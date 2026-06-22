@@ -1,8 +1,8 @@
 /*
 
-A circle in two dimensions supporting epsilon comparisons. The circle centered at $(h, k)$ is
-represented by the relation $(x - h)^2 + (y - k)^2 = r^2$, where the radius $r$ is normalized to a
-nonnegative number.
+A circle in two dimensions with exact stored-value equality and epsilon-aware geometric predicates.
+The circle centered at $(h, k)$ is represented by the relation
+$(x - h)^2 + (y - k)^2 = r^2$, where the radius $r$ is normalized to a nonnegative number.
 
 This implementation stores and computes circle parameters in `double`. Point-accepting
 constructors and predicates are templated on the point type `Pt` and only read `.x`/`.y`, so they
@@ -17,7 +17,8 @@ accept `Point`/`PointD`/`PointI` from 7.1.1 or any struct with numeric `.x` and 
   throwing if the points are collinear.
 - `Circle(a, b, r)` constructs one circle of radius `abs(r)` passing through points `a` and `b`,
   throwing if no finite circle is determined by the inputs.
-- `operator==` and `operator!=` compare centers and radii using `EPS`.
+- `operator==` and `operator!=` compare stored centers and radii exactly; `EQ(a, b)` compares them
+  using `EPS`.
 - `contains(p)` returns whether point `p` lies inside or on the circle.
 - `on_edge(p)` returns whether point `p` lies on the circle boundary.
 - `incircle(a, b, c)` returns the circle inscribed in triangle `abc`.
@@ -132,8 +133,12 @@ struct Circle {
     // The other answer is (h, k) = (mx - v*(a.y - b.y), my - v*(b.x - a.x)).
   }
 
-  bool operator==(const Circle &c) const { return EQ(h, c.h) && EQ(k, c.k) && EQ(r, c.r); }
+  bool operator==(const Circle &c) const { return h == c.h && k == c.k && r == c.r; }
   bool operator!=(const Circle &c) const { return !(*this == c); }
+
+  friend bool EQ(const Circle &a, const Circle &b) {
+    return EQ(a.h, b.h) && EQ(a.k, b.k) && EQ(a.r, b.r);
+  }
 
   template<typename Pt>
   bool contains(const Pt &p) const {
@@ -173,13 +178,16 @@ Circle incircle(const Pt &a, const Pt &b, const Pt &c) {
 
 // Returns +1 if point d lies strictly inside the circle through a, b, c, 0 if d lies exactly on
 // it, or -1 if d is outside. This uses a determinant (no square root), so it is exact for integer
-// coordinates: the result is computed in `int64_t` for integral inputs (watch overflow for large
-// coordinates, where the determinant is degree four) and `long double` otherwise. The points a, b,
-// c must not be collinear; the result does not depend on their orientation.
+// coordinates: built-in integral inputs are widened to `int64_t`, custom exact types retain their
+// coordinate type, and floating-point inputs use `long double`. Watch overflow for large
+// fixed-width coordinates, since the determinant is degree four. The points a, b, c must not be
+// collinear; the result does not depend on their orientation.
 template<typename Pt>
 int in_circumcircle(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
-  using CoordT = decltype(a.x + a.x);
-  using W = std::conditional_t<std::is_integral<CoordT>::value, int64_t, long double>;
+  using T = decltype(a.x + a.x);
+  using W = std::conditional_t<
+      std::is_floating_point<T>::value, long double,
+      std::conditional_t<std::is_integral<T>::value, int64_t, T>>;
   W adx = (W)a.x - d.x, ady = (W)a.y - d.y;
   W bdx = (W)b.x - d.x, bdy = (W)b.y - d.y;
   W cdx = (W)c.x - d.x, cdy = (W)c.y - d.y;
@@ -187,8 +195,8 @@ int in_circumcircle(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
           (bdx * bdx + bdy * bdy) * (cdx * ady - adx * cdy) +
           (cdx * cdx + cdy * cdy) * (adx * bdy - bdx * ady);
   W orient = ((W)b.x - a.x) * ((W)c.y - a.y) - ((W)b.y - a.y) * ((W)c.x - a.x);
-  W val = orient > 0 ? det : -det;
-  return val > 0 ? 1 : (val < 0 ? -1 : 0);
+  W val = W(0) < orient ? det : -det;
+  return W(0) < val ? 1 : (val < W(0) ? -1 : 0);
 }
 
 /*** Example Usage ***/
@@ -207,17 +215,17 @@ struct PointI {
 
 int main() {
   Circle c(-2, 5, sqrt(10));
-  assert(c == Circle(Point(-2, 5), sqrt(10)));
-  assert(c == Circle(Point(1, 6), Point(-5, 4)));
-  assert(c == Circle(Point(-3, 2), Point(-3, 8), Point(-1, 8)));
-  assert(c == incircle(Point(-12, 5), Point(3, 0), Point(0, 9)));
+  assert(EQ(c, Circle(Point(-2, 5), sqrt(10))));
+  assert(EQ(c, Circle(Point(1, 6), Point(-5, 4))));
+  assert(EQ(c, Circle(Point(-3, 2), Point(-3, 8), Point(-1, 8))));
+  assert(EQ(c, incircle(Point(-12, 5), Point(3, 0), Point(0, 9))));
   assert(c.contains(Point(-2, 8)) && !c.contains(Point(-2, 9)));
   assert(c.on_edge(Point(-1, 2)) && !c.on_edge(Point(-1.01, 2)));
 
   // Integer-coordinate points are accepted; the Circle is computed in double.
-  assert(c == Circle(PointI(1, 6), PointI(-5, 4)));
-  assert(c == Circle(PointI(-3, 2), PointI(-3, 8), PointI(-1, 8)));
-  assert(c == incircle(PointI(-12, 5), PointI(3, 0), PointI(0, 9)));
+  assert(EQ(c, Circle(PointI(1, 6), PointI(-5, 4))));
+  assert(EQ(c, Circle(PointI(-3, 2), PointI(-3, 8), PointI(-1, 8))));
+  assert(EQ(c, incircle(PointI(-12, 5), PointI(3, 0), PointI(0, 9))));
   assert(c.contains(PointI(-2, 8)) && !c.contains(PointI(-2, 9)));
   assert(c.on_edge(PointI(-1, 2)));
 

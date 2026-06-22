@@ -117,7 +117,7 @@ int rectangle_intersection(
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
 };
 
 int main() {
@@ -130,6 +130,7 @@ int main() {
   assert(!point_in_rectangle(Point(-1, -2), Point(3, -3), Point(0, -1)));
 
   Point p, q;
+  // Output coordinates come directly from input coordinates via min/max, so exact equality is safe.
   assert(-1 == rectangle_intersection(Point(0, 0), Point(1, 1), Point(2, 2), Point(3, 3)));
   assert(0 == rectangle_intersection(Point(1, 1), Point(7, 7), Point(5, 5), Point(0, 0), &p, &q));
   assert(p == Point(1, 1) && q == Point(5, 5));

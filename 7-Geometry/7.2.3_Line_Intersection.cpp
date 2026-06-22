@@ -3,9 +3,9 @@
 Intersection calculations in two dimensions for straight lines and line segments. The functions
 are templated on the point type `Pt`: pass any struct with numeric `.x` and `.y` fields (for example
 `PointD`/ `PointI` from 7.1.1, or the local example struct) for which `operator<` orders points
-lexicographically. Point outputs are written through a caller-supplied pointer whose type is
-deduced, so the output point type may differ from the input -- e.g. integer endpoints with a
-floating-point output point.
+lexicographically using exact coordinate comparisons. Point outputs are written through a
+caller-supplied pointer whose type is deduced, so the output point type may differ from the input --
+e.g. integer endpoints with a floating-point output point.
 
 `seg_intersection()` has a detection-only overload (called without the output pointers) whose
 calculations are exact when `Pt` has integer coordinates.
@@ -247,9 +247,10 @@ Pt closest_point(double a, double b, double c, const Pt &p) {
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  friend bool EQ(const Point &a, const Point &b) { return EQ(a.x, b.x) && EQ(a.y, b.y); }
   bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return LT(x, p.x) || (EQ(x, p.x) && LT(y, p.y)); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
   bool operator>(const Point &p) const { return p < *this; }
 };
 
@@ -266,30 +267,30 @@ int main() {
   Point p, q;
 
   assert(line_intersection(-1.0, 1.0, 0.0, 1.0, 1.0, -3.0, &p) == 0);
-  assert(p == Point(1.5, 1.5));
+  assert(EQ(p, Point(1.5, 1.5)));
   assert(line_intersection(Point(0, 0), Point(1, 1), Point(0, 4), Point(4, 0), &p) == 0);
-  assert(p == Point(2, 2));
+  assert(EQ(p, Point(2, 2)));
 
   auto test = [&](double a, double b, double c, double d, double e, double f, double g, double h) {
     return seg_intersection(Point(a, b), Point(c, d), Point(e, f), Point(g, h), &p, &q);
   };
-  assert(0 == test(-4, 0, 4, 0, 0, -4, 0, 4) && p == Point(0, 0));
-  assert(0 == test(0, 0, 10, 10, 2, 2, 16, 4) && p == Point(2, 2));
-  assert(0 == test(-2, 2, -2, -2, -2, 0, 0, 0) && p == Point(-2, 0));
-  assert(0 == test(0, 4, 4, 4, 4, 0, 4, 8) && p == Point(4, 4));
+  assert(0 == test(-4, 0, 4, 0, 0, -4, 0, 4) && EQ(p, Point(0, 0)));
+  assert(0 == test(0, 0, 10, 10, 2, 2, 16, 4) && EQ(p, Point(2, 2)));
+  assert(0 == test(-2, 2, -2, -2, -2, 0, 0, 0) && EQ(p, Point(-2, 0)));
+  assert(0 == test(0, 4, 4, 4, 4, 0, 4, 8) && EQ(p, Point(4, 4)));
   assert(1 == test(10, 10, 0, 0, 2, 2, 6, 6));
-  assert(p == Point(2, 2) && q == Point(6, 6));
+  assert(EQ(p, Point(2, 2)) && EQ(q, Point(6, 6)));
   assert(-1 == test(6, 8, 8, 10, 12, 12, 4, 4));
   assert(-1 == test(-4, 2, -8, 8, 0, 0, -4, 6));
 
-  assert(Point(2.5, 2.5) == closest_point(-1.0, -1.0, 5.0, Point(0, 0)));
-  assert(Point(3, 0) == closest_point(1.0, 0.0, -3.0, Point(0, 0)));
+  assert(EQ(Point(2.5, 2.5), closest_point(-1.0, -1.0, 5.0, Point(0, 0))));
+  assert(EQ(Point(3, 0), closest_point(1.0, 0.0, -3.0, Point(0, 0))));
 
   // Detection-only with integer coordinates (exact, no float needed).
   assert(seg_intersection(PointI(0, 0), PointI(4, 4), PointI(0, 4), PointI(4, 0)) == 0);
   assert(seg_intersection(PointI(0, 0), PointI(1, 0), PointI(2, 0), PointI(3, 0)) == -1);
   assert(seg_intersection(PointI(0, 0), PointI(4, 4), PointI(0, 4), PointI(4, 0), &p) == 0);
-  assert(p == Point(2, 2));
+  assert(EQ(p, Point(2, 2)));
 
   // TOUCH_IS_INTERSECT = false treats endpoint-only contact as non-intersecting. The T-junction
   // and shared-endpoint cases below intersect by default but are rejected when the flag is off.

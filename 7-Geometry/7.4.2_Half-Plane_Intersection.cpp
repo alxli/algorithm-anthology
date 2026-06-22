@@ -12,6 +12,9 @@ boundary.
 - If the true intersection is unbounded, the returned polygon is not meaningful. Add explicit
   bounding-box half-planes when a bounded polygon is required.
 
+Angles are sorted exactly to satisfy `sort`'s ordering requirements. EPS is then used outside the
+comparator to group parallel directions and retain only the tightest half-plane in each group.
+
 Time Complexity:
 - O(n log n), where $n$ is the number of half-planes.
 
@@ -43,7 +46,8 @@ bool LT(T a, U b) {
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  friend bool EQ(const Point &a, const Point &b) { return EQ(a.x, b.x) && EQ(a.y, b.y); }
   Point operator+(const Point &p) const { return {x + p.x, y + p.y}; }
   Point operator-(const Point &p) const { return {x - p.x, y - p.y}; }
   Point operator*(double k) const { return {x * k, y * k}; }
@@ -62,12 +66,7 @@ struct HalfPlane {
     double t = h.dir.cross(p - h.p) / dir.cross(h.dir);
     return p + dir * t;
   }
-  bool operator<(const HalfPlane &h) const {
-    if (!EQ(ang, h.ang)) {
-      return ang < h.ang;
-    }
-    return dir.cross(h.p - p) < 0;  // tighter half-plane first among parallel lines
-  }
+  bool operator<(const HalfPlane &h) const { return ang < h.ang; }
 };
 
 std::vector<Point> half_plane_intersection(std::vector<HalfPlane> planes) {
@@ -75,6 +74,9 @@ std::vector<Point> half_plane_intersection(std::vector<HalfPlane> planes) {
   std::vector<HalfPlane> unique;
   for (const HalfPlane &h : planes) {
     if (!unique.empty() && EQ(unique.back().dir.cross(h.dir), 0)) {
+      if (unique.back().dir.cross(h.p - unique.back().p) > 0) {
+        unique.back() = h;
+      }
       continue;
     }
     unique.push_back(h);
@@ -137,6 +139,10 @@ int main() {
   auto square = half_plane_intersection(box);
   assert(square.size() == 4);
   assert(EQ(polygon_area(square), 16));
+
+  auto tighter = box;
+  tighter.push_back(HalfPlane(Point(0, 1), Point(4, 1)));  // y >= 1
+  assert(EQ(polygon_area(half_plane_intersection(tighter)), 12));
 
   box.push_back(HalfPlane(Point(2, 0), Point(2, 4)));  // x <= 2
   auto rect = half_plane_intersection(box);

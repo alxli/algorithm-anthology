@@ -1,29 +1,31 @@
 /*
 
-A 2D point class template supporting epsilon comparisons. The coordinate type `T` defaults to
-`double`. Integer types (e.g. `int`) fully support all exact operations. Floating-point-only
+A 2D point class template supporting exact equality and lexicographic ordering. The coordinate type
+`T` defaults to `double`. Integer types (e.g. `int`) fully support all exact operations. Metric
 operations (`norm`, `arg`, `normalize`, `rotateCW/CCW`, `reflect` across a line) return coordinates
-of type `fp_t`, which is `double` when `T` is integral and `T` itself otherwise.
+of type `fp_t`, which is `T` when `T` is floating-point and `double` otherwise.
 
-Exact operations (return `TPoint<T>` or `T`, no precision lost for integers):
-- element-wise arithmetic, `dot()`, `cross()`, `sqnorm()`, cardinal rotations, `reflect(point)`,
-  comparisons.
+Exact operations (return `TPoint<T>` or `T`, no precision lost for integers) include: element-wise
+arithmetic, `dot()`, `cross()`, `sqnorm()`, cardinal rotations, `reflect(point)`, equality, and
+lexicographic ordering. `operator==` and `operator<` are exact for every coordinate type, as
+required by standard algorithms and containers. `EQ(p, q)` compares floating-point point
+coordinates using `EPS` and remains exact for other coordinate types.
 
 Overflow warning: the exact products `dot()`, `cross()`, and `sqnorm()` grow like the squared
 coordinate magnitude. With `TPoint<int>` these overflow a 32-bit `int` once coordinates exceed
 $\sim 46000$, so use `PointL` (`TPoint<long long>`) for larger integer coordinates.
 
-Floating-point-only operations (return `TPoint<fp_t>` or `fp_t`):
+Metric operations (return `TPoint<fp_t>` or `fp_t`):
 - `norm()`, `arg()`, `proj()`, `normalize()`, `rotateCW()`, `rotateCCW()`, `reflect(line)`.
 - `operator/` also promotes to `fp_t`.
 
 Implicit conversion from `TPoint<U>` to `TPoint<T>` is provided when `U` is integral and `T` is
 floating-point, so `PointI` can be passed wherever `PointD` is expected.
 
-Non-floating-point coordinate types such as `Modular` or `Rational` compose for the exact
-operations (arithmetic, `dot`, `cross`, `sqnorm`, comparisons): these route to exact `==`/`<`
-rather than epsilon comparisons. The floating-point-only operations are simply not instantiated
-unless called.
+Non-floating-point coordinate types such as `Modular` or `Rational` compose for the exact operations
+(arithmetic, `dot`, `cross`, `sqnorm`, comparisons, and `EQ`) using the coordinate type's own
+operators. Their metric operations convert coordinates explicitly to `double`; for `Modular`, this
+uses the stored representative and is not finite-field geometry.
 
 Type aliases:
 - `PointI = TPoint<int>`: exact integer geometry (small coordinates only; see overflow warning)
@@ -44,6 +46,7 @@ Space Complexity:
 #include <cmath>
 #include <cstdint>
 #include <ostream>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -65,8 +68,8 @@ bool LT(T a, U b) {
 
 template<typename T>
 struct TPoint {
-  // fp_t is T for floating-point types, double for integral types.
-  using fp_t = std::conditional_t<std::is_integral<T>::value, double, T>;
+  // Metric operations preserve floating-point coordinates and otherwise promote to double.
+  using fp_t = std::conditional_t<std::is_floating_point<T>::value, T, double>;
 
   T x, y;
 
@@ -80,22 +83,11 @@ struct TPoint {
       typename = std::enable_if_t<std::is_integral<U>::value && std::is_floating_point<T>::value>>
   TPoint(const TPoint<U> &p) : x(static_cast<T>(p.x)), y(static_cast<T>(p.y)) {}
 
-  bool operator==(const TPoint &p) const {
-    if constexpr (std::is_floating_point<T>::value) {
-      return EQ(x, p.x) && EQ(y, p.y);
-    }
-    return x == p.x && y == p.y;  // exact for ints and types like Modular/Rational
-  }
+  bool operator==(const TPoint &p) const { return x == p.x && y == p.y; }
+  friend bool EQ(const TPoint &a, const TPoint &b) { return EQ(a.x, b.x) && EQ(a.y, b.y); }
 
   bool operator!=(const TPoint &p) const { return !(*this == p); }
-
-  bool operator<(const TPoint &p) const {
-    if constexpr (std::is_floating_point<T>::value) {
-      return EQ(x, p.x) ? LT(y, p.y) : LT(x, p.x);
-    }
-    return x == p.x ? y < p.y : x < p.x;  // exact for ints and types like Modular/Rational
-  }
-
+  bool operator<(const TPoint &p) const { return std::tie(x, y) < std::tie(p.x, p.y); }
   bool operator>(const TPoint &p) const { return p < *this; }
   bool operator<=(const TPoint &p) const { return !(*this > p); }
   bool operator>=(const TPoint &p) const { return !(*this < p); }
@@ -187,7 +179,7 @@ struct TPoint {
   // Always returns floating-point coordinates.
   TPoint<fp_t> reflect(const TPoint &p, const TPoint &q) const {
     TPoint<fp_t> fp{(fp_t)p.x, (fp_t)p.y};
-    if (p == q) {
+    if (EQ(p, q)) {
       return TPoint<fp_t>{(fp_t)x, (fp_t)y}.reflect(fp);
     }
     TPoint<fp_t> r{(fp_t)(x - p.x), (fp_t)(y - p.y)}, s{(fp_t)(q.x - p.x), (fp_t)(q.y - p.y)};
@@ -222,10 +214,16 @@ struct TPoint {
   friend TPoint rotate270(const TPoint &p, const TPoint &q) { return p.rotate270(q); }
   friend TPoint<fp_t> rotateCW(const TPoint &p, fp_t t) { return p.rotateCW(t); }
   friend TPoint<fp_t> rotateCCW(const TPoint &p, fp_t t) { return p.rotateCCW(t); }
-  friend TPoint<fp_t> rotateCW(const TPoint &p, const TPoint &q, fp_t t) { return p.rotateCW(q, t); }
-  friend TPoint<fp_t> rotateCCW(const TPoint &p, const TPoint &q, fp_t t) { return p.rotateCCW(q, t); }
+  friend TPoint<fp_t> rotateCW(const TPoint &p, const TPoint &q, fp_t t) {
+    return p.rotateCW(q, t);
+  }
+  friend TPoint<fp_t> rotateCCW(const TPoint &p, const TPoint &q, fp_t t) {
+    return p.rotateCCW(q, t);
+  }
   friend TPoint reflect(const TPoint &p, const TPoint &q) { return p.reflect(q); }
-  friend TPoint<fp_t> reflect(const TPoint &p, const TPoint &a, const TPoint &b) { return p.reflect(a, b); }
+  friend TPoint<fp_t> reflect(const TPoint &p, const TPoint &a, const TPoint &b) {
+    return p.reflect(a, b);
+  }
   // clang-format on
 
   friend std::ostream &operator<<(std::ostream &out, const TPoint &p) {
@@ -242,6 +240,11 @@ using PointD = TPoint<double>;
 using PointLD = TPoint<long double>;
 using Point = PointD;  // Default point type is double.
 
+// Can compose with numerical types from chapter 6:
+// using PointB = TPoint<BigInt<>>;
+// using PointR = TPoint<Rational<int64_t>>;
+// using PointM = TPoint<Modular<1000000007>>;
+
 /*** Example Usage ***/
 
 #include <cassert>
@@ -250,7 +253,7 @@ const double PI = acos(-1.0);
 
 int main() {
   Point p(-10, 3);
-  assert(Point(-18, 29) == p + Point(-3, 9) * 6.0 / 2.0 - Point(-1, 1));
+  assert(EQ(Point(-18, 29), p + Point(-3, 9) * 6.0 / 2.0 - Point(-1, 1)));
   assert(EQ(109, p.sqnorm()));
   assert(EQ(10.44030650891, p.norm()));
   assert(EQ(2.850135859112, p.arg()));
@@ -258,13 +261,13 @@ int main() {
   assert(EQ(0, p.cross(Point(10, -3))));
   assert(EQ(10, p.proj(Point(-10, 0))));
   assert(EQ(1, p.normalize().norm()));
-  assert(Point(-3, -10) == p.rotate90());
-  assert(Point(10, -3) == p.rotate180());
-  assert(Point(3, 10) == p.rotate270());
-  assert(Point(3, 12) == p.rotateCW(Point(1, 1), PI / 2));
-  assert(Point(1, -10) == p.rotateCCW(Point(2, 2), PI / 2));
-  assert(Point(10, -3) == p.reflect(Point(0, 0)));
-  assert(Point(-10, -3) == p.reflect(Point(-2, 0), Point(5, 0)));
+  assert(EQ(Point(-3, -10), p.rotate90()));
+  assert(EQ(Point(10, -3), p.rotate180()));
+  assert(EQ(Point(3, 10), p.rotate270()));
+  assert(EQ(Point(3, 12), p.rotateCW(Point(1, 1), PI / 2)));
+  assert(EQ(Point(1, -10), p.rotateCCW(Point(2, 2), PI / 2)));
+  assert(EQ(Point(10, -3), p.reflect(Point(0, 0))));
+  assert(EQ(Point(-10, -3), p.reflect(Point(-2, 0), Point(5, 0))));
 
   // Integer point - exact arithmetic, float-only ops return PointD.
   PointI a(3, 4), b(1, 0);

@@ -45,7 +45,8 @@ bool LT(T a, U b) {
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  friend bool EQ(const Point &a, const Point &b) { return EQ(a.x, b.x) && EQ(a.y, b.y); }
   Point operator+(const Point &p) const { return {x + p.x, y + p.y}; }
   Point operator-(const Point &p) const { return {x - p.x, y - p.y}; }
   Point operator*(double k) const { return {x * k, y * k}; }
@@ -98,17 +99,21 @@ int main() {
   Point a(0, 0), b(4, 0);
   auto ext = circle_tangents(a, 1, b, 1);
   assert(ext.size() == 2);
-  assert(ext[0].first == Point(0, -1) && ext[0].second == Point(4, -1));
-  assert(ext[1].first == Point(0, 1) && ext[1].second == Point(4, 1));
+  assert(EQ(ext[0].first, Point(0, -1)) && EQ(ext[0].second, Point(4, -1)));
+  assert(EQ(ext[1].first, Point(0, 1)) && EQ(ext[1].second, Point(4, 1)));
 
   auto in = circle_tangents(a, 1, b, 1, true);
   assert(in.size() == 2);
-  assert(in[0].first == Point(0.5, -sqrt(3.0) / 2) && in[0].second == Point(3.5, sqrt(3.0) / 2));
-  assert(in[1].first == Point(0.5, sqrt(3.0) / 2) && in[1].second == Point(3.5, -sqrt(3.0) / 2));
+  assert(
+      EQ(in[0].first, Point(0.5, -sqrt(3.0) / 2)) && EQ(in[0].second, Point(3.5, sqrt(3.0) / 2))
+  );
+  assert(
+      EQ(in[1].first, Point(0.5, sqrt(3.0) / 2)) && EQ(in[1].second, Point(3.5, -sqrt(3.0) / 2))
+  );
 
   auto point_to_circle = circle_tangents(Point(0, 0), 0, Point(2, 0), 1);
   assert(point_to_circle.size() == 2);
-  assert(point_to_circle[0].first == Point(0, 0));
+  assert(EQ(point_to_circle[0].first, Point(0, 0)));
 
   assert(circle_tangents(Point(0, 0), 5, Point(1, 0), 1).empty());        // contained
   assert(circle_tangents(Point(0, 0), 2, Point(3, 0), 2, true).empty());  // overlapping

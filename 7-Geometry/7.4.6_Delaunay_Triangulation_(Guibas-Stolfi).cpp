@@ -15,6 +15,9 @@ with circumcircle tests deciding each connecting edge and deleting invalidated o
   vector of counterclockwise-oriented vertex triples (`std::tuple`) of the input point type. If
   fewer than three non-collinear unique points remain, the result is empty.
 
+The point type must provide exact lexicographic `operator<`; sorting and duplicate removal requires
+this strict ordering rather than epsilon equality.
+
 All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation.
 The in-circle test is a degree-4 polynomial in the coordinates and dominates the overflow budget: a
 64-bit integer coordinate type stays exact up to $|C| \approx 1.4 \times 10^4$, where $C$ is the
@@ -55,7 +58,9 @@ template<typename T>
 struct Point {
   T x, y;
   Point(T x = 0, T y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  friend bool EQ(const Point &a, const Point &b) { return EQ(a.x, b.x) && EQ(a.y, b.y); }
+  bool operator<(const Point &p) const { return std::tie(x, y) < std::tie(p.x, p.y); }
 };
 
 template<typename T>
@@ -239,22 +244,20 @@ template<typename Pt>
 auto delaunay_triangulation(std::vector<Pt> &p) {
   using T = decltype(Pt::x);
   using Triangle = std::tuple<Pt, Pt, Pt>;
-  // Forgo using epsilon comparisons here, since std::sort needs a strict weak ordering to avoid
-  // unpredictably sorting/deduping near-coincident points.
-  auto ptcmp = [](const Pt &a, const Pt &b) { return a.x == b.x ? a.y < b.y : a.x < b.x; };
   // Rotates triangle vertices so that the lexicographically smallest comes first, preserving the
   // cyclic (counterclockwise) order, to give each triangle a canonical, comparable representation.
-  auto canonical = [&](const Pt &a, const Pt &b, const Pt &c) -> Triangle {
-    if (ptcmp(b, a) && ptcmp(b, c)) {
+  auto canonical = [](const Pt &a, const Pt &b, const Pt &c) -> Triangle {
+    if (b < a && b < c) {
       return {b, c, a};
     }
-    if (ptcmp(c, a) && ptcmp(c, b)) {
+    if (c < a && c < b) {
       return {c, a, b};
     }
     return {a, b, c};
   };
-  std::sort(p.begin(), p.end(), ptcmp);
-  p.erase(std::unique(p.begin(), p.end()), p.end());
+  std::sort(p.begin(), p.end());
+  auto same_point = [](const Pt &a, const Pt &b) { return !(a < b) && !(b < a); };
+  p.erase(std::unique(p.begin(), p.end(), same_point), p.end());
   std::vector<Triangle> res;
   if (p.size() < 3) {
     return res;
@@ -276,17 +279,7 @@ auto delaunay_triangulation(std::vector<Pt> &p) {
       res.push_back(canonical(face[0], face[1], face[2]));
     }
   }
-  std::sort(res.begin(), res.end(), [&](const Triangle &t1, const Triangle &t2) {
-    const auto &[a1, b1, c1] = t1;
-    const auto &[a2, b2, c2] = t2;
-    if (ptcmp(a1, a2) || (!ptcmp(a2, a1) && ptcmp(b1, b2))) {
-      return true;
-    }
-    if (ptcmp(a2, a1) || (!ptcmp(a1, a2) && ptcmp(b2, b1))) {
-      return false;
-    }
-    return ptcmp(c1, c2);
-  });
+  std::sort(res.begin(), res.end());
   return res;
 }
 

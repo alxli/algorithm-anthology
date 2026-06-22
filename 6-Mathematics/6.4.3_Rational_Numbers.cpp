@@ -4,7 +4,7 @@ Perform operations on rational numbers internally represented as two integers: a
 denominator. The template integer type must support streamed input/output, comparisons, and
 arithmetic operations. Overflow is not checked for in internal operations: comparisons and
 arithmetic cross-multiply numerators and denominators, so instantiate with a wider integer type
-(such as `__int128`, or even `BigInt`) if the values may grow large.
+(such as `__int128`, or even `BigInt<>`) if the values may grow large.
 
 - `Rational<Int>(n)` constructs a rational number with numerator `n` and denominator 1.
 - `Rational<Int>(n, d)` constructs a rational number with numerator `n` and denominator `d`.
@@ -13,7 +13,9 @@ arithmetic cross-multiply numerators and denominators, so instantiate with a wid
 - `operator<<` outputs the rational number as a string consisting of possibly a minus sign followed
   by the numerator, followed by a slash, followed by the denominator.
 - `v.to_string()`, `v.to_llong()`, `v.to_double()`, and `v.to_ldouble()` return the rational `v`
-  converted to an `std::string`, `int64_t`, `double`, and `long double` respectively.
+  converted to an `std::string`, `int64_t`, `double`, and `long double` respectively with potential
+  truncation or approximation for the primitive types. Equivalent conversions are also available
+  through explicit casts to `int`, `long long`, `double`, and `long double`.
 - `v.abs()`, `abs(v)`, `v.floor()`, and `v.ceil()` return the absolute value, floor, and ceiling of
   rational `v`.
 - Operators `<`, `>`, `<=`, `>=`, `==`, `!=`, `+`, `-`, `*`, `/`, `%`, `++`, `--`, `+=`, `-=`, `*=`,
@@ -100,12 +102,17 @@ class Rational {
   }
 
   long double to_ldouble() const {
-    long double n, d;
     std::stringstream ss;
     ss << num << " " << den;
+    long double n, d;
     ss >> n >> d;
     return n / d;
   }
+
+  explicit operator int() const { return static_cast<int>(to_llong()); }
+  explicit operator long long() const { return static_cast<long long>(to_llong()); }
+  explicit operator double() const { return to_double(); }
+  explicit operator long double() const { return to_ldouble(); }
 
   // The comparison and binary arithmetic operators are hidden friends, so a raw integer operand on
   // either side converts through the implicit constructor.
@@ -177,6 +184,9 @@ int main() {
   Rational r(Rational(-53, 10) % Rational(-17, 10));
   assert(EQ(r.to_ldouble(), fmod(-5.3, -1.7)));
   assert(r.to_string() == "-1/5");
+  assert(static_cast<int>(Rational(7, 2)) == 3);
+  assert(static_cast<long long>(Rational(7, 2)) == 3LL);
+  assert(EQ(static_cast<double>(Rational(1, 2)), 0.5));
 
   // Raw integers work on either side of comparisons and arithmetic.
   assert(2 + Rational(1, 2) == Rational(5, 2));

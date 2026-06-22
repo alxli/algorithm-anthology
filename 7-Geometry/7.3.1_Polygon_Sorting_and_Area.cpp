@@ -125,7 +125,8 @@ using namespace std;
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  friend bool EQ(const Point &a, const Point &b) { return EQ(a.x, b.x) && EQ(a.y, b.y); }
   bool operator!=(const Point &p) const { return !(*this == p); }
   bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
   bool operator>(const Point &p) const { return p < *this; }
@@ -157,7 +158,7 @@ int main() {
   std::mt19937 rng(1234567);
   std::shuffle(v.begin(), v.end(), rng);
   Point c = mean_center(v.begin(), v.end());
-  assert(EQ(c.x, 0.6) && EQ(c.y, 1.8));
+  assert(EQ(c, Point(0.6, 1.8)));
   sort(v.begin(), v.end(), [c](const Point &a, const Point &b) { return cw_comp(a, b, c); });
   cout << "Clockwise vertices: ";
   for (const auto &p : v) {

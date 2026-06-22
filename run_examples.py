@@ -21,7 +21,7 @@ import tempfile
 from pathlib import Path
 from typing import Optional
 
-DEFAULT_CXX_CANDIDATES = ('/opt/homebrew/bin/g++-15', 'g++')
+DEFAULT_CXX_CANDIDATES = ('/opt/homebrew/bin/g++-16', '/opt/homebrew/bin/g++-15', 'g++')
 CXXFLAGS = ['-std=c++17', '-O2', '-Wall', '-pedantic']
 TIMEOUT = 30  # seconds per file
 

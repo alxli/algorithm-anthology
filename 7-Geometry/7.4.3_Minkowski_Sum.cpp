@@ -35,7 +35,8 @@ bool EQ(T a, U b) {
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  friend bool EQ(const Point &a, const Point &b) { return EQ(a.x, b.x) && EQ(a.y, b.y); }
   Point operator+(const Point &p) const { return {x + p.x, y + p.y}; }
   Point operator-(const Point &p) const { return {x - p.x, y - p.y}; }
   double cross(const Point &p) const { return x * p.y - y * p.x; }
@@ -50,7 +51,7 @@ double polygon_area_2x(const std::vector<Point> &p) {
 }
 
 std::vector<Point> normalize(std::vector<Point> p) {
-  while (p.size() > 1 && p.front() == p.back()) {
+  while (p.size() > 1 && EQ(p.front(), p.back())) {
     p.pop_back();
   }
   if (p.size() <= 1) {
@@ -75,7 +76,7 @@ std::vector<Point> remove_collinear(std::vector<Point> p) {
     while (res.size() >= 2 && EQ((res.back() - res[res.size() - 2]).cross(q - res.back()), 0)) {
       res.pop_back();
     }
-    if (res.empty() || !(q == res.back())) {
+    if (res.empty() || !EQ(q, res.back())) {
       res.push_back(q);
     }
   }

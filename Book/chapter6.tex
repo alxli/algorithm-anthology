@@ -2038,6 +2038,7 @@ Division uses the extended Euclidean algorithm, so the divisor only needs to be 
 \begin{compactitem}
   \item \inlinecode{Modular\textless{}MOD\textgreater{}(x)} constructs the residue class of integer \inlinecode{x} modulo \inlinecode{MOD}.
   \item \inlinecode{value()} and \inlinecode{operator()()} return the stored representative in $[0, {\inlinecodemath{MOD}})$.
+  \item Explicit casts to \inlinecode{int}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double} convert that stored representative to the corresponding primitive.
   \item \inlinecode{pow(n)} returns this value raised to nonnegative integer exponent \inlinecode{n}.
   \item \inlinecode{inv()} returns the multiplicative inverse, asserting it exists.
   \item Operators \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, comparison, increment, decrement, and stream I/O are overloaded.
@@ -2120,6 +2121,10 @@ class Modular {
   static value_t mod() { return MOD; }
   value_t value() const { return v; }
   value_t operator()() const { return v; }
+  explicit operator int() const { return static_cast<int>(v); }
+  explicit operator long long() const { return static_cast<long long>(v); }
+  explicit operator double() const { return static_cast<double>(v); }
+  explicit operator long double() const { return static_cast<long double>(v); }
 
   Modular pow(int64_t n) const {
     assert(n >= 0);
@@ -2244,6 +2249,9 @@ int main() {
   Mint b = -2;
   assert(a.value() == 1);
   assert(b() == Mint::mod() - 2);
+  assert(static_cast<int>(a) == 1);
+  assert(static_cast<long long>(a) == 1LL);
+  assert(static_cast<double>(a) == 1.0);
   assert(a + b == -1);
   assert(2 + Mint(3) == 5);
   assert(Mint(2) * 3 == 6);
@@ -3824,7 +3832,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Big Integers}
-Perform operations on arbitrary precision big integers internally represented as a vector of base-$10^9$ digits in little-endian order. Typical arithmetic operations involving mixed numeric primitives and strings are supported through implicit construction and hidden friend operators, as long as at least one operand is a \inlinecode{BigInt} at any given level of evaluation.
+Perform operations on arbitrary precision big integers internally represented as a vector of base-\inlinecode{BASE} digits in little-endian order. \inlinecode{BASE} defaults to $10^9$ and must be a power of 10 no larger than $10^9$; \inlinecode{USE\_FFT\_MULT} selects FFT multiplication when true and Karatsuba multiplication when false. Typical arithmetic operations involving mixed numeric primitives and strings are supported through implicit construction and hidden friend operators, as long as at least one operand is a \inlinecode{BigInt} at any given level of evaluation.
 
 \begin{compactitem}
   \item \inlinecode{BigInt(n)} constructs a big integer from an integer \inlinecode{n} (default: 0).
@@ -3832,7 +3840,7 @@ Perform operations on arbitrary precision big integers internally represented as
   \item \inlinecode{operator=} is defined to copy from another big integer or to assign from a 64-bit integer primitive.
   \item \inlinecode{size()} returns the number of digits in the base-10 representation.
   \item Operators \inlinecode{\textgreater{}\textgreater{}} and \inlinecode{\textless{}\textless{}} are defined to support stream-based input and output.
-  \item \inlinecode{v.to\_string()}, \inlinecode{v.to\_llong()}, \inlinecode{v.to\_double()}, and \inlinecode{v.to\_ldouble()} return the big integer \inlinecode{v} converted to an \inlinecode{std::string}, \inlinecode{int64\_t}, \inlinecode{double}, and \inlinecode{long double} respectively. For the latter three data types, overflow behavior is based on that of inputting from \inlinecode{std::istream}.
+  \item \inlinecode{v.to\_string()}, \inlinecode{v.to\_llong()}, \inlinecode{v.to\_double()}, and \inlinecode{v.to\_ldouble()} return the big integer \inlinecode{v} converted to an \inlinecode{std::string}, \inlinecode{int64\_t}, \inlinecode{double}, and \inlinecode{long double} respectively. For the latter three data types, overflow behavior is based on that of inputting from \inlinecode{std::istream}. Equivalent conversions are also available through explicit casts to \inlinecode{int}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double}.
   \item \inlinecode{v.abs()} returns the absolute value of big integer \inlinecode{v}.
   \item \inlinecode{a.comp(b)} returns $-1$, $0$, or $1$ depending on whether the big integers \inlinecode{a} and \inlinecode{b} compare less, equal, or greater, respectively.
   \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on integer primitives. Addition, subtraction, and comparisons are performed using the standard linear algorithms. Multiplication first converts limbs from base $10^9$ to base $10^4$ so coefficient products fit safely, then uses either Karatsuba multiplication (if \inlinecode{USE\_FFT\_MULT} is false) or complex FFT convolution (if \inlinecode{USE\_FFT\_MULT} is true), converting the result back to base $10^9$. Division and modulo are computed together by normalized long division: scale the operands so the divisor's leading limb is large, estimate each quotient limb from the top one or two limbs of the running remainder, correct the estimate by adding the divisor back if necessary, then unscale the remainder.
@@ -3881,6 +3889,8 @@ Perform operations on arbitrary precision big integers internally represented as
 class BigInt {
   static const int BASE = 1000000000, BASE_DIGITS = 9;
   static const bool USE_FFT_MULT = true;
+  static_assert(10 <= BASE && BASE <= 1000000000, "BASE must be between 10 and 10^9");
+  static_assert(BASE_DIGITS > 0, "BASE must be a power of 10");
 
   using vint = std::vector<int>;
   using vint64 = std::vector<int64_t>;
@@ -4165,6 +4175,11 @@ class BigInt {
     ss >> res;
     return res;
   }
+
+  explicit operator int() const { return static_cast<int>(to_llong()); }
+  explicit operator long long() const { return static_cast<long long>(to_llong()); }
+  explicit operator double() const { return to_double(); }
+  explicit operator long double() const { return to_ldouble(); }
 
   int comp(const BigInt &v) const { return comp(digits, v.digits, sign, v.sign); }
 
@@ -4477,18 +4492,21 @@ int main() {
   assert(x.to_llong() == -6LL);
   assert(x.to_double() == -6.0);
   assert(x.to_ldouble() == -6.0);
+  assert(static_cast<int>(x) == -6);
+  assert(static_cast<long long>(x) == -6LL);
+  assert(static_cast<double>(x) == -6.0);
   return 0;
 }
 \end{lstlisting}
 \subsection{Rational Numbers}
-Perform operations on rational numbers internally represented as two integers: a numerator and a denominator. The template integer type must support streamed input/output, comparisons, and arithmetic operations. Overflow is not checked for in internal operations: comparisons and arithmetic cross-multiply numerators and denominators, so instantiate with a wider integer type (such as \inlinecode{\_\_int128}, or even \inlinecode{BigInt}) if the values may grow large.
+Perform operations on rational numbers internally represented as two integers: a numerator and a denominator. The template integer type must support streamed input/output, comparisons, and arithmetic operations. Overflow is not checked for in internal operations: comparisons and arithmetic cross-multiply numerators and denominators, so instantiate with a wider integer type (such as \inlinecode{\_\_int128}, or even \inlinecode{BigInt\textless{}\textgreater{}}) if the values may grow large.
 
 \begin{compactitem}
   \item \inlinecode{Rational\textless{}Int\textgreater{}(n)} constructs a rational number with numerator \inlinecode{n} and denominator 1.
   \item \inlinecode{Rational\textless{}Int\textgreater{}(n, d)} constructs a rational number with numerator \inlinecode{n} and denominator \inlinecode{d}.
   \item \inlinecode{operator\textgreater{}\textgreater{}} inputs a rational number using the next integer from the stream as the numerator and 1 as the denominator.
   \item \inlinecode{operator\textless{}\textless{}} outputs the rational number as a string consisting of possibly a minus sign followed by the numerator, followed by a slash, followed by the denominator.
-  \item \inlinecode{v.to\_string()}, \inlinecode{v.to\_llong()}, \inlinecode{v.to\_double()}, and \inlinecode{v.to\_ldouble()} return the rational \inlinecode{v} converted to an \inlinecode{std::string}, \inlinecode{int64\_t}, \inlinecode{double}, and \inlinecode{long double} respectively.
+  \item \inlinecode{v.to\_string()}, \inlinecode{v.to\_llong()}, \inlinecode{v.to\_double()}, and \inlinecode{v.to\_ldouble()} return the rational \inlinecode{v} converted to an \inlinecode{std::string}, \inlinecode{int64\_t}, \inlinecode{double}, and \inlinecode{long double} respectively with potential truncation or approximation for the primitive types. Equivalent conversions are also available through explicit casts to \inlinecode{int}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double}.
   \item \inlinecode{v.abs()}, \inlinecode{abs(v)}, \inlinecode{v.floor()}, and \inlinecode{v.ceil()} return the absolute value, floor, and ceiling of rational \inlinecode{v}.
   \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on numerical primitives. The comparisons and binary arithmetic are hidden friends, so a raw integer operand works on either side.
 \end{compactitem}
@@ -4577,12 +4595,17 @@ class Rational {
   }
 
   long double to_ldouble() const {
-    long double n, d;
     std::stringstream ss;
     ss << num << " " << den;
+    long double n, d;
     ss >> n >> d;
     return n / d;
   }
+
+  explicit operator int() const { return static_cast<int>(to_llong()); }
+  explicit operator long long() const { return static_cast<long long>(to_llong()); }
+  explicit operator double() const { return to_double(); }
+  explicit operator long double() const { return to_ldouble(); }
 
   // The comparison and binary arithmetic operators are hidden friends, so a raw integer operand on
   // either side converts through the implicit constructor.
@@ -4651,6 +4674,9 @@ int main() {
   Rational r(Rational(-53, 10) % Rational(-17, 10));
   assert(EQ(r.to_ldouble(), fmod(-5.3, -1.7)));
   assert(r.to_string() == "-1/5");
+  assert(static_cast<int>(Rational(7, 2)) == 3);
+  assert(static_cast<long long>(Rational(7, 2)) == 3LL);
+  assert(EQ(static_cast<double>(Rational(1, 2)), 0.5));
 
   // Raw integers work on either side of comparisons and arithmetic.
   assert(2 + Rational(1, 2) == Rational(5, 2));

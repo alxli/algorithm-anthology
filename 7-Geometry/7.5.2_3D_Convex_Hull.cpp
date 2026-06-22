@@ -27,7 +27,6 @@ const double EPS = 1e-9;
 
 struct Point3D {
   double x, y, z;
-
   Point3D(double x = 0, double y = 0, double z = 0) : x(x), y(y), z(z) {}
   Point3D operator-(const Point3D &p) const { return {x - p.x, y - p.y, z - p.z}; }
   Point3D operator*(double k) const { return {x * k, y * k, z * k}; }

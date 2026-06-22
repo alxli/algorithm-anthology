@@ -129,7 +129,8 @@ int turn(const Pt &a, const Pt &o, const Pt &b) {
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  friend bool EQ(const Point &a, const Point &b) { return EQ(a.x, b.x) && EQ(a.y, b.y); }
 };
 
 #include <cassert>
@@ -137,8 +138,8 @@ struct Point {
 int main() {
   assert(EQ(123, reduce_deg(-8 * 360 + 123)));
   assert(EQ(1.2345, reduce_rad(2 * PI * 8 + 1.2345)));
-  assert(polar_point<Point>(4, PI) == Point(-4, 0));
-  assert(polar_point<Point>(4, -PI / 2) == Point(0, -4));
+  assert(EQ(polar_point<Point>(4, PI), Point(-4, 0)));
+  assert(EQ(polar_point<Point>(4, -PI / 2), Point(0, -4)));
   assert(EQ(45, polar_angle(Point(5, 5)) * RAD));
   assert(EQ(135 * DEG, polar_angle(Point(-4, 4))));
   assert(EQ(90 * DEG, angle(Point(5, 0), Point(0, 5), Point(-5, 0))));

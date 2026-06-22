@@ -36,6 +36,8 @@ prime and the requested factorials are invertible modulo $p$.
 
 - `Modular<MOD>(x)` constructs the residue class of integer `x` modulo `MOD`.
 - `value()` and `operator()()` return the stored representative in $[0, `MOD`)$.
+- Explicit casts to `int`, `long long`, `double`, and `long double` convert that stored
+  representative to the corresponding primitive.
 - `pow(n)` returns this value raised to nonnegative integer exponent `n`.
 - `inv()` returns the multiplicative inverse, asserting it exists.
 - Operators `+`, `-`, `*`, `/`, comparison, increment, decrement, and stream I/O are overloaded.
@@ -115,6 +117,10 @@ class Modular {
   static value_t mod() { return MOD; }
   value_t value() const { return v; }
   value_t operator()() const { return v; }
+  explicit operator int() const { return static_cast<int>(v); }
+  explicit operator long long() const { return static_cast<long long>(v); }
+  explicit operator double() const { return static_cast<double>(v); }
+  explicit operator long double() const { return static_cast<long double>(v); }
 
   Modular pow(int64_t n) const {
     assert(n >= 0);
@@ -240,6 +246,9 @@ int main() {
   Mint b = -2;
   assert(a.value() == 1);
   assert(b() == Mint::mod() - 2);
+  assert(static_cast<int>(a) == 1);
+  assert(static_cast<long long>(a) == 1LL);
+  assert(static_cast<double>(a) == 1.0);
   assert(a + b == -1);
   assert(2 + Mint(3) == 5);
   assert(Mint(2) * 3 == 6);

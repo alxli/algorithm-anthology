@@ -1,9 +1,11 @@
 /*
 
 Perform operations on arbitrary precision big integers internally represented as a vector of
-base-$10^9$ digits in little-endian order. Typical arithmetic operations involving mixed numeric
-primitives and strings are supported through implicit construction and hidden friend operators, as
-long as at least one operand is a `BigInt` at any given level of evaluation.
+base-`BASE` digits in little-endian order. `BASE` defaults to $10^9$ and must be a power of 10 no
+larger than $10^9$; `USE_FFT_MULT` selects FFT multiplication when true and Karatsuba multiplication
+when false. Typical arithmetic operations involving mixed numeric primitives and strings are
+supported through implicit construction and hidden friend operators, as long as at least one operand
+is a `BigInt` at any given level of evaluation.
 
 - `BigInt(n)` constructs a big integer from an integer `n` (default: 0).
 - `BigInt(s)` constructs a big integer from a C string or an `std::string` `s`.
@@ -14,6 +16,8 @@ long as at least one operand is a `BigInt` at any given level of evaluation.
 - `v.to_string()`, `v.to_llong()`, `v.to_double()`, and `v.to_ldouble()` return the big integer `v`
   converted to an `std::string`, `int64_t`, `double`, and `long double` respectively. For the
   latter three data types, overflow behavior is based on that of inputting from `std::istream`.
+  Equivalent conversions are also available through explicit casts to `int`, `long long`, `double`,
+  and `long double`.
 - `v.abs()` returns the absolute value of big integer `v`.
 - `a.comp(b)` returns $-1$, $0$, or $1$ depending on whether the big integers `a` and `b` compare
   less, equal, or greater, respectively.
@@ -74,6 +78,8 @@ Space Complexity:
 class BigInt {
   static const int BASE = 1000000000, BASE_DIGITS = 9;
   static const bool USE_FFT_MULT = true;
+  static_assert(10 <= BASE && BASE <= 1000000000, "BASE must be between 10 and 10^9");
+  static_assert(BASE_DIGITS > 0, "BASE must be a power of 10");
 
   using vint = std::vector<int>;
   using vint64 = std::vector<int64_t>;
@@ -358,6 +364,11 @@ class BigInt {
     ss >> res;
     return res;
   }
+
+  explicit operator int() const { return static_cast<int>(to_llong()); }
+  explicit operator long long() const { return static_cast<long long>(to_llong()); }
+  explicit operator double() const { return to_double(); }
+  explicit operator long double() const { return to_ldouble(); }
 
   int comp(const BigInt &v) const { return comp(digits, v.digits, sign, v.sign); }
 
@@ -673,5 +684,8 @@ int main() {
   assert(x.to_llong() == -6LL);
   assert(x.to_double() == -6.0);
   assert(x.to_ldouble() == -6.0);
+  assert(static_cast<int>(x) == -6);
+  assert(static_cast<long long>(x) == -6LL);
+  assert(static_cast<double>(x) == -6.0);
   return 0;
 }

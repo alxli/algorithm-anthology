@@ -4,17 +4,13 @@
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Point}
-A 2D point class template supporting epsilon comparisons. The coordinate type \inlinecode{T} defaults to \inlinecode{double}. Integer types (e.g. \inlinecode{int}) fully support all exact operations. Floating-point-only operations (\inlinecode{norm}, \inlinecode{arg}, \inlinecode{normalize}, \inlinecode{rotateCW/CCW}, \inlinecode{reflect} across a line) return coordinates of type \inlinecode{fp\_t}, which is \inlinecode{double} when \inlinecode{T} is integral and \inlinecode{T} itself otherwise.
+A 2D point class template supporting exact equality and lexicographic ordering. The coordinate type \inlinecode{T} defaults to \inlinecode{double}. Integer types (e.g. \inlinecode{int}) fully support all exact operations. Metric operations (\inlinecode{norm}, \inlinecode{arg}, \inlinecode{normalize}, \inlinecode{rotateCW/CCW}, \inlinecode{reflect} across a line) return coordinates of type \inlinecode{fp\_t}, which is \inlinecode{T} when \inlinecode{T} is floating-point and \inlinecode{double} otherwise.
 
-Exact operations (return \inlinecode{TPoint\textless{}T\textgreater{}} or \inlinecode{T}, no precision lost for integers):
-
-\begin{compactitem}
-  \item element-wise arithmetic, \inlinecode{dot()}, \inlinecode{cross()}, \inlinecode{sqnorm()}, cardinal rotations, \inlinecode{reflect(point)}, comparisons.
-\end{compactitem}
+Exact operations (return \inlinecode{TPoint\textless{}T\textgreater{}} or \inlinecode{T}, no precision lost for integers) include: element-wise arithmetic, \inlinecode{dot()}, \inlinecode{cross()}, \inlinecode{sqnorm()}, cardinal rotations, \inlinecode{reflect(point)}, equality, and lexicographic ordering. \inlinecode{operator==} and \inlinecode{operator\textless{}} are exact for every coordinate type, as required by standard algorithms and containers. \inlinecode{EQ(p, q)} compares floating-point point coordinates using \inlinecode{EPS} and remains exact for other coordinate types.
 
 Overflow warning: the exact products \inlinecode{dot()}, \inlinecode{cross()}, and \inlinecode{sqnorm()} grow like the squared coordinate magnitude. With \inlinecode{TPoint\textless{}int\textgreater{}} these overflow a 32-bit \inlinecode{int} once coordinates exceed $\sim 46000$, so use \inlinecode{PointL} (\inlinecode{TPoint\textless{}long long\textgreater{}}) for larger integer coordinates.
 
-Floating-point-only operations (return \inlinecode{TPoint\textless{}fp\_t\textgreater{}} or \inlinecode{fp\_t}):
+Metric operations (return \inlinecode{TPoint\textless{}fp\_t\textgreater{}} or \inlinecode{fp\_t}):
 
 \begin{compactitem}
   \item \inlinecode{norm()}, \inlinecode{arg()}, \inlinecode{proj()}, \inlinecode{normalize()}, \inlinecode{rotateCW()}, \inlinecode{rotateCCW()}, \inlinecode{reflect(line)}.
@@ -23,7 +19,7 @@ Floating-point-only operations (return \inlinecode{TPoint\textless{}fp\_t\textgr
 
 Implicit conversion from \inlinecode{TPoint\textless{}U\textgreater{}} to \inlinecode{TPoint\textless{}T\textgreater{}} is provided when \inlinecode{U} is integral and \inlinecode{T} is floating-point, so \inlinecode{PointI} can be passed wherever \inlinecode{PointD} is expected.
 
-Non-floating-point coordinate types such as \inlinecode{Modular} or \inlinecode{Rational} compose for the exact operations (arithmetic, \inlinecode{dot}, \inlinecode{cross}, \inlinecode{sqnorm}, comparisons): these route to exact \inlinecode{==}/\inlinecode{\textless{}} rather than epsilon comparisons. The floating-point-only operations are simply not instantiated unless called.
+Non-floating-point coordinate types such as \inlinecode{Modular} or \inlinecode{Rational} compose for the exact operations (arithmetic, \inlinecode{dot}, \inlinecode{cross}, \inlinecode{sqnorm}, comparisons, and \inlinecode{EQ}) using the coordinate type's own operators. Their metric operations convert coordinates explicitly to \inlinecode{double}; for \inlinecode{Modular}, this uses the stored representative and is not finite-field geometry.
 
 Type aliases:
 
@@ -48,6 +44,7 @@ Type aliases:
 #include <cmath>
 #include <cstdint>
 #include <ostream>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -69,8 +66,8 @@ bool LT(T a, U b) {
 
 template<typename T>
 struct TPoint {
-  // fp_t is T for floating-point types, double for integral types.
-  using fp_t = std::conditional_t<std::is_integral<T>::value, double, T>;
+  // Metric operations preserve floating-point coordinates and otherwise promote to double.
+  using fp_t = std::conditional_t<std::is_floating_point<T>::value, T, double>;
 
   T x, y;
 
@@ -84,22 +81,11 @@ struct TPoint {
       typename = std::enable_if_t<std::is_integral<U>::value && std::is_floating_point<T>::value>>
   TPoint(const TPoint<U> &p) : x(static_cast<T>(p.x)), y(static_cast<T>(p.y)) {}
 
-  bool operator==(const TPoint &p) const {
-    if constexpr (std::is_floating_point<T>::value) {
-      return EQ(x, p.x) && EQ(y, p.y);
-    }
-    return x == p.x && y == p.y;  // exact for ints and types like Modular/Rational
-  }
+  bool operator==(const TPoint &p) const { return x == p.x && y == p.y; }
+  friend bool EQ(const TPoint &a, const TPoint &b) { return EQ(a.x, b.x) && EQ(a.y, b.y); }
 
   bool operator!=(const TPoint &p) const { return !(*this == p); }
-
-  bool operator<(const TPoint &p) const {
-    if constexpr (std::is_floating_point<T>::value) {
-      return EQ(x, p.x) ? LT(y, p.y) : LT(x, p.x);
-    }
-    return x == p.x ? y < p.y : x < p.x;  // exact for ints and types like Modular/Rational
-  }
-
+  bool operator<(const TPoint &p) const { return std::tie(x, y) < std::tie(p.x, p.y); }
   bool operator>(const TPoint &p) const { return p < *this; }
   bool operator<=(const TPoint &p) const { return !(*this > p); }
   bool operator>=(const TPoint &p) const { return !(*this < p); }
@@ -189,7 +175,7 @@ struct TPoint {
   // Always returns floating-point coordinates.
   TPoint<fp_t> reflect(const TPoint &p, const TPoint &q) const {
     TPoint<fp_t> fp{(fp_t)p.x, (fp_t)p.y};
-    if (p == q) {
+    if (EQ(p, q)) {
       return TPoint<fp_t>{(fp_t)x, (fp_t)y}.reflect(fp);
     }
     TPoint<fp_t> r{(fp_t)(x - p.x), (fp_t)(y - p.y)}, s{(fp_t)(q.x - p.x), (fp_t)(q.y - p.y)};
@@ -223,10 +209,16 @@ struct TPoint {
   friend TPoint rotate270(const TPoint &p, const TPoint &q) { return p.rotate270(q); }
   friend TPoint<fp_t> rotateCW(const TPoint &p, fp_t t) { return p.rotateCW(t); }
   friend TPoint<fp_t> rotateCCW(const TPoint &p, fp_t t) { return p.rotateCCW(t); }
-  friend TPoint<fp_t> rotateCW(const TPoint &p, const TPoint &q, fp_t t) { return p.rotateCW(q, t); }
-  friend TPoint<fp_t> rotateCCW(const TPoint &p, const TPoint &q, fp_t t) { return p.rotateCCW(q, t); }
+  friend TPoint<fp_t> rotateCW(const TPoint &p, const TPoint &q, fp_t t) {
+    return p.rotateCW(q, t);
+  }
+  friend TPoint<fp_t> rotateCCW(const TPoint &p, const TPoint &q, fp_t t) {
+    return p.rotateCCW(q, t);
+  }
   friend TPoint reflect(const TPoint &p, const TPoint &q) { return p.reflect(q); }
-  friend TPoint<fp_t> reflect(const TPoint &p, const TPoint &a, const TPoint &b) { return p.reflect(a, b); }
+  friend TPoint<fp_t> reflect(const TPoint &p, const TPoint &a, const TPoint &b) {
+    return p.reflect(a, b);
+  }
 
   friend std::ostream &operator<<(std::ostream &out, const TPoint &p) {
     if constexpr (std::is_floating_point<T>::value) {
@@ -241,6 +233,11 @@ using PointL = TPoint<long long>;
 using PointD = TPoint<double>;
 using PointLD = TPoint<long double>;
 using Point = PointD;  // Default point type is double.
+
+// Can compose with numerical types from chapter 6:
+// using PointB = TPoint<BigInt<>>;
+// using PointR = TPoint<Rational<int64_t>>;
+// using PointM = TPoint<Modular<1000000007>>;
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -251,7 +248,7 @@ const double PI = acos(-1.0);
 
 int main() {
   Point p(-10, 3);
-  assert(Point(-18, 29) == p + Point(-3, 9) * 6.0 / 2.0 - Point(-1, 1));
+  assert(EQ(Point(-18, 29), p + Point(-3, 9) * 6.0 / 2.0 - Point(-1, 1)));
   assert(EQ(109, p.sqnorm()));
   assert(EQ(10.44030650891, p.norm()));
   assert(EQ(2.850135859112, p.arg()));
@@ -259,13 +256,13 @@ int main() {
   assert(EQ(0, p.cross(Point(10, -3))));
   assert(EQ(10, p.proj(Point(-10, 0))));
   assert(EQ(1, p.normalize().norm()));
-  assert(Point(-3, -10) == p.rotate90());
-  assert(Point(10, -3) == p.rotate180());
-  assert(Point(3, 10) == p.rotate270());
-  assert(Point(3, 12) == p.rotateCW(Point(1, 1), PI / 2));
-  assert(Point(1, -10) == p.rotateCCW(Point(2, 2), PI / 2));
-  assert(Point(10, -3) == p.reflect(Point(0, 0)));
-  assert(Point(-10, -3) == p.reflect(Point(-2, 0), Point(5, 0)));
+  assert(EQ(Point(-3, -10), p.rotate90()));
+  assert(EQ(Point(10, -3), p.rotate180()));
+  assert(EQ(Point(3, 10), p.rotate270()));
+  assert(EQ(Point(3, 12), p.rotateCW(Point(1, 1), PI / 2)));
+  assert(EQ(Point(1, -10), p.rotateCCW(Point(2, 2), PI / 2)));
+  assert(EQ(Point(10, -3), p.reflect(Point(0, 0))));
+  assert(EQ(Point(-10, -3), p.reflect(Point(-2, 0), Point(5, 0))));
 
   // Integer point - exact arithmetic, float-only ops return PointD.
   PointI a(3, 4), b(1, 0);
@@ -294,9 +291,11 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Line}
-A straight line in two dimensions, templated on the coordinate type \inlinecode{T} (default \inlinecode{double}). The line $ax + by + c = 0$ is stored unnormalized, so a line through integer points $(p_x, p_y)$ and $(q_x, q_y)$ keeps the integer coefficients: $a = q_y - p_y$, $b = p_x - q_x$, $c = -(a \cdot p_x + b \cdot p_y)$. Storage and the exact predicates \inlinecode{contains()}, \inlinecode{is\_parallel()}, and \inlinecode{is\_perpendicular()} therefore stay exact for integral type \inlinecode{T}. The inherently-fractional operations \inlinecode{slope()}, \inlinecode{x()}, and \inlinecode{y()} return \inlinecode{fp\_t}, which is \inlinecode{double} when \inlinecode{T} is integral and \inlinecode{T} itself otherwise.
+A straight line in two dimensions, templated on the coordinate type \inlinecode{T} (default \inlinecode{double}). The line $ax + by + c = 0$ is canonicalized by default. With \inlinecode{EXACT = true}, coefficients are divided by their Euclidean GCD and given a fixed sign; this supports built-in integers, \inlinecode{BigInt}, and \inlinecode{Rational}. With \inlinecode{EXACT = false}, coefficients are scaled to $b = 1$ when $b$ is nonzero, or to $a = 1$ for vertical lines; this supports floating-point and \inlinecode{Modular} coefficients. Thus proportional valid coefficient vectors have the same canonical representation, up to floating-point rounding.
 
-Because coefficients are not normalized to a canonical form, \inlinecode{operator==} compares lines by proportionality (whether they are the same geometric line) rather than by coefficient equality.
+Set the template flag \inlinecode{CANONICALIZE} to \inlinecode{false} to preserve the supplied coefficients. \inlinecode{EXACT} defaults to true only for built-in integral types; set it explicitly for custom types such as \inlinecode{BigInt} and \inlinecode{Rational}. The internal Euclidean GCD only requires \inlinecode{\%}, comparisons, and basic arithmetic. Calling \inlinecode{canonicalized()} returns a canonical copy. \inlinecode{operator==} always compares stored coefficients exactly, while \inlinecode{EQ(l1, l2)} canonicalizes raw lines if necessary and uses \inlinecode{EPS} for floating-point coefficients.
+
+Storage and the predicates \inlinecode{contains()}, \inlinecode{is\_parallel()}, and \inlinecode{is\_perpendicular()} stay exact for integral type \inlinecode{T}. The inherently-fractional operations \inlinecode{slope()}, \inlinecode{x()}, and \inlinecode{y()} return \inlinecode{fp\_t}, which is \inlinecode{T} when \inlinecode{T} is floating-point and \inlinecode{double} otherwise.
 
 Operations include \inlinecode{horizontal()}, \inlinecode{vertical()}, \inlinecode{slope()}, evaluating $y$ at some $x$ with \inlinecode{y()} (and vice versa with \inlinecode{x()}), checking if a point falls on the line with \inlinecode{contains()}, checking if another line is parallel or perpendicular with \inlinecode{is\_parallel()} or \inlinecode{is\_perpendicular()}, and finding the \inlinecode{parallel()} or \inlinecode{perpendicular()} line through a point.
 
@@ -312,7 +311,12 @@ Type aliases:
   \item \inlinecode{Line = LineD}: default line type is double
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(1)$ per call to the constructor and all other operations.
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(\log C)$ per integral canonicalizing constructor or call to \inlinecode{canonicalize()}, where $C$ is the largest absolute coefficient.
+  \item $O(1)$ per call to all other operations.
+\end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -345,33 +349,78 @@ bool EQ(T a, U b) {
 template<typename Pt>
 using if_point = decltype(std::declval<const Pt &>().x, std::declval<const Pt &>().y, void());
 
-template<typename T>
+template<typename T, bool CANONICALIZE = true, bool EXACT = std::is_integral<T>::value>
 struct TLine {
-  // fp_t is T for floating-point types, double for integral types.
-  using fp_t = std::conditional_t<std::is_integral<T>::value, double, T>;
+  // Slope and solve operations preserve floating-point coordinates and otherwise promote to double.
+  using fp_t = std::conditional_t<std::is_floating_point<T>::value, T, double>;
 
   T a, b, c;
 
+  void canonicalize() {
+    if constexpr (EXACT) {
+      auto gcd = [](T x, T y) {
+        if (x < T(0)) x = -x;
+        if (y < T(0)) y = -y;
+        while (y != T(0)) {
+          x %= y;
+          std::swap(x, y);
+        }
+        return x;
+      };
+      T g = gcd(a, gcd(b, c));
+      if (g != 0) {
+        a /= g;
+        b /= g;
+        c /= g;
+      }
+      if (a < 0 || (a == 0 && b < 0)) {
+        a = -a;
+        b = -b;
+        c = -c;
+      }
+    } else if (!EQ(b, T(0))) {
+      a /= b;
+      c /= b;
+      b = T(1);
+    } else if (!EQ(a, T(0))) {
+      c /= a;
+      a = T(1);
+      b = T(0);
+    }
+  }
+
   TLine() : a(0), b(0), c(0) {}  // Invalid or uninitialized line.
-  TLine(T a, T b, T c) : a(a), b(b), c(c) {}
+
+  TLine(T a, T b, T c) : a(a), b(b), c(c) {
+    if constexpr (CANONICALIZE) canonicalize();
+  }
 
   // Line through two points. Coefficients are exact (type T) for integer points.
   template<typename Pt, typename = if_point<Pt>>
-  TLine(const Pt &p, const Pt &q) : a(q.y - p.y), b(p.x - q.x), c(-(a * p.x + b * p.y)) {}
+  TLine(const Pt &p, const Pt &q) : a(q.y - p.y), b(p.x - q.x), c(-(a * p.x + b * p.y)) {
+    if constexpr (CANONICALIZE) canonicalize();
+  }
 
   // Line of a given slope through a point. Intended for floating-point T (a generic slope
   // produces non-integer coefficients), so this constructor is disabled for integer T.
   template<
       class Pt, typename = if_point<Pt>, typename U = T,
       class = std::enable_if_t<std::is_floating_point<U>::value>>
-  TLine(fp_t slope, const Pt &p) : a(-slope), b(1), c(slope * p.x - p.y) {}
-
-  // Two lines are equal iff their coefficient vectors are proportional (the same line).
-  bool operator==(const TLine &l) const {
-    return EQ(a * l.b, l.a * b) && EQ(b * l.c, l.b * c) && EQ(a * l.c, l.a * c);
+  TLine(fp_t slope, const Pt &p) : a(-slope), b(1), c(slope * p.x - p.y) {
+    if constexpr (CANONICALIZE) canonicalize();
   }
 
+  TLine<T, true, EXACT> canonicalized() const { return TLine<T, true, EXACT>(a, b, c); }
+
+  bool operator==(const TLine &l) const { return a == l.a && b == l.b && c == l.c; }
   bool operator!=(const TLine &l) const { return !(*this == l); }
+
+  friend bool EQ(const TLine &l1, const TLine &l2) {
+    if constexpr (CANONICALIZE) {
+      return EQ(l1.a, l2.a) && EQ(l1.b, l2.b) && EQ(l1.c, l2.c);
+    }
+    return EQ(l1.canonicalized(), l2.canonicalized());
+  }
 
   // Returns whether the line is a valid line (not both a and b zero).
   bool valid() const { return !(EQ(a, 0) && EQ(b, 0)); }
@@ -423,6 +472,10 @@ using LineL = TLine<int64_t>;
 using LineD = TLine<double>;
 using LineLD = TLine<long double>;
 using Line = LineD;  // Default line type is double.
+
+// Can compose with numerical types from chapter 6:
+// using LineB = TLine<BigInt<>, true, true>;
+// using LineR = TLine<Rational<int64_t>, true, true>;
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -446,12 +499,11 @@ int main() {
   Line perp = Line(2, -5, -8).perpendicular(Point(-6, -2));
   assert(l.is_parallel(para) && l.is_perpendicular(perp));
   assert(l.slope() == 0.4);
-  // operator== is proportionality-based: para is the same line as -0.4x + y - 0.4 = 0.
-  assert(para == Line(-0.4, 1, -0.4));
-  assert(perp == Line(2.5, 1, 17));
+  assert(EQ(para, Line(-0.4, 1, -0.4)));
+  assert(EQ(perp, Line(2.5, 1, 17)));
   assert(l.contains(Point(1.5, -1)));  // 2(1.5) - 5(-1) - 8 = 0.
 
-  // Integer line through integer points - exact coefficients and predicates.
+  // Integer line through integer points - exact canonical coefficients and predicates.
   LineI il(PointI(0, 0), PointI(2, 1));  // a=1, b=-2, c=0  ->  x - 2y = 0
   assert(il.a == 1 && il.b == -2 && il.c == 0);
   assert(il.contains(PointI(4, 2)));  // exact integer check
@@ -459,11 +511,23 @@ int main() {
   assert(il.is_parallel(LineI(PointI(1, 1), PointI(3, 2))));        // both slope 1/2
   assert(il.is_perpendicular(LineI(PointI(0, 0), PointI(1, -2))));  // dot of normals = 0
   assert(il.slope() == 0.5);                                        // fp_t result
+
+  LineI reduced(2, -4, -6);
+  assert(reduced == LineI(1, -2, -3));
+
+  using RawLine = TLine<double, false>;
+  RawLine raw(2, -5, -8), scaled(-0.4, 1, 1.6);
+  assert(raw != scaled);    // Stored coefficients differ.
+  assert(EQ(raw, scaled));  // Canonicalized copies represent the same line.
+  RawLine canonical = raw;
+  canonical.canonicalize();
+  assert(canonical == scaled);
+  assert(EQ(raw.canonicalized(), Line(-0.4, 1, 1.6)));
   return 0;
 }
 \end{lstlisting}
 \subsection{Circle}
-A circle in two dimensions supporting epsilon comparisons. The circle centered at $(h, k)$ is represented by the relation $(x - h)^2 + (y - k)^2 = r^2$, where the radius $r$ is normalized to a nonnegative number.
+A circle in two dimensions with exact stored-value equality and epsilon-aware geometric predicates. The circle centered at $(h, k)$ is represented by the relation $(x - h)^2 + (y - k)^2 = r^2$, where the radius $r$ is normalized to a nonnegative number.
 
 This implementation stores and computes circle parameters in \inlinecode{double}. Point-accepting constructors and predicates are templated on the point type \inlinecode{Pt} and only read \inlinecode{.x}/\inlinecode{.y}, so they accept \inlinecode{Point}/\inlinecode{PointD}/\inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields.
 
@@ -475,7 +539,7 @@ This implementation stores and computes circle parameters in \inlinecode{double}
   \item \inlinecode{Circle(a, b)} constructs the circle whose diameter is segment \inlinecode{a}-\inlinecode{b}.
   \item \inlinecode{Circle(a, b, c)} constructs the circumcircle through non-collinear points \inlinecode{a}, \inlinecode{b}, and \inlinecode{c}, throwing if the points are collinear.
   \item \inlinecode{Circle(a, b, r)} constructs one circle of radius \inlinecode{abs(r)} passing through points \inlinecode{a} and \inlinecode{b}, throwing if no finite circle is determined by the inputs.
-  \item \inlinecode{operator==} and \inlinecode{operator!=} compare centers and radii using \inlinecode{EPS}.
+  \item \inlinecode{operator==} and \inlinecode{operator!=} compare stored centers and radii exactly; \inlinecode{EQ(a, b)} compares them using \inlinecode{EPS}.
   \item \inlinecode{contains(p)} returns whether point \inlinecode{p} lies inside or on the circle.
   \item \inlinecode{on\_edge(p)} returns whether point \inlinecode{p} lies on the circle boundary.
   \item \inlinecode{incircle(a, b, c)} returns the circle inscribed in triangle \inlinecode{abc}.
@@ -588,8 +652,12 @@ struct Circle {
     // The other answer is (h, k) = (mx - v*(a.y - b.y), my - v*(b.x - a.x)).
   }
 
-  bool operator==(const Circle &c) const { return EQ(h, c.h) && EQ(k, c.k) && EQ(r, c.r); }
+  bool operator==(const Circle &c) const { return h == c.h && k == c.k && r == c.r; }
   bool operator!=(const Circle &c) const { return !(*this == c); }
+
+  friend bool EQ(const Circle &a, const Circle &b) {
+    return EQ(a.h, b.h) && EQ(a.k, b.k) && EQ(a.r, b.r);
+  }
 
   template<typename Pt>
   bool contains(const Pt &p) const {
@@ -629,13 +697,16 @@ Circle incircle(const Pt &a, const Pt &b, const Pt &c) {
 
 // Returns +1 if point d lies strictly inside the circle through a, b, c, 0 if d lies exactly on
 // it, or -1 if d is outside. This uses a determinant (no square root), so it is exact for integer
-// coordinates: the result is computed in `int64_t` for integral inputs (watch overflow for large
-// coordinates, where the determinant is degree four) and `long double` otherwise. The points a, b,
-// c must not be collinear; the result does not depend on their orientation.
+// coordinates: built-in integral inputs are widened to `int64_t`, custom exact types retain their
+// coordinate type, and floating-point inputs use `long double`. Watch overflow for large
+// fixed-width coordinates, since the determinant is degree four. The points a, b, c must not be
+// collinear; the result does not depend on their orientation.
 template<typename Pt>
 int in_circumcircle(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
-  using CoordT = decltype(a.x + a.x);
-  using W = std::conditional_t<std::is_integral<CoordT>::value, int64_t, long double>;
+  using T = decltype(a.x + a.x);
+  using W = std::conditional_t<
+      std::is_floating_point<T>::value, long double,
+      std::conditional_t<std::is_integral<T>::value, int64_t, T>>;
   W adx = (W)a.x - d.x, ady = (W)a.y - d.y;
   W bdx = (W)b.x - d.x, bdy = (W)b.y - d.y;
   W cdx = (W)c.x - d.x, cdy = (W)c.y - d.y;
@@ -643,8 +714,8 @@ int in_circumcircle(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
           (bdx * bdx + bdy * bdy) * (cdx * ady - adx * cdy) +
           (cdx * cdx + cdy * cdy) * (adx * bdy - bdx * ady);
   W orient = ((W)b.x - a.x) * ((W)c.y - a.y) - ((W)b.y - a.y) * ((W)c.x - a.x);
-  W val = orient > 0 ? det : -det;
-  return val > 0 ? 1 : (val < 0 ? -1 : 0);
+  W val = W(0) < orient ? det : -det;
+  return W(0) < val ? 1 : (val < W(0) ? -1 : 0);
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -664,17 +735,17 @@ struct PointI {
 
 int main() {
   Circle c(-2, 5, sqrt(10));
-  assert(c == Circle(Point(-2, 5), sqrt(10)));
-  assert(c == Circle(Point(1, 6), Point(-5, 4)));
-  assert(c == Circle(Point(-3, 2), Point(-3, 8), Point(-1, 8)));
-  assert(c == incircle(Point(-12, 5), Point(3, 0), Point(0, 9)));
+  assert(EQ(c, Circle(Point(-2, 5), sqrt(10))));
+  assert(EQ(c, Circle(Point(1, 6), Point(-5, 4))));
+  assert(EQ(c, Circle(Point(-3, 2), Point(-3, 8), Point(-1, 8))));
+  assert(EQ(c, incircle(Point(-12, 5), Point(3, 0), Point(0, 9))));
   assert(c.contains(Point(-2, 8)) && !c.contains(Point(-2, 9)));
   assert(c.on_edge(Point(-1, 2)) && !c.on_edge(Point(-1.01, 2)));
 
   // Integer-coordinate points are accepted; the Circle is computed in double.
-  assert(c == Circle(PointI(1, 6), PointI(-5, 4)));
-  assert(c == Circle(PointI(-3, 2), PointI(-3, 8), PointI(-1, 8)));
-  assert(c == incircle(PointI(-12, 5), PointI(3, 0), PointI(0, 9)));
+  assert(EQ(c, Circle(PointI(1, 6), PointI(-5, 4))));
+  assert(EQ(c, Circle(PointI(-3, 2), PointI(-3, 8), PointI(-1, 8))));
+  assert(EQ(c, incircle(PointI(-12, 5), PointI(3, 0), PointI(0, 9))));
   assert(c.contains(PointI(-2, 8)) && !c.contains(PointI(-2, 9)));
   assert(c.on_edge(PointI(-1, 2)));
 
@@ -911,7 +982,7 @@ int rectangle_intersection(
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
 };
 
 int main() {
@@ -924,6 +995,7 @@ int main() {
   assert(!point_in_rectangle(Point(-1, -2), Point(3, -3), Point(0, -1)));
 
   Point p, q;
+  // Output coordinates come directly from input coordinates via min/max, so exact equality is safe.
   assert(-1 == rectangle_intersection(Point(0, 0), Point(1, 1), Point(2, 2), Point(3, 3)));
   assert(0 == rectangle_intersection(Point(1, 1), Point(7, 7), Point(5, 5), Point(0, 0), &p, &q));
   assert(p == Point(1, 1) && q == Point(5, 5));
@@ -1056,7 +1128,8 @@ int turn(const Pt &a, const Pt &o, const Pt &b) {
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  friend bool EQ(const Point &a, const Point &b) { return EQ(a.x, b.x) && EQ(a.y, b.y); }
 };
 
 #include <cassert>
@@ -1064,8 +1137,8 @@ struct Point {
 int main() {
   assert(EQ(123, reduce_deg(-8 * 360 + 123)));
   assert(EQ(1.2345, reduce_rad(2 * PI * 8 + 1.2345)));
-  assert(polar_point<Point>(4, PI) == Point(-4, 0));
-  assert(polar_point<Point>(4, -PI / 2) == Point(0, -4));
+  assert(EQ(polar_point<Point>(4, PI), Point(-4, 0)));
+  assert(EQ(polar_point<Point>(4, -PI / 2), Point(0, -4)));
   assert(EQ(45, polar_angle(Point(5, 5)) * RAD));
   assert(EQ(135 * DEG, polar_angle(Point(-4, 4))));
   assert(EQ(90 * DEG, angle(Point(5, 0), Point(0, 5), Point(-5, 0))));
@@ -1271,7 +1344,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Line Intersection}
-Intersection calculations in two dimensions for straight lines and line segments. The functions are templated on the point type \inlinecode{Pt}: pass any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields (for example \inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1, or the local example struct) for which \inlinecode{operator\textless{}} orders points lexicographically. Point outputs are written through a caller-supplied pointer whose type is deduced, so the output point type may differ from the input -- e.g. integer endpoints with a floating-point output point.
+Intersection calculations in two dimensions for straight lines and line segments. The functions are templated on the point type \inlinecode{Pt}: pass any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields (for example \inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1, or the local example struct) for which \inlinecode{operator\textless{}} orders points lexicographically using exact coordinate comparisons. Point outputs are written through a caller-supplied pointer whose type is deduced, so the output point type may differ from the input -- e.g. integer endpoints with a floating-point output point.
 
 \inlinecode{seg\_intersection()} has a detection-only overload (called without the output pointers) whose calculations are exact when \inlinecode{Pt} has integer coordinates.
 
@@ -1499,9 +1572,10 @@ Pt closest_point(double a, double b, double c, const Pt &p) {
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  friend bool EQ(const Point &a, const Point &b) { return EQ(a.x, b.x) && EQ(a.y, b.y); }
   bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return LT(x, p.x) || (EQ(x, p.x) && LT(y, p.y)); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
   bool operator>(const Point &p) const { return p < *this; }
 };
 
@@ -1518,30 +1592,30 @@ int main() {
   Point p, q;
 
   assert(line_intersection(-1.0, 1.0, 0.0, 1.0, 1.0, -3.0, &p) == 0);
-  assert(p == Point(1.5, 1.5));
+  assert(EQ(p, Point(1.5, 1.5)));
   assert(line_intersection(Point(0, 0), Point(1, 1), Point(0, 4), Point(4, 0), &p) == 0);
-  assert(p == Point(2, 2));
+  assert(EQ(p, Point(2, 2)));
 
   auto test = [&](double a, double b, double c, double d, double e, double f, double g, double h) {
     return seg_intersection(Point(a, b), Point(c, d), Point(e, f), Point(g, h), &p, &q);
   };
-  assert(0 == test(-4, 0, 4, 0, 0, -4, 0, 4) && p == Point(0, 0));
-  assert(0 == test(0, 0, 10, 10, 2, 2, 16, 4) && p == Point(2, 2));
-  assert(0 == test(-2, 2, -2, -2, -2, 0, 0, 0) && p == Point(-2, 0));
-  assert(0 == test(0, 4, 4, 4, 4, 0, 4, 8) && p == Point(4, 4));
+  assert(0 == test(-4, 0, 4, 0, 0, -4, 0, 4) && EQ(p, Point(0, 0)));
+  assert(0 == test(0, 0, 10, 10, 2, 2, 16, 4) && EQ(p, Point(2, 2)));
+  assert(0 == test(-2, 2, -2, -2, -2, 0, 0, 0) && EQ(p, Point(-2, 0)));
+  assert(0 == test(0, 4, 4, 4, 4, 0, 4, 8) && EQ(p, Point(4, 4)));
   assert(1 == test(10, 10, 0, 0, 2, 2, 6, 6));
-  assert(p == Point(2, 2) && q == Point(6, 6));
+  assert(EQ(p, Point(2, 2)) && EQ(q, Point(6, 6)));
   assert(-1 == test(6, 8, 8, 10, 12, 12, 4, 4));
   assert(-1 == test(-4, 2, -8, 8, 0, 0, -4, 6));
 
-  assert(Point(2.5, 2.5) == closest_point(-1.0, -1.0, 5.0, Point(0, 0)));
-  assert(Point(3, 0) == closest_point(1.0, 0.0, -3.0, Point(0, 0)));
+  assert(EQ(Point(2.5, 2.5), closest_point(-1.0, -1.0, 5.0, Point(0, 0))));
+  assert(EQ(Point(3, 0), closest_point(1.0, 0.0, -3.0, Point(0, 0))));
 
   // Detection-only with integer coordinates (exact, no float needed).
   assert(seg_intersection(PointI(0, 0), PointI(4, 4), PointI(0, 4), PointI(4, 0)) == 0);
   assert(seg_intersection(PointI(0, 0), PointI(1, 0), PointI(2, 0), PointI(3, 0)) == -1);
   assert(seg_intersection(PointI(0, 0), PointI(4, 4), PointI(0, 4), PointI(4, 0), &p) == 0);
-  assert(p == Point(2, 2));
+  assert(EQ(p, Point(2, 2)));
 
   // TOUCH_IS_INTERSECT = false treats endpoint-only contact as non-intersecting. The T-junction
   // and shared-endpoint cases below intersect by default but are rejected when the flag is off.
@@ -1632,7 +1706,11 @@ struct Line {
     }
   }
 
-  bool operator==(const Line &l) const { return EQ(a, l.a) && EQ(b, l.b) && EQ(c, l.c); }
+  bool operator==(const Line &l) const { return a == l.a && b == l.b && c == l.c; }
+
+  friend bool EQ(const Line &l1, const Line &l2) {
+    return EQ(l1.a, l2.a) && EQ(l1.b, l2.b) && EQ(l1.c, l2.c);
+  }
 };
 
 template<typename Pt>
@@ -1753,34 +1831,35 @@ double intersection_area(const Circle &c1, const Circle &c2) {
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  friend bool EQ(const Point &a, const Point &b) { return EQ(a.x, b.x) && EQ(a.y, b.y); }
 };
 
 int main() {
   Line l1, l2;
   assert(-1 == tangent(Circle(0, 0, 4), Point(1, 1), &l1, &l2));
   assert(0 == tangent(Circle(0, 0, sqrt(2)), Point(1, 1), &l1, &l2));
-  assert(l1 == Line(-1, -1, 2));
+  assert(EQ(l1, Line(-1, -1, 2)));
   assert(1 == tangent(Circle(0, 0, 2), Point(2, 2), &l1, &l2));
-  assert(l1 == Line(0, -2, 4));
-  assert(l2 == Line(2, 0, -4));
+  assert(EQ(l1, Line(0, -2, 4)));
+  assert(EQ(l2, Line(2, 0, -4)));
 
   Point p, q;
   assert(-1 == intersection(Circle(1, 1, 3), Line(5, 3, -30), &p, &q));
   assert(0 == intersection(Circle(1, 1, 3), Line(0, 1, -4), &p, &q));
-  assert(p == Point(1, 4));
+  assert(EQ(p, Point(1, 4)));
   assert(1 == intersection(Circle(1, 1, 3), Line(0, 1, -1), &p, &q));
-  assert(p == Point(4, 1));
-  assert(q == Point(-2, 1));
+  assert(EQ(p, Point(4, 1)));
+  assert(EQ(q, Point(-2, 1)));
 
   assert(-2 == intersection(Circle(1, 1, 1), Circle(0, 0, 3), &p, &q));
   assert(-1 == intersection(Circle(0, 0, 3), Circle(1, 1, 1), &p, &q));
   assert(0 == intersection(Circle(5, 0, 4), Circle(-5, 0, 4), &p, &q));
   assert(1 == intersection(Circle(-5, 0, 5), Circle(5, 0, 5), &p, &q));
-  assert(p == Point(0, 0));
+  assert(EQ(p, Point(0, 0)));
   assert(2 == intersection(Circle(-0.5, 0, 1), Circle(0.5, 0, 1), &p, &q));
-  assert(p == Point(0, -sqrt(3) / 2));
-  assert(q == Point(0, sqrt(3) / 2));
+  assert(EQ(p, Point(0, -sqrt(3) / 2)));
+  assert(EQ(q, Point(0, sqrt(3) / 2)));
 
   // Each circle passes through the other's center.
   double r = 3, a = intersection_area(Circle(-r / 2, 0, r), Circle(r / 2, 0, r));
@@ -1826,7 +1905,8 @@ bool LT(T a, U b) {
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  friend bool EQ(const Point &a, const Point &b) { return EQ(a.x, b.x) && EQ(a.y, b.y); }
   Point operator+(const Point &p) const { return {x + p.x, y + p.y}; }
   Point operator-(const Point &p) const { return {x - p.x, y - p.y}; }
   Point operator*(double k) const { return {x * k, y * k}; }
@@ -1880,17 +1960,21 @@ int main() {
   Point a(0, 0), b(4, 0);
   auto ext = circle_tangents(a, 1, b, 1);
   assert(ext.size() == 2);
-  assert(ext[0].first == Point(0, -1) && ext[0].second == Point(4, -1));
-  assert(ext[1].first == Point(0, 1) && ext[1].second == Point(4, 1));
+  assert(EQ(ext[0].first, Point(0, -1)) && EQ(ext[0].second, Point(4, -1)));
+  assert(EQ(ext[1].first, Point(0, 1)) && EQ(ext[1].second, Point(4, 1)));
 
   auto in = circle_tangents(a, 1, b, 1, true);
   assert(in.size() == 2);
-  assert(in[0].first == Point(0.5, -sqrt(3.0) / 2) && in[0].second == Point(3.5, sqrt(3.0) / 2));
-  assert(in[1].first == Point(0.5, sqrt(3.0) / 2) && in[1].second == Point(3.5, -sqrt(3.0) / 2));
+  assert(
+      EQ(in[0].first, Point(0.5, -sqrt(3.0) / 2)) && EQ(in[0].second, Point(3.5, sqrt(3.0) / 2))
+  );
+  assert(
+      EQ(in[1].first, Point(0.5, sqrt(3.0) / 2)) && EQ(in[1].second, Point(3.5, -sqrt(3.0) / 2))
+  );
 
   auto point_to_circle = circle_tangents(Point(0, 0), 0, Point(2, 0), 1);
   assert(point_to_circle.size() == 2);
-  assert(point_to_circle[0].first == Point(0, 0));
+  assert(EQ(point_to_circle[0].first, Point(0, 0)));
 
   assert(circle_tangents(Point(0, 0), 5, Point(1, 0), 1).empty());        // contained
   assert(circle_tangents(Point(0, 0), 2, Point(3, 0), 2, true).empty());  // overlapping
@@ -2015,7 +2099,8 @@ using namespace std;
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  friend bool EQ(const Point &a, const Point &b) { return EQ(a.x, b.x) && EQ(a.y, b.y); }
   bool operator!=(const Point &p) const { return !(*this == p); }
   bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
   bool operator>(const Point &p) const { return p < *this; }
@@ -2047,7 +2132,7 @@ int main() {
   std::mt19937 rng(1234567);
   std::shuffle(v.begin(), v.end(), rng);
   Point c = mean_center(v.begin(), v.end());
-  assert(EQ(c.x, 0.6) && EQ(c.y, 1.8));
+  assert(EQ(c, Point(0.6, 1.8)));
   sort(v.begin(), v.end(), [c](const Point &a, const Point &b) { return cw_comp(a, b, c); });
   cout << "Clockwise vertices: ";
   for (const auto &p : v) {
@@ -2612,7 +2697,7 @@ using namespace std;
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
 };
 
 struct PointI {
@@ -2756,8 +2841,6 @@ auto closest_pair(
 #include <vector>
 using namespace std;
 
-const double EPS = 1e-9;
-
 bool EQ(double a, double b) {
   return fabs(a - b) < 1e-9;
 }
@@ -2765,7 +2848,7 @@ bool EQ(double a, double b) {
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
   bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
 };
 
@@ -3134,7 +3217,8 @@ bool LT(T a, U b) {
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  friend bool EQ(const Point &a, const Point &b) { return EQ(a.x, b.x) && EQ(a.y, b.y); }
 };
 
 template<typename PtA, typename PtB, typename PtO>
@@ -3200,22 +3284,29 @@ struct PointI {
   PointI(int x = 0, int y = 0) : x(x), y(y) {}
 };
 
+bool EQ(const vector<Point> &a, const vector<Point> &b) {
+  return a.size() == b.size() &&
+         equal(a.begin(), a.end(), b.begin(), [](const Point &p, const Point &q) {
+           return EQ(p, q);
+         });
+}
+
 int main() {
   {
     vector<Point> v{{1, 3}, {2, 2}, {2, 1}, {0, 0}, {-1, 3}};
     // Cut using the vertical line through (0, 0).
     vector<Point> c{{-1, 3}, {0, 3}, {0, 0}};
-    assert(convex_cut(v.begin(), v.end(), Point(0, 0), Point(0, 1)) == c);
+    assert(EQ(convex_cut(v.begin(), v.end(), Point(0, 0), Point(0, 1)), c));
   }
   {  // On a non-convex input, the result may be multiple disjoint polygons!
     vector<Point> v{{0, 0}, {2, 2}, {0, 4}, {3, 4}, {3, 0}};
     vector<Point> c{{1, 0}, {0, 0}, {1, 1}, {1, 3}, {0, 4}, {1, 4}};
-    assert(convex_cut(v.begin(), v.end(), Point(1, 0), Point(1, 4)) == c);
+    assert(EQ(convex_cut(v.begin(), v.end(), Point(1, 0), Point(1, 4)), c));
   }
   {
     vector<PointI> v{{0, 0}, {4, 0}, {4, 4}, {0, 4}};
     vector<Point> c{{0, 4}, {0, 0}, {2, 0}, {2, 4}};
-    assert(convex_cut(v.begin(), v.end(), PointI(2, 0), PointI(2, 4)) == c);
+    assert(EQ(convex_cut(v.begin(), v.end(), PointI(2, 0), PointI(2, 4)), c));
   }
   return 0;
 }
@@ -3228,6 +3319,8 @@ Given a list of directed lines, compute the convex polygon contained in every le
   \item If the intersection is empty, the function returns an empty vector.
   \item If the true intersection is unbounded, the returned polygon is not meaningful. Add explicit bounding-box half-planes when a bounded polygon is required.
 \end{compactitem}
+
+Angles are sorted exactly to satisfy \inlinecode{sort}'s ordering requirements. EPS is then used outside the comparator to group parallel directions and retain only the tightest half-plane in each group.
 
 \textbf{Time Complexity}: $O(n \log n)$, where $n$ is the number of half-planes.
 
@@ -3257,7 +3350,8 @@ bool LT(T a, U b) {
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  friend bool EQ(const Point &a, const Point &b) { return EQ(a.x, b.x) && EQ(a.y, b.y); }
   Point operator+(const Point &p) const { return {x + p.x, y + p.y}; }
   Point operator-(const Point &p) const { return {x - p.x, y - p.y}; }
   Point operator*(double k) const { return {x * k, y * k}; }
@@ -3276,12 +3370,7 @@ struct HalfPlane {
     double t = h.dir.cross(p - h.p) / dir.cross(h.dir);
     return p + dir * t;
   }
-  bool operator<(const HalfPlane &h) const {
-    if (!EQ(ang, h.ang)) {
-      return ang < h.ang;
-    }
-    return dir.cross(h.p - p) < 0;  // tighter half-plane first among parallel lines
-  }
+  bool operator<(const HalfPlane &h) const { return ang < h.ang; }
 };
 
 std::vector<Point> half_plane_intersection(std::vector<HalfPlane> planes) {
@@ -3289,6 +3378,9 @@ std::vector<Point> half_plane_intersection(std::vector<HalfPlane> planes) {
   std::vector<HalfPlane> unique;
   for (const HalfPlane &h : planes) {
     if (!unique.empty() && EQ(unique.back().dir.cross(h.dir), 0)) {
+      if (unique.back().dir.cross(h.p - unique.back().p) > 0) {
+        unique.back() = h;
+      }
       continue;
     }
     unique.push_back(h);
@@ -3353,6 +3445,10 @@ int main() {
   assert(square.size() == 4);
   assert(EQ(polygon_area(square), 16));
 
+  auto tighter = box;
+  tighter.push_back(HalfPlane(Point(0, 1), Point(4, 1)));  // y >= 1
+  assert(EQ(polygon_area(half_plane_intersection(tighter)), 12));
+
   box.push_back(HalfPlane(Point(2, 0), Point(2, 4)));  // x <= 2
   auto rect = half_plane_intersection(box);
   assert(rect.size() == 4);
@@ -3396,7 +3492,8 @@ bool EQ(T a, U b) {
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  friend bool EQ(const Point &a, const Point &b) { return EQ(a.x, b.x) && EQ(a.y, b.y); }
   Point operator+(const Point &p) const { return {x + p.x, y + p.y}; }
   Point operator-(const Point &p) const { return {x - p.x, y - p.y}; }
   double cross(const Point &p) const { return x * p.y - y * p.x; }
@@ -3411,7 +3508,7 @@ double polygon_area_2x(const std::vector<Point> &p) {
 }
 
 std::vector<Point> normalize(std::vector<Point> p) {
-  while (p.size() > 1 && p.front() == p.back()) {
+  while (p.size() > 1 && EQ(p.front(), p.back())) {
     p.pop_back();
   }
   if (p.size() <= 1) {
@@ -3436,7 +3533,7 @@ std::vector<Point> remove_collinear(std::vector<Point> p) {
     while (res.size() >= 2 && EQ((res.back() - res[res.size() - 2]).cross(q - res.back()), 0)) {
       res.pop_back();
     }
-    if (res.empty() || !(q == res.back())) {
+    if (res.empty() || !EQ(q, res.back())) {
       res.push_back(q);
     }
   }
@@ -3699,7 +3796,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
       }
     }
     std::sort(events.begin(), events.end(), [](const Event &e1, const Event &e2) {
-      if (!EQ(e1.y, e2.y)) {
+      if (e1.y != e2.y) {
         return e1.y < e2.y;
       }
       return e1.mask_delta < e2.mask_delta;
@@ -3745,7 +3842,7 @@ using namespace std;
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
   bool operator!=(const Point &p) const { return !(*this == p); }
   bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
 };
@@ -3891,7 +3988,7 @@ using namespace std;
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
   bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
 };
 
@@ -3933,6 +4030,8 @@ This implementation produces one valid triangulation using the Guibas-Stolfi div
   \item \inlinecode{delaunay\_triangulation(pts)} sorts \inlinecode{pts} lexicographically and removes duplicate points in place (so the input vector is modified), then returns the triangles of one Delaunay triangulation as a vector of counterclockwise-oriented vertex triples (\inlinecode{std::tuple}) of the input point type. If fewer than three non-collinear unique points remain, the result is empty.
 \end{compactitem}
 
+The point type must provide exact lexicographic \inlinecode{operator\textless{}}; sorting and duplicate removal requires this strict ordering rather than epsilon equality.
+
 All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation. The in-circle test is a degree-4 polynomial in the coordinates and dominates the overflow budget: a 64-bit integer coordinate type stays exact up to $|C| \approx 1.4 \times 10^4$, where $C$ is the coordinate magnitude. For floating-point coordinates the predicates are subject to the usual rounding error.
 
 \textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the number of input points.
@@ -3966,7 +4065,9 @@ template<typename T>
 struct Point {
   T x, y;
   Point(T x = 0, T y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  friend bool EQ(const Point &a, const Point &b) { return EQ(a.x, b.x) && EQ(a.y, b.y); }
+  bool operator<(const Point &p) const { return std::tie(x, y) < std::tie(p.x, p.y); }
 };
 
 template<typename T>
@@ -4150,22 +4251,20 @@ template<typename Pt>
 auto delaunay_triangulation(std::vector<Pt> &p) {
   using T = decltype(Pt::x);
   using Triangle = std::tuple<Pt, Pt, Pt>;
-  // Forgo using epsilon comparisons here, since std::sort needs a strict weak ordering to avoid
-  // unpredictably sorting/deduping near-coincident points.
-  auto ptcmp = [](const Pt &a, const Pt &b) { return a.x == b.x ? a.y < b.y : a.x < b.x; };
   // Rotates triangle vertices so that the lexicographically smallest comes first, preserving the
   // cyclic (counterclockwise) order, to give each triangle a canonical, comparable representation.
-  auto canonical = [&](const Pt &a, const Pt &b, const Pt &c) -> Triangle {
-    if (ptcmp(b, a) && ptcmp(b, c)) {
+  auto canonical = [](const Pt &a, const Pt &b, const Pt &c) -> Triangle {
+    if (b < a && b < c) {
       return {b, c, a};
     }
-    if (ptcmp(c, a) && ptcmp(c, b)) {
+    if (c < a && c < b) {
       return {c, a, b};
     }
     return {a, b, c};
   };
-  std::sort(p.begin(), p.end(), ptcmp);
-  p.erase(std::unique(p.begin(), p.end()), p.end());
+  std::sort(p.begin(), p.end());
+  auto same_point = [](const Pt &a, const Pt &b) { return !(a < b) && !(b < a); };
+  p.erase(std::unique(p.begin(), p.end(), same_point), p.end());
   std::vector<Triangle> res;
   if (p.size() < 3) {
     return res;
@@ -4187,17 +4286,7 @@ auto delaunay_triangulation(std::vector<Pt> &p) {
       res.push_back(canonical(face[0], face[1], face[2]));
     }
   }
-  std::sort(res.begin(), res.end(), [&](const Triangle &t1, const Triangle &t2) {
-    const auto &[a1, b1, c1] = t1;
-    const auto &[a2, b2, c2] = t2;
-    if (ptcmp(a1, a2) || (!ptcmp(a2, a1) && ptcmp(b1, b2))) {
-      return true;
-    }
-    if (ptcmp(a2, a1) || (!ptcmp(a1, a2) && ptcmp(b2, b1))) {
-      return false;
-    }
-    return ptcmp(c1, c2);
-  });
+  std::sort(res.begin(), res.end());
   return res;
 }
 \end{lstlisting}
@@ -4343,7 +4432,7 @@ int main() {
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{3D Point}
-A 3D point class template supporting vector arithmetic, dot and cross products, distances, angles, unit vectors, normals, and rotation about an axis. Integer coordinates are suitable for exact algebraic predicates (\inlinecode{dot}, \inlinecode{cross}, \inlinecode{sqnorm}) as long as intermediate products do not overflow; metric operations return floating-point values.
+A 3D point class template supporting vector arithmetic, dot and cross products, distances, angles, unit vectors, normals, and rotation about an axis. Point equality and ordering are exact, while \inlinecode{EQ(p, q)} provides epsilon equality for floating-point coordinates. Integer coordinates are suitable for exact algebraic predicates (\inlinecode{dot}, \inlinecode{cross}, \inlinecode{sqnorm}) as long as intermediate products do not overflow; metric operations preserve floating-point coordinates and otherwise convert them to \inlinecode{double}. For \inlinecode{Modular}, this uses the stored representative and is not finite-field geometry.
 
 Type aliases:
 
@@ -4375,12 +4464,16 @@ bool EQ(T a, U b) {
 
 template<typename T>
 struct TPoint3 {
-  using fp_t = std::conditional_t<std::is_integral<T>::value, double, T>;
+  using fp_t = std::conditional_t<std::is_floating_point<T>::value, T, double>;
 
   T x, y, z;
 
   TPoint3(T x = 0, T y = 0, T z = 0) : x(x), y(y), z(z) {}
   bool operator==(const TPoint3 &p) const { return std::tie(x, y, z) == std::tie(p.x, p.y, p.z); }
+  friend bool EQ(const TPoint3 &a, const TPoint3 &b) {
+    return EQ(a.x, b.x) && EQ(a.y, b.y) && EQ(a.z, b.z);
+  }
+
   bool operator!=(const TPoint3 &p) const { return !(*this == p); }
   bool operator<(const TPoint3 &p) const { return std::tie(x, y, z) < std::tie(p.x, p.y, p.z); }
   TPoint3 operator+(const TPoint3 &p) const { return {x + p.x, y + p.y, z + p.z}; }
@@ -4426,7 +4519,7 @@ int main() {
 
   Point3D p(1, 0, 0);
   auto r = p.rotate(acos(-1.0) / 2, Point3D(0, 0, 1));
-  assert(EQ(r.x, 0) && EQ(r.y, 1) && EQ(r.z, 0));
+  assert(EQ(r, Point3D(0, 1, 0)));
   return 0;
 }
 \end{lstlisting}
@@ -4454,7 +4547,6 @@ const double EPS = 1e-9;
 
 struct Point3D {
   double x, y, z;
-
   Point3D(double x = 0, double y = 0, double z = 0) : x(x), y(y), z(z) {}
   Point3D operator-(const Point3D &p) const { return {x - p.x, y - p.y, z - p.z}; }
   Point3D operator*(double k) const { return {x * k, y * k, z * k}; }
@@ -4581,7 +4673,6 @@ Given an oriented triangular mesh of a closed polyhedron, compute its signed vol
 
 struct Point3D {
   double x, y, z;
-
   Point3D(double x = 0, double y = 0, double z = 0) : x(x), y(y), z(z) {}
   double dot(const Point3D &p) const { return x * p.x + y * p.y + z * p.z; }
   Point3D cross(const Point3D &p) const {
@@ -4603,8 +4694,6 @@ double signed_polyhedron_volume(const std::vector<Pt> &p, const std::vector<F> &
 \begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
-
-const double EPS = 1e-9;
 
 bool EQ(double a, double b) {
   return fabs(a - b) < 1e-9;

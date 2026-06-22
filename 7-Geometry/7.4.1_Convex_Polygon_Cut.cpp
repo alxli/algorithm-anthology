@@ -46,7 +46,8 @@ bool LT(T a, U b) {
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  friend bool EQ(const Point &a, const Point &b) { return EQ(a.x, b.x) && EQ(a.y, b.y); }
 };
 
 template<typename PtA, typename PtB, typename PtO>
@@ -111,22 +112,29 @@ struct PointI {
   PointI(int x = 0, int y = 0) : x(x), y(y) {}
 };
 
+bool EQ(const vector<Point> &a, const vector<Point> &b) {
+  return a.size() == b.size() &&
+         equal(a.begin(), a.end(), b.begin(), [](const Point &p, const Point &q) {
+           return EQ(p, q);
+         });
+}
+
 int main() {
   {
     vector<Point> v{{1, 3}, {2, 2}, {2, 1}, {0, 0}, {-1, 3}};
     // Cut using the vertical line through (0, 0).
     vector<Point> c{{-1, 3}, {0, 3}, {0, 0}};
-    assert(convex_cut(v.begin(), v.end(), Point(0, 0), Point(0, 1)) == c);
+    assert(EQ(convex_cut(v.begin(), v.end(), Point(0, 0), Point(0, 1)), c));
   }
   {  // On a non-convex input, the result may be multiple disjoint polygons!
     vector<Point> v{{0, 0}, {2, 2}, {0, 4}, {3, 4}, {3, 0}};
     vector<Point> c{{1, 0}, {0, 0}, {1, 1}, {1, 3}, {0, 4}, {1, 4}};
-    assert(convex_cut(v.begin(), v.end(), Point(1, 0), Point(1, 4)) == c);
+    assert(EQ(convex_cut(v.begin(), v.end(), Point(1, 0), Point(1, 4)), c));
   }
   {
     vector<PointI> v{{0, 0}, {4, 0}, {4, 4}, {0, 4}};
     vector<Point> c{{0, 4}, {0, 0}, {2, 0}, {2, 4}};
-    assert(convex_cut(v.begin(), v.end(), PointI(2, 0), PointI(2, 4)) == c);
+    assert(EQ(convex_cut(v.begin(), v.end(), PointI(2, 0), PointI(2, 4)), c));
   }
   return 0;
 }

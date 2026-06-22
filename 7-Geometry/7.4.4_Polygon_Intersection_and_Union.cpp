@@ -200,7 +200,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
       }
     }
     std::sort(events.begin(), events.end(), [](const Event &e1, const Event &e2) {
-      if (!EQ(e1.y, e2.y)) {
+      if (e1.y != e2.y) {
         return e1.y < e2.y;
       }
       return e1.mask_delta < e2.mask_delta;
@@ -245,7 +245,7 @@ using namespace std;
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
   bool operator!=(const Point &p) const { return !(*this == p); }
   bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
 };

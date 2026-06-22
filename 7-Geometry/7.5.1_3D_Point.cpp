@@ -1,9 +1,11 @@
 /*
 
 A 3D point class template supporting vector arithmetic, dot and cross products, distances, angles,
-unit vectors, normals, and rotation about an axis. Integer coordinates are suitable for exact
-algebraic predicates (`dot`, `cross`, `sqnorm`) as long as intermediate products do not overflow;
-metric operations return floating-point values.
+unit vectors, normals, and rotation about an axis. Point equality and ordering are exact, while
+`EQ(p, q)` provides epsilon equality for floating-point coordinates. Integer coordinates are
+suitable for exact algebraic predicates (`dot`, `cross`, `sqnorm`) as long as intermediate products
+do not overflow; metric operations preserve floating-point coordinates and otherwise convert them
+to `double`. For `Modular`, this uses the stored representative and is not finite-field geometry.
 
 Type aliases:
 - `Point3I = TPoint3<int>`
@@ -35,12 +37,16 @@ bool EQ(T a, U b) {
 
 template<typename T>
 struct TPoint3 {
-  using fp_t = std::conditional_t<std::is_integral<T>::value, double, T>;
+  using fp_t = std::conditional_t<std::is_floating_point<T>::value, T, double>;
 
   T x, y, z;
 
   TPoint3(T x = 0, T y = 0, T z = 0) : x(x), y(y), z(z) {}
   bool operator==(const TPoint3 &p) const { return std::tie(x, y, z) == std::tie(p.x, p.y, p.z); }
+  friend bool EQ(const TPoint3 &a, const TPoint3 &b) {
+    return EQ(a.x, b.x) && EQ(a.y, b.y) && EQ(a.z, b.z);
+  }
+
   bool operator!=(const TPoint3 &p) const { return !(*this == p); }
   bool operator<(const TPoint3 &p) const { return std::tie(x, y, z) < std::tie(p.x, p.y, p.z); }
   TPoint3 operator+(const TPoint3 &p) const { return {x + p.x, y + p.y, z + p.z}; }
@@ -85,6 +91,6 @@ int main() {
 
   Point3D p(1, 0, 0);
   auto r = p.rotate(acos(-1.0) / 2, Point3D(0, 0, 1));
-  assert(EQ(r.x, 0) && EQ(r.y, 1) && EQ(r.z, 0));
+  assert(EQ(r, Point3D(0, 1, 0)));
   return 0;
 }
