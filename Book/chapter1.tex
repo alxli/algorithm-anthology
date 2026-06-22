@@ -755,20 +755,22 @@ int main() {
 0 4 4 1 3 2 5 5
 1 0 2 0 3 1
 \end{exampleoutput}
-\subsection{Selection (Quickselect)}
-Select the element with a given sorted rank without fully sorting the range. This is the same task as \inlinecode{std::nth\_element()}: after the call, \inlinecode{*nth} is the value that would appear at position \inlinecode{nth} in sorted order, all earlier positions contain values no larger than it, and all later positions contain values no smaller than it. The order within each side is unspecified.
+\subsection{Partitioning and Selection}
+Partition a range around a pivot, or select the element with a given sorted rank without fully sorting the range. Three-way partitioning, also known as the Dutch National Flag algorithm, rearranges the elements into consecutive groups less than, equal to, and greater than the pivot. A single pass maintains these three groups plus an unclassified region. When an element greater than the pivot is swapped with the end of the unclassified region, the incoming element must still be examined before the scan advances.
 
-Quickselect repeatedly partitions around a pivot, then continues only into the side containing the desired rank. This implementation chooses the pivot uniformly at random and uses a 3-way partition (\inlinecode{less than}, \inlinecode{equal to}, \inlinecode{greater than}) so duplicate-heavy inputs do not cause unnecessary work.
+Quickselect repeatedly applies this partition and continues only into the group containing the desired rank. This is the same task as \inlinecode{std::nth\_element()}: after the call, \inlinecode{*nth} is the value that would appear there in sorted order, all earlier positions contain values no larger than it, and all later positions contain values no smaller than it. Choosing pivots uniformly at random gives expected linear time, while the three-way split avoids unnecessary work on duplicate-heavy inputs.
 
 \begin{compactitem}
+  \item \inlinecode{partition\_three\_way(lo, hi, pivot)} rearranges [\inlinecode{lo}, \inlinecode{hi}) in-place and returns iterators (\inlinecode{mid\_lo}, \inlinecode{mid\_hi}), where [\inlinecode{lo}, \inlinecode{mid\_lo}) is less than \inlinecode{pivot}, [\inlinecode{mid\_lo}, \inlinecode{mid\_hi}) is equal to \inlinecode{pivot}, and [\inlinecode{mid\_hi}, \inlinecode{hi}) is greater than \inlinecode{pivot}.
+  \item \inlinecode{sort\_012(lo, hi)} sorts a range consisting only of the values 0, 1, and 2.
   \item \inlinecode{nth\_element2(lo, nth, hi)} rearranges the range [\inlinecode{lo}, \inlinecode{hi}) around the 0-based rank represented by iterator \inlinecode{nth}. This requires random-access iterators and \inlinecode{operator\textless{}} on the value type.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ expected per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
-  \item $O(n^{2})$ in the worst case.
+  \item $O(n)$ per call to \inlinecode{partition\_three\_way()} or \inlinecode{sort\_012()}, where $n$ is the range length.
+  \item $O(n)$ expected per call to \inlinecode{nth\_element2()}, and $O(n^{2})$ in the worst case.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
@@ -777,70 +779,6 @@ Quickselect repeatedly partitions around a pivot, then continues only into the s
 #include <algorithm>
 #include <iterator>
 #include <random>
-
-template<typename It>
-void nth_element2(It lo, It nth, It hi) {
-  static std::mt19937 rng(std::random_device{}());
-  while (hi - lo > 1) {
-    std::uniform_int_distribution<int> dist(0, hi - lo - 1);
-    auto pivot = *(lo + dist(rng));
-    It lt = lo, i = lo, gt = hi;
-    while (i != gt) {
-      if (*i < pivot) {
-        std::iter_swap(lt++, i++);
-      } else if (pivot < *i) {
-        std::iter_swap(i, --gt);
-      } else {
-        ++i;
-      }
-    }
-    if (nth < lt) {
-      hi = lt;
-    } else if (nth >= gt) {
-      lo = gt;
-    } else {
-      return;
-    }
-  }
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-#include <vector>
-using namespace std;
-
-int main() {
-  vector<int> a{5, 6, 4, 3, 2, 6, 7, 9, 3};
-  int n = static_cast<int>(a.size());
-  nth_element2(a.begin(), a.begin() + n / 2, a.end());
-  assert(a[n / 2] == 5);
-  // Values left of the median are <= it and values right are >= it (the exact
-  // order within each side is randomized, since the pivot is chosen at random).
-  for (int i = 0; i < n / 2; i++) {
-    assert(a[i] <= a[n / 2]);
-  }
-  for (int i = n / 2 + 1; i < n; i++) {
-    assert(a[i] >= a[n / 2]);
-  }
-  return 0;
-}
-\end{lstlisting}
-\subsection{3-Way Partitioning (Dutch National Flag)}
-Partitions a range into three consecutive groups according to a pivot value: elements less than the pivot, elements equal to the pivot, and elements greater than the pivot. This is the Dutch National Flag algorithm, and is the core partitioning step used in three-way quicksort and arrays with many duplicate keys. A single pass maintains four regions: values less than the pivot, values equal to it, unclassified values, and values greater than it. The next unclassified value expands the first or second region, or is swapped with the last unclassified value to expand the fourth. In the latter case, the incoming value remains unclassified and must be examined before the scan advances.
-
-\begin{compactitem}
-  \item \inlinecode{partition\_three\_way(lo, hi, pivot)} rearranges the range [\inlinecode{lo}, \inlinecode{hi}) in-place and returns iterators (\inlinecode{mid\_lo}, \inlinecode{mid\_hi}), where [\inlinecode{lo}, \inlinecode{mid\_lo}) is less than \inlinecode{pivot}, [\inlinecode{mid\_lo}, \inlinecode{mid\_hi}) is equal to \inlinecode{pivot}, and [\inlinecode{mid\_hi}, \inlinecode{hi}) is greater than \inlinecode{pivot}.
-  \item \inlinecode{sort\_012(lo, hi)} sorts a range consisting of only the values 0, 1, and 2.
-\end{compactitem}
-
-\textbf{Time Complexity}: $O(n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
-
-\textbf{Space Complexity}: $O(1)$ auxiliary.
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <utility>
 
 template<typename It, typename T>
@@ -862,6 +800,23 @@ template<typename It>
 void sort_012(It lo, It hi) {
   partition_three_way(lo, hi, 1);
 }
+
+template<typename It>
+void nth_element2(It lo, It nth, It hi) {
+  static std::mt19937 rng(std::random_device{}());
+  while (hi - lo > 1) {
+    std::uniform_int_distribution<int> dist(0, hi - lo - 1);
+    auto pivot = *(lo + dist(rng));
+    auto [lt, gt] = partition_three_way(lo, hi, pivot);
+    if (nth < lt) {
+      hi = lt;
+    } else if (nth >= gt) {
+      lo = gt;
+    } else {
+      return;
+    }
+  }
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -871,10 +826,10 @@ void sort_012(It lo, It hi) {
 using namespace std;
 
 int main() {
-  vector<int> a{2, 0, 1, 2, 1, 0, 1};
-  sort_012(a.begin(), a.end());
+  vector<int> values{2, 0, 1, 2, 1, 0, 1};
+  sort_012(values.begin(), values.end());
   for (int i = 0; i < 7; i++) {
-    assert(a[i] == (i < 2 ? 0 : i < 5 ? 1 : 2));
+    assert(values[i] == (i < 2 ? 0 : i < 5 ? 1 : 2));
   }
 
   vector<int> b{4, 2, 5, 3, 3, 1};
@@ -887,6 +842,19 @@ int main() {
   }
   for (auto it = mid_hi; it != b.end(); ++it) {
     assert(*it > 3);
+  }
+
+  vector<int> a{5, 6, 4, 3, 2, 6, 7, 9, 3};
+  int n = static_cast<int>(a.size());
+  nth_element2(a.begin(), a.begin() + n / 2, a.end());
+  assert(a[n / 2] == 5);
+  // Values left of the median are <= it and values right are >= it (the exact
+  // order within each side is randomized, since the pivot is chosen at random).
+  for (int i = 0; i < n / 2; i++) {
+    assert(a[i] <= a[n / 2]);
+  }
+  for (int i = n / 2 + 1; i < n; i++) {
+    assert(a[i] >= a[n / 2]);
   }
   return 0;
 }
