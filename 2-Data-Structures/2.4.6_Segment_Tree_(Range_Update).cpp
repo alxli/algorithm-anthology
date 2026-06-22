@@ -194,7 +194,7 @@ class LazySegTree {
   }
 
   int size() const { return len; }
-  
+
   T at(int i) {
     assert(0 <= i && i < len);
     return query(i, i);

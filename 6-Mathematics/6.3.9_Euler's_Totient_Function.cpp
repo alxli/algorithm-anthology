@@ -22,7 +22,7 @@ $\sqrt{`hi`}$ (a number at most `hi` can have at most one such factor).
 - `phi_table(n)` returns a vector `v` of length `n + 1` such that `v[i]` stores `phi(i)` for every
   `i` in the range $[0, n]$.
 - `phi_table(lo, hi)` returns a vector `v` of length $`hi` - `lo` + 1$ such that `v[i - lo]` stores
-  `phi(i)` for every `i` in the range [`lo`, `hi`]. This overload assumes `lo` $\geq$ 0; if `hi` <
+  `phi(i)` for every `i` in the range [`lo`, `hi`]. This overload assumes `lo` $\geq 0$; if `hi` <
   `lo`, it returns an empty vector.
 
 Time Complexity:

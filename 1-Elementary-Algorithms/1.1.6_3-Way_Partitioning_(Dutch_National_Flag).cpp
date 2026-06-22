@@ -3,8 +3,10 @@
 Partitions a range into three consecutive groups according to a pivot value: elements less than the
 pivot, elements equal to the pivot, and elements greater than the pivot. This is the Dutch National
 Flag algorithm, and is the core partitioning step used in three-way quicksort and arrays with many
-duplicate keys. A single pass maintains the three groups in-place using two boundary iterators,
-swapping each examined element into the region where it belongs.
+duplicate keys. A single pass maintains four regions: values less than the pivot, values equal to
+it, unclassified values, and values greater than it. The next unclassified value expands the first
+or second region, or is swapped with the last unclassified value to expand the fourth. In the latter
+case, the incoming value remains unclassified and must be examined before the scan advances.
 
 - `partition_three_way(lo, hi, pivot)` rearranges the range [`lo`, `hi`) in-place and returns
   iterators (`mid_lo`, `mid_hi`), where [`lo`, `mid_lo`) is less than `pivot`, [`mid_lo`, `mid_hi`)

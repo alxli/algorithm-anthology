@@ -10,8 +10,8 @@ semantics in one place.
   convex polygon `poly`. The polygon must be in counter-clockwise order, with no repeated final
   vertex. Points on the boundary count as inside unless `EDGE_IS_INSIDE` is set to `false`.
 - `line_convex_polygon_intersection(poly, a, b)` describes where the infinite directed line through
-  `a` $\to$ `b` hits the polygon: ${-1, -1}$ for no intersection, ${i, -1}$ for touching vertex $i$,
-  ${i, i}$ for containing side $i \to i+1$, or ${i, j}$ for crossing sides $i \to i+1$ and
+  `a` $\to$ `b` hits the polygon: $(-1, -1)$ for no intersection, $(i, -1)$ for touching vertex $i$,
+  $(i, i)$ for containing side $i \to i+1$, or $(i, j)$ for crossing sides $i \to i+1$ and
   $j \to j+1$.
 - `convex_polygon_tangents(poly, p)` returns the two tangent vertex indices from an outside point
   `p` as (left, right). The left tangent has all polygon vertices on or to the left of the directed
@@ -90,7 +90,7 @@ bool point_in_convex_polygon(
 }
 
 template<typename Pt>
-std::array<int, 2> line_convex_polygon_intersection(
+std::pair<int, int> line_convex_polygon_intersection(
     const std::vector<Pt> &poly, const Pt &a, const Pt &b
 ) {
   int n = static_cast<int>(poly.size());
@@ -105,7 +105,7 @@ std::array<int, 2> line_convex_polygon_intersection(
     }
   }
   if (!has_pos && !has_neg) {
-    return n >= 2 ? std::array<int, 2>{0, 0} : std::array<int, 2>{-1, -1};
+    return n >= 2 ? std::make_pair(0, 0) : std::make_pair(-1, -1);
   }
   if (!(has_pos && has_neg)) {
     for (int i = 0; i < static_cast<int>(on.size()); i++) {
@@ -114,7 +114,7 @@ std::array<int, 2> line_convex_polygon_intersection(
         return {on[i], on[i]};
       }
     }
-    return on.empty() ? std::array<int, 2>{-1, -1} : std::array<int, 2>{on[0], -1};
+    return on.empty() ? std::make_pair(-1, -1) : std::make_pair(on[0], -1);
   }
   for (int i = 0; i < n; i++) {
     int j = (i + 1) % n;
@@ -140,9 +140,9 @@ std::array<int, 2> line_convex_polygon_intersection(
 }
 
 template<typename Pt>
-std::array<int, 2> convex_polygon_tangents(const std::vector<Pt> &poly, const Pt &p) {
+std::pair<int, int> convex_polygon_tangents(const std::vector<Pt> &poly, const Pt &p) {
   int n = static_cast<int>(poly.size());
-  std::array<int, 2> res{-1, -1};
+  std::pair<int, int> res{-1, -1};
   for (int i = 0; i < n; i++) {
     bool left = true, right = true;
     for (int j = 0; j < n; j++) {
@@ -151,10 +151,10 @@ std::array<int, 2> convex_polygon_tangents(const std::vector<Pt> &poly, const Pt
       right &= s <= 0;
     }
     if (left) {
-      res[0] = i;
+      res.first = i;
     }
     if (right) {
-      res[1] = i;
+      res.second = i;
     }
   }
   return res;
@@ -183,17 +183,11 @@ int main() {
   assert(!point_in_convex_polygon(pentagon, PointI(0, 0), false));
   assert(!point_in_convex_polygon(pentagon, PointI(5, 4)));
 
-  assert(
-      (line_convex_polygon_intersection(square, PointI(-1, 2), PointI(5, 2)) == array<int, 2>{3, 1})
-  );
-  assert(
-      (line_convex_polygon_intersection(square, PointI(0, 0), PointI(4, 0)) == array<int, 2>{0, 0})
-  );
-  assert((
-      line_convex_polygon_intersection(square, PointI(5, 0), PointI(5, 4)) == array<int, 2>{-1, -1}
-  ));
+  assert(line_convex_polygon_intersection(square, PointI(-1, 2), PointI(5, 2)) == make_pair(3, 1));
+  assert(line_convex_polygon_intersection(square, PointI(0, 0), PointI(4, 0)) == make_pair(0, 0));
+  assert(line_convex_polygon_intersection(square, PointI(5, 0), PointI(5, 4)) == make_pair(-1, -1));
 
   auto tangents = convex_polygon_tangents(square, PointI(6, 2));
-  assert((tangents == array<int, 2>{2, 1}));
+  assert(tangents == make_pair(2, 1));
   return 0;
 }

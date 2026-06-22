@@ -1181,7 +1181,7 @@ Given an undirected graph, label every node with its connected component and col
   \item \inlinecode{connected\_components()} populates \inlinecode{comp\_id[]} (component ID for each node) and \inlinecode{components[]} (nodes for each component ID) given a global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered [0, \inlinecode{n}), where \inlinecode{n} is \inlinecode{adj.size()}.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{connected\_components()}, where $n$ is the number of nodes and $m$ is the number of edges.
+\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call, where $n$ is the number of nodes and $m$ is the number of edges.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -2588,7 +2588,7 @@ Given a starting node in an unweighted, directed graph, visit every connected no
 
 For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
 
-\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{bfs()}, where $n$ is the number of nodes and $m$ is the number of edges.
+\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call, where $n$ is the number of nodes and $m$ is the number of edges.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -2676,7 +2676,7 @@ Given a starting node in a weighted graph whose edge weights are only 0 or 1, co
 
 For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
 
-\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{bfs\_zero\_one()}, where $n$ is the number of nodes and $m$ is the number of edges.
+\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call, where $n$ is the number of nodes and $m$ is the number of edges.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -2869,7 +2869,7 @@ Bellman-Ford relaxes every edge in the graph $n - 1$ times. Since any shortest p
 
 For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
 
-\textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{bellman\_ford()}, where $n$ is the number of nodes and $m$ is the number of edges.
+\textbf{Time Complexity}: $O(n \cdot m)$ per call, where $n$ is the number of nodes and $m$ is the number of edges.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -2881,6 +2881,7 @@ For path reconstruction, \inlinecode{pred[v]} stores the node immediately before
 \begin{lstlisting}[language=C++]
 #include <cstdint>
 #include <stdexcept>
+#include <tuple>
 #include <vector>
 
 const int64_t INF = INT64_MAX / 4;
@@ -3054,7 +3055,7 @@ Given a starting node in a weighted, directed acyclic graph (DAG), determine the
 
 For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
 
-\textbf{Time Complexity}: $O(n + m)$ per call to \inlinecode{dag\_shortest\_path()}, where $n$ is the number of nodes and $m$ is the number of edges.
+\textbf{Time Complexity}: $O(n + m)$ per call, where $n$ is the number of nodes and $m$ is the number of edges.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -3261,7 +3262,7 @@ Prim's algorithm grows the tree from an arbitrary start node, repeatedly adding 
 
 The priority queue stores candidate edges as (\inlinecode{weight}, \inlinecode{from}, \inlinecode{to}, \inlinecode{edge\_id}) and uses \inlinecode{std::greater} to make it a min-heap. To find a maximum spanning tree instead, use the default max-heap ordering. Multigraphs are supported; parallel edges are stored as separate adjacency entries and the algorithm automatically selects the minimum-weight one to each unvisited node.
 
-\textbf{Time Complexity}: $O(m \log n)$ per call to \inlinecode{prim\_mst()}, where $m$ is the number of edges and $n$ is the number of nodes.
+\textbf{Time Complexity}: $O(m \log n)$ per call, where $m$ is the number of edges and $n$ is the number of nodes.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -3365,7 +3366,7 @@ Kruskal's algorithm scans the edges in nondecreasing weight order, adding each e
 
 Multigraphs are supported; parallel edges appear as separate entries in \inlinecode{edges} and any redundant ones are skipped once the cheaper edge has already connected the two components.
 
-\textbf{Time Complexity}: $O(m \log n)$ per call to \inlinecode{kruskal\_mst()}, where $m$ is the number of edges and $n$ is the number of nodes. The internal DSU uses path compression and union by size, making each DSU operation $O(\alpha\left(n\right))$ amortized.
+\textbf{Time Complexity}: $O(m \log n)$ per call, where $m$ is the number of edges and $n$ is the number of nodes. The internal DSU uses path compression and union by size, making each DSU operation $O(\alpha\left(n\right))$ amortized.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -3564,7 +3565,7 @@ The Ford-Fulkerson method repeatedly finds any augmenting path from source to si
   \item \inlinecode{ford\_fulkerson()} uses global \inlinecode{source} and \inlinecode{sink}, modifies the global residual capacity matrix \inlinecode{cap}, and returns maximum flow. Nodes are numbered [0, \inlinecode{n}), where \inlinecode{n} is \inlinecode{cap.size()}.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n^{2} \cdot f)$ per call to \inlinecode{ford\_fulkerson()}, where $n$ is the number of nodes and $f$ is the maximum flow.
+\textbf{Time Complexity}: $O(n^{2} \cdot f)$ per call, where $n$ is the number of nodes and $f$ is the maximum flow.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -4935,7 +4936,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Global Minimum Cut (Stoer-Wagner)}
-Given a connected, undirected graph with nonnegative edge weights, the global minimum cut is the partition of the vertices into two nonempty sets that minimizes the total weight of edges crossing between them. Unlike a minimum s-t cut, no source or sink is fixed; the goal is the cheapest way to split the graph in two. The Stoer-Wagner algorithm finds it without any maximum flow computation by repeatedly running a ``minimum cut phase''.
+Given a connected, undirected graph with nonnegative edge weights, the global minimum cut is the partition of the vertices into two nonempty sets that minimizes the total weight of edges crossing between them. Unlike a minimum $s$-$t$ cut, no source or sink is fixed; the goal is the cheapest way to split the graph in two. The Stoer-Wagner algorithm finds it without any maximum flow computation by repeatedly running a ``minimum cut phase''.
 
 A phase grows a set, starting from an arbitrary vertex, by repeatedly adding the most tightly connected outside vertex (the one with the greatest total weight to the set so far), exactly as in Prim's algorithm. The last vertex added, together with its connection weight, yields one candidate cut, the ``cut of the phase''. The last two vertices added are then merged into a single supernode and the next phase begins on the smaller graph. After $n - 1$ phases every candidate has been considered, and the smallest is the global minimum cut.
 
@@ -5039,7 +5040,7 @@ Kuhn's algorithm builds the matching one left node at a time. For each, a depth-
   \item \inlinecode{kuhn(n2)} populates \inlinecode{match\_left} and \inlinecode{match\_right}, then returns maximum matching size for a global, pre-populated adjacency list \inlinecode{adj} whose left-side nodes are numbered [0, \inlinecode{n}) and whose right-side neighbors are numbered [0, \inlinecode{n2}), where \inlinecode{n} is \inlinecode{adj.size()}.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(m \cdot (n_1 + n_2))$ per call to \inlinecode{kuhn()}, where $m$ is the number of edges.
+\textbf{Time Complexity}: $O(m \cdot (n_1 + n_2))$ per call, where $m$ is the number of edges.
 
 \textbf{Space Complexity}: $O(n_1 + n_2)$ auxiliary stack space for \inlinecode{kuhn()}.
 
@@ -5126,7 +5127,7 @@ Hopcroft-Karp augments along many shortest augmenting paths per phase. Each phas
   \item \inlinecode{hopcroft\_karp(n2)} populates \inlinecode{match} and returns maximum matching size for a global, pre-populated adjacency list \inlinecode{adj} whose left-side nodes are numbered [0, \inlinecode{n}) and whose right-side neighbors are numbered [0, \inlinecode{n2}), where \inlinecode{n} is \inlinecode{adj.size()}.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(m \cdot \sqrt{n_1 + n_2})$ per call to \inlinecode{hopcroft\_karp()}, where $m$ is the number of edges.
+\textbf{Time Complexity}: $O(m \cdot \sqrt{n_1 + n_2})$ per call, where $m$ is the number of edges.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -5243,7 +5244,7 @@ The construction first computes a maximum matching with Kuhn's algorithm. It the
 
 The adjacency list \inlinecode{adj} is shared with the matching routine: \inlinecode{adj[u]} lists the right-side neighbors of left node \inlinecode{u}. Cover nodes are reported with right node \inlinecode{j} encoded as \inlinecode{n1 + j} so the two sides share one index space.
 
-\textbf{Time Complexity}: $O(m \cdot (n_1 + n_2))$ per call to \inlinecode{min\_vertex\_cover()}, dominated by the matching, where $m$ is the number of edges.
+\textbf{Time Complexity}: $O(m \cdot (n_1 + n_2))$ per call, dominated by the matching, where $m$ is the number of edges.
 
 \textbf{Space Complexity}: $O(n_1 + n_2)$ auxiliary space.
 
@@ -5376,7 +5377,7 @@ The graph must be simple; parallel edges and self-loops are not supported.
   \item \inlinecode{blossom()} returns a matching for a global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered [0, \inlinecode{n}), where \inlinecode{n} is \inlinecode{adj.size()}. The returned vector \inlinecode{match} has \inlinecode{match[u] == v} and \inlinecode{match[v] == u} when \inlinecode{u} and \inlinecode{v} are matched, or \inlinecode{match[u] == -1} when \inlinecode{u} is unmatched.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n^{3})$ per call to \inlinecode{blossom()}, where $n$ is the number of nodes.
+\textbf{Time Complexity}: $O(n^{3})$ per call, where $n$ is the number of nodes.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -5947,7 +5948,10 @@ T hungarian(const std::vector<std::vector<T>> &cost, std::vector<int> *assignmen
   static const T INF = std::numeric_limits<T>::max() / 4;
   int n = static_cast<int>(cost.size());
   int m = cost.empty() ? 0 : static_cast<int>(cost[0].size());
-  assert(n <= m);
+  assert(assignment != nullptr && n <= m);
+  for (const auto &row : cost) {
+    assert(static_cast<int>(row.size()) == m);
+  }
   std::vector<T> u(n + 1), v(m + 1), minv(m + 1);
   std::vector<int> p(m + 1), way(m + 1);
   std::vector<char> used(m + 1);
@@ -6002,7 +6006,6 @@ T hungarian(const std::vector<std::vector<T>> &cost, std::vector<int> *assignmen
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 using namespace std;
 
 int main() {
@@ -6113,6 +6116,7 @@ These implementations use bitmasks of unsigned 64-bit integers, so the number of
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
@@ -6121,6 +6125,10 @@ std::vector<int> w;
 
 std::vector<uint64_t> build_mask_graph() {
   int n = static_cast<int>(adj.size());
+  assert(n < 64);
+  for (const auto &row : adj) {
+    assert(static_cast<int>(row.size()) == n);
+  }
   std::vector<uint64_t> g(n);
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < n; j++) {
@@ -6188,8 +6196,6 @@ int max_clique_weighted() {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
-
 void add_edge(int u, int v) {
   adj[u][v] = true;
   adj[v][u] = true;
@@ -6226,7 +6232,7 @@ This implementation finds the chromatic number by backtracking: nodes (ordered b
   \item \inlinecode{color\_graph()} populates \inlinecode{color} and returns minimum color count for a global, bidirectionally pre-populated adjacency matrix \inlinecode{adj} which must consist of nodes numbered [0, \inlinecode{n}), where \inlinecode{n} is \inlinecode{adj.size()}.
 \end{compactitem}
 
-\textbf{Time Complexity}: Exponential on the number of nodes per call to \inlinecode{color\_graph()}.
+\textbf{Time Complexity}: Exponential on the number of nodes per call.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -6532,7 +6538,10 @@ std::vector<int> path;
 
 int64_t shortest_hamiltonian_path() {
   int n = static_cast<int>(adj.size());
-  assert(n >= 1);
+  assert(1 <= n && n < 31);
+  for (const auto &row : adj) {
+    assert(static_cast<int>(row.size()) == n);
+  }
   int max_mask = (1 << n) - 1;
   dp.assign(max_mask + 1, std::vector<int64_t>(n, INF));
   path.assign(n, 0);
@@ -6573,7 +6582,8 @@ int64_t shortest_hamiltonian_path() {
 
 int64_t shortest_hamiltonian_cycle() {
   int n = static_cast<int>(adj.size());
-  assert(n >= 1);
+  assert(1 <= n && n < 31);
+  for (const auto &row : adj) assert(static_cast<int>(row.size()) == n);
   if (n == 1) {
     path = {0};
     return 0;

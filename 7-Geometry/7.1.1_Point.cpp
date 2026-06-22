@@ -11,7 +11,7 @@ Exact operations (return `TPoint<T>` or `T`, no precision lost for integers):
 
 Overflow warning: the exact products `dot()`, `cross()`, and `sqnorm()` grow like the squared
 coordinate magnitude. With `TPoint<int>` these overflow a 32-bit `int` once coordinates exceed
-~46000, so use `PointL` (`TPoint<long long>`) for larger integer coordinates.
+$\sim 46000$, so use `PointL` (`TPoint<long long>`) for larger integer coordinates.
 
 Floating-point-only operations (return `TPoint<fp_t>` or `fp_t`):
 - `norm()`, `arg()`, `proj()`, `normalize()`, `rotateCW()`, `rotateCCW()`, `reflect(line)`.

@@ -28,7 +28,7 @@ coordinates.
 
 Overflow warning: each individual cross product is still on the order of the squared coordinate
 magnitude, so for integer point types use a 64-bit coordinate type (e.g. `PointL` from 7.1.1) once
-coordinates exceed ~46000.
+coordinates exceed $\sim 46000$.
 
 Time Complexity:
 - O(1) for all operations.

@@ -9,8 +9,9 @@ slots available for jobs with tighter deadlines. A disjoint-set forest over time
 efficient: `find_root(t)` returns the latest still-free slot at or before `t`, and occupying slot
 `t` links it to the next candidate slot `t - 1`.
 
-- `schedule_deadline_jobs(jobs)` returns the maximum total profit for a vector of `Job` with fields
-  `deadline` and `profit`. Deadlines are positive integer time slots.
+- `select_deadline_jobs(jobs)` returns a pair (`profit`, `slot`) containing that maximum profit and
+  `slot[i]`, the assigned time slot of input job `i`, or $-1$ if that job is not selected, for a
+  vector of `Job` with fields `deadline` and `profit`. Deadlines are positive integer time slots.
 
 Time Complexity:
 - O(n log n) per call due to sorting, with near-constant disjoint-set operations.
@@ -23,6 +24,7 @@ Space Complexity:
 #include <algorithm>
 #include <cstdint>
 #include <numeric>
+#include <utility>
 #include <vector>
 
 struct Job {
@@ -46,24 +48,34 @@ class SlotDSU {
   void occupy(int u) { root[u] = find_root(u - 1); }
 };
 
-int64_t schedule_deadline_jobs(std::vector<Job> jobs) {
-  std::sort(jobs.begin(), jobs.end(), [](const Job &a, const Job &b) {
-    return a.profit != b.profit ? a.profit > b.profit : a.deadline < b.deadline;
+std::pair<int64_t, std::vector<int>> select_deadline_jobs(const std::vector<Job> &jobs) {
+  int n = static_cast<int>(jobs.size());
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
+  std::sort(order.begin(), order.end(), [&](int i, int j) {
+    return jobs[i].profit != jobs[j].profit ? jobs[i].profit > jobs[j].profit
+                                            : jobs[i].deadline < jobs[j].deadline;
   });
   int max_deadline = 0;
   for (const auto &j : jobs) {
     max_deadline = std::max(max_deadline, j.deadline);
   }
+  max_deadline = std::min(max_deadline, n);
   SlotDSU slots(max_deadline);
+  std::vector<int> assigned(n, -1);
   int64_t res = 0;
-  for (const auto &j : jobs) {
-    int slot = slots.find_root(j.deadline);
+  for (int i : order) {
+    if (jobs[i].profit <= 0) {
+      continue;
+    }
+    int slot = slots.find_root(std::min(jobs[i].deadline, max_deadline));
     if (slot > 0) {
-      res += j.profit;
+      res += jobs[i].profit;
+      assigned[i] = slot;
       slots.occupy(slot);
     }
   }
-  return res;
+  return {res, assigned};
 }
 
 /*** Example Usage ***/
@@ -73,6 +85,8 @@ using namespace std;
 
 int main() {
   vector<Job> jobs{{2, 100}, {1, 19}, {2, 27}, {1, 25}, {3, 15}};
-  assert(schedule_deadline_jobs(jobs) == 142);
+  auto [profit, slot] = select_deadline_jobs(jobs);
+  assert(profit == 142);
+  assert((slot == vector<int>{2, -1, 1, -1, 3}));
   return 0;
 }

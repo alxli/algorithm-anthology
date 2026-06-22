@@ -213,7 +213,7 @@ class SparseSegTree {
     assert(0 <= i && i <= N);
     return query(i, i);
   }
-  
+
   T query(int lo, int hi) {
     assert(0 <= lo && lo <= hi && hi <= N);
     return query(root, 0, N, lo, hi);

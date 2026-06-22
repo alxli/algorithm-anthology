@@ -48,9 +48,11 @@ bool LT(T a, U b) {
   return C(a) < C(b);
 }
 
+// clang-format off
 template<typename T, typename U> bool GT(T a, U b) { return LT(b, a); }
 template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
 template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
+// clang-format on
 
 template<typename Pt, typename T>
 bool point_in_rectangle(

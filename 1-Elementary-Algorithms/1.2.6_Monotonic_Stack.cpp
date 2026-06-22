@@ -8,6 +8,12 @@ largest rectangle in a histogram. Each index is pushed and popped at most once, 
 in linear time. A largest all-zero submatrix can then be found by sweeping rows, turning each row
 into a histogram of consecutive zeros ending at that row.
 
+For a histogram bar `i`, the nearest strictly lower bars on its left and right are exactly the first
+positions that prevent a rectangle of height `heights[i]` from extending farther. Its widest such
+rectangle therefore spans the positions between those boundaries. For a binary matrix, the height
+at each column counts consecutive zeros ending in the current row; every all-zero rectangle has some
+bottom row, so solving one histogram per row considers every possible rectangle.
+
 All functions below take a vector `a` of $n$ comparable values and return a vector of $n$ indices.
 A "less" query uses a strictly smaller neighbor and a "greater" query uses a strictly larger one;
 changing the comparison from strict to non-strict (e.g. `>=` to `>`) toggles how ties are handled.

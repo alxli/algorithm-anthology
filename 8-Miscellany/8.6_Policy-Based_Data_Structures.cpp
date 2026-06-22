@@ -103,7 +103,7 @@ class OrderedMultiset {
     assert(0 <= k && k < size());
     return tree.find_by_order(k)->first;
   }
-  
+
   int order_of_key(const T &x) const { return tree.order_of_key({x, -1}); }
   int size() const { return static_cast<int>(tree.size()); }
 };
@@ -190,10 +190,10 @@ int main() {
   PairingHeap<int> h1, h2;
   auto it = h1.push(10);
   auto erased = h1.push(5);
-  h1.modify(it, 20);   // Net new over std::priority_queue: update through a handle.
-  h1.erase(erased);    // Also net new: remove an arbitrary heap item through a handle.
+  h1.modify(it, 20);  // Net new over std::priority_queue: update through a handle.
+  h1.erase(erased);   // Also net new: remove an arbitrary heap item through a handle.
   h2.push(7);
-  h1.join(h2);         // Also net new: meld another heap into this one.
+  h1.join(h2);  // Also net new: meld another heap into this one.
   assert(h1.top() == 20);
   h1.pop();
   assert(h1.top() == 7);

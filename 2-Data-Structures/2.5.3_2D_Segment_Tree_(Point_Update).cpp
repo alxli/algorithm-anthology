@@ -248,7 +248,7 @@ class SegTree2D {
   ~SegTree2D() { clean_up(root); }
   SegTree2D(const SegTree2D &) = delete;
   SegTree2D &operator=(const SegTree2D &) = delete;
-  
+
   T at(int r, int c) {
     assert(0 <= r && r <= R && 0 <= c && c <= C);
     return query(r, c, r, c);

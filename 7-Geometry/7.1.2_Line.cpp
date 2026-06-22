@@ -19,7 +19,7 @@ the `parallel()` or `perpendicular()` line through a point.
 Overflow warning: the exact predicates form products of coefficients (e.g. cross terms in
 `is_parallel()`/`is_perpendicular()` and `a*p.x + b*p.y` in `contains()`), which grow like the
 squared coordinate magnitude. For integral type `T`, use `LineL` (`TLine<int64_t>`) once
-coordinates exceed ~46000, or the 32-bit products overflow.
+coordinates exceed $\sim 46000$, or the 32-bit products overflow.
 
 Type aliases:
 - `LineI = TLine<int>`: exact integer-coefficient lines (small values only; see overflow warning)

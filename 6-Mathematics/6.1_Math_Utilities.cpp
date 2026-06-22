@@ -79,10 +79,12 @@ bool LT(T a, U b) {
   return C(a) < C(b);
 }
 
+// clang-format off
 template<typename T, typename U> bool NE(T a, U b) { return !EQ(a, b); }
 template<typename T, typename U> bool GT(T a, U b) { return LT(b, a); }
 template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
 template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
+// clang-format on
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool rEQ(T ref, U val) {
@@ -352,7 +354,7 @@ double lgamma_(double x) {
 Modular Arithmetic:
 
 - `addmod(a, b, m)` returns `(a + b) mod m` and `submod(a, b, m)` returns `(a - b) mod m`, each in
-  $[0, m)$. Both operands may be negative or unreduced; the result is normalized into range. These
+  $[0, `m`)$. Both operands may be negative or unreduced; the result is normalized into range. These
   use signed arithmetic, so `m` (and the reduced operands) must be small enough that `a + b` does
   not overflow `int64_t`, i.e. `m` up to roughly `2^62`, which covers all common contest moduli.
 - `mulmod(x, n, m)` returns `x` multiplied by `n`, modulo `m`. This is done in a way to avoid

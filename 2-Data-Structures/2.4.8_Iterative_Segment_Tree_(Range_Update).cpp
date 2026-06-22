@@ -43,6 +43,12 @@ valid. E.g. for `combine = min`, use `pred(mn) = (mn > x)` to find the first val
 `combine = sum`, use `pred(sum) = (sum <= x)` with nonnegative values to find the longest range
 within the limit `x`.
 
+Both boundary searches are iterative to demonstrate how the flat-array layout can avoid recursion.
+They push lazy deltas along the endpoints, decompose the search range into O(log n) canonical nodes,
+scan those nodes in order while accumulating their aggregates, then push and descend inside the
+first node that makes `pred` false. A recursive descent like the one in 2.4.6 is equally valid and
+may be easier to adapt.
+
 Time Complexity:
 - O(n) per call to both constructors, where $n$ is the size of the array.
 - O(1) per call to `size()`.
@@ -50,7 +56,7 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the array elements and lazy deltas.
-- O(1) auxiliary space for `query()` and `update()`, and O(log n) for boundary searches.
+- O(1) auxiliary space for all operations.
 
 */
 
@@ -120,48 +126,6 @@ class IterativeLazySegTree {
         pull((r - 1) >> h);
       }
     }
-  }
-
-  template<typename Pred>
-  int max_right(int i, int lo, int hi, int qlo, const Pred &pred, std::optional<T> &acc) {
-    if (hi <= qlo || len <= lo) {
-      return -1;
-    }
-    if (qlo <= lo && hi <= len) {
-      T next = acc ? combine(*acc, value[i]) : value[i];
-      if (pred(next)) {
-        acc = next;
-        return -1;
-      }
-      if (hi - lo == 1) {
-        return lo;
-      }
-    }
-    push(i);
-    int mid = (lo + hi) / 2;
-    int res = max_right(i << 1, lo, mid, qlo, pred, acc);
-    return res != -1 ? res : max_right(i << 1 | 1, mid, hi, qlo, pred, acc);
-  }
-
-  template<typename Pred>
-  int min_left(int i, int lo, int hi, int qhi, const Pred &pred, std::optional<T> &acc) {
-    if (qhi <= lo || len <= lo) {
-      return -1;
-    }
-    if (hi <= qhi && hi <= len) {
-      T next = acc ? combine(value[i], *acc) : value[i];
-      if (pred(next)) {
-        acc = next;
-        return -1;
-      }
-      if (hi - lo == 1) {
-        return hi;
-      }
-    }
-    push(i);
-    int mid = (lo + hi) / 2;
-    int res = min_left(i << 1 | 1, mid, hi, qhi, pred, acc);
-    return res != -1 ? res : min_left(i << 1, lo, mid, qhi, pred, acc);
   }
 
  public:
@@ -239,17 +203,68 @@ class IterativeLazySegTree {
   template<typename Pred>
   int max_right(int lo, const Pred &pred) {
     assert(0 <= lo && lo <= len);
+    if (lo == len) {
+      return len;
+    }
+    push_path(lo + base);
+    push_path(len - 1 + base);
     std::optional<T> acc;
-    int res = max_right(1, 0, base, lo, pred, acc);
-    return res == -1 ? len : res;
+    for (int pos = lo; pos < len;) {
+      int width = pos == 0 ? base : pos & -pos;
+      while (width > len - pos) {
+        width >>= 1;
+      }
+      int i = (base + pos) / width;
+      T next = acc ? combine(*acc, value[i]) : value[i];
+      if (pred(next)) {
+        acc = next;
+        pos += width;
+        continue;
+      }
+      while (i < base) {
+        push(i);
+        i <<= 1;
+        next = acc ? combine(*acc, value[i]) : value[i];
+        if (pred(next)) {
+          acc = next;
+          i++;
+        }
+      }
+      return i - base;
+    }
+    return len;
   }
 
   template<typename Pred>
   int min_left(int hi, const Pred &pred) {
     assert(0 <= hi && hi <= len);
+    if (hi == 0) {
+      return 0;
+    }
+    push_path(base);
+    push_path(hi - 1 + base);
     std::optional<T> acc;
-    int res = min_left(1, 0, base, hi, pred, acc);
-    return res == -1 ? 0 : res;
+    for (int pos = hi; pos > 0;) {
+      int width = pos & -pos;
+      int i = (base + pos) / width - 1;
+      T next = acc ? combine(value[i], *acc) : value[i];
+      if (pred(next)) {
+        acc = next;
+        pos -= width;
+        continue;
+      }
+      while (i < base) {
+        push(i);
+        i = i << 1 | 1;
+        next = acc ? combine(value[i], *acc) : value[i];
+        if (pred(next)) {
+          acc = next;
+          i--;
+        }
+      }
+      return i - base + 1;
+    }
+    return 0;
   }
 };
 

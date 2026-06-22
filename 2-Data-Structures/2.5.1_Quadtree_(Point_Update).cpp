@@ -156,7 +156,7 @@ class Quadtree {
   ~Quadtree() { clean_up(root); }
   Quadtree(const Quadtree &) = delete;
   Quadtree &operator=(const Quadtree &) = delete;
-  
+
   T at(int r, int c) {
     assert(0 <= r && r <= R && 0 <= c && c <= C);
     return query(r, c, r, c);

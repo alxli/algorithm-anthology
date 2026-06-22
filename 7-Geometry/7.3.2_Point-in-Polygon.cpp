@@ -15,7 +15,7 @@ comparison to be correct, and the result is exact for integer-coordinate points.
 
 Overflow warning: the edge orientation test forms a cross product that grows like the squared
 coordinate magnitude. For integer point types use a 64-bit coordinate type (e.g. `PointL` from
-7.1.1) once coordinates exceed ~46000.
+7.1.1) once coordinates exceed $\sim 46000$.
 
 Time Complexity:
 - O(n) per call, where $n$ is the distance between `lo` and `hi`.

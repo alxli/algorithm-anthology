@@ -2,7 +2,7 @@
 
 Fast input and output wrappers based on `fread()` and `fwrite()`. For most problems,
 `ios::sync_with_stdio(false); cin.tie(nullptr);` is simpler and fast enough. Use these classes when
-input is huge or when iostream overhead is measurable.
+input is huge or when `iostream` overhead is measurable.
 
 - `FastInput in(file)` reads tokens from a `FILE*`, defaulting to `stdin`.
 - `in >> x` reads a non-whitespace token into `char`, `std::string`, integral types, or floating

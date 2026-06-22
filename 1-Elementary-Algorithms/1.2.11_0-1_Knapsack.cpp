@@ -8,35 +8,52 @@ with total weight at most `w` after processing some prefix of the items. Iterati
 decreasing order is what enforces the 0-1 constraint; it prevents the same item from being reused
 during the current item update.
 
-- `knapsack_01(weight, value, capacity)` returns the maximum total value achievable by choosing a
-  0-1 subset of $n$ items such that their total weight is at most `capacity`, where item `i` has
-  weight `weight[i]` and value `value[i]`. All weights must be nonnegative integers. Items with
-  weight 0 are allowed and can each be taken once.
+- `knapsack_01(weight, value, capacity)` returns a pair (`value`, `items`) containing the maximum
+  value and the selected item indices in increasing order, where item `i` has weight `weight[i]` and
+  value `value[i]`. All weights must be nonnegative integers. Items with weight 0 are allowed and
+  can each be taken once. The take/skip decision for every item and capacity is stored to
+  reconstruct the optimal subset.
 
 Time Complexity:
-- O(n*W), where $n$ is the number of items and $W$ is `capacity`.
+- O(n*W) per call, where $n$ is the number of items and $W$ is `capacity`.
 
 Space Complexity:
-- O(W) auxiliary heap space.
+- O(n*W) auxiliary heap space.
 
 */
 
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
-int64_t knapsack_01(
+std::pair<int64_t, std::vector<int>> knapsack_01(
     const std::vector<int> &weight, const std::vector<int64_t> &value, int capacity
 ) {
   int n = static_cast<int>(weight.size());
+  assert(static_cast<int>(value.size()) == n && capacity >= 0);
   std::vector<int64_t> dp(capacity + 1, 0);
+  std::vector<std::vector<char>> take(n, std::vector<char>(capacity + 1, false));
   for (int i = 0; i < n; i++) {
+    assert(weight[i] >= 0);
     for (int w = capacity; w >= weight[i]; w--) {
-      dp[w] = std::max(dp[w], dp[w - weight[i]] + value[i]);
+      int64_t candidate = dp[w - weight[i]] + value[i];
+      if (dp[w] < candidate) {
+        dp[w] = candidate;
+        take[i][w] = true;
+      }
     }
   }
-  return dp[capacity];
+  std::vector<int> items;
+  for (int i = n - 1, w = capacity; i >= 0; i--) {
+    if (take[i][w]) {
+      items.push_back(i);
+      w -= weight[i];
+    }
+  }
+  std::reverse(items.begin(), items.end());
+  return {dp[capacity], items};
 }
 
 /*** Example Usage ***/
@@ -48,7 +65,8 @@ int main() {
   vector<int> weight{3, 4, 5, 9};
   vector<int64_t> value{4, 5, 7, 10};
 
-  assert(knapsack_01(weight, value, 8) == 11);   // Items of weight 3 and 5.
-  assert(knapsack_01(weight, value, 10) == 12);  // Items of weight 4 and 5.
+  auto [best, items] = knapsack_01(weight, value, 8);
+  assert(best == 11);
+  assert((items == vector<int>{0, 2}));
   return 0;
 }

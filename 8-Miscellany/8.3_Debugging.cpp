@@ -34,21 +34,12 @@ struct is_iterable<
     T, std::void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>()))>>
     : std::true_type {};
 
-std::string dbg_repr(const std::string &s) {
-  return '"' + s + '"';
-}
-
-std::string dbg_repr(const char *s) {
-  return dbg_repr(std::string(s));
-}
-
-std::string dbg_repr(char c) {
-  return std::string("'") + c + "'";
-}
-
-std::string dbg_repr(bool b) {
-  return b ? "true" : "false";
-}
+// clang-format off
+std::string dbg_repr(const std::string &s) { return '"' + s + '"'; }
+std::string dbg_repr(const char *s) { return dbg_repr(std::string(s)); }
+std::string dbg_repr(char c) { return std::string("'") + c + "'"; }
+std::string dbg_repr(bool b) { return b ? "true" : "false"; }
+// clang-format on
 
 template<typename T>
 typename std::enable_if<

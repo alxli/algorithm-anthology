@@ -12,7 +12,7 @@ Exact operations (return \inlinecode{TPoint\textless{}T\textgreater{}} or \inlin
   \item element-wise arithmetic, \inlinecode{dot()}, \inlinecode{cross()}, \inlinecode{sqnorm()}, cardinal rotations, \inlinecode{reflect(point)}, comparisons.
 \end{compactitem}
 
-Overflow warning: the exact products \inlinecode{dot()}, \inlinecode{cross()}, and \inlinecode{sqnorm()} grow like the squared coordinate magnitude. With \inlinecode{TPoint\textless{}int\textgreater{}} these overflow a 32-bit \inlinecode{int} once coordinates exceed \textasciitilde{}46000, so use \inlinecode{PointL} (\inlinecode{TPoint\textless{}long long\textgreater{}}) for larger integer coordinates.
+Overflow warning: the exact products \inlinecode{dot()}, \inlinecode{cross()}, and \inlinecode{sqnorm()} grow like the squared coordinate magnitude. With \inlinecode{TPoint\textless{}int\textgreater{}} these overflow a 32-bit \inlinecode{int} once coordinates exceed $\sim 46000$, so use \inlinecode{PointL} (\inlinecode{TPoint\textless{}long long\textgreater{}}) for larger integer coordinates.
 
 Floating-point-only operations (return \inlinecode{TPoint\textless{}fp\_t\textgreater{}} or \inlinecode{fp\_t}):
 
@@ -53,14 +53,18 @@ Type aliases:
 
 const double EPS = 1e-9;
 
+// Epsilon-aware for floating-point coordinates; exact for int and for coordinate types like Modular
+// or Rational, which therefore compose for all of the predicates below.
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  return C(a) < C(b);
 }
 
 template<typename T>
@@ -296,7 +300,7 @@ Because coefficients are not normalized to a canonical form, \inlinecode{operato
 
 Operations include \inlinecode{horizontal()}, \inlinecode{vertical()}, \inlinecode{slope()}, evaluating $y$ at some $x$ with \inlinecode{y()} (and vice versa with \inlinecode{x()}), checking if a point falls on the line with \inlinecode{contains()}, checking if another line is parallel or perpendicular with \inlinecode{is\_parallel()} or \inlinecode{is\_perpendicular()}, and finding the \inlinecode{parallel()} or \inlinecode{perpendicular()} line through a point.
 
-Overflow warning: the exact predicates form products of coefficients (e.g. cross terms in \inlinecode{is\_parallel()}/\inlinecode{is\_perpendicular()} and \inlinecode{a*p.x + b*p.y} in \inlinecode{contains()}), which grow like the squared coordinate magnitude. For integral type \inlinecode{T}, use \inlinecode{LineL} (\inlinecode{TLine\textless{}int64\_t\textgreater{}}) once coordinates exceed \textasciitilde{}46000, or the 32-bit products overflow.
+Overflow warning: the exact predicates form products of coefficients (e.g. cross terms in \inlinecode{is\_parallel()}/\inlinecode{is\_perpendicular()} and \inlinecode{a*p.x + b*p.y} in \inlinecode{contains()}), which grow like the squared coordinate magnitude. For integral type \inlinecode{T}, use \inlinecode{LineL} (\inlinecode{TLine\textless{}int64\_t\textgreater{}}) once coordinates exceed $\sim 46000$, or the 32-bit products overflow.
 
 Type aliases:
 
@@ -328,6 +332,14 @@ Type aliases:
 const double EPS = 1e-9;
 const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 
+// Epsilon-aware for floating-point coordinates; exact for int and for coordinate types like Modular
+// or Rational, which therefore compose for all of the predicates below.
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
+}
+
 // SFINAE guard: valid only when Pt exposes numeric .x/.y members, so templated point constructors
 // don't hijack scalar-argument calls.
 template<typename Pt>
@@ -354,47 +366,37 @@ struct TLine {
       class = std::enable_if_t<std::is_floating_point<U>::value>>
   TLine(fp_t slope, const Pt &p) : a(-slope), b(1), c(slope * p.x - p.y) {}
 
-  // Epsilon-aware for floating-point T; exact for int and for coordinate types like Modular or
-  // Rational, which therefore compose for all of the predicates below.
-  template<typename A, typename B>
-  static bool eq(const A &p, const B &q) {
-    if constexpr (std::is_floating_point<T>::value) {
-      return fabs(p - q) <= EPS;
-    }
-    return p == q;
-  }
-
   // Two lines are equal iff their coefficient vectors are proportional (the same line).
   bool operator==(const TLine &l) const {
-    return eq(a * l.b, l.a * b) && eq(b * l.c, l.b * c) && eq(a * l.c, l.a * c);
+    return EQ(a * l.b, l.a * b) && EQ(b * l.c, l.b * c) && EQ(a * l.c, l.a * c);
   }
 
   bool operator!=(const TLine &l) const { return !(*this == l); }
 
   // Returns whether the line is a valid line (not both a and b zero).
-  bool valid() const { return !(eq(a, 0) && eq(b, 0)); }
-  bool horizontal() const { return valid() && eq(a, 0); }
-  bool vertical() const { return valid() && eq(b, 0); }
+  bool valid() const { return !(EQ(a, 0) && EQ(b, 0)); }
+  bool horizontal() const { return valid() && EQ(a, 0); }
+  bool vertical() const { return valid() && EQ(b, 0); }
 
   // Slope -a/b, or NaN if the line is vertical or invalid.
-  fp_t slope() const { return (!valid() || eq(b, 0)) ? M_NAN : -(fp_t)a / b; }
+  fp_t slope() const { return (!valid() || EQ(b, 0)) ? M_NAN : -(fp_t)a / b; }
 
   // Solve for x at a given y (NaN if horizontal or invalid).
-  fp_t x(fp_t y) const { return (!valid() || eq(a, 0)) ? M_NAN : -((fp_t)b * y + c) / a; }
+  fp_t x(fp_t y) const { return (!valid() || EQ(a, 0)) ? M_NAN : -((fp_t)b * y + c) / a; }
 
   // Solve for y at a given x (NaN if vertical or invalid).
-  fp_t y(fp_t x) const { return (!valid() || eq(b, 0)) ? M_NAN : -((fp_t)a * x + c) / b; }
+  fp_t y(fp_t x) const { return (!valid() || EQ(b, 0)) ? M_NAN : -((fp_t)a * x + c) / b; }
 
   // Whether point p lies on the line. Exact for integer T and integer p.
   template<typename Pt>
   bool contains(const Pt &p) const {
-    return eq(a * p.x + b * p.y + c, 0);
+    return EQ(a * p.x + b * p.y + c, 0);
   }
 
   // Parallel iff the normals are parallel (cross == 0); perpendicular iff normals are
   // perpendicular (dot == 0). Both exact for integer T.
-  bool is_parallel(const TLine &l) const { return eq(a * l.b, l.a * b); }
-  bool is_perpendicular(const TLine &l) const { return eq(a * l.a, -(b * l.b)); }
+  bool is_parallel(const TLine &l) const { return EQ(a * l.b, l.a * b); }
+  bool is_perpendicular(const TLine &l) const { return EQ(a * l.a, -(b * l.b)); }
 
   // Parallel/perpendicular line through point p. Exact for integer T and integer p.
   template<typename Pt, typename = if_point<Pt>>
@@ -501,13 +503,20 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
 }
+
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  return C(a) < C(b);
 }
-template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
+
+template<typename T, typename U>
+bool LE(T a, U b) {
+  return !LT(b, a);
+}
 
 // SFINAE guard: valid only when Pt exposes numeric .x/.y members. This keeps the templated point
 // constructors from hijacking calls like Circle(double, double, double).
@@ -696,7 +705,7 @@ Common triangle calculations in two dimensions. The functions are templated on t
 
 Use an integral point type for integer coordinates, and a floating-point type for fractional coordinates.
 
-Overflow warning: each individual cross product is still on the order of the squared coordinate magnitude, so for integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) once coordinates exceed \textasciitilde{}46000.
+Overflow warning: each individual cross product is still on the order of the squared coordinate magnitude, so for integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) once coordinates exceed $\sim 46000$.
 
 \textbf{Time Complexity}: $O(1)$ for all operations.
 
@@ -712,12 +721,14 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  return C(a) < C(b);
 }
 
 template<typename Pt>
@@ -822,12 +833,16 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
 }
+
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  return C(a) < C(b);
 }
+
 template<typename T, typename U> bool GT(T a, U b) { return LT(b, a); }
 template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
 template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
@@ -958,12 +973,14 @@ const double RAD = 180 / PI;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  return C(a) < C(b);
 }
 
 double reduce_deg(double t) {
@@ -1085,12 +1102,16 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
 }
+
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  return C(a) < C(b);
 }
+
 template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
 template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
 
@@ -1262,7 +1283,7 @@ Intersection calculations in two dimensions for straight lines and line segments
   \item \inlinecode{closest\_point(a, b, c, p)} returns the closest point on line $ax + by + c = 0$ to point \inlinecode{p}.
 \end{compactitem}
 
-Overflow warning: the exact integer paths multiply coordinate differences (cross products and squared lengths), which grow like the squared coordinate magnitude. With 32-bit \inlinecode{int} coordinates these overflow once coordinates exceed \textasciitilde{}46000, so for larger integer inputs use a point type with 64-bit (\inlinecode{int64\_t}) coordinates.
+Overflow warning: the exact integer paths multiply coordinate differences (cross products and squared lengths), which grow like the squared coordinate magnitude. With 32-bit \inlinecode{int} coordinates these overflow once coordinates exceed $\sim 46000$, so for larger integer inputs use a point type with 64-bit (\inlinecode{int64\_t}) coordinates.
 
 \textbf{Time Complexity}: $O(1)$ for all operations.
 
@@ -1280,13 +1301,20 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
 }
+
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  return C(a) < C(b);
 }
-template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
+
+template<typename T, typename U>
+bool LE(T a, U b) {
+  return !LT(b, a);
+}
 
 template<typename OutPt>
 int line_intersection(double a1, double b1, double c1, double a2, double b2, double c2, OutPt *p) {
@@ -1548,13 +1576,20 @@ const double EPS = 1e-9, PI = acos(-1.0);
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
 }
+
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  return C(a) < C(b);
 }
-template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
+
+template<typename T, typename U>
+bool LE(T a, U b) {
+  return !LT(b, a);
+}
 
 struct Circle {
   double h, k, r;
@@ -1778,12 +1813,14 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  return C(a) < C(b);
 }
 
 struct Point {
@@ -1890,6 +1927,7 @@ Overflow warning: \inlinecode{cw\_comp} and \inlinecode{polygon\_area\_2x} form 
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <random>
 #include <stdexcept>
@@ -1900,7 +1938,8 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
 }
 
 // Comparator (clockwise angular order about c). Exact: comparisons are pure sign tests on
@@ -1952,9 +1991,7 @@ double polygon_area(It lo, It hi) {
 
 template<typename It>
 std::pair<double, double> polygon_centroid(It lo, It hi) {
-  if (hi - lo < 3) {
-    throw std::runtime_error("Cannot compute centroid of a degenerate polygon.");
-  }
+  assert(hi - lo >= 3);
   double cx = 0, cy = 0, area2 = 0;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
     double cross = static_cast<double>(j->x) * i->y - static_cast<double>(i->x) * j->y;
@@ -1971,7 +2008,6 @@ std::pair<double, double> polygon_centroid(It lo, It hi) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 #include <iostream>
 #include <vector>
 using namespace std;
@@ -1996,9 +2032,7 @@ struct PointI {
 
 template<typename It>
 Point mean_center(It lo, It hi) {
-  if (lo == hi) {
-    throw std::runtime_error("Cannot get center of an empty range.");
-  }
+  assert(lo != hi);
   double x_sum = 0, y_sum = 0, n = hi - lo;
   for (It it = lo; it != hi; ++it) {
     x_sum += it->x;
@@ -2050,7 +2084,7 @@ Given a point \inlinecode{p} and a polygon, determines whether \inlinecode{p} li
   \item \inlinecode{point\_in\_polygon(p, lo, hi, EDGE\_IS\_INSIDE)} returns whether \inlinecode{p} lies within the polygon with vertices specified by the range [\inlinecode{lo}, \inlinecode{hi}) of points in either clockwise or counter-clockwise order. The \inlinecode{EDGE\_IS\_INSIDE} flag (default \inlinecode{true}) controls whether points exactly on an edge or vertex count as inside.
 \end{compactitem}
 
-Overflow warning: the edge orientation test forms a cross product that grows like the squared coordinate magnitude. For integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) once coordinates exceed \textasciitilde{}46000.
+Overflow warning: the edge orientation test forms a cross product that grows like the squared coordinate magnitude. For integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) once coordinates exceed $\sim 46000$.
 
 \textbf{Time Complexity}: $O(n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
@@ -2272,7 +2306,7 @@ Given a convex polygon in counter-clockwise order, answer containment and tangen
 
 \begin{compactitem}
   \item \inlinecode{point\_in\_convex\_polygon(poly, p, EDGE\_IS\_INSIDE)} returns whether point \inlinecode{p} lies inside the convex polygon \inlinecode{poly}. The polygon must be in counter-clockwise order, with no repeated final vertex. Points on the boundary count as inside unless \inlinecode{EDGE\_IS\_INSIDE} is set to \inlinecode{false}.
-  \item \inlinecode{line\_convex\_polygon\_intersection(poly, a, b)} describes where the infinite directed line through \inlinecode{a} $\to$ \inlinecode{b} hits the polygon: ${-1, -1}$ for no intersection, ${i, -1}$ for touching vertex $i$, ${i, i}$ for containing side $i \to i+1$, or ${i, j}$ for crossing sides $i \to i+1$ and $j \to j+1$.
+  \item \inlinecode{line\_convex\_polygon\_intersection(poly, a, b)} describes where the infinite directed line through \inlinecode{a} $\to$ \inlinecode{b} hits the polygon: $(-1, -1)$ for no intersection, $(i, -1)$ for touching vertex $i$, $(i, i)$ for containing side $i \to i+1$, or $(i, j)$ for crossing sides $i \to i+1$ and $j \to j+1$.
   \item \inlinecode{convex\_polygon\_tangents(poly, p)} returns the two tangent vertex indices from an outside point \inlinecode{p} as (left, right). The left tangent has all polygon vertices on or to the left of the directed line \inlinecode{p} $\to$ \inlinecode{poly[left]}; the right tangent is analogous for the right side.
 \end{compactitem}
 
@@ -2301,7 +2335,7 @@ auto cross(const Pt &a, const Pt &b, const Pt &o) {
 }
 
 template<typename T>
-int signum(const T &x) {
+int sgn(const T &x) {
   return (T(0) < x) - (x < T(0));
 }
 
@@ -2325,8 +2359,8 @@ bool point_in_convex_polygon(
   if (n == 2) {
     return EDGE_IS_INSIDE && on_segment(p, poly[0], poly[1]);
   }
-  int left = signum(cross(poly[1], p, poly[0]));
-  int right = signum(cross(poly[n - 1], p, poly[0]));
+  int left = sgn(cross(poly[1], p, poly[0]));
+  int right = sgn(cross(poly[n - 1], p, poly[0]));
   if (left < 0 || right > 0) {
     return false;
   }
@@ -2345,19 +2379,19 @@ bool point_in_convex_polygon(
       hi = mid;
     }
   }
-  int s = signum(cross(poly[lo + 1], p, poly[lo]));
+  int s = sgn(cross(poly[lo + 1], p, poly[lo]));
   return EDGE_IS_INSIDE ? s >= 0 : s > 0;
 }
 
 template<typename Pt>
-std::array<int, 2> line_convex_polygon_intersection(
+std::pair<int, int> line_convex_polygon_intersection(
     const std::vector<Pt> &poly, const Pt &a, const Pt &b
 ) {
   int n = static_cast<int>(poly.size());
   std::vector<int> on, cross_edges;
   bool has_pos = false, has_neg = false;
   for (int i = 0; i < n; i++) {
-    int s = signum(cross(b, poly[i], a));
+    int s = sgn(cross(b, poly[i], a));
     has_pos |= s > 0;
     has_neg |= s < 0;
     if (s == 0) {
@@ -2365,7 +2399,7 @@ std::array<int, 2> line_convex_polygon_intersection(
     }
   }
   if (!has_pos && !has_neg) {
-    return n >= 2 ? std::array<int, 2>{0, 0} : std::array<int, 2>{-1, -1};
+    return n >= 2 ? std::make_pair(0, 0) : std::make_pair(-1, -1);
   }
   if (!(has_pos && has_neg)) {
     for (int i = 0; i < static_cast<int>(on.size()); i++) {
@@ -2374,11 +2408,11 @@ std::array<int, 2> line_convex_polygon_intersection(
         return {on[i], on[i]};
       }
     }
-    return on.empty() ? std::array<int, 2>{-1, -1} : std::array<int, 2>{on[0], -1};
+    return on.empty() ? std::make_pair(-1, -1) : std::make_pair(on[0], -1);
   }
   for (int i = 0; i < n; i++) {
     int j = (i + 1) % n;
-    int si = signum(cross(b, poly[i], a)), sj = signum(cross(b, poly[j], a));
+    int si = sgn(cross(b, poly[i], a)), sj = sgn(cross(b, poly[j], a));
     if (si == 0 || si * sj < 0) {
       cross_edges.push_back(i);
     }
@@ -2400,21 +2434,21 @@ std::array<int, 2> line_convex_polygon_intersection(
 }
 
 template<typename Pt>
-std::array<int, 2> convex_polygon_tangents(const std::vector<Pt> &poly, const Pt &p) {
+std::pair<int, int> convex_polygon_tangents(const std::vector<Pt> &poly, const Pt &p) {
   int n = static_cast<int>(poly.size());
-  std::array<int, 2> res{-1, -1};
+  std::pair<int, int> res{-1, -1};
   for (int i = 0; i < n; i++) {
     bool left = true, right = true;
     for (int j = 0; j < n; j++) {
-      int s = signum(cross(poly[i], poly[j], p));
+      int s = sgn(cross(poly[i], poly[j], p));
       left &= s >= 0;
       right &= s <= 0;
     }
     if (left) {
-      res[0] = i;
+      res.first = i;
     }
     if (right) {
-      res[1] = i;
+      res.second = i;
     }
   }
   return res;
@@ -2444,18 +2478,12 @@ int main() {
   assert(!point_in_convex_polygon(pentagon, PointI(0, 0), false));
   assert(!point_in_convex_polygon(pentagon, PointI(5, 4)));
 
-  assert(
-      (line_convex_polygon_intersection(square, PointI(-1, 2), PointI(5, 2)) == array<int, 2>{3, 1})
-  );
-  assert(
-      (line_convex_polygon_intersection(square, PointI(0, 0), PointI(4, 0)) == array<int, 2>{0, 0})
-  );
-  assert((
-      line_convex_polygon_intersection(square, PointI(5, 0), PointI(5, 4)) == array<int, 2>{-1, -1}
-  ));
+  assert(line_convex_polygon_intersection(square, PointI(-1, 2), PointI(5, 2)) == make_pair(3, 1));
+  assert(line_convex_polygon_intersection(square, PointI(0, 0), PointI(4, 0)) == make_pair(0, 0));
+  assert(line_convex_polygon_intersection(square, PointI(5, 0), PointI(5, 4)) == make_pair(-1, -1));
 
   auto tangents = convex_polygon_tangents(square, PointI(6, 2));
-  assert((tangents == array<int, 2>{2, 1}));
+  assert(tangents == make_pair(2, 1));
   return 0;
 }
 \end{lstlisting}
@@ -2468,7 +2496,7 @@ This implementation uses Welzl's randomized incremental algorithm. The points ar
   \item \inlinecode{minimum\_enclosing\_circle(lo, hi)} returns the minimum enclosing circle for the range [\inlinecode{lo}, \inlinecode{hi}) of points, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators. The input range is shuffled in place. The point type may be any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members. The returned circle always uses \inlinecode{double} coordinates, so integer-coordinate inputs are accepted.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n)$ expected time per call to \inlinecode{minimum\_enclosing\_circle(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}, or $O(n^{3})$ in the worst-case for a particular shuffle order.
+\textbf{Time Complexity}: $O(n)$ expected time per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}, or $O(n^{3})$ in the worst-case for a particular shuffle order.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
@@ -2484,13 +2512,20 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
 }
+
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  return C(a) < C(b);
 }
-template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
+
+template<typename T, typename U>
+bool LE(T a, U b) {
+  return !LT(b, a);
+}
 
 double sqnorm(double x, double y) {
   return x * x + y * y;
@@ -2608,7 +2643,7 @@ The returned distance preserves the coordinate arithmetic type. For integer-coor
 
 Overflow warning: squared distances grow like the square of the coordinate magnitude. For integer point types, use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) when coordinates may exceed a few tens of thousands.
 
-\textbf{Time Complexity}: $O(n \log^{2} n)$ per call to \inlinecode{closest\_pair(lo, hi, \&res)}, where n is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\textbf{Time Complexity}: $O(n \log^{2} n)$ per call, where n is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -2766,7 +2801,7 @@ Given a list of line segments in two dimensions, determine whether any pair of s
 
 Overflow warning: \inlinecode{seg\_intersection} forms the usual quadratic cross products, but the $y$-ordering cross-multiplication (\inlinecode{ay * bdx}) is cubic in the coordinate magnitude. With 32-bit \inlinecode{int} endpoints this overflows once coordinates reach the low thousands, so use a 64-bit (\inlinecode{int64\_t}) coordinate type for any non-trivial integer inputs.
 
-\textbf{Time Complexity}: $O(n \log n)$ per call to \inlinecode{find\_intersection(lo, hi, \&res1, \&res2)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
 \textbf{Space Complexity}: $O(n)$ auxiliary heap space for \inlinecode{find\_intersection(lo, hi, \&res1, \&res2)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
@@ -3065,19 +3100,19 @@ int main() {
 Given a convex polygon and a directed line from \inlinecode{p} to \inlinecode{q}, clips the polygon to the closed left half-plane of that line. The polygon is walked edge by edge: vertices on the left side of the line are kept, and whenever an edge crosses the line, the intersection point is appended to the output.
 
 \begin{compactitem}
-  \item \inlinecode{convex\_cut(lo, hi, p, q)} returns the portion of the polygon lying on or to the left of the directed line \inlinecode{p} $\to$ \inlinecode{q}. The input range [\inlinecode{lo}, \inlinecode{hi}) must contain the vertices of a convex polygon in boundary order, either clockwise or counterclockwise. The returned polygon preserves that boundary order. If \inlinecode{p} equals \inlinecode{q}, the cutting line is invalid and an error is thrown.
+  \item \inlinecode{convex\_cut(lo, hi, p, q)} returns the portion of the polygon lying on or to the left of the directed line \inlinecode{p} $\to$ \inlinecode{q}. The input range [\inlinecode{lo}, \inlinecode{hi}) must contain the vertices of a convex polygon in boundary order, either clockwise or counterclockwise. The returned polygon preserves that boundary order. The points \inlinecode{p} and \inlinecode{q} must differ.
 \end{compactitem}
 
 The function is templated on the input point type. Side classification is done with cross products. For integer-coordinate inputs, classification is exact only if the intermediate products do not overflow. Edge-line intersection points are computed in floating point, and the returned polygon uses \inlinecode{Point} with \inlinecode{double} coordinates.
 
-\textbf{Time Complexity}: $O(n)$ per call to \inlinecode{convex\_cut(lo, hi, p, q)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\textbf{Time Complexity}: $O(n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
 \textbf{Space Complexity}: $O(n)$ auxiliary space for the returned polygon.
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <cmath>
 #include <cstddef>
-#include <stdexcept>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -3086,12 +3121,14 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  return C(a) < C(b);
 }
 
 struct Point {
@@ -3132,9 +3169,7 @@ int line_intersection(
 
 template<typename It, typename Pt>
 std::vector<Point> convex_cut(It lo, It hi, const Pt &p, const Pt &q) {
-  if (EQ(p.x, q.x) && EQ(p.y, q.y)) {
-    throw std::runtime_error("Cannot cut using line from identical points.");
-  }
+  assert(!EQ(p.x, q.x) || !EQ(p.y, q.y));
   if (lo == hi) {
     return {};
   }
@@ -3158,7 +3193,6 @@ std::vector<Point> convex_cut(It lo, It hi, const Pt &p, const Pt &q) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 using namespace std;
 
 struct PointI {
@@ -3210,12 +3244,14 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  return C(a) < C(b);
 }
 
 struct Point {
@@ -3353,7 +3389,8 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
 }
 
 struct Point {
@@ -3504,13 +3541,20 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
 }
+
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  return C(a) < C(b);
 }
-template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
+
+template<typename T, typename U>
+bool LE(T a, U b) {
+  return !LT(b, a);
+}
 
 template<typename Pt>
 bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
@@ -3739,7 +3783,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Delaunay Triangulation (Simple)}
-Given a set $P$ of distinct two-dimensional points, a Delaunay triangulation of $P$ is a triangulation of the convex hull of P such that no point of P lies strictly inside the circumcircle of any triangle in the triangulation. The Delaunay triangulation is not necessarily unique when four or more points are cocircular.
+Given a set $P$ of distinct two-dimensional points, a Delaunay triangulation of $P$ is a triangulation of the convex hull of $P$ such that no point of $P$ lies strictly inside the circumcircle of any triangle in the triangulation. The Delaunay triangulation is not necessarily unique when four or more points are cocircular.
 
 This implementation produces one valid triangulation using a simple brute-force algorithm. Each candidate triangle is tested against the empty-circumcircle condition, and candidates whose edges would properly cross already accepted triangles are rejected.
 
@@ -3747,9 +3791,9 @@ This implementation produces one valid triangulation using a simple brute-force 
   \item \inlinecode{delaunay\_triangulation(p)} returns a Delaunay triangulation of the distinct points in \inlinecode{p} as a vector of clockwise-oriented vertex triples, or an empty vector if no triangulation exists (e.g. fewer than three points, or all points collinear).
 \end{compactitem}
 
-All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation. The lifted-paraboloid test scales as \textasciitilde{}96*C\textasciicircum{}4 where \inlinecode{C} is the coordinate magnitude, so a 64-bit integer coordinate type is safe up to |C| $\leq$ \textasciitilde{}17600. For floating-point coordinates the test is subject to the usual rounding error.
+All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation. The lifted-paraboloid test scales as $\sim 96 \cdot C^4$ where $C$ is the coordinate magnitude, so a 64-bit integer coordinate type is safe up to $|C| \leq \sim 17600$. For floating-point coordinates the test is subject to the usual rounding error.
 
-\textbf{Time Complexity}: $O(n^{6})$ per call to \inlinecode{delaunay\_triangulation(p)}, where $n$ is the number of points. The empty-circumcircle test contributes $O(n^{4})$; the remaining factor comes from checking candidate triangles against previously accepted triangles.
+\textbf{Time Complexity}: $O(n^{6})$ per call, where $n$ is the number of points. The empty-circumcircle test contributes $O(n^{4})$ while $O(n^{2})$ comes from checking candidate triangles against previously accepted triangles.
 
 \textbf{Space Complexity}: $O(n)$ auxiliary heap space, excluding the returned triangulation.
 
@@ -3763,13 +3807,20 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
 }
+
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  return C(a) < C(b);
 }
-template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
+
+template<typename T, typename U>
+bool LE(T a, U b) {
+  return !LT(b, a);
+}
 
 // Specialized version of seg_intersection() from 7.2.3, simplified for TOUCH_IS_INTERSECT = false,
 // i.e. we're detecting proper crossings of two non-parallel segments whose interiors intersect.
@@ -3874,7 +3925,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Delaunay Triangulation (Guibas-Stolfi)}
-Given a set $P$ of distinct two-dimensional points, a Delaunay triangulation of $P$ is a triangulation of the convex hull of P such that no point of P lies strictly inside the circumcircle of any triangle in the triangulation. The Delaunay triangulation is not necessarily unique when four or more points are cocircular.
+Given a set $P$ of distinct two-dimensional points, a Delaunay triangulation of $P$ is a triangulation of the convex hull of $P$ such that no point of $P$ lies strictly inside the circumcircle of any triangle in the triangulation. The Delaunay triangulation is not necessarily unique when four or more points are cocircular.
 
 This implementation produces one valid triangulation using the Guibas-Stolfi divide-and-conquer algorithm with a quad-edge data structure. The point set is split in half, each half is triangulated recursively, and the halves are stitched together from the bottom up by a sequence of cross edges, with circumcircle tests deciding each connecting edge and deleting invalidated ones.
 
@@ -3882,9 +3933,9 @@ This implementation produces one valid triangulation using the Guibas-Stolfi div
   \item \inlinecode{delaunay\_triangulation(pts)} sorts \inlinecode{pts} lexicographically and removes duplicate points in place (so the input vector is modified), then returns the triangles of one Delaunay triangulation as a vector of counterclockwise-oriented vertex triples (\inlinecode{std::tuple}) of the input point type. If fewer than three non-collinear unique points remain, the result is empty.
 \end{compactitem}
 
-All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation. The in-circle test is a degree-4 polynomial in the coordinates and dominates the overflow budget: a 64-bit integer coordinate type stays exact up to |C| \textasciitilde{}= 1.4e4, where \inlinecode{C} is the coordinate magnitude. For floating-point coordinates the predicates are subject to the usual rounding error.
+All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation. The in-circle test is a degree-4 polynomial in the coordinates and dominates the overflow budget: a 64-bit integer coordinate type stays exact up to $|C| \approx 1.4 \times 10^4$, where $C$ is the coordinate magnitude. For floating-point coordinates the predicates are subject to the usual rounding error.
 
-\textbf{Time Complexity}: $O(n \log n)$ per call to \inlinecode{delaunay\_triangulation(pts)}, where $n$ is the number of input points.
+\textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the number of input points.
 
 \textbf{Space Complexity}: $O(n)$ heap space for the quad-edge structure and returned triangulation.
 
@@ -3901,12 +3952,14 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  return C(a) < C(b);
 }
 
 template<typename T>
@@ -4183,7 +4236,7 @@ int main() {
 Given points in the plane, produce a small set of candidate edges guaranteed to contain a minimum spanning tree under Manhattan distance $|x_1 - x_2| + |y_1 - y_2|$. The plane is swept in four rotations/reflections; in each sweep, dominance by $x + y$ identifies the only nearby candidates that can matter. Run Kruskal on the returned edges to obtain the MST.
 
 \begin{compactitem}
-  \item \inlinecode{manhattan\_mst\_edges(points)} returns $O(n)$ candidate edges ${w, u, v}$.
+  \item \inlinecode{manhattan\_mst\_edges(points)} returns $O(n)$ candidate edges $(w, u, v)$.
   \item \inlinecode{manhattan\_mst\_weight(points)} is a small Kruskal wrapper that returns the MST weight.
 \end{compactitem}
 
@@ -4316,7 +4369,8 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
 }
 
 template<typename T>

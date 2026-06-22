@@ -10,6 +10,11 @@ them back off. Summed over all masks `m` of `n` bits, the total work is
 $\sum_k \binom{n}{k} 2^k = 3^n$, since each of the `n` bit positions is independently absent,
 present in `m` only, or present in both `m` and `s`.
 
+Gosper's hack advances to the next mask with the same popcount. It isolates the lowest set bit and
+adds it to move the lowest movable 1 one position left, clearing the block of 1-bits beneath it. The
+remaining expression counts those cleared bits and packs them into the least-significant positions,
+producing the smallest larger integer with the same number of set bits.
+
 - `submasks(m)` returns all submasks of `m`, including `m` itself and 0, in decreasing order.
 - `next_popcount(x)` returns the smallest integer greater than `x` with the same number of set bits
   (Gosper's hack), for `x > 0`.

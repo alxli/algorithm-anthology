@@ -184,7 +184,7 @@ int main() {
 
 \section{\texorpdfstring{Fast IO}{8.2 Fast IO}}
 \setcounter{section}{2}
-Fast input and output wrappers based on \inlinecode{fread()} and \inlinecode{fwrite()}. For most problems, \inlinecode{ios::sync\_with\_stdio(false); cin.tie(nullptr);} is simpler and fast enough. Use these classes when input is huge or when iostream overhead is measurable.
+Fast input and output wrappers based on \inlinecode{fread()} and \inlinecode{fwrite()}. For most problems, \inlinecode{ios::sync\_with\_stdio(false); cin.tie(nullptr);} is simpler and fast enough. Use these classes when input is huge or when \inlinecode{iostream} overhead is measurable.
 
 \begin{compactitem}
   \item \inlinecode{FastInput in(file)} reads tokens from a \inlinecode{FILE*}, defaulting to \inlinecode{stdin}.
@@ -434,7 +434,7 @@ int main() {
   }
   std::rewind(output);
   char buf[64] = {};
-  std::fgets(buf, sizeof(buf), output);
+  assert(std::fgets(buf, sizeof(buf), output));
   assert(std::strncmp(buf, "42 hello 3.5 -2147483648", 24) == 0);
   std::fclose(output);
   return 0;
@@ -472,21 +472,10 @@ struct is_iterable<
     T, std::void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>()))>>
     : std::true_type {};
 
-std::string dbg_repr(const std::string &s) {
-  return '"' + s + '"';
-}
-
-std::string dbg_repr(const char *s) {
-  return dbg_repr(std::string(s));
-}
-
-std::string dbg_repr(char c) {
-  return std::string("'") + c + "'";
-}
-
-std::string dbg_repr(bool b) {
-  return b ? "true" : "false";
-}
+std::string dbg_repr(const std::string &s) { return '"' + s + '"'; }
+std::string dbg_repr(const char *s) { return dbg_repr(std::string(s)); }
+std::string dbg_repr(char c) { return std::string("'") + c + "'"; }
+std::string dbg_repr(bool b) { return b ? "true" : "false"; }
 
 template<typename T>
 typename std::enable_if<
@@ -784,6 +773,7 @@ The order-statistic operations use GNU PBDS conventions: \inlinecode{find\_by\_o
 \textbf{Space Complexity}: $O(n)$ for all containers.
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -839,7 +829,11 @@ class OrderedMultiset {
     return true;
   }
 
-  T find_by_order(int k) const { return tree.find_by_order(k)->first; }
+  T find_by_order(int k) const {
+    assert(0 <= k && k < size());
+    return tree.find_by_order(k)->first;
+  }
+
   int order_of_key(const T &x) const { return tree.order_of_key({x, -1}); }
   int size() const { return static_cast<int>(tree.size()); }
 };
@@ -862,6 +856,7 @@ class OrderedMultimap {
   }
 
   std::pair<K, V> find_by_order(int k) const {
+    assert(0 <= k && k < size());
     auto it = tree.find_by_order(k);
     return {it->first.first, it->second};
   }
@@ -885,8 +880,6 @@ using RcBinomialHeap = __gnu_pbds::priority_queue<T, Compare, __gnu_pbds::rc_bin
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
-
 int main() {
   OrderedSet<int> s;
   s.insert(10);
@@ -928,10 +921,10 @@ int main() {
   PairingHeap<int> h1, h2;
   auto it = h1.push(10);
   auto erased = h1.push(5);
-  h1.modify(it, 20);   // Net new over std::priority_queue: update through a handle.
-  h1.erase(erased);    // Also net new: remove an arbitrary heap item through a handle.
+  h1.modify(it, 20);  // Net new over std::priority_queue: update through a handle.
+  h1.erase(erased);   // Also net new: remove an arbitrary heap item through a handle.
   h2.push(7);
-  h1.join(h2);         // Also net new: meld another heap into this one.
+  h1.join(h2);  // Also net new: meld another heap into this one.
   assert(h1.top() == 20);
   h1.pop();
   assert(h1.top() == 7);

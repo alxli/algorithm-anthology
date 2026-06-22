@@ -10,27 +10,25 @@ possible tail value of an increasing subsequence of that length. Each element ex
 one of these tails, located in O(log n) by binary search; predecessor links then reconstruct the
 subsequence.
 
-- `longest_increasing_subsequence(lo, hi)` returns a longest strictly increasing subsequence of
-  [`lo`, `hi`) as a `std::vector` of the selected values, in order.
+- `longest_increasing_subsequence(lo, hi)` returns the indices relative to `lo` of one longest
+  strictly increasing subsequence of [`lo`, `hi`), in order.
 
 Time Complexity:
-- O(n log n) per call, where $n$ is the distance between `lo` and `hi`.
+- O(n log n) per call to either function, where $n$ is the distance between `lo` and `hi`.
 
 Space Complexity:
-- O(n) auxiliary heap space for `longest_increasing_subsequence()`.
+- O(n) auxiliary heap space.
 
 */
 
 #include <algorithm>
-#include <iterator>
 #include <vector>
 
 template<typename It>
-auto longest_increasing_subsequence(It lo, It hi) {
-  using T = typename std::iterator_traits<It>::value_type;
+std::vector<int> longest_increasing_subsequence(It lo, It hi) {
   int len = 0, n = static_cast<int>(hi - lo);
   if (n == 0) {
-    return std::vector<T>();
+    return {};
   }
   // tail[i] = index (into [lo, hi)) of the last element of the best known LIS of length i+1.
   // prev[i] = index of the predecessor of element i in its LIS (or -1 if first).
@@ -50,9 +48,9 @@ auto longest_increasing_subsequence(It lo, It hi) {
     prev[i] = pos > 0 ? tail[pos - 1] : -1;
     tail[pos] = i;
   }
-  std::vector<T> res(len);
+  std::vector<int> res(len);
   for (int i = tail[len - 1]; i != -1; i = prev[i]) {
-    res[--len] = *(lo + i);
+    res[--len] = i;
   }
   return res;
 }
@@ -63,13 +61,14 @@ auto longest_increasing_subsequence(It lo, It hi) {
 
 ***/
 
+#include <cassert>
 #include <iostream>
 using namespace std;
 
 template<typename It>
-void print_range(It lo, It hi) {
-  while (lo != hi) {
-    cout << *lo++ << " ";
+void print_range(It lo, const vector<int> &indices) {
+  for (int i : indices) {
+    cout << *(lo + i) << " ";
   }
   cout << endl;
 }
@@ -77,6 +76,7 @@ void print_range(It lo, It hi) {
 int main() {
   vector<int> a{-2, -5, 1, 9, 10, 8, 11, 10, 13, 11};
   vector<int> res = longest_increasing_subsequence(a.begin(), a.end());
-  print_range(res.begin(), res.end());
+  assert((res == vector<int>{1, 2, 3, 4, 6, 8}));
+  print_range(a.begin(), res);
   return 0;
 }

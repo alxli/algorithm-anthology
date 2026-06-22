@@ -8,7 +8,7 @@ for present values and an ordered set of currently missing candidates.
 
 - `mex(lo, hi)` returns the MEX of the values in [`lo`, `hi`).
 - `DynamicMex()` maintains the MEX of a multiset of nonnegative integers.
-- `add(x)` inserts one copy of value `x` if `x >= 0`.
+- `add(x)` inserts one copy of value `x` if `x` $\geq 0$.
 - `remove(x)` removes one copy of value `x` if present.
 - `get()` returns the current MEX.
 

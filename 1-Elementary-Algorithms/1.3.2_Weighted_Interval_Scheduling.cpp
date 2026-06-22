@@ -9,9 +9,10 @@ finishing no later than its start, with that predecessor located by binary searc
 Intervals are represented as half-open ranges [`start`, `finish`), so two intervals are compatible
 if the next interval's `start` is at least the previous interval's `finish`.
 
-- `schedule_weighted_intervals(intervals)` returns the maximum total weight of a compatible subset
-  from an input vector of `WeightedInterval` with fields `start`, `finish`, and `weight`.
-  `dp[i]` stores the best answer using the first `i` intervals after sorting by finish time.
+- `select_weighted_intervals(intervals)` returns a pair (`weight`, `selected`) containing that
+  maximum weight and the selected intervals as original input indices in execution order, from an
+  input vector of `WeightedInterval` with fields `start`, `finish`, and `weight`. `dp[i]` stores the
+  best answer using the first `i` intervals after sorting by finish time.
 
 Time Complexity:
 - O(n log n) per call due to sorting and binary searching compatible intervals.
@@ -23,6 +24,8 @@ Space Complexity:
 
 #include <algorithm>
 #include <cstdint>
+#include <numeric>
+#include <utility>
 #include <vector>
 
 struct WeightedInterval {
@@ -30,24 +33,45 @@ struct WeightedInterval {
   int64_t weight;
 };
 
-int64_t schedule_weighted_intervals(std::vector<WeightedInterval> intervals) {
-  std::sort(
-      intervals.begin(), intervals.end(), [](const WeightedInterval &a, const WeightedInterval &b) {
-        return a.finish != b.finish ? a.finish < b.finish : a.start < b.start;
-      }
-  );
+std::pair<int64_t, std::vector<int>> select_weighted_intervals(
+    const std::vector<WeightedInterval> &intervals
+) {
   int n = static_cast<int>(intervals.size());
-  std::vector<int> finish;
-  finish.reserve(n);
-  for (const auto &iv : intervals) {
-    finish.push_back(iv.finish);
+  std::vector<int> order(n), finish(n), prev(n);
+  std::iota(order.begin(), order.end(), 0);
+  std::sort(order.begin(), order.end(), [&](int i, int j) {
+    return intervals[i].finish != intervals[j].finish ? intervals[i].finish < intervals[j].finish
+                                                      : intervals[i].start < intervals[j].start;
+  });
+  for (int i = 0; i < n; i++) {
+    finish[i] = intervals[order[i]].finish;
   }
   std::vector<int64_t> dp(n + 1, 0);
+  std::vector<char> take(n + 1, false);
   for (int i = 1; i <= n; i++) {
-    int j = std::upper_bound(finish.begin(), finish.end(), intervals[i - 1].start) - finish.begin();
-    dp[i] = std::max(dp[i - 1], dp[j] + intervals[i - 1].weight);
+    int j =
+        std::upper_bound(finish.begin(), finish.begin() + i - 1, intervals[order[i - 1]].start) -
+        finish.begin();
+    prev[i - 1] = j;
+    int64_t candidate = dp[j] + intervals[order[i - 1]].weight;
+    if (dp[i - 1] < candidate) {
+      dp[i] = candidate;
+      take[i] = true;
+    } else {
+      dp[i] = dp[i - 1];
+    }
   }
-  return dp[n];
+  std::vector<int> selected;
+  for (int i = n; i > 0;) {
+    if (take[i]) {
+      selected.push_back(order[i - 1]);
+      i = prev[i - 1];
+    } else {
+      i--;
+    }
+  }
+  std::reverse(selected.begin(), selected.end());
+  return {dp[n], selected};
 }
 
 /*** Example Usage ***/
@@ -57,6 +81,8 @@ using namespace std;
 
 int main() {
   vector<WeightedInterval> intervals{{1, 3, 5}, {2, 5, 6}, {4, 6, 5}, {6, 7, 4}, {5, 8, 11}};
-  assert(schedule_weighted_intervals(intervals) == 17);
+  auto [weight, selected] = select_weighted_intervals(intervals);
+  assert(weight == 17);
+  assert((selected == vector<int>{1, 4}));
   return 0;
 }

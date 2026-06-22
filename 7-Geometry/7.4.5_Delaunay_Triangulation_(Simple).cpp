@@ -1,9 +1,9 @@
 /*
 
 Given a set $P$ of distinct two-dimensional points, a Delaunay triangulation of $P$ is a
-triangulation of the convex hull of P such that no point of P lies strictly inside the circumcircle
-of any triangle in the triangulation. The Delaunay triangulation is not necessarily unique when four
-or more points are cocircular.
+triangulation of the convex hull of $P$ such that no point of $P$ lies strictly inside the
+circumcircle of any triangle in the triangulation. The Delaunay triangulation is not necessarily
+unique when four or more points are cocircular.
 
 This implementation produces one valid triangulation using a simple brute-force algorithm. Each
 candidate triangle is tested against the empty-circumcircle condition, and candidates whose edges
@@ -14,9 +14,9 @@ would properly cross already accepted triangles are rejected.
   fewer than three points, or all points collinear).
 
 All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation.
-The lifted-paraboloid test scales as ~96*C^4 where `C` is the coordinate magnitude, so a 64-bit
-integer coordinate type is safe up to |C| <= ~17600. For floating-point coordinates the test is
-subject to the usual rounding error.
+The lifted-paraboloid test scales as $\sim 96 \cdot C^4$ where $C$ is the coordinate magnitude, so a
+64-bit integer coordinate type is safe up to $|C| \leq \sim 17600$. For floating-point coordinates
+the test is subject to the usual rounding error.
 
 Time Complexity:
 - O(n^6) per call, where $n$ is the number of points. The empty-circumcircle test contributes O(n^4)
@@ -46,7 +46,10 @@ bool LT(T a, U b) {
   return C(a) < C(b);
 }
 
-template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
+template<typename T, typename U>
+bool LE(T a, U b) {
+  return !LT(b, a);
+}
 
 // Specialized version of seg_intersection() from 7.2.3, simplified for TOUCH_IS_INTERSECT = false,
 // i.e. we're detecting proper crossings of two non-parallel segments whose interiors intersect.

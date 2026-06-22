@@ -202,6 +202,8 @@ void combsort(It lo, It hi, Compare comp = Compare()) {
 \end{lstlisting}
 Radix sort is used to sort integer elements with a constant number of bits in linear time. This implementation works on ranges pointing to any signed or unsigned integer primitive. Signed values are handled by sorting on a key that flips the sign bit, which maps the two's-complement order onto the unsigned order so the most negative value sorts first.
 
+Digits are processed from least significant to most significant, and each counting-sort pass is stable. After one pass, the values are sorted by the processed digit; stability ensures that a later pass preserves the ordering already established by all less-significant digits. Inductively, after the final pass the values are sorted by the entire key.
+
 In this implementation, a power of two is chosen to be the base for the sort so that bitwise operations can be easily used to extract digits. This avoids the need to use modulo/exponentiation, which are much more expensive operations. In practice, it's been demonstrated that $2^8$ is the best choice for sorting 32-bit integers (approximately 5 times faster than \inlinecode{std::sort()}, and typically 2-4 times faster than radix sort using any other power of two chosen as the base).
 
 \textbf{Time Complexity}: $O(n \cdot w)$ for $n$ integers of $w$ bits each.
@@ -372,9 +374,11 @@ All three versions below achieve the same result using in-place algorithms.
 
 \begin{compactitem}
   \item \inlinecode{rotate1(lo, mid, hi)} uses a straightforward swapping algorithm requiring ForwardIterators.
-  \item \inlinecode{rotate2(lo, mid, hi)} requires BidirectionalIterators, employing a well-known trick with three simple inversions.
+  \item \inlinecode{rotate2(lo, mid, hi)} requires BidirectionalIterators, employing a well-known trick with three simple reversals.
   \item \inlinecode{rotate3(lo, mid, hi)} requires random-access iterators, applying a juggling algorithm which first divides the range into \inlinecode{gcd(hi - lo, mid - lo)} sets and then rotates the corresponding elements in each set.
 \end{compactitem}
+
+Writing the original range as \inlinecode{A B}, the reversal method first produces \inlinecode{reverse(A) reverse(B)}; reversing that whole range yields \inlinecode{B A} while restoring the order within both parts. The juggling method follows the permutation that sends each position to its rotated destination. Those moves form \inlinecode{gcd(n, shift)} disjoint cycles, so walking each cycle once moves every element to its final position.
 
 \textbf{Time Complexity}: $O(n)$ per call to all versions, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
@@ -763,7 +767,7 @@ Quickselect repeatedly partitions around a pivot, then continues only into the s
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ expected per call to \inlinecode{nth\_element2()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+  \item $O(n)$ expected per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
   \item $O(n^{2})$ in the worst case.
 \end{compactitem}
 
@@ -824,7 +828,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{3-Way Partitioning (Dutch National Flag)}
-Partitions a range into three consecutive groups according to a pivot value: elements less than the pivot, elements equal to the pivot, and elements greater than the pivot. This is the Dutch National Flag algorithm, and is the core partitioning step used in three-way quicksort and arrays with many duplicate keys. A single pass maintains the three groups in-place using two boundary iterators, swapping each examined element into the region where it belongs.
+Partitions a range into three consecutive groups according to a pivot value: elements less than the pivot, elements equal to the pivot, and elements greater than the pivot. This is the Dutch National Flag algorithm, and is the core partitioning step used in three-way quicksort and arrays with many duplicate keys. A single pass maintains four regions: values less than the pivot, values equal to it, unclassified values, and values greater than it. The next unclassified value expands the first or second region, or is swapped with the last unclassified value to expand the fourth. In the latter case, the incoming value remains unclassified and must be examined before the scan advances.
 
 \begin{compactitem}
   \item \inlinecode{partition\_three\_way(lo, hi, pivot)} rearranges the range [\inlinecode{lo}, \inlinecode{hi}) in-place and returns iterators (\inlinecode{mid\_lo}, \inlinecode{mid\_hi}), where [\inlinecode{lo}, \inlinecode{mid\_lo}) is less than \inlinecode{pivot}, [\inlinecode{mid\_lo}, \inlinecode{mid\_hi}) is equal to \inlinecode{pivot}, and [\inlinecode{mid\_hi}, \inlinecode{hi}) is greater than \inlinecode{pivot}.
@@ -1085,22 +1089,26 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Two Pointers}
-Uses two moving indices to avoid trying all pairs of positions. This technique has two common forms: opposite-end pointers over sorted arrays, and a sliding window over contiguous subarrays. The opposite-end form moves the smaller or larger side according to the current comparison. The sliding-window form is useful when expanding the right endpoint and shrinking the left endpoint monotonically preserves enough state to test a condition or update an answer.
+Uses two moving indices to avoid trying all pairs of positions. This technique has two common forms: opposite-end pointers over sorted arrays, and a sliding window over contiguous subarrays. For sorted 2-sum, if the current sum is too small, pairing the left value with any smaller right value also fails, so the left pointer can safely advance; if the sum is too large, the symmetric argument lets the right pointer retreat. Each step therefore discards an entire row or column of candidate pairs.
+
+A sliding window applies the same idea when extending and shrinking a range changes its state monotonically. With nonnegative values, extending a window cannot decrease its sum and removing its leftmost value cannot increase it, so no shorter feasible window is skipped. For a bound such as at most \inlinecode{k} distinct values, the left pointer advances only until the window becomes valid again. Since neither endpoint moves backward, each element enters and leaves the window at most once.
 
 The examples below cover sorted 2-sum/3-sum variants, finding the shortest subarray with sum at least a target when all values are nonnegative, and finding the longest subarray with at most \inlinecode{k} distinct values.
 
 \begin{compactitem}
-  \item \inlinecode{two\_sum\_sorted(a, target)} returns two indices whose values sum to \inlinecode{target}, or ${-1, -1}$ if no such pair exists. The input array must be sorted.
-  \item \inlinecode{three\_sum\_exists(a, target)} returns whether any three values in \inlinecode{a} sum to \inlinecode{target}. It sorts a copy of the input array.
-  \item \inlinecode{min\_length\_at\_least(a, target)} returns the minimum length of a contiguous subarray with sum at least \inlinecode{target}, or $-1$ if none exists. Values in \inlinecode{a} must be nonnegative.
-  \item \inlinecode{longest\_at\_most\_k\_distinct(a, k)} returns the maximum length of a contiguous subarray containing at most \inlinecode{k} distinct values.
+  \item \inlinecode{two\_sum\_sorted(a, target)} returns two indices whose values sum to \inlinecode{target}, or $(-1, -1)$ if no such pair exists. The input array must be sorted.
+  \item \inlinecode{three\_sum(a, target)} returns three original indices whose values sum to \inlinecode{target}, or $(-1, -1, -1)$ if none exist.
+  \item \inlinecode{min\_length\_at\_least(a, target)} returns the minimum length and inclusive endpoints of a contiguous subarray with sum at least \inlinecode{target}, or length $-1$ if none exists. Values in \inlinecode{a} must be nonnegative. If \inlinecode{target} is nonpositive, it returns the empty subarray with length 0.
+  \item \inlinecode{longest\_at\_most\_k\_distinct(a, k)} returns the maximum length and inclusive endpoints of a contiguous subarray containing at most \inlinecode{k} distinct values.
 \end{compactitem}
+
+The two window functions return \inlinecode{(length, lo, hi)}. An empty or nonexistent result is represented by endpoints [0, $-1$].
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{two\_sum\_sorted()} and \inlinecode{min\_length\_at\_least()}, where $n$ is the array size.
-  \item $O(n^{2})$ per call to \inlinecode{three\_sum\_exists()}.
+  \item $O(n^{2})$ per call to \inlinecode{three\_sum()}.
   \item $O(n)$ expected per call to \inlinecode{longest\_at\_most\_k\_distinct()}.
 \end{compactitem}
 
@@ -1108,14 +1116,17 @@ The examples below cover sorted 2-sum/3-sum variants, finding the shortest subar
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for \inlinecode{two\_sum\_sorted(a, target)}.
-  \item $O(n)$ auxiliary heap space for \inlinecode{three\_sum\_exists(a, target)}.
+  \item $O(n)$ auxiliary heap space for \inlinecode{three\_sum(a, target)}.
   \item $O(1)$ auxiliary for \inlinecode{min\_length\_at\_least(a, target)}.
   \item $O(k)$ auxiliary heap space for \inlinecode{longest\_at\_most\_k\_distinct(a, k)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <array>
 #include <cstdint>
+#include <tuple>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -1134,14 +1145,19 @@ std::pair<int, int> two_sum_sorted(const std::vector<int> &a, int64_t target) {
   return {-1, -1};
 }
 
-bool three_sum_exists(std::vector<int> a, int64_t target) {
-  std::sort(a.begin(), a.end());
+std::array<int, 3> three_sum(const std::vector<int> &a, int64_t target) {
+  std::vector<std::pair<int, int>> sorted;
+  sorted.reserve(a.size());
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
-    int l = i + 1, r = static_cast<int>(a.size()) - 1;
+    sorted.push_back({a[i], i});
+  }
+  std::sort(sorted.begin(), sorted.end());
+  for (int i = 0; i < static_cast<int>(sorted.size()); i++) {
+    int l = i + 1, r = static_cast<int>(sorted.size()) - 1;
     while (l < r) {
-      int64_t sum = static_cast<int64_t>(a[i]) + a[l] + a[r];
+      int64_t sum = static_cast<int64_t>(sorted[i].first) + sorted[l].first + sorted[r].first;
       if (sum == target) {
-        return true;
+        return {sorted[i].second, sorted[l].second, sorted[r].second};
       } else if (sum < target) {
         l++;
       } else {
@@ -1149,28 +1165,38 @@ bool three_sum_exists(std::vector<int> a, int64_t target) {
       }
     }
   }
-  return false;
+  return {-1, -1, -1};
 }
 
-int min_length_at_least(const std::vector<int> &a, int64_t target) {
-  int best = static_cast<int>(a.size()) + 1;
+std::tuple<int, int, int> min_length_at_least(const std::vector<int> &a, int64_t target) {
+  if (target <= 0) {
+    return {0, 0, -1};
+  }
+  int best = static_cast<int>(a.size()) + 1, best_lo = 0, best_hi = -1;
   int64_t sum = 0;
   for (int l = 0, r = 0; r < static_cast<int>(a.size()); r++) {
     sum += a[r];
     while (sum >= target) {
-      best = std::min(best, r - l + 1);
+      if (r - l + 1 < best) {
+        best = r - l + 1;
+        best_lo = l;
+        best_hi = r;
+      }
       sum -= a[l++];
     }
   }
-  return best == static_cast<int>(a.size()) + 1 ? -1 : best;
+  if (best == static_cast<int>(a.size()) + 1) {
+    return {-1, 0, -1};
+  }
+  return {best, best_lo, best_hi};
 }
 
-int longest_at_most_k_distinct(const std::vector<int> &a, int k) {
+std::tuple<int, int, int> longest_at_most_k_distinct(const std::vector<int> &a, int k) {
   if (k <= 0) {
-    return 0;
+    return {0, 0, -1};
   }
   std::unordered_map<int, int> count;
-  int best = 0;
+  int best = 0, best_lo = 0, best_hi = -1;
   for (int l = 0, r = 0; r < static_cast<int>(a.size()); r++) {
     count[a[r]]++;
     while (static_cast<int>(count.size()) > k) {
@@ -1179,9 +1205,13 @@ int longest_at_most_k_distinct(const std::vector<int> &a, int k) {
       }
       l++;
     }
-    best = std::max(best, r - l + 1);
+    if (best < r - l + 1) {
+      best = r - l + 1;
+      best_lo = l;
+      best_hi = r;
+    }
   }
-  return best;
+  return {best, best_lo, best_hi};
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -1197,14 +1227,22 @@ int main() {
   assert(two_sum_sorted(c, 100) == make_pair(-1, -1));
 
   vector<int> d{4, -1, 8, 2, -3, 11};
-  assert(three_sum_exists(d, 9));   // -3 + 4 + 8.
-  assert(!three_sum_exists(d, 30));
+  array<int, 3> triple = three_sum(d, 9);
+  assert(d[triple[0]] + d[triple[1]] + d[triple[2]] == 9);
+  assert((three_sum(d, 30) == array<int, 3>{-1, -1, -1}));
 
   vector<int> a{2, 3, 1, 2, 4, 3};
-  assert(min_length_at_least(a, 7) == 2);  // [4, 3].
+  auto [length, lo, hi] = min_length_at_least(a, 7);
+  assert(length == 2);
+  assert(lo == 4 && hi == 5);  // [4, 3].
+  auto [empty_length, empty_lo, empty_hi] = min_length_at_least(a, 0);
+  assert(empty_length == 0);
+  assert(empty_lo == 0 && empty_hi == -1);
 
   vector<int> b{1, 2, 1, 3, 4, 3, 5};
-  assert(longest_at_most_k_distinct(b, 2) == 3);  // [1, 2, 1].
+  auto [longest, longest_lo, longest_hi] = longest_at_most_k_distinct(b, 2);
+  assert(longest == 3);
+  assert(longest_lo == 0 && longest_hi == 2);  // [1, 2, 1].
   return 0;
 }
 \end{lstlisting}
@@ -1223,12 +1261,14 @@ Both functions take a vector of $n$ comparable values and a window length $k \in
 \textbf{Space Complexity}: $O(n)$ auxiliary heap space for the result, plus $O(k)$ for the deque.
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <deque>
 #include <vector>
 
 template<typename T>
 std::vector<T> sliding_window_maximum(const std::vector<T> &a, int k) {
   int n = static_cast<int>(a.size());
+  assert(1 <= k && k <= n);
   std::deque<int> window;
   std::vector<T> res;
   for (int i = 0; i < n; i++) {
@@ -1249,6 +1289,7 @@ std::vector<T> sliding_window_maximum(const std::vector<T> &a, int k) {
 template<typename T>
 std::vector<T> sliding_window_minimum(const std::vector<T> &a, int k) {
   int n = static_cast<int>(a.size());
+  assert(1 <= k && k <= n);
   std::deque<int> window;
   std::vector<T> res;
   for (int i = 0; i < n; i++) {
@@ -1269,7 +1310,6 @@ std::vector<T> sliding_window_minimum(const std::vector<T> &a, int k) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 using namespace std;
 
 int main() {
@@ -1312,6 +1352,7 @@ The fold is defined by an associative \inlinecode{combine(a, b)} function. The d
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <utility>
 #include <vector>
 
@@ -1333,6 +1374,7 @@ class AggregateQueue {
   }
 
   void pop() {
+    assert(!empty());
     if (front_stack.empty()) {
       // Flip the back stack onto the front stack, reversing order so the oldest element ends up on
       // top, and recompute the front folds in queue order.
@@ -1347,10 +1389,12 @@ class AggregateQueue {
   }
 
   T front() const {
+    assert(!empty());
     return front_stack.empty() ? back_stack.front().first : front_stack.back().first;
   }
 
   T fold() const {
+    assert(!empty());
     if (front_stack.empty()) {
       return back_stack.back().second;
     }
@@ -1364,7 +1408,6 @@ class AggregateQueue {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 using namespace std;
 
 int main() {
@@ -1400,6 +1443,8 @@ int main() {
 \subsection{Monotonic Stack}
 A monotonic stack maintains its elements in sorted order as values are pushed, popping away any entries that would violate the ordering. Scanning an array once while keeping such a stack of indices answers, for every position, where the nearest smaller or larger neighbor lies. These ``nearest smaller/greater'' relationships underlie many array problems, the most famous being the largest rectangle in a histogram. Each index is pushed and popped at most once, so a full scan runs in linear time. A largest all-zero submatrix can then be found by sweeping rows, turning each row into a histogram of consecutive zeros ending at that row.
 
+For a histogram bar \inlinecode{i}, the nearest strictly lower bars on its left and right are exactly the first positions that prevent a rectangle of height \inlinecode{heights[i]} from extending farther. Its widest such rectangle therefore spans the positions between those boundaries. For a binary matrix, the height at each column counts consecutive zeros ending in the current row; every all-zero rectangle has some bottom row, so solving one histogram per row considers every possible rectangle.
+
 All functions below take a vector \inlinecode{a} of $n$ comparable values and return a vector of $n$ indices. A ``less'' query uses a strictly smaller neighbor and a ``greater'' query uses a strictly larger one; changing the comparison from strict to non-strict (e.g. \inlinecode{\textgreater{}=} to \inlinecode{\textgreater{}}) toggles how ties are handled.
 
 \begin{compactitem}
@@ -1427,6 +1472,7 @@ All functions below take a vector \inlinecode{a} of $n$ comparable values and re
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <stack>
 #include <vector>
 
@@ -1509,6 +1555,9 @@ int largest_zero_submatrix(const std::vector<std::vector<char>> &a) {
     return 0;
   }
   int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
+  for (const auto &row : a) {
+    assert(static_cast<int>(row.size()) == cols);
+  }
   int best = 0;
   std::vector<int> height(cols, 0);
   for (int i = 0; i < rows; i++) {
@@ -1523,7 +1572,6 @@ int largest_zero_submatrix(const std::vector<std::vector<char>> &a) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 using namespace std;
 
 int main() {
@@ -1548,11 +1596,11 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Maximum Subarray Sum (Kadane)}
-Given an array of numbers, determine the maximum possible sum of any contiguous subarray. Kadane's algorithm scans through the array, at each index computing the maximum nonnegative sum subarray ending there. Either this subarray is empty (in which case its sum is zero), or it consists of one more element than the maximum sequence ending at the previous position. This can be adapted to compute the maximal submatrix sum as well.
+Given an array of numbers, determine the maximum possible sum of any contiguous subarray. Kadane's algorithm scans the array while maintaining the maximum nonnegative sum of a subarray ending at the current position. A negative running sum is discarded because it can only reduce the sum of every subarray that extends it. Thus, by including \inlinecode{a[i]}, the running sum becomes \inlinecode{max(0, sum + a[i])}, and the largest running sum seen is the answer. This can be adapted to compute the maximal submatrix sum as well.
 
 \begin{compactitem}
-  \item \inlinecode{max\_subarray\_sum(lo, hi, \&res\_lo, \&res\_hi)} returns the maximal subarray sum for the range [\inlinecode{lo}, \inlinecode{hi}), where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to numeric types. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} to be defined on the iterators' value type. Optionally, two \inlinecode{int} pointers may be passed to store the inclusive boundary indices [\inlinecode{res\_lo}, \inlinecode{res\_hi}] of the resulting subarray. By convention, the empty subarray is allowed, so an input range consisting of only negative values returns 0 with an empty result interval.
-  \item \inlinecode{max\_submatrix\_sum(a, \&r1, \&c1, \&r2, \&c2)} returns the largest sum of any rectangular submatrix for a matrix \inlinecode{a} with $m$ rows and $n$ columns. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} to be defined on the iterators' value type. Optionally, four \inlinecode{int} pointers may be passed to store the boundary indices of the resulting subarray, with (\inlinecode{r1}, \inlinecode{c1}) specifiying the top-left index and (\inlinecode{r2}, \inlinecode{c2}) specifying the bottom-right index. By convention, the empty submatrix is allowed, so an input matrix consisting of only negative values returns 0 with an empty result interval.
+  \item \inlinecode{max\_subarray\_sum(lo, hi)} returns \inlinecode{(sum, begin, end)} for the maximal subarray in [\inlinecode{lo}, \inlinecode{hi}), where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to numeric types. The endpoints are inclusive. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} on the iterators' value type. By convention, the empty subarray is allowed, so an input range containing only negative values returns sum 0 and endpoints [0, $-1$].
+  \item \inlinecode{max\_submatrix\_sum(a)} returns \inlinecode{(sum, r1, c1, r2, c2)} for the largest rectangular submatrix of a matrix \inlinecode{a} with $m$ rows and $n$ columns. The corners are inclusive. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} on the matrix value type. By convention, the empty submatrix is allowed, so a matrix containing only negative values returns sum 0 with empty row and column intervals.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1573,13 +1621,14 @@ Given an array of numbers, determine the maximum possible sum of any contiguous 
 #include <algorithm>
 #include <cstddef>
 #include <iterator>
+#include <tuple>
 #include <vector>
 
 template<typename It>
-auto max_subarray_sum(It lo, It hi, int *res_lo = nullptr, int *res_hi = nullptr) {
+auto max_subarray_sum(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
   if (lo == hi) {
-    return T();
+    return std::make_tuple(T(), 0, -1);
   }
   int curr_begin = 0, begin = 0, end = -1;
   T sum = 0, max_sum = 0;
@@ -1594,43 +1643,34 @@ auto max_subarray_sum(It lo, It hi, int *res_lo = nullptr, int *res_hi = nullptr
       end = it - lo;
     }
   }
-  if (res_lo != nullptr && res_hi != nullptr) {
-    *res_lo = begin;
-    *res_hi = end;
-  }
-  return max_sum;
+  return std::make_tuple(max_sum, begin, end);
 }
 
 template<typename T>
-T max_submatrix_sum(
-    const std::vector<std::vector<T>> &a, int *r1 = nullptr, int *c1 = nullptr, int *r2 = nullptr,
-    int *c2 = nullptr
-) {
+std::tuple<T, int, int, int, int> max_submatrix_sum(const std::vector<std::vector<T>> &a) {
   if (a.empty() || a[0].empty()) {
-    return T();
+    return {T(), 0, 0, -1, -1};
   }
   int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
-  T sum, max_sum = 0;
+  int r1 = 0, c1 = 0, r2 = -1, c2 = -1;
+  T max_sum = 0;
   for (int clo = 0; clo < cols; clo++) {
     std::vector<T> sums(rows, 0);
     for (int chi = clo; chi < cols; chi++) {
       for (int i = 0; i < rows; i++) {
         sums[i] += a[i][chi];
       }
-      int rlo, rhi;
-      sum = max_subarray_sum(sums.begin(), sums.end(), &rlo, &rhi);
+      auto [sum, rlo, rhi] = max_subarray_sum(sums.begin(), sums.end());
       if (max_sum < sum) {
         max_sum = sum;
-        if (r1 != nullptr && c1 != nullptr && r2 != nullptr && c2 != nullptr) {
-          *r1 = rlo;
-          *c1 = clo;
-          *r2 = rhi;
-          *c2 = chi;
-        }
+        r1 = rlo;
+        c1 = clo;
+        r2 = rhi;
+        c2 = chi;
       }
     }
   }
-  return max_sum;
+  return {max_sum, r1, c1, r2, c2};
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -1643,9 +1683,10 @@ using namespace std;
 int main() {
   {
     vector<int> a{-2, -1, -3, 4, -1, 2, 1, -5, 4};
-    int lo = 0, hi = 0;
-    assert(max_subarray_sum(a.begin(), a.begin() + 3) == 0);
-    assert(max_subarray_sum(a.begin(), a.end(), &lo, &hi) == 6);
+    auto [negative_sum, negative_lo, negative_hi] = max_subarray_sum(a.begin(), a.begin() + 3);
+    assert(negative_sum == 0 && negative_lo == 0 && negative_hi == -1);
+    auto [sum, lo, hi] = max_subarray_sum(a.begin(), a.end());
+    assert(sum == 6);
     cout << "Maximal sum subarray:" << endl;
     for (int i = lo; i <= hi; i++) {
       cout << a[i] << " ";
@@ -1657,8 +1698,8 @@ int main() {
                           {9, 2, -6, 2, -4},
                           {-4, 1, -4, 1, 0},
                           {-1, 8, 0, -2, 3}};
-    int r1 = 0, c1 = 0, r2 = 0, c2 = 0;
-    assert(max_submatrix_sum(a, &r1, &c1, &r2, &c2) == 15);
+    auto [sum, r1, c1, r2, c2] = max_submatrix_sum(a);
+    assert(sum == 15);
     cout << "\nMaximal sum submatrix:" << endl;
     for (int i = r1; i <= r2; i++) {
       for (int j = c1; j <= c2; j++) {
@@ -1685,24 +1726,22 @@ Given a range of elements, determine a longest subsequence of the range where al
 The answer is computed by scanning left to right while maintaining, for each length, the smallest possible tail value of an increasing subsequence of that length. Each element extends or improves one of these tails, located in $O(\log n)$ by binary search; predecessor links then reconstruct the subsequence.
 
 \begin{compactitem}
-  \item \inlinecode{longest\_increasing\_subsequence(lo, hi)} returns a longest strictly increasing subsequence of [\inlinecode{lo}, \inlinecode{hi}) as a \inlinecode{std::vector} of the selected values, in order.
+  \item \inlinecode{longest\_increasing\_subsequence(lo, hi)} returns the indices relative to \inlinecode{lo} of one longest strictly increasing subsequence of [\inlinecode{lo}, \inlinecode{hi}), in order.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n \log n)$ per call to \inlinecode{longest\_increasing\_subsequence()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\textbf{Time Complexity}: $O(n \log n)$ per call to either function, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space for \inlinecode{longest\_increasing\_subsequence()}.
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
-#include <iterator>
 #include <vector>
 
 template<typename It>
-auto longest_increasing_subsequence(It lo, It hi) {
-  using T = typename std::iterator_traits<It>::value_type;
+std::vector<int> longest_increasing_subsequence(It lo, It hi) {
   int len = 0, n = static_cast<int>(hi - lo);
   if (n == 0) {
-    return std::vector<T>();
+    return {};
   }
   // tail[i] = index (into [lo, hi)) of the last element of the best known LIS of length i+1.
   // prev[i] = index of the predecessor of element i in its LIS (or -1 if first).
@@ -1722,9 +1761,9 @@ auto longest_increasing_subsequence(It lo, It hi) {
     prev[i] = pos > 0 ? tail[pos - 1] : -1;
     tail[pos] = i;
   }
-  std::vector<T> res(len);
+  std::vector<int> res(len);
   for (int i = tail[len - 1]; i != -1; i = prev[i]) {
-    res[--len] = *(lo + i);
+    res[--len] = i;
   }
   return res;
 }
@@ -1732,13 +1771,14 @@ auto longest_increasing_subsequence(It lo, It hi) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <iostream>
 using namespace std;
 
 template<typename It>
-void print_range(It lo, It hi) {
-  while (lo != hi) {
-    cout << *lo++ << " ";
+void print_range(It lo, const vector<int> &indices) {
+  for (int i : indices) {
+    cout << *(lo + i) << " ";
   }
   cout << endl;
 }
@@ -1746,7 +1786,8 @@ void print_range(It lo, It hi) {
 int main() {
   vector<int> a{-2, -5, 1, 9, 10, 8, 11, 10, 13, 11};
   vector<int> res = longest_increasing_subsequence(a.begin(), a.end());
-  print_range(res.begin(), res.end());
+  assert((res == vector<int>{1, 2, 3, 4, 6, 8}));
+  print_range(a.begin(), res);
   return 0;
 }
 \end{lstlisting}
@@ -1754,12 +1795,12 @@ int main() {
 -5 1 9 10 11 13
 \end{exampleoutput}
 \subsection{Minimum Excluded Value}
-Computes the minimum excluded nonnegative integer, commonly called the MEX. The MEX of a set is the smallest integer $x \geq 0$ that does not appear in the set. It appears frequently in array problems, game theory with Grundy numbers, and dynamic programming states. Since the MEX of $n$ elements never exceeds $n$, the one-shot version simply marks which of the values $0$ to $n$ occur and scans for the first gap. The dynamic version keeps a count per value plus an ordered set of absent values, whose smallest member is always the current MEX.
+Computes the minimum excluded nonnegative (MEX) integer of a set of integers, that is, the smallest integer $x \geq 0$ that does not appear in the set. It appears frequently in array problems, game theory with Grundy numbers, and dynamic programming states. Since the MEX of $n$ values never exceeds $n$, the one-shot version only marks values in [0, \inlinecode{n}]. The dynamic version stores counts for present values and an ordered set of currently missing candidates.
 
 \begin{compactitem}
   \item \inlinecode{mex(lo, hi)} returns the MEX of the values in [\inlinecode{lo}, \inlinecode{hi}).
-  \item \inlinecode{DynamicMex(n)} maintains counts of values in [0, \inlinecode{n}], enough to track the MEX of a multiset of at most \inlinecode{n} relevant nonnegative values.
-  \item \inlinecode{add(x)} inserts one copy of value \inlinecode{x} if \inlinecode{x} $\in$ [0, \inlinecode{n}].
+  \item \inlinecode{DynamicMex()} maintains the MEX of a multiset of nonnegative integers.
+  \item \inlinecode{add(x)} inserts one copy of value \inlinecode{x} if \inlinecode{x} $\geq 0$.
   \item \inlinecode{remove(x)} removes one copy of value \inlinecode{x} if present.
   \item \inlinecode{get()} returns the current MEX.
 \end{compactitem}
@@ -1768,18 +1809,21 @@ Computes the minimum excluded nonnegative integer, commonly called the MEX. The 
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{mex(lo, hi)}, where $n$ is the number of values.
-  \item $O(\log n)$ per call to \inlinecode{add(x)}, \inlinecode{remove(x)}, and \inlinecode{get()} for \inlinecode{DynamicMex}.
+  \item $O(\log n)$ per call to \inlinecode{add(x)} and \inlinecode{remove(x)} for \inlinecode{DynamicMex}.
+  \item $O(1)$ per call to \inlinecode{get()} for \inlinecode{DynamicMex}.
 \end{compactitem}
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space for both approaches.
+\textbf{Space Complexity}: $O(n)$ auxiliary space for both approaches.
 
 \begin{lstlisting}[language=C++]
+#include <iterator>
 #include <set>
+#include <unordered_map>
 #include <vector>
 
 template<typename It>
 int mex(It lo, It hi) {
-  int n = static_cast<int>(hi - lo);
+  int n = std::distance(lo, hi);
   std::vector<char> seen(n + 1, false);
   for (It it = lo; it != hi; ++it) {
     if (0 <= *it && *it <= n) {
@@ -1795,26 +1839,41 @@ int mex(It lo, It hi) {
 }
 
 class DynamicMex {
-  std::vector<int> count;
+  std::unordered_map<int, int> count;
   std::set<int> missing;
+  int size = 0;
 
- public:
-  explicit DynamicMex(int n) : count(n + 1, 0) {
-    for (int x = 0; x <= n; x++) {
+  void ensure_candidate(int x) {
+    if (!count.count(x)) {
       missing.insert(x);
     }
   }
 
+ public:
+  DynamicMex() { missing.insert(0); }
+
   void add(int x) {
-    if (0 <= x && x < static_cast<int>(count.size()) && count[x]++ == 0) {
+    if (x < 0) {
+      return;
+    }
+    ensure_candidate(size + 1);
+    if (count[x]++ == 0) {
       missing.erase(x);
     }
+    size++;
+    ensure_candidate(size + 1);
   }
 
   void remove(int x) {
-    if (0 <= x && x < static_cast<int>(count.size()) && count[x] > 0 && --count[x] == 0) {
+    auto it = count.find(x);
+    if (it == count.end()) {
+      return;
+    }
+    if (--it->second == 0) {
+      count.erase(it);
       missing.insert(x);
     }
+    size--;
   }
 
   int get() const { return *missing.begin(); }
@@ -1830,7 +1889,7 @@ int main() {
   vector<int> a{0, 1, 4, 2, 1};
   assert(mex(a.begin(), a.end()) == 3);
 
-  DynamicMex m(5);
+  DynamicMex m;
   m.add(0);
   m.add(1);
   m.add(3);
@@ -1839,6 +1898,8 @@ int main() {
   assert(m.get() == 4);
   m.remove(1);
   assert(m.get() == 1);
+  m.remove(100);
+  assert(m.get() == 1);
   return 0;
 }
 \end{lstlisting}
@@ -1846,6 +1907,8 @@ int main() {
 Given a function $f$ mapping a finite set to itself and a starting value $x_0$, return the position and length of the cycle reached by repeatedly applying $f$. Formally, the sequence $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$ must eventually repeat some value. If $x_i = x_j$ for $i < j$, then the sequence from $x_i$ to $x_{j - 1}$ repeats forever. This is useful for detecting cycles in functional graphs, pseudo-random generators, Pollard rho style algorithms, degenerate linked lists, and arrays where each index points to the next index. For example, if \inlinecode{nums} has size $n + 1$ and all values are in $[1, n]$, then $f(i)$ = \inlinecode{nums[i]} forms a functional graph; the duplicate value is the entry point of the cycle reached from 0.
 
 Floyd's cycle-finding algorithm, a.k.a. the ``tortoise and the hare algorithm'', is a space-efficient default choice: it moves two pointers through the sequence at different speeds, finds a meeting point inside the cycle, then locates the cycle start. Brent's algorithm is a compact variant that usually calls $f$ fewer times by only resetting the tortoise at powers of two; prefer it when evaluating $f$ is expensive and constant factors matter. In the detection phase, Brent advances one pointer with one call to $f$ per step, while Floyd advances the tortoise once and the hare twice, using three calls to $f$ per step.
+
+For Floyd's algorithm, suppose the tail has length $m$ and the cycle has length $n$. At a meeting, the hare has traveled twice as far as the tortoise, so the tortoise's distance is a multiple of $n$. Consequently, the distance from the meeting point around the cycle to its entry is congruent to $m$ modulo $n$. Resetting one pointer to $x_0$ and advancing both one step at a time makes them meet at the cycle entry after $m$ steps. Brent first determines $n$, then advances one pointer $n$ steps; moving both together from that fixed separation likewise makes them meet at the entry.
 
 \begin{compactitem}
   \item \inlinecode{find\_cycle\_floyd(f, x0)} returns the reached cycle as a pair (\inlinecode{start}, \inlinecode{length}), where \inlinecode{start} is the smallest index $i$ such that $x_i$ is in the cycle, and \inlinecode{length} is the number of distinct values in the cycle.
@@ -1861,11 +1924,13 @@ Floyd's cycle-finding algorithm, a.k.a. the ``tortoise and the hare algorithm'',
 
 template<typename Fn, typename T>
 std::pair<int, int> find_cycle_floyd(Fn f, T x0) {
+  // Find a meeting point inside the cycle.
   T tortoise = f(x0), hare = f(f(x0));
   while (tortoise != hare) {
     tortoise = f(tortoise);
     hare = f(f(hare));
   }
+  // Find the cycle entry.
   int start = 0;
   tortoise = x0;
   while (tortoise != hare) {
@@ -1873,6 +1938,7 @@ std::pair<int, int> find_cycle_floyd(Fn f, T x0) {
     hare = f(hare);
     start++;
   }
+  // Measure the cycle length.
   int length = 1;
   hare = f(tortoise);
   while (tortoise != hare) {
@@ -1884,6 +1950,7 @@ std::pair<int, int> find_cycle_floyd(Fn f, T x0) {
 
 template<typename Fn, typename T>
 std::pair<int, int> find_cycle_brent(Fn f, T x0) {
+  // Find the cycle length by doubling the search block.
   int power = 1, length = 1;
   T tortoise = x0, hare = f(x0);
   while (tortoise != hare) {
@@ -1895,10 +1962,12 @@ std::pair<int, int> find_cycle_brent(Fn f, T x0) {
     hare = f(hare);
     length++;
   }
+  // Separate the pointers by one cycle length.
   hare = x0;
   for (int i = 0; i < length; i++) {
     hare = f(hare);
   }
+  // Find the cycle entry.
   int start = 0;
   tortoise = x0;
   while (tortoise != hare) {
@@ -1971,30 +2040,46 @@ Solves the 0-1 knapsack problem: given items with nonnegative integer weights an
 The one-dimensional dynamic programming array \inlinecode{dp[w]} stores the best value that can be achieved with total weight at most \inlinecode{w} after processing some prefix of the items. Iterating weights in decreasing order is what enforces the 0-1 constraint; it prevents the same item from being reused during the current item update.
 
 \begin{compactitem}
-  \item \inlinecode{knapsack\_01(weight, value, capacity)} returns the maximum total value achievable by choosing a 0-1 subset of $n$ items such that their total weight is at most \inlinecode{capacity}, where item \inlinecode{i} has weight \inlinecode{weight[i]} and value \inlinecode{value[i]}. All weights must be nonnegative integers. Items with weight 0 are allowed and can each be taken once.
+  \item \inlinecode{knapsack\_01(weight, value, capacity)} returns a pair (\inlinecode{value}, \inlinecode{items}) containing the maximum value and the selected item indices in increasing order, where item \inlinecode{i} has weight \inlinecode{weight[i]} and value \inlinecode{value[i]}. All weights must be nonnegative integers. Items with weight 0 are allowed and can each be taken once. The take/skip decision for every item and capacity is stored to reconstruct the optimal subset.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n \cdot W)$, where $n$ is the number of items and $W$ is \inlinecode{capacity}.
+\textbf{Time Complexity}: $O(n \cdot W)$ per call, where $n$ is the number of items and $W$ is \inlinecode{capacity}.
 
-\textbf{Space Complexity}: $O(W)$ auxiliary heap space.
+\textbf{Space Complexity}: $O(n \cdot W)$ auxiliary heap space.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
-int64_t knapsack_01(
+std::pair<int64_t, std::vector<int>> knapsack_01(
     const std::vector<int> &weight, const std::vector<int64_t> &value, int capacity
 ) {
   int n = static_cast<int>(weight.size());
+  assert(static_cast<int>(value.size()) == n && capacity >= 0);
   std::vector<int64_t> dp(capacity + 1, 0);
+  std::vector<std::vector<char>> take(n, std::vector<char>(capacity + 1, false));
   for (int i = 0; i < n; i++) {
+    assert(weight[i] >= 0);
     for (int w = capacity; w >= weight[i]; w--) {
-      dp[w] = std::max(dp[w], dp[w - weight[i]] + value[i]);
+      int64_t candidate = dp[w - weight[i]] + value[i];
+      if (dp[w] < candidate) {
+        dp[w] = candidate;
+        take[i][w] = true;
+      }
     }
   }
-  return dp[capacity];
+  std::vector<int> items;
+  for (int i = n - 1, w = capacity; i >= 0; i--) {
+    if (take[i][w]) {
+      items.push_back(i);
+      w -= weight[i];
+    }
+  }
+  std::reverse(items.begin(), items.end());
+  return {dp[capacity], items};
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -2007,18 +2092,19 @@ int main() {
   vector<int> weight{3, 4, 5, 9};
   vector<int64_t> value{4, 5, 7, 10};
 
-  assert(knapsack_01(weight, value, 8) == 11);   // Items of weight 3 and 5.
-  assert(knapsack_01(weight, value, 10) == 12);  // Items of weight 4 and 5.
+  auto [best, items] = knapsack_01(weight, value, 8);
+  assert(best == 11);
+  assert((items == vector<int>{0, 2}));
   return 0;
 }
 \end{lstlisting}
 \subsection{Unbounded Knapsack and Coin Change}
 Solves two common unbounded knapsack variants, where each item may be used any number of times. In the maximum-value version, each item has a weight and value, and the goal is to maximize total value subject to a capacity limit. In the coin change version, each coin denomination may be used any number of times, and the goal is to count unordered ways to form a target sum.
 
-For unbounded maximum-value knapsack, weights are iterated in increasing order so the current item may be reused. For unordered coin change, coins are the outer loop so each multiset of coins is counted once, independent of ordering.
+For unbounded maximum-value knapsack, capacities are processed in increasing order. Thus, when computing \inlinecode{dp[w]}, every smaller-capacity state \inlinecode{dp[w - weight[i]]} is already final and may itself contain item \inlinecode{i}, allowing unlimited reuse. For unordered coin change, coins are the outer loop so each multiset of coins is counted once, independent of ordering.
 
 \begin{compactitem}
-  \item \inlinecode{unbounded\_knapsack(weight, value, capacity)} returns the maximum value achievable with total weight at most \inlinecode{capacity}.
+  \item \inlinecode{unbounded\_knapsack(weight, value, capacity)} returns a pair (\inlinecode{value}, \inlinecode{count}) containing the maximum value achievable with total weight at most \inlinecode{capacity} and \inlinecode{count[i]}, the number of copies selected of each item \inlinecode{i}.
   \item \inlinecode{count\_coin\_change(coins, target)} returns the number of unordered ways to make sum \inlinecode{target} using the given coin denominations.
   \item All capacities must be nonnegative integers. Weights and coin denominations should be positive to avoid infinitely many uses of a zero-weight item.
 \end{compactitem}
@@ -2026,33 +2112,47 @@ For unbounded maximum-value knapsack, weights are iterated in increasing order s
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \cdot W)$ for \inlinecode{unbounded\_knapsack(weight, value, capacity)}, where $n$ is the number of items and $W$ is \inlinecode{capacity}.
+  \item $O(n \cdot W)$ for \inlinecode{unbounded\_knapsack()}, where $n$ is the number of items and $W$ is \inlinecode{capacity}.
   \item $O(c \cdot t)$ for \inlinecode{count\_coin\_change(coins, target)}, where $c$ is the number of coin denominations and $t$ is \inlinecode{target}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(W)$ auxiliary heap space for \inlinecode{unbounded\_knapsack(weight, value, capacity)}.
+  \item $O(W)$ auxiliary heap space for \inlinecode{unbounded\_knapsack()}.
   \item $O(t)$ auxiliary heap space for \inlinecode{count\_coin\_change(coins, target)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
-int64_t unbounded_knapsack(
+std::pair<int64_t, std::vector<int>> unbounded_knapsack(
     const std::vector<int> &weight, const std::vector<int64_t> &value, int capacity
 ) {
   int n = static_cast<int>(weight.size());
+  assert(static_cast<int>(value.size()) == n && capacity >= 0);
+  for (int w : weight) {
+    assert(w > 0);
+  }
   std::vector<int64_t> dp(capacity + 1, 0);
-  for (int i = 0; i < n; i++) {
-    for (int w = weight[i]; w <= capacity; w++) {
-      dp[w] = std::max(dp[w], dp[w - weight[i]] + value[i]);
+  std::vector<int> choice(capacity + 1, -1);
+  for (int w = 1; w <= capacity; w++) {
+    for (int i = 0; i < n; i++) {
+      if (weight[i] <= w && dp[w] < dp[w - weight[i]] + value[i]) {
+        dp[w] = dp[w - weight[i]] + value[i];
+        choice[w] = i;
+      }
     }
   }
-  return dp[capacity];
+  std::vector<int> count(n, 0);
+  for (int w = capacity; choice[w] != -1; w -= weight[choice[w]]) {
+    count[choice[w]]++;
+  }
+  return {dp[capacity], count};
 }
 
 int64_t count_coin_change(const std::vector<int> &coins, int target) {
@@ -2075,7 +2175,9 @@ using namespace std;
 int main() {
   vector<int> weight{3, 4, 5};
   vector<int64_t> value{4, 5, 7};
-  assert(unbounded_knapsack(weight, value, 10) == 14);  // Two weight-5 items.
+  auto [best, count] = unbounded_knapsack(weight, value, 10);
+  assert(best == 14);
+  assert((count == vector<int>{0, 0, 2}));
 
   vector<int> coins{1, 2, 5};
   assert(count_coin_change(coins, 5) == 4);  // 5, 2+2+1, 2+1+1+1, 1*5.
@@ -2083,14 +2185,14 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Subset Sum}
-Given a collection of integers and a target \inlinecode{v}, the subset sum problem asks for the maximum sum of any subset that is at most \inlinecode{v}. Two algorithms below solve this problem in complementary regimes, and which one wins depends on whether the bottleneck is the number of items or the size of the weights.
+Given a collection of integers and a target $v$, the subset sum problem asks for the maximum sum of any subset that is at most $v$. Two algorithms below solve this problem in complementary regimes, and which one wins depends on whether the bottleneck is the number of items or the size of the weights.
 
-The meet-in-the-middle method splits the collection in half, enumerates every subset sum for each half, sorts one side, and binary searches for the best compatible partner. It makes no assumption about the sign or size of the values, so it handles negative inputs, and it is the method of choice when the number of items \inlinecode{n} is small (up to roughly 40).
+The meet-in-the-middle method splits the collection in half, enumerates every subset sum for each half, sorts one side, and binary searches for the best compatible partner. It makes no assumption about the sign or size of the values, so it handles negative inputs, and it is the method of choice when the number of items $n$ is small (up to roughly 40).
 
-Pisinger's algorithm targets the opposite regime: nonnegative weights whose maximum value is small, with possibly many items. It first greedily takes a prefix of items while they still fit, which leaves the optimum within one weight of the target. It then repairs that prefix by a balanced sweep, tracking only sums within \inlinecode{max(weight)} of the target. The running time is linear in the number of items times the largest weight, with no dependence on the target itself beyond that window. This routine is sometimes called ``fast knapsack,'' a slight misnomer: it maximizes a subset sum rather than packing items with distinct values, so it is really the bounded-weight case of subset sum rather than the 0-1 value knapsack.
+Pisinger's algorithm targets the opposite regime: nonnegative weights whose maximum value is small, with possibly many items. Let $W$ be the largest weight. It greedily takes a maximal prefix with sum $s$ that fits the target; because the next weight is at most $W$ and does not fit, $s$ is greater than \inlinecode{target} $- W$. The prefix itself is feasible, so the optimum lies between $s$ and \inlinecode{target} and only that width-$W$ window matters. A balanced sweep explores exchanges that add later items to sums below the target and remove earlier items from sums above it. For each sum, it retains the farthest prefix boundary reached, which dominates smaller boundaries because it permits at least the same future exchanges. This gives a running time linear in the number of items times $W$, independent of the target beyond that window. This routine is sometimes called ``fast knapsack,'' a slight misnomer: it maximizes a subset sum rather than packing items with distinct values, so it is really the bounded-weight case of subset sum rather than the 0-1 value knapsack.
 
 \begin{compactitem}
-  \item \inlinecode{max\_subset\_sum\_at\_most(lo, hi, v)} returns the maximum sum of any subset of the range [\inlinecode{lo}, \inlinecode{hi}) that does not exceed \inlinecode{v}. Values may be negative. The range is supplied as random-access iterators, and 64-bit integers are used in calculations to avoid overflow.
+  \item \inlinecode{max\_subset\_sum\_at\_most(lo, hi, v)} returns a pair (\inlinecode{sum}, \inlinecode{items}) containing that maximum sum and the selected item indices relative to \inlinecode{lo}. Values may be negative. The range is supplied as random-access iterators, and 64-bit integers are used in calculations to avoid overflow.
   \item \inlinecode{max\_subset\_sum\_bounded(lo, hi, target)} returns the maximum sum of any subset of the range [\inlinecode{lo}, \inlinecode{hi}) that does not exceed \inlinecode{target}. All weights and \inlinecode{target} must be nonnegative integers. This is faster than meet-in-the-middle when the largest weight is small relative to $2^{n/2}$.
 \end{compactitem}
 
@@ -2111,30 +2213,50 @@ Pisinger's algorithm targets the opposite regime: nonnegative weights whose maxi
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 template<typename It>
-int64_t max_subset_sum_at_most(It lo, It hi, int64_t v) {
+std::pair<int64_t, std::vector<int>> max_subset_sum_at_most(It lo, It hi, int64_t v) {
   int n = static_cast<int>(hi - lo);
   int64_t llen = 1LL << (n / 2), hlen = 1LL << (n - n / 2);
-  std::vector<int64_t> lsum(llen), hsum(hlen);
+  std::vector<int64_t> lsum(llen);
+  std::vector<std::pair<int64_t, int64_t>> hsum(hlen);
   for (int64_t mask = 1; mask < llen; mask++) {
     int bit = __builtin_ctzll(mask);
     lsum[mask] = lsum[mask ^ (1LL << bit)] + *(lo + bit);
   }
   for (int64_t mask = 1; mask < hlen; mask++) {
     int bit = __builtin_ctzll(mask);
-    hsum[mask] = hsum[mask ^ (1LL << bit)] + *(lo + n / 2 + bit);
+    hsum[mask].first = hsum[mask ^ (1LL << bit)].first + *(lo + n / 2 + bit);
+    hsum[mask].second = mask;
   }
   std::sort(hsum.begin(), hsum.end());
-  int64_t res = INT64_MIN;
-  for (int64_t x : lsum) {
-    auto it = std::upper_bound(hsum.begin(), hsum.end(), v - x);
+  int64_t best = INT64_MIN, lmask = 0, hmask = 0;
+  for (int64_t mask = 0; mask < llen; mask++) {
+    auto it = std::upper_bound(hsum.begin(), hsum.end(), std::make_pair(v - lsum[mask], INT64_MAX));
     if (it != hsum.begin()) {
-      res = std::max(res, x + *--it);
+      --it;
+      int64_t candidate = lsum[mask] + it->first;
+      if (best < candidate) {
+        best = candidate;
+        lmask = mask;
+        hmask = it->second;
+      }
     }
   }
-  return res;
+  std::vector<int> items;
+  for (int i = 0; i < n / 2; i++) {
+    if ((lmask >> i) & 1) {
+      items.push_back(i);
+    }
+  }
+  for (int i = 0; i < n - n / 2; i++) {
+    if ((hmask >> i) & 1) {
+      items.push_back(n / 2 + i);
+    }
+  }
+  return {best, items};
 }
 
 template<typename It>
@@ -2183,9 +2305,14 @@ int64_t max_subset_sum_bounded(It lo, It hi, int target) {
 
 int main() {
   std::vector<int> a{9, 1, 5, 0, 1, 11, 5};
-  assert(max_subset_sum_at_most(a.begin(), a.end(), 8) == 7);
+  auto [sum, items] = max_subset_sum_at_most(a.begin(), a.end(), 8);
+  int64_t selected_sum = 0;
+  for (int i : items) {
+    selected_sum += a[i];
+  }
+  assert(sum == 7 && selected_sum == sum);
   std::vector<int> b{-7, -3, -2, 5, 8};
-  assert(max_subset_sum_at_most(b.begin(), b.end(), 0) == 0);
+  assert(max_subset_sum_at_most(b.begin(), b.end(), 0).first == 0);
 
   // The bounded-weight method agrees with meet-in-the-middle on nonnegative inputs.
   assert(max_subset_sum_bounded(a.begin(), a.end(), 8) == 7);
@@ -2208,7 +2335,7 @@ The greedy choice is safe because among all intervals that could be chosen first
 Intervals are represented as half-open ranges [\inlinecode{start}, \inlinecode{finish}), so two intervals are compatible if the next interval's \inlinecode{start} is at least the previous interval's \inlinecode{finish}.
 
 \begin{compactitem}
-  \item \inlinecode{interval\_scheduling(intervals)} returns one maximum-size compatible subset of intervals, in the order they are selected, from an input vector of \inlinecode{Interval} with fields \inlinecode{start}, \inlinecode{finish}, and the original \inlinecode{id}.
+  \item \inlinecode{schedule\_intervals(intervals)} returns one maximum-size compatible subset of intervals, in the order they are selected, from an input vector of \inlinecode{Interval} with fields \inlinecode{start}, \inlinecode{finish}, and the original \inlinecode{id}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting, where $n$ is the number of intervals.
@@ -2224,7 +2351,7 @@ struct Interval {
   int start, finish, id;
 };
 
-std::vector<Interval> interval_scheduling(std::vector<Interval> intervals) {
+std::vector<Interval> schedule_intervals(std::vector<Interval> intervals) {
   std::sort(intervals.begin(), intervals.end(), [](const Interval &a, const Interval &b) {
     return a.finish != b.finish ? a.finish < b.finish : a.start < b.start;
   });
@@ -2247,7 +2374,7 @@ using namespace std;
 
 int main() {
   vector<Interval> intervals{{1, 4, 0}, {3, 5, 1}, {0, 6, 2}, {5, 7, 3}, {8, 9, 4}};
-  vector<Interval> chosen = interval_scheduling(intervals);
+  vector<Interval> chosen = schedule_intervals(intervals);
   assert(chosen.size() == 3);
   assert(chosen[0].id == 0);
   assert(chosen[1].id == 3);
@@ -2261,7 +2388,7 @@ Selects a maximum-weight subset of non-overlapping intervals using dynamic progr
 Intervals are represented as half-open ranges [\inlinecode{start}, \inlinecode{finish}), so two intervals are compatible if the next interval's \inlinecode{start} is at least the previous interval's \inlinecode{finish}.
 
 \begin{compactitem}
-  \item \inlinecode{weighted\_interval\_scheduling(intervals)} returns the maximum total weight of a compatible subset from an input vector of \inlinecode{WeightedInterval} with fields \inlinecode{start}, \inlinecode{finish}, and \inlinecode{weight}. \inlinecode{dp[i]} stores the best answer using the first \inlinecode{i} intervals after sorting by finish time.
+  \item \inlinecode{select\_weighted\_intervals(intervals)} returns a pair (\inlinecode{weight}, \inlinecode{selected}) containing that maximum weight and the selected intervals as original input indices in execution order, from an input vector of \inlinecode{WeightedInterval} with fields \inlinecode{start}, \inlinecode{finish}, and \inlinecode{weight}. \inlinecode{dp[i]} stores the best answer using the first \inlinecode{i} intervals after sorting by finish time.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting and binary searching compatible intervals.
@@ -2271,6 +2398,8 @@ Intervals are represented as half-open ranges [\inlinecode{start}, \inlinecode{f
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cstdint>
+#include <numeric>
+#include <utility>
 #include <vector>
 
 struct WeightedInterval {
@@ -2278,24 +2407,45 @@ struct WeightedInterval {
   int64_t weight;
 };
 
-int64_t weighted_interval_scheduling(std::vector<WeightedInterval> intervals) {
-  std::sort(
-      intervals.begin(), intervals.end(), [](const WeightedInterval &a, const WeightedInterval &b) {
-        return a.finish != b.finish ? a.finish < b.finish : a.start < b.start;
-      }
-  );
+std::pair<int64_t, std::vector<int>> select_weighted_intervals(
+    const std::vector<WeightedInterval> &intervals
+) {
   int n = static_cast<int>(intervals.size());
-  std::vector<int> finish;
-  finish.reserve(n);
-  for (const auto &iv : intervals) {
-    finish.push_back(iv.finish);
+  std::vector<int> order(n), finish(n), prev(n);
+  std::iota(order.begin(), order.end(), 0);
+  std::sort(order.begin(), order.end(), [&](int i, int j) {
+    return intervals[i].finish != intervals[j].finish ? intervals[i].finish < intervals[j].finish
+                                                      : intervals[i].start < intervals[j].start;
+  });
+  for (int i = 0; i < n; i++) {
+    finish[i] = intervals[order[i]].finish;
   }
   std::vector<int64_t> dp(n + 1, 0);
+  std::vector<char> take(n + 1, false);
   for (int i = 1; i <= n; i++) {
-    int j = std::upper_bound(finish.begin(), finish.end(), intervals[i - 1].start) - finish.begin();
-    dp[i] = std::max(dp[i - 1], dp[j] + intervals[i - 1].weight);
+    int j =
+        std::upper_bound(finish.begin(), finish.begin() + i - 1, intervals[order[i - 1]].start) -
+        finish.begin();
+    prev[i - 1] = j;
+    int64_t candidate = dp[j] + intervals[order[i - 1]].weight;
+    if (dp[i - 1] < candidate) {
+      dp[i] = candidate;
+      take[i] = true;
+    } else {
+      dp[i] = dp[i - 1];
+    }
   }
-  return dp[n];
+  std::vector<int> selected;
+  for (int i = n; i > 0;) {
+    if (take[i]) {
+      selected.push_back(order[i - 1]);
+      i = prev[i - 1];
+    } else {
+      i--;
+    }
+  }
+  std::reverse(selected.begin(), selected.end());
+  return {dp[n], selected};
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -2306,7 +2456,9 @@ using namespace std;
 
 int main() {
   vector<WeightedInterval> intervals{{1, 3, 5}, {2, 5, 6}, {4, 6, 5}, {6, 7, 4}, {5, 8, 11}};
-  assert(weighted_interval_scheduling(intervals) == 17);
+  auto [weight, selected] = select_weighted_intervals(intervals);
+  assert(weight == 17);
+  assert((selected == vector<int>{1, 4}));
   return 0;
 }
 \end{lstlisting}
@@ -2318,7 +2470,7 @@ The greedy algorithm sorts intervals by start time and reuses the group whose cu
 Intervals are treated as half-open ranges [\inlinecode{start}, \inlinecode{finish}), so one interval may reuse a room that another interval vacates at the same time.
 
 \begin{compactitem}
-  \item \inlinecode{interval\_partitioning(intervals)} returns a vector \inlinecode{room}, where \inlinecode{room[id]} is the assigned room for each input interval given as a vector of \inlinecode{PartitionInterval} with fields \inlinecode{start}, \inlinecode{finish}, and \inlinecode{id}. The number of rooms used in the returned assignment is $1 + \max({\inlinecodemath{room[id]}})$, or 0 if there are no intervals.
+  \item \inlinecode{partition\_intervals(intervals)} returns a vector \inlinecode{room}, where \inlinecode{room[id]} is the assigned room for each input interval given as a vector of \inlinecode{PartitionInterval} with fields \inlinecode{start}, \inlinecode{finish}, and \inlinecode{id}. The number of rooms used in the returned assignment is $1 + \max({\inlinecodemath{room[id]}})$, or 0 if there are no intervals.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting and priority queue operations.
@@ -2336,7 +2488,7 @@ struct PartitionInterval {
   int start, finish, id;
 };
 
-std::vector<int> interval_partitioning(std::vector<PartitionInterval> intervals) {
+std::vector<int> partition_intervals(std::vector<PartitionInterval> intervals) {
   std::sort(
       intervals.begin(), intervals.end(),
       [](const PartitionInterval &a, const PartitionInterval &b) {
@@ -2370,7 +2522,7 @@ using namespace std;
 
 int main() {
   vector<PartitionInterval> intervals{{0, 30, 0}, {5, 10, 1}, {15, 20, 2}};
-  vector<int> room = interval_partitioning(intervals);
+  vector<int> room = partition_intervals(intervals);
   assert(1 + *max_element(room.begin(), room.end()) == 2);
   assert(room[1] == room[2]);
   assert(room[0] != room[1]);
@@ -2383,7 +2535,7 @@ Schedules unit-time jobs with deadlines and profits to maximize total profit. Ea
 The latest-slot choice is safe because it uses the current high-profit job while leaving earlier slots available for jobs with tighter deadlines. A disjoint-set forest over time slots makes this efficient: \inlinecode{find\_root(t)} returns the latest still-free slot at or before \inlinecode{t}, and occupying slot \inlinecode{t} links it to the next candidate slot \inlinecode{t - 1}.
 
 \begin{compactitem}
-  \item \inlinecode{schedule\_deadline\_jobs(jobs)} returns the maximum total profit for a vector of \inlinecode{Job} with fields \inlinecode{deadline} and \inlinecode{profit}. Deadlines are positive integer time slots.
+  \item \inlinecode{select\_deadline\_jobs(jobs)} returns a pair (\inlinecode{profit}, \inlinecode{slot}) containing that maximum profit and \inlinecode{slot[i]}, the assigned time slot of input job \inlinecode{i}, or $-1$ if that job is not selected, for a vector of \inlinecode{Job} with fields \inlinecode{deadline} and \inlinecode{profit}. Deadlines are positive integer time slots.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting, with near-constant disjoint-set operations.
@@ -2394,6 +2546,7 @@ The latest-slot choice is safe because it uses the current high-profit job while
 #include <algorithm>
 #include <cstdint>
 #include <numeric>
+#include <utility>
 #include <vector>
 
 struct Job {
@@ -2417,21 +2570,99 @@ class SlotDSU {
   void occupy(int u) { root[u] = find_root(u - 1); }
 };
 
-int64_t schedule_deadline_jobs(std::vector<Job> jobs) {
-  std::sort(jobs.begin(), jobs.end(), [](const Job &a, const Job &b) {
-    return a.profit != b.profit ? a.profit > b.profit : a.deadline < b.deadline;
+std::pair<int64_t, std::vector<int>> select_deadline_jobs(const std::vector<Job> &jobs) {
+  int n = static_cast<int>(jobs.size());
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
+  std::sort(order.begin(), order.end(), [&](int i, int j) {
+    return jobs[i].profit != jobs[j].profit ? jobs[i].profit > jobs[j].profit
+                                            : jobs[i].deadline < jobs[j].deadline;
   });
   int max_deadline = 0;
   for (const auto &j : jobs) {
     max_deadline = std::max(max_deadline, j.deadline);
   }
+  max_deadline = std::min(max_deadline, n);
   SlotDSU slots(max_deadline);
+  std::vector<int> assigned(n, -1);
   int64_t res = 0;
-  for (const auto &j : jobs) {
-    int slot = slots.find_root(j.deadline);
+  for (int i : order) {
+    if (jobs[i].profit <= 0) {
+      continue;
+    }
+    int slot = slots.find_root(std::min(jobs[i].deadline, max_deadline));
     if (slot > 0) {
-      res += j.profit;
+      res += jobs[i].profit;
+      assigned[i] = slot;
       slots.occupy(slot);
+    }
+  }
+  return {res, assigned};
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<Job> jobs{{2, 100}, {1, 19}, {2, 27}, {1, 25}, {3, 15}};
+  auto [profit, slot] = select_deadline_jobs(jobs);
+  assert(profit == 142);
+  assert((slot == vector<int>{2, -1, 1, -1, 3}));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Minimizing Late Jobs (Moore-Hodgson)}
+Selects a maximum-size subset of jobs that can all be completed by their deadlines. Each job has a processing time and deadline, and all jobs are available at time 0. The Moore-Hodgson algorithm sorts by deadline and keeps the accepted jobs in a max-heap by processing time; whenever the schedule becomes late, it removes the longest accepted job.
+
+After considering jobs up to some deadline, if the accepted set no longer fits, at least one accepted job must be removed. Removing the longest one leaves the most remaining time while keeping the same number of removed jobs, so it is never worse than removing a shorter accepted job. Repeating this repair after each deadline leaves a largest feasible accepted set.
+
+\begin{compactitem}
+  \item \inlinecode{select\_on\_time\_jobs(jobs)} returns the selected jobs as original input indices in a feasible earliest-deadline-first execution order, for an input vector of \inlinecode{TimedJob} with fields \inlinecode{duration} and \inlinecode{deadline}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n \log n)$ per call due to sorting and heap operations.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <numeric>
+#include <queue>
+#include <utility>
+#include <vector>
+
+struct TimedJob {
+  int duration, deadline;
+};
+
+std::vector<int> select_on_time_jobs(const std::vector<TimedJob> &jobs) {
+  int n = static_cast<int>(jobs.size());
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
+  std::sort(order.begin(), order.end(), [&](int i, int j) {
+    return jobs[i].deadline != jobs[j].deadline ? jobs[i].deadline < jobs[j].deadline
+                                                : jobs[i].duration < jobs[j].duration;
+  });
+  std::priority_queue<std::pair<int, int>> accepted;
+  std::vector<char> selected(n, false);
+  int time = 0;
+  for (int i : order) {
+    time += jobs[i].duration;
+    accepted.push({jobs[i].duration, i});
+    selected[i] = true;
+    if (time > jobs[i].deadline) {
+      time -= accepted.top().first;
+      selected[accepted.top().second] = false;
+      accepted.pop();
+    }
+  }
+  std::vector<int> res;
+  for (int i : order) {
+    if (selected[i]) {
+      res.push_back(i);
     }
   }
   return res;
@@ -2444,59 +2675,8 @@ int64_t schedule_deadline_jobs(std::vector<Job> jobs) {
 using namespace std;
 
 int main() {
-  vector<Job> jobs{{2, 100}, {1, 19}, {2, 27}, {1, 25}, {3, 15}};
-  assert(schedule_deadline_jobs(jobs) == 142);
-  return 0;
-}
-\end{lstlisting}
-\subsection{Minimizing Late Jobs (Moore-Hodgson)}
-Selects a maximum-size subset of jobs that can all be completed by their deadlines. Each job has a processing time and deadline, and all jobs are available at time 0. The Moore-Hodgson algorithm sorts by deadline and keeps the accepted jobs in a max-heap by processing time; whenever the schedule becomes late, it removes the longest accepted job.
-
-After considering jobs up to some deadline, if the accepted set no longer fits, at least one accepted job must be removed. Removing the longest one leaves the most remaining time while keeping the same number of removed jobs, so it is never worse than removing a shorter accepted job. Repeating this repair after each deadline leaves a largest feasible accepted set.
-
-\begin{compactitem}
-  \item \inlinecode{maximize\_on\_time\_jobs(jobs)} returns the maximum number of jobs that can finish by their deadlines for an input vector of \inlinecode{TimedJob} with fields \inlinecode{duration} and \inlinecode{deadline}.
-\end{compactitem}
-
-\textbf{Time Complexity}: $O(n \log n)$ per call due to sorting and heap operations.
-
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space.
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <queue>
-#include <vector>
-
-struct TimedJob {
-  int duration, deadline;
-};
-
-int maximize_on_time_jobs(std::vector<TimedJob> jobs) {
-  std::sort(jobs.begin(), jobs.end(), [](const TimedJob &a, const TimedJob &b) {
-    return a.deadline != b.deadline ? a.deadline < b.deadline : a.duration < b.duration;
-  });
-  std::priority_queue<int> durations;
-  int time = 0;
-  for (const auto &j : jobs) {
-    time += j.duration;
-    durations.push(j.duration);
-    if (time > j.deadline) {
-      time -= durations.top();
-      durations.pop();
-    }
-  }
-  return static_cast<int>(durations.size());
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-using namespace std;
-
-int main() {
   vector<TimedJob> jobs{{3, 4}, {2, 3}, {1, 2}, {2, 7}};
-  assert(maximize_on_time_jobs(jobs) == 3);
+  assert((select_on_time_jobs(jobs) == vector<int>{2, 1, 3}));
   return 0;
 }
 \end{lstlisting}
@@ -2661,7 +2841,7 @@ int main() {
 \subsection{Majority Element (Boyer-Moore)}
 Given a range of $n$ elements, find the majority element: an element that occurs strictly more than $\lfloor n/2 \rfloor$ times in the range.
 
-The Boyer-Moore voting algorithm performs a first pass while maintaining a single candidate and a counter, incrementing it on a match and decrementing on a mismatch, replacing the candidate when the counter reaches zero; any majority element necessarily survives as the final candidate. The second pass counts the candidate's occurrences to confirm it truly holds a majority. The range is therefore traversed twice, so it only needs to be supplied as ForwardIterators rather than random-access.
+The Boyer-Moore voting algorithm performs a first pass while maintaining a single candidate and a counter, incrementing it on a match and decrementing on a mismatch. Each decrement can be viewed as canceling one candidate occurrence against one different occurrence. Removing pairs of different values cannot eliminate a true majority, so if one exists, it survives all cancellations as the final candidate. The second pass counts the candidate's occurrences to confirm it truly holds a majority. The range is therefore traversed twice, so it only needs to be supplied as ForwardIterators rather than random-access.
 
 If a majority element is guaranteed in advance to exist, the verification pass can be dropped and the candidate returned directly. The candidate phase alone is single-pass, so that variant could be written as a ``true'' streaming API with one element per call.
 
@@ -2669,7 +2849,7 @@ If a majority element is guaranteed in advance to exist, the verification pass c
   \item \inlinecode{majority(lo, hi)} returns an iterator to the first occurrence of the majority element of the range [\inlinecode{lo}, \inlinecode{hi}), or \inlinecode{hi} if no majority element exists. Requires \inlinecode{operator==} on the value type.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n)$ per call to \inlinecode{majority()}, where $n$ is the size of the array.
+\textbf{Time Complexity}: $O(n)$ per call, where $n$ is the size of the array.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
@@ -2969,6 +3149,8 @@ Many bitmask algorithms must visit related masks in a structured order: every su
 
 The classic submask loop \inlinecode{for (int s = m; s \textgreater{} 0; s = (s - 1) \& m)} walks every nonzero submask of \inlinecode{m} in decreasing order; subtracting 1 borrows through the zero bits of \inlinecode{m}, and the \inlinecode{\& m} masks them back off. Summed over all masks \inlinecode{m} of \inlinecode{n} bits, the total work is $\sum_k \binom{n}{k} 2^k = 3^n$, since each of the \inlinecode{n} bit positions is independently absent, present in \inlinecode{m} only, or present in both \inlinecode{m} and \inlinecode{s}.
 
+Gosper's hack advances to the next mask with the same popcount. It isolates the lowest set bit and adds it to move the lowest movable 1 one position left, clearing the block of 1-bits beneath it. The remaining expression counts those cleared bits and packs them into the least-significant positions, producing the smallest larger integer with the same number of set bits.
+
 \begin{compactitem}
   \item \inlinecode{submasks(m)} returns all submasks of \inlinecode{m}, including \inlinecode{m} itself and 0, in decreasing order.
   \item \inlinecode{next\_popcount(x)} returns the smallest integer greater than \inlinecode{x} with the same number of set bits (Gosper's hack), for \inlinecode{x \textgreater{} 0}.
@@ -2993,6 +3175,7 @@ The classic submask loop \inlinecode{for (int s = m; s \textgreater{} 0; s = (s 
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
@@ -3028,6 +3211,7 @@ std::vector<uint32_t> masks_with_popcount(int n, int k) {
 
 template<typename T>
 void subset_sum_transform(std::vector<T> &f) {
+  assert(!f.empty() && (f.size() & (f.size() - 1)) == 0);
   int n = __builtin_ctz(f.size());  // f.size() must be a power of two, 2^n.
   for (int b = 0; b < n; b++) {
     for (uint32_t m = 0; m < static_cast<uint32_t>(f.size()); m++) {
@@ -3041,7 +3225,6 @@ void subset_sum_transform(std::vector<T> &f) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 using namespace std;
 
 int main() {
@@ -3064,7 +3247,7 @@ int main() {
 \subsection{Gray Code}
 The binary reflected Gray code is an ordering of all $2^n$ bitmasks in which consecutive masks differ in exactly one bit. It is useful whenever the cost of moving between adjacent states depends on a single bit flip: enumerating subsets while incrementally maintaining a value, hardware where only one bit may toggle at a time, and constructions like Hamiltonian paths on the hypercube.
 
-The \inlinecode{k}-th Gray code is obtained from the ordinary binary value \inlinecode{k} by \inlinecode{k \textasciicircum{} (k \textgreater{}\textgreater{} 1)}, a bijection on $[0, 2^n)$. Its inverse recovers the rank of a given Gray code, which tells how many flips into the sequence a mask sits.
+The \inlinecode{k}-th Gray code is obtained from the ordinary binary value \inlinecode{k} by \inlinecode{k \textasciicircum{} (k \textgreater{}\textgreater{} 1)}. Incrementing \inlinecode{k} flips one binary bit and every lower bit, but XORing each bit with its higher neighbor cancels all but the highest of those changes, so consecutive Gray codes differ in exactly one bit. The map is a bijection: each binary bit is the prefix XOR of the Gray bits at and above it. The inverse loop computes those prefix XORs in doubling steps to recover the original rank.
 
 \begin{compactitem}
   \item \inlinecode{gray\_code(k)} returns the \inlinecode{k}-th mask in Gray code order.

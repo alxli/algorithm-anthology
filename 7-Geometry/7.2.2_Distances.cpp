@@ -45,9 +45,10 @@ bool LT(T a, U b) {
   return C(a) < C(b);
 }
 
+// clang-format off
 template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
 template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
-
+// clang-format on
 
 // sqdist returns the coordinate type (exact for integer points).
 template<typename Pt>

@@ -462,7 +462,7 @@ FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Start
   \item \inlinecode{PairIntHasher} is a self-contained hasher for \inlinecode{std::pair\textless{}int, int\textgreater{}} keys, written without any dependency on the templates below so that it can be copy-pasted on its own.
   \item \inlinecode{IntHasher\textless{}Int\textgreater{}}, \inlinecode{PairHasher\textless{}A, B\textgreater{}}, \inlinecode{TupleHasher\textless{}Ts...\textgreater{}}, and \inlinecode{VectorHasher\textless{}T\textgreater{}} are hash functors passed as the third template argument of \inlinecode{std::unordered\_map} or \inlinecode{std::unordered\_set}.
   \item \inlinecode{GenericHasher\textless{}T\textgreater{}} recursively handles integer, pair, tuple, and vector keys, and falls back to \inlinecode{std::hash\textless{}T\textgreater{}} for other hashable types.
-  \item Specializations of \inlinecode{std::hash} for \inlinecode{std::pair} and \inlinecode{std::tuple} are also provided, letting those keys be used in \inlinecode{std::unordered\_map}/\inlinecode{std::unordered\_set} without an explicit hasher argument. Specializing \inlinecode{std::hash} for purely standard types is technically nonstandard, so the functor forms above are the portable alternative. (Vector keys are left to the functors to avoid clashing with the standard \inlinecode{std::hash\textless{}std::vector\textless{}bool\textgreater{}\textgreater{}}.)
+  \item Specializations of \inlinecode{std::hash} for \inlinecode{std::pair} and \inlinecode{std::tuple} are also provided, letting those keys be used in \inlinecode{std::unordered\_map}/\inlinecode{std::unordered\_set} without an explicit hasher argument. Specializing \inlinecode{std::hash} for purely standard types is technically nonstandard, so the functor forms above are the portable alternative. (Vector keys are left to the functors to avoid clashing with the standard \inlinecode{std::hash\textless{}std::vector\textless{}char\textgreater{}\textgreater{}}.)
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1161,6 +1161,7 @@ Element values must be nonnegative. As with any polynomial hash, comparing subse
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -1224,6 +1225,7 @@ class DynamicHash {
   int size() const { return len; }
 
   void set(int i, int x) {
+    assert(0 <= i && i < len && x >= 0);
     uint64_t old1 = static_cast<uint64_t>(cur[i]) % MOD1 * pw1[i] % MOD1;
     uint64_t old2 = static_cast<uint64_t>(cur[i]) % MOD2 * pw2[i] % MOD2;
     uint64_t new1 = static_cast<uint64_t>(x) % MOD1 * pw1[i] % MOD1;
@@ -1234,6 +1236,7 @@ class DynamicHash {
   }
 
   std::pair<uint64_t, uint64_t> hash(int lo, int hi) const {
+    assert(0 <= lo && lo <= hi && hi <= len);
     uint64_t raw1 = (sum(ft1, hi - 1, MOD1) + MOD1 - sum(ft1, lo - 1, MOD1)) % MOD1;
     uint64_t raw2 = (sum(ft2, hi - 1, MOD2) + MOD2 - sum(ft2, lo - 1, MOD2)) % MOD2;
     return {raw1 * ip1[lo] % MOD1, raw2 * ip2[lo] % MOD2};
@@ -1243,7 +1246,6 @@ class DynamicHash {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 #include <string>
 using namespace std;
 
@@ -1884,6 +1886,7 @@ The construction here is the Fredricksen-Kessler-Maiorana (FKM) algorithm. It co
 \textbf{Space Complexity}: $O(k^{n})$ heap space for the returned sequence, plus $O(n)$ auxiliary space for the recursion.
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <vector>
 
 void de_bruijn_gen(int t, int p, int k, int n, std::vector<int> &word, std::vector<int> &seq) {
@@ -1904,6 +1907,7 @@ void de_bruijn_gen(int t, int p, int k, int n, std::vector<int> &word, std::vect
 }
 
 std::vector<int> de_bruijn(int k, int n) {
+  assert(k >= 1 && n >= 1);
   std::vector<int> word(n + 1, 0), seq;
   de_bruijn_gen(1, 1, k, n, word, seq);
   return seq;
@@ -1912,7 +1916,6 @@ std::vector<int> de_bruijn(int k, int n) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 #include <cmath>
 #include <set>
 #include <vector>
@@ -3493,7 +3496,7 @@ Given two strings, determine their longest common substring: a contiguous run of
   \item \inlinecode{longest\_common\_substring(s1, s2)} returns a longest common substring of \inlinecode{s1} and \inlinecode{s2} (one such substring if several are tied in length), or the empty string if they have none in common.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{longest\_common\_substring(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+\textbf{Time Complexity}: $O(n \cdot m)$ per call, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
 
 \textbf{Space Complexity}: $O(\min\left(n, m\right))$ auxiliary heap space, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
 
@@ -3813,7 +3816,7 @@ Evaluate an expression in accordance to the order of operations (parentheses, un
   \item \inlinecode{eval(s)} returns an evaluation of the arithmetic expression \inlinecode{s}.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n)$ per call to \inlinecode{eval(s)}, where $n$ is the length of \inlinecode{s}.
+\textbf{Time Complexity}: $O(n)$ per call, where $n$ is the length of \inlinecode{s}.
 
 \textbf{Space Complexity}: $O(n)$ auxiliary stack space for \inlinecode{eval(s)}, where $n$ is the length of \inlinecode{s}.
 

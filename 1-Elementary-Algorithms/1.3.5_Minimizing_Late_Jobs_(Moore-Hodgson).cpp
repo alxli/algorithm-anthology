@@ -7,11 +7,12 @@ schedule becomes late, it removes the longest accepted job.
 
 After considering jobs up to some deadline, if the accepted set no longer fits, at least one
 accepted job must be removed. Removing the longest one leaves the most remaining time while keeping
-the same number of removed jobs, so it is never worse than removing a shorter accepted job. Repeating
-this repair after each deadline leaves a largest feasible accepted set.
+the same number of removed jobs, so it is never worse than removing a shorter accepted job.
+Repeating this repair after each deadline leaves a largest feasible accepted set.
 
-- `maximize_on_time_jobs(jobs)` returns the maximum number of jobs that can finish by their
-  deadlines for an input vector of `TimedJob` with fields `duration` and `deadline`.
+- `select_on_time_jobs(jobs)` returns the selected jobs as original input indices in a feasible
+  earliest-deadline-first execution order, for an input vector of `TimedJob` with fields `duration`
+  and `deadline`.
 
 Time Complexity:
 - O(n log n) per call due to sorting and heap operations.
@@ -22,28 +23,43 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <numeric>
 #include <queue>
+#include <utility>
 #include <vector>
 
 struct TimedJob {
   int duration, deadline;
 };
 
-int maximize_on_time_jobs(std::vector<TimedJob> jobs) {
-  std::sort(jobs.begin(), jobs.end(), [](const TimedJob &a, const TimedJob &b) {
-    return a.deadline != b.deadline ? a.deadline < b.deadline : a.duration < b.duration;
+std::vector<int> select_on_time_jobs(const std::vector<TimedJob> &jobs) {
+  int n = static_cast<int>(jobs.size());
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
+  std::sort(order.begin(), order.end(), [&](int i, int j) {
+    return jobs[i].deadline != jobs[j].deadline ? jobs[i].deadline < jobs[j].deadline
+                                                : jobs[i].duration < jobs[j].duration;
   });
-  std::priority_queue<int> durations;
+  std::priority_queue<std::pair<int, int>> accepted;
+  std::vector<char> selected(n, false);
   int time = 0;
-  for (const auto &j : jobs) {
-    time += j.duration;
-    durations.push(j.duration);
-    if (time > j.deadline) {
-      time -= durations.top();
-      durations.pop();
+  for (int i : order) {
+    time += jobs[i].duration;
+    accepted.push({jobs[i].duration, i});
+    selected[i] = true;
+    if (time > jobs[i].deadline) {
+      time -= accepted.top().first;
+      selected[accepted.top().second] = false;
+      accepted.pop();
     }
   }
-  return static_cast<int>(durations.size());
+  std::vector<int> res;
+  for (int i : order) {
+    if (selected[i]) {
+      res.push_back(i);
+    }
+  }
+  return res;
 }
 
 /*** Example Usage ***/
@@ -53,6 +69,6 @@ using namespace std;
 
 int main() {
   vector<TimedJob> jobs{{3, 4}, {2, 3}, {1, 2}, {2, 7}};
-  assert(maximize_on_time_jobs(jobs) == 3);
+  assert((select_on_time_jobs(jobs) == vector<int>{2, 1, 3}));
   return 0;
 }

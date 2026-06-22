@@ -2,9 +2,9 @@
 
 Given a connected, undirected graph with nonnegative edge weights, the global minimum cut is the
 partition of the vertices into two nonempty sets that minimizes the total weight of edges crossing
-between them. Unlike a minimum s-t cut, no source or sink is fixed; the goal is the cheapest way to
-split the graph in two. The Stoer-Wagner algorithm finds it without any maximum flow computation by
-repeatedly running a "minimum cut phase".
+between them. Unlike a minimum $s$-$t$ cut, no source or sink is fixed; the goal is the cheapest way
+to split the graph in two. The Stoer-Wagner algorithm finds it without any maximum flow computation
+by repeatedly running a "minimum cut phase".
 
 A phase grows a set, starting from an arbitrary vertex, by repeatedly adding the most tightly
 connected outside vertex (the one with the greatest total weight to the set so far), exactly as in

@@ -1,9 +1,9 @@
 /*
 
 Given a set $P$ of distinct two-dimensional points, a Delaunay triangulation of $P$ is a
-triangulation of the convex hull of P such that no point of P lies strictly inside the circumcircle
-of any triangle in the triangulation. The Delaunay triangulation is not necessarily unique when four
-or more points are cocircular.
+triangulation of the convex hull of $P$ such that no point of $P$ lies strictly inside the
+circumcircle of any triangle in the triangulation. The Delaunay triangulation is not necessarily
+unique when four or more points are cocircular.
 
 This implementation produces one valid triangulation using the Guibas-Stolfi divide-and-conquer
 algorithm with a quad-edge data structure. The point set is split in half, each half is triangulated
@@ -17,8 +17,9 @@ with circumcircle tests deciding each connecting edge and deleting invalidated o
 
 All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation.
 The in-circle test is a degree-4 polynomial in the coordinates and dominates the overflow budget: a
-64-bit integer coordinate type stays exact up to |C| ~= 1.4e4, where `C` is the coordinate
-magnitude. For floating-point coordinates the predicates are subject to the usual rounding error.
+64-bit integer coordinate type stays exact up to $|C| \approx 1.4 \times 10^4$, where $C$ is the
+coordinate magnitude. For floating-point coordinates the predicates are subject to the usual
+rounding error.
 
 Time Complexity:
 - O(n log n) per call, where $n$ is the number of input points.

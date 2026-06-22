@@ -177,7 +177,7 @@ class SegTreeBeats {
     assert(0 <= lo && lo <= hi && hi < len);
     return query_max(0, 0, len - 1, lo, hi);
   }
-  
+
   T at(int i) {
     assert(0 <= i && i < len);
     return query_sum(0, 0, len - 1, i, i);

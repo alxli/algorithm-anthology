@@ -4,10 +4,12 @@ Given a range of $n$ elements, find the majority element: an element that occurs
 $\lfloor n/2 \rfloor$ times in the range.
 
 The Boyer-Moore voting algorithm performs a first pass while maintaining a single candidate and a
-counter, incrementing it on a match and decrementing on a mismatch, replacing the candidate when the
-counter reaches zero; any majority element necessarily survives as the final candidate. The second
-pass counts the candidate's occurrences to confirm it truly holds a majority. The range is therefore
-traversed twice, so it only needs to be supplied as ForwardIterators rather than random-access.
+counter, incrementing it on a match and decrementing on a mismatch. Each decrement can be viewed as
+canceling one candidate occurrence against one different occurrence. Removing pairs of different
+values cannot eliminate a true majority, so if one exists, it survives all cancellations as the
+final candidate. The second pass counts the candidate's occurrences to confirm it truly holds a
+majority. The range is therefore traversed twice, so it only needs to be supplied as
+ForwardIterators rather than random-access.
 
 If a majority element is guaranteed in advance to exist, the verification pass can be dropped and
 the candidate returned directly. The candidate phase alone is single-pass, so that variant could be

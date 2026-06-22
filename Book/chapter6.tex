@@ -49,9 +49,9 @@ const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 Epsilon Comparisons:
 
 \begin{compactitem}
-  \item \inlinecode{EQ()}, \inlinecode{NE()}, \inlinecode{LT()}, \inlinecode{GT()}, \inlinecode{LE()}, and \inlinecode{GE()} relationally compare two values $x$ and $y$. Arguments may be of different types; the common type governs behavior. If the common type is integral, exact comparison is used (\inlinecode{==}, \inlinecode{\textless{}}, etc.). Otherwise, absolute-error epsilon comparison is used: values within \inlinecode{EPS} of each other are considered equal, and \inlinecode{LT}/\inlinecode{GT}/\inlinecode{LE}/\inlinecode{GE} shift the boundary by \inlinecode{EPS} accordingly.
-  \item \inlinecode{rEQ(ref, val)} returns whether \inlinecode{val} equals reference \inlinecode{ref} within relative error \inlinecode{EPS}. The tolerance scales with \inlinecode{|ref|}, so \inlinecode{rEQ(ref, val)} is NOT the same as \inlinecode{rEQ(val, ref)}. Use this when one argument is a known exact value and the other is a computed approximation. Degenerates to exact comparison when \inlinecode{ref} = 0, since the tolerance collapses to 0; use \inlinecode{EQ} near zero.
-  \item \inlinecode{rEQ\_sym(x, y)} is the symmetric (commutative) variant: tolerance scales with \inlinecode{max(|x|, |y|)}, so the result is the same regardless of argument order. Still degenerates near zero when both arguments are close to 0.
+  \item \inlinecode{EQ()}, \inlinecode{NE()}, \inlinecode{LT()}, \inlinecode{GT()}, \inlinecode{LE()}, and \inlinecode{GE()} relationally compare two values $x$ and $y$. Arguments may be of different types; the common type governs behavior. If the common type is a floating-point type, absolute-error epsilon comparison is used: values within \inlinecode{EPS} of each other are considered equal, and \inlinecode{LT}/\inlinecode{GT}/\inlinecode{LE}/\inlinecode{GE} shift the boundary by \inlinecode{EPS} accordingly. Otherwise exact comparison is used (\inlinecode{==}, \inlinecode{\textless{}}, etc.). The branch is selected with \inlinecode{if constexpr}, so exact types without floating-point arithmetic (e.g. integers, \inlinecode{Modular}, \inlinecode{Rational}) compose as well.
+  \item \inlinecode{rEQ(ref, val)} returns whether \inlinecode{val} equals reference \inlinecode{ref} within relative error \inlinecode{EPS}. The tolerance scales with $|{\inlinecodemath{ref}}|$, so \inlinecode{rEQ(ref, val)} is NOT the same as \inlinecode{rEQ(val, ref)}. Use this when one argument is a known exact value and the other is a computed approximation. Degenerates to exact comparison when \inlinecode{ref} = 0, since the tolerance collapses to 0; use \inlinecode{EQ} near zero.
+  \item \inlinecode{rEQ\_sym(x, y)} is the symmetric (commutative) variant: tolerance scales with $max(|{\inlinecodemath{x}}|, |{\inlinecodemath{y}}|)$, so the result is the same regardless of argument order. Still degenerates near zero when both arguments are close to 0.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -59,13 +59,17 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
 }
-template<typename T, typename U> bool NE(T a, U b) { return !EQ(a, b); }
+
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  return C(a) < C(b);
 }
+
+template<typename T, typename U> bool NE(T a, U b) { return !EQ(a, b); }
 template<typename T, typename U> bool GT(T a, U b) { return LT(b, a); }
 template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
 template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
@@ -317,7 +321,7 @@ double lgamma_(double x) {
 Modular Arithmetic:
 
 \begin{compactitem}
-  \item \inlinecode{addmod(a, b, m)} returns \inlinecode{(a + b) mod m} and \inlinecode{submod(a, b, m)} returns \inlinecode{(a - b) mod m}, each in $[0, m)$. Both operands may be negative or unreduced; the result is normalized into range. These use signed arithmetic, so \inlinecode{m} (and the reduced operands) must be small enough that \inlinecode{a + b} does not overflow \inlinecode{int64\_t}, i.e. \inlinecode{m} up to roughly \inlinecode{2\textasciicircum{}62}, which covers all common contest moduli.
+  \item \inlinecode{addmod(a, b, m)} returns \inlinecode{(a + b) mod m} and \inlinecode{submod(a, b, m)} returns \inlinecode{(a - b) mod m}, each in $[0, {\inlinecodemath{m}})$. Both operands may be negative or unreduced; the result is normalized into range. These use signed arithmetic, so \inlinecode{m} (and the reduced operands) must be small enough that \inlinecode{a + b} does not overflow \inlinecode{int64\_t}, i.e. \inlinecode{m} up to roughly \inlinecode{2\textasciicircum{}62}, which covers all common contest moduli.
   \item \inlinecode{mulmod(x, n, m)} returns \inlinecode{x} multiplied by \inlinecode{n}, modulo \inlinecode{m}. This is done in a way to avoid overflow: on compilers with \inlinecode{\_\_uint128\_t} it uses one wide product, while the portable fallback uses double-and-add multiplication. The fallback is slower by a logarithmic factor, but avoids relying on nonstandard 128-bit integers. Unlike \inlinecode{addmod}/\inlinecode{submod}, this takes unsigned operands and supports a full 64-bit modulus.
   \item \inlinecode{powmod(x, n, m)} returns \inlinecode{x} raised to the power \inlinecode{n}, modulo \inlinecode{m}.
 \end{compactitem}
@@ -2417,7 +2421,7 @@ The baby-step giant-step method writes $x = np - q$ for a block size $n$ near th
   \item \inlinecode{discrete\_log(a, b, m)} returns the smallest nonnegative \inlinecode{x} with \inlinecode{a\textasciicircum{}x} congruent to \inlinecode{b} modulo \inlinecode{m}, or $-1$ if no such \inlinecode{x} exists. Requires \inlinecode{m} $\geq 1$; \inlinecode{a} and \inlinecode{b} are reduced modulo \inlinecode{m} internally.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(\sqrt{m} \cdot \log\left(m\right))$ per call to \inlinecode{discrete\_log()}, dominated by the hashed baby-step table.
+\textbf{Time Complexity}: $O(\sqrt{m} \cdot \log\left(m\right))$ per call, dominated by the hashed baby-step table.
 
 \textbf{Space Complexity}: $O(\sqrt{m})$ auxiliary heap space for the table.
 
@@ -2514,7 +2518,7 @@ The Tonelli-Shanks algorithm handles the general case. Euler's criterion, $a^{(p
   \item \inlinecode{mod\_sqrt(a, p)} returns the smaller of the two square roots of \inlinecode{a} modulo the odd prime \inlinecode{p}, or $-1$ if \inlinecode{a} is not a quadratic residue. The value 0 maps to 0. The argument \inlinecode{a} is reduced modulo \inlinecode{p} internally. The modulus \inlinecode{p} must be an odd prime.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(\log^{2} p)$ per call to \inlinecode{mod\_sqrt()} in the worst case, from the squaring loop nested inside the exponentiations.
+\textbf{Time Complexity}: $O(\log^{2} p)$ per call in the worst case, from the squaring loop nested inside the exponentiations.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
@@ -2629,15 +2633,17 @@ The symbol is fully multiplicative in $a$ and in $n$. For prime $n$ it exactly d
   \item \inlinecode{jacobi(a, n)} returns the Jacobi symbol (\inlinecode{a} / \inlinecode{n}) as one of $-1$, 0, or 1. The modulus \inlinecode{n} must be a positive odd integer; \inlinecode{a} is reduced modulo \inlinecode{n} internally and may be negative. The result is 0 exactly when \inlinecode{a} and \inlinecode{n} share a common factor.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(\log a \cdot \log n)$ per call to \inlinecode{jacobi()}.
+\textbf{Time Complexity}: $O(\log a \cdot \log n)$ per call.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <cstdint>
 #include <utility>
 
 int jacobi(int64_t a, int64_t n) {
+  assert(n > 0 && n % 2 == 1);
   a %= n;
   if (a < 0) {
     a += n;
@@ -2664,7 +2670,6 @@ int jacobi(int64_t a, int64_t n) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 using namespace std;
 
 int64_t legendre_via_euler(int64_t a, int64_t p) {
@@ -2769,7 +2774,8 @@ std::vector<int> sieve(int lo, int hi) {
   }
   for (int i = 2; i <= sqrt_hi; i++) {
     if (prime1[i]) {
-      int64_t start = std::max(1LL * i * i, ((static_cast<int64_t>(lo) + i - 1) / i) * i);
+      int64_t first_multiple = ((static_cast<int64_t>(lo) + i - 1) / i) * i;
+      int64_t start = std::max(static_cast<int64_t>(i) * i, first_multiple);
       for (int64_t j = start; j <= hi; j += i) {
         prime2[j - lo] = false;
       }
@@ -3345,7 +3351,7 @@ The overload \inlinecode{phi\_table(lo, hi)} computes the totients of a high but
 \begin{compactitem}
   \item \inlinecode{phi(n)} returns Euler's totient of \inlinecode{n}.
   \item \inlinecode{phi\_table(n)} returns a vector \inlinecode{v} of length \inlinecode{n + 1} such that \inlinecode{v[i]} stores \inlinecode{phi(i)} for every \inlinecode{i} in the range $[0, n]$.
-  \item \inlinecode{phi\_table(lo, hi)} returns a vector \inlinecode{v} of length ${\inlinecodemath{hi}} - {\inlinecodemath{lo}} + 1$ such that \inlinecode{v[i - lo]} stores \inlinecode{phi(i)} for every \inlinecode{i} in the range [\inlinecode{lo}, \inlinecode{hi}]. This overload assumes \inlinecode{lo} $\geq$ 0; if \inlinecode{hi} \textless{} \inlinecode{lo}, it returns an empty vector.
+  \item \inlinecode{phi\_table(lo, hi)} returns a vector \inlinecode{v} of length ${\inlinecodemath{hi}} - {\inlinecodemath{lo}} + 1$ such that \inlinecode{v[i - lo]} stores \inlinecode{phi(i)} for every \inlinecode{i} in the range [\inlinecode{lo}, \inlinecode{hi}]. This overload assumes \inlinecode{lo} $\geq 0$; if \inlinecode{hi} \textless{} \inlinecode{lo}, it returns an empty vector.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -3637,6 +3643,7 @@ This version is intentionally small and decimal-oriented. Addition and subtracti
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <cctype>
 #include <cstdint>
 #include <stdexcept>
@@ -3783,9 +3790,7 @@ class BigInt {
   }
 
   friend BigInt div(const BigInt &a, const BigInt &b) {
-    if (b.digits.size() == 1 && b.digits[0] == '0') {
-      throw std::runtime_error("Division by zero in BigInt.");
-    }
+    assert(b.digits.size() != 1 || b.digits[0] != '0');
     BigInt res, row;
     res.digits.assign(a.digits.size(), '0');
     row.digits.clear();  // Running remainder; kept normalized and nonnegative below.
@@ -3808,8 +3813,6 @@ class BigInt {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
-
 int main() {
   BigInt a("-9899819294989142124"), b("12398124981294214");
   assert(add(a, b).to_string() == "-9887421170007847910");
@@ -3861,6 +3864,7 @@ Perform operations on arbitrary precision big integers internally represented as
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <complex>
 #include <cstdint>
@@ -3870,7 +3874,6 @@ Perform operations on arbitrary precision big integers internally represented as
 #include <istream>
 #include <ostream>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -4244,9 +4247,7 @@ class BigInt {
   }
 
   BigInt &operator/=(int v) {
-    if (v == 0) {
-      throw std::runtime_error("Division by zero in BigInt.");
-    }
+    assert(v != 0);
     if (v < 0) {
       sign = -sign;
       v = -v;
@@ -4267,9 +4268,7 @@ class BigInt {
   }
 
   int operator%(int v) const {
-    if (v == 0) {
-      throw std::runtime_error("Division by zero in BigInt.");
-    }
+    assert(v != 0);
     if (v < 0) {
       v = -v;
     }
@@ -4281,9 +4280,7 @@ class BigInt {
   }
 
   std::pair<BigInt, BigInt> div(const BigInt &v) const {
-    if (v == 0) {
-      throw std::runtime_error("Division by zero in BigInt.");
-    }
+    assert(v != 0);
     if (comp(digits, v.digits, 1, 1) < 0) {
       return {BigInt(0), *this};
     }
@@ -4338,9 +4335,7 @@ class BigInt {
   }
 
   BigInt sqrt() const {
-    if (sign == -1) {
-      throw std::runtime_error("Cannot take square root of a negative number.");
-    }
+    assert(sign != -1);
     BigInt v(*this);
     while (v.digits.empty() || v.digits.size() % 2 == 1) {
       v.digits.push_back(0);
@@ -4384,10 +4379,8 @@ class BigInt {
   }
 
   BigInt nth_root(int n) const {
-    if (sign == -1 && n % 2 == 0) {
-      throw std::runtime_error("Cannot take even root of a negative number.");
-    }
-    if (*this == 0 || n < 0) {
+    assert(n > 0 && (sign != -1 || n % 2 == 1));
+    if (*this == 0) {
       return BigInt(0);
     }
     if (n >= size()) {
@@ -4434,8 +4427,6 @@ class BigInt {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
-
 int main() {
   BigInt a("-9899819294989142124"), b("12398124981294214");
   assert(a + b == "-9887421170007847910");
@@ -4517,6 +4508,7 @@ Perform operations on rational numbers internally represented as two integers: a
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <cstdint>
 #include <istream>
 #include <ostream>
@@ -4533,9 +4525,7 @@ class Rational {
 
   template<typename T1, typename T2>
   Rational(const T1 &n, const T2 &d) : num(n), den(d) {
-    if (den == 0) {
-      throw std::runtime_error("Division by zero in Rational.");
-    }
+    assert(den != 0);
     if (den < 0) {
       num = -num;
       den = -den;
@@ -4649,7 +4639,6 @@ class Rational {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 #include <cmath>
 
 bool EQ(double a, double b) {
@@ -4719,10 +4708,10 @@ Exponentiation uses the usual iterative binary exponentiation pattern: keep an a
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <iomanip>
 #include <ostream>
-#include <stdexcept>
 #include <vector>
 
 template<typename T>
@@ -4805,9 +4794,7 @@ Matrix<T> &operator/=(Matrix<T> &a, const U &v) {
 
 template<typename T>
 Matrix<T> &operator+=(Matrix<T> &a, const Matrix<T> &b) {
-  if (rows(a) != rows(b) || columns(a) != columns(b)) {
-    throw std::runtime_error("Invalid dimensions for matrix addition.");
-  }
+  assert(rows(a) == rows(b) && columns(a) == columns(b));
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
       a[i][j] += b[i][j];
@@ -4818,9 +4805,7 @@ Matrix<T> &operator+=(Matrix<T> &a, const Matrix<T> &b) {
 
 template<typename T>
 Matrix<T> &operator-=(Matrix<T> &a, const Matrix<T> &b) {
-  if (rows(a) != rows(b) || columns(a) != columns(b)) {
-    throw std::runtime_error("Invalid dimensions for matrix subtraction.");
-  }
+  assert(rows(a) == rows(b) && columns(a) == columns(b));
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
       a[i][j] -= b[i][j];
@@ -4843,9 +4828,7 @@ Matrix<T> operator-(const Matrix<T> &a, const Matrix<T> &b) {
 
 template<typename T>
 Matrix<T> &operator*=(Matrix<T> &a, const std::vector<T> &v) {
-  if (columns(a) != static_cast<int>(v.size()) || v.empty()) {
-    throw std::runtime_error("Invalid dimensions for matrix-vector multiplication.");
-  }
+  assert(columns(a) == static_cast<int>(v.size()) && !v.empty());
   int cols = columns(a);
   for (int i = 0; i < rows(a); i++) {
     T sum = 0;
@@ -4859,9 +4842,7 @@ Matrix<T> &operator*=(Matrix<T> &a, const std::vector<T> &v) {
 
 template<typename T>
 Matrix<T> operator*(const Matrix<T> &a, const Matrix<T> &b) {
-  if (columns(a) != rows(b)) {
-    throw std::runtime_error("Invalid dimensions for matrix multiplication.");
-  }
+  assert(columns(a) == rows(b));
   Matrix<T> res = make_matrix<T>(rows(a), columns(b));
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(b); j++) {
@@ -4902,9 +4883,7 @@ Matrix<T> operator-(const U &v, const Matrix<T> &a) {
 
 template<typename T>
 Matrix<T> operator^(Matrix<T> a, unsigned int p) {
-  if (rows(a) != columns(a)) {
-    throw std::runtime_error("Matrix must be square for exponentiation.");
-  }
+  assert(rows(a) == columns(a));
   Matrix<T> res = identity_matrix<T>(rows(a));
   while (p > 0) {
     if (p & 1) {
@@ -4923,9 +4902,7 @@ Matrix<T> operator^=(Matrix<T> &a, unsigned int p) {
 
 template<typename T>
 Matrix<T> power_sum(const Matrix<T> &a, unsigned int p) {
-  if (rows(a) != columns(a)) {
-    throw std::runtime_error("Matrix must be square for power_sum.");
-  }
+  assert(rows(a) == columns(a));
   int n = rows(a);
   if (p == 0) {
     return make_matrix<T>(n, n);
@@ -4964,9 +4941,7 @@ Matrix<T> transpose(const Matrix<T> &a) {
 
 template<typename T>
 Matrix<T> &transpose_in_place(Matrix<T> &a) {
-  if (rows(a) != columns(a)) {
-    throw std::runtime_error("Matrix must be square for transpose_in_place.");
-  }
+  assert(rows(a) == columns(a));
   for (int i = 0; i < rows(a); i++) {
     for (int j = i + 1; j < columns(a); j++) {
       std::swap(a[i][j], a[j][i]);
@@ -4977,9 +4952,7 @@ Matrix<T> &transpose_in_place(Matrix<T> &a) {
 
 template<typename T>
 Matrix<T> rotate(const Matrix<T> &a, int degrees = 90) {
-  if (degrees % 90 != 0) {
-    throw std::runtime_error("Rotation must be by a multiple of 90 degrees.");
-  }
+  assert(degrees % 90 == 0);
   if (degrees < 0) {
     degrees = 360 - ((-degrees) % 360);
   }
@@ -5021,12 +4994,8 @@ Matrix<T> rotate(const Matrix<T> &a, int degrees = 90) {
 
 template<typename T>
 Matrix<T> &rotate_in_place(Matrix<T> &a, int degrees = 90) {
-  if (degrees % 90 != 0) {
-    throw std::runtime_error("Rotation must be by a multiple of 90 degrees.");
-  }
-  if (degrees % 180 != 0 && rows(a) != columns(a)) {
-    throw std::runtime_error("Matrix must be square for rotate_in_place.");
-  }
+  assert(degrees % 90 == 0);
+  assert(degrees % 180 == 0 || rows(a) == columns(a));
   if (degrees < 0) {
     degrees = 360 - ((-degrees) % 360);
   }
@@ -5065,7 +5034,6 @@ Matrix<T> &rotate_in_place(Matrix<T> &a, int degrees = 90) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -5127,9 +5095,9 @@ Converts a matrix to reduced row echelon form using Gaussian elimination to solv
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstddef>
-#include <stdexcept>
 #include <vector>
 
 const double EPS = 1e-9;
@@ -5140,6 +5108,9 @@ Matrix &row_reduce(Matrix &a) {
     return a;
   }
   int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
+  for (const auto &row : a) {
+    assert(static_cast<int>(row.size()) == cols);
+  }
   for (int r = 0, lead = 0; r < rows && lead < cols; lead++) {
     int pivot = r;
     for (int i = r + 1; i < rows; i++) {
@@ -5233,7 +5204,6 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 using namespace std;
 
 int main() {
@@ -5676,7 +5646,7 @@ A direct expansion would cost a determinant per coefficient. Instead the matrix 
   \item \inlinecode{characteristic\_polynomial(a)} returns a vector $c$ of length $n + 1$ with $\det(xI - {\inlinecodemath{a}}) = c_0 + c_1 x + ... + c_n x^n$ modulo \inlinecode{MOD}, where $c_n = 1$. The matrix \inlinecode{a} must be square; its entries are reduced modulo \inlinecode{MOD} internally.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n^{3})$ per call to \inlinecode{characteristic\_polynomial()}, where $n$ is the dimension of the matrix.
+\textbf{Time Complexity}: $O(n^{3})$ per call, where $n$ is the dimension of the matrix.
 
 \textbf{Space Complexity}: $O(n^{2})$ auxiliary heap space.
 
@@ -5795,7 +5765,7 @@ The determinant is evaluated modulo a prime by Gaussian elimination, so the coun
   \item \inlinecode{count\_spanning\_trees(n, edges)} returns the number of spanning trees of the undirected graph on nodes [0, \inlinecode{n}) with the given edge list, modulo \inlinecode{MOD}. Parallel edges are honored; self-loops do not affect the count. The result is 0 when the graph is disconnected, and 1 when \inlinecode{n} is 1.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n^{3})$ per call to \inlinecode{count\_spanning\_trees()}, where $n$ is the number of nodes.
+\textbf{Time Complexity}: $O(n^{3})$ per call, where $n$ is the number of nodes.
 
 \textbf{Space Complexity}: $O(n^{2})$ auxiliary heap space.
 
@@ -6395,6 +6365,7 @@ The trade-off is precision. Complex arithmetic in double precision accumulates r
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <complex>
 #include <cstdint>
@@ -6406,6 +6377,7 @@ const int NAIVE_CUTOFF = 150;
 
 void fft(std::vector<cd> &a, bool invert) {
   int n = static_cast<int>(a.size());
+  assert(n > 0 && (n & (n - 1)) == 0);
   for (int i = 1, j = 0; i < n; i++) {
     int bit = n >> 1;
     for (; j & bit; bit >>= 1) {
@@ -6473,7 +6445,6 @@ std::vector<int64_t> convolve(const std::vector<int64_t> &a, const std::vector<i
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 using namespace std;
 
 int main() {
@@ -6837,11 +6808,12 @@ The key identity is that the $n$-th term is a fixed linear combination of the fi
   \item \inlinecode{kth\_term(rec, init, n)} returns $s_n$ modulo \inlinecode{MOD}, where \inlinecode{rec} holds the coefficients $c_0, ..., c_{L-1}$ and \inlinecode{init} holds at least $L$ initial terms $s_0, ..., s_{L-1}$. Indexing is 0-based and \inlinecode{n} $\geq 0$. Values are reduced modulo \inlinecode{MOD} internally.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(L^{2} \log n)$ per call to \inlinecode{kth\_term()}.
+\textbf{Time Complexity}: $O(L^{2} \log n)$ per call.
 
 \textbf{Space Complexity}: $O(L)$ auxiliary heap space.
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
@@ -6874,6 +6846,7 @@ std::vector<int64_t> combine(
 }
 
 int64_t kth_term(const std::vector<int64_t> &rec, const std::vector<int64_t> &init, int64_t n) {
+  assert(n >= 0 && init.size() >= rec.size());
   int L = static_cast<int>(rec.size());
   if (n < static_cast<int64_t>(init.size())) {
     return ((init[n] % MOD) + MOD) % MOD;
@@ -6904,7 +6877,6 @@ int64_t kth_term(const std::vector<int64_t> &rec, const std::vector<int64_t> &in
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 using namespace std;
 
 int main() {
@@ -6959,20 +6931,21 @@ int64_t powmod(int64_t b, int64_t e, int64_t m) {
   return res;
 }
 
-int64_t inv(int64_t a) {
-  return powmod(((a % MOD) + MOD) % MOD, MOD - 2, MOD);
-}
+int64_t modnorm(int64_t a) { return (a %= MOD) < 0 ? a + MOD : a; }
+int64_t addmod(int64_t a, int64_t b) { return modnorm(modnorm(a) + modnorm(b)); }
+int64_t submod(int64_t a, int64_t b) { return modnorm(modnorm(a) - modnorm(b)); }
+int64_t inv(int64_t a) { return powmod(modnorm(a), MOD - 2, MOD); }
 
 std::vector<int64_t> interpolate(std::vector<int64_t> x, std::vector<int64_t> y) {
   int n = static_cast<int>(x.size());
   for (int i = 0; i < n; i++) {
-    x[i] = ((x[i] % MOD) + MOD) % MOD;
-    y[i] = ((y[i] % MOD) + MOD) % MOD;
+    x[i] = modnorm(x[i]);
+    y[i] = modnorm(y[i]);
   }
   // Replace y by its divided differences in place.
   for (int k = 0; k < n; k++) {
     for (int i = k + 1; i < n; i++) {
-      y[i] = (y[i] - y[k] + MOD) % MOD * inv((x[i] - x[k] + MOD) % MOD) % MOD;
+      y[i] = submod(y[i], y[k]) * inv(submod(x[i], x[k])) % MOD;
     }
   }
   // Expand the Newton basis into ordinary coefficients.
@@ -6981,11 +6954,11 @@ std::vector<int64_t> interpolate(std::vector<int64_t> x, std::vector<int64_t> y)
   for (int k = 0; k < n; k++) {
     int64_t last = 0;
     for (int i = 0; i < n; i++) {
-      res[i] = (res[i] + y[k] * temp[i]) % MOD;
+      res[i] = addmod(res[i], y[k] * temp[i] % MOD);
       int64_t old = temp[i];
       temp[i] = last;
       last = old;
-      temp[i] = (temp[i] - last * x[k] % MOD + MOD) % MOD;
+      temp[i] = submod(temp[i], last * x[k] % MOD);
     }
   }
   return res;
@@ -6993,17 +6966,17 @@ std::vector<int64_t> interpolate(std::vector<int64_t> x, std::vector<int64_t> y)
 
 int64_t interpolate_at(const std::vector<int64_t> &x, const std::vector<int64_t> &y, int64_t t) {
   int n = static_cast<int>(x.size());
-  t = ((t % MOD) + MOD) % MOD;
+  t = modnorm(t);
   int64_t res = 0;
   for (int k = 0; k < n; k++) {
     int64_t num = 1, den = 1;
     for (int j = 0; j < n; j++) {
       if (j != k) {
-        num = num * ((t - x[j]) % MOD + MOD) % MOD;
-        den = den * ((x[k] - x[j]) % MOD + MOD) % MOD;
+        num = num * submod(t, x[j]) % MOD;
+        den = den * submod(x[k], x[j]) % MOD;
       }
     }
-    res = (res + ((y[k] % MOD) + MOD) % MOD * num % MOD * inv(den)) % MOD;
+    res = addmod(res, modnorm(y[k]) * num % MOD * inv(den) % MOD);
   }
   return res;
 }
@@ -7022,7 +6995,7 @@ int main() {
   assert(interpolate_at(x, y, 5) == 38);  // 25 + 10 + 3.
 
   // Non-consecutive nodes for P(x) = 2x^3 - x + 4.
-  auto poly = [](int64_t t) { return ((2 * t * t * t - t + 4) % MOD + MOD) % MOD; };
+  auto poly = [](int64_t t) { return modnorm(2 * t * t * t - t + 4); };
   vector<int64_t> xs{2, 5, 7, 10}, ys;
   for (int64_t v : xs) {
     ys.push_back(poly(v));
@@ -7119,7 +7092,7 @@ Rather than evaluate the recursive definition directly, this implementation prec
   \item $O(64^{2})$ per call to \inlinecode{nim\_product()}; $O(64^{2} \log e)$ per call to \inlinecode{nim\_pow()} and \inlinecode{nim\_inverse()}.
 \end{compactitem}
 
-\textbf{Space Complexity}: $O(1)$: a fixed 64 by 64 table of 64-bit products.
+\textbf{Space Complexity}: $O(1)$ for a fixed 64 by 64 table of 64-bit products.
 
 \begin{lstlisting}[language=C++]
 #include <cstdint>

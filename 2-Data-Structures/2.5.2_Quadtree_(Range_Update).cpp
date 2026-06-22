@@ -195,7 +195,7 @@ class LazyQuadtree {
   ~LazyQuadtree() { clean_up(root); }
   LazyQuadtree(const LazyQuadtree &) = delete;
   LazyQuadtree &operator=(const LazyQuadtree &) = delete;
-  
+
   T at(int r, int c) {
     assert(0 <= r && r <= R && 0 <= c && c <= C);
     return query(r, c, r, c);

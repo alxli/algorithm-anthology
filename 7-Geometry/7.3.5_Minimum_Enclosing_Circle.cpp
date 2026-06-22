@@ -43,7 +43,10 @@ bool LT(T a, U b) {
   return C(a) < C(b);
 }
 
-template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
+template<typename T, typename U>
+bool LE(T a, U b) {
+  return !LT(b, a);
+}
 
 double sqnorm(double x, double y) {
   return x * x + y * y;

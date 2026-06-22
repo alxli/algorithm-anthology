@@ -1,23 +1,21 @@
 /*
 
 Given an array of numbers, determine the maximum possible sum of any contiguous subarray. Kadane's
-algorithm scans through the array, at each index computing the maximum nonnegative sum subarray
-ending there. Either this subarray is empty (in which case its sum is zero), or it consists of one
-more element than the maximum sequence ending at the previous position. This can be adapted to
-compute the maximal submatrix sum as well.
+algorithm scans the array while maintaining the maximum nonnegative sum of a subarray ending at the
+current position. A negative running sum is discarded because it can only reduce the sum of every
+subarray that extends it. Thus, by including `a[i]`, the running sum becomes `max(0, sum + a[i])`,
+and the largest running sum seen is the answer. This can be adapted to compute the maximal submatrix
+sum as well.
 
-- `max_subarray_sum(lo, hi, &res_lo, &res_hi)` returns the maximal subarray sum for the range
-  [`lo`, `hi`), where `lo` and `hi` are random-access iterators to numeric types. This
-  implementation requires operators `+` and `<` to be defined on the iterators' value type.
-  Optionally, two `int` pointers may be passed to store the inclusive boundary indices
-  [`res_lo`, `res_hi`] of the resulting subarray. By convention, the empty subarray is allowed, so
-  an input range consisting of only negative values returns 0 with an empty result interval.
-- `max_submatrix_sum(a, &r1, &c1, &r2, &c2)` returns the largest sum of any rectangular submatrix
-  for a matrix `a` with $m$ rows and $n$ columns. This implementation requires operators `+` and `<`
-  to be defined on the iterators' value type. Optionally, four `int` pointers may be passed to store
-  the boundary indices of the resulting subarray, with (`r1`, `c1`) specifiying the top-left index
-  and (`r2`, `c2`) specifying the bottom-right index. By convention, the empty submatrix is allowed,
-  so an input matrix consisting of only negative values returns 0 with an empty result interval.
+- `max_subarray_sum(lo, hi)` returns `(sum, begin, end)` for the maximal subarray in [`lo`, `hi`),
+  where `lo` and `hi` are random-access iterators to numeric types. The endpoints are inclusive.
+  This implementation requires operators `+` and `<` on the iterators' value type. By convention,
+  the empty subarray is allowed, so an input range containing only negative values returns sum 0
+  and endpoints [0, $-1$].
+- `max_submatrix_sum(a)` returns `(sum, r1, c1, r2, c2)` for the largest rectangular submatrix of a
+  matrix `a` with $m$ rows and $n$ columns. The corners are inclusive. This implementation requires
+  operators `+` and `<` on the matrix value type. By convention, the empty submatrix is allowed, so
+  a matrix containing only negative values returns sum 0 with empty row and column intervals.
 
 Time Complexity:
 - O(n) per call to `max_subarray_sum()`, where $n$ is the distance between `lo` and `hi`.
@@ -34,13 +32,14 @@ Space Complexity:
 #include <algorithm>
 #include <cstddef>
 #include <iterator>
+#include <tuple>
 #include <vector>
 
 template<typename It>
-auto max_subarray_sum(It lo, It hi, int *res_lo = nullptr, int *res_hi = nullptr) {
+auto max_subarray_sum(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
   if (lo == hi) {
-    return T();
+    return std::make_tuple(T(), 0, -1);
   }
   int curr_begin = 0, begin = 0, end = -1;
   T sum = 0, max_sum = 0;
@@ -55,43 +54,34 @@ auto max_subarray_sum(It lo, It hi, int *res_lo = nullptr, int *res_hi = nullptr
       end = it - lo;
     }
   }
-  if (res_lo != nullptr && res_hi != nullptr) {
-    *res_lo = begin;
-    *res_hi = end;
-  }
-  return max_sum;
+  return std::make_tuple(max_sum, begin, end);
 }
 
 template<typename T>
-T max_submatrix_sum(
-    const std::vector<std::vector<T>> &a, int *r1 = nullptr, int *c1 = nullptr, int *r2 = nullptr,
-    int *c2 = nullptr
-) {
+std::tuple<T, int, int, int, int> max_submatrix_sum(const std::vector<std::vector<T>> &a) {
   if (a.empty() || a[0].empty()) {
-    return T();
+    return {T(), 0, 0, -1, -1};
   }
   int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
-  T sum, max_sum = 0;
+  int r1 = 0, c1 = 0, r2 = -1, c2 = -1;
+  T max_sum = 0;
   for (int clo = 0; clo < cols; clo++) {
     std::vector<T> sums(rows, 0);
     for (int chi = clo; chi < cols; chi++) {
       for (int i = 0; i < rows; i++) {
         sums[i] += a[i][chi];
       }
-      int rlo, rhi;
-      sum = max_subarray_sum(sums.begin(), sums.end(), &rlo, &rhi);
+      auto [sum, rlo, rhi] = max_subarray_sum(sums.begin(), sums.end());
       if (max_sum < sum) {
         max_sum = sum;
-        if (r1 != nullptr && c1 != nullptr && r2 != nullptr && c2 != nullptr) {
-          *r1 = rlo;
-          *c1 = clo;
-          *r2 = rhi;
-          *c2 = chi;
-        }
+        r1 = rlo;
+        c1 = clo;
+        r2 = rhi;
+        c2 = chi;
       }
     }
   }
-  return max_sum;
+  return {max_sum, r1, c1, r2, c2};
 }
 
 /*** Example Usage and Output:
@@ -113,9 +103,10 @@ using namespace std;
 int main() {
   {
     vector<int> a{-2, -1, -3, 4, -1, 2, 1, -5, 4};
-    int lo = 0, hi = 0;
-    assert(max_subarray_sum(a.begin(), a.begin() + 3) == 0);
-    assert(max_subarray_sum(a.begin(), a.end(), &lo, &hi) == 6);
+    auto [negative_sum, negative_lo, negative_hi] = max_subarray_sum(a.begin(), a.begin() + 3);
+    assert(negative_sum == 0 && negative_lo == 0 && negative_hi == -1);
+    auto [sum, lo, hi] = max_subarray_sum(a.begin(), a.end());
+    assert(sum == 6);
     cout << "Maximal sum subarray:" << endl;
     for (int i = lo; i <= hi; i++) {
       cout << a[i] << " ";
@@ -129,8 +120,8 @@ int main() {
                           {-4, 1, -4, 1, 0},
                           {-1, 8, 0, -2, 3}};
     // clang-format on
-    int r1 = 0, c1 = 0, r2 = 0, c2 = 0;
-    assert(max_submatrix_sum(a, &r1, &c1, &r2, &c2) == 15);
+    auto [sum, r1, c1, r2, c2] = max_submatrix_sum(a);
+    assert(sum == 15);
     cout << "\nMaximal sum submatrix:" << endl;
     for (int i = r1; i <= r2; i++) {
       for (int j = c1; j <= c2; j++) {

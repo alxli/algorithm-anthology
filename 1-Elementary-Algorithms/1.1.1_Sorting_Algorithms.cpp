@@ -241,6 +241,11 @@ implementation works on ranges pointing to any signed or unsigned integer primit
 are handled by sorting on a key that flips the sign bit, which maps the two's-complement order onto
 the unsigned order so the most negative value sorts first.
 
+Digits are processed from least significant to most significant, and each counting-sort pass is
+stable. After one pass, the values are sorted by the processed digit; stability ensures that a later
+pass preserves the ordering already established by all less-significant digits. Inductively, after
+the final pass the values are sorted by the entire key.
+
 In this implementation, a power of two is chosen to be the base for the sort so that bitwise
 operations can be easily used to extract digits. This avoids the need to use modulo/exponentiation,
 which are much more expensive operations. In practice, it's been demonstrated that $2^8$ is the best

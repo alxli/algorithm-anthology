@@ -18,6 +18,13 @@ evaluating $f$ is expensive and constant factors matter. In the detection phase,
 one pointer with one call to $f$ per step, while Floyd advances the tortoise once and the hare
 twice, using three calls to $f$ per step.
 
+For Floyd's algorithm, suppose the tail has length $m$ and the cycle has length $n$. At a meeting,
+the hare has traveled twice as far as the tortoise, so the tortoise's distance is a multiple of $n$.
+Consequently, the distance from the meeting point around the cycle to its entry is congruent to $m$
+modulo $n$. Resetting one pointer to $x_0$ and advancing both one step at a time makes them meet at
+the cycle entry after $m$ steps. Brent first determines $n$, then advances one pointer $n$ steps;
+moving both together from that fixed separation likewise makes them meet at the entry.
+
 - `find_cycle_floyd(f, x0)` returns the reached cycle as a pair (`start`, `length`), where `start`
   is the smallest index $i$ such that $x_i$ is in the cycle, and `length` is the number of distinct
   values in the cycle.
@@ -35,11 +42,13 @@ Space Complexity:
 
 template<typename Fn, typename T>
 std::pair<int, int> find_cycle_floyd(Fn f, T x0) {
+  // Find a meeting point inside the cycle.
   T tortoise = f(x0), hare = f(f(x0));
   while (tortoise != hare) {
     tortoise = f(tortoise);
     hare = f(f(hare));
   }
+  // Find the cycle entry.
   int start = 0;
   tortoise = x0;
   while (tortoise != hare) {
@@ -47,6 +56,7 @@ std::pair<int, int> find_cycle_floyd(Fn f, T x0) {
     hare = f(hare);
     start++;
   }
+  // Measure the cycle length.
   int length = 1;
   hare = f(tortoise);
   while (tortoise != hare) {
@@ -58,6 +68,7 @@ std::pair<int, int> find_cycle_floyd(Fn f, T x0) {
 
 template<typename Fn, typename T>
 std::pair<int, int> find_cycle_brent(Fn f, T x0) {
+  // Find the cycle length by doubling the search block.
   int power = 1, length = 1;
   T tortoise = x0, hare = f(x0);
   while (tortoise != hare) {
@@ -69,10 +80,12 @@ std::pair<int, int> find_cycle_brent(Fn f, T x0) {
     hare = f(hare);
     length++;
   }
+  // Separate the pointers by one cycle length.
   hare = x0;
   for (int i = 0; i < length; i++) {
     hare = f(hare);
   }
+  // Find the cycle entry.
   int start = 0;
   tortoise = x0;
   while (tortoise != hare) {

@@ -5,9 +5,11 @@ differ in exactly one bit. It is useful whenever the cost of moving between adja
 on a single bit flip: enumerating subsets while incrementally maintaining a value, hardware where
 only one bit may toggle at a time, and constructions like Hamiltonian paths on the hypercube.
 
-The `k`-th Gray code is obtained from the ordinary binary value `k` by `k ^ (k >> 1)`, a bijection
-on $[0, 2^n)$. Its inverse recovers the rank of a given Gray code, which tells how many flips into
-the sequence a mask sits.
+The `k`-th Gray code is obtained from the ordinary binary value `k` by `k ^ (k >> 1)`. Incrementing
+`k` flips one binary bit and every lower bit, but XORing each bit with its higher neighbor cancels
+all but the highest of those changes, so consecutive Gray codes differ in exactly one bit. The map
+is a bijection: each binary bit is the prefix XOR of the Gray bits at and above it. The inverse loop
+computes those prefix XORs in doubling steps to recover the original rank.
 
 - `gray_code(k)` returns the `k`-th mask in Gray code order.
 - `inverse_gray_code(g)` returns the rank `k` such that `gray_code(k) == g`.

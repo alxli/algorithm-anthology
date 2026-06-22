@@ -28,8 +28,8 @@ calculations are exact when `Pt` has integer coordinates.
 
 Overflow warning: the exact integer paths multiply coordinate differences (cross products and
 squared lengths), which grow like the squared coordinate magnitude. With 32-bit `int` coordinates
-these overflow once coordinates exceed ~46000, so for larger integer inputs use a point type with
-64-bit (`int64_t`) coordinates.
+these overflow once coordinates exceed $\sim 46000$, so for larger integer inputs use a point type
+with 64-bit (`int64_t`) coordinates.
 
 Time Complexity:
 - O(1) for all operations.
@@ -60,7 +60,10 @@ bool LT(T a, U b) {
   return C(a) < C(b);
 }
 
-template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
+template<typename T, typename U>
+bool LE(T a, U b) {
+  return !LT(b, a);
+}
 
 template<typename OutPt>
 int line_intersection(double a1, double b1, double c1, double a2, double b2, double c2, OutPt *p) {
