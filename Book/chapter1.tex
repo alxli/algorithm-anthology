@@ -1088,21 +1088,22 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Two Pointers}
+\subsection{Two Pointers and Sliding Window}
 Uses two moving indices to avoid trying all pairs of positions. This technique has two common forms: opposite-end pointers over sorted arrays, and a sliding window over contiguous subarrays. For sorted 2-sum, if the current sum is too small, pairing the left value with any smaller right value also fails, so the left pointer can safely advance; if the sum is too large, the symmetric argument lets the right pointer retreat. Each step therefore discards an entire row or column of candidate pairs.
 
 A sliding window applies the same idea when extending and shrinking a range changes its state monotonically. With nonnegative values, extending a window cannot decrease its sum and removing its leftmost value cannot increase it, so no shorter feasible window is skipped. For a bound such as at most \inlinecode{k} distinct values, the left pointer advances only until the window becomes valid again. Since neither endpoint moves backward, each element enters and leaves the window at most once.
 
-The examples below cover sorted 2-sum/3-sum variants, finding the shortest subarray with sum at least a target when all values are nonnegative, and finding the longest subarray with at most \inlinecode{k} distinct values.
+For fixed-length windows, a monotonic deque of indices can report every minimum or maximum in linear total time. It stores only candidates that could still become the answer, ordered from the current extreme at the front to the least useful value at the back. A new element removes every older value that it dominates, while expired indices are removed from the front. Each index is again pushed and popped at most once.
+
+The examples below cover sorted 2-sum/3-sum variants, finding the shortest subarray with sum at least a target when all values are nonnegative, and finding the longest subarray with at most \inlinecode{k} distinct values. They also cover the minimum or maximum of every fixed-length window.
 
 \begin{compactitem}
   \item \inlinecode{two\_sum\_sorted(a, target)} returns two indices whose values sum to \inlinecode{target}, or $(-1, -1)$ if no such pair exists. The input array must be sorted.
   \item \inlinecode{three\_sum(a, target)} returns three original indices whose values sum to \inlinecode{target}, or $(-1, -1, -1)$ if none exist.
-  \item \inlinecode{min\_length\_at\_least(a, target)} returns the minimum length and inclusive endpoints of a contiguous subarray with sum at least \inlinecode{target}, or length $-1$ if none exists. Values in \inlinecode{a} must be nonnegative. If \inlinecode{target} is nonpositive, it returns the empty subarray with length 0.
-  \item \inlinecode{longest\_at\_most\_k\_distinct(a, k)} returns the maximum length and inclusive endpoints of a contiguous subarray containing at most \inlinecode{k} distinct values.
+  \item \inlinecode{min\_length\_at\_least(a, target)} returns (\inlinecode{length}, \inlinecode{lo}, \inlinecode{hi}), the minimum length and inclusive endpoints of a contiguous subarray with sum at least \inlinecode{target}, or length $-1$ if none exists. Values in \inlinecode{a} must be nonnegative. If \inlinecode{target} is nonpositive, it returns the empty subarray.
+  \item \inlinecode{longest\_at\_most\_k\_distinct(a, k)} returns (\inlinecode{length}, \inlinecode{lo}, \inlinecode{hi}), the maximum length and inclusive endpoints of a contiguous subarray containing at most \inlinecode{k} distinct values.
+  \item \inlinecode{sliding\_window\_extrema(a, k, comp)} returns the extreme value in each window of length \inlinecode{k}. With the default \inlinecode{less\textless{}\textgreater{}} comparator it returns minimums; passing \inlinecode{greater\textless{}\textgreater{}} returns maximums.
 \end{compactitem}
-
-The two window functions return \inlinecode{(length, lo, hi)}. An empty or nonexistent result is represented by endpoints [0, $-1$].
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -1110,6 +1111,7 @@ The two window functions return \inlinecode{(length, lo, hi)}. An empty or nonex
   \item $O(n)$ per call to \inlinecode{two\_sum\_sorted()} and \inlinecode{min\_length\_at\_least()}, where $n$ is the array size.
   \item $O(n^{2})$ per call to \inlinecode{three\_sum()}.
   \item $O(n)$ expected per call to \inlinecode{longest\_at\_most\_k\_distinct()}.
+  \item $O(n)$ per call to \inlinecode{sliding\_window\_extrema()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1119,14 +1121,17 @@ The two window functions return \inlinecode{(length, lo, hi)}. An empty or nonex
   \item $O(n)$ auxiliary heap space for \inlinecode{three\_sum(a, target)}.
   \item $O(1)$ auxiliary for \inlinecode{min\_length\_at\_least(a, target)}.
   \item $O(k)$ auxiliary heap space for \inlinecode{longest\_at\_most\_k\_distinct(a, k)}.
+  \item $O(n)$ auxiliary heap space for the result of \inlinecode{sliding\_window\_extrema()}, plus $O(k)$ for the deque.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cstdint>
+#include <deque>
+#include <functional>
 #include <tuple>
-#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -1146,14 +1151,15 @@ std::pair<int, int> two_sum_sorted(const std::vector<int> &a, int64_t target) {
 }
 
 std::array<int, 3> three_sum(const std::vector<int> &a, int64_t target) {
+  int n = static_cast<int>(a.size());
   std::vector<std::pair<int, int>> sorted;
   sorted.reserve(a.size());
-  for (int i = 0; i < static_cast<int>(a.size()); i++) {
+  for (int i = 0; i < n; i++) {
     sorted.push_back({a[i], i});
   }
   std::sort(sorted.begin(), sorted.end());
-  for (int i = 0; i < static_cast<int>(sorted.size()); i++) {
-    int l = i + 1, r = static_cast<int>(sorted.size()) - 1;
+  for (int i = 0; i < n; i++) {
+    int l = i + 1, r = n - 1;
     while (l < r) {
       int64_t sum = static_cast<int64_t>(sorted[i].first) + sorted[l].first + sorted[r].first;
       if (sum == target) {
@@ -1213,11 +1219,32 @@ std::tuple<int, int, int> longest_at_most_k_distinct(const std::vector<int> &a, 
   }
   return {best, best_lo, best_hi};
 }
+
+template<typename T, typename Compare = std::less<>>
+std::vector<T> sliding_window_extrema(const std::vector<T> &a, int k, Compare comp = Compare()) {
+  int n = static_cast<int>(a.size());
+  assert(1 <= k && k <= n);
+  std::deque<int> window;
+  std::vector<T> res;
+  res.reserve(n - k + 1);
+  for (int i = 0; i < n; i++) {
+    while (!window.empty() && !comp(a[window.back()], a[i])) {
+      window.pop_back();
+    }
+    window.push_back(i);
+    if (window.front() <= i - k) {
+      window.pop_front();
+    }
+    if (i >= k - 1) {
+      res.push_back(a[window.front()]);
+    }
+  }
+  return res;
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 using namespace std;
 
 int main() {
@@ -1243,200 +1270,10 @@ int main() {
   auto [longest, longest_lo, longest_hi] = longest_at_most_k_distinct(b, 2);
   assert(longest == 3);
   assert(longest_lo == 0 && longest_hi == 2);  // [1, 2, 1].
-  return 0;
-}
-\end{lstlisting}
-\subsection{Sliding Window Maximum}
-Given an array and a fixed window length $k$, report the maximum (or minimum) of every contiguous window of that length as the window slides from left to right. A monotonic deque of indices answers all windows in linear total time: it holds the indices of candidates that could still become a window maximum, kept in decreasing order of value. Each new element pops every smaller element off the back, since those can never again be the maximum while the larger newer element is in the window, and indices that fall outside the window are dropped from the front. The front of the deque is always the maximum of the current window. This is the windowed counterpart of the monotonic stack: each index is pushed and popped at most once.
 
-Both functions take a vector of $n$ comparable values and a window length $k \in [1, n]$, returning a vector of $n - k + 1$ results, one per window in left-to-right order.
-
-\begin{compactitem}
-  \item \inlinecode{sliding\_window\_maximum(a, k)} returns the maximum of each window of length \inlinecode{k}.
-  \item \inlinecode{sliding\_window\_minimum(a, k)} returns the minimum of each window of length \inlinecode{k}.
-\end{compactitem}
-
-\textbf{Time Complexity}: $O(n)$ per call to both functions, where $n$ is the size of the input.
-
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space for the result, plus $O(k)$ for the deque.
-
-\begin{lstlisting}[language=C++]
-#include <cassert>
-#include <deque>
-#include <vector>
-
-template<typename T>
-std::vector<T> sliding_window_maximum(const std::vector<T> &a, int k) {
-  int n = static_cast<int>(a.size());
-  assert(1 <= k && k <= n);
-  std::deque<int> window;
-  std::vector<T> res;
-  for (int i = 0; i < n; i++) {
-    while (!window.empty() && a[window.back()] <= a[i]) {
-      window.pop_back();
-    }
-    window.push_back(i);
-    if (window.front() <= i - k) {
-      window.pop_front();
-    }
-    if (i >= k - 1) {
-      res.push_back(a[window.front()]);
-    }
-  }
-  return res;
-}
-
-template<typename T>
-std::vector<T> sliding_window_minimum(const std::vector<T> &a, int k) {
-  int n = static_cast<int>(a.size());
-  assert(1 <= k && k <= n);
-  std::deque<int> window;
-  std::vector<T> res;
-  for (int i = 0; i < n; i++) {
-    while (!window.empty() && a[window.back()] >= a[i]) {
-      window.pop_back();
-    }
-    window.push_back(i);
-    if (window.front() <= i - k) {
-      window.pop_front();
-    }
-    if (i >= k - 1) {
-      res.push_back(a[window.front()]);
-    }
-  }
-  return res;
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-using namespace std;
-
-int main() {
-  vector<int> a{1, 3, -1, -3, 5, 3, 6, 7};
-  assert((sliding_window_maximum(a, 3) == vector<int>{3, 3, 5, 5, 6, 7}));
-  assert((sliding_window_minimum(a, 3) == vector<int>{-1, -3, -3, -3, 3, 3}));
-  return 0;
-}
-\end{lstlisting}
-\subsection{Aggregate Queue}
-Maintain a first-in, first-out queue that additionally answers, in $O(1)$ amortized time, the fold of an associative operation over all elements currently in the queue. This is the ``sliding window aggregation'' (SWAG) technique: by pushing new elements and popping old ones as a window advances, it reports an aggregate of every window in linear total time.
-
-Unlike the monotonic deque used for the sliding-window maximum (see 1.2.4), the operation need only be associative, not order-based, so the same structure handles min, max, sum, gcd, matrix products, and other monoids. It is sometimes called a ``monotonic queue,'' but that term usually denotes the monotonic deque of 1.2.4 (which handles only min/max); the two are different structures. The queue is built from two stacks: a back stack receives pushes while a front stack serves pops, and each stack stores running folds so the two halves combine in $O(1)$. Whenever the front stack empties, the back stack is flipped onto it; this costs $O(1)$ amortized per element, since each element is moved between stacks at most once.
-
-The fold is defined by an associative \inlinecode{combine(a, b)} function. The default code below returns the ``min'' of the elements; for ``sum'', \inlinecode{combine(a, b)} should return \inlinecode{a + b}. The fold is taken in queue order (front to back), so non-commutative operations such as matrix products are also supported.
-
-\begin{compactitem}
-  \item \inlinecode{AggregateQueue\textless{}T\textgreater{}()} constructs an empty queue.
-  \item \inlinecode{empty()} returns whether the queue is empty.
-  \item \inlinecode{size()} returns the number of elements in the queue.
-  \item \inlinecode{push(x)} appends \inlinecode{x} to the back of the queue.
-  \item \inlinecode{pop()} removes the element at the front of the queue, which must be non-empty.
-  \item \inlinecode{front()} returns the element at the front of the queue, which must be non-empty.
-  \item \inlinecode{fold()} returns \inlinecode{combine()} applied to all elements in queue order; the queue must be non-empty.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(1)$ per call to the constructor, \inlinecode{empty()}, \inlinecode{size()}, \inlinecode{front()}, and \inlinecode{fold()}.
-  \item $O(1)$ amortized per call to \inlinecode{push()} and \inlinecode{pop()}.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n)$ for storage of the queue elements, where $n$ is the number of elements.
-  \item $O(1)$ auxiliary per operation, amortized (a \inlinecode{pop()} may flip the back stack onto the front stack).
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <cassert>
-#include <utility>
-#include <vector>
-
-template<typename T>
-class AggregateQueue {
-  static T combine(const T &a, const T &b) { return std::min(a, b); }
-
-  // Each stack entry is (value, fold), where fold combines the value with all entries between it
-  // and its end of the queue (the front for front_stack, the back for back_stack).
-  std::vector<std::pair<T, T>> front_stack, back_stack;
-
- public:
-  bool empty() const { return front_stack.empty() && back_stack.empty(); }
-  int size() const { return static_cast<int>(front_stack.size() + back_stack.size()); }
-
-  void push(const T &x) {
-    T acc = back_stack.empty() ? x : combine(back_stack.back().second, x);
-    back_stack.emplace_back(x, acc);
-  }
-
-  void pop() {
-    assert(!empty());
-    if (front_stack.empty()) {
-      // Flip the back stack onto the front stack, reversing order so the oldest element ends up on
-      // top, and recompute the front folds in queue order.
-      while (!back_stack.empty()) {
-        T x = back_stack.back().first;
-        back_stack.pop_back();
-        T acc = front_stack.empty() ? x : combine(x, front_stack.back().second);
-        front_stack.emplace_back(x, acc);
-      }
-    }
-    front_stack.pop_back();
-  }
-
-  T front() const {
-    assert(!empty());
-    return front_stack.empty() ? back_stack.front().first : front_stack.back().first;
-  }
-
-  T fold() const {
-    assert(!empty());
-    if (front_stack.empty()) {
-      return back_stack.back().second;
-    }
-    if (back_stack.empty()) {
-      return front_stack.back().second;
-    }
-    return combine(front_stack.back().second, back_stack.back().second);
-  }
-};
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-using namespace std;
-
-int main() {
-  // Used directly as a FIFO queue with an O(1) min query.
-  AggregateQueue<int> q;
-  q.push(5);
-  q.push(3);
-  q.push(8);
-  assert(q.front() == 5 && q.size() == 3);
-  assert(q.fold() == 3);  // min(5, 3, 8)
-  q.pop();                // Removes 5.
-  assert(q.fold() == 3);  // min(3, 8)
-  q.pop();                // Removes 3.
-  assert(q.fold() == 8);
-
-  // Canonical use: the minimum of every width-3 window, advancing the window by push/pop.
-  vector<int> a{4, 2, 5, 1, 3, 6};
-  AggregateQueue<int> w;
-  vector<int> mins;
-  for (int i = 0; i < static_cast<int>(a.size()); i++) {
-    w.push(a[i]);
-    if (w.size() > 3) {
-      w.pop();
-    }
-    if (w.size() == 3) {
-      mins.push_back(w.fold());
-    }
-  }
-  assert((mins == vector<int>{2, 1, 1, 1}));  // min of [4,2,5], [2,5,1], [5,1,3], [1,3,6]
+  vector<int> e{1, 3, -1, -3, 5, 3, 6, 7};
+  assert((sliding_window_extrema(e, 3) == vector<int>{-1, -3, -3, -3, 3, 3}));
+  assert((sliding_window_extrema(e, 3, greater<>()) == vector<int>{3, 3, 5, 5, 6, 7}));
   return 0;
 }
 \end{lstlisting}
@@ -1592,6 +1429,127 @@ int main() {
       {1, 0, 1, 0, 0, 1}
   };
   assert(largest_zero_submatrix(grid) == 6);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Aggregate Queue}
+Maintain a first-in, first-out queue that additionally answers, in $O(1)$ amortized time, the fold of an associative operation over all elements currently in the queue. This is the ``sliding window aggregation'' (SWAG) technique: by pushing new elements and popping old ones as a window advances, it reports an aggregate of every window in linear total time.
+
+Unlike the monotonic deque used for sliding-window extrema (see 1.2.3), the operation need only be associative, not order-based, so the same structure handles min, max, sum, gcd, matrix products, and other monoids. It is sometimes called a ``monotonic queue,'' but that term usually denotes the monotonic deque of 1.2.3 (which handles only min/max); the two are different structures. The queue is built from two stacks: a back stack receives pushes while a front stack serves pops, and each stack stores running folds so the two halves combine in $O(1)$. Whenever the front stack empties, the back stack is flipped onto it; this costs $O(1)$ amortized per element, since each element is moved between stacks at most once.
+
+The fold is defined by an associative \inlinecode{combine(a, b)} function. The default code below returns the ``min'' of the elements; for ``sum'', \inlinecode{combine(a, b)} should return \inlinecode{a + b}. The fold is taken in queue order (front to back), so non-commutative operations such as matrix products are also supported.
+
+\begin{compactitem}
+  \item \inlinecode{AggregateQueue\textless{}T\textgreater{}()} constructs an empty queue.
+  \item \inlinecode{empty()} returns whether the queue is empty.
+  \item \inlinecode{size()} returns the number of elements in the queue.
+  \item \inlinecode{push(x)} appends \inlinecode{x} to the back of the queue.
+  \item \inlinecode{pop()} removes the element at the front of the queue, which must be non-empty.
+  \item \inlinecode{front()} returns the element at the front of the queue, which must be non-empty.
+  \item \inlinecode{fold()} returns \inlinecode{combine()} applied to all elements in queue order; the queue must be non-empty.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the constructor, \inlinecode{empty()}, \inlinecode{size()}, \inlinecode{front()}, and \inlinecode{fold()}.
+  \item $O(1)$ amortized per call to \inlinecode{push()} and \inlinecode{pop()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the queue elements, where $n$ is the number of elements.
+  \item $O(1)$ auxiliary per operation, amortized (a \inlinecode{pop()} may flip the back stack onto the front stack).
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <utility>
+#include <vector>
+
+template<typename T>
+class AggregateQueue {
+  static T combine(const T &a, const T &b) { return std::min(a, b); }
+
+  // Each stack entry is (value, fold), where fold combines the value with all entries between it
+  // and its end of the queue (the front for front_stack, the back for back_stack).
+  std::vector<std::pair<T, T>> front_stack, back_stack;
+
+ public:
+  bool empty() const { return front_stack.empty() && back_stack.empty(); }
+  int size() const { return static_cast<int>(front_stack.size() + back_stack.size()); }
+
+  void push(const T &x) {
+    T acc = back_stack.empty() ? x : combine(back_stack.back().second, x);
+    back_stack.emplace_back(x, acc);
+  }
+
+  void pop() {
+    assert(!empty());
+    if (front_stack.empty()) {
+      // Flip the back stack onto the front stack, reversing order so the oldest element ends up on
+      // top, and recompute the front folds in queue order.
+      while (!back_stack.empty()) {
+        T x = back_stack.back().first;
+        back_stack.pop_back();
+        T acc = front_stack.empty() ? x : combine(x, front_stack.back().second);
+        front_stack.emplace_back(x, acc);
+      }
+    }
+    front_stack.pop_back();
+  }
+
+  T front() const {
+    assert(!empty());
+    return front_stack.empty() ? back_stack.front().first : front_stack.back().first;
+  }
+
+  T fold() const {
+    assert(!empty());
+    if (front_stack.empty()) {
+      return back_stack.back().second;
+    }
+    if (back_stack.empty()) {
+      return front_stack.back().second;
+    }
+    return combine(front_stack.back().second, back_stack.back().second);
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+using namespace std;
+
+int main() {
+  // Used directly as a FIFO queue with an O(1) min query.
+  AggregateQueue<int> q;
+  q.push(5);
+  q.push(3);
+  q.push(8);
+  assert(q.front() == 5 && q.size() == 3);
+  assert(q.fold() == 3);  // min(5, 3, 8)
+  q.pop();                // Removes 5.
+  assert(q.fold() == 3);  // min(3, 8)
+  q.pop();                // Removes 3.
+  assert(q.fold() == 8);
+
+  // Canonical use: the minimum of every width-3 window, advancing the window by push/pop.
+  vector<int> a{4, 2, 5, 1, 3, 6};
+  AggregateQueue<int> w;
+  vector<int> mins;
+  for (int i = 0; i < static_cast<int>(a.size()); i++) {
+    w.push(a[i]);
+    if (w.size() > 3) {
+      w.pop();
+    }
+    if (w.size() == 3) {
+      mins.push_back(w.fold());
+    }
+  }
+  assert((mins == vector<int>{2, 1, 1, 1}));  // min of [4,2,5], [2,5,1], [5,1,3], [1,3,6]
   return 0;
 }
 \end{lstlisting}

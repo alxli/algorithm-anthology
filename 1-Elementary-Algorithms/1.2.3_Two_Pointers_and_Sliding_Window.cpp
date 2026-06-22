@@ -12,41 +12,50 @@ leftmost value cannot increase it, so no shorter feasible window is skipped. For
 most `k` distinct values, the left pointer advances only until the window becomes valid again. Since
 neither endpoint moves backward, each element enters and leaves the window at most once.
 
+For fixed-length windows, a monotonic deque of indices can report every minimum or maximum in
+linear total time. It stores only candidates that could still become the answer, ordered from the
+current extreme at the front to the least useful value at the back. A new element removes every
+older value that it dominates, while expired indices are removed from the front. Each index is
+again pushed and popped at most once.
+
 The examples below cover sorted 2-sum/3-sum variants, finding the shortest subarray with sum at
 least a target when all values are nonnegative, and finding the longest subarray with at most `k`
-distinct values.
+distinct values. They also cover the minimum or maximum of every fixed-length window.
 
 - `two_sum_sorted(a, target)` returns two indices whose values sum to `target`, or $(-1, -1)$ if no
   such pair exists. The input array must be sorted.
 - `three_sum(a, target)` returns three original indices whose values sum to `target`, or
   $(-1, -1, -1)$ if none exist.
-- `min_length_at_least(a, target)` returns the minimum length and inclusive endpoints of a
-  contiguous subarray with sum at least `target`, or length $-1$ if none exists. Values in `a` must
-  be nonnegative. If `target` is nonpositive, it returns the empty subarray with length 0.
-- `longest_at_most_k_distinct(a, k)` returns the maximum length and inclusive endpoints of a
-  contiguous subarray containing at most `k` distinct values.
-
-The two window functions return `(length, lo, hi)`. An empty or nonexistent result is represented
-by endpoints [0, $-1$].
+- `min_length_at_least(a, target)` returns (`length`, `lo`, `hi`), the minimum length and inclusive
+  endpoints of a contiguous subarray with sum at least `target`, or length $-1$ if none exists.
+  Values in `a` must be nonnegative. If `target` is nonpositive, it returns the empty subarray.
+- `longest_at_most_k_distinct(a, k)` returns (`length`, `lo`, `hi`), the maximum length and
+  inclusive endpoints of a contiguous subarray containing at most `k` distinct values.
+- `sliding_window_extrema(a, k, comp)` returns the extreme value in each window of length `k`.
+  With the default `less<>` comparator it returns minimums; passing `greater<>` returns maximums.
 
 Time Complexity:
 - O(n) per call to `two_sum_sorted()` and `min_length_at_least()`, where $n$ is the array size.
 - O(n^2) per call to `three_sum()`.
 - O(n) expected per call to `longest_at_most_k_distinct()`.
+- O(n) per call to `sliding_window_extrema()`.
 
 Space Complexity:
 - O(1) auxiliary for `two_sum_sorted(a, target)`.
 - O(n) auxiliary heap space for `three_sum(a, target)`.
 - O(1) auxiliary for `min_length_at_least(a, target)`.
 - O(k) auxiliary heap space for `longest_at_most_k_distinct(a, k)`.
+- O(n) auxiliary heap space for the result of `sliding_window_extrema()`, plus O(k) for the deque.
 
 */
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cstdint>
+#include <deque>
+#include <functional>
 #include <tuple>
-#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -66,14 +75,15 @@ std::pair<int, int> two_sum_sorted(const std::vector<int> &a, int64_t target) {
 }
 
 std::array<int, 3> three_sum(const std::vector<int> &a, int64_t target) {
+  int n = static_cast<int>(a.size());
   std::vector<std::pair<int, int>> sorted;
   sorted.reserve(a.size());
-  for (int i = 0; i < static_cast<int>(a.size()); i++) {
+  for (int i = 0; i < n; i++) {
     sorted.push_back({a[i], i});
   }
   std::sort(sorted.begin(), sorted.end());
-  for (int i = 0; i < static_cast<int>(sorted.size()); i++) {
-    int l = i + 1, r = static_cast<int>(sorted.size()) - 1;
+  for (int i = 0; i < n; i++) {
+    int l = i + 1, r = n - 1;
     while (l < r) {
       int64_t sum = static_cast<int64_t>(sorted[i].first) + sorted[l].first + sorted[r].first;
       if (sum == target) {
@@ -134,9 +144,30 @@ std::tuple<int, int, int> longest_at_most_k_distinct(const std::vector<int> &a, 
   return {best, best_lo, best_hi};
 }
 
+template<typename T, typename Compare = std::less<>>
+std::vector<T> sliding_window_extrema(const std::vector<T> &a, int k, Compare comp = Compare()) {
+  int n = static_cast<int>(a.size());
+  assert(1 <= k && k <= n);
+  std::deque<int> window;
+  std::vector<T> res;
+  res.reserve(n - k + 1);
+  for (int i = 0; i < n; i++) {
+    while (!window.empty() && !comp(a[window.back()], a[i])) {
+      window.pop_back();
+    }
+    window.push_back(i);
+    if (window.front() <= i - k) {
+      window.pop_front();
+    }
+    if (i >= k - 1) {
+      res.push_back(a[window.front()]);
+    }
+  }
+  return res;
+}
+
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int main() {
@@ -162,5 +193,9 @@ int main() {
   auto [longest, longest_lo, longest_hi] = longest_at_most_k_distinct(b, 2);
   assert(longest == 3);
   assert(longest_lo == 0 && longest_hi == 2);  // [1, 2, 1].
+
+  vector<int> e{1, 3, -1, -3, 5, 3, 6, 7};
+  assert((sliding_window_extrema(e, 3) == vector<int>{-1, -3, -3, -3, 3, 3}));
+  assert((sliding_window_extrema(e, 3, greater<>()) == vector<int>{3, 3, 5, 5, 6, 7}));
   return 0;
 }
