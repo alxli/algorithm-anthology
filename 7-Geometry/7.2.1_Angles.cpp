@@ -25,8 +25,8 @@ degrees.
   between points `a` and `b` where the $z$-component is implicitly zero and the origin is implicitly
   shifted to point `o`. This operation is also equal to double the signed area of the triangle from
   these three points.
-- `turn(a, o, b)` returns $-1$ if the path `a` $\to$ `o` $\to$ `b` forms a left turn on the plane, 0
-  if the path forms a straight line segment, or 1 if it forms a right turn.
+- `turn(a, o, b)` returns 1 if the path `a` $\to$ `o` $\to$ `b` forms a left turn on the plane, 0
+  if the path forms a straight line segment, or $-1$ if it forms a right turn.
 
 Time Complexity:
 - O(1) for all operations.
@@ -115,13 +115,10 @@ auto cross(const Pt &a, const Pt &b, const Pt &o = Pt(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-// Built on cross(a, b, o), whose sign is the opposite of the path-direction cross product, so a
-// positive cross here is a right turn: this returns +1 for right/clockwise (NOT the more common
-// +1 = counter-clockwise convention), -1 for left/counter-clockwise, and 0 if collinear.
 template<typename Pt>
 int turn(const Pt &a, const Pt &o, const Pt &b) {
   auto c = cross(a, b, o);
-  return LT(c, 0) ? -1 : (LT(0, c) ? 1 : 0);
+  return LT(c, 0) ? 1 : (LT(0, c) ? -1 : 0);
 }
 
 /*** Example Usage ***/
@@ -145,6 +142,6 @@ int main() {
   assert(EQ(90 * DEG, angle(Point(5, 0), Point(0, 5), Point(-5, 0))));
   assert(EQ(225 * DEG, angle_between(Point(0, 5), Point(5, -5))));
   assert(-1 == cross(Point(0, 1), Point(1, 0), Point(0, 0)));
-  assert(1 == turn(Point(0, 1), Point(0, 0), Point(-5, -5)));
+  assert(-1 == turn(Point(0, 1), Point(0, 0), Point(-5, -5)));
   return 0;
 }

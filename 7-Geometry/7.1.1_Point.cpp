@@ -241,7 +241,7 @@ using PointLD = TPoint<long double>;
 using Point = PointD;  // Default point type is double.
 
 // Can compose with numerical types from chapter 6:
-// using PointB = TPoint<BigInt<>>;
+// using PointB = TPoint<BigInt>;
 // using PointR = TPoint<Rational<int64_t>>;
 // using PointM = TPoint<Modular<1000000007>>;
 

@@ -235,7 +235,7 @@ using PointLD = TPoint<long double>;
 using Point = PointD;  // Default point type is double.
 
 // Can compose with numerical types from chapter 6:
-// using PointB = TPoint<BigInt<>>;
+// using PointB = TPoint<BigInt>;
 // using PointR = TPoint<Rational<int64_t>>;
 // using PointM = TPoint<Modular<1000000007>>;
 \end{lstlisting}
@@ -474,7 +474,7 @@ using LineLD = TLine<long double>;
 using Line = LineD;  // Default line type is double.
 
 // Can compose with numerical types from chapter 6:
-// using LineB = TLine<BigInt<>, true, true>;
+// using LineB = TLine<BigInt, true, true>;
 // using LineR = TLine<Rational<int64_t>, true, true>;
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -1026,7 +1026,7 @@ Angle calculations in two dimensions. All operations are inherently floating-poi
   \item \inlinecode{angle\_between(a, b)} returns the angle in radians of segment from point \inlinecode{a} to point \inlinecode{b}, relative counterclockwise to the positive $x$-axis.
   \item \inlinecode{angle\_between(a1, b1, a2, b2)} returns the smaller angle in radians between two lines $a_1 x + b_1 y + c_1 = 0$ and $a_2 x + b_2 y + c_2 = 0$, limited to $[0, \pi / 2]$.
   \item \inlinecode{cross(a, b, o)} returns the magnitude (Euclidean norm) of the three-dimensional cross product between points \inlinecode{a} and \inlinecode{b} where the $z$-component is implicitly zero and the origin is implicitly shifted to point \inlinecode{o}. This operation is also equal to double the signed area of the triangle from these three points.
-  \item \inlinecode{turn(a, o, b)} returns $-1$ if the path \inlinecode{a} $\to$ \inlinecode{o} $\to$ \inlinecode{b} forms a left turn on the plane, 0 if the path forms a straight line segment, or 1 if it forms a right turn.
+  \item \inlinecode{turn(a, o, b)} returns 1 if the path \inlinecode{a} $\to$ \inlinecode{o} $\to$ \inlinecode{b} forms a left turn on the plane, 0 if the path forms a straight line segment, or $-1$ if it forms a right turn.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(1)$ for all operations.
@@ -1113,13 +1113,10 @@ auto cross(const Pt &a, const Pt &b, const Pt &o = Pt(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-// Built on cross(a, b, o), whose sign is the opposite of the path-direction cross product, so a
-// positive cross here is a right turn: this returns +1 for right/clockwise (NOT the more common
-// +1 = counter-clockwise convention), -1 for left/counter-clockwise, and 0 if collinear.
 template<typename Pt>
 int turn(const Pt &a, const Pt &o, const Pt &b) {
   auto c = cross(a, b, o);
-  return LT(c, 0) ? -1 : (LT(0, c) ? 1 : 0);
+  return LT(c, 0) ? 1 : (LT(0, c) ? -1 : 0);
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -1144,7 +1141,7 @@ int main() {
   assert(EQ(90 * DEG, angle(Point(5, 0), Point(0, 5), Point(-5, 0))));
   assert(EQ(225 * DEG, angle_between(Point(0, 5), Point(5, -5))));
   assert(-1 == cross(Point(0, 1), Point(1, 0), Point(0, 0)));
-  assert(1 == turn(Point(0, 1), Point(0, 0), Point(-5, -5)));
+  assert(-1 == turn(Point(0, 1), Point(0, 0), Point(-5, -5)));
   return 0;
 }
 \end{lstlisting}
@@ -3229,7 +3226,7 @@ double cross(const PtA &a, const PtB &b, const PtO &o) {
 template<typename PtA, typename PtO, typename PtB>
 int turn(const PtA &a, const PtO &o, const PtB &b) {
   double c = cross(a, b, o);
-  return LT(c, 0) ? -1 : (LT(0, c) ? 1 : 0);
+  return LT(c, 0) ? 1 : (LT(0, c) ? -1 : 0);
 }
 
 template<typename PtA, typename PtB>
@@ -3262,7 +3259,7 @@ std::vector<Point> convex_cut(It lo, It hi, const Pt &p, const Pt &q) {
     Point pj(static_cast<double>(j->x), static_cast<double>(j->y));
     Point pi(static_cast<double>(i->x), static_cast<double>(i->y));
     int d1 = turn(q, p, pj), d2 = turn(q, p, pi);
-    if (d1 >= 0) {
+    if (d1 <= 0) {
       res.push_back(pj);
     }
     if (d1 * d2 < 0) {
@@ -4568,7 +4565,6 @@ std::vector<Face> convex_hull_3d(const std::vector<Point3D> &p) {
       n, std::vector<std::array<int, 2>>(n, {-1, -1})
   );
   std::vector<Face> faces;
-
   auto normal = [&](const Face &f) { return (p[f.b] - p[f.a]).cross(p[f.c] - p[f.a]); };
   auto visible = [&](const Face &f, int i) { return normal(f).dot(p[i] - p[f.a]) > EPS; };
   auto add_edge = [&](int a, int b, int c) {
@@ -4601,7 +4597,6 @@ std::vector<Face> convex_hull_3d(const std::vector<Point3D> &p) {
     add_edge(f.c, f.a, f.b);
     faces.push_back(f);
   };
-
   for (int i = 0; i < 4; i++) {
     for (int j = i + 1; j < 4; j++) {
       for (int k = j + 1; k < 4; k++) {
@@ -4609,7 +4604,6 @@ std::vector<Face> convex_hull_3d(const std::vector<Point3D> &p) {
       }
     }
   }
-
   for (int i = 4; i < n; i++) {
     for (int j = 0; j < static_cast<int>(faces.size()); j++) {
       Face f = faces[j];

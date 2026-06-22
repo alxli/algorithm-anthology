@@ -60,7 +60,7 @@ Epsilon Comparisons:
   when one argument is a known exact value and the other is a computed approximation. Degenerates
   to exact comparison when `ref` = 0, since the tolerance collapses to 0; use `EQ` near zero.
 - `rEQ_sym(x, y)` is the symmetric (commutative) variant: tolerance scales with
-  $max(|`x`|, |`y`|)$, so the result is the same regardless of argument order. Still degenerates
+  $\max(|`x`|, |`y`|)$, so the result is the same regardless of argument order. Still degenerates
   near zero when both arguments are close to 0.
 
 */

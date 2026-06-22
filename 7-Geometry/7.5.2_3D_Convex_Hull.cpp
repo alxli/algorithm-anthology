@@ -48,7 +48,6 @@ std::vector<Face> convex_hull_3d(const std::vector<Point3D> &p) {
       n, std::vector<std::array<int, 2>>(n, {-1, -1})
   );
   std::vector<Face> faces;
-
   auto normal = [&](const Face &f) { return (p[f.b] - p[f.a]).cross(p[f.c] - p[f.a]); };
   auto visible = [&](const Face &f, int i) { return normal(f).dot(p[i] - p[f.a]) > EPS; };
   auto add_edge = [&](int a, int b, int c) {
@@ -81,7 +80,6 @@ std::vector<Face> convex_hull_3d(const std::vector<Point3D> &p) {
     add_edge(f.c, f.a, f.b);
     faces.push_back(f);
   };
-
   for (int i = 0; i < 4; i++) {
     for (int j = i + 1; j < 4; j++) {
       for (int k = j + 1; k < 4; k++) {
@@ -89,7 +87,6 @@ std::vector<Face> convex_hull_3d(const std::vector<Point3D> &p) {
       }
     }
   }
-
   for (int i = 4; i < n; i++) {
     for (int j = 0; j < static_cast<int>(faces.size()); j++) {
       Face f = faces[j];

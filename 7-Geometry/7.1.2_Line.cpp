@@ -195,7 +195,7 @@ using LineLD = TLine<long double>;
 using Line = LineD;  // Default line type is double.
 
 // Can compose with numerical types from chapter 6:
-// using LineB = TLine<BigInt<>, true, true>;
+// using LineB = TLine<BigInt, true, true>;
 // using LineR = TLine<Rational<int64_t>, true, true>;
 
 /*** Example Usage ***/

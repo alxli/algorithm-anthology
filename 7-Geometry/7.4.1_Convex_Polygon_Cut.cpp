@@ -58,7 +58,7 @@ double cross(const PtA &a, const PtB &b, const PtO &o) {
 template<typename PtA, typename PtO, typename PtB>
 int turn(const PtA &a, const PtO &o, const PtB &b) {
   double c = cross(a, b, o);
-  return LT(c, 0) ? -1 : (LT(0, c) ? 1 : 0);
+  return LT(c, 0) ? 1 : (LT(0, c) ? -1 : 0);
 }
 
 template<typename PtA, typename PtB>
@@ -91,7 +91,7 @@ std::vector<Point> convex_cut(It lo, It hi, const Pt &p, const Pt &q) {
     Point pj(static_cast<double>(j->x), static_cast<double>(j->y));
     Point pi(static_cast<double>(i->x), static_cast<double>(i->y));
     int d1 = turn(q, p, pj), d2 = turn(q, p, pi);
-    if (d1 >= 0) {
+    if (d1 <= 0) {
       res.push_back(pj);
     }
     if (d1 * d2 < 0) {

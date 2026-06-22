@@ -51,7 +51,7 @@ Epsilon Comparisons:
 \begin{compactitem}
   \item \inlinecode{EQ()}, \inlinecode{NE()}, \inlinecode{LT()}, \inlinecode{GT()}, \inlinecode{LE()}, and \inlinecode{GE()} relationally compare two values $x$ and $y$. Arguments may be of different types; the common type governs behavior. If the common type is a floating-point type, absolute-error epsilon comparison is used: values within \inlinecode{EPS} of each other are considered equal, and \inlinecode{LT}/\inlinecode{GT}/\inlinecode{LE}/\inlinecode{GE} shift the boundary by \inlinecode{EPS} accordingly. Otherwise exact comparison is used (\inlinecode{==}, \inlinecode{\textless{}}, etc.). The branch is selected with \inlinecode{if constexpr}, so exact types without floating-point arithmetic (e.g. integers, \inlinecode{Modular}, \inlinecode{Rational}) compose as well.
   \item \inlinecode{rEQ(ref, val)} returns whether \inlinecode{val} equals reference \inlinecode{ref} within relative error \inlinecode{EPS}. The tolerance scales with $|{\inlinecodemath{ref}}|$, so \inlinecode{rEQ(ref, val)} is NOT the same as \inlinecode{rEQ(val, ref)}. Use this when one argument is a known exact value and the other is a computed approximation. Degenerates to exact comparison when \inlinecode{ref} = 0, since the tolerance collapses to 0; use \inlinecode{EQ} near zero.
-  \item \inlinecode{rEQ\_sym(x, y)} is the symmetric (commutative) variant: tolerance scales with $max(|{\inlinecodemath{x}}|, |{\inlinecodemath{y}}|)$, so the result is the same regardless of argument order. Still degenerates near zero when both arguments are close to 0.
+  \item \inlinecode{rEQ\_sym(x, y)} is the symmetric (commutative) variant: tolerance scales with $\max(|{\inlinecodemath{x}}|, |{\inlinecodemath{y}}|)$, so the result is the same regardless of argument order. Still degenerates near zero when both arguments are close to 0.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -4499,7 +4499,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Rational Numbers}
-Perform operations on rational numbers internally represented as two integers: a numerator and a denominator. The template integer type must support streamed input/output, comparisons, and arithmetic operations. Overflow is not checked for in internal operations: comparisons and arithmetic cross-multiply numerators and denominators, so instantiate with a wider integer type (such as \inlinecode{\_\_int128}, or even \inlinecode{BigInt\textless{}\textgreater{}}) if the values may grow large.
+Perform operations on rational numbers internally represented as two integers: a numerator and a denominator. The template integer type must support streamed input/output, comparisons, and arithmetic operations. Overflow is not checked for in internal operations: comparisons and arithmetic cross-multiply numerators and denominators, so instantiate with a wider integer type (such as \inlinecode{\_\_int128}, or even \inlinecode{BigInt}) if the values may grow large.
 
 \begin{compactitem}
   \item \inlinecode{Rational\textless{}Int\textgreater{}(n)} constructs a rational number with numerator \inlinecode{n} and denominator 1.

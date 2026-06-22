@@ -119,9 +119,9 @@ void dbg_out(bool leading_space, const Head &head, const Tail &...tail) {
 
 /*** Example Usage and Output:
 
-[main:173] v, mp: {1, 2, 3} {("a", 1), ("b", 2)}
-[main:174] p, t: (4, "x") (1, true, "ok")
-[main:175] pt, e: Point(2, 3) Edge{0->1, w=5}
+[main:166] v: {1, 2, 3}
+[main:167] p, t, mp: (4, "x") (1, true, "ok") {("a", 1), ("b", 2)}
+[main:168] pt, e: Point(2, 3) Edge{0->1, w=5}
 "plain output" 3.141592654
 
 ***/
@@ -151,9 +151,9 @@ string dbg_repr(const Edge &e) {
 
 int main() {
   vector<int> v = {1, 2, 3};
-  map<string, int> mp = {{"a", 1}, {"b", 2}};
   auto p = make_pair(4, string("x"));
   auto t = make_tuple(1, true, string("ok"));
+  map<string, int> mp = {{"a", 1}, {"b", 2}};
   Point pt{2, 3};
   Edge e{0, 1, 5};
   assert(dbg_repr(v) == "{1, 2, 3}");
@@ -163,8 +163,8 @@ int main() {
   assert(dbg_repr(pt) == "Point(2, 3)");
   assert(dbg_repr(e) == "Edge{0->1, w=5}");
   double d = 3.141592653589793;
-  dbg(v, mp);
-  dbg(p, t);
+  dbg(v);
+  dbg(p, t, mp);
   dbg(pt, e);
   pr("plain output", d);
   assert(dbg_repr(1.0 / 3.0) == "0.3333333333");

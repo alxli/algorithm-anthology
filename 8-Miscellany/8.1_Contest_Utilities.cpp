@@ -3,17 +3,15 @@
 Small contest-template helpers that are useful across many algorithms. These snippets avoid
 algorithm-specific policy and are meant to be pasted near the top of a solution file.
 
-- `y_combinator(f)` wraps a recursive lambda so that the lambda can call itself as its first
-  argument.
 - `Rep(i,N)`, `For(i,L,H)`, `Rev(i,N)`, `Dwn(i,H,L)`, and `Each(x,C)` are compact loop macros.
 - `sz(c)` returns the signed size of a container.
-- `ckmin(a, b)` assigns `a = b` and returns true if `b < a` before the assignment.
-- `ckmax(a, b)` assigns `a = b` and returns true if `a < b` before the assignment.
+- `ckmin(a, b)` assigns `a = b` and returns true if `b` < `a` before the assignment.
+- `ckmax(a, b)` assigns `a = b` and returns true if `a` < `b` before the assignment.
 - `between(x, a, b)` returns whether `a` $\leq$ `x` $\leq$ `b`.
 - `clmp(x, a, b)` returns `x` clamped into the interval [`a`, `b`]. This is not needed on C++17 and
   later, where std::clamp() is available.
-- `ceil_div(a, b)` and `floor_div(a, b)` divide signed integers with mathematical rounding toward
-  positive or negative infinity. Requires `b != 0`.
+- `floor_div(a, b)` and `ceil_div(a, b)` divide signed integers with mathematical rounding toward
+  negative or positive infinity. Requires `b != 0`.
 - `sort_unique(v)` sorts a vector and removes duplicates.
 - `erase_one(c, x)` erases one existing value from an associative container, asserting that it is
   present.
@@ -23,6 +21,8 @@ algorithm-specific policy and are meant to be pasted near the top of a solution 
 - `rng.uniform_int(lo, hi)` returns a random integer in the inclusive range [`lo`, `hi`].
 - `rng.uniform_real(lo, hi)` returns a random real number in the half-open range [`lo`, `hi`).
 - `rng.shuffle(lo, hi)` randomly shuffles the range [`lo`, `hi`).
+- `y_combinator(f)` wraps a recursive lambda so that the lambda can call itself as its first
+  argument.
 
 */
 
@@ -41,24 +41,6 @@ algorithm-specific policy and are meant to be pasted near the top of a solution 
 #define Rev(i, N) for (int i = (N); --i >= 0;)                      // N-1 to 0
 #define Dwn(i, H, L) for (int i = (H), _##i = (L); i >= _##i; --i)  //   H to L
 #define Each(x, C) for (auto &x : (C))
-
-template<typename Fun>
-class y_combinator_result {
-  Fun fun;
-
- public:
-  template<typename T>
-  explicit y_combinator_result(T &&fun_) : fun(std::forward<T>(fun_)) {}
-  template<class... Args>
-  decltype(auto) operator()(Args &&...args) {
-    return fun(std::ref(*this), std::forward<Args>(args)...);
-  }
-};
-
-template<typename Fun>
-decltype(auto) y_combinator(Fun &&fun) {
-  return y_combinator_result<std::decay_t<Fun>>(std::forward<Fun>(fun));
-}
 
 // clang-format off
 template<typename C> int sz(const C &c) { return static_cast<int>(c.size()); }
@@ -120,6 +102,24 @@ struct RNG {
   }
 };
 
+template<typename Fun>
+class y_combinator_result {
+  Fun fun;
+
+ public:
+  template<typename T>
+  explicit y_combinator_result(T &&fun_) : fun(std::forward<T>(fun_)) {}
+  template<class... Args>
+  decltype(auto) operator()(Args &&...args) {
+    return fun(std::ref(*this), std::forward<Args>(args)...);
+  }
+};
+
+template<typename Fun>
+decltype(auto) y_combinator(Fun &&fun) {
+  return y_combinator_result<std::decay_t<Fun>>(std::forward<Fun>(fun));
+}
+
 /*** Example Usage ***/
 
 #include <set>
@@ -132,27 +132,6 @@ int main() {
   Rev(i, 3) tot += i;     // 20 + (2 + 1 + 0) = 23
   Dwn(i, 8, 6) tot += i;  // 23 + (8 + 7 + 6) = 44
   assert(tot == 44);
-
-  // Recursive lambda with y_combinator.
-  auto fib =
-      y_combinator([](auto fib, int n) -> int { return n < 2 ? n : fib(n - 1) + fib(n - 2); });
-  assert(fib(10) == 55);
-
-  // Recursive lambda without y_combinator: pass the lambda to itself as the first argument.
-  vector<vector<int>> adj{{1, 2}, {0}, {0}};
-  int seen = 0;
-  auto dfs = [&](auto &&dfs, int u, int p) -> void {
-    seen++;
-    Each(v, adj[u]) if (v != p) dfs(dfs, v, u);
-  };
-  dfs(dfs, 0, -1);
-  assert(seen == 3);
-
-  // Recursive lambdas are automatically supported in C++23.
-#if __cplusplus >= 202302L
-  auto fact = [&](this auto fact, int n) -> int { return n ? n * fact(n - 1) : 1; };
-  assert(fact(5) == 120);
-#endif
 
   int x = 10;
   assert(ckmin(x, 7) && x == 7);
@@ -181,5 +160,26 @@ int main() {
   assert(1 <= r && r <= 6);
   rng.shuffle(v.begin(), v.end());
   assert(sz(v) == 3);
+
+  // Recursive lambda with y_combinator.
+  auto fib =
+      y_combinator([](auto fib, int n) -> int { return n < 2 ? n : fib(n - 1) + fib(n - 2); });
+  assert(fib(10) == 55);
+
+  // Recursive lambda without y_combinator: pass the lambda to itself as the first argument.
+  vector<vector<int>> adj{{1, 2}, {0}, {0}};
+  int seen = 0;
+  auto dfs = [&](auto &&dfs, int u, int p) -> void {
+    seen++;
+    Each(v, adj[u]) if (v != p) dfs(dfs, v, u);
+  };
+  dfs(dfs, 0, -1);
+  assert(seen == 3);
+
+  // Recursive lambdas are automatically supported in C++23.
+#if __cplusplus >= 202302L
+  auto fact = [&](this auto fact, int n) -> int { return n ? n * fact(n - 1) : 1; };
+  assert(fact(5) == 120);
+#endif
   return 0;
 }
