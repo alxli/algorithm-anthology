@@ -14,9 +14,9 @@ interface in O(n log n).
   for the tree rooted at `root` (default 0). This must be called only after the added edges define a
   connected tree of size `n`.
 - `is_ancestor(u, v)` returns whether `u` is an ancestor of `v` in the last rooted tree.
-- `rerooting_dp(identity, combine, finalize, lift)` returns the value that `dfs(root, -1)` would
-  produce for every possible `root`. This must be called only after the added edges define a
-  connected tree of size `n`.
+- `rerooting_dp(identity, combine, finalize, lift)` returns the value that `dfs(root, p)` would
+  produce for every possible `root` with sentinel parent $p = -1$. This must be called only after
+  the added edges define a connected tree of size `n`.
 
 The aggregation scheme for `rerooting_dp()` is defined by the following pieces:
 - `Data` is the return type of a normal fixed-root DFS call `dfs(u, p)`. It summarizes the

@@ -1521,9 +1521,10 @@ Let $A$ be the number of candidate values considered at each position (the base 
 \begin{compactitem}
   \item $O(A \cdot L)$ calls to \inlinecode{count()} per call to \inlinecode{to\_rank()} and \inlinecode{from\_rank()}.
   \item $O(T \cdot A \cdot L)$ calls to \inlinecode{count()} per call to \inlinecode{enumerate()}, excluding the cost of the callback \inlinecode{f}.
-  \item The actual running time multiplies these bounds by the subclass cost of \inlinecode{count()}. In the implementations below, \inlinecode{CombinationEnumerator::count()} is $O(1)$, while \inlinecode{ArrangementEnumerator::count()} and \inlinecode{PartitionEnumerator::count()} are $O(L)$.
   \item $O(A^{2})$ constructor time for \inlinecode{CombinationEnumerator} and $O(L^{2})$ constructor time for \inlinecode{PartitionEnumerator} to build their tables.
 \end{compactitem}
+
+The actual running time multiplies these bounds by the subclass cost of \inlinecode{count()}. In the implementations below, \inlinecode{CombinationEnumerator::count()} is $O(1)$, while \inlinecode{ArrangementEnumerator::count()} and \inlinecode{PartitionEnumerator::count()} are $O(L)$.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -2038,15 +2039,15 @@ Division uses the extended Euclidean algorithm, so the divisor only needs to be 
 \begin{compactitem}
   \item \inlinecode{Modular\textless{}MOD\textgreater{}(x)} constructs the residue class of integer \inlinecode{x} modulo \inlinecode{MOD}.
   \item \inlinecode{value()} and \inlinecode{operator()()} return the stored representative in $[0, {\inlinecodemath{MOD}})$.
-  \item Explicit casts to \inlinecode{int}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double} convert that stored representative to the corresponding primitive.
   \item \inlinecode{pow(n)} returns this value raised to nonnegative integer exponent \inlinecode{n}.
   \item \inlinecode{inv()} returns the multiplicative inverse, asserting it exists.
-  \item Operators \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, comparison, increment, decrement, and stream I/O are overloaded.
   \item \inlinecode{ModCombinatorics\textless{}Mint\textgreater{}::factorial(n)} returns $n!$ using a lazy factorial table.
   \item \inlinecode{ModCombinatorics\textless{}Mint\textgreater{}::choose(n, k)} returns $\binom n k$ using lazy factorial and inverse-factorial tables.
   \item \inlinecode{ModCombinatorics\textless{}Mint\textgreater{}::permute(n, k)} returns the number of ordered selections of \inlinecode{k} distinct elements from \inlinecode{n}.
   \item \inlinecode{ModCombinatorics\textless{}Mint\textgreater{}::multichoose(n, k)} returns the number of size-\inlinecode{k} multisets drawn from \inlinecode{n} types.
 \end{compactitem}
+
+Explicit casts to \inlinecode{int}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double} convert the stored representative to the corresponding primitive. Operators \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, comparison, increment, decrement, and stream I/O are overloaded.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -2290,7 +2291,7 @@ A primitive root modulo $m$ is a number $g$ whose powers generate every invertib
 Primitive roots do not exist for every $m$. They exist exactly for $m \in \{1, 2, 4, p^k, 2p^k\}$, where $p$ is an odd prime and $k \geq 1$. This implementation first checks that classification by factoring $m$, then factors $\phi(m)$. A candidate $g$ is primitive exactly when $g^{\phi(m)} \equiv 1 \pmod m$ and $g^{\phi(m)/q} \not\equiv 1 \pmod m$ for every prime factor $q$ of $\phi(m)$.
 
 \begin{compactitem}
-  \item \inlinecode{primitive\_root(m)} returns the smallest primitive root modulo \inlinecode{m}, or \inlinecode{-1} if no primitive root exists.
+  \item \inlinecode{primitive\_root(m)} returns the smallest primitive root modulo \inlinecode{m}, or $-1$ if no primitive root exists.
 \end{compactitem}
 
 For a prime modulus $p$, this reduces to the common contest test: factor $p - 1$, then scan for the first $g$ such that $g^{(p - 1)/q} \not\equiv 1 \pmod p$ for every prime factor $q$ of $p - 1$.
@@ -2860,7 +2861,7 @@ sieve(n=10000000): 0.042641s
 sieve([1000000000, 1005000000]): 0.01969s
 \end{exampleoutput}
 \subsection{Prime Tests and Factorization}
-Test whether an integer is prime and compute the prime factorization of an integer $n$. The Miller-Rabin test writes $n - 1 = d \cdot 2^r$ and squares $a^d$ repeatedly, checking that the sequence behaves the only way it can for a prime; a base $a$ that breaks the pattern is a witness that $n$ is composite. For large composite inputs, Pollard's rho iterates a pseudorandom map modulo $n$; two iterates that collide modulo a hidden prime factor reveal that factor through a GCD with their difference. Prime factorizations are represented as sorted vectors of (prime, exponent) pairs. For 0 and 1, the prime factorization is empty.
+Test whether an integer is prime and compute the prime factorization of an integer $n$. The Miller-Rabin test writes $n - 1 = d \cdot 2^r$ and squares $a^d$ repeatedly, checking that the sequence behaves the only way it can for a prime; a base $a$ that breaks the pattern is a witness that $n$ is composite. For large composite inputs, Pollard's rho iterates a pseudorandom map modulo $n$; two iterates that collide modulo a hidden prime factor reveal that factor through a GCD with their difference. Prime factorizations are represented as sorted vectors of (prime, exponent) pairs. For $0$ and $1$, the prime factorization is empty.
 
 \begin{compactitem}
   \item \inlinecode{is\_prime\_slow(n)} returns whether the integer \inlinecode{n} is prime using trial division.
@@ -2886,7 +2887,7 @@ Modular multiplication inside Miller-Rabin and Pollard's rho uses \inlinecode{\_
   \item $O(\log^{3}(n))$ per call to \inlinecode{is\_prime(n)}.
   \item $O(\sqrt{n})$ per call to \inlinecode{factorize\_slow(n)}.
   \item $O(n)$ to rebuild the prime cache in \inlinecode{cached\_sieve(n)}.
-  \item Unknown, but approximately $O(n^{1/4})$ per call to \inlinecode{rho\_factor(n)} and \inlinecode{factorize(n)}.
+  \item $O(n^{1/4})$ approximately per call to \inlinecode{rho\_factor(n)} and \inlinecode{factorize(n)}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -3440,7 +3441,7 @@ std::vector<int> phi_table(int lo, int hi) {
     remaining[i - lo] = i;
   }
   for (int p : primes) {
-    // Start at the first multiple of p that is >= lo, but never below p itself (this skips 0).
+    // Start at the first multiple of p at least lo, but never below p itself (this skips 0).
     int64_t start = std::max(1LL * p, ((1LL * lo + p - 1) / p) * p);
     for (int64_t j = start; j <= hi; j += p) {
       int idx = static_cast<int>(j - lo);
@@ -3805,7 +3806,7 @@ class BigInt {
     for (int i = static_cast<int>(a.digits.size()) - 1; i >= 0; i--) {
       row.digits.insert(row.digits.begin(), a.digits[i]);
       row.normalize();  // Strip the spurious high-order zero left by the previous remainder.
-      // Subtract while the remainder is >= b. A strict ">" undercounts the quotient digit when the
+      // Subtract while the remainder is at least b. A strict ">" undercounts the quotient digit when the
       // remainder equals b, and leaves the remainder too large, overflowing the next digit past 9.
       while (comp(row.digits, b.digits, 1, 1) >= 0) {
         res.digits[i]++;
@@ -3839,14 +3840,17 @@ Perform operations on arbitrary precision big integers internally represented as
   \item \inlinecode{BigInt(s)} constructs a big integer from a C string or an \inlinecode{std::string} \inlinecode{s}.
   \item \inlinecode{operator=} is defined to copy from another big integer or to assign from a 64-bit integer primitive.
   \item \inlinecode{size()} returns the number of digits in the base-10 representation.
-  \item Operators \inlinecode{\textgreater{}\textgreater{}} and \inlinecode{\textless{}\textless{}} are defined to support stream-based input and output.
   \item \inlinecode{v.to\_string()}, \inlinecode{v.to\_llong()}, \inlinecode{v.to\_double()}, and \inlinecode{v.to\_ldouble()} return the big integer \inlinecode{v} converted to an \inlinecode{std::string}, \inlinecode{int64\_t}, \inlinecode{double}, and \inlinecode{long double} respectively. For the latter three data types, overflow behavior is based on that of inputting from \inlinecode{std::istream}. Equivalent conversions are also available through explicit casts to \inlinecode{int}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double}.
   \item \inlinecode{v.abs()} returns the absolute value of big integer \inlinecode{v}.
   \item \inlinecode{a.comp(b)} returns $-1$, $0$, or $1$ depending on whether the big integers \inlinecode{a} and \inlinecode{b} compare less, equal, or greater, respectively.
-  \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on integer primitives. Addition, subtraction, and comparisons are performed using the standard linear algorithms. Multiplication first converts limbs from base $10^9$ to base $10^4$ so coefficient products fit safely, then uses either Karatsuba multiplication (if \inlinecode{USE\_FFT\_MULT} is false) or complex FFT convolution (if \inlinecode{USE\_FFT\_MULT} is true), converting the result back to base $10^9$. Division and modulo are computed together by normalized long division: scale the operands so the divisor's leading limb is large, estimate each quotient limb from the top one or two limbs of the running remainder, correct the estimate by adding the divisor back if necessary, then unscale the remainder.
   \item \inlinecode{a.div(b)} returns a pair consisting of the quotient and remainder.
   \item \inlinecode{v.pow(n)} returns \inlinecode{v} raised to the power of $n$.
   \item \inlinecode{v.sqrt()} returns the integral part of the square root of big integer \inlinecode{v}.
+\end{compactitem}
+
+Operators \inlinecode{\textgreater{}\textgreater{}} and \inlinecode{\textless{}\textless{}} are defined to support stream-based input and output. Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on integer primitives. Addition, subtraction, and comparisons are performed using the standard linear algorithms. Multiplication first converts limbs from base $10^9$ to base $10^4$ so coefficient products fit safely, then uses either Karatsuba multiplication (if \inlinecode{USE\_FFT\_MULT} is false) or complex FFT convolution (if \inlinecode{USE\_FFT\_MULT} is true), converting the result back to base $10^9$. Division and modulo are computed together by normalized long division: scale the operands so the divisor's leading limb is large, estimate each quotient limb from the top one or two limbs of the running remainder, correct the estimate by adding the divisor back if necessary, then unscale the remainder.
+
+\begin{compactitem}
   \item \inlinecode{v.nth\_root(n)} returns the integral part of the $n$-th root of big integer \inlinecode{v}.
   \item \inlinecode{rand(n)} returns a random, positive big integer with $n$ digits.
 \end{compactitem}
@@ -4508,8 +4512,9 @@ Perform operations on rational numbers internally represented as two integers: a
   \item \inlinecode{operator\textless{}\textless{}} outputs the rational number as a string consisting of possibly a minus sign followed by the numerator, followed by a slash, followed by the denominator.
   \item \inlinecode{v.to\_string()}, \inlinecode{v.to\_llong()}, \inlinecode{v.to\_double()}, and \inlinecode{v.to\_ldouble()} return the rational \inlinecode{v} converted to an \inlinecode{std::string}, \inlinecode{int64\_t}, \inlinecode{double}, and \inlinecode{long double} respectively with potential truncation or approximation for the primitive types. Equivalent conversions are also available through explicit casts to \inlinecode{int}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double}.
   \item \inlinecode{v.abs()}, \inlinecode{abs(v)}, \inlinecode{v.floor()}, and \inlinecode{v.ceil()} return the absolute value, floor, and ceiling of rational \inlinecode{v}.
-  \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on numerical primitives. The comparisons and binary arithmetic are hidden friends, so a raw integer operand works on either side.
 \end{compactitem}
+
+Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on numerical primitives. The comparisons and binary arithmetic are hidden friends, so a raw integer operand works on either side.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -4698,14 +4703,15 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
   \item \inlinecode{rows(a)} returns the number of rows in matrix \inlinecode{a}.
   \item \inlinecode{columns(a)} returns the number of columns in matrix \inlinecode{a}.
   \item \inlinecode{a[i][j]} may be used to access or modify the specified entry of \inlinecode{a}.
-  \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, and \inlinecode{!=} define lexicographical comparison based on that of \inlinecode{std::vector}.
-  \item Operators \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, and \inlinecode{/=} define scalar addition, subtraction, multiplication, and division involving a matrix and a numeric scalar value.
-  \item Operators \inlinecode{*} and \inlinecode{*=} define vector and matrix multiplication.
-  \item Operators \inlinecode{\textasciicircum{}} and \inlinecode{\textasciicircum{}=} define iterative binary matrix exponentiation of a square matrix \inlinecode{a} by an integer power \inlinecode{p}.
   \item \inlinecode{power\_sum(a, p)} returns the power sum of a square matrix \inlinecode{a} up to an integer power \inlinecode{p}, that is, $a + a^2 + \ldots + a^p$.
   \item \inlinecode{transpose(a)} returns the transpose of an $m$ by $n$ matrix \inlinecode{a}, that is, a new $n$ by $m$ matrix $b$ such that \inlinecode{a[i][j]} = \inlinecode{b[j][i]} for every \inlinecode{i} $\in [0, m)$ and \inlinecode{j} $\in [0, n)$.
   \item \inlinecode{transpose\_in\_place(a)} assigns the square matrix \inlinecode{a} to its transpose, returning a reference to the modified argument itself.
   \item \inlinecode{rotate(a, d)} returns the matrix \inlinecode{a} rotated \inlinecode{d} degrees clockwise. A negative \inlinecode{d} specifies a counter-clockwise rotation, and \inlinecode{d} must be a multiple of 90.
+\end{compactitem}
+
+Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, and \inlinecode{!=} define lexicographical comparison based on \inlinecode{std::vector}. Operators \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, and \inlinecode{/=} define scalar arithmetic with a numeric value. Operators \inlinecode{*} and \inlinecode{*=} define vector and matrix multiplication. Operators \inlinecode{\textasciicircum{}} and \inlinecode{\textasciicircum{}=} define iterative binary matrix exponentiation of a square matrix \inlinecode{a} by an integer power \inlinecode{p}.
+
+\begin{compactitem}
   \item \inlinecode{rotate\_in\_place(a, d)} assigns the square matrix \inlinecode{a} to its rotation by \inlinecode{d} degrees clockwise, returning a reference to the modified argument itself. A negative \inlinecode{d} specifies a counter-clockwise rotation, and \inlinecode{d} must be a multiple of 90.
 \end{compactitem}
 
@@ -5107,7 +5113,7 @@ Converts a matrix to reduced row echelon form using Gaussian elimination to solv
 \begin{compactitem}
   \item \inlinecode{row\_reduce(a)} assigns the matrix \inlinecode{a} to its reduced row echelon form, returning a reference to the modified argument itself.
   \item \inlinecode{matrix\_rank(a)} returns the rank of matrix \inlinecode{a}, i.e. the number of nonzero rows after row reduction.
-  \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning $0$ if there is one solution, $-1$ if there are $0$ solutions, or $-2$ if there are infinite solutions. If there is exactly one solution, then the output pointer \inlinecode{x} is populated with the solution vector of length $n$.
+  \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning $0$ if there is one solution, $-1$ if there are zero solutions, or $-2$ if there are infinite solutions. If there is exactly one solution, then the output pointer \inlinecode{x} is populated with the solution vector of length $n$.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(m^{2} \cdot n)$ per call to \inlinecode{row\_reduce(a)}, \inlinecode{matrix\_rank(a)}, and \inlinecode{solve\_system(a)}, where $m$ and $n$ are the number of rows and columns of \inlinecode{a}, respectively.
@@ -5451,7 +5457,7 @@ The LU decomposition of a matrix $a$ with row-partial pivoting is a factorizatio
 
 \begin{compactitem}
   \item \inlinecode{lu\_decompose(a, \&p1col)} assigns the $m$ by $n$ matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}, returning either $0$ or $1$ denoting the ``sign'' of the permutation parity ($0$ if the number of overall row swaps performed is even, or $1$ if it is odd), or $-1$ denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix \inlinecode{lu} has \inlinecode{lu[i][j]} = \inlinecode{l[i][j]} for \inlinecode{i} \textgreater{} \inlinecode{j} and \inlinecode{lu[i][j]} = \inlinecode{u[i][j]} for \inlinecode{i} $\leq$ \inlinecode{j}. Note that the algorithm always yields an atomic lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to $1$, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optionally, a \inlinecode{vector\textless{}int\textgreater{}} pointer \inlinecode{p1col} may be passed to return the permutation vector \inlinecode{p1col} where \inlinecode{p1col[i]} stores the only column that is equal to $1$ in row $i$ of the permutation matrix $p$ (all other columns in row $i$ of $p$ are implicitly $0$). The permutation matrix $p$ corresponding to \inlinecode{p1col} satisfies $pa = lu$.
-  \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning $0$ if there is one solution or $-1$ if there are $0$ or infinite solutions. If there is exactly one solution, then the output pointer \inlinecode{x} is populated with the solution vector of length $n$.
+  \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning $0$ if there is one solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then the output pointer \inlinecode{x} is populated with the solution vector of length $n$.
   \item \inlinecode{det(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a} using LU decomposition.
   \item \inlinecode{invert(a)} assigns the $n$ by $n$ matrix \inlinecode{a} to its inverse (if it exists), returning $0$ if the inversion was successful or $-1$ if \inlinecode{a} has no inverse.
 \end{compactitem}
@@ -5788,7 +5794,7 @@ Kirchhoff's matrix-tree theorem counts the spanning trees of an undirected graph
 The determinant is evaluated modulo a prime by Gaussian elimination, so the count is returned modulo \inlinecode{MOD}. Spanning-tree counts grow astronomically, so a modular count is the usual contest form; run the routine under a few different primes and combine with the Chinese remainder theorem to recover a large exact value. The same construction handles weighted graphs (sum edge weights into the Laplacian to get the weighted tree count) and, with the directed Laplacian and a fixed deleted row, counts rooted spanning arborescences.
 
 \begin{compactitem}
-  \item \inlinecode{count\_spanning\_trees(n, edges)} returns the number of spanning trees of the undirected graph on nodes [0, \inlinecode{n}) with the given edge list, modulo \inlinecode{MOD}. Parallel edges are honored; self-loops do not affect the count. The result is 0 when the graph is disconnected, and 1 when \inlinecode{n} is 1.
+  \item \inlinecode{count\_spanning\_trees(n, edges)} returns the number of spanning trees of the undirected graph on nodes [0, \inlinecode{n}) with the given edge list, modulo \inlinecode{MOD}. Parallel edges are honored; self-loops do not affect the count. The result is $0$ when the graph is disconnected, and $1$ when \inlinecode{n} is $1$.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n^{3})$ per call, where $n$ is the number of nodes.
@@ -5931,7 +5937,7 @@ Sparse elimination chooses, in each pivot column, the available pivot row with t
 \begin{compactitem}
   \item $O(\log d)$ per call to \inlinecode{get()}, \inlinecode{set()}, and \inlinecode{add()}, where $d$ is the number of nonzeros in the touched row or column.
   \item $O(n)$ per call to \inlinecode{transpose()} and \inlinecode{multiply\_vector()}, where $n$ is the number of stored nonzero entries.
-  \item Sparse elimination costs $O(f \cdot \log d)$, where $f$ is the number of entry updates performed after fill-in and $d$ is a touched row or column size. In the worst case this is still cubic.
+  \item $O(f \cdot \log d)$ for sparse elimination, where $f$ is the number of entry updates performed after fill-in and $d$ is a touched row or column size. In the worst case this is still cubic.
   \item $O(f \cdot \log d)$ for \inlinecode{det()}, \inlinecode{sparse\_rank()}, and \inlinecode{solve\_system()}.
   \item $O(1)$ per call to \inlinecode{height()}, \inlinecode{width()}, \inlinecode{nonzeros()}, \inlinecode{row()}, and \inlinecode{column()}.
 \end{compactitem}
@@ -7346,7 +7352,7 @@ The example game is ``take $1$ or $2$ stones'': starting with \inlinecode{stones
 \begin{compactitem}
   \item \inlinecode{minimax(stones, maximizing)} returns the exact game-tree value.
   \item \inlinecode{alpha\_beta(stones, maximizing, alpha, beta)} returns the same value, with pruning.
-  \item \inlinecode{best\_take(stones)} returns an optimal first move, either 1 or 2.
+  \item \inlinecode{best\_take(stones)} returns an optimal first move, either $1$ or $2$.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(b^{d})$ in the worst case, where $b$ is branching factor and $d$ is search depth. Alpha-beta can reduce this substantially with good move ordering.

@@ -2,11 +2,10 @@
 
 Simple bump allocators for local contest code. These are useful when creating many small objects
 and individual `new`/`delete` overhead is measurable. They allocate from one fixed buffer and do
-not reclaim individual objects.
+not reclaim individual objects. The global `operator new` override sends all dynamic allocations
+through a static buffer. This is the shortest version, but it affects the whole program and should
+be used only when you are sure the fixed buffer is large enough.
 
-- The global `operator new` override sends all dynamic allocations through a static buffer. This is
-  the shortest version, but it affects the whole program and should be used only when you are sure
-  the fixed buffer is large enough.
 - `BumpAllocator<T>` is an STL allocator for containers such as `std::vector<T, BumpAllocator<T>>`.
   It is less invasive than overriding global `new`, but still has no real deallocation.
 

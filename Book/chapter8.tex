@@ -767,7 +767,8 @@ The order-statistic operations use GNU PBDS conventions: \inlinecode{find\_by\_o
   \item \inlinecode{HashMap}/\inlinecode{HashSet}: same expected bounds as \inlinecode{std::unordered\_map}/\inlinecode{std::unordered\_set} (expected $O(1)$, worst-case $O(n)$).
   \item \inlinecode{OrderedSet}/\inlinecode{OrderedMap}: same as \inlinecode{std::set}/\inlinecode{std::map}, with $O(\log n)$ for \inlinecode{find\_by\_order} and \inlinecode{order\_of\_key}.
   \item \inlinecode{OrderedMultiset}/\inlinecode{OrderedMultimap}: same as \inlinecode{std::multiset}/\inlinecode{std::multimap}, with $O(\log n)$ for \inlinecode{find\_by\_order} and \inlinecode{order\_of\_key}.
-  \item PBDS priority queues: similar to standard priority queues for \inlinecode{top}/\inlinecode{push}/\inlinecode{pop}, but with extra non-standard handles for \inlinecode{modify} and \inlinecode{erase}, and \inlinecode{join} for melding. Exact bounds depend on the heap tag; for \inlinecode{PairingHeap}, \inlinecode{push} and \inlinecode{join} are $O(1)$ amortized, while \inlinecode{pop}, \inlinecode{modify}, and \inlinecode{erase} are $O(\log n)$ amortized.
+  \item $O(1)$ amortized per call to \inlinecode{push()} and \inlinecode{join()} for \inlinecode{PairingHeap}.
+  \item $O(\log n)$ amortized per call to \inlinecode{pop()}, \inlinecode{modify()}, and \inlinecode{erase()} for \inlinecode{PairingHeap}.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(n)$ for all containers.
@@ -999,10 +1000,9 @@ int main() {
 
 \section{\texorpdfstring{Memory Allocation}{8.8 Memory Allocation}}
 \setcounter{section}{8}
-Simple bump allocators for local contest code. These are useful when creating many small objects and individual \inlinecode{new}/\inlinecode{delete} overhead is measurable. They allocate from one fixed buffer and do not reclaim individual objects.
+Simple bump allocators for local contest code. These are useful when creating many small objects and individual \inlinecode{new}/\inlinecode{delete} overhead is measurable. They allocate from one fixed buffer and do not reclaim individual objects. The global \inlinecode{operator new} override sends all dynamic allocations through a static buffer. This is the shortest version, but it affects the whole program and should be used only when you are sure the fixed buffer is large enough.
 
 \begin{compactitem}
-  \item The global \inlinecode{operator new} override sends all dynamic allocations through a static buffer. This is the shortest version, but it affects the whole program and should be used only when you are sure the fixed buffer is large enough.
   \item \inlinecode{BumpAllocator\textless{}T\textgreater{}} is an STL allocator for containers such as \inlinecode{std::vector\textless{}T, BumpAllocator\textless{}T\textgreater{}\textgreater{}}. It is less invasive than overriding global \inlinecode{new}, but still has no real deallocation.
 \end{compactitem}
 

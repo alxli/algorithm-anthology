@@ -13,7 +13,7 @@ at least as costly.
   `adj.size()`.
 
 Time Complexity:
-- Exponential on the number of nodes per call.
+- O(n^n) per call in the worst case, where $n$ is the number of nodes.
 
 Space Complexity:
 - O(n^2) for storage of the graph, where $n$ is the number of nodes.

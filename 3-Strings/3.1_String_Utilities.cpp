@@ -331,6 +331,9 @@ Joining and Splitting:
 */
 
 string join(const std::vector<string> &v, const string &delim = " ") {
+  if (v.empty()) {
+    return "";
+  }
   string res;
   res.reserve(v.size() + delim.size() * (v.size() - 1));
   for (int i = 0; i < static_cast<int>(v.size()); i++) {

@@ -22,11 +22,11 @@ own conventional constructor names, such as `n` and `k` for combinations.
 Time Complexity:
 - O(A*L) calls to `count()` per call to `to_rank()` and `from_rank()`.
 - O(T*A*L) calls to `count()` per call to `enumerate()`, excluding the cost of the callback `f`.
+- O(A^2) constructor time for `CombinationEnumerator` and O(L^2) constructor time for
+  `PartitionEnumerator` to build their tables.
 - The actual running time multiplies these bounds by the subclass cost of `count()`. In the
   implementations below, `CombinationEnumerator::count()` is O(1), while
   `ArrangementEnumerator::count()` and `PartitionEnumerator::count()` are O(L).
-- O(A^2) constructor time for `CombinationEnumerator` and O(L^2) constructor time for
-  `PartitionEnumerator` to build their tables.
 
 Space Complexity:
 - O(L) auxiliary heap space per call to `to_rank()`, `from_rank()`, and `enumerate()`, excluding

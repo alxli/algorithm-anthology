@@ -119,7 +119,7 @@ int tangent(const Circle &c, const Pt &p, Line *l1 = nullptr, Line *l2 = nullptr
     return -1;  // Point inside Circle, no intersection.
   }
   double qx = vopx / c.r, qy = vopy / c.r;
-  double n = sqnorm(qx, qy), d = qy * sqrt(sqnorm(qx, qy) - 1.0);
+  double n = sqnorm(qx, qy), d = qy * sqrt(n - 1.0);
   double t1x = (qx - d) / n, t1y = c.k;
   double t2x = (qx + d) / n, t2y = c.k;
   if (!EQ(qy, 0)) {  // Common case.

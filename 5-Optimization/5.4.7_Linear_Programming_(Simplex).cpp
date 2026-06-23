@@ -20,7 +20,8 @@ tableau row or column currently represents, making solution recovery independent
   optimum is found, then the vector pointed to by `x` is populated with a dense solution vector.
 
 Time Complexity:
-- Polynomial (average) on the number of equations and unknowns, but exponential in the worst case.
+- O(2^n) pivots in the worst case, where $n$ is the number of unknowns, although simplex typically
+  runs much faster in practice.
 
 Space Complexity:
 - O(m*n) auxiliary heap space.

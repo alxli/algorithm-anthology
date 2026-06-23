@@ -9,17 +9,17 @@ halving the search space until it closes on the answer. Unlike searching through
 binary search is not restricted by available memory, making it useful for handling infinitely large
 search spaces such as real number intervals.
 
-- `binary_search_first_true(lo, hi, pred)` takes integer boundaries for the search space
+- `binary_search_first_true(lo, hi, pred)` takes signed integer boundaries for the search space
   [`lo`, `hi`) (i.e. including `lo`, but excluding `hi`) and returns the smallest integer `k` in
   [`lo`, `hi`) for which the predicate `pred(k)` tests true. If `pred(k)` tests false for the entire
   input range, then `hi` is returned. The caller must ensure `pred` is monotonic on the input range,
   i.e. returning all false for some (possibly empty) prefix, followed by all true in some (possibly
   empty) suffix. E.g., patterns `"01"`, `"00"`, and `"11"` are allowed, but `"10"` is disallowed.
-- `binary_search_last_true(lo, hi, pred)` takes integer boundaries for the search space [`lo`, `hi`)
-  (i.e. including `lo`, but excluding `hi`) and returns the largest integer `k` in [`lo`, `hi`) for
-  which the predicate `pred(k)` tests true. If `pred(k)` tests false for the entire input range,
-  then `hi` is returned. The caller must ensure `pred` is monotonic on the input range, i.e.
-  returning all true for some (possibly empty) prefix, followed by all false in some (possibly
+- `binary_search_last_true(lo, hi, pred)` takes signed integer boundaries for the search space
+  [`lo`, `hi`) (i.e. including `lo`, but excluding `hi`) and returns the largest integer `k` in
+  [`lo`, `hi`) for which the predicate `pred(k)` tests true. If `pred(k)` tests false for the entire
+  input range, then `hi` is returned. The caller must ensure `pred` is monotonic on the input range,
+  i.e. returning all true for some (possibly empty) prefix, followed by all false in some (possibly
   empty) suffix. E.g., patterns `"10"`, `"00"`, and `"11"` are allowed, but `"01"` is disallowed.
 - `fbinary_search(lo, hi, pred)` is the equivalent of `binary_search_first_true()` on floating point
   predicates. Since any interval of real numbers is dense, the exact target cannot be found due to
@@ -55,28 +55,21 @@ Int binary_search_first_true(Int lo, Int hi, Pred pred) {  // 000[1]11
       lo = mid + 1;
     }
   }
-  return lo;
+  return lo;  // hi if all false
 }
 
 template<typename Int, typename Pred>
 Int binary_search_last_true(Int lo, Int hi, Pred pred) {  // 11[1]000
-  Int _hi = hi;
-  if (lo == hi) {
-    return _hi;
-  }
-  hi--;
+  Int begin = lo, end = hi;
   while (lo < hi) {
-    Int mid = lo + (hi - lo + 1) / 2;
+    Int mid = lo + (hi - lo) / 2;
     if (pred(mid)) {
-      lo = mid;
+      lo = mid + 1;
     } else {
-      hi = mid - 1;
+      hi = mid;
     }
   }
-  if (!pred(lo)) {
-    return _hi;  // All false.
-  }
-  return lo;
+  return lo == begin ? end : lo - 1;  // hi if all false
 }
 
 template<typename Pred>

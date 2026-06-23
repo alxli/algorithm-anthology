@@ -396,7 +396,7 @@ Given a tree DP that can answer one rooted query with a recursive \inlinecode{df
   \item \inlinecode{add\_edge(u, v)} adds an undirected edge between nodes \inlinecode{u} and \inlinecode{v}.
   \item \inlinecode{build\_rooted\_tree(root)} populates \inlinecode{parent}, \inlinecode{depth}, \inlinecode{subtree\_size}, \inlinecode{order}, \inlinecode{tin}, and \inlinecode{tout} for the tree rooted at \inlinecode{root} (default 0). This must be called only after the added edges define a connected tree of size \inlinecode{n}.
   \item \inlinecode{is\_ancestor(u, v)} returns whether \inlinecode{u} is an ancestor of \inlinecode{v} in the last rooted tree.
-  \item \inlinecode{rerooting\_dp(identity, combine, finalize, lift)} returns the value that \inlinecode{dfs(root, -1)} would produce for every possible \inlinecode{root}. This must be called only after the added edges define a connected tree of size \inlinecode{n}.
+  \item \inlinecode{rerooting\_dp(identity, combine, finalize, lift)} returns the value that \inlinecode{dfs(root, p)} would produce for every possible \inlinecode{root} with sentinel parent $p = -1$. This must be called only after the added edges define a connected tree of size \inlinecode{n}.
 \end{compactitem}
 
 The aggregation scheme for \inlinecode{rerooting\_dp()} is defined by the following pieces:
@@ -2666,12 +2666,12 @@ The shortest distance from 0 to 3 is 2.
 Take the path: 0->1->3.
 \end{exampleoutput}
 \subsection{0-1 Shortest Path (Deque BFS)}
-Given a starting node in a weighted graph whose edge weights are only 0 or 1, compute the shortest distance to every reachable node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred}.
+Given a starting node in a weighted graph whose edge weights are only $0$ or $1$, compute the shortest distance to every reachable node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred}.
 
 0-1 BFS is a specialized version of Dijkstra's algorithm. Because every relaxation changes the distance by either $0$ or $1$, a deque maintains nodes in nondecreasing distance order: push weight-0 relaxations to the front and weight-1 relaxations to the back.
 
 \begin{compactitem}
-  \item \inlinecode{bfs\_zero\_one(start)} populates \inlinecode{dist} and \inlinecode{pred} for a global, pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered [0, \inlinecode{n}), where \inlinecode{n} is \inlinecode{adj.size()}. Each edge is stored as (\inlinecode{neighbor}, \inlinecode{weight}), where \inlinecode{weight} is either 0 or 1.
+  \item \inlinecode{bfs\_zero\_one(start)} populates \inlinecode{dist} and \inlinecode{pred} for a global, pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered [0, \inlinecode{n}), where \inlinecode{n} is \inlinecode{adj.size()}. Each edge is stored as (\inlinecode{neighbor}, \inlinecode{weight}), where \inlinecode{weight} is either $0$ or $1$.
 \end{compactitem}
 
 For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
@@ -4941,7 +4941,7 @@ Given a connected, undirected graph with nonnegative edge weights, the global mi
 A phase grows a set, starting from an arbitrary vertex, by repeatedly adding the most tightly connected outside vertex (the one with the greatest total weight to the set so far), exactly as in Prim's algorithm. The last vertex added, together with its connection weight, yields one candidate cut, the ``cut of the phase''. The last two vertices added are then merged into a single supernode and the next phase begins on the smaller graph. After $n - 1$ phases every candidate has been considered, and the smallest is the global minimum cut.
 
 \begin{compactitem}
-  \item \inlinecode{stoer\_wagner(adj)} returns a pair (\inlinecode{weight}, \inlinecode{side}) for a graph as a symmetric adjacency matrix \inlinecode{adj} (with 0 for the diagonal and absent edges), where \inlinecode{weight} is the total weight of the global minimum cut and \inlinecode{side} lists the vertices on one side of that cut. The graph must have at least two vertices.
+  \item \inlinecode{stoer\_wagner(adj)} returns a pair (\inlinecode{weight}, \inlinecode{side}) for a graph as a symmetric adjacency matrix \inlinecode{adj} (with $0$ for the diagonal and absent edges), where \inlinecode{weight} is the total weight of the global minimum cut and \inlinecode{side} lists the vertices on one side of that cut. The graph must have at least two vertices.
 \end{compactitem}
 
 Parallel edges should be pre-summed into the adjacency matrix before calling: \inlinecode{adj[u][v]} holds a single combined weight, so the sum of all parallel edge weights between \inlinecode{u} and \inlinecode{v} should be stored there.
@@ -5374,7 +5374,7 @@ Edmonds' blossom algorithm extends augmenting-path search to general (non-bipart
 The graph must be simple; parallel edges and self-loops are not supported.
 
 \begin{compactitem}
-  \item \inlinecode{blossom()} returns a matching for a global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered [0, \inlinecode{n}), where \inlinecode{n} is \inlinecode{adj.size()}. The returned vector \inlinecode{match} has \inlinecode{match[u] == v} and \inlinecode{match[v] == u} when \inlinecode{u} and \inlinecode{v} are matched, or \inlinecode{match[u] == -1} when \inlinecode{u} is unmatched.
+  \item \inlinecode{blossom()} returns a matching for a global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered [0, \inlinecode{n}), where \inlinecode{n} is \inlinecode{adj.size()}. The returned vector \inlinecode{match} has \inlinecode{match[u] == v} and \inlinecode{match[v] == u} when \inlinecode{u} and \inlinecode{v} are matched, or \inlinecode{match[u]} is $-1$ when \inlinecode{u} is unmatched.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n^{3})$ per call, where $n$ is the number of nodes.
@@ -6232,7 +6232,7 @@ This implementation finds the chromatic number by backtracking: nodes (ordered b
   \item \inlinecode{color\_graph()} populates \inlinecode{color} and returns minimum color count for a global, bidirectionally pre-populated adjacency matrix \inlinecode{adj} which must consist of nodes numbered [0, \inlinecode{n}), where \inlinecode{n} is \inlinecode{adj.size()}.
 \end{compactitem}
 
-\textbf{Time Complexity}: Exponential on the number of nodes per call.
+\textbf{Time Complexity}: $O(n^{n})$ per call in the worst case, where $n$ is the number of nodes.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:

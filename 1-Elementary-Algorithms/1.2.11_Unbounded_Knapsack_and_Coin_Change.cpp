@@ -15,8 +15,9 @@ each multiset of coins is counted once, independent of ordering.
   selected of each item `i`.
 - `count_coin_change(coins, target)` returns the number of unordered ways to make sum `target` using
   the given coin denominations.
-- All capacities must be nonnegative integers. Weights and coin denominations should be positive to
-  avoid infinitely many uses of a zero-weight item.
+
+All capacities must be nonnegative integers. Weights and coin denominations should be positive to
+avoid infinitely many uses of a zero-weight item.
 
 Time Complexity:
 - O(n*W) for `unbounded_knapsack()`, where $n$ is the number of items and $W$ is `capacity`.

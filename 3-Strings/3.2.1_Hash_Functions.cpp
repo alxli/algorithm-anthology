@@ -38,11 +38,12 @@ offers no protection against adversarial inputs.
   functors passed as the third template argument of `std::unordered_map` or `std::unordered_set`.
 - `GenericHasher<T>` recursively handles integer, pair, tuple, and vector keys, and falls back to
   `std::hash<T>` for other hashable types.
-- Specializations of `std::hash` for `std::pair` and `std::tuple` are also provided, letting those
-  keys be used in `std::unordered_map`/`std::unordered_set` without an explicit hasher argument.
-  Specializing `std::hash` for purely standard types is technically nonstandard, so the functor
-  forms above are the portable alternative. (Vector keys are left to the functors to avoid clashing
-  with the standard `std::hash<std::vector<char>>`.)
+
+Specializations of `std::hash` for `std::pair` and `std::tuple` are also provided, letting those
+keys be used in `std::unordered_map`/`std::unordered_set` without an explicit hasher argument.
+Specializing `std::hash` for purely standard types is technically nonstandard, so the functor forms
+above are the portable alternative. Vector keys are left to the functors to avoid clashing with the
+standard `std::hash<std::vector<char>>`.
 
 Time Complexity:
 - O(1) per call to the integer, combiner, and floating-point hash functions.

@@ -13,8 +13,8 @@ The graph must be simple; parallel edges and self-loops are not supported.
 
 - `blossom()` returns a matching for a global, bidirectionally pre-populated adjacency list `adj`
   which must consist of nodes numbered [0, `n`), where `n` is `adj.size()`. The returned vector
-  `match` has `match[u] == v` and `match[v] == u` when `u` and `v` are matched, or `match[u] == -1`
-  when `u` is unmatched.
+  `match` has `match[u] == v` and `match[v] == u` when `u` and `v` are matched, or `match[u]` is
+  $-1$ when `u` is unmatched.
 
 Time Complexity:
 - O(n^3) per call, where $n$ is the number of nodes.

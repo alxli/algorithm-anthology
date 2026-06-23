@@ -1,11 +1,11 @@
 /*
 
 Common triangle calculations in two dimensions. The functions are templated on the point type `Pt`,
-which should work with `Point`/ `PointD`/`PointI` from 7.1.1 or any struct with numeric
-`.x` and `.y` fields. `triangle_area()` returns `double` regardless of input type (the area is
-fractional via the `/2`). `same_side()` and `point_in_triangle()` do all arithmetic in the point's
-own coordinate type and are exact for integer points: they reduce each cross product to a sign
-before combining, so no precision is lost and cross products are never multiplied together.
+which should work with `Point`/`PointD`/`PointI` from 7.1.1 or any struct with numeric `.x` and `.y`
+fields. `triangle_area()` returns `double` regardless of input type (the area is fractional via the
+`/2`). `same_side()` and `point_in_triangle()` do all arithmetic in the point's own coordinate type
+and are exact for integer points: they reduce each cross product to a sign before combining, so no
+precision is lost and cross products are never multiplied together.
 
 - `triangle_area(a, b, c)` returns the area of the triangle with vertices `a`, `b`, and `c`.
 - `triangle_area_sides(s1, s2, s3)` returns the area of a triangle with side lengths `s1`, `s2`, and

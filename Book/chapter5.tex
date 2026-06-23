@@ -7,8 +7,8 @@
 Binary search can be generally used to find the input value corresponding to any output value of a monotonic (strictly non-increasing or strictly non-decreasing) function in $O(\log n)$ time with respect to the domain size. This is a special case of finding the exact point at which any given monotonic Boolean function changes from true to false or vice versa. Each step evaluates the midpoint of the current interval and keeps the half that still contains the transition point, halving the search space until it closes on the answer. Unlike searching through an array, discrete binary search is not restricted by available memory, making it useful for handling infinitely large search spaces such as real number intervals.
 
 \begin{compactitem}
-  \item \inlinecode{binary\_search\_first\_true(lo, hi, pred)} takes integer boundaries for the search space [\inlinecode{lo}, \inlinecode{hi}) (i.e. including \inlinecode{lo}, but excluding \inlinecode{hi}) and returns the smallest integer \inlinecode{k} in [\inlinecode{lo}, \inlinecode{hi}) for which the predicate \inlinecode{pred(k)} tests true. If \inlinecode{pred(k)} tests false for the entire input range, then \inlinecode{hi} is returned. The caller must ensure \inlinecode{pred} is monotonic on the input range, i.e. returning all false for some (possibly empty) prefix, followed by all true in some (possibly empty) suffix. E.g., patterns \inlinecode{"01"}, \inlinecode{"00"}, and \inlinecode{"11"} are allowed, but \inlinecode{"10"} is disallowed.
-  \item \inlinecode{binary\_search\_last\_true(lo, hi, pred)} takes integer boundaries for the search space [\inlinecode{lo}, \inlinecode{hi}) (i.e. including \inlinecode{lo}, but excluding \inlinecode{hi}) and returns the largest integer \inlinecode{k} in [\inlinecode{lo}, \inlinecode{hi}) for which the predicate \inlinecode{pred(k)} tests true. If \inlinecode{pred(k)} tests false for the entire input range, then \inlinecode{hi} is returned. The caller must ensure \inlinecode{pred} is monotonic on the input range, i.e. returning all true for some (possibly empty) prefix, followed by all false in some (possibly empty) suffix. E.g., patterns \inlinecode{"10"}, \inlinecode{"00"}, and \inlinecode{"11"} are allowed, but \inlinecode{"01"} is disallowed.
+  \item \inlinecode{binary\_search\_first\_true(lo, hi, pred)} takes signed integer boundaries for the search space [\inlinecode{lo}, \inlinecode{hi}) (i.e. including \inlinecode{lo}, but excluding \inlinecode{hi}) and returns the smallest integer \inlinecode{k} in [\inlinecode{lo}, \inlinecode{hi}) for which the predicate \inlinecode{pred(k)} tests true. If \inlinecode{pred(k)} tests false for the entire input range, then \inlinecode{hi} is returned. The caller must ensure \inlinecode{pred} is monotonic on the input range, i.e. returning all false for some (possibly empty) prefix, followed by all true in some (possibly empty) suffix. E.g., patterns \inlinecode{"01"}, \inlinecode{"00"}, and \inlinecode{"11"} are allowed, but \inlinecode{"10"} is disallowed.
+  \item \inlinecode{binary\_search\_last\_true(lo, hi, pred)} takes signed integer boundaries for the search space [\inlinecode{lo}, \inlinecode{hi}) (i.e. including \inlinecode{lo}, but excluding \inlinecode{hi}) and returns the largest integer \inlinecode{k} in [\inlinecode{lo}, \inlinecode{hi}) for which the predicate \inlinecode{pred(k)} tests true. If \inlinecode{pred(k)} tests false for the entire input range, then \inlinecode{hi} is returned. The caller must ensure \inlinecode{pred} is monotonic on the input range, i.e. returning all true for some (possibly empty) prefix, followed by all false in some (possibly empty) suffix. E.g., patterns \inlinecode{"10"}, \inlinecode{"00"}, and \inlinecode{"11"} are allowed, but \inlinecode{"01"} is disallowed.
   \item \inlinecode{fbinary\_search(lo, hi, pred)} is the equivalent of \inlinecode{binary\_search\_first\_true()} on floating point predicates. Since any interval of real numbers is dense, the exact target cannot be found due to floating point error. Instead, a value that is very close to the border between false and true is returned. The precision of the answer depends on the number of repetitions the function performs. Since each repetition bisects the search space, the absolute error of the answer is $1/(2^n)$ times the distance between \inlinecode{lo} and \inlinecode{hi} after $n$ repetitions. Although it is possible to control the error by looping until the distance shrinks to an arbitrary epsilon, it is simpler to let the loop run for a desired number of iterations until floating point arithmetic breaks down. 100 iterations is usually sufficient, since the search space will be reduced to $2^{-100}$ (roughly $10^{-30}$) times its original size. This implementation can be modified to find the ``last true'' point in the range by simply interchanging the assignments of \inlinecode{lo} and \inlinecode{hi} in the if-else statements.
 \end{compactitem}
 
@@ -32,28 +32,21 @@ Int binary_search_first_true(Int lo, Int hi, Pred pred) {  // 000[1]11
       lo = mid + 1;
     }
   }
-  return lo;
+  return lo;  // hi if all false
 }
 
 template<typename Int, typename Pred>
 Int binary_search_last_true(Int lo, Int hi, Pred pred) {  // 11[1]000
-  Int _hi = hi;
-  if (lo == hi) {
-    return _hi;
-  }
-  hi--;
+  Int begin = lo, end = hi;
   while (lo < hi) {
-    Int mid = lo + (hi - lo + 1) / 2;
+    Int mid = lo + (hi - lo) / 2;
     if (pred(mid)) {
-      lo = mid;
+      lo = mid + 1;
     } else {
-      hi = mid - 1;
+      hi = mid;
     }
   }
-  if (!pred(lo)) {
-    return _hi;  // All false.
-  }
-  return lo;
+  return lo == begin ? end : lo - 1;  // hi if all false
 }
 
 template<typename Pred>
@@ -113,16 +106,17 @@ Int exponential_search_first_true(Int lo, Pred pred) {  // 000[1]11
   while (!pred(lo + step)) {
     step *= 2;
   }
-  Int l = lo + step / 2, r = lo + step;
-  while (l < r) {
-    Int mid = l + (r - l) / 2;
+  Int hi = lo + step;
+  lo += step / 2;
+  while (lo < hi) {
+    Int mid = lo + (hi - lo) / 2;
     if (pred(mid)) {
-      r = mid;
+      hi = mid;
     } else {
-      l = mid + 1;
+      lo = mid + 1;
     }
   }
-  return l;
+  return lo;
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -231,9 +225,12 @@ Int discrete_ternary_min(Int lo, Int hi, Fn f) {
     }
   }
   Int best = lo;
+  auto best_value = f(best);
   for (Int k = lo + 1; k <= hi; k++) {
-    if (f(k) < f(best)) {
+    auto value = f(k);
+    if (value < best_value) {
       best = k;
+      best_value = value;
     }
   }
   return best;
@@ -521,7 +518,7 @@ int main() {
   assert(window_min[2] == 1);
   assert(window_min[3] == 1);
 
-  // dp[i] = a[i] + min(dp[j]) over max(0, i - 2) <= j < i.
+  // dp[i] = a[i] + min(dp[j]) over j in [max(0, i - 2), i).
   vector<int> dp(a.size());
   MonotoneQueue<int, less<int>> best;
   dp[0] = a[0];
@@ -1147,11 +1144,13 @@ Finds an $x$ in an interval $[a, b]$ for a continuous function $f$ such that $f(
 template<typename Fn>
 double bisection_root(Fn f, double a, double b, const int ITERATIONS = 100) {
   assert(a <= b && f(a) * f(b) <= 0);
-  double m;
+  double m, fa = f(a);
   for (int i = 0; i < ITERATIONS; i++) {
     m = a + (b - a) / 2;
-    if (f(a) * f(m) >= 0) {
+    double fm = f(m);
+    if (fa * fm >= 0) {
       a = m;
+      fa = fm;
     } else {
       b = m;
     }
@@ -1811,7 +1810,7 @@ The implementation uses a two-phase simplex tableau. Phase 1 introduces an artif
   \item \inlinecode{simplex\_solve(a, b, c, \&x)} solves the linear programming problem for an $m$ by $n$ matrix \inlinecode{a} of real values, a length $m$ vector \inlinecode{b}, and a length $n$ vector \inlinecode{c}, returning $0$ if an optimum was found, $-1$ if there are no feasible solutions, or $1$ if the objective is unbounded. If an optimum is found, then the vector pointed to by \inlinecode{x} is populated with a dense solution vector.
 \end{compactitem}
 
-\textbf{Time Complexity}: Polynomial (average) on the number of equations and unknowns, but exponential in the worst case.
+\textbf{Time Complexity}: $O(2^{n})$ pivots in the worst case, where $n$ is the number of unknowns, although simplex is typically much faster in practice.
 
 \textbf{Space Complexity}: $O(m \cdot n)$ auxiliary heap space.
 

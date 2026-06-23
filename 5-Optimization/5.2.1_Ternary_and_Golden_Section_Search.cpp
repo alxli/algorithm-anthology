@@ -98,9 +98,12 @@ Int discrete_ternary_min(Int lo, Int hi, Fn f) {
     }
   }
   Int best = lo;
+  auto best_value = f(best);
   for (Int k = lo + 1; k <= hi; k++) {
-    if (f(k) < f(best)) {
+    auto value = f(k);
+    if (value < best_value) {
       best = k;
+      best_value = value;
     }
   }
   return best;

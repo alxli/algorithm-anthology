@@ -2,7 +2,7 @@
 
 Distance calculations in two dimensions for points, lines, and line segments. The functions are
 templated on the point type `Pt`: pass any struct with numeric `.x` and `.y` fields (for example
-`PointD`/ `PointI` from 7.1.1, or the local example struct). `sqdist` preverses the coordinate type
+`PointD`/`PointI` from 7.1.1, or the local example struct). `sqdist` preserves the coordinate type
 and is exact for integer points. Functions that return an actual distance use `double` for the final
 division/square root. `closest_point` returns a point of the same type as its inputs, so use a
 floating-point `Pt` there for a meaningful (non-truncated) result.

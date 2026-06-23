@@ -3,17 +3,15 @@
 Given a list of directed lines, compute the convex polygon contained in every left half-plane.
 Half-plane intersection sorts the lines by angle, keeps only the tightest representative among
 parallel lines, and maintains a deque of lines whose pairwise intersections form the current
-boundary.
+boundary. Angles are sorted exactly to satisfy `std::sort`'s strict ordering requirement. `EPS` is
+then used outside the comparator to group parallel directions and retain only the tightest
+half-plane in each group.
 
 - `half_plane_intersection(planes)` returns the polygon cut out by the half-planes in
   counter-clockwise order. Each half-plane is represented by `HalfPlane(p, q)`, meaning the closed
-  region to the left of the directed line `p` $\to$ `q`.
-- If the intersection is empty, the function returns an empty vector.
-- If the true intersection is unbounded, the returned polygon is not meaningful. Add explicit
-  bounding-box half-planes when a bounded polygon is required.
-
-Angles are sorted exactly to satisfy `sort`'s ordering requirements. EPS is then used outside the
-comparator to group parallel directions and retain only the tightest half-plane in each group.
+  region to the left of the directed line `p` $\to$ `q`. If the intersection is empty, the function
+  returns an empty vector. If the true intersection is unbounded, the returned polygon is not
+  meaningful; add explicit bounding-box half-planes when a bounded polygon is required.
 
 Time Complexity:
 - O(n log n), where $n$ is the number of half-planes.

@@ -30,11 +30,13 @@ Space Complexity:
 template<typename Fn>
 double bisection_root(Fn f, double a, double b, const int ITERATIONS = 100) {
   assert(a <= b && f(a) * f(b) <= 0);
-  double m;
+  double m, fa = f(a);
   for (int i = 0; i < ITERATIONS; i++) {
     m = a + (b - a) / 2;
-    if (f(a) * f(m) >= 0) {
+    double fm = f(m);
+    if (fa * fm >= 0) {
       a = m;
+      fa = fm;
     } else {
       b = m;
     }

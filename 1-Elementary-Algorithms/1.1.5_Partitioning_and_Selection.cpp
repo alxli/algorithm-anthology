@@ -100,8 +100,8 @@ int main() {
   int n = static_cast<int>(a.size());
   nth_element2(a.begin(), a.begin() + n / 2, a.end());
   assert(a[n / 2] == 5);
-  // Values left of the median are <= it and values right are >= it (the exact
-  // order within each side is randomized, since the pivot is chosen at random).
+  // Values left of the median are <=, and values right are >= (the exact order within each side is
+  // randomized, since the pivot is chosen at random).
   for (int i = 0; i < n / 2; i++) {
     assert(a[i] <= a[n / 2]);
   }

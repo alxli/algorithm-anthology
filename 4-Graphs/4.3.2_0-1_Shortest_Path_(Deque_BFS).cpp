@@ -1,8 +1,8 @@
 /*
 
-Given a starting node in a weighted graph whose edge weights are only 0 or 1, compute the shortest
-distance to every reachable node. Optionally, output the shortest path to a specific destination
-node using the shortest-path tree from the predecessor array `pred`.
+Given a starting node in a weighted graph whose edge weights are only $0$ or $1$, compute the
+shortest distance to every reachable node. Optionally, output the shortest path to a specific
+destination node using the shortest-path tree from the predecessor array `pred`.
 
 0-1 BFS is a specialized version of Dijkstra's algorithm. Because every relaxation changes the
 distance by either $0$ or $1$, a deque maintains nodes in nondecreasing distance order: push
@@ -10,7 +10,7 @@ weight-0 relaxations to the front and weight-1 relaxations to the back.
 
 - `bfs_zero_one(start)` populates `dist` and `pred` for a global, pre-populated adjacency list `adj`
   which must consist of nodes numbered [0, `n`), where `n` is `adj.size()`. Each edge is stored as
-  (`neighbor`, `weight`), where `weight` is either 0 or 1.
+  (`neighbor`, `weight`), where `weight` is either $0$ or $1$.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 `start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the

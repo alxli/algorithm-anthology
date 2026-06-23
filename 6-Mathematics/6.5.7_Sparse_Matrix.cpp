@@ -39,7 +39,7 @@ Time Complexity:
   touched row or column.
 - O(n) per call to `transpose()` and `multiply_vector()`, where $n$ is the number of stored nonzero
   entries.
-- Sparse elimination costs O(f * log d), where $f$ is the number of entry updates performed after
+- O(f * log d) for sparse elimination, where $f$ is the number of entry updates performed after
   fill-in and $d$ is a touched row or column size. In the worst case this is still cubic.
 - O(f * log d) for `det()`, `sparse_rank()`, and `solve_system()`.
 - O(1) per call to `height()`, `width()`, `nonzeros()`, `row()`, and `column()`.

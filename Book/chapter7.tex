@@ -116,7 +116,7 @@ struct TPoint {
 
   // --- Floating-point operations: return fp_t or TPoint<fp_t> ---
 
-  fp_t norm() const { return sqrt(static_cast<fp_t>(sqnorm())); }
+  fp_t norm() const { return hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)); }
   fp_t arg() const { return atan2(static_cast<fp_t>(y), static_cast<fp_t>(x)); }
   fp_t proj(const TPoint &p) const { return static_cast<fp_t>(dot(p)) / p.norm(); }
 
@@ -742,7 +742,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Triangle}
-Common triangle calculations in two dimensions. The functions are templated on the point type \inlinecode{Pt}, which should work with \inlinecode{Point}/ \inlinecode{PointD}/\inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. \inlinecode{triangle\_area()} returns \inlinecode{double} regardless of input type (the area is fractional via the \inlinecode{/2}). \inlinecode{same\_side()} and \inlinecode{point\_in\_triangle()} do all arithmetic in the point's own coordinate type and are exact for integer points: they reduce each cross product to a sign before combining, so no precision is lost and cross products are never multiplied together.
+Common triangle calculations in two dimensions. The functions are templated on the point type \inlinecode{Pt}, which should work with \inlinecode{Point}/\inlinecode{PointD}/\inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. \inlinecode{triangle\_area()} returns \inlinecode{double} regardless of input type (the area is fractional via the \inlinecode{/2}). \inlinecode{same\_side()} and \inlinecode{point\_in\_triangle()} do all arithmetic in the point's own coordinate type and are exact for integer points: they reduce each cross product to a sign before combining, so no precision is lost and cross products are never multiplied together.
 
 \begin{compactitem}
   \item \inlinecode{triangle\_area(a, b, c)} returns the area of the triangle with vertices \inlinecode{a}, \inlinecode{b}, and \inlinecode{c}.
@@ -1125,7 +1125,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Distances}
-Distance calculations in two dimensions for points, lines, and line segments. The functions are templated on the point type \inlinecode{Pt}: pass any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields (for example \inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1, or the local example struct). \inlinecode{sqdist} preverses the coordinate type and is exact for integer points. Functions that return an actual distance use \inlinecode{double} for the final division/square root. \inlinecode{closest\_point} returns a point of the same type as its inputs, so use a floating-point \inlinecode{Pt} there for a meaningful (non-truncated) result.
+Distance calculations in two dimensions for points, lines, and line segments. The functions are templated on the point type \inlinecode{Pt}: pass any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields (for example \inlinecode{PointD}/\inlinecode{PointI} from 7.1.1, or the local example struct). \inlinecode{sqdist} preserves the coordinate type and is exact for integer points. Functions that return an actual distance use \inlinecode{double} for the final division/square root. \inlinecode{closest\_point} returns a point of the same type as its inputs, so use a floating-point \inlinecode{Pt} there for a meaningful (non-truncated) result.
 
 \begin{compactitem}
   \item \inlinecode{dist(a, b)} and \inlinecode{sqdist(a, b)} respectively return the distance and squared distance between points \inlinecode{a} and \inlinecode{b}.
@@ -1320,7 +1320,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Line Intersection}
-Intersection calculations in two dimensions for straight lines and line segments. The functions are templated on the point type \inlinecode{Pt}: pass any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields (for example \inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1, or the local example struct) for which \inlinecode{operator\textless{}} orders points lexicographically using exact coordinate comparisons. Point outputs are written through a caller-supplied pointer whose type is deduced, so the output point type may differ from the input -- e.g. integer endpoints with a floating-point output point.
+Intersection calculations in two dimensions for straight lines and line segments. The functions are templated on the point type \inlinecode{Pt}: pass any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields (for example \inlinecode{PointD}/\inlinecode{PointI} from 7.1.1, or the local example struct) for which \inlinecode{operator\textless{}} orders points lexicographically using exact coordinate comparisons. Point outputs are written through a caller-supplied pointer whose type is deduced, so the output point type may differ from the input -- e.g. integer endpoints with a floating-point output point.
 
 \inlinecode{seg\_intersection()} has a detection-only overload (called without the output pointers) whose calculations are exact when \inlinecode{Pt} has integer coordinates.
 
@@ -1703,7 +1703,7 @@ int tangent(const Circle &c, const Pt &p, Line *l1 = nullptr, Line *l2 = nullptr
     return -1;  // Point inside Circle, no intersection.
   }
   double qx = vopx / c.r, qy = vopy / c.r;
-  double n = sqnorm(qx, qy), d = qy * sqrt(sqnorm(qx, qy) - 1.0);
+  double n = sqnorm(qx, qy), d = qy * sqrt(n - 1.0);
   double t1x = (qx - d) / n, t1y = c.k;
   double t2x = (qx + d) / n, t2y = c.k;
   if (!EQ(qy, 0)) {  // Common case.
@@ -1963,7 +1963,7 @@ int main() {
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Polygon Sorting and Area}
-Given a list of distinct points in two-dimensions, order them into a valid polygon and determine the area. The sorting comparators order two points by the sign of their cross product around a chosen center, that is, by angle. The area functions use the shoelace formula, summing the cross products of consecutive vertex pairs. The functions are templated on the point type. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}/\inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields and \inlinecode{\textless{}} / \inlinecode{==} operators.
+Given a list of distinct points in two-dimensions, order them into a valid polygon and determine the area. The sorting comparators order two points by the sign of their cross product around a chosen center, that is, by angle. The area functions use the shoelace formula, summing the cross products of consecutive vertex pairs. The functions are templated on the point type. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}/\inlinecode{PointD}/\inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields and \inlinecode{\textless{}} / \inlinecode{==} operators.
 
 \begin{compactitem}
   \item \inlinecode{cw\_comp(a, b, c)} returns whether point \inlinecode{a} compares clockwise before \inlinecode{b} about \inlinecode{c}.
@@ -2139,7 +2139,7 @@ Clockwise vertices: (1, 3) (1, 2) (2, 1) (0, 0) (-1, 3)
 Counterclockwise vertices: (-1, 3) (0, 0) (2, 1) (1, 2) (1, 3)
 \end{exampleoutput}
 \subsection{Point-in-Polygon}
-Given a point \inlinecode{p} and a polygon, determines whether \inlinecode{p} lies inside using ray casting. A ray cast from \inlinecode{p} must cross the polygon's boundary an odd number of times exactly when \inlinecode{p} is inside, so the function counts crossings between a horizontal ray and each polygon edge. The function is templated on the point type \inlinecode{Pt}. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}/\inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. All comparisons are exact (no epsilon): the ray-crossing parity needs a consistent comparison to be correct, and the result is exact for integer-coordinate points.
+Given a point \inlinecode{p} and a polygon, determines whether \inlinecode{p} lies inside using ray casting. A ray cast from \inlinecode{p} must cross the polygon's boundary an odd number of times exactly when \inlinecode{p} is inside, so the function counts crossings between a horizontal ray and each polygon edge. The function is templated on the point type \inlinecode{Pt}. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}/\inlinecode{PointD}/\inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. All comparisons are exact (no epsilon): the ray-crossing parity needs a consistent comparison to be correct, and the result is exact for integer-coordinate points.
 
 \begin{compactitem}
   \item \inlinecode{point\_in\_polygon(p, lo, hi, EDGE\_IS\_INSIDE)} returns whether \inlinecode{p} lies within the polygon with vertices specified by the range [\inlinecode{lo}, \inlinecode{hi}) of points in either clockwise or counter-clockwise order. The \inlinecode{EDGE\_IS\_INSIDE} flag (default \inlinecode{true}) controls whether points exactly on an edge or vertex count as inside.
@@ -3292,9 +3292,9 @@ Given a list of directed lines, compute the convex polygon contained in every le
 
 \begin{compactitem}
   \item \inlinecode{half\_plane\_intersection(planes)} returns the polygon cut out by the half-planes in counter-clockwise order. Each half-plane is represented by \inlinecode{HalfPlane(p, q)}, meaning the closed region to the left of the directed line \inlinecode{p} $\to$ \inlinecode{q}.
-  \item If the intersection is empty, the function returns an empty vector.
-  \item If the true intersection is unbounded, the returned polygon is not meaningful. Add explicit bounding-box half-planes when a bounded polygon is required.
 \end{compactitem}
+
+If the intersection is empty, the function returns an empty vector. If the true intersection is unbounded, the returned polygon is not meaningful; add explicit bounding-box half-planes when a bounded polygon is required.
 
 Angles are sorted exactly to satisfy \inlinecode{sort}'s ordering requirements. EPS is then used outside the comparator to group parallel directions and retain only the tightest half-plane in each group.
 
@@ -3638,8 +3638,7 @@ bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
 }
 
 // Specialized version of seg_intersection() from 7.2.3, simplified for TOUCH_IS_INTERSECT = true,
-// returning $-1$ for no intersection, $0$ for one intersection point, or $1$ for positive length
-// overlap.
+// returning -1 for no intersection, 0 for one intersection point, 1 for positive length overlap.
 template<typename Pt>
 int seg_intersection1(
     const Pt &a, const Pt &b, const Pt &c, const Pt &d, double *outx, double *outy
@@ -4459,7 +4458,11 @@ struct TPoint3 {
   TPoint3<fp_t> operator/(fp_t k) const { return {(fp_t)x / k, (fp_t)y / k, (fp_t)z / k}; }
   T dot(const TPoint3 &p) const { return x * p.x + y * p.y + z * p.z; }
   T sqnorm() const { return x * x + y * y + z * z; }
-  fp_t norm() const { return sqrt(static_cast<fp_t>(sqnorm())); }
+
+  fp_t norm() const {
+    return hypot(hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)), static_cast<fp_t>(z));
+  }
+
   fp_t phi() const { return atan2(static_cast<fp_t>(y), static_cast<fp_t>(x)); }
   TPoint3<fp_t> unit() const { return *this / norm(); }
 

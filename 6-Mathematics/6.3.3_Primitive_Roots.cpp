@@ -12,7 +12,7 @@ factoring $m$, then factors $\phi(m)$. A candidate $g$ is primitive exactly when
 $g^{\phi(m)} \equiv 1 \pmod m$ and $g^{\phi(m)/q} \not\equiv 1 \pmod m$ for every prime factor
 $q$ of $\phi(m)$.
 
-- `primitive_root(m)` returns the smallest primitive root modulo `m`, or `-1` if no primitive root
+- `primitive_root(m)` returns the smallest primitive root modulo `m`, or $-1$ if no primitive root
   exists.
 
 For a prime modulus $p$, this reduces to the common contest test: factor $p - 1$, then scan for the

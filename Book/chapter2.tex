@@ -4648,13 +4648,7 @@ Values: 6 -2 4 8 10
 Values: 5 5 5 1 5
 \end{exampleoutput}
 \subsection{Segment Tree Beats}
-Maintain a fixed-size array under the range ``chmin'' update \inlinecode{a[i] = min(a[i], t)} for all \inlinecode{i} in a range, while answering range-sum and range-maximum queries. An ordinary lazy segment tree cannot represent a clamp like this with a single composable tag, because clamping affects only the entries that currently exceed \inlinecode{t}. Segment tree beats (the Ji Driver tree) resolves this by storing, for each node, the strict maximum, the second-largest distinct value, and a count of entries equal to the maximum. A clamp then has three cases at each node.
-
-\begin{compactitem}
-  \item If \inlinecode{t} $\geq$ \inlinecode{max1}, the clamp changes nothing and the recursion stops (the prune case).
-  \item If \inlinecode{max2} \textless{} \inlinecode{t} \textless{} \inlinecode{max1}, every entry equal to \inlinecode{max1} drops to \inlinecode{t} and all others are untouched, so the node updates in $O(1)$: the sum falls by $({\inlinecodemath{max1}} - {\inlinecodemath{t}}) * {\inlinecodemath{count}}$ and \inlinecode{max1} becomes \inlinecode{t} (the break, or tag, case). This lazy tag pushes down to a child only when the child's maximum is larger.
-  \item Otherwise (\inlinecode{t} $\leq$ \inlinecode{max2}) the node is too coarse to update directly, so the clamp recurses into both children and re-pulls.
-\end{compactitem}
+Maintain a fixed-size array under the range ``chmin'' update \inlinecode{a[i] = min(a[i], t)} for all \inlinecode{i} in a range, while answering range-sum and range-maximum queries. An ordinary lazy segment tree cannot represent a clamp like this with a single composable tag, because clamping affects only the entries that currently exceed \inlinecode{t}. Segment tree beats (the Ji Driver tree) resolves this by storing, for each node, the strict maximum, the second-largest distinct value, and a count of entries equal to the maximum. A clamp then has three cases at each node: if \inlinecode{t} $\geq$ \inlinecode{max1}, the clamp changes nothing and the recursion stops (the prune case); if \inlinecode{max2} \textless{} \inlinecode{t} \textless{} \inlinecode{max1}, every entry equal to \inlinecode{max1} drops to \inlinecode{t} and all others are untouched, so the node updates in $O(1)$, the sum falls by $({\inlinecodemath{max1}} - {\inlinecodemath{t}}) * {\inlinecodemath{count}}$, and \inlinecode{max1} becomes \inlinecode{t} (the break, or tag, case); otherwise (\inlinecode{t} $\leq$ \inlinecode{max2}) the node is too coarse to update directly, so the clamp recurses into both children and re-pulls. The lazy tag pushes down to a child only when the child's maximum is larger.
 
 The break condition is what makes this efficient: a potential-function argument on the number of distinct values along root-to-leaf paths shows the total work over any sequence of clamps is amortized $O(\log^{2} n)$ each, even though a single clamp can momentarily descend deep. The same scheme extends to range ``chmax'' by tracking the symmetric minimum trio, and to mixed clamp-and-add workloads by carrying an additional add tag; only the chmin / sum / max core is shown here. Unlike the generic lazy segment tree, this structure cannot be reduced to a pluggable \inlinecode{combine} and \inlinecode{apply}, because a clamp acts on only the maximal entries of a node rather than uniformly on all of them, so each operation set must be hand-written and its amortized bound argued separately.
 
@@ -4876,7 +4870,7 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies
 
 \begin{compactitem}
   \item \inlinecode{SparseSegTree\textless{}T, N\textgreater{}(v)} constructs an array over indices [0, \inlinecode{N}], with every value implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
-  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} is between 0 and \inlinecode{N}.
+  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} is between $0$ and \inlinecode{N}.
   \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If \inlinecode{lo == hi}, then the single specified value is returned.
   \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{apply\_delta(v, d)}.
   \item \inlinecode{update(lo, hi, d)} modifies the value at each array index from \inlinecode{lo} to \inlinecode{hi}, inclusive, by applying the delta \inlinecode{d} to each value.
@@ -7125,7 +7119,7 @@ int main() {
   freq.add(1, 1);                   // One element of value 1.
   freq.add(3, 3);                   // Three elements of value 3.
   freq.add(6, 1);                   // One element of value 6.
-  assert(freq.max_prefix(0) == 1);  // The longest prefix with count <= 0 is [0, 1).
+  assert(freq.max_prefix(0) == 1);  // The longest prefix with count at most 0 is [0, 1).
   assert(freq.max_prefix(3) == 3);  // Prefix [0, 3) has count 1; [0, 4) has count 4.
   assert(freq.max_prefix(4) == 6);  // Prefix [0, 6) has count 4; [0, 7) has count 5.
   return 0;

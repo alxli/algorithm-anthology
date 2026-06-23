@@ -6,7 +6,7 @@ sequence behaves the only way it can for a prime; a base $a$ that breaks the pat
 that $n$ is composite. For large composite inputs, Pollard's rho iterates a pseudorandom map modulo
 $n$; two iterates that collide modulo a hidden prime factor reveal that factor through a GCD with
 their difference. Prime factorizations are represented as sorted vectors of (prime, exponent) pairs.
-For 0 and 1, the prime factorization is empty.
+For $0$ and $1$, the prime factorization is empty.
 
 - `is_prime_slow(n)` returns whether the integer `n` is prime using trial division.
 - `factorize_slow(n)` returns the prime factorization of `n` using trial division.
@@ -44,7 +44,7 @@ Time Complexity:
 - O(log^3(n)) per call to `is_prime(n)`.
 - O(sqrt n) per call to `factorize_slow(n)`.
 - O(n) to rebuild the prime cache in `cached_sieve(n)`.
-- Unknown, but approximately O(n^{1/4}) per call to `rho_factor(n)` and `factorize(n)`.
+- O(n^{1/4}) approximately per call to `rho_factor(n)` and `factorize(n)`.
 
 Space Complexity:
 - O(f) auxiliary heap space for all operations, where $f$ is the number of factors returned.
@@ -417,7 +417,7 @@ int main() {
         {561, false},  // Carmichael number
     };
     // clang-format on
-    for (const auto [n, expected] : cases) {
+    for (const auto &[n, expected] : cases) {
       assert(is_prime_slow(n) == expected);
       assert(is_probable_prime(n) == expected);
       assert(is_prime(n) == expected);

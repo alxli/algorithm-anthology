@@ -119,7 +119,7 @@ struct TPoint {
 
   // --- Floating-point operations: return fp_t or TPoint<fp_t> ---
 
-  fp_t norm() const { return sqrt(static_cast<fp_t>(sqnorm())); }
+  fp_t norm() const { return hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)); }
   fp_t arg() const { return atan2(static_cast<fp_t>(y), static_cast<fp_t>(x)); }
   fp_t proj(const TPoint &p) const { return static_cast<fp_t>(dot(p)) / p.norm(); }
 

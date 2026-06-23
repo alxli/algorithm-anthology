@@ -100,7 +100,7 @@ int main() {
   freq.add(1, 1);                   // One element of value 1.
   freq.add(3, 3);                   // Three elements of value 3.
   freq.add(6, 1);                   // One element of value 6.
-  assert(freq.max_prefix(0) == 1);  // The longest prefix with count <= 0 is [0, 1).
+  assert(freq.max_prefix(0) == 1);  // The longest prefix with count at most 0 is [0, 1).
   assert(freq.max_prefix(3) == 3);  // Prefix [0, 3) has count 1; [0, 4) has count 4.
   assert(freq.max_prefix(4) == 6);  // Prefix [0, 6) has count 4; [0, 7) has count 5.
   return 0;

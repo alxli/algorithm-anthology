@@ -299,6 +299,9 @@ Joining and Splitting:
 
 \begin{lstlisting}[language=C++]
 string join(const std::vector<string> &v, const string &delim = " ") {
+  if (v.empty()) {
+    return "";
+  }
   string res;
   res.reserve(v.size() + delim.size() * (v.size() - 1));
   for (int i = 0; i < static_cast<int>(v.size()); i++) {
@@ -462,8 +465,9 @@ FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Start
   \item \inlinecode{PairIntHasher} is a self-contained hasher for \inlinecode{std::pair\textless{}int, int\textgreater{}} keys, written without any dependency on the templates below so that it can be copy-pasted on its own.
   \item \inlinecode{IntHasher\textless{}Int\textgreater{}}, \inlinecode{PairHasher\textless{}A, B\textgreater{}}, \inlinecode{TupleHasher\textless{}Ts...\textgreater{}}, and \inlinecode{VectorHasher\textless{}T\textgreater{}} are hash functors passed as the third template argument of \inlinecode{std::unordered\_map} or \inlinecode{std::unordered\_set}.
   \item \inlinecode{GenericHasher\textless{}T\textgreater{}} recursively handles integer, pair, tuple, and vector keys, and falls back to \inlinecode{std::hash\textless{}T\textgreater{}} for other hashable types.
-  \item Specializations of \inlinecode{std::hash} for \inlinecode{std::pair} and \inlinecode{std::tuple} are also provided, letting those keys be used in \inlinecode{std::unordered\_map}/\inlinecode{std::unordered\_set} without an explicit hasher argument. Specializing \inlinecode{std::hash} for purely standard types is technically nonstandard, so the functor forms above are the portable alternative. (Vector keys are left to the functors to avoid clashing with the standard \inlinecode{std::hash\textless{}std::vector\textless{}char\textgreater{}\textgreater{}}.)
 \end{compactitem}
+
+Specializations of \inlinecode{std::hash} for \inlinecode{std::pair} and \inlinecode{std::tuple} are also provided, letting those keys be used in \inlinecode{std::unordered\_map}/\inlinecode{std::unordered\_set} without an explicit hasher argument. Specializing \inlinecode{std::hash} for purely standard types is technically nonstandard, so the functor forms above are the portable alternative. Vector keys are left to the functors to avoid clashing with the standard \inlinecode{std::hash\textless{}std::vector\textless{}char\textgreater{}\textgreater{}}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -3276,7 +3280,7 @@ class SuffixAutomaton {
     return true;
   }
 
-  // Returns the starting index of the first (leftmost) occurrence of `t` as a substring, or $-1$ if
+  // Returns the starting index of the first (leftmost) occurrence of `t` as a substring, or -1 if
   // `t` does not occur. `first_pos` stores the end index of the first occurrence of each state's
   // class, so subtracting the length of `t` recovers its start.
   int first_occurrence(const string &t) const {

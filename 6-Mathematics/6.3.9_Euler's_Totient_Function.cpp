@@ -98,7 +98,7 @@ std::vector<int> phi_table(int lo, int hi) {
     remaining[i - lo] = i;
   }
   for (int p : primes) {
-    // Start at the first multiple of p that is >= lo, but never below p itself (this skips 0).
+    // Start at the first multiple of p at least lo, but never below p itself (this skips 0).
     int64_t start = std::max(1LL * p, ((1LL * lo + p - 1) / p) * p);
     for (int64_t j = start; j <= hi; j += p) {
       int idx = static_cast<int>(j - lo);

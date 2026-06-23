@@ -30,16 +30,17 @@ Int exponential_search_first_true(Int lo, Pred pred) {  // 000[1]11
   while (!pred(lo + step)) {
     step *= 2;
   }
-  Int l = lo + step / 2, r = lo + step;
-  while (l < r) {
-    Int mid = l + (r - l) / 2;
+  Int hi = lo + step;
+  lo += step / 2;
+  while (lo < hi) {
+    Int mid = lo + (hi - lo) / 2;
     if (pred(mid)) {
-      r = mid;
+      hi = mid;
     } else {
-      l = mid + 1;
+      lo = mid + 1;
     }
   }
-  return l;
+  return lo;
 }
 
 /*** Example Usage ***/

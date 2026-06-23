@@ -33,10 +33,8 @@ Time Complexity:
   `order_of_key`.
 - `OrderedMultiset`/`OrderedMultimap`: same as `std::multiset`/`std::multimap`, with O(log n) for
   `find_by_order` and `order_of_key`.
-- PBDS priority queues: similar to standard priority queues for `top`/`push`/`pop`, but with extra
-  non-standard handles for `modify` and `erase`, and `join` for melding. Exact bounds depend on the
-  heap tag; for `PairingHeap`, `push` and `join` are O(1) amortized, while `pop`, `modify`, and
-  `erase` are O(log n) amortized.
+- O(1) amortized per call to `push()` and `join()` for `PairingHeap`.
+- O(log n) amortized per call to `pop()`, `modify()`, and `erase()` for `PairingHeap`.
 
 Space Complexity:
 - O(n) for all containers.

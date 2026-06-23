@@ -75,7 +75,7 @@ int main() {
   assert(window_min[2] == 1);
   assert(window_min[3] == 1);
 
-  // dp[i] = a[i] + min(dp[j]) over max(0, i - 2) <= j < i.
+  // dp[i] = a[i] + min(dp[j]) over j in [max(0, i - 2), i).
   vector<int> dp(a.size());
   MonotoneQueue<int, less<int>> best;
   dp[0] = a[0];

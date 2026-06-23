@@ -4,7 +4,7 @@ Given a point `p` and a polygon, determines whether `p` lies inside using ray ca
 from `p` must cross the polygon's boundary an odd number of times exactly when `p` is inside, so
 the function counts crossings between a horizontal ray and each polygon edge. The function is
 templated on the point type `Pt`. The local `Point` struct (`double` coordinates) is the default;
-replace it with `Point`/`PointD`/ `PointI` from 7.1.1 or any struct with numeric `.x` and `.y`
+replace it with `Point`/`PointD`/`PointI` from 7.1.1 or any struct with numeric `.x` and `.y`
 fields. All comparisons are exact (no epsilon): the ray-crossing parity needs a consistent
 comparison to be correct, and the result is exact for integer-coordinate points.
 
