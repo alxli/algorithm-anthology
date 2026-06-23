@@ -10,12 +10,12 @@ numeric `.x` and `.y` fields.
 - `point_in_rectangle(p, a, b, EDGE_IS_INSIDE)` returns whether point `p` lies inside the
   axis-aligned rectangle with opposite corners `a` and `b`.
 - `rectangle_intersection(a1, b1, a2, b2, &p, &q, EDGE_IS_INSIDE)` computes the intersection of two
-  axis-aligned rectangles, where `a1`/`b1` and `a2`/`b2` are opposite-corner pairs. Returns -1 if
-  the rectangles are disjoint, 0 if they partially intersect, 1 if the first rectangle is completely
-  inside the second, and 2 if the second rectangle is completely inside the first. If an
-  intersection exists, its lower-left and upper-right corners are stored in `p` and `q` when those
-  pointers are non-null. The `EDGE_IS_INSIDE` flag (default `true`) controls whether boundary-only
-  contact counts as intersecting.
+  axis-aligned rectangles, where `a1`/`b1` and `a2`/`b2` are opposite-corner pairs. Returns $-1$ if
+  the rectangles are disjoint, $0$ if they partially intersect, $1$ if the first rectangle is
+  completely inside the second, and $2$ if the second rectangle is completely inside the first. If
+  an intersection exists, its lower-left and upper-right corners are stored in `p` and `q` when
+  those pointers are non-null. The `EDGE_IS_INSIDE` flag (default `true`) controls whether
+  boundary-only contact counts as intersecting.
 
 For integer-coordinate inputs, comparisons are exact as long as intermediate coordinate additions,
 subtractions, and min/max values do not overflow. Floating-point inputs use EPS-based comparisons.

@@ -25,8 +25,8 @@ degrees.
   between points `a` and `b` where the $z$-component is implicitly zero and the origin is implicitly
   shifted to point `o`. This operation is also equal to double the signed area of the triangle from
   these three points.
-- `turn(a, o, b)` returns 1 if the path `a` $\to$ `o` $\to$ `b` forms a left turn on the plane, 0
-  if the path forms a straight line segment, or $-1$ if it forms a right turn.
+- `turn(a, o, b)` returns $1$ if the path `a` $\to$ `o` $\to$ `b` forms a left turn on the plane,
+  $0$ if the path forms a straight line segment, or $-1$ if it forms a right turn.
 
 Time Complexity:
 - O(1) for all operations.

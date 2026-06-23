@@ -35,7 +35,7 @@ increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, 
 - `max_right(lo, pred)` returns the largest boundary `hi` such that the aggregate over the half-open
   range [`lo`, `hi`) satisfies `pred`. It returns `size()` if `pred` remains true to the end.
 - `min_left(hi, pred)` returns the smallest boundary `lo` such that the aggregate over the half-open
-  range [`lo`, `hi`) satisfies `pred`. It returns 0 if `pred` remains true to the beginning.
+  range [`lo`, `hi`) satisfies `pred`. It returns $0$ if `pred` remains true to the beginning.
 
 For the boundary-search functions, `pred` takes aggregate `T` values of candidate ranges. As a range
 grows, `pred` may change from true to false but never back to true; The empty range is considered

@@ -2251,7 +2251,7 @@ Building the structure peels away nodes of in-degree zero to expose the cycles (
 \begin{compactitem}
   \item \inlinecode{FunctionalGraph(f)} builds the structure for the successor function \inlinecode{f} over nodes numbered [0, \inlinecode{n}), where \inlinecode{n} is \inlinecode{f.size()}.
   \item \inlinecode{on\_cycle(i)} returns whether node \inlinecode{i} lies on a cycle.
-  \item \inlinecode{dist\_to\_cycle(i)} returns the number of steps from \inlinecode{i} to the first cycle node it reaches (0 if \inlinecode{i} is itself on a cycle).
+  \item \inlinecode{dist\_to\_cycle(i)} returns the number of steps from \inlinecode{i} to the first cycle node it reaches ($0$ if \inlinecode{i} is itself on a cycle).
   \item \inlinecode{cycle\_id(i)} returns an identifier for the cycle that \inlinecode{i} eventually reaches; two nodes share an identifier exactly when they funnel into the same cycle.
   \item \inlinecode{cycle\_length(id)} returns the length of the cycle with the given identifier.
   \item \inlinecode{num\_cycles()} returns the number of distinct cycles.
@@ -6376,7 +6376,7 @@ The graph must be simple: the implementation stores one color per ordered node p
 
 class EdgeColoring {
   int n, max_deg;
-  std::vector<std::vector<int>> color;  // color[u][v] is the color of edge (u, v), or 0 if none.
+  std::vector<std::vector<int>> color;  // color[u][v] is the color of edge (u, v), or $0$ if none.
 
   bool is_free(int x, int c) const {
     for (int w = 0; w < n; w++) {

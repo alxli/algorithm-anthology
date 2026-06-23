@@ -10,7 +10,7 @@ where both row updates and column pivot lookups are common.
 - `height()` returns the number of rows.
 - `width()` returns the number of columns.
 - `nonzeros()` returns the number of stored nonzero entries.
-- `get(i, j)` returns the value at row `i`, column `j`, or 0 if the entry is not stored.
+- `get(i, j)` returns the value at row `i`, column `j`, or $0$ if the entry is not stored.
 - `set(i, j, value)` assigns an entry. Assigning zero erases it from both maps.
 - `add(i, j, delta)` adds `delta` to an entry. If the result becomes zero, the entry is erased.
 - `row(i)` returns a map from column index to value for the nonzero entries in row `i`.
@@ -22,7 +22,7 @@ where both row updates and column pivot lookups are common.
   the rank found in those columns.
 - `det(a)` returns the determinant of a square sparse matrix.
 - `sparse_rank(a)` returns the rank of a sparse matrix.
-- `solve_system(a, b, &x)` solves the system $ax = b$, returning 0 for one solution, $-1$ for no
+- `solve_system(a, b, &x)` solves the system $ax = b$, returning $0$ for one solution, $-1$ for no
   solution, or $-2$ for infinitely many solutions. When one solution exists, `x` is populated.
 
 The class assumes that `T{}` is the additive zero and that `value == T{}` is a valid zero test. The

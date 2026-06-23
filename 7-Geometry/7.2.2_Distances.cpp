@@ -15,7 +15,7 @@ floating-point `Pt` there for a meaningful (non-truncated) result.
 - `line_dist(a1, b1, c1, a2, b2, c2)` returns the distance between two lines.
 - `seg_dist(p, a, b)` returns the distance from point `p` to the line segment `a`-`b`.
 - `seg_dist(a, b, c, d)` returns the minimum distance between line segments `a`-`b` and `c`-`d`, or
-  0 if the segments touch or intersect.
+  $0$ if the segments touch or intersect.
 - `closest_point(a, b, p)` returns the point on segment `a`-`b` closest to point `p`.
 
 Time Complexity:

@@ -1,6 +1,6 @@
 /*
 
-The Mobius function $\mu(n)$ is the multiplicative function defined as 1 if $n = 1$, 0 if $n$ is
+The Mobius function $\mu(n)$ is the multiplicative function defined as $1$ if $n = 1$, $0$ if $n$ is
 divisible by the square of a prime, and $(-1)^k$ if $n$ is a product of $k$ distinct primes. It is
 the coefficient that appears in Mobius inversion: if $g(n) = \sum_{d \mid n} f(d)$ for all $n$, then
 $f(n) = \sum_{d \mid n} \mu(d) \, g(n / d)$. This formalizes the principle of inclusion-exclusion in

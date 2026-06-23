@@ -16,7 +16,7 @@ it gets there, and exactly where it lands after a huge number of steps.
 - `FunctionalGraph(f)` builds the structure for the successor function `f` over nodes numbered [0,
   `n`), where `n` is `f.size()`.
 - `on_cycle(i)` returns whether node `i` lies on a cycle.
-- `dist_to_cycle(i)` returns the number of steps from `i` to the first cycle node it reaches (0 if
+- `dist_to_cycle(i)` returns the number of steps from `i` to the first cycle node it reaches ($0$ if
   `i` is itself on a cycle).
 - `cycle_id(i)` returns an identifier for the cycle that `i` eventually reaches; two nodes share an
   identifier exactly when they funnel into the same cycle.

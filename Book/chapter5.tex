@@ -1808,7 +1808,7 @@ The simplex algorithm walks between vertices of the feasible polytope, at each s
 The implementation uses a two-phase simplex tableau. Phase 1 introduces an artificial variable to find a feasible starting basis, which is essential when some constraint bounds are negative. Phase 2 then optimizes the original objective. The \inlinecode{basis} and \inlinecode{nonbasis} arrays track which variable each tableau row or column currently represents, making solution recovery independent of pivot order.
 
 \begin{compactitem}
-  \item \inlinecode{simplex\_solve(a, b, c, \&x)} solves the linear programming problem for an $m$ by $n$ matrix \inlinecode{a} of real values, a length $m$ vector \inlinecode{b}, and a length $n$ vector \inlinecode{c}, returning 0 if an optimum was found, $-1$ if there are no feasible solutions, or 1 if the objective is unbounded. If an optimum is found, then the vector pointed to by \inlinecode{x} is populated with a dense solution vector.
+  \item \inlinecode{simplex\_solve(a, b, c, \&x)} solves the linear programming problem for an $m$ by $n$ matrix \inlinecode{a} of real values, a length $m$ vector \inlinecode{b}, and a length $n$ vector \inlinecode{c}, returning $0$ if an optimum was found, $-1$ if there are no feasible solutions, or $1$ if the objective is unbounded. If an optimum is found, then the vector pointed to by \inlinecode{x} is populated with a dense solution vector.
 \end{compactitem}
 
 \textbf{Time Complexity}: Polynomial (average) on the number of equations and unknowns, but exponential in the worst case.

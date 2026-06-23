@@ -5,8 +5,8 @@ each circle. External tangents touch both circles on the same side of the line j
 centers; internal tangents cross between the circles. A point can be treated as a zero-radius
 circle, so this also covers tangents from a point to a circle.
 
-- `circle_tangents(c1, r1, c2, r2, INTERNAL)` returns 0, 1, or 2 tangent point pairs. Each pair
-  `{p, q}` means the tangent line touches the first circle at `p` and the second circle at `q`.
+- `circle_tangents(c1, r1, c2, r2, INTERNAL)` returns $0$, $1$, or $2$ tangent point pairs. Each
+  pair `{p, q}` means the tangent line touches the first circle at `p` and the second circle at `q`.
   Set `INTERNAL = true` to get internal tangents; otherwise external tangents are returned.
 - `all_circle_tangents(c1, r1, c2, r2)` returns all external and internal tangents.
 

@@ -15,9 +15,9 @@ then optimizes the original objective. The `basis` and `nonbasis` arrays track w
 tableau row or column currently represents, making solution recovery independent of pivot order.
 
 - `simplex_solve(a, b, c, &x)` solves the linear programming problem for an $m$ by $n$ matrix `a` of
-  real values, a length $m$ vector `b`, and a length $n$ vector `c`, returning 0 if an optimum was
-  found, $-1$ if there are no feasible solutions, or 1 if the objective is unbounded. If an optimum
-  is found, then the vector pointed to by `x` is populated with a dense solution vector.
+  real values, a length $m$ vector `b`, and a length $n$ vector `c`, returning $0$ if an optimum was
+  found, $-1$ if there are no feasible solutions, or $1$ if the objective is unbounded. If an
+  optimum is found, then the vector pointed to by `x` is populated with a dense solution vector.
 
 Time Complexity:
 - Polynomial (average) on the number of equations and unknowns, but exponential in the worst case.

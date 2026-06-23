@@ -34,7 +34,7 @@ Space Complexity:
 
 class EdgeColoring {
   int n, max_deg;
-  std::vector<std::vector<int>> color;  // color[u][v] is the color of edge (u, v), or 0 if none.
+  std::vector<std::vector<int>> color;  // color[u][v] is the color of edge (u, v), or $0$ if none.
 
   bool is_free(int x, int c) const {
     for (int w = 0; w < n; w++) {

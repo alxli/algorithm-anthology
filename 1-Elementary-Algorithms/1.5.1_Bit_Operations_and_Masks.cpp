@@ -1,29 +1,29 @@
 /*
 
 Integers are all fixed-size sets of bits, where the $i$-th bit (counting from the least significant
-bit where $i = 0$) is "present" when set to 1. Treating an `int` as a bitmask makes set membership,
-insertion, deletion, and iteration into single machine instructions, which is why bitmasks are the
-backbone of subset dynamic programming and many low-level tricks. The helpers below operate on
-`uint32_t` masks; to use 64-bit masks, replace `uint32_t` with `uint64_t`, the literal `1u` with
-`1ull`, and the `1u << 31` inside `clz()` with `1ull << 63`. The loop implementations below exist
-for education only; production code should prefer the GCC built-ins named in the inline comments
-whenever available, or on C++20 systems the `<bit>` header, whose generic `constexpr` equivalents
-(also named in the comments) are additionally well-defined at 0.
+bit where $i = 0$) is "present" when set to $1$. Treating an `int` as a bitmask makes set
+membership, insertion, deletion, and iteration into single machine instructions, which is why
+bitmasks are the backbone of subset dynamic programming and many low-level tricks. The helpers
+below operate on `uint32_t` masks; to use 64-bit masks, replace `uint32_t` with `uint64_t`, the
+literal `1u` with `1ull`, and the `1u << 31` inside `clz()` with `1ull << 63`. The loop
+implementations below exist for education only; production code should prefer the GCC built-ins
+named in the inline comments whenever available, or on C++20 systems the `<bit>` header, whose
+generic `constexpr` equivalents (also named in the comments) are additionally well-defined at $0$.
 
 - `test_bit(x, i)` returns whether the `i`-th bit of `x` is set.
 - `set_bit(x, i)`, `clear_bit(x, i)`, and `toggle_bit(x, i)` return `x` with the `i`-th respectively
-  forced to 1, forced to 0, or flipped.
-- `lowest_set_bit(x)` returns the value of the lowest set bit of `x` (a power of two), or 0 if `x`
-  is 0. `clear_lowest_set_bit(x)` returns `x` with its lowest set bit removed.
+  forced to $1$, forced to $0$, or flipped.
+- `lowest_set_bit(x)` returns the value of the lowest set bit of `x` (a power of two), or $0$ if `x`
+  is $0$. `clear_lowest_set_bit(x)` returns `x` with its lowest set bit removed.
 - `popcount(x)` returns the number of set bits, analogous to `__builtin_popcount()` and C++20's
   `std::popcount()`.
-- `parity(x)` returns 1 if the number of set bits is odd and 0 otherwise, analogous to
+- `parity(x)` returns $1$ if the number of set bits is odd and $0$ otherwise, analogous to
   `__builtin_parity()`.
-- `ctz(x)` returns the number of trailing 0-bits (undefined for 0), analogous to `__builtin_ctz()`
+- `ctz(x)` returns the number of trailing 0-bits (undefined for $0$), analogous to `__builtin_ctz()`
   and C++20's `std::countr_zero()`.
-- `ffs(x)` returns one plus the position of the lowest 1-bit of `x`, or 0 if `x` is 0, analogous to
-  `__builtin_ffs()`.
-- `clz(x)` returns the number of leading 0-bits (undefined for 0), analogous to `__builtin_clz()`
+- `ffs(x)` returns one plus the position of the lowest 1-bit of `x`, or $0$ if `x` is $0$,
+  analogous to `__builtin_ffs()`.
+- `clz(x)` returns the number of leading 0-bits (undefined for $0$), analogous to `__builtin_clz()`
   and C++20's `std::countl_zero()`.
 - `is_pow2(x)` returns whether `x` has exactly one set bit, analogous to C++20's
   `std::has_single_bit()`.

@@ -2633,12 +2633,12 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Jacobi Symbol}
-The Jacobi symbol $(a / n)$, defined for an odd positive integer $n$, generalizes the Legendre symbol. For an odd prime $p$ the Legendre symbol $(a / p)$ is 0 when $p$ divides $a$, 1 when $a$ is a nonzero quadratic residue modulo $p$, and $-1$ when $a$ is a non-residue. The Jacobi symbol extends this to composite $n$ by multiplying the Legendre symbols of the prime factors of $n$, counted with multiplicity. It is computed without factoring $n$, using the law of quadratic reciprocity together with the supplementary rules for $-1$ and $2$, in the style of the binary GCD.
+The Jacobi symbol $(a / n)$, defined for an odd positive integer $n$, generalizes the Legendre symbol. For an odd prime $p$ the Legendre symbol $(a / p)$ is $0$ when $p$ divides $a$, $1$ when $a$ is a nonzero quadratic residue modulo $p$, and $-1$ when $a$ is a non-residue. The Jacobi symbol extends this to composite $n$ by multiplying the Legendre symbols of the prime factors of $n$, counted with multiplicity. It is computed without factoring $n$, using the law of quadratic reciprocity together with the supplementary rules for $-1$ and $2$, in the style of the binary GCD.
 
 The symbol is fully multiplicative in $a$ and in $n$. For prime $n$ it exactly decides quadratic residuosity, so it is the fast way to test whether a modular square root exists. For composite $n$, beware that $(a / n) = 1$ does not guarantee that $a$ is a quadratic residue; this asymmetry is what the Solovay-Strassen primality test exploits.
 
 \begin{compactitem}
-  \item \inlinecode{jacobi(a, n)} returns the Jacobi symbol (\inlinecode{a} / \inlinecode{n}) as one of $-1$, 0, or 1. The modulus \inlinecode{n} must be a positive odd integer; \inlinecode{a} is reduced modulo \inlinecode{n} internally and may be negative. The result is 0 exactly when \inlinecode{a} and \inlinecode{n} share a common factor.
+  \item \inlinecode{jacobi(a, n)} returns the Jacobi symbol (\inlinecode{a} / \inlinecode{n}) as one of $-1$, $0$, or $1$. The modulus \inlinecode{n} must be a positive odd integer; \inlinecode{a} is reduced modulo \inlinecode{n} internally and may be negative. The result is $0$ exactly when \inlinecode{a} and \inlinecode{n} share a common factor.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(\log a \cdot \log n)$ per call.
@@ -3489,7 +3489,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Mobius Function and Inclusion-Exclusion}
-The Mobius function $\mu(n)$ is the multiplicative function defined as 1 if $n = 1$, 0 if $n$ is divisible by the square of a prime, and $(-1)^k$ if $n$ is a product of $k$ distinct primes. It is the coefficient that appears in Mobius inversion: if $g(n) = \sum_{d \mid n} f(d)$ for all $n$, then $f(n) = \sum_{d \mid n} \mu(d) \, g(n / d)$. This formalizes the principle of inclusion-exclusion in the divisor lattice, letting one recover a summand function from its divisor sums.
+The Mobius function $\mu(n)$ is the multiplicative function defined as $1$ if $n = 1$, $0$ if $n$ is divisible by the square of a prime, and $(-1)^k$ if $n$ is a product of $k$ distinct primes. It is the coefficient that appears in Mobius inversion: if $g(n) = \sum_{d \mid n} f(d)$ for all $n$, then $f(n) = \sum_{d \mid n} \mu(d) \, g(n / d)$. This formalizes the principle of inclusion-exclusion in the divisor lattice, letting one recover a summand function from its divisor sums.
 
 Inclusion-exclusion itself counts the size of a union by alternately adding and subtracting the sizes of intersections. A canonical number-theoretic instance is counting integers in $[1, n]$ that are coprime to a modulus $m$: subtract the multiples of each prime factor of $m$, add back those counted twice, and so on. The signed terms are precisely the values of \inlinecode{mu} over the squarefree divisors of $m$, so \inlinecode{count\_coprime(n, m)} equals $\sum_{d \mid m} \mu(d) \lfloor n / d \rfloor$.
 
@@ -4694,7 +4694,7 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
 
 \begin{compactitem}
   \item \inlinecode{make\_matrix\textless{}T\textgreater{}(m, n, v)} constructs and returns an $m$ by $n$ matrix with 0-based indices (row indices [0, \inlinecode{m}) and column indices [0, \inlinecode{n})), where every value is initialized to \inlinecode{v}.
-  \item \inlinecode{identity\_matrix\textless{}T\textgreater{}(n)} returns the \inlinecode{n} by \inlinecode{n} identity matrix, that is, a matrix where each \inlinecode{a[i][j]} equals 1 if \inlinecode{i} = \inlinecode{j}, or 0 otherwise.
+  \item \inlinecode{identity\_matrix\textless{}T\textgreater{}(n)} returns the \inlinecode{n} by \inlinecode{n} identity matrix, that is, a matrix where each \inlinecode{a[i][j]} equals $1$ if \inlinecode{i} = \inlinecode{j}, or $0$ otherwise.
   \item \inlinecode{rows(a)} returns the number of rows in matrix \inlinecode{a}.
   \item \inlinecode{columns(a)} returns the number of columns in matrix \inlinecode{a}.
   \item \inlinecode{a[i][j]} may be used to access or modify the specified entry of \inlinecode{a}.
@@ -5107,7 +5107,7 @@ Converts a matrix to reduced row echelon form using Gaussian elimination to solv
 \begin{compactitem}
   \item \inlinecode{row\_reduce(a)} assigns the matrix \inlinecode{a} to its reduced row echelon form, returning a reference to the modified argument itself.
   \item \inlinecode{matrix\_rank(a)} returns the rank of matrix \inlinecode{a}, i.e. the number of nonzero rows after row reduction.
-  \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning 0 if there is one solution, $-1$ if there are zero solutions, or $-2$ if there are infinite solutions. If there is exactly one solution, then the output pointer \inlinecode{x} is populated with the solution vector of length $n$.
+  \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning $0$ if there is one solution, $-1$ if there are $0$ solutions, or $-2$ if there are infinite solutions. If there is exactly one solution, then the output pointer \inlinecode{x} is populated with the solution vector of length $n$.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(m^{2} \cdot n)$ per call to \inlinecode{row\_reduce(a)}, \inlinecode{matrix\_rank(a)}, and \inlinecode{solve\_system(a)}, where $m$ and $n$ are the number of rows and columns of \inlinecode{a}, respectively.
@@ -5450,10 +5450,10 @@ int main() {
 The LU decomposition of a matrix $a$ with row-partial pivoting is a factorization of $a$ (after some rows are possibly permuted by a permutation matrix $p$) as a product of a lower triangular matrix $l$ and an upper triangular matrix $u$. This factorization can be used to tackle many common problems in linear algebra such as solving systems of linear equations and computing determinants. An improvement on basic row reduction, LU decomposition by row-partial pivoting keeps the relative magnitude of matrix values small, thus reducing the relative error due to rounding in computed solutions.
 
 \begin{compactitem}
-  \item \inlinecode{lu\_decompose(a, \&p1col)} assigns the $m$ by $n$ matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}, returning either 0 or 1 denoting the ``sign'' of the permutation parity (0 if the number of overall row swaps performed is even, or 1 if it is odd), or $-1$ denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix \inlinecode{lu} has \inlinecode{lu[i][j]} = \inlinecode{l[i][j]} for \inlinecode{i} \textgreater{} \inlinecode{j} and \inlinecode{lu[i][j]} = \inlinecode{u[i][j]} for \inlinecode{i} $\leq$ \inlinecode{j}. Note that the algorithm always yields an atomic lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to 1, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optionally, a \inlinecode{vector\textless{}int\textgreater{}} pointer \inlinecode{p1col} may be passed to return the permutation vector \inlinecode{p1col} where \inlinecode{p1col[i]} stores the only column that is equal to 1 in row $i$ of the permutation matrix $p$ (all other columns in row $i$ of $p$ are implicitly 0). The permutation matrix $p$ corresponding to \inlinecode{p1col} satisfies $pa = lu$.
-  \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning 0 if there is one solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then the output pointer \inlinecode{x} is populated with the solution vector of length $n$.
+  \item \inlinecode{lu\_decompose(a, \&p1col)} assigns the $m$ by $n$ matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}, returning either $0$ or $1$ denoting the ``sign'' of the permutation parity ($0$ if the number of overall row swaps performed is even, or $1$ if it is odd), or $-1$ denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix \inlinecode{lu} has \inlinecode{lu[i][j]} = \inlinecode{l[i][j]} for \inlinecode{i} \textgreater{} \inlinecode{j} and \inlinecode{lu[i][j]} = \inlinecode{u[i][j]} for \inlinecode{i} $\leq$ \inlinecode{j}. Note that the algorithm always yields an atomic lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to $1$, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optionally, a \inlinecode{vector\textless{}int\textgreater{}} pointer \inlinecode{p1col} may be passed to return the permutation vector \inlinecode{p1col} where \inlinecode{p1col[i]} stores the only column that is equal to $1$ in row $i$ of the permutation matrix $p$ (all other columns in row $i$ of $p$ are implicitly $0$). The permutation matrix $p$ corresponding to \inlinecode{p1col} satisfies $pa = lu$.
+  \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning $0$ if there is one solution or $-1$ if there are $0$ or infinite solutions. If there is exactly one solution, then the output pointer \inlinecode{x} is populated with the solution vector of length $n$.
   \item \inlinecode{det(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a} using LU decomposition.
-  \item \inlinecode{invert(a)} assigns the $n$ by $n$ matrix \inlinecode{a} to its inverse (if it exists), returning 0 if the inversion was successful or $-1$ if \inlinecode{a} has no inverse.
+  \item \inlinecode{invert(a)} assigns the $n$ by $n$ matrix \inlinecode{a} to its inverse (if it exists), returning $0$ if the inversion was successful or $-1$ if \inlinecode{a} has no inverse.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -5908,7 +5908,7 @@ A sparse matrix stores only nonzero entries, which is useful when the matrix is 
   \item \inlinecode{height()} returns the number of rows.
   \item \inlinecode{width()} returns the number of columns.
   \item \inlinecode{nonzeros()} returns the number of stored nonzero entries.
-  \item \inlinecode{get(i, j)} returns the value at row \inlinecode{i}, column \inlinecode{j}, or 0 if the entry is not stored.
+  \item \inlinecode{get(i, j)} returns the value at row \inlinecode{i}, column \inlinecode{j}, or $0$ if the entry is not stored.
   \item \inlinecode{set(i, j, value)} assigns an entry. Assigning zero erases it from both maps.
   \item \inlinecode{add(i, j, delta)} adds \inlinecode{delta} to an entry. If the result becomes zero, the entry is erased.
   \item \inlinecode{row(i)} returns a map from column index to value for the nonzero entries in row \inlinecode{i}.
@@ -5919,7 +5919,7 @@ A sparse matrix stores only nonzero entries, which is useful when the matrix is 
   \item \inlinecode{row\_reduce(a, limit)} converts columns [0, \inlinecode{limit}) of \inlinecode{a} to sparse row echelon form, returning the rank found in those columns.
   \item \inlinecode{det(a)} returns the determinant of a square sparse matrix.
   \item \inlinecode{sparse\_rank(a)} returns the rank of a sparse matrix.
-  \item \inlinecode{solve\_system(a, b, \&x)} solves the system $ax = b$, returning 0 for one solution, $-1$ for no solution, or $-2$ for infinitely many solutions. When one solution exists, \inlinecode{x} is populated.
+  \item \inlinecode{solve\_system(a, b, \&x)} solves the system $ax = b$, returning $0$ for one solution, $-1$ for no solution, or $-2$ for infinitely many solutions. When one solution exists, \inlinecode{x} is populated.
 \end{compactitem}
 
 The class assumes that \inlinecode{T\{\}} is the additive zero and that \inlinecode{value == T\{\}} is a valid zero test. The elimination routines also require field-like arithmetic because they divide by pivots, so use types such as \inlinecode{double}, rational numbers, or modular integers. For floating-point matrices, replace \inlinecode{is\_zero()} with an epsilon comparison if small roundoff values should be erased.
@@ -7341,7 +7341,7 @@ Searches a finite two-player, zero-sum, perfect-information game tree using mini
 
 Alpha-beta pruning computes the same value as minimax, but avoids exploring branches that cannot affect the final answer. It is most effective when good moves are searched first.
 
-The example game is ``take 1 or 2 stones'': starting with \inlinecode{stones} stones, players alternate taking 1 or 2 stones, and the player who takes the last stone wins. The evaluation returns 1 for a win for the player to move at the root and $-1$ for a loss.
+The example game is ``take $1$ or $2$ stones'': starting with \inlinecode{stones} stones, players alternate taking $1$ or $2$ stones, and the player who takes the last stone wins. The evaluation returns $1$ for a win for the player to move at the root and $-1$ for a loss.
 
 \begin{compactitem}
   \item \inlinecode{minimax(stones, maximizing)} returns the exact game-tree value.

@@ -1670,7 +1670,7 @@ std::vector<int> longest_increasing_subsequence(It lo, It hi) {
     return {};
   }
   // tail[i] = index (into [lo, hi)) of the last element of the best known LIS of length i+1.
-  // prev[i] = index of the predecessor of element i in its LIS (or -1 if first).
+  // prev[i] = index of the predecessor of element i in its LIS (or $-1$ if first).
   std::vector<int> prev(n), tail(n);
   for (int i = 0; i < n; i++) {
     // Find the tail to extend or improve. Comparing by value through the stored indices keeps
@@ -2396,7 +2396,7 @@ The greedy algorithm sorts intervals by start time and reuses the group whose cu
 Intervals are treated as half-open ranges [\inlinecode{start}, \inlinecode{finish}), so one interval may reuse a room that another interval vacates at the same time.
 
 \begin{compactitem}
-  \item \inlinecode{partition\_intervals(intervals)} returns a vector \inlinecode{room}, where \inlinecode{room[id]} is the assigned room for each input interval given as a vector of \inlinecode{PartitionInterval} with fields \inlinecode{start}, \inlinecode{finish}, and \inlinecode{id}. The number of rooms used in the returned assignment is $1 + \max({\inlinecodemath{room[id]}})$, or 0 if there are no intervals.
+  \item \inlinecode{partition\_intervals(intervals)} returns a vector \inlinecode{room}, where \inlinecode{room[id]} is the assigned room for each input interval given as a vector of \inlinecode{PartitionInterval} with fields \inlinecode{start}, \inlinecode{finish}, and \inlinecode{id}. The number of rooms used in the returned assignment is $1 + \max({\inlinecodemath{room[id]}})$, or $0$ if there are no intervals.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting and priority queue operations.
@@ -2942,17 +2942,17 @@ int main() {
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Bit Operations and Masks}
-Integers are all fixed-size sets of bits, where the $i$-th bit (counting from the least significant bit where $i = 0$) is ``present'' when set to 1. Treating an \inlinecode{int} as a bitmask makes set membership, insertion, deletion, and iteration into single machine instructions, which is why bitmasks are the backbone of subset dynamic programming and many low-level tricks. The helpers below operate on \inlinecode{uint32\_t} masks; to use 64-bit masks, replace \inlinecode{uint32\_t} with \inlinecode{uint64\_t}, the literal \inlinecode{1u} with \inlinecode{1ull}, and the \inlinecode{1u \textless{}\textless{} 31} inside \inlinecode{clz()} with \inlinecode{1ull \textless{}\textless{} 63}. The loop implementations below exist for education only; production code should prefer the GCC built-ins named in the inline comments whenever available, or on C++20 systems the \inlinecode{\textless{}bit\textgreater{}} header, whose generic \inlinecode{constexpr} equivalents (also named in the comments) are additionally well-defined at 0.
+Integers are all fixed-size sets of bits, where the $i$-th bit (counting from the least significant bit where $i = 0$) is ``present'' when set to $1$. Treating an \inlinecode{int} as a bitmask makes set membership, insertion, deletion, and iteration into single machine instructions, which is why bitmasks are the backbone of subset dynamic programming and many low-level tricks. The helpers below operate on \inlinecode{uint32\_t} masks; to use 64-bit masks, replace \inlinecode{uint32\_t} with \inlinecode{uint64\_t}, the literal \inlinecode{1u} with \inlinecode{1ull}, and the \inlinecode{1u \textless{}\textless{} 31} inside \inlinecode{clz()} with \inlinecode{1ull \textless{}\textless{} 63}. The loop implementations below exist for education only; production code should prefer the GCC built-ins named in the inline comments whenever available, or on C++20 systems the \inlinecode{\textless{}bit\textgreater{}} header, whose generic \inlinecode{constexpr} equivalents (also named in the comments) are additionally well-defined at $0$.
 
 \begin{compactitem}
   \item \inlinecode{test\_bit(x, i)} returns whether the \inlinecode{i}-th bit of \inlinecode{x} is set.
-  \item \inlinecode{set\_bit(x, i)}, \inlinecode{clear\_bit(x, i)}, and \inlinecode{toggle\_bit(x, i)} return \inlinecode{x} with the \inlinecode{i}-th respectively forced to 1, forced to 0, or flipped.
-  \item \inlinecode{lowest\_set\_bit(x)} returns the value of the lowest set bit of \inlinecode{x} (a power of two), or 0 if \inlinecode{x} is 0. \inlinecode{clear\_lowest\_set\_bit(x)} returns \inlinecode{x} with its lowest set bit removed.
+  \item \inlinecode{set\_bit(x, i)}, \inlinecode{clear\_bit(x, i)}, and \inlinecode{toggle\_bit(x, i)} return \inlinecode{x} with the \inlinecode{i}-th respectively forced to $1$, forced to $0$, or flipped.
+  \item \inlinecode{lowest\_set\_bit(x)} returns the value of the lowest set bit of \inlinecode{x} (a power of two), or $0$ if \inlinecode{x} is $0$. \inlinecode{clear\_lowest\_set\_bit(x)} returns \inlinecode{x} with its lowest set bit removed.
   \item \inlinecode{popcount(x)} returns the number of set bits, analogous to \inlinecode{\_\_builtin\_popcount()} and C++20's \inlinecode{std::popcount()}.
-  \item \inlinecode{parity(x)} returns 1 if the number of set bits is odd and 0 otherwise, analogous to \inlinecode{\_\_builtin\_parity()}.
-  \item \inlinecode{ctz(x)} returns the number of trailing 0-bits (undefined for 0), analogous to \inlinecode{\_\_builtin\_ctz()} and C++20's \inlinecode{std::countr\_zero()}.
-  \item \inlinecode{ffs(x)} returns one plus the position of the lowest 1-bit of \inlinecode{x}, or 0 if \inlinecode{x} is 0, analogous to \inlinecode{\_\_builtin\_ffs()}.
-  \item \inlinecode{clz(x)} returns the number of leading 0-bits (undefined for 0), analogous to \inlinecode{\_\_builtin\_clz()} and C++20's \inlinecode{std::countl\_zero()}.
+  \item \inlinecode{parity(x)} returns $1$ if the number of set bits is odd and $0$ otherwise, analogous to \inlinecode{\_\_builtin\_parity()}.
+  \item \inlinecode{ctz(x)} returns the number of trailing 0-bits (undefined for $0$), analogous to \inlinecode{\_\_builtin\_ctz()} and C++20's \inlinecode{std::countr\_zero()}.
+  \item \inlinecode{ffs(x)} returns one plus the position of the lowest 1-bit of \inlinecode{x}, or $0$ if \inlinecode{x} is $0$, analogous to \inlinecode{\_\_builtin\_ffs()}.
+  \item \inlinecode{clz(x)} returns the number of leading 0-bits (undefined for $0$), analogous to \inlinecode{\_\_builtin\_clz()} and C++20's \inlinecode{std::countl\_zero()}.
   \item \inlinecode{is\_pow2(x)} returns whether \inlinecode{x} has exactly one set bit, analogous to C++20's \inlinecode{std::has\_single\_bit()}.
   \item \inlinecode{floor\_pow2(x)} returns the largest power of two that is $\leq$ \inlinecode{x} (for \inlinecode{x} $> 0$), analogous to C++20's \inlinecode{std::bit\_floor()}.
   \item \inlinecode{ceil\_pow2(x)} returns the smallest power of two that is $\geq$ \inlinecode{x} (for \inlinecode{x} $> 0$), analogous to C++20's \inlinecode{std::bit\_ceil()}.
@@ -3001,7 +3001,7 @@ int ctz(uint32_t x) {  // __builtin_ctz(x); undefined when x == 0. std::countr_z
   return count;
 }
 
-int ffs(uint32_t x) {  // __builtin_ffs(x); returns 0 when x == 0.
+int ffs(uint32_t x) {  // __builtin_ffs(x); returns $0$ when x == 0.
   return x == 0 ? 0 : ctz(x) + 1;
 }
 

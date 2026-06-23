@@ -11,12 +11,12 @@ e.g. integer endpoints with a floating-point output point.
 calculations are exact when `Pt` has integer coordinates.
 
 - `line_intersection(a1, b1, c1, a2, b2, c2, &p)` intersects lines $a_1 x + b_1 y + c_1 = 0$ and
-  $a_2 x + b_2 y + c_2 = 0$, returning $-1$ (parallel), 0 (one point, stored into `p`), or 1
+  $a_2 x + b_2 y + c_2 = 0$, returning $-1$ (parallel), $0$ (one point, stored into `p`), or $1$
   (identical).
 - `line_intersection(p1, p2, p3, p4, &p)` intersects the infinite lines through `p1`-`p2` and
-  `p3`-`p4`, returning $-1$ (parallel), 0 (one point, stored into `p`), or 1 (identical).
+  `p3`-`p4`, returning $-1$ (parallel), $0$ (one point, stored into `p`), or $1$ (identical).
 - `seg_intersection(a, b, c, d, &p, &q, TOUCH_IS_INTERSECT)` intersects segments `a`-`b` and
-  `c`-`d`, returning $-1$ (none), 0 (one point), or 1 (overlapping segment). The
+  `c`-`d`, returning $-1$ (none), $0$ (one point), or $1$ (overlapping segment). The
   `TOUCH_IS_INTERSECT` flag (default `true`) controls whether segments that meet only at an
   endpoint count as intersecting. If the intersection is a point (and `p` is not `nullptr`), it
   will be stored into `p`. If the intersection is an overlapping segment (and `p` and `q` are not

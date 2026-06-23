@@ -16,7 +16,7 @@ that another interval vacates at the same time.
 
 - `partition_intervals(intervals)` returns a vector `room`, where `room[id]` is the assigned room
   for each input interval given as a vector of `PartitionInterval` with fields `start`, `finish`,
-  and `id`. The number of rooms used in the returned assignment is $1 + \max(`room[id]`)$, or 0 if
+  and `id`. The number of rooms used in the returned assignment is $1 + \max(`room[id]`)$, or $0$ if
   there are no intervals.
 
 Time Complexity:

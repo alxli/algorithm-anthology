@@ -1,8 +1,8 @@
 /*
 
 The Jacobi symbol $(a / n)$, defined for an odd positive integer $n$, generalizes the Legendre
-symbol. For an odd prime $p$ the Legendre symbol $(a / p)$ is 0 when $p$ divides $a$, 1 when $a$ is
-a nonzero quadratic residue modulo $p$, and $-1$ when $a$ is a non-residue. The Jacobi symbol
+symbol. For an odd prime $p$ the Legendre symbol $(a / p)$ is $0$ when $p$ divides $a$, $1$ when
+$a$ is a nonzero quadratic residue modulo $p$, and $-1$ when $a$ is a non-residue. The Jacobi symbol
 extends this to composite $n$ by multiplying the Legendre symbols of the prime factors of $n$,
 counted with multiplicity. It is computed without factoring $n$, using the law of quadratic
 reciprocity together with the supplementary rules for $-1$ and $2$, in the style of the binary GCD.
@@ -12,9 +12,9 @@ residuosity, so it is the fast way to test whether a modular square root exists.
 beware that $(a / n) = 1$ does not guarantee that $a$ is a quadratic residue; this asymmetry is what
 the Solovay-Strassen primality test exploits.
 
-- `jacobi(a, n)` returns the Jacobi symbol (`a` / `n`) as one of $-1$, 0, or 1. The modulus `n` must
-  be a positive odd integer; `a` is reduced modulo `n` internally and may be negative. The result is
-  0 exactly when `a` and `n` share a common factor.
+- `jacobi(a, n)` returns the Jacobi symbol (`a` / `n`) as one of $-1$, $0$, or $1$. The modulus
+  `n` must be a positive odd integer; `a` is reduced modulo `n` internally and may be negative. The
+  result is $0$ exactly when `a` and `n` share a common factor.
 
 Time Complexity:
 - O(log a * log n) per call.

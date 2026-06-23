@@ -12,8 +12,8 @@ systems of linear equations, LU decomposition with row partial pivoting should b
 - `matrix_rank(a)` returns the rank of matrix `a`, i.e. the number of nonzero rows after row
   reduction.
 - `solve_system(a, b, &x)` solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix
-  `a` of real values, and a length $m$ vector `b`, returning 0 if there is one solution, $-1$
-  if there are zero solutions, or $-2$ if there are infinite solutions. If there is exactly one
+  `a` of real values, and a length $m$ vector `b`, returning $0$ if there is one solution, $-1$ if
+  there are zero solutions, or $-2$ if there are infinite solutions. If there is exactly one
   solution, then the output pointer `x` is populated with the solution vector of length $n$.
 
 Time Complexity:

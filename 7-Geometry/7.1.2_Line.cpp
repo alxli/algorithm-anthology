@@ -1,10 +1,10 @@
 /*
 
-A straight line in two dimensions, templated on the coordinate type `T` (default `double`). The line
-$ax + by + c = 0$ is canonicalized by default. With `EXACT = true`, coefficients are divided by
-their Euclidean GCD and given a fixed sign; this supports built-in integers, `BigInt`, and
-`Rational`. With `EXACT = false`, coefficients are scaled to $b = 1$ when $b$ is nonzero, or to
-$a = 1$ for vertical lines; this supports floating-point and `Modular` coefficients. Thus
+A straight line in two dimensions, templated on the coordinate type `T`. The line $ax + by + c = 0$
+is canonicalized by default. With `EXACT = true`, coefficients are divided by their Euclidean GCD
+and given a fixed sign; this supports built-in integer types as well as `BigInt` and `Rational` from
+previous chapters. With `EXACT = false`, coefficients are scaled to $b = 1$ when $b$ is nonzero, or
+to $a = 1$ for vertical lines; this supports floating-point and `Modular` coefficients. Thus
 proportional valid coefficient vectors have the same canonical representation, up to floating-point
 rounding.
 

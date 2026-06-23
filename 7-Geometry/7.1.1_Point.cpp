@@ -1,9 +1,8 @@
 /*
 
-A 2D point class template supporting exact equality and lexicographic ordering. The coordinate type
-`T` defaults to `double`. Integer types (e.g. `int`) fully support all exact operations. Metric
-operations (`norm`, `arg`, `normalize`, `rotateCW/CCW`, `reflect` across a line) return coordinates
-of type `fp_t`, which is `T` when `T` is floating-point and `double` otherwise.
+A 2D point class templated on the coordinate type `T`. Integer types support some exact operations,
+while metric operations (`norm`, `arg`, `normalize`, `rotateCW/CCW`, `reflect` across a line) return
+coordinates of type `fp_t`, which is `T` when `T` is floating-point and `double` otherwise.
 
 Exact operations (return `TPoint<T>` or `T`, no precision lost for integers) include: element-wise
 arithmetic, `dot()`, `cross()`, `sqnorm()`, cardinal rotations, `reflect(point)`, equality, and

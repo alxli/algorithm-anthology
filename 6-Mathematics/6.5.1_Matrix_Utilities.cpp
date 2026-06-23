@@ -5,7 +5,7 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
 - `make_matrix<T>(m, n, v)` constructs and returns an $m$ by $n$ matrix with 0-based indices (row
   indices [0, `m`) and column indices [0, `n`)), where every value is initialized to `v`.
 - `identity_matrix<T>(n)` returns the `n` by `n` identity matrix, that is, a matrix where each
-  `a[i][j]` equals 1 if `i` = `j`, or 0 otherwise.
+  `a[i][j]` equals $1$ if `i` = `j`, or $0$ otherwise.
 - `rows(a)` returns the number of rows in matrix `a`.
 - `columns(a)` returns the number of columns in matrix `a`.
 - `a[i][j]` may be used to access or modify the specified entry of `a`.

@@ -4,7 +4,7 @@
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Point}
-A 2D point class template supporting exact equality and lexicographic ordering. The coordinate type \inlinecode{T} defaults to \inlinecode{double}. Integer types (e.g. \inlinecode{int}) fully support all exact operations. Metric operations (\inlinecode{norm}, \inlinecode{arg}, \inlinecode{normalize}, \inlinecode{rotateCW/CCW}, \inlinecode{reflect} across a line) return coordinates of type \inlinecode{fp\_t}, which is \inlinecode{T} when \inlinecode{T} is floating-point and \inlinecode{double} otherwise.
+A 2D point class templated on the coordinate type \inlinecode{T}. Integer types support some exact operations, while metric operations (\inlinecode{norm}, \inlinecode{arg}, \inlinecode{normalize}, \inlinecode{rotateCW/CCW}, \inlinecode{reflect} across a line) return coordinates of type \inlinecode{fp\_t}, which is \inlinecode{T} when \inlinecode{T} is floating-point and \inlinecode{double} otherwise.
 
 Exact operations (return \inlinecode{TPoint\textless{}T\textgreater{}} or \inlinecode{T}, no precision lost for integers) include: element-wise arithmetic, \inlinecode{dot()}, \inlinecode{cross()}, \inlinecode{sqnorm()}, cardinal rotations, \inlinecode{reflect(point)}, equality, and lexicographic ordering. \inlinecode{operator==} and \inlinecode{operator\textless{}} are exact for every coordinate type, as required by standard algorithms and containers. \inlinecode{EQ(p, q)} compares floating-point point coordinates using \inlinecode{EPS} and remains exact for other coordinate types.
 
@@ -291,7 +291,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Line}
-A straight line in two dimensions, templated on the coordinate type \inlinecode{T} (default \inlinecode{double}). The line $ax + by + c = 0$ is canonicalized by default. With \inlinecode{EXACT = true}, coefficients are divided by their Euclidean GCD and given a fixed sign; this supports built-in integers, \inlinecode{BigInt}, and \inlinecode{Rational}. With \inlinecode{EXACT = false}, coefficients are scaled to $b = 1$ when $b$ is nonzero, or to $a = 1$ for vertical lines; this supports floating-point and \inlinecode{Modular} coefficients. Thus proportional valid coefficient vectors have the same canonical representation, up to floating-point rounding.
+A straight line in two dimensions, templated on the coordinate type \inlinecode{T}. The line $ax + by + c = 0$ is canonicalized by default. With \inlinecode{EXACT = true}, coefficients are divided by their Euclidean GCD and given a fixed sign; this supports built-in integer types as well as \inlinecode{BigInt} and \inlinecode{Rational} from previous chapters. With \inlinecode{EXACT = false}, coefficients are scaled to $b = 1$ when $b$ is nonzero, or to $a = 1$ for vertical lines; this supports floating-point and \inlinecode{Modular} coefficients. Thus proportional valid coefficient vectors have the same canonical representation, up to floating-point rounding.
 
 Set the template flag \inlinecode{CANONICALIZE} to \inlinecode{false} to preserve the supplied coefficients. \inlinecode{EXACT} defaults to true only for built-in integral types; set it explicitly for custom types such as \inlinecode{BigInt} and \inlinecode{Rational}. The internal Euclidean GCD only requires \inlinecode{\%}, comparisons, and basic arithmetic. Calling \inlinecode{canonicalized()} returns a canonical copy. \inlinecode{operator==} always compares stored coefficients exactly, while \inlinecode{EQ(l1, l2)} canonicalizes raw lines if necessary and uses \inlinecode{EPS} for floating-point coefficients.
 
@@ -527,7 +527,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Circle}
-A circle in two dimensions with exact stored-value equality and epsilon-aware geometric predicates. The circle centered at $(h, k)$ is represented by the relation $(x - h)^2 + (y - k)^2 = r^2$, where the radius $r$ is normalized to a nonnegative number.
+A circle in two dimensions with epsilon-aware operations. The circle centered at $(h, k)$ is represented by the relation $(x - h)^2 + (y - k)^2 = r^2$, where the radius $r$ is normalized to a nonnegative number.
 
 This implementation stores and computes circle parameters in \inlinecode{double}. Point-accepting constructors and predicates are templated on the point type \inlinecode{Pt} and only read \inlinecode{.x}/\inlinecode{.y}, so they accept \inlinecode{Point}/\inlinecode{PointD}/\inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields.
 
@@ -543,8 +543,10 @@ This implementation stores and computes circle parameters in \inlinecode{double}
   \item \inlinecode{contains(p)} returns whether point \inlinecode{p} lies inside or on the circle.
   \item \inlinecode{on\_edge(p)} returns whether point \inlinecode{p} lies on the circle boundary.
   \item \inlinecode{incircle(a, b, c)} returns the circle inscribed in triangle \inlinecode{abc}.
-  \item \inlinecode{in\_circumcircle(a, b, c, d)} returns 1 if \inlinecode{d} lies strictly inside the circle through \inlinecode{a}, \inlinecode{b}, and \inlinecode{c}, 0 if it lies on the circle, or $-1$ if it lies outside. This has exact reasoning for integral points by evaluating the determinant directly without constructing a \inlinecode{Circle} or taking square roots. For integer inputs, the sign test is exact provided the chosen intermediate type does not overflow. The determinant has degree four in the coordinate magnitude, so use a wider type for large integer coordinates.
+  \item \inlinecode{in\_circumcircle(a, b, c, d)} returns $1$ if \inlinecode{d} lies strictly inside the circle through \inlinecode{a}, \inlinecode{b}, and \inlinecode{c}, $0$ if it lies on the circle, or $-1$ if it lies outside. This has exact reasoning for integral points by evaluating the determinant directly without constructing a \inlinecode{Circle} or taking square roots. For integer inputs, the sign test is exact provided the chosen intermediate type does not overflow.
 \end{compactitem}
+
+The floating-point constructors and predicates use an absolute tolerance \inlinecode{EPS}. The determinant in \inlinecode{in\_circumcircle()} has degree four in the coordinate magnitude, so use a wider intermediate type for large integer coordinates.
 
 \textbf{Time Complexity}: $O(1)$ per call to the constructors and all other operations.
 
@@ -597,7 +599,6 @@ struct Circle {
   template<typename Pt, typename = if_point<Pt>>
   Circle(const Pt &o, double r) : h(o.x), k(o.y), r(fabs(r)) {}
 
-  // Circle with the line segment ab as a diameter.
   template<typename Pt, typename = if_point<Pt>>
   Circle(const Pt &a, const Pt &b) {
     h = (a.x + b.x) / 2.0;
@@ -605,35 +606,22 @@ struct Circle {
     r = hypot(a.x - h, a.y - k);
   }
 
-  // Circumcircle of three points.
   template<typename Pt, typename = if_point<Pt>>
   Circle(const Pt &a, const Pt &b, const Pt &c) {
-    double an =
-        static_cast<double>(b.x - c.x) * (b.x - c.x) + static_cast<double>(b.y - c.y) * (b.y - c.y);
-    double bn =
-        static_cast<double>(a.x - c.x) * (a.x - c.x) + static_cast<double>(a.y - c.y) * (a.y - c.y);
-    double cn =
-        static_cast<double>(a.x - b.x) * (a.x - b.x) + static_cast<double>(a.y - b.y) * (a.y - b.y);
-    double wa = an * (bn + cn - an);
-    double wb = bn * (an + cn - bn);
-    double wc = cn * (an + bn - cn);
-    double w = wa + wb + wc;
-    if (EQ(w, 0)) {
+    double ax = a.x, ay = a.y, bx = b.x, by = b.y, cx = c.x, cy = c.y;
+    double asq = ax * ax + ay * ay, bsq = bx * bx + by * by, csq = cx * cx + cy * cy;
+    double d = 2.0 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));
+    if (EQ(d, 0)) {
       throw std::runtime_error("No circumcircle from collinear points.");
     }
-    h = (wa * a.x + wb * b.x + wc * c.x) / w;
-    k = (wa * a.y + wb * b.y + wc * c.y) / w;
-    r = hypot(a.x - h, a.y - k);
+    h = (asq * (by - cy) + bsq * (cy - ay) + csq * (ay - by)) / d;
+    k = (asq * (cx - bx) + bsq * (ax - cx) + csq * (bx - ax)) / d;
+    r = hypot(ax - h, ay - k);
   }
 
-  // Circle of radius r that contains points a and b. In the general case, there will be two
-  // possible circles and only one is chosen arbitrarily. However if the diameter is equal to
-  // dist(a, b) = 2*r, then there is only one possible center. If points a and b are identical, then
-  // there are infinite circles. If the points are too far away relative to the radius, then there
-  // is no possible Circle. In the latter two cases, an exception is thrown.
   template<typename Pt, typename = if_point<Pt>>
   Circle(const Pt &a, const Pt &b, double r) : r(fabs(r)) {
-    if (LE(r, 0) && EQ(a.x, b.x) && EQ(a.y, b.y)) {  // Zero-radius circle.
+    if (EQ(this->r, 0) && EQ(a.x, b.x) && EQ(a.y, b.y)) {
       h = a.x;
       k = a.y;
       return;
@@ -642,10 +630,11 @@ struct Circle {
     if (EQ(d, 0)) {
       throw std::runtime_error("Identical points, infinite circles.");
     }
-    if (LT(r * 2.0, d)) {
+    if (LT(this->r * 2.0, d)) {
       throw std::runtime_error("Points too far away to make Circle.");
     }
-    double v = sqrt(r * r - d * d / 4.0) / d;
+    double z = this->r * this->r - d * d / 4.0;
+    double v = sqrt(z < 0 ? 0 : z) / d;
     double mx = (a.x + b.x) / 2.0, my = (a.y + b.y) / 2.0;
     h = mx + v * (a.y - b.y);
     k = my + v * (b.x - a.x);
@@ -661,16 +650,12 @@ struct Circle {
 
   template<typename Pt>
   bool contains(const Pt &p) const {
-    return LE(
-        static_cast<double>(p.x - h) * (p.x - h) + static_cast<double>(p.y - k) * (p.y - k), r * r
-    );
+    return LE(hypot(p.x - h, p.y - k), r);
   }
 
   template<typename Pt>
   bool on_edge(const Pt &p) const {
-    return EQ(
-        static_cast<double>(p.x - h) * (p.x - h) + static_cast<double>(p.y - k) * (p.y - k), r * r
-    );
+    return EQ(hypot(p.x - h, p.y - k), r);
   }
 
   friend std::ostream &operator<<(std::ostream &out, const Circle &c) {
@@ -680,7 +665,6 @@ struct Circle {
   }
 };
 
-// Returns the Circle inscribed inside the triangle abc.
 template<typename Pt>
 Circle incircle(const Pt &a, const Pt &b, const Pt &c) {
   double al = hypot(b.x - c.x, b.y - c.y);
@@ -695,12 +679,6 @@ Circle incircle(const Pt &a, const Pt &b, const Pt &c) {
                     );
 }
 
-// Returns +1 if point d lies strictly inside the circle through a, b, c, 0 if d lies exactly on
-// it, or -1 if d is outside. This uses a determinant (no square root), so it is exact for integer
-// coordinates: built-in integral inputs are widened to `int64_t`, custom exact types retain their
-// coordinate type, and floating-point inputs use `long double`. Watch overflow for large
-// fixed-width coordinates, since the determinant is degree four. The points a, b, c must not be
-// collinear; the result does not depend on their orientation.
 template<typename Pt>
 int in_circumcircle(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   using T = decltype(a.x + a.x);
@@ -715,7 +693,7 @@ int in_circumcircle(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
           (cdx * cdx + cdy * cdy) * (adx * bdy - bdx * ady);
   W orient = ((W)b.x - a.x) * ((W)c.y - a.y) - ((W)b.y - a.y) * ((W)c.x - a.x);
   W val = W(0) < orient ? det : -det;
-  return W(0) < val ? 1 : (val < W(0) ? -1 : 0);
+  return EQ(val, W(0)) ? 0 : (W(0) < val ? 1 : -1);
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -738,6 +716,7 @@ int main() {
   assert(EQ(c, Circle(Point(-2, 5), sqrt(10))));
   assert(EQ(c, Circle(Point(1, 6), Point(-5, 4))));
   assert(EQ(c, Circle(Point(-3, 2), Point(-3, 8), Point(-1, 8))));
+  assert(EQ(Circle(Point(0, 0), Point(0, 2), -1), Circle(0, 1, 1)));
   assert(EQ(c, incircle(Point(-12, 5), Point(3, 0), Point(0, 9))));
   assert(c.contains(Point(-2, 8)) && !c.contains(Point(-2, 9)));
   assert(c.on_edge(Point(-1, 2)) && !c.on_edge(Point(-1.01, 2)));
@@ -884,7 +863,7 @@ Common axis-aligned rectangle calculations in two dimensions. The functions are 
 \begin{compactitem}
   \item \inlinecode{point\_in\_rectangle(p, v, w, h, EDGE\_IS\_INSIDE)} returns whether point \inlinecode{p} lies inside the axis-aligned rectangle with corner \inlinecode{v}, width \inlinecode{w}, and height \inlinecode{h}. Negative widths and heights are supported. The \inlinecode{EDGE\_IS\_INSIDE} flag (default \inlinecode{true}) controls whether boundary points count.
   \item \inlinecode{point\_in\_rectangle(p, a, b, EDGE\_IS\_INSIDE)} returns whether point \inlinecode{p} lies inside the axis-aligned rectangle with opposite corners \inlinecode{a} and \inlinecode{b}.
-  \item \inlinecode{rectangle\_intersection(a1, b1, a2, b2, \&p, \&q, EDGE\_IS\_INSIDE)} computes the intersection of two axis-aligned rectangles, where \inlinecode{a1}/\inlinecode{b1} and \inlinecode{a2}/\inlinecode{b2} are opposite-corner pairs. Returns -1 if the rectangles are disjoint, 0 if they partially intersect, 1 if the first rectangle is completely inside the second, and 2 if the second rectangle is completely inside the first. If an intersection exists, its lower-left and upper-right corners are stored in \inlinecode{p} and \inlinecode{q} when those pointers are non-null. The \inlinecode{EDGE\_IS\_INSIDE} flag (default \inlinecode{true}) controls whether boundary-only contact counts as intersecting.
+  \item \inlinecode{rectangle\_intersection(a1, b1, a2, b2, \&p, \&q, EDGE\_IS\_INSIDE)} computes the intersection of two axis-aligned rectangles, where \inlinecode{a1}/\inlinecode{b1} and \inlinecode{a2}/\inlinecode{b2} are opposite-corner pairs. Returns $-1$ if the rectangles are disjoint, $0$ if they partially intersect, $1$ if the first rectangle is completely inside the second, and $2$ if the second rectangle is completely inside the first. If an intersection exists, its lower-left and upper-right corners are stored in \inlinecode{p} and \inlinecode{q} when those pointers are non-null. The \inlinecode{EDGE\_IS\_INSIDE} flag (default \inlinecode{true}) controls whether boundary-only contact counts as intersecting.
 \end{compactitem}
 
 For integer-coordinate inputs, comparisons are exact as long as intermediate coordinate additions, subtractions, and min/max values do not overflow. Floating-point inputs use EPS-based comparisons.
@@ -1026,7 +1005,7 @@ Angle calculations in two dimensions. All operations are inherently floating-poi
   \item \inlinecode{angle\_between(a, b)} returns the angle in radians of segment from point \inlinecode{a} to point \inlinecode{b}, relative counterclockwise to the positive $x$-axis.
   \item \inlinecode{angle\_between(a1, b1, a2, b2)} returns the smaller angle in radians between two lines $a_1 x + b_1 y + c_1 = 0$ and $a_2 x + b_2 y + c_2 = 0$, limited to $[0, \pi / 2]$.
   \item \inlinecode{cross(a, b, o)} returns the magnitude (Euclidean norm) of the three-dimensional cross product between points \inlinecode{a} and \inlinecode{b} where the $z$-component is implicitly zero and the origin is implicitly shifted to point \inlinecode{o}. This operation is also equal to double the signed area of the triangle from these three points.
-  \item \inlinecode{turn(a, o, b)} returns 1 if the path \inlinecode{a} $\to$ \inlinecode{o} $\to$ \inlinecode{b} forms a left turn on the plane, 0 if the path forms a straight line segment, or $-1$ if it forms a right turn.
+  \item \inlinecode{turn(a, o, b)} returns $1$ if the path \inlinecode{a} $\to$ \inlinecode{o} $\to$ \inlinecode{b} forms a left turn on the plane, $0$ if the path forms a straight line segment, or $-1$ if it forms a right turn.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(1)$ for all operations.
@@ -1154,7 +1133,7 @@ Distance calculations in two dimensions for points, lines, and line segments. Th
   \item \inlinecode{line\_dist(p, a, b)} returns the distance from point \inlinecode{p} to the infinite line containing points \inlinecode{a} and \inlinecode{b}. If \inlinecode{a} = \inlinecode{b}, the distance from \inlinecode{p} to \inlinecode{a} is returned.
   \item \inlinecode{line\_dist(a1, b1, c1, a2, b2, c2)} returns the distance between two lines.
   \item \inlinecode{seg\_dist(p, a, b)} returns the distance from point \inlinecode{p} to the line segment \inlinecode{a}-\inlinecode{b}.
-  \item \inlinecode{seg\_dist(a, b, c, d)} returns the minimum distance between line segments \inlinecode{a}-\inlinecode{b} and \inlinecode{c}-\inlinecode{d}, or 0 if the segments touch or intersect.
+  \item \inlinecode{seg\_dist(a, b, c, d)} returns the minimum distance between line segments \inlinecode{a}-\inlinecode{b} and \inlinecode{c}-\inlinecode{d}, or $0$ if the segments touch or intersect.
   \item \inlinecode{closest\_point(a, b, p)} returns the point on segment \inlinecode{a}-\inlinecode{b} closest to point \inlinecode{p}.
 \end{compactitem}
 
@@ -1346,9 +1325,9 @@ Intersection calculations in two dimensions for straight lines and line segments
 \inlinecode{seg\_intersection()} has a detection-only overload (called without the output pointers) whose calculations are exact when \inlinecode{Pt} has integer coordinates.
 
 \begin{compactitem}
-  \item \inlinecode{line\_intersection(a1, b1, c1, a2, b2, c2, \&p)} intersects lines $a_1 x + b_1 y + c_1 = 0$ and $a_2 x + b_2 y + c_2 = 0$, returning $-1$ (parallel), 0 (one point, stored into \inlinecode{p}), or 1 (identical).
-  \item \inlinecode{line\_intersection(p1, p2, p3, p4, \&p)} intersects the infinite lines through \inlinecode{p1}-\inlinecode{p2} and \inlinecode{p3}-\inlinecode{p4}, returning $-1$ (parallel), 0 (one point, stored into \inlinecode{p}), or 1 (identical).
-  \item \inlinecode{seg\_intersection(a, b, c, d, \&p, \&q, TOUCH\_IS\_INTERSECT)} intersects segments \inlinecode{a}-\inlinecode{b} and \inlinecode{c}-\inlinecode{d}, returning $-1$ (none), 0 (one point), or 1 (overlapping segment). The \inlinecode{TOUCH\_IS\_INTERSECT} flag (default \inlinecode{true}) controls whether segments that meet only at an endpoint count as intersecting. If the intersection is a point (and \inlinecode{p} is not \inlinecode{nullptr}), it will be stored into \inlinecode{p}. If the intersection is an overlapping segment (and \inlinecode{p} and \inlinecode{q} are not \inlinecode{nullptr}) then their endpoints will be stored into pointers \inlinecode{p} and \inlinecode{q}, which must reference a floating-point point type.
+  \item \inlinecode{line\_intersection(a1, b1, c1, a2, b2, c2, \&p)} intersects lines $a_1 x + b_1 y + c_1 = 0$ and $a_2 x + b_2 y + c_2 = 0$, returning $-1$ (parallel), $0$ (one point, stored into \inlinecode{p}), or $1$ (identical).
+  \item \inlinecode{line\_intersection(p1, p2, p3, p4, \&p)} intersects the infinite lines through \inlinecode{p1}-\inlinecode{p2} and \inlinecode{p3}-\inlinecode{p4}, returning $-1$ (parallel), $0$ (one point, stored into \inlinecode{p}), or $1$ (identical).
+  \item \inlinecode{seg\_intersection(a, b, c, d, \&p, \&q, TOUCH\_IS\_INTERSECT)} intersects segments \inlinecode{a}-\inlinecode{b} and \inlinecode{c}-\inlinecode{d}, returning $-1$ (none), $0$ (one point), or $1$ (overlapping segment). The \inlinecode{TOUCH\_IS\_INTERSECT} flag (default \inlinecode{true}) controls whether segments that meet only at an endpoint count as intersecting. If the intersection is a point (and \inlinecode{p} is not \inlinecode{nullptr}), it will be stored into \inlinecode{p}. If the intersection is an overlapping segment (and \inlinecode{p} and \inlinecode{q} are not \inlinecode{nullptr}) then their endpoints will be stored into pointers \inlinecode{p} and \inlinecode{q}, which must reference a floating-point point type.
   \item \inlinecode{seg\_intersection(a, b, c, d, TOUCH\_IS\_INTERSECT)} is a simplified, detection-only version of the above. Both versions are exact for detection if the input point type is integral.
   \item \inlinecode{closest\_point(a, b, c, p)} returns the closest point on line $ax + by + c = 0$ to point \inlinecode{p}.
 \end{compactitem}
@@ -1626,9 +1605,9 @@ int main() {
 Circle tangent and intersection calculations in two dimensions. Such calculations are floating-point by nature, so this section mostly computes in \inlinecode{double}. The input point \inlinecode{p} to \inlinecode{tangent()} can be any type with numeric \inlinecode{.x} and \inlinecode{.y} fields, and intersection point outputs are written through a caller-supplied point type.
 
 \begin{compactitem}
-  \item \inlinecode{tangent(c, p, \&l1, \&l2)} determines the line(s) tangent to circle \inlinecode{c} that pass through point \inlinecode{p}, returning $-1$ if there is no tangent line because \inlinecode{p} is strictly inside \inlinecode{c}, 0 if there is exactly one tangent line because \inlinecode{p} is on the boundary of \inlinecode{c} (in which case the line will be stored into pointer \inlinecode{l1} if it's not \inlinecode{nullptr}), or 1 if there are two tangent lines because \inlinecode{p} is strictly outside of \inlinecode{c} (in which case the lines will be stored into pointers \inlinecode{l1} and \inlinecode{l2} if they are not \inlinecode{nullptr}).
-  \item \inlinecode{intersection(c, l, \&p, \&q)} determines the intersection between the circle \inlinecode{c} and line \inlinecode{l}, returning $-1$ if there is no intersection, 0 if the line has one intersection point because the line is tangent (in which case it will be stored into pointer \inlinecode{p} if it's not \inlinecode{nullptr}), or 1 if there are two intersection points because the line crosses through the circle (in which case they will be stored into pointers \inlinecode{p} and \inlinecode{q} if they are not \inlinecode{nullptr}).
-  \item \inlinecode{intersection(c1, c2, \&p, \&q)} determines the intersection points between two circles \inlinecode{c1} and \inlinecode{c2}, returning $-2$ if circle \inlinecode{c2} completely encloses circle \inlinecode{c1}, $-1$ if circle \inlinecode{c1} completely encloses circle \inlinecode{c2}, 0 if the circles are completely disjoint, 1 if the circles are tangent with one intersection (stored in \inlinecode{p} if it's not \inlinecode{nullptr}), 2 if the circles intersect at two points (stored in \inlinecode{p} and \inlinecode{q} if they are not \inlinecode{nullptr}), 3 if the circles are equal and intersect at infinite points.
+  \item \inlinecode{tangent(c, p, \&l1, \&l2)} determines the line(s) tangent to circle \inlinecode{c} that pass through point \inlinecode{p}, returning $-1$ if there is no tangent line because \inlinecode{p} is strictly inside \inlinecode{c}, $0$ if there is exactly one tangent line because \inlinecode{p} is on the boundary of \inlinecode{c} (in which case the line will be stored into pointer \inlinecode{l1} if it's not \inlinecode{nullptr}), or $1$ if there are two tangent lines because \inlinecode{p} is strictly outside of \inlinecode{c} (in which case the lines will be stored into pointers \inlinecode{l1} and \inlinecode{l2} if they are not \inlinecode{nullptr}).
+  \item \inlinecode{intersection(c, l, \&p, \&q)} determines the intersection between the circle \inlinecode{c} and line \inlinecode{l}, returning $-1$ if there is no intersection, $0$ if the line has one intersection point because the line is tangent (in which case it will be stored into pointer \inlinecode{p} if it's not \inlinecode{nullptr}), or $1$ if there are two intersection points because the line crosses through the circle (in which case they will be stored into pointers \inlinecode{p} and \inlinecode{q} if they are not \inlinecode{nullptr}).
+  \item \inlinecode{intersection(c1, c2, \&p, \&q)} determines the intersection points between two circles \inlinecode{c1} and \inlinecode{c2}, returning $-2$ if circle \inlinecode{c2} completely encloses circle \inlinecode{c1}, $-1$ if circle \inlinecode{c1} completely encloses circle \inlinecode{c2}, $0$ if the circles are completely disjoint, $1$ if the circles are tangent with one intersection (stored in \inlinecode{p} if it's not \inlinecode{nullptr}), $2$ if the circles intersect at two points (stored in \inlinecode{p} and \inlinecode{q} if they are not \inlinecode{nullptr}), $3$ if the circles are equal and intersect at infinite points.
   \item \inlinecode{intersection\_area(c1, c2)} returns the intersection area of circles \inlinecode{c1} and \inlinecode{c2}.
 \end{compactitem}
 
@@ -1868,7 +1847,7 @@ int main() {
 Given two circles, compute their common tangent lines by returning the two points of tangency on each circle. External tangents touch both circles on the same side of the line joining their centers; internal tangents cross between the circles. A point can be treated as a zero-radius circle, so this also covers tangents from a point to a circle.
 
 \begin{compactitem}
-  \item \inlinecode{circle\_tangents(c1, r1, c2, r2, INTERNAL)} returns 0, 1, or 2 tangent point pairs. Each pair \inlinecode{\{p, q\}} means the tangent line touches the first circle at \inlinecode{p} and the second circle at \inlinecode{q}. Set \inlinecode{INTERNAL = true} to get internal tangents; otherwise external tangents are returned.
+  \item \inlinecode{circle\_tangents(c1, r1, c2, r2, INTERNAL)} returns $0$, $1$, or $2$ tangent point pairs. Each pair \inlinecode{\{p, q\}} means the tangent line touches the first circle at \inlinecode{p} and the second circle at \inlinecode{q}. Set \inlinecode{INTERNAL = true} to get internal tangents; otherwise external tangents are returned.
   \item \inlinecode{all\_circle\_tangents(c1, r1, c2, r2)} returns all external and internal tangents.
 \end{compactitem}
 
@@ -3659,7 +3638,8 @@ bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
 }
 
 // Specialized version of seg_intersection() from 7.2.3, simplified for TOUCH_IS_INTERSECT = true,
-// returning -1 for no intersection, 0 for one intersection point, 1 for positive length overlap.
+// returning $-1$ for no intersection, $0$ for one intersection point, or $1$ for positive length
+// overlap.
 template<typename Pt>
 int seg_intersection1(
     const Pt &a, const Pt &b, const Pt &c, const Pt &d, double *outx, double *outy
