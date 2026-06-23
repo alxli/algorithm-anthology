@@ -11,7 +11,7 @@ edge at each step.
 
 - `prim_mst()` populates `mst` with the edge IDs in the minimum spanning tree (returning the total
   MST weight) for a global, bidirectionally pre-populated adjacency list `adj` which must consist of
-  nodes numbered [0, `n`), where `n` is `adj.size()`. Edges are stored as (`neighbor`, `weight`,
+  nodes numbered [$0$, `n`), where `n` is `adj.size()`. Edges are stored as (`neighbor`, `weight`,
   `edge_id`).
 
 The priority queue stores candidate edges as (`weight`, `from`, `to`, `edge_id`) and uses

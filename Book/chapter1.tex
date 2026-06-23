@@ -1237,7 +1237,7 @@ int main() {
   vector<int> b{1, 2, 1, 3, 4, 3, 5};
   auto [longest, longest_lo, longest_hi] = longest_at_most_k_distinct(b, 2);
   assert(longest == 3);
-  assert(longest_lo == 0 && longest_hi == 2);  // [1, 2, 1].
+  assert(longest_lo == 0 && longest_hi == 2);  // [$1$, 2, 1].
 
   vector<int> e{1, 3, -1, -3, 5, 3, 6, 7};
   assert((sliding_window_extrema(e, 3) == vector<int>{-1, -3, -3, -3, 3, 3}));
@@ -1525,7 +1525,7 @@ int main() {
 Given an array of numbers, determine the maximum possible sum of any contiguous subarray. Kadane's algorithm scans the array while maintaining the maximum nonnegative sum of a subarray ending at the current position. A negative running sum is discarded because it can only reduce the sum of every subarray that extends it. Thus, by including \inlinecode{a[i]}, the running sum becomes \inlinecode{max(0, sum + a[i])}, and the largest running sum seen is the answer. This can be adapted to compute the maximal submatrix sum as well.
 
 \begin{compactitem}
-  \item \inlinecode{max\_subarray\_sum(lo, hi)} returns \inlinecode{(sum, begin, end)} for the maximal subarray in [\inlinecode{lo}, \inlinecode{hi}), where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to numeric types. The endpoints are inclusive. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} on the iterators' value type. By convention, the empty subarray is allowed, so an input range containing only negative values returns sum 0 and endpoints [0, $-1$].
+  \item \inlinecode{max\_subarray\_sum(lo, hi)} returns \inlinecode{(sum, begin, end)} for the maximal subarray in [\inlinecode{lo}, \inlinecode{hi}), where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to numeric types. The endpoints are inclusive. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} on the iterators' value type. By convention, the empty subarray is allowed, so an input range containing only negative values returns sum 0 and endpoints [$0$, $-1$].
   \item \inlinecode{max\_submatrix\_sum(a)} returns \inlinecode{(sum, r1, c1, r2, c2)} for the largest rectangular submatrix of a matrix \inlinecode{a} with $m$ rows and $n$ columns. The corners are inclusive. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} on the matrix value type. By convention, the empty submatrix is allowed, so a matrix containing only negative values returns sum 0 with empty row and column intervals.
 \end{compactitem}
 
@@ -1721,7 +1721,7 @@ int main() {
 -5 1 9 10 11 13
 \end{exampleoutput}
 \subsection{Minimum Excluded Value}
-Computes the minimum excluded nonnegative (MEX) integer of a set of integers, that is, the smallest integer $x \geq 0$ that does not appear in the set. It appears frequently in array problems, game theory with Grundy numbers, and dynamic programming states. Since the MEX of $n$ values never exceeds $n$, the one-shot version only marks values in [0, \inlinecode{n}]. The dynamic version stores counts for present values and an ordered set of currently missing candidates.
+Computes the minimum excluded nonnegative (MEX) integer of a set of integers, that is, the smallest integer $x \geq 0$ that does not appear in the set. It appears frequently in array problems, game theory with Grundy numbers, and dynamic programming states. Since the MEX of $n$ values never exceeds $n$, the one-shot version only marks values in [$0$, \inlinecode{n}]. The dynamic version stores counts for present values and an ordered set of currently missing candidates.
 
 \begin{compactitem}
   \item \inlinecode{mex(lo, hi)} returns the MEX of the values in [\inlinecode{lo}, \inlinecode{hi}).
@@ -1934,8 +1934,8 @@ void verify(int x0, int start, int length) {
   assert(startx == x);
 }
 
-// Given n + 1 integers within [1, n], where one value in [1, n] is present 2 or more times (but
-// other values in [1, n] are present at most once), find the duplicate without modifying the array.
+// Given n + 1 integers within [$1$, n], where one value in [$1$, n] is present 2 or more times (but
+// other values in [$1$, n] are present at most once), find the duplicate without modifying the array.
 // Interpret each value as a pointer to the next index; the duplicate is the cycle entry.
 int find_duplicate_integer(const vector<int> &nums) {
   auto [start, _] = find_cycle_floyd([&](int i) { return nums[i]; }, 0);

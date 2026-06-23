@@ -10,7 +10,7 @@ Lengauer-Tarjan's algorithm numbers vertices by DFS order, computes each reachab
 semidominator using a disjoint-set structure with path compression, and then resolves immediate
 dominators from semidominator buckets.
 
-- `Dominators(n)` constructs a directed graph of `n` nodes numbered [0, `n`).
+- `Dominators(n)` constructs a directed graph of `n` nodes numbered [$0$, `n`).
 - `add_edge(u, v)` adds a directed edge from `u` to `v`.
 - `find_dominators(start)` returns a vector `idom` where `idom[start]` = `start`, `idom[v]` is the
   immediate dominator of reachable node `v`, and `idom[v]` $= -1$ if `v` is unreachable.

@@ -17,7 +17,7 @@ binary lifting so it is self-contained; given an existing lowest common ancestor
 sort-and-stack logic applies directly.
 
 - `VirtualTree(adj, root)` builds the structure over a tree rooted at `root`, given a bidirectional
-  adjacency list `adj` of nodes numbered [0, `n`), where `n` is `adj.size()`.
+  adjacency list `adj` of nodes numbered [$0$, `n`), where `n` is `adj.size()`.
 - `lca(u, v)` returns the lowest common ancestor of nodes `u` and `v`.
 - `depth_of(u)` returns the depth of `u` in the original tree (the root has depth 0). The original
   path length of a virtual-tree edge (`p`, `c`) is `depth_of(c) - depth_of(p)`.

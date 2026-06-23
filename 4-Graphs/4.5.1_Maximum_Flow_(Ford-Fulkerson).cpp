@@ -11,7 +11,7 @@ certain real-valued flow inputs for which the algorithm never terminates. The Ed
 is an improvement using breadth-first search, addressing this problem.
 
 - `ford_fulkerson()` uses global `source` and `sink`, modifies the global residual capacity matrix
-  `cap`, and returns maximum flow. Nodes are numbered [0, `n`), where `n` is `cap.size()`.
+  `cap`, and returns maximum flow. Nodes are numbered [$0$, `n`), where `n` is `cap.size()`.
 
 Time Complexity:
 - O(n^2*f) per call, where $n$ is the number of nodes and $f$ is the maximum flow.

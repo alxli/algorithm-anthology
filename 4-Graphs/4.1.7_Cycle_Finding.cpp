@@ -6,7 +6,7 @@ multigraphs with parallel edges. In an undirected graph, the cycles found this w
 basis: one cycle for each non-tree edge. In a directed graph, this finds cycles created by back
 edges to vertices still on the recursion stack.
 
-- `CycleFinder(n, directed)` constructs a graph of `n` nodes numbered [0, `n`). The graph is
+- `CycleFinder(n, directed)` constructs a graph of `n` nodes numbered [$0$, `n`). The graph is
   directed if `directed` is true, or undirected otherwise.
 - `add_edge(u, v)` adds an edge and returns its edge ID.
 - `find_cycles(max_cycles, max_total_size)` returns simple cycles as vectors of edge IDs, stopping

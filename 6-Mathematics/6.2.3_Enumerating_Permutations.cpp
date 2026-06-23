@@ -155,7 +155,7 @@ cycles permutation_cycles(const std::vector<int> &a) {
 
 /*** Example Usage and Output:
 
-Permutations of [0, 4):
+Permutations of [$0$, 4):
 {0,1,2,3} {0,1,3,2} {0,2,1,3} {0,2,3,1} {0,3,1,2} {0,3,2,1} {1,0,2,3} {1,0,3,2}
 {1,2,0,3} {1,2,3,0} {1,3,0,2} {1,3,2,0} {2,0,1,3} {2,0,3,1} {2,1,0,3} {2,1,3,0}
 {2,3,0,1} {2,3,1,0} {3,0,1,2} {3,0,2,1} {3,1,0,2} {3,1,2,0} {3,2,0,1} {3,2,1,0}
@@ -186,7 +186,7 @@ int main() {
   {
     const int n = 4;
     vector<int> a{0, 1, 2, 3}, b = a, c = a;
-    cout << "Permutations of [0, " << n << "):" << endl;
+    cout << "Permutations of [$0$, " << n << "):" << endl;
     int count = 0;
     do {
       print_range(a.begin(), a.end());

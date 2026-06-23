@@ -9,7 +9,7 @@ smallest available leaf at each step. This makes the implementation deterministi
 usual textbook convention.
 
 - `encode_prufer()` returns the prufer code for the global, bidirectionally pre-populated adjacency
-  list `adj` which must form a valid tree with nodes numbered [0, `n`), where `n` is `adj.size()`.
+  list `adj` which must form a valid tree with nodes numbered [$0$, `n`), where `n` is `adj.size()`.
 - `decode_prufer()` takes a Prufer code and returns the corresponding tree edges.
 
 Time Complexity:

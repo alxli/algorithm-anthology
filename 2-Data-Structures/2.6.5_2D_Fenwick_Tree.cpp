@@ -15,12 +15,12 @@ than the sparse version. For non-additive aggregates such as min/max with custom
 segment tree or quadtree instead, since Fenwick-tree algebra relies on addition and subtraction.
 
 - `Fenwick2D<T>(rows, cols)` constructs a `rows` by `cols` array with 0-based indices, with all
-  values initialized to 0.
+  values initialized to $0$.
 - `size_rows()` and `size_cols()` return the number of rows and columns.
 - `add(r, c, x)` adds `x` to the value at index (`r`, `c`).
 - `set(r, c, x)` assigns `x` to the value at index (`r`, `c`).
 - `at(r, c)` returns the value at index (`r`, `c`).
-- `sum(r, c)` returns the sum of the rectangle with corners (`0`, `0`) and (`r`, `c`), inclusive.
+- `sum(r, c)` returns the sum of the rectangle with corners ($0$, $0$) and (`r`, `c`), inclusive.
 - `sum(r1, c1, r2, c2)` returns the sum of the rectangle with upper-left corner (`r1`, `c1`) and
   lower-right corner (`r2`, `c2`), inclusive.
 

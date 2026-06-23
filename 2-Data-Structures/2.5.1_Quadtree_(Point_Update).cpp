@@ -21,8 +21,8 @@ rectangles are sparse or naturally align with large quadrants. Choose the sparse
 instead when many thin or adversarial rectangles are expected and a predictable O(log(R)*log(C))
 bound matters more than lower constant factors on aligned regions.
 
-- `Quadtree<T, R, C>(v)` constructs a two-dimensional array with rows from 0 to $R$ (inclusive) and
-  columns from 0 to $C$ (inclusive). All array values are initialized to `v`.
+- `Quadtree<T, R, C>(v)` constructs a two-dimensional array with rows from $0$ to $R$ (inclusive)
+  and columns from $0$ to $C$ (inclusive). All array values are initialized to `v`.
 - `at(r, c)` returns the value at row `r`, column `c`.
 - `query(r1, c1, r2, c2)` returns the result of `combine()` applied to every value in the
   rectangular region consisting of rows from `r1` to `r2`, inclusive, and columns from `c1` to `c2`,

@@ -17,7 +17,7 @@ base, hashing remains fast and practical, but it is still probabilistic and shou
 proof of equality when exact verification is required.
 
 By default, each sequence value is cast to `uint64_t` and mixed. For non-integer element types, pass
-a custom value hasher that maps each element to a stable nonzero value in [1, `HASH_MOD`).
+a custom value hasher that maps each element to a stable nonzero value in [$1$, `HASH_MOD`).
 
 - `RollingHash<T, ValueHasher>(first, last)` constructs prefix hashes for any iterator range of
   values accepted by the value hasher.
@@ -83,7 +83,7 @@ uint64_t mix64(uint64_t x) {
 
 template<typename T>
 struct RollingValueHasher {
-  // +1 ensures the result is in [1, HASH_MOD) and never zero; a zero element in a polynomial
+  // +1 ensures the result is in [$1$, HASH_MOD) and never zero; a zero element in a polynomial
   // hash is invisible and enables trivial collisions.
   uint64_t operator()(const T &x) const { return mix64((uint64_t)x) % (HASH_MOD - 1) + 1; }
 };
@@ -190,7 +190,7 @@ int main() {
   v.push_back(1);
   v.push_back(2);
   RollingHash<int> hv(v);
-  assert(hv.get(0, 2) == hv.get(3, 5));  // [1, 2] == [1, 2]
+  assert(hv.get(0, 2) == hv.get(3, 5));  // [$1$, 2] == [$1$, 2]
   assert(hv.get(0, 3) == RollingHash<int>::hash(v.begin(), v.begin() + 3));
 
   vector<PointI> poly{{1, 2}, {3, 4}};

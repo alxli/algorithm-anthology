@@ -10,16 +10,16 @@ lifting: it walks the implicit power-of-two block structure to find the longest 
 most `c`. This lets the same structure double as a dynamic multiset over a bounded integer domain,
 useful for coordinate-compressed $k$-th element lookups and online rank queries.
 
-- `Fenwick<T>(n)` constructs an array with 0-based indices [0, `n`), with all values initialized to
-  0.
+- `Fenwick<T>(n)` constructs an array with 0-based indices [$0$, `n`), with all values initialized
+  to $0$.
 - `size()` returns the size of the array.
 - `add(i, x)` adds `x` to the value at index `i`.
 - `set(i, x)` assigns the value at index `i` to `x`.
 - `at(i)` returns the value at index `i`.
-- `sum(hi)` returns the sum of all values at indices from 0 to `hi`, inclusive.
+- `sum(hi)` returns the sum of all values at indices from $0$ to `hi`, inclusive.
 - `sum(lo, hi)` returns the sum of all values at indices from `lo` to `hi`, inclusive.
 - `max_prefix(c)` returns the largest boundary `hi` such that `sum(0, hi - 1) <= c`, assuming
-  prefix sums are nondecreasing. It may return any value from 0 to `size()`.
+  prefix sums are nondecreasing. It may return any value from $0$ to `size()`.
 
 Time Complexity:
 - O(n) per call to the constructor, where $n$ is the size of the array.
@@ -100,8 +100,8 @@ int main() {
   freq.add(1, 1);                   // One element of value 1.
   freq.add(3, 3);                   // Three elements of value 3.
   freq.add(6, 1);                   // One element of value 6.
-  assert(freq.max_prefix(0) == 1);  // The longest prefix with count at most 0 is [0, 1).
-  assert(freq.max_prefix(3) == 3);  // Prefix [0, 3) has count 1; [0, 4) has count 4.
-  assert(freq.max_prefix(4) == 6);  // Prefix [0, 6) has count 4; [0, 7) has count 5.
+  assert(freq.max_prefix(0) == 1);  // The longest prefix with count at most 0 is [$0$, 1).
+  assert(freq.max_prefix(3) == 3);  // Prefix [$0$, 3) has count 1; [$0$, 4) has count 4.
+  assert(freq.max_prefix(4) == 6);  // Prefix [$0$, 6) has count 4; [$0$, 7) has count 5.
   return 0;
 }

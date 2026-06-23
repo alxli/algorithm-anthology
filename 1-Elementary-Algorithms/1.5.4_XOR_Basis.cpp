@@ -15,7 +15,7 @@ covers.
 - `insert(x)` adds `x` to the basis, returning `true` if `x` was linearly independent of the current
   basis (increasing its size), or `false` if `x` was already representable as a subset XOR.
 - `contains(x)` returns whether `x` is representable as the XOR of some subset of the inserted
-  values, i.e. whether it reduces to 0 against the basis.
+  values, i.e. whether it reduces to $0$ against the basis.
 - `max_xor(base)` returns the maximum value of `base` XORed with some subset XOR of the basis. With
   the default `base` of 0, this is the maximum subset XOR.
 - `size()` returns the number of elements in the basis (its rank).

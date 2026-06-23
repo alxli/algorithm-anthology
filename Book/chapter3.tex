@@ -757,7 +757,7 @@ Given a sequence $a_0, a_1, \ldots, a_{n-1}$ and a value hash $h(a_i)$ for each 
 
 The implementation works modulo the Mersenne prime $2^{61} - 1$, using \inlinecode{\_\_uint128\_t} for the multiplication where available and falling back to a double-and-add modular multiply otherwise. The base \inlinecode{HASH\_BASE} should be changed or chosen randomly for open-hacking environments. With a fixed base, hashing remains fast and practical, but it is still probabilistic and should not be used as proof of equality when exact verification is required.
 
-By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For non-integer element types, pass a custom value hasher that maps each element to a stable nonzero value in [1, \inlinecode{HASH\_MOD}).
+By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For non-integer element types, pass a custom value hasher that maps each element to a stable nonzero value in [$1$, \inlinecode{HASH\_MOD}).
 
 \begin{compactitem}
   \item \inlinecode{RollingHash\textless{}T, ValueHasher\textgreater{}(first, last)} constructs prefix hashes for any iterator range of values accepted by the value hasher.
@@ -827,7 +827,7 @@ uint64_t mix64(uint64_t x) {
 
 template<typename T>
 struct RollingValueHasher {
-  // +1 ensures the result is in [1, HASH_MOD) and never zero; a zero element in a polynomial
+  // +1 ensures the result is in [$1$, HASH_MOD) and never zero; a zero element in a polynomial
   // hash is invisible and enables trivial collisions.
   uint64_t operator()(const T &x) const { return mix64((uint64_t)x) % (HASH_MOD - 1) + 1; }
 };
@@ -935,7 +935,7 @@ int main() {
   v.push_back(1);
   v.push_back(2);
   RollingHash<int> hv(v);
-  assert(hv.get(0, 2) == hv.get(3, 5));  // [1, 2] == [1, 2]
+  assert(hv.get(0, 2) == hv.get(3, 5));  // [$1$, 2] == [$1$, 2]
   assert(hv.get(0, 3) == RollingHash<int>::hash(v.begin(), v.begin() + 3));
 
   vector<PointI> poly{{1, 2}, {3, 4}};

@@ -8,7 +8,7 @@ The prefix/suffix aggregation requires `combine` to be associative for a running
 is usually preferred, but a segment-tree/exclusive-combine variant can support a left-fold style
 interface in O(n log n).
 
-- `RerootingTree(n)` constructs a tree with `n` nodes numbered [0, `n`).
+- `RerootingTree(n)` constructs a tree with `n` nodes numbered [$0$, `n`).
 - `add_edge(u, v)` adds an undirected edge between nodes `u` and `v`.
 - `build_rooted_tree(root)` populates `parent`, `depth`, `subtree_size`, `order`, `tin`, and `tout`
   for the tree rooted at `root` (default 0). This must be called only after the added edges define a
@@ -29,7 +29,7 @@ The aggregation scheme for `rerooting_dp()` is defined by the following pieces:
   the last line of a normal `dfs(u, p)` before returning.
 - `lift(acc, u, p)` converts a finished `dfs(u, p)` value into the contribution that node `u` gives
   to adjacent node `p`. Here `p` is the neighbor treated as the parent/excluded side of the directed
-  DFS state, not necessarily `u`'s parent in the initial root-0 traversal.
+  DFS state, not necessarily `u`'s parent in the initial root-$0$ traversal.
 
 This covers problems such as subtree sizes, sum/max of distances from every root, and rerooted
 polynomial/hash-like aggregates, as long as sibling contributions can be combined associatively. The

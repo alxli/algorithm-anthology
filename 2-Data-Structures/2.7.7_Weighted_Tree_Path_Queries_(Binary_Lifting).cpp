@@ -15,7 +15,7 @@ table is to store each node's weighted depth `dw[u]` and return `dw[u] + dw[v] -
 
 - `WeightedTreePath<W>(adj)` builds the structure over a forest given by a weighted, bidirectional
   adjacency list `adj`, where `adj[u]` holds `{v, w}` pairs for each edge `u`-`v` of weight `w`,
-  over nodes numbered [0, `n`), where `n` is `adj.size()`.
+  over nodes numbered [$0$, `n`), where `n` is `adj.size()`.
 - `lca(u, v)` returns the lowest common ancestor of `u` and `v`, or $-1$ if they lie in different
   trees.
 - `kth_ancestor(u, k)` returns the $k$-th ancestor of `u`, stopping at that tree's root if `k`

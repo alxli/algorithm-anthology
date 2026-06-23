@@ -13,7 +13,7 @@ paths are undefined and an error will be thrown. (To detect a negative cycle any
 add a virtual source with zero-weight edges to every node and start from it.)
 
 - `bellman_ford(n, start)` populates `dist` and `pred` for a global, pre-populated edge list `edges`
-  whose endpoints must be numbered [0, `n`).
+  whose endpoints must be numbered [$0$, `n`).
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 `start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the

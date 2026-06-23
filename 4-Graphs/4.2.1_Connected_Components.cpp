@@ -7,7 +7,7 @@ same component. For directed graphs, use a strongly connected components algorit
 
 - `connected_components()` populates `comp_id[]` (component ID for each node) and `components[]`
   (nodes for each component ID) given a global, bidirectionally pre-populated adjacency list `adj`
-  which must consist of nodes numbered [0, `n`), where `n` is `adj.size()`.
+  which must consist of nodes numbered [$0$, `n`), where `n` is `adj.size()`.
 
 Time Complexity:
 - O(max(n, m)) per call, where $n$ is the number of nodes and $m$ is the number of edges.

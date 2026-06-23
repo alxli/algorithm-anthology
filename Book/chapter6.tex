@@ -461,7 +461,7 @@ int main() {
   assert(EQ(lgamma_(0.5), 0.5723649429) && EQ(lgamma_(1.0), 0.0));
 
   assert(addmod(7, 8, 10) == 5 && submod(2, 5, 10) == 7);
-  // Negative and unreduced operands are normalized into [0, m).
+  // Negative and unreduced operands are normalized into [$0$, m).
   assert(addmod(-3, -4, 10) == 3 && submod(-3, 4, 10) == 3);
   assert(addmod(25, -7, 10) == 8);
 
@@ -1050,7 +1050,7 @@ int main() {
   {
     const int n = 4;
     vector<int> a{0, 1, 2, 3}, b = a, c = a;
-    cout << "Permutations of [0, " << n << "):" << endl;
+    cout << "Permutations of [$0$, " << n << "):" << endl;
     int count = 0;
     do {
       print_range(a.begin(), a.end());
@@ -1091,7 +1091,7 @@ int main() {
 }
 \end{lstlisting}
 \begin{exampleoutput}
-Permutations of [0, 4):
+Permutations of [$0$, 4):
 {0,1,2,3} {0,1,3,2} {0,2,1,3} {0,2,3,1} {0,3,1,2} {0,3,2,1} {1,0,2,3} {1,0,3,2}
 {1,2,0,3} {1,2,3,0} {1,3,0,2} {1,3,2,0} {2,0,1,3} {2,0,3,1} {2,1,0,3} {2,1,3,0}
 {2,3,0,1} {2,3,1,0} {3,0,1,2} {3,0,2,1} {3,1,0,2} {3,1,2,0} {3,2,0,1} {3,2,1,0}
@@ -1512,7 +1512,7 @@ Let $A$ be the number of candidate values considered at each position (the base 
 
 \begin{compactitem}
   \item \inlinecode{to\_rank(a)} returns an integer representing the 0-based rank of the combinatorial sequence \inlinecode{a}.
-  \item \inlinecode{from\_rank(r)} returns a combinatorial sequence of integers that is lexicographically ranked \inlinecode{r}, where \inlinecode{r} is a 0-based rank in the range [0, \inlinecode{total\_count()}).
+  \item \inlinecode{from\_rank(r)} returns a combinatorial sequence of integers that is lexicographically ranked \inlinecode{r}, where \inlinecode{r} is a 0-based rank in the range [$0$, \inlinecode{total\_count()}).
   \item \inlinecode{enumerate(f)} calls the function \inlinecode{f(lo, hi)} on every specified combinatorial sequence in lexicographically increasing order, where \inlinecode{lo} and \inlinecode{hi} are two random-access iterators to a range [\inlinecode{lo}, \inlinecode{hi}) of integers.
 \end{compactitem}
 
@@ -1700,7 +1700,7 @@ int main() {
     cout << endl;
   }
   {
-    cout << "\nPermutations of [0, 3):" << endl;
+    cout << "\nPermutations of [$0$, 3):" << endl;
     PermutationEnumerator perm(3);
     perm.enumerate([](auto lo, auto hi) { print_range(lo, hi); });
     cout << endl;
@@ -1724,7 +1724,7 @@ int main() {
 3 permute 2 arrangements:
 {0,1} {0,2} {1,0} {1,2} {2,0} {2,1}
 
-Permutations of [0, 3):
+Permutations of [$0$, 3):
 {0,1,2} {0,2,1} {1,0,2} {1,2,0} {2,0,1} {2,1,0}
 
 4 choose 3 combinations:
@@ -3497,7 +3497,7 @@ Inclusion-exclusion itself counts the size of a union by alternately adding and 
 \begin{compactitem}
   \item \inlinecode{mobius(n)} returns $\mu(n)$ for a single \inlinecode{n} by trial division.
   \item \inlinecode{mobius\_sieve(n)} returns a vector of length $n + 1$ where index $i$ holds $\mu(i)$, computed together with a linear sieve.
-  \item \inlinecode{count\_coprime(n, m)} returns the number of integers in [1, \inlinecode{n}] that are coprime to $m$, via inclusion-exclusion over the distinct prime factors of \inlinecode{m}.
+  \item \inlinecode{count\_coprime(n, m)} returns the number of integers in [$1$, \inlinecode{n}] that are coprime to $m$, via inclusion-exclusion over the distinct prime factors of \inlinecode{m}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -4698,13 +4698,13 @@ int main() {
 Basic matrix operations defined on a two-dimensional vector of numeric values.
 
 \begin{compactitem}
-  \item \inlinecode{make\_matrix\textless{}T\textgreater{}(m, n, v)} constructs and returns an $m$ by $n$ matrix with 0-based indices (row indices [0, \inlinecode{m}) and column indices [0, \inlinecode{n})), where every value is initialized to \inlinecode{v}.
+  \item \inlinecode{make\_matrix\textless{}T\textgreater{}(m, n, v)} constructs and returns an $m$ by $n$ matrix with 0-based indices (row indices [$0$, \inlinecode{m}) and column indices [$0$, \inlinecode{n})), where every value is initialized to \inlinecode{v}.
   \item \inlinecode{identity\_matrix\textless{}T\textgreater{}(n)} returns the \inlinecode{n} by \inlinecode{n} identity matrix, that is, a matrix where each \inlinecode{a[i][j]} equals $1$ if \inlinecode{i} = \inlinecode{j}, or $0$ otherwise.
   \item \inlinecode{rows(a)} returns the number of rows in matrix \inlinecode{a}.
   \item \inlinecode{columns(a)} returns the number of columns in matrix \inlinecode{a}.
   \item \inlinecode{a[i][j]} may be used to access or modify the specified entry of \inlinecode{a}.
   \item \inlinecode{power\_sum(a, p)} returns the power sum of a square matrix \inlinecode{a} up to an integer power \inlinecode{p}, that is, $a + a^2 + \ldots + a^p$.
-  \item \inlinecode{transpose(a)} returns the transpose of an $m$ by $n$ matrix \inlinecode{a}, that is, a new $n$ by $m$ matrix $b$ such that \inlinecode{a[i][j]} = \inlinecode{b[j][i]} for every \inlinecode{i} $\in [0, m)$ and \inlinecode{j} $\in [0, n)$.
+  \item \inlinecode{transpose(a)} returns the transpose of an $m$ by $n$ matrix \inlinecode{a}, that is, a new $n$ by $m$ matrix $b$ such that \inlinecode{a[i][j]} = \inlinecode{b[j][i]} for every \inlinecode{i} $\in [$0$, m)$ and \inlinecode{j} $\in [$0$, n)$.
   \item \inlinecode{transpose\_in\_place(a)} assigns the square matrix \inlinecode{a} to its transpose, returning a reference to the modified argument itself.
   \item \inlinecode{rotate(a, d)} returns the matrix \inlinecode{a} rotated \inlinecode{d} degrees clockwise. A negative \inlinecode{d} specifies a counter-clockwise rotation, and \inlinecode{d} must be a multiple of 90.
 \end{compactitem}
@@ -5794,7 +5794,7 @@ Kirchhoff's matrix-tree theorem counts the spanning trees of an undirected graph
 The determinant is evaluated modulo a prime by Gaussian elimination, so the count is returned modulo \inlinecode{MOD}. Spanning-tree counts grow astronomically, so a modular count is the usual contest form; run the routine under a few different primes and combine with the Chinese remainder theorem to recover a large exact value. The same construction handles weighted graphs (sum edge weights into the Laplacian to get the weighted tree count) and, with the directed Laplacian and a fixed deleted row, counts rooted spanning arborescences.
 
 \begin{compactitem}
-  \item \inlinecode{count\_spanning\_trees(n, edges)} returns the number of spanning trees of the undirected graph on nodes [0, \inlinecode{n}) with the given edge list, modulo \inlinecode{MOD}. Parallel edges are honored; self-loops do not affect the count. The result is $0$ when the graph is disconnected, and $1$ when \inlinecode{n} is $1$.
+  \item \inlinecode{count\_spanning\_trees(n, edges)} returns the number of spanning trees of the undirected graph on nodes [$0$, \inlinecode{n}) with the given edge list, modulo \inlinecode{MOD}. Parallel edges are honored; self-loops do not affect the count. The result is $0$ when the graph is disconnected, and $1$ when \inlinecode{n} is $1$.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n^{3})$ per call, where $n$ is the number of nodes.
@@ -5922,7 +5922,7 @@ A sparse matrix stores only nonzero entries, which is useful when the matrix is 
   \item \inlinecode{swap\_rows(i, j)} swaps two rows while keeping the column maps synchronized.
   \item \inlinecode{transpose()} transposes the matrix in place.
   \item \inlinecode{multiply\_vector(x)} returns the matrix-vector product with vector \inlinecode{x}.
-  \item \inlinecode{row\_reduce(a, limit)} converts columns [0, \inlinecode{limit}) of \inlinecode{a} to sparse row echelon form, returning the rank found in those columns.
+  \item \inlinecode{row\_reduce(a, limit)} converts columns [$0$, \inlinecode{limit}) of \inlinecode{a} to sparse row echelon form, returning the rank found in those columns.
   \item \inlinecode{det(a)} returns the determinant of a square sparse matrix.
   \item \inlinecode{sparse\_rank(a)} returns the rank of a sparse matrix.
   \item \inlinecode{solve\_system(a, b, \&x)} solves the system $ax = b$, returning $0$ for one solution, $-1$ for no solution, or $-2$ for infinitely many solutions. When one solution exists, \inlinecode{x} is populated.
@@ -6248,7 +6248,7 @@ The transform replaces a coefficient vector with its evaluations at the powers o
 
 \begin{compactitem}
   \item \inlinecode{ntt(a, invert)} transforms the vector \inlinecode{a} in place, whose length must be a power of two. The forward transform uses \inlinecode{invert = false}; the inverse uses \inlinecode{invert = true}.
-  \item \inlinecode{convolve(a, b)} returns the convolution of \inlinecode{a} and \inlinecode{b} modulo the prime, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length ${\inlinecodemath{a.size()}} + {\inlinecodemath{b.size()}} - 1$, or is empty if either input is empty. Input values are assumed to lie in [0, \inlinecode{MOD}). Small inputs use direct multiplication to avoid NTT overhead.
+  \item \inlinecode{convolve(a, b)} returns the convolution of \inlinecode{a} and \inlinecode{b} modulo the prime, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length ${\inlinecodemath{a.size()}} + {\inlinecodemath{b.size()}} - 1$, or is empty if either input is empty. Input values are assumed to lie in [$0$, \inlinecode{MOD}). Small inputs use direct multiplication to avoid NTT overhead.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}

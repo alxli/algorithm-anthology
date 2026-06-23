@@ -11,8 +11,8 @@ non-residue to generate the 2-power part of the group, and repeatedly squares a 
 find the order of the current error term, correcting the candidate root until the error becomes 1.
 
 - `mod_sqrt(a, p)` returns the smaller of the two square roots of `a` modulo the odd prime `p`, or
-  $-1$ if `a` is not a quadratic residue. The value 0 maps to 0. The argument `a` is reduced modulo
-  `p` internally. The modulus `p` must be an odd prime.
+  $-1$ if `a` is not a quadratic residue. The value $0$ maps to $0$. The argument `a` is reduced
+  modulo `p` internally. The modulus `p` must be an odd prime.
 
 Time Complexity:
 - O(log^2 p) per call in the worst case, from the squaring loop nested inside the exponentiations.

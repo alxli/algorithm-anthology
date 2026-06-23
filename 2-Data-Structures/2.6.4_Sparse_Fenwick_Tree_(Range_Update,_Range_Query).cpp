@@ -5,16 +5,16 @@ queries. This is the sparse version of the two-tree Fenwick range-update/range-q
 Fenwick nodes reached by previous operations are stored, using `std::unordered_map` instead of dense
 vectors.
 
-- `SparseFenwick<T, N>()` constructs an array with 0-based indices [0, `N`), implicitly initialized
-  to 0.
+- `SparseFenwick<T, N>()` constructs an array with 0-based indices [$0$, `N`), implicitly
+  initialized to $0$.
 - `at(i)` returns the value at index `i`.
 - `add(i, x)` adds `x` to the value at index `i`.
 - `add(lo, hi, x)` adds `x` to the values at all indices from `lo` to `hi`, inclusive.
 - `set(i, x)` assigns the value at index `i` to `x`.
-- `sum(hi)` returns the sum of all values at indices from 0 to `hi`, inclusive.
+- `sum(hi)` returns the sum of all values at indices from $0$ to `hi`, inclusive.
 - `sum(lo, hi)` returns the sum of all values at indices from `lo` to `hi`, inclusive.
-- `max_prefix(c)` returns the largest boundary `hi` such that `sum(0, hi - 1) <= c`, assuming prefix
-  sums are nondecreasing. It may return any value from 0 to `N`.
+- `max_prefix(c)` returns the largest boundary `hi` such that `sum(0, hi - 1)` $\leq$ `c`, assuming
+  prefix sums are nondecreasing. It may return any value from $0$ to `N`.
 
 Time Complexity:
 - O(log N) per call to all member functions.

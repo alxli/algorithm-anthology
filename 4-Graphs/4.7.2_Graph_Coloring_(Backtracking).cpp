@@ -9,7 +9,7 @@ while the fewest colors seen in a complete coloring so far bounds the search and
 at least as costly.
 
 - `color_graph()` populates `color` and returns minimum color count for a global, bidirectionally
-  pre-populated adjacency matrix `adj` which must consist of nodes numbered [0, `n`), where `n` is
+  pre-populated adjacency matrix `adj` which must consist of nodes numbered [$0$, `n`), where `n` is
   `adj.size()`.
 
 Time Complexity:

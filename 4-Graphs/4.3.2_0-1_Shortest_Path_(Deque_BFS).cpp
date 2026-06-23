@@ -9,7 +9,7 @@ distance by either $0$ or $1$, a deque maintains nodes in nondecreasing distance
 weight-0 relaxations to the front and weight-1 relaxations to the back.
 
 - `bfs_zero_one(start)` populates `dist` and `pred` for a global, pre-populated adjacency list `adj`
-  which must consist of nodes numbered [0, `n`), where `n` is `adj.size()`. Each edge is stored as
+  which must consist of nodes numbered [$0$, `n`), where `n` is `adj.size()`. Each edge is stored as
   (`neighbor`, `weight`), where `weight` is either $0$ or $1$.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from

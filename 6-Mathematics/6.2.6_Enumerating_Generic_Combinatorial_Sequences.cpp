@@ -14,7 +14,7 @@ own conventional constructor names, such as `n` and `k` for combinations.
 
 - `to_rank(a)` returns an integer representing the 0-based rank of the combinatorial sequence `a`.
 - `from_rank(r)` returns a combinatorial sequence of integers that is lexicographically ranked `r`,
-  where `r` is a 0-based rank in the range [0, `total_count()`).
+  where `r` is a 0-based rank in the range [$0$, `total_count()`).
 - `enumerate(f)` calls the function `f(lo, hi)` on every specified combinatorial sequence in
   lexicographically increasing order, where `lo` and `hi` are two random-access iterators to a range
   [`lo`, `hi`) of integers.
@@ -184,7 +184,7 @@ class PartitionEnumerator : public AbstractEnumerator {
 3 permute 2 arrangements:
 {0,1} {0,2} {1,0} {1,2} {2,0} {2,1}
 
-Permutations of [0, 3):
+Permutations of [$0$, 3):
 {0,1,2} {0,2,1} {1,0,2} {1,2,0} {2,0,1} {2,1,0}
 
 4 choose 3 combinations:
@@ -215,7 +215,7 @@ int main() {
     cout << endl;
   }
   {
-    cout << "\nPermutations of [0, 3):" << endl;
+    cout << "\nPermutations of [$0$, 3):" << endl;
     PermutationEnumerator perm(3);
     perm.enumerate([](auto lo, auto hi) { print_range(lo, hi); });
     cout << endl;

@@ -14,12 +14,12 @@ single updated index. The default definition below supports updates that "set" t
 index to a new value. Another possible update operation is "increment", in which case
 `apply_delta(v, d)` should return `v + d`.
 
-- `PersistentSegTree<T>(n, v)` constructs version 0 of an array of size `n` with indices [0, `n`),
-  and all values initialized to `v`.
-- `PersistentSegTree<T>(lo, hi)` constructs version 0 from two random-access iterators as a range
+- `PersistentSegTree<T>(n, v)` constructs version $0$ of an array of size `n` with indices
+  [$0$, `n`), and all values initialized to `v`.
+- `PersistentSegTree<T>(lo, hi)` constructs version $0$ from two random-access iterators as a range
   [`lo`, `hi`), initialized to the elements of the range in the same order.
 - `size()` returns the size of every version of the array.
-- `versions()` returns the number of stored versions. Versions are numbered starting from 0.
+- `versions()` returns the number of stored versions. Versions are numbered starting from $0$.
 - `at(version, i)` returns the value at index `i` in the specified version.
 - `query(version, lo, hi)` returns the result of `combine()` applied to all indices from `lo` to
   `hi` in the specified version, inclusive. If `lo == hi`, then the single specified value is

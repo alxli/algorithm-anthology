@@ -14,7 +14,7 @@ Laplacian to get the weighted tree count) and, with the directed Laplacian and a
 counts rooted spanning arborescences.
 
 - `count_spanning_trees(n, edges)` returns the number of spanning trees of the undirected graph on
-  nodes [0, `n`) with the given edge list, modulo `MOD`. Parallel edges are honored; self-loops do
+  nodes [$0$, `n`) with the given edge list, modulo `MOD`. Parallel edges are honored; self-loops do
   not affect the count. The result is $0$ when the graph is disconnected, and $1$ when `n` is $1$.
 
 Time Complexity:

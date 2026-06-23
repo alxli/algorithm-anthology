@@ -14,7 +14,7 @@ implementation below repeats this contraction in rounds, accumulating the select
 cycle remains.
 
 - `directed_mst(n, root, edges)` returns the total weight of the minimum spanning arborescence
-  rooted at `root` over `n` nodes numbered [0, `n`), or $-1$ if some node is unreachable from the
+  rooted at `root` over `n` nodes numbered [$0$, `n`), or $-1$ if some node is unreachable from the
   root (no arborescence exists). Edges are given as (`from`, `to`, `weight`) triples; parallel edges
   and self-loops are allowed, with self-loops simply ignored.
 

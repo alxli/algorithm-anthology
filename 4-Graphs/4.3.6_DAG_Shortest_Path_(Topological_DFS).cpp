@@ -9,7 +9,7 @@ The same pass computes longest paths if the relaxation comparison is reversed, w
 way to find the critical path in a schedule of dependent tasks.
 
 - `dag_shortest_path(start)` populates `dist` and `pred` for a global, pre-populated adjacency list
-  `adj` whose nodes are numbered [0, `n`), where `n` is `adj.size()`. Each edge is stored as
+  `adj` whose nodes are numbered [$0$, `n`), where `n` is `adj.size()`. Each edge is stored as
   (`neighbor`, `weight`) and may have any sign. `dist[v]` is set to `INF` for nodes not reachable
   from `start`, and `pred` stores the shortest-path tree for path reconstruction.
 

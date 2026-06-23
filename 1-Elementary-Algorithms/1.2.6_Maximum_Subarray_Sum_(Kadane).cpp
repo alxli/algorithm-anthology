@@ -10,12 +10,12 @@ sum as well.
 - `max_subarray_sum(lo, hi)` returns `(sum, begin, end)` for the maximal subarray in [`lo`, `hi`),
   where `lo` and `hi` are random-access iterators to numeric types. The endpoints are inclusive.
   This implementation requires operators `+` and `<` on the iterators' value type. By convention,
-  the empty subarray is allowed, so an input range containing only negative values returns sum 0
-  and endpoints [0, $-1$].
+  the empty subarray is allowed, so an input range containing only negative values returns sum $0$
+  and endpoints $[0, -1]$.
 - `max_submatrix_sum(a)` returns `(sum, r1, c1, r2, c2)` for the largest rectangular submatrix of a
   matrix `a` with $m$ rows and $n$ columns. The corners are inclusive. This implementation requires
   operators `+` and `<` on the matrix value type. By convention, the empty submatrix is allowed, so
-  a matrix containing only negative values returns sum 0 with empty row and column intervals.
+  a matrix containing only negative values returns sum $0$ with empty row and column intervals.
 
 Time Complexity:
 - O(n) per call to `max_subarray_sum()`, where $n$ is the distance between `lo` and `hi`.

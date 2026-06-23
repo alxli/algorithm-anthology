@@ -11,8 +11,8 @@ weights. Use Bellman-Ford or SPFA instead when negative edges are present. Becau
 nonnegative, a node's distance is final the first time it is removed from the queue.
 
 - `dijkstra(start, adj, dist, pred)` returns a pair of vectors `dist` and `pred` for an adjacency
-  list `adj` which must consist of nodes numbered [0, `n`), where `n` is `adj.size()`. Each edge is
-  stored as (`neighbor`, `weight`), where `weight` is nonnegative.
+  list `adj` which must consist of nodes numbered [$0$, `n`), where `n` is `adj.size()`. Each edge
+  is stored as (`neighbor`, `weight`), where `weight` is nonnegative.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 `start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the

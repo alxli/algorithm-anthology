@@ -8,7 +8,7 @@ Dinic's algorithm proceeds in phases. Each phase runs a breadth-first search to 
 of shortest residual distances from the source, then finds a blocking flow that saturates that level
 graph using depth-first search, before repeating on the new residual graph.
 
-- `Dinic<T>(n)` constructs an empty flow network with nodes numbered [0, `n`).
+- `Dinic<T>(n)` constructs an empty flow network with nodes numbered [$0$, `n`).
 - `add_edge(u, v, cap)` adds a directed residual-network edge from `u` to `v`.
 - `max_flow(source, sink)` modifies the residual network and returns maximum flow.
 - `clear_flow()` resets all edge flows to zero, allowing a fresh recomputation on the same graph.

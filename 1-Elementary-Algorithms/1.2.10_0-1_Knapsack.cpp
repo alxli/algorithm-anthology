@@ -10,7 +10,7 @@ during the current item update.
 
 - `knapsack_01(weight, value, capacity)` returns a pair (`value`, `items`) containing the maximum
   value and the selected item indices in increasing order, where item `i` has weight `weight[i]` and
-  value `value[i]`. All weights must be nonnegative integers. Items with weight 0 are allowed and
+  value `value[i]`. All weights must be nonnegative integers. Items with weight $0$ are allowed and
   can each be taken once. The take/skip decision for every item and capacity is stored to
   reconstruct the optimal subset.
 

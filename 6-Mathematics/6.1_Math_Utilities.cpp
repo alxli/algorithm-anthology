@@ -58,7 +58,7 @@ Epsilon Comparisons:
 - `rEQ(ref, val)` returns whether `val` equals reference `ref` within relative error `EPS`. The
   tolerance scales with $|`ref`|$, so `rEQ(ref, val)` is NOT the same as `rEQ(val, ref)`. Use this
   when one argument is a known exact value and the other is a computed approximation. Degenerates
-  to exact comparison when `ref` = 0, since the tolerance collapses to 0; use `EQ` near zero.
+  to exact comparison when `ref` is $0$, since the tolerance collapses to $0$; use `EQ` near zero.
 - `rEQ_sym(x, y)` is the symmetric (commutative) variant: tolerance scales with
   $\max(|`x`|, |`y`|)$, so the result is the same regardless of argument order. Still degenerates
   near zero when both arguments are close to 0.
@@ -356,7 +356,7 @@ Modular Arithmetic:
 - `addmod(a, b, m)` returns `(a + b) mod m` and `submod(a, b, m)` returns `(a - b) mod m`, each in
   $[0, `m`)$. Both operands may be negative or unreduced; the result is normalized into range. These
   use signed arithmetic, so `m` (and the reduced operands) must be small enough that `a + b` does
-  not overflow `int64_t`, i.e. `m` up to roughly `2^62`, which covers all common contest moduli.
+  not overflow `int64_t`, i.e. `m` up to roughly $2^{62}$, which covers all common contest moduli.
 - `mulmod(x, n, m)` returns `x` multiplied by `n`, modulo `m`. This is done in a way to avoid
   overflow: on compilers with `__uint128_t` it uses one wide product, while the portable fallback
   uses double-and-add multiplication. The fallback is slower by a logarithmic factor, but avoids
@@ -506,7 +506,7 @@ int main() {
   assert(EQ(lgamma_(0.5), 0.5723649429) && EQ(lgamma_(1.0), 0.0));
 
   assert(addmod(7, 8, 10) == 5 && submod(2, 5, 10) == 7);
-  // Negative and unreduced operands are normalized into [0, m).
+  // Negative and unreduced operands are normalized into [$0$, m).
   assert(addmod(-3, -4, 10) == 3 && submod(-3, 4, 10) == 3);
   assert(addmod(25, -7, 10) == 8);
 

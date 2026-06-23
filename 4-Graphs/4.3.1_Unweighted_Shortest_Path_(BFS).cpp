@@ -7,7 +7,7 @@ output the shortest path to a specific destination node using the shortest-path 
 predecessor vector `pred`.
 
 - `bfs(start)` populates `dist` and `pred` for a global, pre-populated adjacency list `adj` which
-  must consist of nodes numbered [0, `n`), where `n` is `adj.size()`.
+  must consist of nodes numbered [$0$, `n`), where `n` is `adj.size()`.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 `start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the

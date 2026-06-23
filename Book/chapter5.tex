@@ -609,7 +609,7 @@ int main() {
 
   vector<int64_t> dp_two(n + 1, INF);
   compute_dc_layer(dp_cur, dp_two, 1, n, 0, n - 1, cost);
-  assert(dp_two[4] == 52);  // Split as [1, 2] and [3, 4].
+  assert(dp_two[4] == 52);  // Split as [$1$, 2] and [3, 4].
   return 0;
 }
 \end{lstlisting}

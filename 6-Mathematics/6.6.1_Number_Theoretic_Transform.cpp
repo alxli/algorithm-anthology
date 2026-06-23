@@ -18,7 +18,7 @@ and all arithmetic taken modulo the prime.
 - `convolve(a, b)` returns the convolution of `a` and `b` modulo the prime, that is, the
   coefficients of the product of the two polynomials whose coefficients are the inputs. The result
   has length $`a.size()` + `b.size()` - 1$, or is empty if either input is empty. Input values are
-  assumed to lie in [0, `MOD`). Small inputs use direct multiplication to avoid NTT overhead.
+  assumed to lie in [$0$, `MOD`). Small inputs use direct multiplication to avoid NTT overhead.
 
 Time Complexity:
 - O(n log n) per call to `ntt()`, where $n$ is the length of the vector.

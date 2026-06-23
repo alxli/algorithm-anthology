@@ -219,7 +219,7 @@ Find and Replace:
   in the string `haystack`. Matches may overlap; e.g. `find_all("aaa", "aa")` returns `{0, 1}`.
 - `count(haystack, needle)` returns the number of non-overlapping occurrences of `needle` in
   `haystack`, like Python's `str.count`. This differs from `find_all().size()`, which counts
-  overlapping matches; e.g. `count("aaa", "aa")` returns `1`, but `find_all("aaa", "aa")` finds two.
+  overlapping matches; e.g. `count("aaa", "aa")` returns $1$, but `find_all("aaa", "aa")` finds $2$.
 - `replace(s, old, replacement)` returns a copy of `s` with all occurrences of the string `old`
   replaced with the given `replacement`.
 - `regex_find_all(s, pattern)` returns every substring of `s` matched by `pattern`.

@@ -14,12 +14,12 @@ articulation point, with an edge whenever an articulation point belongs to a BCC
 differs from a bridge forest: the block-cut forest describes vertex connectivity, while a bridge
 forest describes edge connectivity after compressing 2-edge-connected components.
 
-- `BiconnectedComponents(n)` constructs an undirected graph of `n` nodes numbered [0, `n`).
+- `BiconnectedComponents(n)` constructs an undirected graph of `n` nodes numbered [$0$, `n`).
 - `add_edge(u, v)` adds the undirected edge `u`-`v`. Parallel edges are supported.
 - `build_bcc()` populates `articulation_points` and `bccs`.
 - `build_block_cut_forest()` populates `block_cut_forest` and `block_cut_id` using the results of
   the previous `build_bcc()` call. After the call, `block_cut_forest` nodes are numbered in the
-  range [0, `bccs.size()`), and `block_cut_id[v]` stores the node ID of articulation point `v` in
+  range [$0$, `bccs.size()`), and `block_cut_id[v]` stores the node ID of articulation point `v` in
   the block-cut forest, or $-1$ if `v` is not an articulation point.
 
 Time Complexity:

@@ -6,7 +6,7 @@ two different connected components, it creates a new bridge. When it joins two n
 same connected component, it creates a cycle and every bridge on the path between the two endpoints
 stops being a bridge.
 
-- `OnlineBridges(n)` constructs a graph with `n` isolated nodes numbered [0, `n`).
+- `OnlineBridges(n)` constructs a graph with `n` isolated nodes numbered [$0$, `n`).
 - `add_edge(u, v)` adds the undirected edge `u`-`v` and updates: `bridges` with the current number
   of bridges, and the disjoint-set parent arrays `dsu_2ecc[]` and `dsu_cc[]`, which partition the
   nodes into 2-edge-connected components and ordinary connected components respectively.

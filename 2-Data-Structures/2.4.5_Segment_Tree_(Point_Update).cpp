@@ -13,7 +13,7 @@ single updated index. The default definition below supports updates that "set" t
 index to a new value. Another possible update operation is "increment", in which case
 `apply_delta(v, d)` should return `v + d`.
 
-- `SegTree<T>(n, v)` constructs an array of size `n` with indices [0, `n`), and all values
+- `SegTree<T>(n, v)` constructs an array of size `n` with indices [$0$, `n`), and all values
   initialized to `v`.
 - `SegTree<T>(lo, hi)` constructs an array from two random-access iterators as a range [`lo`, `hi`),
   initialized to the elements of the range in the same order.
@@ -201,7 +201,7 @@ class SegTree {
 /*** Example Usage and Output:
 
 Values: 6 -2 4 8 10
-The minimum value in the range [0, 3] is -2.
+The minimum value in the range [$0$, 3] is -2.
 
 ***/
 
@@ -217,7 +217,7 @@ int main() {
     cout << " " << t.at(i);
   }
   cout << endl;
-  cout << "The minimum value in the range [0, 3] is " << t.query(0, 3) << "." << endl;
+  cout << "The minimum value in the range [$0$, 3] is " << t.query(0, 3) << "." << endl;
   assert(t.query(0, 3) == -2);
 
   // Boundary search by accumulated aggregate: stop before including the -2 at index 1.

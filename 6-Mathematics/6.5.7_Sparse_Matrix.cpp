@@ -18,7 +18,7 @@ where both row updates and column pivot lookups are common.
 - `swap_rows(i, j)` swaps two rows while keeping the column maps synchronized.
 - `transpose()` transposes the matrix in place.
 - `multiply_vector(x)` returns the matrix-vector product with vector `x`.
-- `row_reduce(a, limit)` converts columns [0, `limit`) of `a` to sparse row echelon form, returning
+- `row_reduce(a, limit)` converts columns [$0$, `limit`) of `a` to sparse row echelon form, returning
   the rank found in those columns.
 - `det(a)` returns the determinant of a square sparse matrix.
 - `sparse_rank(a)` returns the rank of a sparse matrix.

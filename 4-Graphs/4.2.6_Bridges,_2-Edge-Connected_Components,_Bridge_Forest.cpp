@@ -12,7 +12,7 @@ nodes into a bridge tree, or a bridge forest when the original graph is disconne
 from a block-cut forest: the bridge forest describes edge connectivity, while the block-cut forest
 describes vertex connectivity using articulation points and vertex-biconnected components.
 
-- `BridgeDecomposition(n)` constructs an undirected graph of `n` nodes numbered [0, `n`).
+- `BridgeDecomposition(n)` constructs an undirected graph of `n` nodes numbered [$0$, `n`).
 - `add_edge(u, v)` adds the undirected edge `u`-`v`. Parallel edges are supported.
 - `build_bridges()` populates `bridges`.
 - `build_bridge_forest()` populates `component`, `two_edge_components`, and `bridge_forest` using

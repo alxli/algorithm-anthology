@@ -4,8 +4,8 @@ Basic multithreading can speed up independent local work such as stress tests, b
 offline preprocessing. It is rarely useful in standard contest submissions, and many judges restrict
 threads, so use it only when the environment allows it.
 
-- `parallel_for(n, threads, f)` runs `f(i)` once for each `0 <= i < n`, splitting the indices among
-  at most `threads` worker threads.
+- `parallel_for(n, threads, f)` runs `f(i)` once for each $0 \leq$ `i` < `n`, splitting the indices
+  among at most `threads` worker threads.
 - `parallel_cases(cases, threads, solve)` solves independent test cases in parallel and returns the
   outputs in the original case order.
 

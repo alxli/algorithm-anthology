@@ -21,7 +21,7 @@ performing their updates sequentially. The default code below defines range assi
 increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, len)` should return
 `v + d` for range-min/range-max queries, and `v + d * len` for range-sum queries.
 
-- `IterativeLazySegTree<T>(n, v)` constructs an array of size `n` with indices [0, `n`), and all
+- `IterativeLazySegTree<T>(n, v)` constructs an array of size `n` with indices [$0$, `n`), and all
   values initialized to `v`.
 - `IterativeLazySegTree<T>(lo, hi)` constructs an array from two random-access iterators as a range
   [`lo`, `hi`), initialized to the elements of the range in the same order.

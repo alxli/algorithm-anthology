@@ -20,7 +20,7 @@ the lexicographical ordering of conflicting operators.
 - `ShuntingYardParser(unary_op, binary_op)` initializes a parser with operators specified by hash
   tables `unary_op` (of operator to unary function object) and `binary_op` (of operator to pair of
   binary function object and operator precedence). Operator precedences should be numbered upwards
-  starting at 0 (lowest precedence, evaluated last).
+  starting at $0$ (lowest precedence, evaluated last).
 - `split(s)` returns a vector of tokens for the expression `s`, split on the given operators during
   construction. Each parenthesis, operator, and operand satisfying `is_operand()` will be split into
   a separate token. The algorithm is naive, matching operators lazily in the case of overlapping

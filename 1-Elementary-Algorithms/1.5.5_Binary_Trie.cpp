@@ -15,9 +15,9 @@ basis spans subset XORs of a fixed set, whereas this answers XOR queries against
 themselves with support for insertion and deletion.
 
 Values must lie in $[0, 2^b)$ for bit width $b$; the template parameters select the unsigned word
-type `U` and the bit width `BITS`, which must be less than the width of `U` (for example, 30 with
-`uint32_t` or 62 with `uint64_t`). Nodes are kept in a pool indexed by integer, where index 0 is the
-root and also serves as the null child.
+type `U` and the bit width `BITS`, which must be less than the width of `U` (for example, $30$ with
+`uint32_t` or $62$ with `uint64_t`). Nodes are kept in a pool indexed by integer, where index $0$ is
+the root and also serves as the null child.
 
 - `BinaryTrie<U, BITS>()` constructs an empty multiset.
 - `size()` returns the number of stored values, and `empty()` returns whether there are none.

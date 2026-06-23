@@ -8,7 +8,7 @@ Floyd-Warshall's algorithm is a dynamic program over intermediate nodes: for eac
 every pair $(i, j)$ is relaxed by considering a path through $k$, so once all $k$ have been
 processed the matrix holds the all-pairs shortest distances.
 
-- `init_floyd(n)` initializes `dist` and `next_node` for a graph of `n` nodes numbered [0, `n`).
+- `init_floyd(n)` initializes `dist` and `next_node` for a graph of `n` nodes numbered [$0$, `n`).
 - `floyd_warshall()` updates the global adjacency matrix `dist` so `dist[u][v]` stores the shortest
   path from $u$ to $v$, and updates `next_node` for path reconstruction. If the graph contains
   negative-weighted cycles, there is no shortest path and an error will be thrown.

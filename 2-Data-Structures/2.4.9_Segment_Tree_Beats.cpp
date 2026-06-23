@@ -21,7 +21,7 @@ the generic lazy segment tree, this structure cannot be reduced to a pluggable `
 `apply`, because a clamp acts on only the maximal entries of a node rather than uniformly on all of
 them, so each operation set must be hand-written and its amortized bound argued separately.
 
-- `SegTreeBeats<T>(n, v)` constructs an array of size `n`, indices [0, `n`), all equal to `v`.
+- `SegTreeBeats<T>(n, v)` constructs an array of size `n`, indices [$0$, `n`), all equal to `v`.
 - `SegTreeBeats<T>(lo, hi)` constructs an array from two random-access iterators as a range
   [`lo`, `hi`), initialized to the elements of the range in the same order.
 - `size()` returns the size of the array.

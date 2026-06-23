@@ -26,7 +26,7 @@ increment updates, `apply_delta(v, d, len)` would return `v + d` for min/max que
 
 - `HeavyLight<T>(adj, v)` constructs a new heavy light decomposition on a forest defined by the
   adjacency list `adj`, with all values initialized to `v`. The adjacency list must consist of only
-  the integers [0, `n`), where `n` is `adj.size()`. No duplicate edges should exist.
+  the integers [$0$, `n`), where `n` is `adj.size()`. No duplicate edges should exist.
 - `query(u, v)` returns the result of `combine()` applied to all values on the path from node `u` to
   node `v`. The nodes must be in the same tree.
 - `update(u, v, d)` modifies all values on the path from node `u` to node `v` by respectively

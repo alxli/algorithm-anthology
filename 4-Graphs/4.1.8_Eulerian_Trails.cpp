@@ -11,7 +11,7 @@ Hierholzer's algorithm walks unused edges until stuck, then backtracks to splice
 into the final trail. This implementation stores and returns edge IDs, which supports multigraphs:
 parallel edges are distinct because each edge receives its own ID.
 
-- `EulerianGraph(n, directed)` constructs a graph of `n` nodes numbered [0, `n`). The graph is
+- `EulerianGraph(n, directed)` constructs a graph of `n` nodes numbered [$0$, `n`). The graph is
   directed if `directed` is true, or undirected otherwise.
 - `add_edge(u, v)` adds an edge and returns its edge ID.
 - `eulerian_path(start)` returns a trail using every edge exactly once, or a result with
