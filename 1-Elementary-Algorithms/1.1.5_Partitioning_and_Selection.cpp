@@ -16,7 +16,7 @@ expected linear time, while the three-way split avoids unnecessary work on dupli
 - `partition_three_way(lo, hi, pivot)` rearranges $[`lo`, `hi`)$ in-place and returns iterators
   $(`mid_lo`, `mid_hi`)$, where $[`lo`, `mid_lo`)$ is less than `pivot`, $[`mid_lo`, `mid_hi`)$ is
   equal to `pivot`, and $[`mid_hi`, `hi`)$ is greater than `pivot`.
-- `sort_012(lo, hi)` sorts a range consisting only of the values 0, 1, and 2.
+- `sort_012(lo, hi)` sorts a range consisting only of the values $0$, $1$, and $2$.
 - `nth_element2(lo, nth, hi)` rearranges the range $[`lo`, `hi`)$ around the 0-based rank
   represented by iterator `nth`. This requires random-access iterators and `operator<` on the value
   type.

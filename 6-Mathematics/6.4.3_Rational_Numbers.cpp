@@ -6,7 +6,7 @@ arithmetic operations. Overflow is not checked for in internal operations: compa
 arithmetic cross-multiply numerators and denominators, so instantiate with a wider integer type
 (such as `__int128`, or even `BigInt`) if the values may grow large.
 
-- `Rational<Int>(n)` constructs a rational number with numerator `n` and denominator 1.
+- `Rational<Int>(n)` constructs a rational number with numerator `n` and denominator $1$.
 - `Rational<Int>(n, d)` constructs a rational number with numerator `n` and denominator `d`.
 - `operator>>` inputs a rational number using the next integer from the stream as the numerator and
   1 as the denominator.

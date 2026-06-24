@@ -1,7 +1,7 @@
 /*
 
 Selects a maximum-size subset of jobs that can all be completed by their deadlines. Each job has a
-processing time and deadline, and all jobs are available at time 0. The Moore-Hodgson algorithm
+processing time and deadline, and all jobs are available at time $0$. The Moore-Hodgson algorithm
 sorts by deadline and keeps the accepted jobs in a max-heap by processing time; whenever the
 schedule becomes late, it removes the longest accepted job.
 

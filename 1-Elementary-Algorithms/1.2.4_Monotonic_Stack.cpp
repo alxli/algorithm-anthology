@@ -27,7 +27,7 @@ changing the comparison from strict to non-strict (e.g. `>=` to `>`) toggles how
 - `next_greater(a)` returns, for each $i$, the smallest index $j > i$ with $a[j] > a[i]$, or $n$ if
   there's no such index.
 - `largest_rectangle(heights)` returns the maximum area of an axis-aligned rectangle that fits under
-  the given histogram, given an array of `heights` where each bar has width 1.
+  the given histogram, given an array of `heights` where each bar has width $1$.
 - `largest_zero_submatrix(a)` returns the area of the largest all-zero rectangular submatrix of the
   0/1 matrix `a`.
 

@@ -6,7 +6,7 @@ down to its $x$-intercept, that is, $x \leftarrow x - f(x)/f'(x)$. Newton's meth
 explicit definition of the function's derivative while the secant method starts with two initial
 guesses and approximates the derivative using the secant slope from the previous iteration. For
 $n$ iterations and a good initial guess, the methods below compute approximately $2^n$ digits of
-precision, with the secant method converging approximately 1.6 times slower than Newton's.
+precision, with the secant method converging approximately $1.6$ times slower than Newton's.
 
 - `newton_root(f, fprime, x0)` returns a root $x$ for a function `f` with derivative `fprime` using
   an initial guess `x0` which should be relatively close to $x$.

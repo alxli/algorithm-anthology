@@ -61,7 +61,7 @@ Epsilon Comparisons:
   to exact comparison when `ref` is $0$, since the tolerance collapses to $0$; use `EQ` near zero.
 - `rEQ_sym(x, y)` is the symmetric (commutative) variant: tolerance scales with
   $\max(|`x`|, |`y`|)$, so the result is the same regardless of argument order. Still degenerates
-  near zero when both arguments are close to 0.
+  near zero when both arguments are close to $0$.
 
 */
 

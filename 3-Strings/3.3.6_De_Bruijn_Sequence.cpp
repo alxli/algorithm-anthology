@@ -14,8 +14,8 @@ necklace representatives directly, appending the first $p$ symbols of each candi
 period $p$ divides $n$.
 
 - `de_bruijn(k, n)` returns a vector of length $k^n$ holding one period of $B(k, n)$. Each entry
-  lies in $[0, k)$. Both $k$ and $n$ must be at least 1. Treat the result as cyclic: the length-$n$
-  windows that wrap past the end are exactly the ones still needed to cover all strings.
+  lies in $[0, k)$. Both $k$ and $n$ must be at least $1$. Treat the result as cyclic: the
+  length-$n$ windows that wrap past the end are exactly the ones still needed to cover all strings.
 
 Time Complexity:
 - O(k^n) per call to `de_bruijn(k, n)`, which is optimal since the output itself has length $k^n$.

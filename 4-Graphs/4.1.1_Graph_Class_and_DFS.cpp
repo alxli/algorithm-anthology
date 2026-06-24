@@ -7,7 +7,7 @@ efficient representation that is also time-efficient for traversals.
 The following class implements a simple graph using adjacency lists, along with depth-first search
 and a few other applications. The constructor takes a flag which specifies whether the instance is a
 directed or undirected graph. The nodes of the graph are identified by integer indices numbered
-consecutively starting from 0. The total number of nodes automatically increases based on the
+consecutively starting from $0$. The total number of nodes automatically increases based on the
 maximum node index passed to `add_edge()` so far.
 
 - `Graph(directed)` constructs an empty graph, directed if `directed` is true (the default) and
