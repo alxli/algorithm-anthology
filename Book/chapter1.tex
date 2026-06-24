@@ -311,6 +311,12 @@ int main() {
     radix_sort(a.begin(), a.end());
     assert(sorted(a.begin(), a.end()));
   }
+  {  // Empty and singleton ranges are valid no-ops.
+    vector<int> empty, single{42};
+    quicksort(empty.begin(), empty.end());
+    mergesort(single.begin(), single.end());
+    assert(empty.empty() && single[0] == 42);
+  }
 
   // Example from: http://www.cplusplus.com/reference/algorithm/stable_sort
   const vector<double> a{3.14, 1.41, 2.72, 4.67, 1.73, 1.32, 1.62, 2.58};
@@ -456,6 +462,14 @@ int main() {
   rotate3(a3.begin(), a3.begin() + mid, a3.end());
   assert(a0 == a1 && a0 == a2 && a0 == a3);
 
+  vector<int> no_op{1, 2, 3};
+  rotate1(no_op.begin(), no_op.begin(), no_op.end());
+  assert((no_op == vector<int>{1, 2, 3}));
+  rotate2(no_op.begin(), no_op.end(), no_op.end());
+  assert((no_op == vector<int>{1, 2, 3}));
+  rotate3(no_op.begin(), no_op.begin(), no_op.end());
+  assert((no_op == vector<int>{1, 2, 3}));
+
   // Example from: http://en.cppreference.com/w/cpp/algorithm/rotate
   vector<int> a{2, 4, 2, 0, 5, 10, 7, 3, 7, 1};
   cout << "before sort:  ";
@@ -499,7 +513,7 @@ rotate left:  1 2 2 3 4 5 7 7 10 0
 rotate right: 0 1 2 2 3 4 5 7 7 10
 \end{exampleoutput}
 \subsection{Counting Inversions}
-The number of inversions for a sequence \inlinecode{a} is the number of ordered pairs $(i, j)$ such that $i < j$ and $a[i] > a[j]$. This is roughly how ``close'' an array is to being sorted, but is \textit{not} the minimum number of swaps required to sort the array. If the array is sorted, then the inversion count is 0. If the array is sorted in decreasing order, then the inversion count is maximal. The following two functions are each techniques to efficiently count inversions. In the merge sort approach, whenever the merge step emits an element from the right half, that element jumps ahead of every unmerged left-half element, and exactly that many inversions are added to the count.
+The number of inversions for a sequence \inlinecode{a} is the number of ordered pairs $(i, j)$ such that $i < j$ and $a[i] > a[j]$. This is roughly how ``close'' an array is to being sorted, but is \textit{not} the minimum number of swaps required to sort the array. If the array is sorted, then the inversion count is $0$. If the array is sorted in decreasing order, then the inversion count is maximal. The following two functions are each techniques to efficiently count inversions. In the merge sort approach, whenever the merge step emits an element from the right half, that element jumps ahead of every unmerged left-half element, and exactly that many inversions are added to the count.
 
 \begin{compactitem}
   \item \inlinecode{inversions(lo, hi)} uses merge sort to return the number of inversions given two random-access iterators as a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$. The input range will be sorted after the function call. Optionally, a comparison function object specifying a strict weak ordering may be specified to replace the default \inlinecode{operator\textless{}}.
@@ -590,10 +604,16 @@ int main() {
   {
     std::vector<int> a{6, 9, 1, 14, 8, 12, 3, 2};
     assert(inversions(a.begin(), a.end()) == 16);
+    assert(std::is_sorted(a.begin(), a.end()));
   }
   {
     std::vector<int> a{6, 9, 1, 14, 8, 12, 3, 2};
     assert(inversions(a) == 16);
+    assert((a == std::vector<int>{6, 9, 1, 14, 8, 12, 3, 2}));
+  }
+  {
+    std::vector<int> a{2, 2, 1};
+    assert(inversions(a) == 2);  // Equal elements are not inversions.
   }
   return 0;
 }
@@ -762,7 +782,7 @@ Quickselect repeatedly applies this partition and continues only into the group 
 
 \begin{compactitem}
   \item \inlinecode{partition\_three\_way(lo, hi, pivot)} rearranges $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ in-place and returns iterators $({\inlinecodemath{mid_lo}}, {\inlinecodemath{mid_hi}})$, where $[{\inlinecodemath{lo}}, {\inlinecodemath{mid_lo}})$ is less than \inlinecode{pivot}, $[{\inlinecodemath{mid_lo}}, {\inlinecodemath{mid_hi}})$ is equal to \inlinecode{pivot}, and $[{\inlinecodemath{mid_hi}}, {\inlinecodemath{hi}})$ is greater than \inlinecode{pivot}.
-  \item \inlinecode{sort\_012(lo, hi)} sorts a range consisting only of the values 0, 1, and 2.
+  \item \inlinecode{sort\_012(lo, hi)} sorts a range consisting only of the values $0$, $1$, and $2$.
   \item \inlinecode{nth\_element2(lo, nth, hi)} rearranges the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ around the 0-based rank represented by iterator \inlinecode{nth}. This requires random-access iterators and \inlinecode{operator\textless{}} on the value type.
 \end{compactitem}
 
@@ -934,6 +954,7 @@ int main() {
   auto pref = prefix_sums(a);
   assert(range_sum(pref, 0, 4) == 12);  // Whole array a[0..4]
   assert(range_sum(pref, 1, 3) == 4);   // -1 + 4 + 1
+  assert(range_sum(pref, 2, 2) == 4);   // Single element.
 
   vector<vector<int>> grid{
     {1, 2, 3},
@@ -941,6 +962,8 @@ int main() {
   };
   auto pre2 = prefix_sums_2d(grid);
   assert(rectangle_sum(pre2, 0, 1, 1, 2) == 16);  // rows 0..1, cols 1..2
+  assert(rectangle_sum(pre2, 0, 0, 1, 2) == 21);  // Whole grid.
+  assert(rectangle_sum(pre2, 1, 1, 1, 1) == 5);   // Single cell.
   return 0;
 }
 \end{lstlisting}
@@ -1037,8 +1060,9 @@ int main() {
   d.add(0, 2, 2);   // a[0..2] += 2
   d.add(1, 4, 4);   // a[1..4] += 4
   d.add(2, 3, -1);  // a[2..3] -= 1
+  d.add(4, 4, 3);   // Single index update.
   vector<int64_t> a = d.build();
-  vector<int64_t> expected{2, 6, 5, 3, 4};
+  vector<int64_t> expected{2, 6, 5, 3, 7};
   for (int i = 0; i < static_cast<int>(expected.size()); i++) {
     assert(a[i] == expected[i]);
   }
@@ -1046,11 +1070,12 @@ int main() {
   DifferenceArray2D d2(3, 4);
   d2.add(0, 0, 1, 2, 1);  // Rows 0..1, cols 0..2 += 1
   d2.add(1, 1, 2, 3, 2);  // Rows 1..2, cols 1..3 += 2
+  d2.add(2, 0, 2, 0, 5);  // Single cell update.
   vector<vector<int64_t>> g = d2.build();
   vector<vector<int64_t>> expected2{
     {1, 1, 1, 0},
     {1, 3, 3, 2},
-    {0, 2, 2, 2}
+    {5, 2, 2, 2}
   };
   assert(g == expected2);
   return 0;
@@ -1257,7 +1282,7 @@ All functions below take a vector \inlinecode{a} of $n$ comparable values and re
   \item \inlinecode{next\_less(a)} returns, for each $i$, the smallest index $j > i$ with $a[j] < a[i]$, or $n$ if there's no such index.
   \item \inlinecode{previous\_greater(a)} returns, for each $i$, the largest index $j < i$ with $a[j] > a[i]$, or $-1$ if there's no such index.
   \item \inlinecode{next\_greater(a)} returns, for each $i$, the smallest index $j > i$ with $a[j] > a[i]$, or $n$ if there's no such index.
-  \item \inlinecode{largest\_rectangle(heights)} returns the maximum area of an axis-aligned rectangle that fits under the given histogram, given an array of \inlinecode{heights} where each bar has width 1.
+  \item \inlinecode{largest\_rectangle(heights)} returns the maximum area of an axis-aligned rectangle that fits under the given histogram, given an array of \inlinecode{heights} where each bar has width $1$.
   \item \inlinecode{largest\_zero\_submatrix(a)} returns the area of the largest all-zero rectangular submatrix of the 0/1 matrix \inlinecode{a}.
 \end{compactitem}
 
@@ -1494,15 +1519,19 @@ using namespace std;
 int main() {
   // Used directly as a FIFO queue with an O(1) min query.
   AggregateQueue<int> q;
+  assert(q.empty());
   q.push(5);
   q.push(3);
   q.push(8);
+  assert(!q.empty());
   assert(q.front() == 5 && q.size() == 3);
   assert(q.fold() == 3);  // min(5, 3, 8)
   q.pop();                // Removes 5.
   assert(q.fold() == 3);  // min(3, 8)
   q.pop();                // Removes 3.
   assert(q.fold() == 8);
+  q.pop();                // Removes 8.
+  assert(q.empty());
 
   // Canonical use: the minimum of every width-3 window, advancing the window by push/pop.
   vector<int> a{4, 2, 5, 1, 3, 6};
@@ -1814,14 +1843,19 @@ using namespace std;
 int main() {
   vector<int> a{0, 1, 4, 2, 1};
   assert(mex(a.begin(), a.end()) == 3);
+  vector<int> b{-1, 0, 1, 2};
+  assert(mex(b.begin(), b.end()) == 3);  // Negative values are ignored.
 
   DynamicMex m;
   m.add(0);
+  m.add(1);
   m.add(1);
   m.add(3);
   assert(m.get() == 2);
   m.add(2);
   assert(m.get() == 4);
+  m.remove(1);
+  assert(m.get() == 4);  // One copy of 1 remains.
   m.remove(1);
   assert(m.get() == 1);
   m.remove(100);
@@ -1830,7 +1864,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Iterated Function Cycle Detection}
-Given a function $f$ mapping a finite set to itself and a starting value $x_0$, return the position and length of the cycle reached by repeatedly applying $f$. Formally, the sequence $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$ must eventually repeat some value. If $x_i = x_j$ for $i < j$, then the sequence from $x_i$ to $x_{j - 1}$ repeats forever. This is useful for detecting cycles in functional graphs, pseudo-random generators, Pollard rho style algorithms, degenerate linked lists, and arrays where each index points to the next index. For example, if \inlinecode{nums} has size $n + 1$ and all values are in $[1, n]$, then $f(i)$ = \inlinecode{nums[i]} forms a functional graph; the duplicate value is the entry point of the cycle reached from 0.
+Given a function $f$ mapping a finite set to itself and a starting value $x_0$, return the position and length of the cycle reached by repeatedly applying $f$. Formally, the sequence $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$ must eventually repeat some value. If $x_i = x_j$ for $i < j$, then the sequence from $x_i$ to $x_{j - 1}$ repeats forever. This is useful for detecting cycles in functional graphs, pseudo-random generators, Pollard rho style algorithms, degenerate linked lists, and arrays where each index points to the next index. For example, if \inlinecode{nums} has size $n + 1$ and all values are in $[1, n]$, then $f(i)$ = \inlinecode{nums[i]} forms a functional graph; the duplicate value is the entry point of the cycle reached from $0$.
 
 Floyd's cycle-finding algorithm, a.k.a. the ``tortoise and the hare algorithm'', is a space-efficient default choice: it moves two pointers through the sequence at different speeds, finds a meeting point inside the cycle, then locates the cycle start. Brent's algorithm is a compact variant that usually calls $f$ fewer times by only resetting the tortoise at powers of two; prefer it when evaluating $f$ is expensive and constant factors matter. In the detection phase, Brent advances one pointer with one call to $f$ per step, while Floyd advances the tortoise once and the hare twice, using three calls to $f$ per step.
 
@@ -2306,6 +2340,9 @@ int main() {
   assert(chosen[0].id == 0);
   assert(chosen[1].id == 3);
   assert(chosen[2].id == 4);
+
+  vector<Interval> touching{{0, 2, 0}, {2, 4, 1}, {4, 5, 2}};
+  assert(schedule_intervals(touching).size() == 3);
   return 0;
 }
 \end{lstlisting}
@@ -2386,6 +2423,11 @@ int main() {
   auto [weight, selected] = select_weighted_intervals(intervals);
   assert(weight == 17);
   assert((selected == vector<int>{1, 4}));
+
+  vector<WeightedInterval> touching{{0, 2, 5}, {2, 4, 6}, {1, 3, 7}};
+  auto [touching_weight, touching_selected] = select_weighted_intervals(touching);
+  assert(touching_weight == 11);
+  assert((touching_selected == vector<int>{0, 1}));
   return 0;
 }
 \end{lstlisting}
@@ -2453,6 +2495,11 @@ int main() {
   assert(1 + *max_element(room.begin(), room.end()) == 2);
   assert(room[1] == room[2]);
   assert(room[0] != room[1]);
+
+  vector<PartitionInterval> touching{{0, 2, 0}, {2, 4, 1}, {4, 5, 2}};
+  vector<int> touching_room = partition_intervals(touching);
+  assert(*max_element(touching_room.begin(), touching_room.end()) == 0);
+  assert(partition_intervals({}).empty());
   return 0;
 }
 \end{lstlisting}
@@ -2542,7 +2589,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Minimizing Late Jobs (Moore-Hodgson)}
-Selects a maximum-size subset of jobs that can all be completed by their deadlines. Each job has a processing time and deadline, and all jobs are available at time 0. The Moore-Hodgson algorithm sorts by deadline and keeps the accepted jobs in a max-heap by processing time; whenever the schedule becomes late, it removes the longest accepted job.
+Selects a maximum-size subset of jobs that can all be completed by their deadlines. Each job has a processing time and deadline, and all jobs are available at time $0$. The Moore-Hodgson algorithm sorts by deadline and keeps the accepted jobs in a max-heap by processing time; whenever the schedule becomes late, it removes the longest accepted job.
 
 After considering jobs up to some deadline, if the accepted set no longer fits, at least one accepted job must be removed. Removing the longest one leaves the most remaining time while keeping the same number of removed jobs, so it is never worse than removing a shorter accepted job. Repeating this repair after each deadline leaves a largest feasible accepted set.
 
@@ -2754,6 +2801,7 @@ int main() {
   for (int x : a) {
     s1.add(x);
   }
+  assert(s1.count() == 5);
   int one = s1.get();
   assert(one == 10 || one == 20 || one == 30 || one == 40 || one == 50);
 
@@ -2761,7 +2809,15 @@ int main() {
   for (int x : a) {
     sk.add(x);
   }
+  assert(sk.count() == 5);
   assert(sk.get().size() == 3);
+
+  ReservoirSampleK<int> large(10);
+  for (int x : a) {
+    large.add(x);
+  }
+  assert(large.count() == 5);
+  assert(large.get().size() == 5);
   return 0;
 }
 \end{lstlisting}
@@ -2872,6 +2928,19 @@ bool close(double a, double b) {
 }
 
 int main() {
+  OnlineStatistics empty;
+  assert(empty.count() == 0);
+  assert(close(empty.mean(), 0.0));
+  assert(close(empty.variance_population(), 0.0));
+  assert(close(empty.variance_sample(), 0.0));
+
+  OnlineStatistics singleton;
+  singleton.add(7);
+  assert(singleton.count() == 1);
+  assert(close(singleton.mean(), 7.0));
+  assert(close(singleton.variance_population(), 0.0));
+  assert(close(singleton.variance_sample(), 0.0));
+
   OnlineStatistics stats;
   for (int x = 1; x <= 5; x++) {
     stats.add(x);
@@ -3051,9 +3120,13 @@ int main() {
 
   assert(lowest_set_bit(x) == 0b100u);
   assert(clear_lowest_set_bit(x) == 0b101000u);
+  assert(lowest_set_bit(0) == 0u);
+  assert(clear_lowest_set_bit(0) == 0u);
   assert(popcount(x) == 3);
+  assert(popcount(0) == 0);
   assert(parity(x) == 1);
   assert(parity(0b101101u) == 0);
+  assert(parity(0) == 0);
   assert(ctz(x) == 2);
   assert(ffs(x) == 3);
   assert(ffs(0) == 0);
@@ -3494,9 +3567,11 @@ using namespace std;
 
 int main() {
   BinaryTrie<> trie;
+  assert(trie.empty());
   for (int x : {3, 10, 5, 25, 2}) {
     trie.insert(x);
   }
+  assert(!trie.empty());
   assert(trie.size() == 5);
 
   // x XOR y over the stored y: {26, 19, 28, 0, 27} for x = 25.
@@ -3649,6 +3724,25 @@ using namespace std;
 int main() {
   vector<int64_t> a{1, 2, 3, 4};
   vector<int64_t> b{5, 6, 7, 8};
+
+  {
+    vector<int64_t> f{1, 2, 3, 4}, original(f);
+    xor_transform(f, false);
+    xor_transform(f, true);
+    assert(f == original);
+  }
+  {
+    vector<int64_t> f{1, 2, 3, 4}, original(f);
+    or_transform(f, false);
+    or_transform(f, true);
+    assert(f == original);
+  }
+  {
+    vector<int64_t> f{1, 2, 3, 4}, original(f);
+    and_transform(f, false);
+    and_transform(f, true);
+    assert(f == original);
+  }
 
   // XOR: c[m] sums a[x] * b[y] over pairs with x ^ y == m.
   assert((xor_convolve(a, b) == vector<int64_t>{70, 68, 62, 60}));

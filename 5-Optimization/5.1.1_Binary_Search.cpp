@@ -95,10 +95,14 @@ double fbinary_search(double lo, double hi, Pred pred) {  // 000[1]11
 
 int main() {
   assert(binary_search_first_true(0, 7, [](int x) { return x >= 3; }) == 3);
+  assert(binary_search_first_true(0, 7, [](int x) { return true; }) == 0);
   assert(binary_search_first_true(0, 7, [](int x) { return false; }) == 7);
+  assert(binary_search_first_true(4, 4, [](int x) { return x >= 4; }) == 4);
 
   assert(binary_search_last_true(0, 7, [](int x) { return x <= 5; }) == 5);
   assert(binary_search_last_true(0, 7, [](int x) { return true; }) == 6);
+  assert(binary_search_last_true(0, 7, [](int x) { return false; }) == 7);
+  assert(binary_search_last_true(4, 4, [](int x) { return x <= 4; }) == 4);
 
   double res = fbinary_search(-10.0, 10.0, [](double x) { return x >= 1.2345; });
   assert(fabs(res - 1.2345) < 1e-15);

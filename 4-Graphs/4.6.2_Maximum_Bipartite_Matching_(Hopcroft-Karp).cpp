@@ -97,19 +97,26 @@ Matched 3 pair(s):
 
 ***/
 
+#include <cassert>
 #include <iostream>
 using namespace std;
 
 int main() {
   int n1 = 3, n2 = 4;
   adj.assign(n1, {});
+  // Left vertices L0..L2, right vertices R0..R3:
+  //   L0 -- R1
+  //   L1 -- R0, R1, R2
+  //   L2 -- R2, R3
   adj[0].push_back(1);
   adj[1].push_back(0);
   adj[1].push_back(1);
   adj[1].push_back(2);
   adj[2].push_back(2);
   adj[2].push_back(3);
-  cout << "Matched " << hopcroft_karp(n2) << " pair(s):" << endl;
+  int pairs = hopcroft_karp(n2);
+  assert(pairs == 3);
+  cout << "Matched " << pairs << " pair(s):" << endl;
   for (int i = 0; i < n2; i++) {
     if (match[i] != -1) {
       cout << match[i] << " " << i << endl;

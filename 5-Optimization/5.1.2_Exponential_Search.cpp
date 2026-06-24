@@ -56,6 +56,7 @@ bool square_large_enough(int64_t x) {
 }
 
 int main() {
+  assert(exponential_search_first_true(1000, at_least_1000) == 1000);
   assert(exponential_search_first_true(0, at_least_1000) == 1000);
   assert(exponential_search_first_true(5, at_least_1000) == 1000);
   assert(exponential_search_first_true(0LL, square_large_enough) == 11112);

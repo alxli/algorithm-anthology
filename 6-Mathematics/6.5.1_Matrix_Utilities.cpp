@@ -399,6 +399,7 @@ int main() {
   assert(rotate(a, 180) == a180);
   assert(rotate(a, 270) == a270);
   assert(rotate(a, 360) == a);
+  assert(rotate(a, 450) == a90);
 
   matrix b{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
   for (int d = -360; d <= 360; d += 90) {
@@ -414,6 +415,7 @@ int main() {
   m[0][0] += 5;
   assert(m[0][0] == 25 && m[1][1] == 20);
   assert((m ^ 0) == identity_matrix(5));
+  assert((identity_matrix<int>(3) ^ 5) == identity_matrix<int>(3));
   assert(power_sum(m, 3) == m + m * m + (m ^ 3));
 
   Matrix<double> d = make_matrix<double>(2, 2, 0.5);

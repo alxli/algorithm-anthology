@@ -84,5 +84,10 @@ int main() {
   auto [weight, selected] = select_weighted_intervals(intervals);
   assert(weight == 17);
   assert((selected == vector<int>{1, 4}));
+
+  vector<WeightedInterval> touching{{0, 2, 5}, {2, 4, 6}, {1, 3, 7}};
+  auto [touching_weight, touching_selected] = select_weighted_intervals(touching);
+  assert(touching_weight == 11);
+  assert((touching_selected == vector<int>{0, 1}));
   return 0;
 }

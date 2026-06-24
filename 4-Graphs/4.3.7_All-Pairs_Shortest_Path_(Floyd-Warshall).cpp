@@ -76,6 +76,7 @@ Take the path: 0->1->2.
 
 ***/
 
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -90,11 +91,18 @@ void print_path(int u, int v) {
 
 int main() {
   init_floyd(3);
+  //    w=1      w=2
+  // 0 -----> 1 -----> 2
+  // |                 ^
+  // +-----------------+
+  //         w=5
   dist[0][1] = 1;
   dist[1][2] = 2;
   dist[0][2] = 5;
   floyd_warshall();
   int start = 0, dest = 2;
+  assert(dist[start][dest] == 3);
+  assert(next_node[start][dest] == 1);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[start][dest]
        << ".\n";
   print_path(start, dest);

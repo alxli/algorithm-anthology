@@ -109,5 +109,12 @@ int main() {
   assert(h.query(2) == 4);
   assert(h.query(1) == 3);
   assert(h.query(3) == 5);
+
+  HullOptimizer mx(true);
+  mx.add_line(3, 0);
+  mx.add_line(0, 6);
+  mx.add_line(1, 2);
+  assert(mx.query(0) == 6);
+  assert(mx.query(3) == 9);
   return 0;
 }

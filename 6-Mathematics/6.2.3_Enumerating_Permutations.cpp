@@ -202,6 +202,7 @@ int main() {
       std::next_permutation(b.begin(), b.end());
       next_permutation(c);
     } while (next_permutation(a));
+    assert(count == 24);
     cout << endl;
   }
   {  // Permutations of binary digits.
@@ -209,15 +210,21 @@ int main() {
     cout << "\nPermutations of 2 zeros and 3 ones:" << endl;
     int lo = bitset<5>(string("00111")).to_ulong();
     int hi = bitset<6>(string("100011")).to_ulong();
+    int count = 0;
     do {
       cout << bitset<n>(lo).to_string() << " ";
+      count++;
     } while ((lo = next_permutation(lo)) != hi);
+    assert(count == 10);
     cout << endl;
   }
   {  // Decomposition into cycles.
     vector<int> a{3, 1, 0, 2};
     cout << "\nDecomposition of {3,1,0,2} into cycles:" << endl;
     cycles c = permutation_cycles(a);
+    assert(c.size() == 2);
+    assert((c[0] == vector<int>{0, 3, 2}));
+    assert((c[1] == vector<int>{1}));
     for (const auto &cycle : c) {
       print_range(cycle.begin(), cycle.end());
     }

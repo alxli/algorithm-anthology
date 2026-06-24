@@ -192,10 +192,15 @@ struct Hasher {
 
 int main() {
   ChainingHashMap<string, char, Hasher> m;
+  assert(m.empty());
   m["foo"] = 'a';
-  m.insert("bar", 'b');
+  assert(m.insert("bar", 'b'));
+  assert(!m.insert("bar", 'z'));
+  assert(!m.empty() && m.size() == 2);
   assert(m["foo"] == 'a');
   assert(m["bar"] == 'b');
+  assert(m.find("foo") != nullptr && *m.find("foo") == 'a');
+  assert(m.find("qux") == nullptr);
   assert(m["baz"] == '\0');
   m["baz"] = 'c';
 

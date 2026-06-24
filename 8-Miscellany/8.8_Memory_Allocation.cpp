@@ -79,14 +79,20 @@ struct BumpAllocator {
 /*** Example Usage ***/
 
 int main() {
+  std::size_t before_new = bump_pos;
   int *x = new int(42);
   assert(*x == 42);
+  assert(bump_pos < before_new);
+  std::size_t after_new = bump_pos;
   delete x;  // No-op.
+  assert(bump_pos == after_new);
 
   std::vector<int, BumpAllocator<int>> v;
   for (int i = 0; i < 1000; i++) {
     v.push_back(i);
   }
+  assert(v.size() == 1000);
   assert(v[123] == 123);
+  assert(v.back() == 999);
   return 0;
 }

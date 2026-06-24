@@ -4404,7 +4404,7 @@ int main() {
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{3D Point}
-A 3D point class template supporting vector arithmetic, dot and cross products, distances, angles, unit vectors, normals, and rotation about an axis. Point equality and ordering are exact, while \inlinecode{EQ(p, q)} provides epsilon equality for floating-point coordinates. Integer coordinates are suitable for exact algebraic predicates $({\inlinecodemath{dot}}, {\inlinecodemath{cross}}, {\inlinecodemath{sqnorm}})$ as long as intermediate products do not overflow; metric operations preserve floating-point coordinates and otherwise convert them to \inlinecode{double}. For \inlinecode{Modular}, this uses the stored representative and is not finite-field geometry.
+A 3D point class template supporting vector arithmetic, dot and cross products, distances, angles, unit vectors, normals, and rotation about an axis. Point equality and ordering are exact, while \inlinecode{EQ(p, q)} provides epsilon equality for floating-point coordinates. Integer coordinates are suitable for exact algebraic predicates $({\inlinecodemath{dot}}, {\inlinecodemath{cross}}, {\inlinecodemath{sqnorm}})$ as long as intermediate products do not overflow; metric operations preserve floating-point coordinates and otherwise convert them to \inlinecode{double}.
 
 Type aliases:
 

@@ -76,6 +76,10 @@ string base64_decode(const string &text) {
 #include <cassert>
 
 int main() {
+  assert(base64_encode("") == "");
+  assert(base64_decode("") == "");
+  assert(base64_encode("f") == "Zg==");
+  assert(base64_encode("fo") == "Zm8=");
   assert(base64_encode("hello") == "aGVsbG8=");
   assert(base64_decode("aGVsbG8=") == "hello");
   assert(base64_decode(base64_encode("abc123!?")) == "abc123!?");

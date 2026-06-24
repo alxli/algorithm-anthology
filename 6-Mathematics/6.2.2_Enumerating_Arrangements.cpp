@@ -154,6 +154,7 @@ int main() {
         cout << endl;
       }
     } while (next_arrangement(n, a));
+    assert(count == 24);
     cout << endl;
   }
   {
@@ -168,6 +169,7 @@ int main() {
         cout << endl;
       }
     } while (next_arrangement_with_repeats(n, a));
+    assert(count == 16);
     cout << endl;
   }
   return 0;

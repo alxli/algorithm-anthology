@@ -62,6 +62,7 @@ Values: 5 10 15 10 10
 
 ***/
 
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -70,6 +71,11 @@ int main() {
   t.add(0, 1, 5);
   t.add(1, 2, 5);
   t.add(2, 4, 10);
+  assert(t.size() == 5);
+  assert(t.at(0) == 5);
+  assert(t.at(1) == 10);
+  assert(t.at(2) == 15);
+  assert(t.at(4) == 10);
   cout << "Values: ";
   for (int i = 0; i < t.size(); i++) {
     cout << t.at(i) << " ";

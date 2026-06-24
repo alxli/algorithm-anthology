@@ -141,6 +141,25 @@ int main() {
   vector<int64_t> a{1, 2, 3, 4};
   vector<int64_t> b{5, 6, 7, 8};
 
+  {
+    vector<int64_t> f{1, 2, 3, 4}, original(f);
+    xor_transform(f, false);
+    xor_transform(f, true);
+    assert(f == original);
+  }
+  {
+    vector<int64_t> f{1, 2, 3, 4}, original(f);
+    or_transform(f, false);
+    or_transform(f, true);
+    assert(f == original);
+  }
+  {
+    vector<int64_t> f{1, 2, 3, 4}, original(f);
+    and_transform(f, false);
+    and_transform(f, true);
+    assert(f == original);
+  }
+
   // XOR: c[m] sums a[x] * b[y] over pairs with x ^ y == m.
   assert((xor_convolve(a, b) == vector<int64_t>{70, 68, 62, 60}));
 

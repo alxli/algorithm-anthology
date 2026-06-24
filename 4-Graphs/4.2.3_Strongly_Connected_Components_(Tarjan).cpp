@@ -93,11 +93,18 @@ Components:
 
 ***/
 
+#include <cassert>
 #include <iostream>
 using namespace std;
 
 int main() {
   TarjanSCC g(8);
+  // 0 ---> 1 ----> 2 <---> 3
+  // ^    / |       |       ^
+  // |   /  |       |       |
+  // |  /   |       |       v
+  // | v    v       v       7
+  // 4 ---> 5 <---> 6 <----/
   g.add_edge(0, 1);
   g.add_edge(1, 2);
   g.add_edge(1, 4);
@@ -113,6 +120,14 @@ int main() {
   g.add_edge(7, 3);
   g.add_edge(7, 6);
   g.build_scc();
+  // SCC condensation DAG:
+  // {0,1,4} -> {2,3,7} -> {5,6}
+  //     \-------------------^
+  assert(g.scc.size() == 3);
+  assert(g.component[0] == g.component[1] && g.component[1] == g.component[4]);
+  assert(g.component[2] == g.component[3] && g.component[3] == g.component[7]);
+  assert(g.component[5] == g.component[6]);
+  assert(g.component[0] != g.component[2] && g.component[2] != g.component[5]);
   cout << "Components:" << endl;
   for (auto &component : g.scc) {
     for (int v : component) {

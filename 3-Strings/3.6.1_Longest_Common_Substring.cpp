@@ -54,5 +54,8 @@ string longest_common_substring(const string &s1, const string &s2) {
 
 int main() {
   assert(longest_common_substring("bbbabca", "aababcd") == "babc");
+  assert(longest_common_substring("abc", "def") == "");
+  assert(longest_common_substring("", "abc") == "");
+  assert(longest_common_substring("xyabc", "zzabczz") == "abc");
   return 0;
 }

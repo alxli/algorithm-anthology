@@ -119,6 +119,8 @@ int main() {
   vector<int64_t> a{1, 2, 3}, b{4, 5, 6};
   vector<int64_t> c = convolve(a, b);
   assert((c == vector<int64_t>{4, 13, 28, 27, 18}));
+  assert(convolve({}, b).empty());
+  assert((convolve(vector<int64_t>{5}, vector<int64_t>{7}) == vector<int64_t>{35}));
   vector<int64_t> ones(160, 1);
   vector<int64_t> d = convolve(ones, ones);
   assert(d[0] == 1 && d[159] == 160 && d[318] == 1);

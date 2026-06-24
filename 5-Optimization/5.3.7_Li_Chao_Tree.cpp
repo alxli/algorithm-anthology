@@ -116,6 +116,7 @@ int main() {
   cht.add_line(3, 0);
   cht.add_line(1, 2);
   cht.add_line(-1, 10);
+  assert(cht.query(-10) == -30);
   assert(cht.query(0) == 0);
   assert(cht.query(2) == 4);
   assert(cht.query(10) == 0);

@@ -126,9 +126,13 @@ int main() {
 
   assert(lowest_set_bit(x) == 0b100u);
   assert(clear_lowest_set_bit(x) == 0b101000u);
+  assert(lowest_set_bit(0) == 0u);
+  assert(clear_lowest_set_bit(0) == 0u);
   assert(popcount(x) == 3);
+  assert(popcount(0) == 0);
   assert(parity(x) == 1);
   assert(parity(0b101101u) == 0);
+  assert(parity(0) == 0);
   assert(ctz(x) == 2);
   assert(ffs(x) == 3);
   assert(ffs(0) == 0);

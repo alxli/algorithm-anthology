@@ -82,6 +82,7 @@ Total distance: 13
 
 ***/
 
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -95,8 +96,14 @@ void add_edge(int u, int v, int w) {
 }
 
 int main() {
-  int nodes = 7;
-  adj.assign(nodes, {});
+  adj.assign(7, {});
+  // Two connected components; MST routine returns a minimum spanning forest.
+  //      w=4              w=1
+  //   0 ----- 1        3 ----- 4
+  //    \     /                /  \.
+  // w=3 \   / w=6        w=2 /    \ w=4
+  //      \ /                / w=3  \.
+  //       2                5 ------ 6
   add_edge(0, 1, 4);
   add_edge(1, 2, 6);
   add_edge(2, 0, 3);
@@ -104,7 +111,10 @@ int main() {
   add_edge(4, 5, 2);
   add_edge(5, 6, 3);
   add_edge(6, 4, 4);
-  cout << "Total distance: " << prim_mst() << endl;
+  int total = prim_mst();
+  assert(total == 13);
+  assert(mst.size() == 5);
+  cout << "Total distance: " << total << endl;
   for (int id : mst) {
     auto &[u, v] = edge_endpoints[id];
     cout << u << " <-> " << v << endl;

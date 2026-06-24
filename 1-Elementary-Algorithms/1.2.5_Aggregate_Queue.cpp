@@ -97,15 +97,19 @@ using namespace std;
 int main() {
   // Used directly as a FIFO queue with an O(1) min query.
   AggregateQueue<int> q;
+  assert(q.empty());
   q.push(5);
   q.push(3);
   q.push(8);
+  assert(!q.empty());
   assert(q.front() == 5 && q.size() == 3);
   assert(q.fold() == 3);  // min(5, 3, 8)
   q.pop();                // Removes 5.
   assert(q.fold() == 3);  // min(3, 8)
   q.pop();                // Removes 3.
   assert(q.fold() == 8);
+  q.pop();                // Removes 8.
+  assert(q.empty());
 
   // Canonical use: the minimum of every width-3 window, advancing the window by push/pop.
   vector<int> a{4, 2, 5, 1, 3, 6};

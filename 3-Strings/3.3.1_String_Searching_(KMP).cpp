@@ -69,6 +69,10 @@ class KMP {
 #include <cassert>
 
 int main() {
-  assert(15 == KMP("ABCDABD").find_in("ABC ABCDAB ABCDABCDABDE"));
+  KMP kmp("ABCDABD");
+  assert(kmp.find_in("ABC ABCDAB ABCDABCDABDE") == 15);
+  assert(kmp.find_in("ABC ABCDAB ABCDABCDA") == string::npos);
+  assert(KMP("aa").find_in("aaa") == 0);  // First overlapping occurrence.
+  assert(KMP("").find_in("abc") == 0);
   return 0;
 }

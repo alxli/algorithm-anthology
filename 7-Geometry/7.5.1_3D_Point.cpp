@@ -43,6 +43,7 @@ struct TPoint3 {
 
   TPoint3(T x = 0, T y = 0, T z = 0) : x(x), y(y), z(z) {}
   bool operator==(const TPoint3 &p) const { return std::tie(x, y, z) == std::tie(p.x, p.y, p.z); }
+
   friend bool EQ(const TPoint3 &a, const TPoint3 &b) {
     return EQ(a.x, b.x) && EQ(a.y, b.y) && EQ(a.z, b.z);
   }

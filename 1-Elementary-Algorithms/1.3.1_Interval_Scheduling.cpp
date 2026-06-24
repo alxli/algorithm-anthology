@@ -61,5 +61,8 @@ int main() {
   assert(chosen[0].id == 0);
   assert(chosen[1].id == 3);
   assert(chosen[2].id == 4);
+
+  vector<Interval> touching{{0, 2, 0}, {2, 4, 1}, {4, 5, 2}};
+  assert(schedule_intervals(touching).size() == 3);
   return 0;
 }

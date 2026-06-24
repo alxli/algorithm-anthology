@@ -206,9 +206,12 @@ int main() {
     int k = 3;
     string s = "11234";
     cout << "\"" << s << "\" choose " << k << ":" << endl;
+    int count = 0;
     do {
       cout << s.substr(0, k) << " ";
+      count++;
     } while (next_combination(s.begin(), s.begin() + k, s.end()));
+    assert(count == 7);  // Duplicate '1' values collapse equal output strings.
     cout << endl;
   }
   {  // Unordered combinations using masks.
@@ -222,6 +225,7 @@ int main() {
     for (int i = k - 1; i < n; i++) {
       dest |= (1 << i);
     }
+    int count = 0;
     do {
       for (int i = 0; i < n; i++) {
         if ((mask >> i) & 1) {
@@ -229,8 +233,10 @@ int main() {
         }
       }
       cout << " ";
+      count++;
       mask = next_combination_mask(mask);
     } while (mask != dest);
+    assert(count == 9);  // Stops before the sentinel mask.
     cout << endl;
   }
   {  // Combinations of distinct integers from 0 to n - 1.
@@ -245,15 +251,19 @@ int main() {
       assert(rank_by_combination(n, a) == count);
       count++;
     } while (next_combination(n, a));
+    assert(count == 10);
     cout << endl;
   }
   {  // Combinations with repeats.
     int n = 3, k = 2;
     vector<int> a{0, 0};
     cout << "\n" << n << " multichoose " << k << ":" << endl;
+    int count = 0;
     do {
       print_range(a.begin(), a.end());
+      count++;
     } while (next_combination_with_repeats(n, a));
+    assert(count == 6);
     cout << endl;
   }
   return 0;

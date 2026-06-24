@@ -95,6 +95,15 @@ using namespace std;
 
 int main() {
   adj.assign(8, {});
+  //        1
+  //        |
+  //        v
+  // 0 ---> 3 ---> 5
+  // |      | ╲
+  // v      v  v
+  // 4 ---> 6  7 <--- 2
+  // ^                |
+  //  \_______________|
   adj[0].push_back(3);
   adj[0].push_back(4);
   adj[1].push_back(3);
@@ -111,6 +120,8 @@ int main() {
   }
   cout << endl;
   vector<int> kahn = toposort_kahn();
+  assert(dfs_res.size() == adj.size());
+  assert(kahn.size() == adj.size());
   vector<int> position(kahn.size());
   for (int i = 0; i < static_cast<int>(kahn.size()); i++) {
     position[kahn[i]] = i;

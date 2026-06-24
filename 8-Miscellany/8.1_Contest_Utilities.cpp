@@ -141,8 +141,13 @@ int main() {
   vector<int> v = {1, 2, 3};
   assert(sz(v) == 3);
   assert(between(2, 1, 3));
+  assert(between(1, 1, 3) && between(3, 1, 3));
+  assert(!between(0, 1, 3));
+  assert(clmp(-5, 1, 3) == 1);
   assert(clmp(10, 1, 3) == 3);
+  assert(floor_div(7, -3) == -3);
   assert(floor_div(-7, 3) == -3);
+  assert(ceil_div(7, -3) == -2);
   assert(ceil_div(-7, 3) == -2);
   v = {3, 1, 3, 2, 1};
   sort_unique(v);
@@ -158,6 +163,8 @@ int main() {
   RNG rng(123);
   int r = rng.uniform_int(1, 6);
   assert(1 <= r && r <= 6);
+  double d = rng.uniform_real();
+  assert(0.0 <= d && d < 1.0);
   rng.shuffle(v.begin(), v.end());
   assert(sz(v) == 3);
 

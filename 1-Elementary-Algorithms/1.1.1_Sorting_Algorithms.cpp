@@ -369,6 +369,12 @@ int main() {
     radix_sort(a.begin(), a.end());
     assert(sorted(a.begin(), a.end()));
   }
+  {  // Empty and singleton ranges are valid no-ops.
+    vector<int> empty, single{42};
+    quicksort(empty.begin(), empty.end());
+    mergesort(single.begin(), single.end());
+    assert(empty.empty() && single[0] == 42);
+  }
 
   // Example from: http://www.cplusplus.com/reference/algorithm/stable_sort
   const vector<double> a{3.14, 1.41, 2.72, 4.67, 1.73, 1.32, 1.62, 2.58};

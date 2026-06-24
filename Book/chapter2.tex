@@ -1303,7 +1303,7 @@ abcde
 bcde
 \end{exampleoutput}
 \subsection{AVL Tree}
-Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible key appears at most once in the collection. An AVL tree is a binary search tree balanced by height, guaranteeing $O(\log n)$ worst-case running time in insertions and deletions by making sure that the heights of the left and right subtrees at every node differ by at most 1. Whenever an insertion or deletion breaks this invariant, it is repaired with one or two rotations at each affected node along the search path.
+Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible key appears at most once in the collection. An AVL tree is a binary search tree balanced by height, guaranteeing $O(\log n)$ worst-case running time in insertions and deletions by making sure that the heights of the left and right subtrees at every node differ by at most $1$. Whenever an insertion or deletion breaks this invariant, it is repaired with one or two rotations at each affected node along the search path.
 
 This implementation requires an ordering on the key type \inlinecode{K} defined by \inlinecode{operator\textless{}}.
 
@@ -8497,7 +8497,7 @@ The construction sorts the subset by depth-first entry time, which lists the nod
   \item \inlinecode{VirtualTree(adj, root)} builds the structure over a tree rooted at \inlinecode{root}, given a bidirectional adjacency list \inlinecode{adj} of nodes numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}.
   \item \inlinecode{lca(u, v)} returns the lowest common ancestor of nodes \inlinecode{u} and \inlinecode{v}.
   \item \inlinecode{depth\_of(u)} returns the depth of \inlinecode{u} in the original tree (the root has depth 0). The original path length of a virtual-tree edge $({\inlinecodemath{p}}, {\inlinecodemath{c}})$ is \inlinecode{depth\_of(c) - depth\_of(p)}.
-  \item \inlinecode{build(nodes)} returns the virtual tree induced by \inlinecode{nodes}. The result has \inlinecode{root} set to the topmost node (the common ancestor of \inlinecode{nodes}), \inlinecode{vertices} listing every original node ID in the virtual tree sorted by entry time, and \inlinecode{edges} listing each $({\inlinecodemath{p}}, {\inlinecodemath{c}})$ pair in original IDs. Both the vertex set and the edges use the node numbering of the original tree. An empty input yields an empty result with \inlinecode{root} = $-1$.
+  \item \inlinecode{build(nodes)} returns the virtual tree induced by \inlinecode{nodes}. The result has \inlinecode{root} set to the topmost node (the common ancestor of \inlinecode{nodes}), \inlinecode{vertices} listing every original node ID in the virtual tree sorted by entry time, and \inlinecode{edges} listing each $({\inlinecodemath{p}}, {\inlinecodemath{c}})$ pair in original IDs. Both the vertex set and the edges use the node numbering of the original tree. An empty input yields an empty result with \inlinecode{root} $= -1$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}

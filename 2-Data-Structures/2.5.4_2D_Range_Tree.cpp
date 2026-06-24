@@ -114,6 +114,8 @@ class RangeTree {
 
 ***/
 
+#include <algorithm>
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -125,6 +127,15 @@ int main() {
   vector<pair<int, int>> v{{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
                            {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
   RangeTree<int> t(v.begin(), v.end());
+  vector<pair<int, int>> got;
+  auto collect = [&](int, const pair<int, int> &p) { got.push_back(p); };
+  t.query(-1, -1, 2, 5, collect);
+  sort(got.begin(), got.end());
+  assert((got == vector<pair<int, int>>{{-1, -1}, {1, 4}, {2, -1}, {2, 2}}));
+  got.clear();
+  t.query(1, 1, 4, 8, collect);
+  sort(got.begin(), got.end());
+  assert((got == vector<pair<int, int>>{{1, 4}, {2, 2}, {3, 1}}));
   t.query(-1, -1, 2, 5, print);
   cout << endl;
   t.query(1, 1, 4, 8, print);

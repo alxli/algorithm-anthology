@@ -74,5 +74,10 @@ int main() {
   assert(1 + *max_element(room.begin(), room.end()) == 2);
   assert(room[1] == room[2]);
   assert(room[0] != room[1]);
+
+  vector<PartitionInterval> touching{{0, 2, 0}, {2, 4, 1}, {4, 5, 2}};
+  vector<int> touching_room = partition_intervals(touching);
+  assert(*max_element(touching_room.begin(), touching_room.end()) == 0);
+  assert(partition_intervals({}).empty());
   return 0;
 }

@@ -339,13 +339,16 @@ using namespace std;
 
 int main() {
   RedBlackTree<int, char> t;
+  assert(t.empty());
   t.insert(2, 'b');
   t.insert(1, 'a');
   t.insert(3, 'c');
   t.insert(5, 'e');
   assert(t.insert(4, 'd'));
+  assert(!t.empty() && t.size() == 5);
   assert(*t.find(4) == 'd');
   assert(!t.insert(4, 'd'));
+  assert(t.size() == 5);
   for (const auto &[k, v] : t.entries()) {
     cout << v;
   }

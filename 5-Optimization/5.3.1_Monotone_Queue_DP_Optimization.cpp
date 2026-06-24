@@ -62,6 +62,7 @@ int main() {
   vector<int> a{4, 2, 7, 1, 3, 6};
 
   MonotoneQueue<int, less<int>> minq;
+  assert(minq.empty());
   vector<int> window_min;
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
     minq.push(i, a[i]);
@@ -74,6 +75,19 @@ int main() {
   assert(window_min[1] == 1);
   assert(window_min[2] == 1);
   assert(window_min[3] == 1);
+  minq.expire(static_cast<int>(a.size()));
+  assert(minq.empty());
+
+  MonotoneQueue<int, greater<int>> maxq;
+  vector<int> window_max;
+  for (int i = 0; i < static_cast<int>(a.size()); i++) {
+    maxq.push(i, a[i]);
+    maxq.expire(i - 2);
+    if (i >= 2) {
+      window_max.push_back(maxq.top().second);
+    }
+  }
+  assert((window_max == vector<int>{7, 7, 7, 6}));
 
   // dp[i] = a[i] + min(dp[j]) over j in [max(0, i - 2), i).
   vector<int> dp(a.size());

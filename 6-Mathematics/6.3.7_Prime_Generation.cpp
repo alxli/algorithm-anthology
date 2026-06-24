@@ -139,6 +139,8 @@ int main() {
   auto p = sieve(pmax);
   delta = static_cast<double>((clock() - start)) / CLOCKS_PER_SEC;
   cout << "sieve(n=" << pmax << "): " << delta << "s" << endl;
+  assert((sieve(1) == vector<int>{}));
+  assert((sieve(10) == vector<int>{2, 3, 5, 7}));
 
   vector<int> least;
   assert(linear_sieve(pmax, &least) == p);
@@ -150,5 +152,8 @@ int main() {
   p = sieve(l, h);
   delta = static_cast<double>((clock() - start)) / CLOCKS_PER_SEC;
   cout << "sieve([" << l << ", " << h << "]): " << delta << "s" << endl;
+  assert((sieve(14, 16) == vector<int>{}));
+  assert((sieve(17, 19) == vector<int>{17, 19}));
+  assert(!p.empty() && p.front() >= l && p.back() <= h);
   return 0;
 }

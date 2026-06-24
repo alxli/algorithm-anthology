@@ -101,6 +101,9 @@ int64_t manhattan_mst_weight(const std::vector<Point> &p) {
 using namespace std;
 
 int main() {
+  assert(manhattan_mst_weight({Point(5, -7)}) == 0);
+  assert(manhattan_mst_weight({Point(0, 0), Point(3, -4)}) == 7);
+
   vector<Point> p{{0, 0}, {2, 1}, {3, 4}, {-1, 2}, {5, 0}};
   assert(manhattan_mst_weight(p) == 14);
   auto edges = manhattan_mst_edges(p);

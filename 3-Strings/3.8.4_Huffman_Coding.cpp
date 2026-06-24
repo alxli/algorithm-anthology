@@ -131,5 +131,13 @@ int main() {
   string bits = h.encode(text);
   assert(h.decode(bits) == text);
   assert(bits.size() < text.size() * 8);
+
+  HuffmanTree single("aaaa");
+  assert(single.encode("aaaa") == "0000");
+  assert(single.decode(single.encode("aaaa")) == "aaaa");
+
+  HuffmanTree empty("");
+  assert(empty.encode("") == "");
+  assert(empty.decode("") == "");
   return 0;
 }

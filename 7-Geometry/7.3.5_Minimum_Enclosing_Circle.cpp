@@ -141,6 +141,18 @@ struct PointI {
 };
 
 int main() {
+  vector<Point> empty;
+  Circle none = minimum_enclosing_circle(empty.begin(), empty.end());
+  assert(EQ(none.h, 0) && EQ(none.k, 0) && EQ(none.r, 0));
+
+  vector<Point> one{{2, 3}};
+  Circle single = minimum_enclosing_circle(one.begin(), one.end());
+  assert(EQ(single.h, 2) && EQ(single.k, 3) && EQ(single.r, 0));
+
+  vector<Point> two{{0, 0}, {4, 0}};
+  Circle diameter = minimum_enclosing_circle(two.begin(), two.end());
+  assert(EQ(diameter.h, 2) && EQ(diameter.k, 0) && EQ(diameter.r, 2));
+
   vector<Point> v{{0, 0}, {0, 1}, {1, 0}, {1, 1}};
   Circle res = minimum_enclosing_circle(v.begin(), v.end());
   assert(EQ(res.h, 0.5) && EQ(res.k, 0.5) && EQ(res.r, 1 / sqrt(2)));

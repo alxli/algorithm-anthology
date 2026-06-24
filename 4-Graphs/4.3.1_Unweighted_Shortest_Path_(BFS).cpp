@@ -60,6 +60,7 @@ Take the path: 0->1->3.
 
 ***/
 
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -77,13 +78,19 @@ void print_path(int dest) {
 }
 
 int main() {
-  int nodes = 4, start = 0, dest = 3;
-  adj.assign(nodes, {});
+  adj.assign(4, {});
+  // 0 -> 1 -> 2
+  //      |    | 
+  //      v    |
+  //      3 <--+
   adj[0].push_back(1);
   adj[1].push_back(2);
   adj[1].push_back(3);
   adj[2].push_back(3);
+  int start = 0, dest = 3;
   bfs(start);
+  assert(dist[dest] == 2);
+  assert(pred[dest] == 1);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
        << endl;
   print_path(dest);

@@ -68,6 +68,7 @@ Take the path: 0->1->2.
 
 ***/
 
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -85,11 +86,18 @@ void print_path(int dest) {
 }
 
 int main() {
+  //    w=1      w=2
+  // 0 -----> 1 -----> 2
+  // |                 ^
+  // +-----------------+
+  //         w=5
   edges.emplace_back(0, 1, 1);
   edges.emplace_back(1, 2, 2);
   edges.emplace_back(0, 2, 5);
   int start = 0, dest = 2;
   bellman_ford(3, start);
+  assert(dist[dest] == 3);
+  assert(pred[dest] == 1);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
   print_path(dest);
   return 0;

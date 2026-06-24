@@ -67,6 +67,7 @@ Take the path: 0->2->3.
 
 ***/
 
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -88,14 +89,23 @@ void print_path(int dest) {
 }
 
 int main() {
-  int start = 0, dest = 3;
   adj.assign(4, {});
+  //         w=1
+  //     0 -------> 1
+  //     |        ^ |
+  // w=0 |    w=0   | w=1
+  //     v  /       v
+  //     2 -------> 3
+  //         w=1
   add_edge(0, 1, 1);
   add_edge(0, 2, 0);
   add_edge(2, 1, 0);
   add_edge(1, 3, 1);
   add_edge(2, 3, 1);
+  int start = 0, dest = 3;
   bfs_zero_one(start);
+  assert(dist[dest] == 1);
+  assert(pred[dest] == 2);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
   print_path(dest);
   return 0;

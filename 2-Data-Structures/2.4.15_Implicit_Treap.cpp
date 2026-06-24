@@ -257,6 +257,7 @@ Values: 2 2 1 8 10 11 (min: 1)
 
 ***/
 
+#include <cassert>
 #include <iostream>
 #include <vector>
 using namespace std;
@@ -275,11 +276,19 @@ int main() {
   t.push_back(11);
   t.push_back(12);
   t.pop_back();
+  assert(t.size() == 6);
+  assert(t.at(5) == 11);
+  assert(t.query(0, t.size() - 1) == -2);
   print(t);
   t.insert(0, 90);
   t.erase(1);
+  assert(t.at(0) == 90);
+  assert(t.at(1) == -2);
   print(t);
   t.update(0, 1, 2);
+  assert(t.at(0) == 2);
+  assert(t.at(1) == 2);
+  assert(t.query(0, t.size() - 1) == 1);
   print(t);
   return 0;
 }

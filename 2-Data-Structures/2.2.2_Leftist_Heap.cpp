@@ -130,19 +130,26 @@ class LeftistHeap {
 ***/
 
 #include <iostream>
+#include <vector>
 using namespace std;
 
 int main() {
   LeftistHeap<int> h, h2;
+  assert(h.empty());
   h.push(12);
   h.push(10);
   h2.push(5);
   h2.push(-1);
   h2.push(0);
   h.join(h2);
+  assert(h.size() == 5);
+  assert(h2.empty());
+  vector<int> popped;
   while (!h.empty()) {
     cout << h.top() << endl;
+    popped.push_back(h.top());
     h.pop();
   }
+  assert((popped == vector<int>{-1, 0, 5, 10, 12}));
   return 0;
 }

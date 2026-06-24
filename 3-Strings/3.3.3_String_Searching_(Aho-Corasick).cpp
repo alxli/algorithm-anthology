@@ -129,7 +129,10 @@ Matched "abccab" at position 0.
 
 ***/
 
+#include <algorithm>
+#include <cassert>
 #include <iostream>
+#include <utility>
 using namespace std;
 
 int main() {
@@ -143,7 +146,21 @@ int main() {
   needles.push_back("caa");
   needles.push_back("abccab");
 
-  AhoCorasick(needles).find_all_in("abccab", [](const string &needle, int pos) {
+  AhoCorasick ac(needles);
+  vector<pair<string, int>> matches;
+  ac.find_all_in("abccab", [&](const string &needle, int pos) {
+    matches.push_back({needle, pos});
+  });
+  sort(matches.begin(), matches.end());
+  assert((matches == vector<pair<string, int>>{
+                         {"a", 0}, {"a", 4}, {"ab", 0}, {"ab", 4}, {"abccab", 0}, {"bc", 1},
+                         {"c", 2}, {"c", 3}}));
+
+  vector<pair<string, int>> none;
+  ac.find_all_in("zzzz", [&](const string &needle, int pos) { none.push_back({needle, pos}); });
+  assert(none.empty());
+
+  ac.find_all_in("abccab", [](const string &needle, int pos) {
     cout << "Matched \"" << needle << "\" at position " << pos << "." << endl;
   });
   return 0;

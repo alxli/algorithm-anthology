@@ -92,8 +92,9 @@ int main() {
   d.add(0, 2, 2);   // a[0..2] += 2
   d.add(1, 4, 4);   // a[1..4] += 4
   d.add(2, 3, -1);  // a[2..3] -= 1
+  d.add(4, 4, 3);   // Single index update.
   vector<int64_t> a = d.build();
-  vector<int64_t> expected{2, 6, 5, 3, 4};
+  vector<int64_t> expected{2, 6, 5, 3, 7};
   for (int i = 0; i < static_cast<int>(expected.size()); i++) {
     assert(a[i] == expected[i]);
   }
@@ -101,12 +102,13 @@ int main() {
   DifferenceArray2D d2(3, 4);
   d2.add(0, 0, 1, 2, 1);  // Rows 0..1, cols 0..2 += 1
   d2.add(1, 1, 2, 3, 2);  // Rows 1..2, cols 1..3 += 2
+  d2.add(2, 0, 2, 0, 5);  // Single cell update.
   vector<vector<int64_t>> g = d2.build();
   // clang-format off
   vector<vector<int64_t>> expected2{
     {1, 1, 1, 0},
     {1, 3, 3, 2},
-    {0, 2, 2, 2}
+    {5, 2, 2, 2}
   };
   // clang-format on
   assert(g == expected2);

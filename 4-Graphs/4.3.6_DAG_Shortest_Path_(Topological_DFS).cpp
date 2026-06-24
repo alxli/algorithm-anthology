@@ -79,8 +79,13 @@ Take the path: 0->1->3->4.
 
 ***/
 
+#include <cassert>
 #include <iostream>
 using namespace std;
+
+void add_edge(int u, int v, int w) {
+  adj[u].emplace_back(v, w);
+}
 
 void print_path(int dest) {
   vector<int> path;
@@ -98,11 +103,21 @@ void print_path(int dest) {
 int main() {
   int start = 0, dest = 4;
   adj.assign(5, {});
-  adj[0] = {{1, 1}, {2, 5}};
-  adj[1] = {{2, 1}, {3, -2}};  // A negative edge, which Dijkstra could not handle.
-  adj[2] = {{3, 1}};
-  adj[3] = {{4, 3}};
+  //        w=1    w=-2     w=3  
+  //     0 ----> 1 ----> 3 -----> 4
+  //     |     /        ^
+  // w=5 |   / w=1     /
+  //     v v          /w=1
+  //     2 ----------+
+  add_edge(0, 1, 1);
+  add_edge(0, 2, 5);
+  add_edge(1, 2, 1);
+  add_edge(1, 3, -2);  // A negative edge, which Dijkstra could not handle.
+  add_edge(2, 3, 1);
+  add_edge(3, 4, 3);
   dag_shortest_path(start);
+  assert(dist[dest] == 2);
+  assert(pred[dest] == 3 && pred[3] == 1);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
   print_path(dest);
   return 0;

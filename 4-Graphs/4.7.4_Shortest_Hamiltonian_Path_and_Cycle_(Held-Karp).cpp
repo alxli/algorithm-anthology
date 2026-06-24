@@ -130,12 +130,15 @@ Cycle: 0->1->2->0
 
 ***/
 
+#include <cassert>
 #include <iostream>
 using namespace std;
 
 int main() {
   int nodes = 3;
   adj.assign(nodes, std::vector<int64_t>(nodes));
+  // Complete directed graph where 0 -> 1 -> 2 costs 1 + 2 + 3.
+  // The reverse cycle is intentionally more expensive.
   adj[0][1] = 1;
   adj[0][2] = 1;
   adj[1][0] = 7;
@@ -143,13 +146,19 @@ int main() {
   adj[2][0] = 3;
   adj[2][1] = 5;
 
-  cout << "Shortest Hamiltonian path length: " << shortest_hamiltonian_path() << endl;
+  int64_t path_len = shortest_hamiltonian_path();
+  assert(path_len == 3);
+  assert((path == vector<int>{0, 1, 2}));
+  cout << "Shortest Hamiltonian path length: " << path_len << endl;
   cout << "Path: " << path[0];
   for (int i = 1; i < nodes; i++) {
     cout << "->" << path[i];
   }
   cout << "\n\n";
-  cout << "Shortest Hamiltonian cycle length: " << shortest_hamiltonian_cycle() << endl;
+  int64_t cycle_len = shortest_hamiltonian_cycle();
+  assert(cycle_len == 6);
+  assert((path == vector<int>{0, 1, 2}));
+  cout << "Shortest Hamiltonian cycle length: " << cycle_len << endl;
   cout << "Cycle: ";
   for (int i = 0; i < nodes; i++) {
     cout << path[i] << "->";

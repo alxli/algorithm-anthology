@@ -163,9 +163,11 @@ using namespace std;
 
 int main() {
   BinaryTrie<> trie;
+  assert(trie.empty());
   for (int x : {3, 10, 5, 25, 2}) {
     trie.insert(x);
   }
+  assert(!trie.empty());
   assert(trie.size() == 5);
 
   // x XOR y over the stored y: {26, 19, 28, 0, 27} for x = 25.

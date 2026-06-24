@@ -97,6 +97,7 @@ int main() {
   for (int x : a) {
     s1.add(x);
   }
+  assert(s1.count() == 5);
   int one = s1.get();
   assert(one == 10 || one == 20 || one == 30 || one == 40 || one == 50);
 
@@ -104,6 +105,14 @@ int main() {
   for (int x : a) {
     sk.add(x);
   }
+  assert(sk.count() == 5);
   assert(sk.get().size() == 3);
+
+  ReservoirSampleK<int> large(10);
+  for (int x : a) {
+    large.add(x);
+  }
+  assert(large.count() == 5);
+  assert(large.get().size() == 5);
   return 0;
 }

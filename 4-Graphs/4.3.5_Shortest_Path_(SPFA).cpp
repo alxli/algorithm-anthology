@@ -77,6 +77,7 @@ Take the path: 0->1->2->3.
 
 ***/
 
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -98,13 +99,22 @@ void print_path(int dest) {
 }
 
 int main() {
-  int start = 0, dest = 3;
   adj.assign(4, {});
+  //        w=4
+  //     0 ----> 1
+  //     |      /
+  // w=5 |    / w=-2
+  //     |  /
+  //     v v   w=3
+  //     2 ---------> 3
   add_edge(0, 1, 4);
   add_edge(0, 2, 5);
   add_edge(1, 2, -2);
   add_edge(2, 3, 3);
+  int start = 0, dest = 3;
   spfa(start);
+  assert(dist[dest] == 5);
+  assert(pred[dest] == 2 && pred[2] == 1);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
   print_path(dest);
   return 0;

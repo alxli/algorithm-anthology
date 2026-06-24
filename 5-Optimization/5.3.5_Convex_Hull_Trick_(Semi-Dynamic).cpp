@@ -93,5 +93,9 @@ int main() {
   assert(cht.query(1) == 3);
   assert(cht.query(2) == 4);
   assert(cht.query(3) == 5);
+  cht.add_line(0, 7);  // Same slope, worse intercept; ignored.
+  assert(cht.query(4) == 6);
+  cht.add_line(0, 5);  // Same slope, better intercept; replaces the old constant line.
+  assert(cht.query(5) == 5);
   return 0;
 }

@@ -115,5 +115,9 @@ string hirschberg_lcs(const string &s1, const string &s2) {
 int main() {
   assert(longest_common_subsequence("xmjyauz", "mzjawxu") == "mjau");
   assert(hirschberg_lcs("xmjyauz", "mzjawxu") == "mjau");
+  assert(longest_common_subsequence("abc", "def") == "");
+  assert(hirschberg_lcs("abc", "def") == "");
+  assert(longest_common_subsequence("", "abc") == "");
+  assert(hirschberg_lcs("", "abc") == "");
   return 0;
 }

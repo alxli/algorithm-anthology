@@ -195,6 +195,7 @@ Partition of 4:
 
 ***/
 
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -211,25 +212,49 @@ int main() {
   {
     cout << "3 permute 2 arrangements:" << endl;
     ArrangementEnumerator arr(3, 2);
-    arr.enumerate([](auto lo, auto hi) { print_range(lo, hi); });
+    int count = 0;
+    arr.enumerate([&](auto lo, auto hi) {
+      print_range(lo, hi);
+      count++;
+    });
+    assert(count == 6);
+    assert((arr.from_rank(5) == vector<int>{2, 1}));
+    assert(arr.to_rank(vector<int>{2, 1}) == 5);
     cout << endl;
   }
   {
     cout << "\nPermutations of [$0$, 3):" << endl;
     PermutationEnumerator perm(3);
-    perm.enumerate([](auto lo, auto hi) { print_range(lo, hi); });
+    int count = 0;
+    perm.enumerate([&](auto lo, auto hi) {
+      print_range(lo, hi);
+      count++;
+    });
+    assert(count == 6);
     cout << endl;
   }
   {
     cout << "\n4 choose 3 combinations:" << endl;
     CombinationEnumerator comb(4, 3);
-    comb.enumerate([](auto lo, auto hi) { print_range(lo, hi); });
+    int count = 0;
+    comb.enumerate([&](auto lo, auto hi) {
+      print_range(lo, hi);
+      count++;
+    });
+    assert(count == 4);
+    assert((comb.from_rank(3) == vector<int>{1, 2, 3}));
+    assert(comb.to_rank(vector<int>{1, 2, 3}) == 3);
     cout << endl;
   }
   {
     cout << "\nPartition of 4:" << endl;
     PartitionEnumerator part(4);
-    part.enumerate([](auto lo, auto hi) { print_range(lo, hi); });
+    int count = 0;
+    part.enumerate([&](auto lo, auto hi) {
+      print_range(lo, hi);
+      count++;
+    });
+    assert(count == 5);
     cout << endl;
   }
   return 0;

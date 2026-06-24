@@ -82,6 +82,10 @@ std::size_t find(const string &haystack, const string &needle) {
 #include <cassert>
 
 int main() {
-  assert(15 == find("ABC ABCDAB ABCDABCDABDE", "ABCDABD"));
+  assert((z_array(string("aaaaa")) == std::vector<int>{0, 4, 3, 2, 1}));
+  assert(find("ABC ABCDAB ABCDABCDABDE", "ABCDABD") == 15);
+  assert(find("ABC ABCDAB ABCDABCDA", "ABCDABD") == string::npos);
+  assert(find("aaa", "aa") == 0);  // First overlapping occurrence.
+  assert(find("abc", "") == 0);
   return 0;
 }

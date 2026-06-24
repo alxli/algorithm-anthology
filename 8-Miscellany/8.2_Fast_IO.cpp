@@ -232,7 +232,7 @@ int main() {
   // set_io("file.in", "file.out");
 
   FILE *input = tmpfile();
-  std::fputs("42 hello 3.5 -2147483648\n", input);
+  std::fputs("42 hello 3.5 -2147483648 1 Z 1234567890123\n", input);
   std::rewind(input);
 
   FastInput in(input);
@@ -240,21 +240,25 @@ int main() {
   std::string s;
   double y;
   int z;
-  in >> x >> s >> y >> z;
+  bool flag;
+  char ch;
+  long long big;
+  in >> x >> s >> y >> z >> flag >> ch >> big;
   assert(x == 42 && s == "hello" && y == 3.5);
   assert(z == -2147483648);
+  assert(flag && ch == 'Z' && big == 1234567890123LL);
   std::fclose(input);
 
   FILE *output = tmpfile();
   {
     FastOutput out(output);
-    out << x << ' ' << s << ' ' << y << ' ' << z << '\n';
+    out << x << ' ' << s << ' ' << y << ' ' << z << ' ' << flag << ' ' << ch << ' ' << big << '\n';
     out.flush();
   }
   std::rewind(output);
-  char buf[64] = {};
+  char buf[96] = {};
   assert(std::fgets(buf, sizeof(buf), output));
-  assert(std::strncmp(buf, "42 hello 3.5 -2147483648", 24) == 0);
+  assert(std::strncmp(buf, "42 hello 3.5 -2147483648 1 Z 1234567890123", 42) == 0);
   std::fclose(output);
   return 0;
 }

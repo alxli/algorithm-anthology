@@ -51,7 +51,7 @@ Epsilon Comparisons:
 \begin{compactitem}
   \item \inlinecode{EQ()}, \inlinecode{NE()}, \inlinecode{LT()}, \inlinecode{GT()}, \inlinecode{LE()}, and \inlinecode{GE()} relationally compare two values $x$ and $y$. Arguments may be of different types; the common type governs behavior. If the common type is a floating-point type, absolute-error epsilon comparison is used: values within \inlinecode{EPS} of each other are considered equal, and \inlinecode{LT}/\inlinecode{GT}/\inlinecode{LE}/\inlinecode{GE} shift the boundary by \inlinecode{EPS} accordingly. Otherwise exact comparison is used (\inlinecode{==}, \inlinecode{\textless{}}, etc.). The branch is selected with \inlinecode{if constexpr}, so exact types without floating-point arithmetic (e.g. integers, \inlinecode{Modular}, \inlinecode{Rational}) compose as well.
   \item \inlinecode{rEQ(ref, val)} returns whether \inlinecode{val} equals reference \inlinecode{ref} within relative error \inlinecode{EPS}. The tolerance scales with $|{\inlinecodemath{ref}}|$, so \inlinecode{rEQ(ref, val)} is NOT the same as \inlinecode{rEQ(val, ref)}. Use this when one argument is a known exact value and the other is a computed approximation. Degenerates to exact comparison when \inlinecode{ref} is $0$, since the tolerance collapses to $0$; use \inlinecode{EQ} near zero.
-  \item \inlinecode{rEQ\_sym(x, y)} is the symmetric (commutative) variant: tolerance scales with $\max(|{\inlinecodemath{x}}|, |{\inlinecodemath{y}}|)$, so the result is the same regardless of argument order. Still degenerates near zero when both arguments are close to 0.
+  \item \inlinecode{rEQ\_sym(x, y)} is the symmetric (commutative) variant: tolerance scales with $\max(|{\inlinecodemath{x}}|, |{\inlinecodemath{y}}|)$, so the result is the same regardless of argument order. Still degenerates near zero when both arguments are close to $0$.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -2520,7 +2520,7 @@ int main() {
 \subsection{Modular Square Root (Tonelli-Shanks)}
 Given an integer $a$ and an odd prime $p$, find a modular square root: an $x$ with $x^2$ congruent to $a$ modulo $p$. Exactly half of the nonzero residues modulo a prime are squares (quadratic residues), so a solution exists only for those; when it does, the two roots are $x$ and $p - x$.
 
-The Tonelli-Shanks algorithm handles the general case. Euler's criterion, $a^{(p-1)/2}$ modulo $p$, first tests whether $a$ is a residue at all. When $p$ is congruent to 3 modulo 4 the root is simply $a^{(p+1)/4}$. Otherwise the algorithm factors $p - 1$ as $s \cdot 2^e$, picks any quadratic non-residue to generate the 2-power part of the group, and repeatedly squares a running value to find the order of the current error term, correcting the candidate root until the error becomes 1.
+The Tonelli-Shanks algorithm handles the general case. Euler's criterion, $a^{(p-1)/2}$ modulo $p$, first tests whether $a$ is a residue at all. When $p$ is congruent to 3 modulo 4 the root is simply $a^{(p+1)/4}$. Otherwise the algorithm factors $p - 1$ as $s \cdot 2^e$, picks any quadratic non-residue to generate the 2-power part of the group, and repeatedly squares a running value to find the order of the current error term, correcting the candidate root until the error becomes $1$.
 
 \begin{compactitem}
   \item \inlinecode{mod\_sqrt(a, p)} returns the smaller of the two square roots of \inlinecode{a} modulo the odd prime \inlinecode{p}, or $-1$ if \inlinecode{a} is not a quadratic residue. The value $0$ maps to $0$. The argument \inlinecode{a} is reduced modulo \inlinecode{p} internally. The modulus \inlinecode{p} must be an odd prime.
@@ -2860,7 +2860,7 @@ sieve(n=10000000): 0.042641s
 sieve([1000000000, 1005000000]): 0.01969s
 \end{exampleoutput}
 \subsection{Prime Tests and Factorization}
-Test whether an integer is prime and compute the prime factorization of an integer $n$. The Miller-Rabin test writes $n - 1 = d \cdot 2^r$ and squares $a^d$ repeatedly, checking that the sequence behaves the only way it can for a prime; a base $a$ that breaks the pattern is a witness that $n$ is composite. For large composite inputs, Pollard's rho iterates a pseudorandom map modulo $n$; two iterates that collide modulo a hidden prime factor reveal that factor through a GCD with their difference. Prime factorizations are represented as sorted vectors of $(prime, exponent)$ pairs. For $0$ and $1$, the prime factorization is empty.
+Test whether an integer is prime and compute the prime factorization of an integer $n$. The Miller-Rabin test writes $n - 1 = d \cdot 2^r$ and squares $a^d$ repeatedly, checking that the sequence behaves the only way it can for a prime; a base $a$ that breaks the pattern is a witness that $n$ is composite. For large composite inputs, Pollard's rho iterates a pseudorandom map modulo $n$; two iterates that collide modulo a hidden prime factor reveal that factor through a GCD with their difference. Prime factorizations are represented as sorted vectors of $({\inlinecodemath{prime}}, {\inlinecodemath{exponent}})$ pairs. For $0$ and $1$, the prime factorization is empty.
 
 \begin{compactitem}
   \item \inlinecode{is\_prime\_slow(n)} returns whether the integer \inlinecode{n} is prime using trial division.
@@ -4502,7 +4502,7 @@ int main() {
 Perform operations on rational numbers internally represented as two integers: a numerator and a denominator. The template integer type must support streamed input/output, comparisons, and arithmetic operations. Overflow is not checked for in internal operations: comparisons and arithmetic cross-multiply numerators and denominators, so instantiate with a wider integer type (such as \inlinecode{\_\_int128}, or even \inlinecode{BigInt}) if the values may grow large.
 
 \begin{compactitem}
-  \item \inlinecode{Rational\textless{}Int\textgreater{}(n)} constructs a rational number with numerator \inlinecode{n} and denominator 1.
+  \item \inlinecode{Rational\textless{}Int\textgreater{}(n)} constructs a rational number with numerator \inlinecode{n} and denominator $1$.
   \item \inlinecode{Rational\textless{}Int\textgreater{}(n, d)} constructs a rational number with numerator \inlinecode{n} and denominator \inlinecode{d}.
   \item \inlinecode{operator\textgreater{}\textgreater{}} inputs a rational number using the next integer from the stream as the numerator and 1 as the denominator.
   \item \inlinecode{operator\textless{}\textless{}} outputs the rational number as a string consisting of possibly a minus sign followed by the numerator, followed by a slash, followed by the denominator.

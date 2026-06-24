@@ -112,10 +112,16 @@ using namespace std;
 int main() {
   vector<int> a{0, 5, -1, 12};
   BinaryHeap<int> h(a.begin(), a.end());
+  assert(h.size() == 4);
+  assert(h.top() == -1);
   h.push(10);
+  vector<int> popped;
   while (!h.empty()) {
     cout << h.top() << endl;
+    popped.push_back(h.top());
     h.pop();
   }
+  assert((popped == vector<int>{-1, 0, 5, 10, 12}));
+  assert(h.empty());
   return 0;
 }

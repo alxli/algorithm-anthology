@@ -68,6 +68,7 @@ int main() {
   auto pref = prefix_sums(a);
   assert(range_sum(pref, 0, 4) == 12);  // Whole array a[0..4]
   assert(range_sum(pref, 1, 3) == 4);   // -1 + 4 + 1
+  assert(range_sum(pref, 2, 2) == 4);   // Single element.
 
   // clang-format off
   vector<vector<int>> grid{
@@ -77,5 +78,7 @@ int main() {
   // clang-format on
   auto pre2 = prefix_sums_2d(grid);
   assert(rectangle_sum(pre2, 0, 1, 1, 2) == 16);  // rows 0..1, cols 1..2
+  assert(rectangle_sum(pre2, 0, 0, 1, 2) == 21);  // Whole grid.
+  assert(rectangle_sum(pre2, 1, 1, 1, 1) == 5);   // Single cell.
   return 0;
 }

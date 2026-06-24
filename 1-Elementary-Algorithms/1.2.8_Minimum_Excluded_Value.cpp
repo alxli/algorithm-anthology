@@ -93,14 +93,19 @@ using namespace std;
 int main() {
   vector<int> a{0, 1, 4, 2, 1};
   assert(mex(a.begin(), a.end()) == 3);
+  vector<int> b{-1, 0, 1, 2};
+  assert(mex(b.begin(), b.end()) == 3);  // Negative values are ignored.
 
   DynamicMex m;
   m.add(0);
+  m.add(1);
   m.add(1);
   m.add(3);
   assert(m.get() == 2);
   m.add(2);
   assert(m.get() == 4);
+  m.remove(1);
+  assert(m.get() == 4);  // One copy of 1 remains.
   m.remove(1);
   assert(m.get() == 1);
   m.remove(100);

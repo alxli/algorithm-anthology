@@ -183,13 +183,16 @@ using namespace std;
 
 int main() {
   SkipList<int, char> l;
+  assert(l.empty());
   l.insert(2, 'b');
   l.insert(1, 'a');
   l.insert(3, 'c');
   l.insert(5, 'e');
   assert(l.insert(4, 'd'));
+  assert(!l.empty() && l.size() == 5);
   assert(*l.find(4) == 'd');
   assert(!l.insert(4, 'd'));
+  assert(l.size() == 5);
   for (const auto &[k, v] : l.entries()) {
     cout << v;
   }
@@ -197,6 +200,7 @@ int main() {
   assert(l.erase(1));
   assert(!l.erase(1));
   assert(l.find(1) == nullptr);
+  assert(l.size() == 4);
   for (const auto &[k, v] : l.entries()) {
     cout << v;
   }

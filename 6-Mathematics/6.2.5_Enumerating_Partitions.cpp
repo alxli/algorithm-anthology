@@ -97,8 +97,7 @@ int64_t rank_by_partition(const std::vector<int> &p) {
   return res;
 }
 
-using Fn = void (*)(std::vector<int>::iterator, std::vector<int>::iterator);
-
+template<typename Fn>
 void generate_increasing_partitions(int left, int prev, int i, std::vector<int> &p, Fn f) {
   if (left == 0) {
     f(p.begin(), p.begin() + i);
@@ -109,6 +108,7 @@ void generate_increasing_partitions(int left, int prev, int i, std::vector<int> 
   }
 }
 
+template<typename Fn>
 void generate_increasing_partitions(int n, Fn f) {
   std::vector<int> p(n, 0);
   generate_increasing_partitions(n, 0, 0, p, f);
@@ -150,12 +150,18 @@ int main() {
       assert(rank_by_partition(a) == count);
       count++;
     } while (next_partition(a));
+    assert(count == 5);
     cout << endl;
   }
   {
     int n = 8;
     cout << "\nIncreasing partitions of " << n << ":" << endl;
-    generate_increasing_partitions(n, print_range);
+    int count = 0;
+    generate_increasing_partitions(n, [&](auto lo, auto hi) {
+      print_range(lo, hi);
+      count++;
+    });
+    assert(count == 6);
     cout << endl;
   }
   return 0;

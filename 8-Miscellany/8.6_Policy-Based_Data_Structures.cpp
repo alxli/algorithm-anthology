@@ -152,9 +152,13 @@ int main() {
   s.insert(10);
   s.insert(20);
   s.insert(30);
+  s.insert(20);  // Duplicate ignored, like std::set.
   // Net new over std::set: order-statistic queries.
+  assert(s.size() == 3);
+  assert(*s.find_by_order(0) == 10);
   assert(*s.find_by_order(1) == 20);
   assert(s.order_of_key(25) == 2);
+  assert(s.order_of_key(100) == 3);
 
   HashMap<int, int> hm;
   hm[10] = 1;
@@ -174,6 +178,9 @@ int main() {
   assert(ms.find_by_order(1) == 5);
   assert(ms.erase_one(5));
   assert(ms.order_of_key(7) == 1);
+  assert(ms.erase_one(5));
+  assert(!ms.erase_one(5));
+  assert(ms.find_by_order(0) == 7);
 
   OrderedMultimap<int, char> mp;
   mp.insert(5, 'a');
@@ -184,6 +191,9 @@ int main() {
   assert(mp.find_by_order(1).first == 5);
   assert(mp.erase_one(5));
   assert(mp.order_of_key(7) == 1);
+  assert(mp.erase_one(5));
+  assert(!mp.erase_one(5));
+  assert(mp.find_by_order(0) == std::make_pair(7, 'c'));
 
   PairingHeap<int> h1, h2;
   auto it = h1.push(10);
@@ -192,6 +202,7 @@ int main() {
   h1.erase(erased);   // Also net new: remove an arbitrary heap item through a handle.
   h2.push(7);
   h1.join(h2);  // Also net new: meld another heap into this one.
+  assert(h2.empty());
   assert(h1.top() == 20);
   h1.pop();
   assert(h1.top() == 7);

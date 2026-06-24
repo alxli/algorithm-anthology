@@ -202,11 +202,13 @@ using namespace std;
 
 int main() {
   SplayTree<int, char> t;
+  assert(t.empty());
   t.insert(2, 'b');
   t.insert(1, 'a');
   t.insert(3, 'c');
   t.insert(5, 'e');
   assert(t.insert(4, 'd'));
+  assert(!t.empty());
   assert(*t.find(4) == 'd');
   assert(!t.insert(4, 'd'));
   for (const auto &[k, v] : t.entries()) {

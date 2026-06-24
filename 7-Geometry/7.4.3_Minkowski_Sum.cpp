@@ -141,6 +141,9 @@ std::vector<Point> minkowski_sum(std::vector<Point> a, std::vector<Point> b) {
 using namespace std;
 
 int main() {
+  vector<Point> empty;
+  assert(minkowski_sum(empty, {Point(1, 2)}).empty());
+
   vector<Point> square{{0, 0}, {1, 0}, {1, 1}, {0, 1}};
   vector<Point> tri{{0, 0}, {2, 0}, {0, 2}};
   vector<Point> sum = minkowski_sum(square, tri);
@@ -150,5 +153,8 @@ int main() {
   vector<Point> shifted = minkowski_sum(square, {Point(2, 3)});
   vector<Point> expected_shifted{{2, 3}, {3, 3}, {3, 4}, {2, 4}};
   assert(shifted == expected_shifted);
+
+  vector<Point> point_sum = minkowski_sum({Point(1, 2)}, {Point(3, 4)});
+  assert(point_sum.size() == 1 && point_sum[0] == Point(4, 6));
   return 0;
 }

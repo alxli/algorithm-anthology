@@ -113,6 +113,12 @@ void add_edge(int u, int v) {
 int main() {
   int nodes = 5;
   adj.assign(nodes, std::vector<char>(nodes));
+  // Wheel-like graph with vertex 4 adjacent to every outer edge endpoint.
+  //     0
+  //    / \.
+  //   1---4---2
+  //    \ / \ /
+  //     3---+
   add_edge(0, 1);
   add_edge(0, 4);
   add_edge(1, 3);
@@ -121,6 +127,14 @@ int main() {
   add_edge(2, 4);
   add_edge(3, 4);
   int colors = color_graph();
+  assert(colors == 3);
+  for (int u = 0; u < nodes; u++) {
+    for (int v = u + 1; v < nodes; v++) {
+      if (adj[u][v]) {
+        assert(color[u] != color[v]);
+      }
+    }
+  }
   cout << "Colored using " << colors << " color(s):" << endl;
   for (int i = 0; i < colors; i++) {
     cout << "Color " << i + 1 << ":";

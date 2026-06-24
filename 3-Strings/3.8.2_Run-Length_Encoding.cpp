@@ -56,5 +56,8 @@ int main() {
   assert(runs[0] == (pair<char, int>{'a', 3}));
   assert(runs[2] == (pair<char, int>{'c', 4}));
   assert(run_length_decode(runs) == s);
+  assert(run_length_encode("").empty());
+  assert(run_length_decode({}) == "");
+  assert((run_length_encode("z") == vector<pair<char, int>>{{'z', 1}}));
   return 0;
 }

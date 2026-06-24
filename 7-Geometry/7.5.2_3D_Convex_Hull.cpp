@@ -123,9 +123,17 @@ int main() {
   vector<Point3D> tetra{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
   auto faces = convex_hull_3d(tetra);
   assert(faces.size() == 4);
+  for (const Face &f : faces) {
+    assert(f.a != f.b && f.b != f.c && f.c != f.a);
+  }
 
   tetra.push_back(Point3D(1, 1, 1));
   faces = convex_hull_3d(tetra);
   assert(faces.size() == 6);
+  for (const Face &f : faces) {
+    assert(0 <= f.a && f.a < static_cast<int>(tetra.size()));
+    assert(0 <= f.b && f.b < static_cast<int>(tetra.size()));
+    assert(0 <= f.c && f.c < static_cast<int>(tetra.size()));
+  }
   return 0;
 }
