@@ -4,7 +4,7 @@
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Sorting Algorithms}
-The following functions are equivalent to \inlinecode{std::sort()}, taking random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}) to be sorted. Elements between \inlinecode{lo} and \inlinecode{hi} (including the element pointed to by \inlinecode{lo} but excluding the element pointed to by \inlinecode{hi}) will be sorted into ascending order after the function call. Optionally, a comparison function object specifying a strict weak ordering may be specified to replace the default \inlinecode{operator\textless{}}.
+The following functions are equivalent to \inlinecode{std::sort()}, taking random-access iterators as a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ to be sorted. Elements between \inlinecode{lo} and \inlinecode{hi} (including the element pointed to by \inlinecode{lo} but excluding the element pointed to by \inlinecode{hi}) will be sorted into ascending order after the function call. Optionally, a comparison function object specifying a strict weak ordering may be specified to replace the default \inlinecode{operator\textless{}}.
 
 \begin{compactitem}
   \item \inlinecode{quicksort(lo, hi)} sorts the range using quicksort.
@@ -368,7 +368,7 @@ combsort():   0.365s
 radix_sort(): 0.016s
 \end{exampleoutput}
 \subsection{Array Rotation}
-These functions are equivalent to \inlinecode{std::rotate()}, taking three iterators \inlinecode{lo}, \inlinecode{mid}, and \inlinecode{hi} (\inlinecode{lo} $\leq$ \inlinecode{mid} $\leq$ \inlinecode{hi}) to perform a left rotation on the range [\inlinecode{lo}, \inlinecode{hi}). After the function call, [\inlinecode{lo}, \inlinecode{hi}) will consist of the concatenation of elements originally in [\inlinecode{mid}, \inlinecode{hi}) + [\inlinecode{lo}, \inlinecode{mid}). That is, the range [\inlinecode{lo}, \inlinecode{hi}) will be rearranged in such a way that the element at \inlinecode{mid} becomes the first element of the new range, and the element before \inlinecode{mid} becomes the last element, all while preserving the relative ordering of elements within the two rotated subarrays.
+These functions are equivalent to \inlinecode{std::rotate()}, taking three iterators \inlinecode{lo}, \inlinecode{mid}, and \inlinecode{hi} (\inlinecode{lo} $\leq$ \inlinecode{mid} $\leq$ \inlinecode{hi}) to perform a left rotation on the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$. After the function call, $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ will consist of the concatenation of elements originally in $[{\inlinecodemath{mid}}, {\inlinecodemath{hi}})$ + $[{\inlinecodemath{lo}}, {\inlinecodemath{mid}})$. That is, the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ will be rearranged in such a way that the element at \inlinecode{mid} becomes the first element of the new range, and the element before \inlinecode{mid} becomes the last element, all while preserving the relative ordering of elements within the two rotated subarrays.
 
 All three versions below achieve the same result using in-place algorithms.
 
@@ -502,7 +502,7 @@ rotate right: 0 1 2 2 3 4 5 7 7 10
 The number of inversions for a sequence \inlinecode{a} is the number of ordered pairs $(i, j)$ such that $i < j$ and $a[i] > a[j]$. This is roughly how ``close'' an array is to being sorted, but is \textit{not} the minimum number of swaps required to sort the array. If the array is sorted, then the inversion count is 0. If the array is sorted in decreasing order, then the inversion count is maximal. The following two functions are each techniques to efficiently count inversions. In the merge sort approach, whenever the merge step emits an element from the right half, that element jumps ahead of every unmerged left-half element, and exactly that many inversions are added to the count.
 
 \begin{compactitem}
-  \item \inlinecode{inversions(lo, hi)} uses merge sort to return the number of inversions given two random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}). The input range will be sorted after the function call. Optionally, a comparison function object specifying a strict weak ordering may be specified to replace the default \inlinecode{operator\textless{}}.
+  \item \inlinecode{inversions(lo, hi)} uses merge sort to return the number of inversions given two random-access iterators as a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$. The input range will be sorted after the function call. Optionally, a comparison function object specifying a strict weak ordering may be specified to replace the default \inlinecode{operator\textless{}}.
   \item \inlinecode{inversions(a)} uses coordinate compression and a Fenwick tree to return the number of inversions in an integer vector without modifying it.
 \end{compactitem}
 
@@ -611,7 +611,7 @@ All implementations below take ranges as ForwardIterators and require \inlinecod
 \inlinecode{CoordinateCompressor} is a class version that retains the sorted table of distinct values so that arbitrary values can be mapped to and from compressed ranks long after construction (e.g. for offline queries arriving separately from the array being compressed).
 
 \begin{compactitem}
-  \item \inlinecode{CoordinateCompressor\textless{}T\textgreater{}(lo, hi)} constructs a compressor over the values of [\inlinecode{lo}, \inlinecode{hi}), ready for querying. Alternatively, use the default constructor and register values with \inlinecode{add(x)}, then call \inlinecode{build()} once after all values are registered and before the first query.
+  \item \inlinecode{CoordinateCompressor\textless{}T\textgreater{}(lo, hi)} constructs a compressor over the values of $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, ready for querying. Alternatively, use the default constructor and register values with \inlinecode{add(x)}, then call \inlinecode{build()} once after all values are registered and before the first query.
   \item \inlinecode{size()} returns the number of distinct registered values $k$.
   \item \inlinecode{value(r)} returns the original value with rank \inlinecode{r}, inverting \inlinecode{rank()}.
   \item \inlinecode{rank(x)} returns the compressed value (rank) of \inlinecode{x} in $[0, k)$. \inlinecode{x} must have been registered.
@@ -761,9 +761,9 @@ Partition a range around a pivot, or select the element with a given sorted rank
 Quickselect repeatedly applies this partition and continues only into the group containing the desired rank. This is the same task as \inlinecode{std::nth\_element()}: after the call, \inlinecode{*nth} is the value that would appear there in sorted order, all earlier positions contain values no larger than it, and all later positions contain values no smaller than it. Choosing pivots uniformly at random gives expected linear time, while the three-way split avoids unnecessary work on duplicate-heavy inputs.
 
 \begin{compactitem}
-  \item \inlinecode{partition\_three\_way(lo, hi, pivot)} rearranges [\inlinecode{lo}, \inlinecode{hi}) in-place and returns iterators (\inlinecode{mid\_lo}, \inlinecode{mid\_hi}), where [\inlinecode{lo}, \inlinecode{mid\_lo}) is less than \inlinecode{pivot}, [\inlinecode{mid\_lo}, \inlinecode{mid\_hi}) is equal to \inlinecode{pivot}, and [\inlinecode{mid\_hi}, \inlinecode{hi}) is greater than \inlinecode{pivot}.
+  \item \inlinecode{partition\_three\_way(lo, hi, pivot)} rearranges $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ in-place and returns iterators $({\inlinecodemath{mid_lo}}, {\inlinecodemath{mid_hi}})$, where $[{\inlinecodemath{lo}}, {\inlinecodemath{mid_lo}})$ is less than \inlinecode{pivot}, $[{\inlinecodemath{mid_lo}}, {\inlinecodemath{mid_hi}})$ is equal to \inlinecode{pivot}, and $[{\inlinecodemath{mid_hi}}, {\inlinecodemath{hi}})$ is greater than \inlinecode{pivot}.
   \item \inlinecode{sort\_012(lo, hi)} sorts a range consisting only of the values 0, 1, and 2.
-  \item \inlinecode{nth\_element2(lo, nth, hi)} rearranges the range [\inlinecode{lo}, \inlinecode{hi}) around the 0-based rank represented by iterator \inlinecode{nth}. This requires random-access iterators and \inlinecode{operator\textless{}} on the value type.
+  \item \inlinecode{nth\_element2(lo, nth, hi)} rearranges the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ around the 0-based rank represented by iterator \inlinecode{nth}. This requires random-access iterators and \inlinecode{operator\textless{}} on the value type.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -848,8 +848,8 @@ int main() {
   int n = static_cast<int>(a.size());
   nth_element2(a.begin(), a.begin() + n / 2, a.end());
   assert(a[n / 2] == 5);
-  // Values left of the median are no greater than it, and values right are no less than it (the exact
-  // order within each side is randomized, since the pivot is chosen at random).
+  // Values left of the median are <=, and values right are >= (the exact order within each side is
+  // randomized, since the pivot is chosen at random).
   for (int i = 0; i < n / 2; i++) {
     assert(a[i] <= a[n / 2]);
   }
@@ -868,9 +868,9 @@ Precomputes prefix sums so range-sum queries can be answered in constant time. T
 
 \begin{compactitem}
   \item \inlinecode{prefix\_sums(a)} returns array \inlinecode{pref} with \inlinecode{pref[0] = 0} and \inlinecode{pref[i + 1] = a[0] + ... + a[i]}.
-  \item \inlinecode{range\_sum(pref, lo, hi)} returns the sum of the inclusive range [\inlinecode{lo}, \inlinecode{hi}].
+  \item \inlinecode{range\_sum(pref, lo, hi)} returns the sum of the inclusive range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{prefix\_sums\_2d(a)} returns a two-dimensional prefix sum table for matrix \inlinecode{a}.
-  \item \inlinecode{rectangle\_sum(pref, r1, c1, r2, c2)} returns the sum of the rectangle with top left at (\inlinecode{r1}, \inlinecode{c1}) and bottom right at (\inlinecode{r2}, \inlinecode{c2}).
+  \item \inlinecode{rectangle\_sum(pref, r1, c1, r2, c2)} returns the sum of the rectangle with top left at $({\inlinecodemath{r1}}, {\inlinecodemath{c1}})$ and bottom right at $({\inlinecodemath{r2}}, {\inlinecodemath{c2}})$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -945,14 +945,14 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Difference Array}
-Applies many range-add updates to an array in linear total time using a difference array. Instead of immediately adding \inlinecode{delta} to every element of an inclusive range [\inlinecode{lo}, \inlinecode{hi}], we can add \inlinecode{delta} at \inlinecode{diff[lo]} and subtract it at \inlinecode{diff[hi + 1]}; a final prefix sum reconstructs the updated values. This idea extends to two dimensions: a rectangle update touches just the four corner cells of a difference grid by inclusion-exclusion, and a final two-dimensional prefix sum reconstructs the grid.
+Applies many range-add updates to an array in linear total time using a difference array. Instead of immediately adding \inlinecode{delta} to every element of an inclusive range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$, we can add \inlinecode{delta} at \inlinecode{diff[lo]} and subtract it at \inlinecode{diff[hi + 1]}; a final prefix sum reconstructs the updated values. This idea extends to two dimensions: a rectangle update touches just the four corner cells of a difference grid by inclusion-exclusion, and a final two-dimensional prefix sum reconstructs the grid.
 
 \begin{compactitem}
   \item \inlinecode{DifferenceArray(n)} constructs an initially zero array of size \inlinecode{n}.
-  \item \inlinecode{add(lo, hi, delta)} adds \inlinecode{delta} to every position in the inclusive range [\inlinecode{lo}, \inlinecode{hi}].
+  \item \inlinecode{add(lo, hi, delta)} adds \inlinecode{delta} to every position in the inclusive range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{build()} returns the final array after all range updates.
   \item \inlinecode{DifferenceArray2D(rows, cols)} constructs an initially zero grid with \inlinecode{rows} rows and \inlinecode{cols} columns.
-  \item \inlinecode{add(r1, c1, r2, c2, delta)} adds \inlinecode{delta} to every cell of the rectangle with top left at (\inlinecode{r1}, \inlinecode{c1}) and bottom right at (\inlinecode{r2}, \inlinecode{c2}), inclusive.
+  \item \inlinecode{add(r1, c1, r2, c2, delta)} adds \inlinecode{delta} to every cell of the rectangle with top left at $({\inlinecodemath{r1}}, {\inlinecodemath{c1}})$ and bottom right at $({\inlinecodemath{r2}}, {\inlinecodemath{c2}})$, inclusive.
   \item \inlinecode{build()} returns the final grid after all rectangle updates.
 \end{compactitem}
 
@@ -1068,8 +1068,8 @@ The examples below cover sorted 2-sum/3-sum variants, finding the shortest subar
 \begin{compactitem}
   \item \inlinecode{two\_sum\_sorted(a, target)} returns two indices whose values sum to \inlinecode{target}, or $(-1, -1)$ if no such pair exists. The input array must be sorted.
   \item \inlinecode{three\_sum(a, target)} returns three original indices whose values sum to \inlinecode{target}, or $(-1, -1, -1)$ if none exist.
-  \item \inlinecode{min\_length\_at\_least(a, target)} returns (\inlinecode{length}, \inlinecode{lo}, \inlinecode{hi}), the minimum length and inclusive endpoints of a contiguous subarray with sum at least \inlinecode{target}, or length $-1$ if none exists. Values in \inlinecode{a} must be nonnegative. If \inlinecode{target} is nonpositive, it returns the empty subarray.
-  \item \inlinecode{longest\_at\_most\_k\_distinct(a, k)} returns (\inlinecode{length}, \inlinecode{lo}, \inlinecode{hi}), the maximum length and inclusive endpoints of a contiguous subarray containing at most \inlinecode{k} distinct values.
+  \item \inlinecode{min\_length\_at\_least(a, target)} returns $({\inlinecodemath{length}}, {\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, the minimum length and inclusive endpoints of a contiguous subarray with sum at least \inlinecode{target}, or length $-1$ if none exists. Values in \inlinecode{a} must be nonnegative. If \inlinecode{target} is nonpositive, it returns the empty subarray.
+  \item \inlinecode{longest\_at\_most\_k\_distinct(a, k)} returns $({\inlinecodemath{length}}, {\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, the maximum length and inclusive endpoints of a contiguous subarray containing at most \inlinecode{k} distinct values.
   \item \inlinecode{sliding\_window\_extrema(a, k, comp)} returns the extreme value in each window of length \inlinecode{k}. With the default \inlinecode{less\textless{}\textgreater{}} comparator it returns minimums; passing \inlinecode{greater\textless{}\textgreater{}} returns maximums.
 \end{compactitem}
 
@@ -1237,7 +1237,7 @@ int main() {
   vector<int> b{1, 2, 1, 3, 4, 3, 5};
   auto [longest, longest_lo, longest_hi] = longest_at_most_k_distinct(b, 2);
   assert(longest == 3);
-  assert(longest_lo == 0 && longest_hi == 2);  // [$1$, 2, 1].
+  assert(longest_lo == 0 && longest_hi == 2);  // [1, 2, 1].
 
   vector<int> e{1, 3, -1, -3, 5, 3, 6, 7};
   assert((sliding_window_extrema(e, 3) == vector<int>{-1, -3, -3, -3, 3, 3}));
@@ -1525,8 +1525,8 @@ int main() {
 Given an array of numbers, determine the maximum possible sum of any contiguous subarray. Kadane's algorithm scans the array while maintaining the maximum nonnegative sum of a subarray ending at the current position. A negative running sum is discarded because it can only reduce the sum of every subarray that extends it. Thus, by including \inlinecode{a[i]}, the running sum becomes \inlinecode{max(0, sum + a[i])}, and the largest running sum seen is the answer. This can be adapted to compute the maximal submatrix sum as well.
 
 \begin{compactitem}
-  \item \inlinecode{max\_subarray\_sum(lo, hi)} returns \inlinecode{(sum, begin, end)} for the maximal subarray in [\inlinecode{lo}, \inlinecode{hi}), where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to numeric types. The endpoints are inclusive. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} on the iterators' value type. By convention, the empty subarray is allowed, so an input range containing only negative values returns sum 0 and endpoints [$0$, $-1$].
-  \item \inlinecode{max\_submatrix\_sum(a)} returns \inlinecode{(sum, r1, c1, r2, c2)} for the largest rectangular submatrix of a matrix \inlinecode{a} with $m$ rows and $n$ columns. The corners are inclusive. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} on the matrix value type. By convention, the empty submatrix is allowed, so a matrix containing only negative values returns sum 0 with empty row and column intervals.
+  \item \inlinecode{max\_subarray\_sum(lo, hi)} returns \inlinecode{(sum, begin, end)} for the maximal subarray in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to numeric types. The endpoints are inclusive. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} on the iterators' value type. By convention, the empty subarray is allowed, so an input range containing only negative values returns sum $0$ and endpoints $[0, -1]$.
+  \item \inlinecode{max\_submatrix\_sum(a)} returns \inlinecode{(sum, r1, c1, r2, c2)} for the largest rectangular submatrix of a matrix \inlinecode{a} with $m$ rows and $n$ columns. The corners are inclusive. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} on the matrix value type. By convention, the empty submatrix is allowed, so a matrix containing only negative values returns sum $0$ with empty row and column intervals.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1652,7 +1652,7 @@ Given a range of elements, determine a longest subsequence of the range where al
 The answer is computed by scanning left to right while maintaining, for each length, the smallest possible tail value of an increasing subsequence of that length. Each element extends or improves one of these tails, located in $O(\log n)$ by binary search; predecessor links then reconstruct the subsequence.
 
 \begin{compactitem}
-  \item \inlinecode{longest\_increasing\_subsequence(lo, hi)} returns the indices relative to \inlinecode{lo} of one longest strictly increasing subsequence of [\inlinecode{lo}, \inlinecode{hi}), in order.
+  \item \inlinecode{longest\_increasing\_subsequence(lo, hi)} returns the indices relative to \inlinecode{lo} of one longest strictly increasing subsequence of $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, in order.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call to either function, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
@@ -1721,10 +1721,10 @@ int main() {
 -5 1 9 10 11 13
 \end{exampleoutput}
 \subsection{Minimum Excluded Value}
-Computes the minimum excluded nonnegative (MEX) integer of a set of integers, that is, the smallest integer $x \geq 0$ that does not appear in the set. It appears frequently in array problems, game theory with Grundy numbers, and dynamic programming states. Since the MEX of $n$ values never exceeds $n$, the one-shot version only marks values in [$0$, \inlinecode{n}]. The dynamic version stores counts for present values and an ordered set of currently missing candidates.
+Computes the minimum excluded nonnegative (MEX) integer of a set of integers, that is, the smallest integer $x \geq 0$ that does not appear in the set. It appears frequently in array problems, game theory with Grundy numbers, and dynamic programming states. Since the MEX of $n$ values never exceeds $n$, the one-shot version only marks values in $[0, {\inlinecodemath{n}}]$. The dynamic version stores counts for present values and an ordered set of currently missing candidates.
 
 \begin{compactitem}
-  \item \inlinecode{mex(lo, hi)} returns the MEX of the values in [\inlinecode{lo}, \inlinecode{hi}).
+  \item \inlinecode{mex(lo, hi)} returns the MEX of the values in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{DynamicMex()} maintains the MEX of a multiset of nonnegative integers.
   \item \inlinecode{add(x)} inserts one copy of value \inlinecode{x} if \inlinecode{x} $\geq 0$.
   \item \inlinecode{remove(x)} removes one copy of value \inlinecode{x} if present.
@@ -1837,7 +1837,7 @@ Floyd's cycle-finding algorithm, a.k.a. the ``tortoise and the hare algorithm'',
 For Floyd's algorithm, suppose the tail has length $m$ and the cycle has length $n$. At a meeting, the hare has traveled twice as far as the tortoise, so the tortoise's distance is a multiple of $n$. Consequently, the distance from the meeting point around the cycle to its entry is congruent to $m$ modulo $n$. Resetting one pointer to $x_0$ and advancing both one step at a time makes them meet at the cycle entry after $m$ steps. Brent first determines $n$, then advances one pointer $n$ steps; moving both together from that fixed separation likewise makes them meet at the entry.
 
 \begin{compactitem}
-  \item \inlinecode{find\_cycle\_floyd(f, x0)} returns the reached cycle as a pair (\inlinecode{start}, \inlinecode{length}), where \inlinecode{start} is the smallest index $i$ such that $x_i$ is in the cycle, and \inlinecode{length} is the number of distinct values in the cycle.
+  \item \inlinecode{find\_cycle\_floyd(f, x0)} returns the reached cycle as a pair $({\inlinecodemath{start}}, {\inlinecodemath{length}})$, where \inlinecode{start} is the smallest index $i$ such that $x_i$ is in the cycle, and \inlinecode{length} is the number of distinct values in the cycle.
   \item \inlinecode{find\_cycle\_brent(f, x0)} does the same with fewer calls to $f$ in many cases.
 \end{compactitem}
 
@@ -1934,8 +1934,8 @@ void verify(int x0, int start, int length) {
   assert(startx == x);
 }
 
-// Given n + 1 integers within [$1$, n], where one value in [$1$, n] is present 2 or more times (but
-// other values in [$1$, n] are present at most once), find the duplicate without modifying the array.
+// Given n + 1 integers within [1, n], where one value in [1, n] is present 2 or more times (but
+// other values in [1, n] are present at most once), find the duplicate without modifying the array.
 // Interpret each value as a pointer to the next index; the duplicate is the cycle entry.
 int find_duplicate_integer(const vector<int> &nums) {
   auto [start, _] = find_cycle_floyd([&](int i) { return nums[i]; }, 0);
@@ -1966,7 +1966,7 @@ Solves the 0-1 knapsack problem: given items with nonnegative integer weights an
 The one-dimensional dynamic programming array \inlinecode{dp[w]} stores the best value that can be achieved with total weight at most \inlinecode{w} after processing some prefix of the items. Iterating weights in decreasing order is what enforces the 0-1 constraint; it prevents the same item from being reused during the current item update.
 
 \begin{compactitem}
-  \item \inlinecode{knapsack\_01(weight, value, capacity)} returns a pair (\inlinecode{value}, \inlinecode{items}) containing the maximum value and the selected item indices in increasing order, where item \inlinecode{i} has weight \inlinecode{weight[i]} and value \inlinecode{value[i]}. All weights must be nonnegative integers. Items with weight 0 are allowed and can each be taken once. The take/skip decision for every item and capacity is stored to reconstruct the optimal subset.
+  \item \inlinecode{knapsack\_01(weight, value, capacity)} returns a pair $({\inlinecodemath{value}}, {\inlinecodemath{items}})$ containing the maximum value and the selected item indices in increasing order, where item \inlinecode{i} has weight \inlinecode{weight[i]} and value \inlinecode{value[i]}. All weights must be nonnegative integers. Items with weight $0$ are allowed and can each be taken once. The take/skip decision for every item and capacity is stored to reconstruct the optimal subset.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \cdot W)$ per call, where $n$ is the number of items and $W$ is \inlinecode{capacity}.
@@ -2030,7 +2030,7 @@ Solves two common unbounded knapsack variants, where each item may be used any n
 For unbounded maximum-value knapsack, capacities are processed in increasing order. Thus, when computing \inlinecode{dp[w]}, every smaller-capacity state \inlinecode{dp[w - weight[i]]} is already final and may itself contain item \inlinecode{i}, allowing unlimited reuse. For unordered coin change, coins are the outer loop so each multiset of coins is counted once, independent of ordering.
 
 \begin{compactitem}
-  \item \inlinecode{unbounded\_knapsack(weight, value, capacity)} returns a pair (\inlinecode{value}, \inlinecode{count}) containing the maximum value achievable with total weight at most \inlinecode{capacity} and \inlinecode{count[i]}, the number of copies selected of each item \inlinecode{i}.
+  \item \inlinecode{unbounded\_knapsack(weight, value, capacity)} returns a pair $({\inlinecodemath{value}}, {\inlinecodemath{count}})$ containing the maximum value achievable with total weight at most \inlinecode{capacity} and \inlinecode{count[i]}, the number of copies selected of each item \inlinecode{i}.
   \item \inlinecode{count\_coin\_change(coins, target)} returns the number of unordered ways to make sum \inlinecode{target} using the given coin denominations.
 \end{compactitem}
 
@@ -2119,8 +2119,8 @@ The meet-in-the-middle method splits the collection in half, enumerates every su
 Pisinger's algorithm targets the opposite regime: nonnegative weights whose maximum value is small, with possibly many items. Let $W$ be the largest weight. It greedily takes a maximal prefix with sum $s$ that fits the target; because the next weight is at most $W$ and does not fit, $s$ is greater than \inlinecode{target} $- W$. The prefix itself is feasible, so the optimum lies between $s$ and \inlinecode{target} and only that width-$W$ window matters. A balanced sweep explores exchanges that add later items to sums below the target and remove earlier items from sums above it. For each sum, it retains the farthest prefix boundary reached, which dominates smaller boundaries because it permits at least the same future exchanges. This gives a running time linear in the number of items times $W$, independent of the target beyond that window. This routine is sometimes called ``fast knapsack,'' a slight misnomer: it maximizes a subset sum rather than packing items with distinct values, so it is really the bounded-weight case of subset sum rather than the 0-1 value knapsack.
 
 \begin{compactitem}
-  \item \inlinecode{max\_subset\_sum\_at\_most(lo, hi, v)} returns a pair (\inlinecode{sum}, \inlinecode{items}) containing that maximum sum and the selected item indices relative to \inlinecode{lo}. Values may be negative. The range is supplied as random-access iterators, and 64-bit integers are used in calculations to avoid overflow.
-  \item \inlinecode{max\_subset\_sum\_bounded(lo, hi, target)} returns the maximum sum of any subset of the range [\inlinecode{lo}, \inlinecode{hi}) that does not exceed \inlinecode{target}. All weights and \inlinecode{target} must be nonnegative integers. This is faster than meet-in-the-middle when the largest weight is small relative to $2^{n/2}$.
+  \item \inlinecode{max\_subset\_sum\_at\_most(lo, hi, v)} returns a pair $({\inlinecodemath{sum}}, {\inlinecodemath{items}})$ containing that maximum sum and the selected item indices relative to \inlinecode{lo}. Values may be negative. The range is supplied as random-access iterators, and 64-bit integers are used in calculations to avoid overflow.
+  \item \inlinecode{max\_subset\_sum\_bounded(lo, hi, target)} returns the maximum sum of any subset of the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ that does not exceed \inlinecode{target}. All weights and \inlinecode{target} must be nonnegative integers. This is faster than meet-in-the-middle when the largest weight is small relative to $2^{n/2}$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -2259,7 +2259,7 @@ Selects the maximum number of non-overlapping intervals using the classic earlie
 
 The greedy choice is safe because among all intervals that could be chosen first, taking one with the earliest finish time leaves the most room for the remaining intervals. In any optimal solution, the first chosen interval can be exchanged for an earliest-finishing compatible interval without reducing the number of intervals selected. Repeating this argument after each choice proves the greedy algorithm optimal. The weighted version in 1.3.2 needs dynamic programming instead.
 
-Intervals are represented as half-open ranges [\inlinecode{start}, \inlinecode{finish}), so two intervals are compatible if the next interval's \inlinecode{start} is at least the previous interval's \inlinecode{finish}.
+Intervals are represented as half-open ranges $[{\inlinecodemath{start}}, {\inlinecodemath{finish}})$, so two intervals are compatible if the next interval's \inlinecode{start} is at least the previous interval's \inlinecode{finish}.
 
 \begin{compactitem}
   \item \inlinecode{schedule\_intervals(intervals)} returns one maximum-size compatible subset of intervals, in the order they are selected, from an input vector of \inlinecode{Interval} with fields \inlinecode{start}, \inlinecode{finish}, and the original \inlinecode{id}.
@@ -2312,10 +2312,10 @@ int main() {
 \subsection{Weighted Interval Scheduling}
 Selects a maximum-weight subset of non-overlapping intervals using dynamic programming and binary search. Unlike unweighted interval scheduling, the earliest finish-time greedy choice is not sufficient when intervals have weights. With intervals sorted by finish time, the best total for the first $i$ intervals either skips interval $i$ or adds its weight to the best total over intervals finishing no later than its start, with that predecessor located by binary search.
 
-Intervals are represented as half-open ranges [\inlinecode{start}, \inlinecode{finish}), so two intervals are compatible if the next interval's \inlinecode{start} is at least the previous interval's \inlinecode{finish}.
+Intervals are represented as half-open ranges $[{\inlinecodemath{start}}, {\inlinecodemath{finish}})$, so two intervals are compatible if the next interval's \inlinecode{start} is at least the previous interval's \inlinecode{finish}.
 
 \begin{compactitem}
-  \item \inlinecode{select\_weighted\_intervals(intervals)} returns a pair (\inlinecode{weight}, \inlinecode{selected}) containing that maximum weight and the selected intervals as original input indices in execution order, from an input vector of \inlinecode{WeightedInterval} with fields \inlinecode{start}, \inlinecode{finish}, and \inlinecode{weight}. \inlinecode{dp[i]} stores the best answer using the first \inlinecode{i} intervals after sorting by finish time.
+  \item \inlinecode{select\_weighted\_intervals(intervals)} returns a pair $({\inlinecodemath{weight}}, {\inlinecodemath{selected}})$ containing that maximum weight and the selected intervals as original input indices in execution order, from an input vector of \inlinecode{WeightedInterval} with fields \inlinecode{start}, \inlinecode{finish}, and \inlinecode{weight}. \inlinecode{dp[i]} stores the best answer using the first \inlinecode{i} intervals after sorting by finish time.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting and binary searching compatible intervals.
@@ -2394,7 +2394,7 @@ Assigns intervals to the minimum number of groups so that no two intervals in th
 
 The greedy algorithm sorts intervals by start time and reuses the group whose current finish time is earliest whenever possible. Otherwise, it creates a new group. This is optimal because the number of groups must be at least the maximum number of intervals overlapping at any time. When the earliest-finishing active group still overlaps the next interval, every active group overlaps it, so creating a new group is unavoidable. If that group is free, reusing it preserves as many later options as possible.
 
-Intervals are treated as half-open ranges [\inlinecode{start}, \inlinecode{finish}), so one interval may reuse a room that another interval vacates at the same time.
+Intervals are treated as half-open ranges $[{\inlinecodemath{start}}, {\inlinecodemath{finish}})$, so one interval may reuse a room that another interval vacates at the same time.
 
 \begin{compactitem}
   \item \inlinecode{partition\_intervals(intervals)} returns a vector \inlinecode{room}, where \inlinecode{room[id]} is the assigned room for each input interval given as a vector of \inlinecode{PartitionInterval} with fields \inlinecode{start}, \inlinecode{finish}, and \inlinecode{id}. The number of rooms used in the returned assignment is $1 + \max({\inlinecodemath{room[id]}})$, or $0$ if there are no intervals.
@@ -2462,7 +2462,7 @@ Schedules unit-time jobs with deadlines and profits to maximize total profit. Ea
 The latest-slot choice is safe because it uses the current high-profit job while leaving earlier slots available for jobs with tighter deadlines. A disjoint-set forest over time slots makes this efficient: \inlinecode{find\_root(t)} returns the latest still-free slot at or before \inlinecode{t}, and occupying slot \inlinecode{t} links it to the next candidate slot \inlinecode{t - 1}.
 
 \begin{compactitem}
-  \item \inlinecode{select\_deadline\_jobs(jobs)} returns a pair (\inlinecode{profit}, \inlinecode{slot}) containing that maximum profit and \inlinecode{slot[i]}, the assigned time slot of input job \inlinecode{i}, or $-1$ if that job is not selected, for a vector of \inlinecode{Job} with fields \inlinecode{deadline} and \inlinecode{profit}. Deadlines are positive integer time slots.
+  \item \inlinecode{select\_deadline\_jobs(jobs)} returns a pair $({\inlinecodemath{profit}}, {\inlinecodemath{slot}})$ containing that maximum profit and \inlinecode{slot[i]}, the assigned time slot of input job \inlinecode{i}, or $-1$ if that job is not selected, for a vector of \inlinecode{Job} with fields \inlinecode{deadline} and \inlinecode{profit}. Deadlines are positive integer time slots.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting, with near-constant disjoint-set operations.
@@ -2617,7 +2617,7 @@ Randomly permutes a range in-place using the Fisher-Yates shuffle. Each possible
 The algorithm scans from right to left. At each position $i$, it chooses a random position $j$ from $[0, i]$ and swaps the two elements. This fixes one uniformly random remaining element at a time.
 
 \begin{compactitem}
-  \item \inlinecode{fisher\_yates\_shuffle(lo, hi)} randomly shuffles the range [\inlinecode{lo}, \inlinecode{hi}).
+  \item \inlinecode{fisher\_yates\_shuffle(lo, hi)} randomly shuffles the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
@@ -2773,7 +2773,7 @@ The Boyer-Moore voting algorithm performs a first pass while maintaining a singl
 If a majority element is guaranteed in advance to exist, the verification pass can be dropped and the candidate returned directly. The candidate phase alone is single-pass, so that variant could be written as a ``true'' streaming API with one element per call.
 
 \begin{compactitem}
-  \item \inlinecode{majority(lo, hi)} returns an iterator to the first occurrence of the majority element of the range [\inlinecode{lo}, \inlinecode{hi}), or \inlinecode{hi} if no majority element exists. Requires \inlinecode{operator==} on the value type.
+  \item \inlinecode{majority(lo, hi)} returns an iterator to the first occurrence of the majority element of the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, or \inlinecode{hi} if no majority element exists. Requires \inlinecode{operator==} on the value type.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ per call, where $n$ is the size of the array.
@@ -3252,7 +3252,7 @@ The basis is kept in reduced form: the $i$-th basis is either $0$ or a value who
 
 \begin{compactitem}
   \item \inlinecode{insert(x)} adds \inlinecode{x} to the basis, returning \inlinecode{true} if \inlinecode{x} was linearly independent of the current basis (increasing its size), or \inlinecode{false} if \inlinecode{x} was already representable as a subset XOR.
-  \item \inlinecode{contains(x)} returns whether \inlinecode{x} is representable as the XOR of some subset of the inserted values, i.e. whether it reduces to 0 against the basis.
+  \item \inlinecode{contains(x)} returns whether \inlinecode{x} is representable as the XOR of some subset of the inserted values, i.e. whether it reduces to $0$ against the basis.
   \item \inlinecode{max\_xor(base)} returns the maximum value of \inlinecode{base} XORed with some subset XOR of the basis. With the default \inlinecode{base} of 0, this is the maximum subset XOR.
   \item \inlinecode{size()} returns the number of elements in the basis (its rank).
 \end{compactitem}
@@ -3347,7 +3347,7 @@ The classic application is the maximum-XOR query: to maximize \inlinecode{x \tex
 
 This is a multiset (a value may be inserted more than once), and is distinct from the XOR basis: the basis spans subset XORs of a fixed set, whereas this answers XOR queries against the stored elements themselves with support for insertion and deletion.
 
-Values must lie in $[0, 2^b)$ for bit width $b$; the template parameters select the unsigned word type \inlinecode{U} and the bit width \inlinecode{BITS}, which must be less than the width of \inlinecode{U} (for example, 30 with \inlinecode{uint32\_t} or 62 with \inlinecode{uint64\_t}). Nodes are kept in a pool indexed by integer, where index 0 is the root and also serves as the null child.
+Values must lie in $[0, 2^b)$ for bit width $b$; the template parameters select the unsigned word type \inlinecode{U} and the bit width \inlinecode{BITS}, which must be less than the width of \inlinecode{U} (for example, $30$ with \inlinecode{uint32\_t} or $62$ with \inlinecode{uint64\_t}). Nodes are kept in a pool indexed by integer, where index $0$ is the root and also serves as the null child.
 
 \begin{compactitem}
   \item \inlinecode{BinaryTrie\textless{}U, BITS\textgreater{}()} constructs an empty multiset.

@@ -6,11 +6,11 @@ found by finding the root of the derivative.
 
 - `horner_eval(p, x)` evaluates the polynomial `p` of degree $d$ (represented as a vector of size
   $d + 1$ where `p[i]` stores the coefficient for the $x^i$ term) at `x`, using Horner's method.
-- `find_one_root(p, a, b, EPS)` returns a root in the interval [`a`, `b`] for a polynomial `p` where
-  $\operatorname{sgn}(f(a)) \neq \operatorname{sgn}(f(b))$, using the bisection method. If this
-  precondition is not satisfied, then `NaN` is returned. The root is found to a tolerance of `EPS`
-  in absolute or relative error (whichever is reached first).
-- `find_all_roots(p, a, b, EPS)` returns a vector of all roots in the interval [`a`, `b`] for a
+- `find_one_root(p, a, b, EPS)` returns a root in the interval $[`a`, `b`]$ for a polynomial `p`
+  where $\operatorname{sgn}(f(a)) \neq \operatorname{sgn}(f(b))$, using the bisection method. If
+  this precondition is not satisfied, then `NaN` is returned. The root is found to a tolerance of
+  `EPS` in absolute or relative error (whichever is reached first).
+- `find_all_roots(p, a, b, EPS)` returns a vector of all roots in the interval $[`a`, `b`]$ for a
   polynomial `p` using the bisection method. The roots are found to a tolerance of `EPS` in absolute
   or relative error (whichever is reached first).
 

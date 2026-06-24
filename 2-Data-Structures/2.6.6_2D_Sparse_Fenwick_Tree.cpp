@@ -16,15 +16,15 @@ addition and subtraction.
 - `SparseFenwick2D<T, R, C>()` constructs a 2D array over rows $0$ to $R - 1$ (inclusive) and
   columns $0$ to $C - 1$ (inclusive). All values are implicitly initialized to $0$, as nodes are
   allocated lazily as indices are touched.
-- `add(r, c, x)` adds `x` to the value at index (`r`, `c`).
+- `add(r, c, x)` adds `x` to the value at index $(`r`, `c`)$.
 - `add(r1, c1, r2, c2, x)` adds `x` to all indices in the rectangle with upper-left corner
-  (`r1`, `c1`) and lower-right corner (`r2`, `c2`).
-- `set(r, c, x)` assigns `x` to the value at index (`r`, `c`).
-- `sum(r, c)` returns the sum of the rectangle with upper-left corner ($0$, $0$) and lower-right
-  corner (`r`, `c`).
-- `sum(r1, c1, r2, c2)` returns the sum of the rectangle with upper-left corner (`r1`, `c1`) and
-  lower-right corner (`r2`, `c2`).
-- `at(r, c)` returns the value at index (`r`, `c`).
+  $(`r1`, `c1`)$ and lower-right corner $(`r2`, `c2`)$.
+- `set(r, c, x)` assigns `x` to the value at index $(`r`, `c`)$.
+- `sum(r, c)` returns the sum of the rectangle with upper-left corner $(0, 0)$ and lower-right
+  corner $(`r`, `c`)$.
+- `sum(r1, c1, r2, c2)` returns the sum of the rectangle with upper-left corner $(`r1`, `c1`)$ and
+  lower-right corner $(`r2`, `c2`)$.
+- `at(r, c)` returns the value at index $(`r`, `c`)$.
 
 Time Complexity:
 - O(log(R)*log(C)) per call to all member functions.

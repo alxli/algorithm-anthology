@@ -11,7 +11,7 @@ earliest-finishing active group still overlaps the next interval, every active g
 creating a new group is unavoidable. If that group is free, reusing it preserves as many later
 options as possible.
 
-Intervals are treated as half-open ranges [`start`, `finish`), so one interval may reuse a room
+Intervals are treated as half-open ranges $[`start`, `finish`)$, so one interval may reuse a room
 that another interval vacates at the same time.
 
 - `partition_intervals(intervals)` returns a vector `room`, where `room[id]` is the assigned room

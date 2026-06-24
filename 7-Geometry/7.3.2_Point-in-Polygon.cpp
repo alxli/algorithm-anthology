@@ -9,7 +9,7 @@ fields. All comparisons are exact (no epsilon): the ray-crossing parity needs a 
 comparison to be correct, and the result is exact for integer-coordinate points.
 
 - `point_in_polygon(p, lo, hi, EDGE_IS_INSIDE)` returns whether `p` lies within the polygon with
-  vertices specified by the range [`lo`, `hi`) of points in either clockwise or counter-clockwise
+  vertices specified by the range $[`lo`, `hi`)$ of points in either clockwise or counter-clockwise
   order. The `EDGE_IS_INSIDE` flag (default `true`) controls whether points exactly on an edge or
   vertex count as inside.
 

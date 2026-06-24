@@ -11,7 +11,7 @@ the first chosen interval can be exchanged for an earliest-finishing compatible 
 reducing the number of intervals selected. Repeating this argument after each choice proves the
 greedy algorithm optimal. The weighted version in 1.3.2 needs dynamic programming instead.
 
-Intervals are represented as half-open ranges [`start`, `finish`), so two intervals are compatible
+Intervals are represented as half-open ranges $[`start`, `finish`)$, so two intervals are compatible
 if the next interval's `start` is at least the previous interval's `finish`.
 
 - `schedule_intervals(intervals)` returns one maximum-size compatible subset of intervals, in the

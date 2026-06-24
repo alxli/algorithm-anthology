@@ -8,7 +8,7 @@ The prefix/suffix aggregation requires `combine` to be associative for a running
 is usually preferred, but a segment-tree/exclusive-combine variant can support a left-fold style
 interface in O(n log n).
 
-- `RerootingTree(n)` constructs a tree with `n` nodes numbered [$0$, `n`).
+- `RerootingTree(n)` constructs a tree with `n` nodes numbered $[0, `n`)$.
 - `add_edge(u, v)` adds an undirected edge between nodes `u` and `v`.
 - `build_rooted_tree(root)` populates `parent`, `depth`, `subtree_size`, `order`, `tin`, and `tout`
   for the tree rooted at `root` (default 0). This must be called only after the added edges define a

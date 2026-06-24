@@ -7,7 +7,7 @@ subarray that extends it. Thus, by including `a[i]`, the running sum becomes `ma
 and the largest running sum seen is the answer. This can be adapted to compute the maximal submatrix
 sum as well.
 
-- `max_subarray_sum(lo, hi)` returns `(sum, begin, end)` for the maximal subarray in [`lo`, `hi`),
+- `max_subarray_sum(lo, hi)` returns `(sum, begin, end)` for the maximal subarray in $[`lo`, `hi`)$,
   where `lo` and `hi` are random-access iterators to numeric types. The endpoints are inclusive.
   This implementation requires operators `+` and `<` on the iterators' value type. By convention,
   the empty subarray is allowed, so an input range containing only negative values returns sum $0$

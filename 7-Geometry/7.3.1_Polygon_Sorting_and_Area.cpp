@@ -10,7 +10,7 @@ struct with numeric `.x` and `.y` fields and `<` / `==` operators.
 - `cw_comp(a, b, c)` returns whether point `a` compares clockwise before `b` about `c`.
 - `CWComparator(c)` / `CCWComparator(c)` return comparators for `std::sort`.
 - `polygon_area_2x(lo, hi)` returns exactly double the area of the polygon with vertices specified
-  by the range [`lo`, `hi`) of points in either clockwise or counter-clockwise order. The return
+  by the range $[`lo`, `hi`)$ of points in either clockwise or counter-clockwise order. The return
   value is integral or floating-point, depending on the input point type. For integer vertices,
   divide by 2 in the caller if the exact area is needed.
 - `polygon_area(lo, hi)` returns the area as `double`.

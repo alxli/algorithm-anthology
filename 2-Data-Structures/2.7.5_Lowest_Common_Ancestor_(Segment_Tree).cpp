@@ -10,7 +10,7 @@ shallowest node visited between their first occurrences in the tour, found by a 
 over the depth sequence. This version answers those queries with a segment tree.
 
 - `SegTreeLCA(adj)` builds the structure over a forest represented by a bidirectional adjacency list
-  `adj` of nodes numbered [$0$, `n`), where `n` is `adj.size()`.
+  `adj` of nodes numbered $[0, `n`)$, where `n` is `adj.size()`.
 - `lca(u, v)` returns the lowest common ancestor of nodes `u` and `v`, or $-1$ if they are in
   different trees.
 - `dist(u, v)` returns the number of edges on the path between nodes `u` and `v`, or $-1$ if they

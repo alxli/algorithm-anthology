@@ -11,7 +11,7 @@ form a cycle.
 
 - `kruskal_mst(n)` populates `mst` with the edge IDs in the minimum spanning tree (returning the
   total MST weight) for a global, pre-populated edge list `edges` whose endpoints must be numbered
-  [$0$, `n`). Each edge is stored as (`weight`, `u`, `v`).
+  $[0, `n`)$. Each edge is stored as $(`weight`, `u`, `v`)$.
 
 Multigraphs are supported; parallel edges appear as separate entries in `edges` and any redundant
 ones are skipped once the cheaper edge has already connected the two components.

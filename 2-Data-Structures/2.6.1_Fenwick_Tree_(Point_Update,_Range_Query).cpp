@@ -10,7 +10,7 @@ lifting: it walks the implicit power-of-two block structure to find the longest 
 most `c`. This lets the same structure double as a dynamic multiset over a bounded integer domain,
 useful for coordinate-compressed $k$-th element lookups and online rank queries.
 
-- `Fenwick<T>(n)` constructs an array with 0-based indices [$0$, `n`), with all values initialized
+- `Fenwick<T>(n)` constructs an array with 0-based indices $[0, `n`)$, with all values initialized
   to $0$.
 - `size()` returns the size of the array.
 - `add(i, x)` adds `x` to the value at index `i`.

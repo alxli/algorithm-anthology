@@ -10,7 +10,7 @@ Common number theory operations relating to modular arithmetic.
 - `extended_euclid(a, b)` returns a pair $(x, y)$ of integers such that $\gcd(a, b) = ax + by$.
 - `diophantine(a, b, c, &x, &y, &g)` solves the linear Diophantine equation $ax + by = c$, returning
   whether a solution exists (one does if and only if $\gcd(a, b)$ divides $c$), and on success sets
-  `g` to $\gcd(a, b)$ and (`x`, `y`) to a particular solution bounded by $\max(|a|, |b|, |c|)$ in
+  `g` to $\gcd(a, b)$ and $(`x`, `y`)$ to a particular solution bounded by $\max(|a|, |b|, |c|)$ in
   magnitude. A 128-bit intermediate is used where available to keep the scaling step overflow-free.
 - `mod(a, b)` returns the value of `a` mod `b` under the true Euclidean definition of modulo, that
   is, the smallest nonnegative integer $m$ satisfying $a + bn = m$ for some integer $n$. Note that

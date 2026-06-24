@@ -9,7 +9,7 @@ The algorithm starts with every vertex attached to vertex 0, then performs $n - 
 computations. After computing the minimum cut between vertex $s$ and its current parent, vertices on
 the $s$ side of that cut are reparented under $s$, gradually refining the cut-equivalent tree.
 
-- `gomory_hu(n, edges)` returns the $`n` - 1$ edges of a Gomory-Hu tree as (`u`, `v`, `weight`)
+- `gomory_hu(n, edges)` returns the $`n` - 1$ edges of a Gomory-Hu tree as $(`u`, `v`, `weight`)$
   tripes for an undirected, weighted graph with `n` nodes and `edges` of the same shape.
 - `min_cut_value(n, tree, source, sink)` returns the minimum cut value between two vertices using a
   Gomory-Hu tree. Note that for many pairwise cut queries on the same tree, it's more efficient to

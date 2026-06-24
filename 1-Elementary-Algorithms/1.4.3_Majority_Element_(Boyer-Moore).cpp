@@ -16,7 +16,7 @@ the candidate returned directly. The candidate phase alone is single-pass, so th
 written as a "true" streaming API with one element per call. 
 
 - `majority(lo, hi)` returns an iterator to the first occurrence of the majority element of the
-  range [`lo`, `hi`), or `hi` if no majority element exists. Requires `operator==` on the value
+  range $[`lo`, `hi`)$, or `hi` if no majority element exists. Requires `operator==` on the value
   type.
 
 Time Complexity:

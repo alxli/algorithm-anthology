@@ -1,19 +1,19 @@
 /*
 
 Applies many range-add updates to an array in linear total time using a difference array. Instead of
-immediately adding `delta` to every element of an inclusive range [`lo`, `hi`], we can add `delta`
+immediately adding `delta` to every element of an inclusive range $[`lo`, `hi`]$, we can add `delta`
 at `diff[lo]` and subtract it at `diff[hi + 1]`; a final prefix sum reconstructs the updated values.
 This idea extends to two dimensions: a rectangle update touches just the four corner cells of a
 difference grid by inclusion-exclusion, and a final two-dimensional prefix sum reconstructs the
 grid.
 
 - `DifferenceArray(n)` constructs an initially zero array of size `n`.
-- `add(lo, hi, delta)` adds `delta` to every position in the inclusive range [`lo`, `hi`].
+- `add(lo, hi, delta)` adds `delta` to every position in the inclusive range $[`lo`, `hi`]$.
 - `build()` returns the final array after all range updates.
 - `DifferenceArray2D(rows, cols)` constructs an initially zero grid with `rows` rows and `cols`
   columns.
 - `add(r1, c1, r2, c2, delta)` adds `delta` to every cell of the rectangle with top left at
-  (`r1`, `c1`) and bottom right at (`r2`, `c2`), inclusive.
+  $(`r1`, `c1`)$ and bottom right at $(`r2`, `c2`)$, inclusive.
 - `build()` returns the final grid after all rectangle updates.
 
 Time Complexity:

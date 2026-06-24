@@ -13,10 +13,10 @@ cut, the "cut of the phase". The last two vertices added are then merged into a 
 the next phase begins on the smaller graph. After $n - 1$ phases every candidate has been
 considered, and the smallest is the global minimum cut.
 
-- `stoer_wagner(adj)` returns a pair (`weight`, `side`) for a graph as a symmetric adjacency matrix
-  `adj` (with $0$ for the diagonal and absent edges), where `weight` is the total weight of the
-  global minimum cut and `side` lists the vertices on one side of that cut. The graph must have at
-  least two vertices.
+- `stoer_wagner(adj)` returns a pair $(`weight`, `side`)$ for a graph as a symmetric adjacency
+  matrix `adj` (with $0$ for the diagonal and absent edges), where `weight` is the total weight of
+  the global minimum cut and `side` lists the vertices on one side of that cut. The graph must have
+  at least two vertices.
 
 Parallel edges should be pre-summed into the adjacency matrix before calling: `adj[u][v]` holds a
 single combined weight, so the sum of all parallel edge weights between `u` and `v` should be

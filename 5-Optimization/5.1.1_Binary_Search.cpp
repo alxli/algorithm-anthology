@@ -10,17 +10,19 @@ binary search is not restricted by available memory, making it useful for handli
 search spaces such as real number intervals.
 
 - `binary_search_first_true(lo, hi, pred)` takes signed integer boundaries for the search space
-  [`lo`, `hi`) (i.e. including `lo`, but excluding `hi`) and returns the smallest integer `k` in
-  [`lo`, `hi`) for which the predicate `pred(k)` tests true. If `pred(k)` tests false for the entire
-  input range, then `hi` is returned. The caller must ensure `pred` is monotonic on the input range,
-  i.e. returning all false for some (possibly empty) prefix, followed by all true in some (possibly
-  empty) suffix. E.g., patterns `"01"`, `"00"`, and `"11"` are allowed, but `"10"` is disallowed.
+  $[`lo`, `hi`)$ (i.e. including `lo`, but excluding `hi`) and returns the smallest integer `k` in
+  $[`lo`, `hi`)$ for which the predicate `pred(k)` tests true. If `pred(k)` tests false for the
+  entire input range, then `hi` is returned. The caller must ensure `pred` is monotonic on the input
+  range, i.e. returning all false for some (possibly empty) prefix, followed by all true in some
+  (possibly empty) suffix. E.g., patterns `"01"`, `"00"`, and `"11"` are allowed, but `"10"` is
+  disallowed.
 - `binary_search_last_true(lo, hi, pred)` takes signed integer boundaries for the search space
-  [`lo`, `hi`) (i.e. including `lo`, but excluding `hi`) and returns the largest integer `k` in
-  [`lo`, `hi`) for which the predicate `pred(k)` tests true. If `pred(k)` tests false for the entire
-  input range, then `hi` is returned. The caller must ensure `pred` is monotonic on the input range,
-  i.e. returning all true for some (possibly empty) prefix, followed by all false in some (possibly
-  empty) suffix. E.g., patterns `"10"`, `"00"`, and `"11"` are allowed, but `"01"` is disallowed.
+  $[`lo`, `hi`)$ (i.e. including `lo`, but excluding `hi`) and returns the largest integer `k` in
+  $[`lo`, `hi`)$ for which the predicate `pred(k)` tests true. If `pred(k)` tests false for the
+  entire input range, then `hi` is returned. The caller must ensure `pred` is monotonic on the input
+  range, i.e. returning all true for some (possibly empty) prefix, followed by all false in some
+  (possibly empty) suffix. E.g., patterns `"10"`, `"00"`, and `"11"` are allowed, but `"01"` is
+  disallowed.
 - `fbinary_search(lo, hi, pred)` is the equivalent of `binary_search_first_true()` on floating point
   predicates. Since any interval of real numbers is dense, the exact target cannot be found due to
   floating point error. Instead, a value that is very close to the border between false and true is

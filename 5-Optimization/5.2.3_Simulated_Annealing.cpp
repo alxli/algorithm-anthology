@@ -14,8 +14,8 @@ function, the starting point, the initial temperature, the cooling rate, and the
 independent restarts.
 
 - `anneal_min(f, x0, y0, &best_x, &best_y)` returns a small value found by the randomized search
-  starting from (`x0`, `y0`). If the optional pointers `best_x` and `best_y` are supplied, the point
-  attaining the returned value is stored through them.
+  starting from $(`x0`, `y0`)$. If the optional pointers `best_x` and `best_y` are supplied, the
+  point attaining the returned value is stored through them.
 - `TEMPERATURE_START` controls the initial move scale and willingness to accept worse states.
 - `TEMPERATURE_END` controls when the search stops.
 - `COOLING_RATE` controls how quickly the temperature decreases.

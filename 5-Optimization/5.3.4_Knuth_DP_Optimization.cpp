@@ -8,7 +8,7 @@ Common applications include optimal binary search trees and some range merging p
 is responsible for verifying the quadrangle inequality and monotonicity assumptions for the chosen
 `cost(l, r)`.
 
-- `knuth_interval_dp(n, cost, &opt)` computes minimum costs for all half-open intervals [`l`, `r`)
+- `knuth_interval_dp(n, cost, &opt)` computes minimum costs for all half-open intervals $[`l`, `r`)$
   over `n` items. The template parameter `cost` must be callable such that `cost(l, r)` returns the
   interval cost added after choosing the best split. If the optional pointer `opt` is supplied, it
   is filled with the chosen split points.

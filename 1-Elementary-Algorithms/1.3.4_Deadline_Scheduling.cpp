@@ -9,8 +9,8 @@ slots available for jobs with tighter deadlines. A disjoint-set forest over time
 efficient: `find_root(t)` returns the latest still-free slot at or before `t`, and occupying slot
 `t` links it to the next candidate slot `t - 1`.
 
-- `select_deadline_jobs(jobs)` returns a pair (`profit`, `slot`) containing that maximum profit and
-  `slot[i]`, the assigned time slot of input job `i`, or $-1$ if that job is not selected, for a
+- `select_deadline_jobs(jobs)` returns a pair $(`profit`, `slot`)$ containing that maximum profit
+  and `slot[i]`, the assigned time slot of input job `i`, or $-1$ if that job is not selected, for a
   vector of `Job` with fields `deadline` and `profit`. Deadlines are positive integer time slots.
 
 Time Complexity:

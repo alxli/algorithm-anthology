@@ -10,7 +10,7 @@ computing `dp[w]`, every smaller-capacity state `dp[w - weight[i]]` is already f
 contain item `i`, allowing unlimited reuse. For unordered coin change, coins are the outer loop so
 each multiset of coins is counted once, independent of ordering.
 
-- `unbounded_knapsack(weight, value, capacity)` returns a pair (`value`, `count`) containing the
+- `unbounded_knapsack(weight, value, capacity)` returns a pair $(`value`, `count`)$ containing the
   maximum value achievable with total weight at most `capacity` and `count[i]`, the number of copies
   selected of each item `i`.
 - `count_coin_change(coins, target)` returns the number of unordered ways to make sum `target` using

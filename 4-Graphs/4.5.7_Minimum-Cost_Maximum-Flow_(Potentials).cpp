@@ -7,13 +7,13 @@ reduced costs are nonnegative, Dijkstra's algorithm can find the shortest augmen
 After each augmentation, $h$ is updated with the new shortest-path distances so that reduced costs
 remain nonnegative on the updated residual graph.
 
-- `MinCostMaxFlow<T, C>(n)` constructs an empty residual network with nodes numbered [$0$, `n`).
+- `MinCostMaxFlow<T, C>(n)` constructs an empty residual network with nodes numbered $[0, `n`)$.
 - `add_edge(u, v, cap, cost, rev_cap = 0)` adds a directed residual-network edge and returns its
   edge ID.
 - `edge_flow(id)` returns the flow through a previously added edge.
 - `clear_flow()` resets all edge flows to zero.
 - `min_cost_flow(source, sink, target_flow)` sends up to `target_flow` additional units of flow and
-  returns (flow, cost) for the flow sent by that call. If the returned flow is smaller than
+  returns $(flow, cost)$ for the flow sent by that call. If the returned flow is smaller than
   `target_flow`, the residual network cannot carry the requested amount.
 
 If all initial edge costs are nonnegative, the initial potentials can be zero and the first shortest

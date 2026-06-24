@@ -534,7 +534,7 @@ This implementation stores and computes circle parameters in \inlinecode{double}
 \begin{compactitem}
   \item \inlinecode{Circle()} constructs the zero-radius circle centered at the origin.
   \item \inlinecode{Circle(r)} constructs a circle of radius \inlinecode{abs(r)} centered at the origin.
-  \item \inlinecode{Circle(h, k, r)} constructs a circle of radius \inlinecode{abs(r)} centered at (\inlinecode{h}, \inlinecode{k}).
+  \item \inlinecode{Circle(h, k, r)} constructs a circle of radius \inlinecode{abs(r)} centered at $({\inlinecodemath{h}}, {\inlinecodemath{k}})$.
   \item \inlinecode{Circle(o, r)} constructs a circle of radius \inlinecode{abs(r)} centered at point \inlinecode{o}.
   \item \inlinecode{Circle(a, b)} constructs the circle whose diameter is segment \inlinecode{a}-\inlinecode{b}.
   \item \inlinecode{Circle(a, b, c)} constructs the circumcircle through non-collinear points \inlinecode{a}, \inlinecode{b}, and \inlinecode{c}, throwing if the points are collinear.
@@ -1968,7 +1968,7 @@ Given a list of distinct points in two-dimensions, order them into a valid polyg
 \begin{compactitem}
   \item \inlinecode{cw\_comp(a, b, c)} returns whether point \inlinecode{a} compares clockwise before \inlinecode{b} about \inlinecode{c}.
   \item \inlinecode{CWComparator(c)} / \inlinecode{CCWComparator(c)} return comparators for \inlinecode{std::sort}.
-  \item \inlinecode{polygon\_area\_2x(lo, hi)} returns exactly double the area of the polygon with vertices specified by the range [\inlinecode{lo}, \inlinecode{hi}) of points in either clockwise or counter-clockwise order. The return value is integral or floating-point, depending on the input point type. For integer vertices, divide by 2 in the caller if the exact area is needed.
+  \item \inlinecode{polygon\_area\_2x(lo, hi)} returns exactly double the area of the polygon with vertices specified by the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of points in either clockwise or counter-clockwise order. The return value is integral or floating-point, depending on the input point type. For integer vertices, divide by 2 in the caller if the exact area is needed.
   \item \inlinecode{polygon\_area(lo, hi)} returns the area as \inlinecode{double}.
   \item \inlinecode{polygon\_centroid(lo, hi)} returns the centroid (center of mass) of a non-degenerate simple polygon with vertices in boundary order as an \inlinecode{std::pair\textless{}double, double\textgreater{}}. It uses signed shoelace weights, so either clockwise or counter-clockwise inputs will work.
 \end{compactitem}
@@ -2142,7 +2142,7 @@ Counterclockwise vertices: (-1, 3) (0, 0) (2, 1) (1, 2) (1, 3)
 Given a point \inlinecode{p} and a polygon, determines whether \inlinecode{p} lies inside using ray casting. A ray cast from \inlinecode{p} must cross the polygon's boundary an odd number of times exactly when \inlinecode{p} is inside, so the function counts crossings between a horizontal ray and each polygon edge. The function is templated on the point type \inlinecode{Pt}. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}/\inlinecode{PointD}/\inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. All comparisons are exact (no epsilon): the ray-crossing parity needs a consistent comparison to be correct, and the result is exact for integer-coordinate points.
 
 \begin{compactitem}
-  \item \inlinecode{point\_in\_polygon(p, lo, hi, EDGE\_IS\_INSIDE)} returns whether \inlinecode{p} lies within the polygon with vertices specified by the range [\inlinecode{lo}, \inlinecode{hi}) of points in either clockwise or counter-clockwise order. The \inlinecode{EDGE\_IS\_INSIDE} flag (default \inlinecode{true}) controls whether points exactly on an edge or vertex count as inside.
+  \item \inlinecode{point\_in\_polygon(p, lo, hi, EDGE\_IS\_INSIDE)} returns whether \inlinecode{p} lies within the polygon with vertices specified by the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of points in either clockwise or counter-clockwise order. The \inlinecode{EDGE\_IS\_INSIDE} flag (default \inlinecode{true}) controls whether points exactly on an edge or vertex count as inside.
 \end{compactitem}
 
 Overflow warning: the edge orientation test forms a cross product that grows like the squared coordinate magnitude. For integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) once coordinates exceed $\sim 46000$.
@@ -2221,7 +2221,7 @@ int main() {
 Given a list of points in two dimensions, computes the convex hull using the monotone chain algorithm and the diametral pair using rotating calipers. Monotone chain sorts the points lexicographically and builds the lower and upper hulls in one pass each, popping any point that would create a clockwise turn. Rotating calipers then walks two antipodal pointers around the hull, advancing whichever increases the separation, visiting every candidate diametral pair in linear time. The functions are templated on the iterator type; the value type of the iterator is used as the point type. Both functions accept either floating-point or integral coordinates, but since they use only cross product comparisons, they happen to be exact for integral points.
 
 \begin{compactitem}
-  \item \inlinecode{convex\_hull(lo, hi)} returns the convex hull in clockwise order for a range [\inlinecode{lo}, \inlinecode{hi}) of points. The input range is sorted lexicographically after the call. To instead return the hull points counter-clockwise order, replace every \inlinecode{\textgreater{}= 0} with \inlinecode{\textless{}= 0}.
+  \item \inlinecode{convex\_hull(lo, hi)} returns the convex hull in clockwise order for a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of points. The input range is sorted lexicographically after the call. To instead return the hull points counter-clockwise order, replace every \inlinecode{\textgreater{}= 0} with \inlinecode{\textless{}= 0}.
   \item \inlinecode{diametral\_pair(lo, hi)} returns the maximum-distance pair of points.
 \end{compactitem}
 
@@ -2368,7 +2368,7 @@ Given a convex polygon in counter-clockwise order, answer containment and tangen
 \begin{compactitem}
   \item \inlinecode{point\_in\_convex\_polygon(poly, p, EDGE\_IS\_INSIDE)} returns whether point \inlinecode{p} lies inside the convex polygon \inlinecode{poly}. The polygon must be in counter-clockwise order, with no repeated final vertex. Points on the boundary count as inside unless \inlinecode{EDGE\_IS\_INSIDE} is set to \inlinecode{false}.
   \item \inlinecode{line\_convex\_polygon\_intersection(poly, a, b)} describes where the infinite directed line through \inlinecode{a} $\to$ \inlinecode{b} hits the polygon: $(-1, -1)$ for no intersection, $(i, -1)$ for touching vertex $i$, $(i, i)$ for containing side $i \to i+1$, or $(i, j)$ for crossing sides $i \to i+1$ and $j \to j+1$.
-  \item \inlinecode{convex\_polygon\_tangents(poly, p)} returns the two tangent vertex indices from an outside point \inlinecode{p} as (left, right). The left tangent has all polygon vertices on or to the left of the directed line \inlinecode{p} $\to$ \inlinecode{poly[left]}; the right tangent is analogous for the right side.
+  \item \inlinecode{convex\_polygon\_tangents(poly, p)} returns the two tangent vertex indices from an outside point \inlinecode{p} as $(left, right)$. The left tangent has all polygon vertices on or to the left of the directed line \inlinecode{p} $\to$ \inlinecode{poly[left]}; the right tangent is analogous for the right side.
 \end{compactitem}
 
 For integer-coordinate inputs, all tests are exact provided the cross products do not overflow.
@@ -2554,7 +2554,7 @@ Given a set of points in two dimensions, finds the unique circle of minimum radi
 This implementation uses Welzl's randomized incremental algorithm. The points are shuffled and processed one at a time while maintaining the current minimum enclosing circle. Whenever a point lies outside the current circle, the circle is rebuilt with that point constrained to lie on the boundary. The final circle is determined by at most three boundary points.
 
 \begin{compactitem}
-  \item \inlinecode{minimum\_enclosing\_circle(lo, hi)} returns the minimum enclosing circle for the range [\inlinecode{lo}, \inlinecode{hi}) of points, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators. The input range is shuffled in place. The point type may be any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members. The returned circle always uses \inlinecode{double} coordinates, so integer-coordinate inputs are accepted.
+  \item \inlinecode{minimum\_enclosing\_circle(lo, hi)} returns the minimum enclosing circle for the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of points, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators. The input range is shuffled in place. The point type may be any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members. The returned circle always uses \inlinecode{double} coordinates, so integer-coordinate inputs are accepted.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ expected time per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}, or $O(n^{3})$ in the worst-case for a particular shuffle order.
@@ -2697,7 +2697,7 @@ int main() {
 Given a list of points in two dimensions, finds the closest pair using a divide-and-conquer algorithm. The points are split in half by $x$-coordinate and each half is solved recursively; the combining step then only needs to examine points within the best distance so far of the dividing line, where each point in this strip is compared to a constant number of $y$-ordered neighbors.
 
 \begin{compactitem}
-  \item \inlinecode{closest\_pair(lo, hi, \&res)} returns the minimum squared distance between any two points in the range [\inlinecode{lo}, \inlinecode{hi}), where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators. The input range is reordered during the computation and is sorted by $y$-coordinate on return. If \inlinecode{res} is non-null, one closest pair is stored there in lexicographic order. The function is templated on the point type and works with any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members.
+  \item \inlinecode{closest\_pair(lo, hi, \&res)} returns the minimum squared distance between any two points in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators. The input range is reordered during the computation and is sorted by $y$-coordinate on return. If \inlinecode{res} is non-null, one closest pair is stored there in lexicographic order. The function is templated on the point type and works with any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members.
 \end{compactitem}
 
 The returned distance preserves the coordinate arithmetic type. For integer-coordinate inputs, the result is therefore an exact squared distance provided intermediate products do not overflow. The returned pair contains the original point type.
@@ -2855,7 +2855,7 @@ int main() {
 Given a list of line segments in two dimensions, determine whether any pair of segments intersect using a sweep line algorithm. Endpoint events are processed from left to right while an ordered set maintains the segments currently crossing the sweep line, sorted by $y$; only segments that become adjacent in this set need to be tested, since any leftmost intersection must involve a pair that is adjacent just before it occurs. The input type \inlinecode{Segment\textless{}Pt\textgreater{}} is templated on the point type, so endpoints may be integer (\inlinecode{PointI}) or floating-point (\inlinecode{Point}/\inlinecode{PointD}), but must support \inlinecode{operator\textless{}} which orders points lexicographically. The cross-product sign tests in \inlinecode{seg\_intersection} are exact for integer endpoints, so intersection detection is exact.
 
 \begin{compactitem}
-  \item \inlinecode{find\_intersection(lo, hi, \&res1, \&res2, TOUCH\_IS\_INTERSECT)} returns whether any pair of segments intersect given a range [\inlinecode{lo}, \inlinecode{hi}) of segments, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators. If an intersection is found, then one such pair of segments will be stored into pointers \inlinecode{res1} and \inlinecode{res2}. The \inlinecode{TOUCH\_IS\_INTERSECT} flag (default \inlinecode{true}) controls whether segments that meet only at an endpoint count as intersecting; set it to \inlinecode{false} to report proper crossings only, as when testing a polygon for self-intersection among edges that legitimately share endpoints.
+  \item \inlinecode{find\_intersection(lo, hi, \&res1, \&res2, TOUCH\_IS\_INTERSECT)} returns whether any pair of segments intersect given a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of segments, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators. If an intersection is found, then one such pair of segments will be stored into pointers \inlinecode{res1} and \inlinecode{res2}. The \inlinecode{TOUCH\_IS\_INTERSECT} flag (default \inlinecode{true}) controls whether segments that meet only at an endpoint count as intersecting; set it to \inlinecode{false} to report proper crossings only, as when testing a polygon for self-intersection among edges that legitimately share endpoints.
 \end{compactitem}
 
 Overflow warning: \inlinecode{seg\_intersection} forms the usual quadratic cross products, but the $y$-ordering cross-multiplication (\inlinecode{ay * bdx}) is cubic in the coordinate magnitude. With 32-bit \inlinecode{int} endpoints this overflows once coordinates reach the low thousands, so use a 64-bit (\inlinecode{int64\_t}) coordinate type for any non-trivial integer inputs.
@@ -3159,7 +3159,7 @@ int main() {
 Given a convex polygon and a directed line from \inlinecode{p} to \inlinecode{q}, clips the polygon to the closed left half-plane of that line. The polygon is walked edge by edge: vertices on the left side of the line are kept, and whenever an edge crosses the line, the intersection point is appended to the output.
 
 \begin{compactitem}
-  \item \inlinecode{convex\_cut(lo, hi, p, q)} returns the portion of the polygon lying on or to the left of the directed line \inlinecode{p} $\to$ \inlinecode{q}. The input range [\inlinecode{lo}, \inlinecode{hi}) must contain the vertices of a convex polygon in boundary order, either clockwise or counterclockwise. The returned polygon preserves that boundary order. The points \inlinecode{p} and \inlinecode{q} must differ.
+  \item \inlinecode{convex\_cut(lo, hi, p, q)} returns the portion of the polygon lying on or to the left of the directed line \inlinecode{p} $\to$ \inlinecode{q}. The input range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ must contain the vertices of a convex polygon in boundary order, either clockwise or counterclockwise. The returned polygon preserves that boundary order. The points \inlinecode{p} and \inlinecode{q} must differ.
 \end{compactitem}
 
 The function is templated on the input point type. Side classification is done with cross products. For integer-coordinate inputs, classification is exact only if the intermediate products do not overflow. Edge-line intersection points are computed in floating point, and the returned polygon uses \inlinecode{Point} with \inlinecode{double} coordinates.
@@ -3288,15 +3288,11 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Half-Plane Intersection}
-Given a list of directed lines, compute the convex polygon contained in every left half-plane. Half-plane intersection sorts the lines by angle, keeps only the tightest representative among parallel lines, and maintains a deque of lines whose pairwise intersections form the current boundary.
+Given a list of directed lines, compute the convex polygon contained in every left half-plane. Half-plane intersection sorts the lines by angle, keeps only the tightest representative among parallel lines, and maintains a deque of lines whose pairwise intersections form the current boundary. Angles are sorted exactly to satisfy \inlinecode{std::sort}'s strict ordering requirement. \inlinecode{EPS} is then used outside the comparator to group parallel directions and retain only the tightest half-plane in each group.
 
 \begin{compactitem}
-  \item \inlinecode{half\_plane\_intersection(planes)} returns the polygon cut out by the half-planes in counter-clockwise order. Each half-plane is represented by \inlinecode{HalfPlane(p, q)}, meaning the closed region to the left of the directed line \inlinecode{p} $\to$ \inlinecode{q}.
+  \item \inlinecode{half\_plane\_intersection(planes)} returns the polygon cut out by the half-planes in counter-clockwise order. Each half-plane is represented by \inlinecode{HalfPlane(p, q)}, meaning the closed region to the left of the directed line \inlinecode{p} $\to$ \inlinecode{q}. If the intersection is empty, the function returns an empty vector. If the true intersection is unbounded, the returned polygon is not meaningful; add explicit bounding-box half-planes when a bounded polygon is required.
 \end{compactitem}
-
-If the intersection is empty, the function returns an empty vector. If the true intersection is unbounded, the returned polygon is not meaningful; add explicit bounding-box half-planes when a bounded polygon is required.
-
-Angles are sorted exactly to satisfy \inlinecode{sort}'s ordering requirements. EPS is then used outside the comparator to group parallel directions and retain only the tightest half-plane in each group.
 
 \textbf{Time Complexity}: $O(n \log n)$, where $n$ is the number of half-planes.
 
@@ -3591,8 +3587,8 @@ int main() {
 Given two simple (non-self-intersecting) polygons, determine the areas of their intersection and union using a sweep line algorithm and the inclusion-exclusion principle. Every vertex and every pairwise edge intersection contributes its $x$-coordinate as a sweep boundary, so within each vertical slab between consecutive boundaries the two borders cannot cross, and the slab's overlap is accumulated exactly from trapezoid areas. The union then follows by inclusion-exclusion as area(A) + area(B) minus the intersection.
 
 \begin{compactitem}
-  \item \inlinecode{intersection\_area(lo1, hi1, lo2, hi2)} returns the intersection area of two polygons respectively specified by two ranges [\inlinecode{lo1}, \inlinecode{hi1}) and [\inlinecode{lo2}, \inlinecode{hi2}) of vertices in clockwise order, where \inlinecode{lo1}, \inlinecode{hi1}, \inlinecode{lo2}, and \inlinecode{hi2} must be random-access iterators.
-  \item \inlinecode{union\_area(lo1, hi1, lo2, hi2)} returns the union area of two polygons respectively specified by two ranges [\inlinecode{lo1}, \inlinecode{hi1}) and [\inlinecode{lo2}, \inlinecode{hi2}) of vertices in clockwise order, where \inlinecode{lo1}, \inlinecode{hi1}, \inlinecode{lo2}, and \inlinecode{hi2} must be random-access iterators.
+  \item \inlinecode{intersection\_area(lo1, hi1, lo2, hi2)} returns the intersection area of two polygons respectively specified by two ranges $[{\inlinecodemath{lo1}}, {\inlinecodemath{hi1}})$ and $[{\inlinecodemath{lo2}}, {\inlinecodemath{hi2}})$ of vertices in clockwise order, where \inlinecode{lo1}, \inlinecode{hi1}, \inlinecode{lo2}, and \inlinecode{hi2} must be random-access iterators.
+  \item \inlinecode{union\_area(lo1, hi1, lo2, hi2)} returns the union area of two polygons respectively specified by two ranges $[{\inlinecodemath{lo1}}, {\inlinecodemath{hi1}})$ and $[{\inlinecodemath{lo2}}, {\inlinecodemath{hi2}})$ of vertices in clockwise order, where \inlinecode{lo1}, \inlinecode{hi1}, \inlinecode{lo2}, and \inlinecode{hi2} must be random-access iterators.
 \end{compactitem}
 
 Overflow warning: the segment-intersection tests form cross products in the input point's coordinate type, which grow like the squared coordinate magnitude. For integral point types, use 64-bit coordinates (e.g. \inlinecode{PointL} from 7.1.1) if necessary.
@@ -4408,7 +4404,7 @@ int main() {
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{3D Point}
-A 3D point class template supporting vector arithmetic, dot and cross products, distances, angles, unit vectors, normals, and rotation about an axis. Point equality and ordering are exact, while \inlinecode{EQ(p, q)} provides epsilon equality for floating-point coordinates. Integer coordinates are suitable for exact algebraic predicates (\inlinecode{dot}, \inlinecode{cross}, \inlinecode{sqnorm}) as long as intermediate products do not overflow; metric operations preserve floating-point coordinates and otherwise convert them to \inlinecode{double}. For \inlinecode{Modular}, this uses the stored representative and is not finite-field geometry.
+A 3D point class template supporting vector arithmetic, dot and cross products, distances, angles, unit vectors, normals, and rotation about an axis. Point equality and ordering are exact, while \inlinecode{EQ(p, q)} provides epsilon equality for floating-point coordinates. Integer coordinates are suitable for exact algebraic predicates $({\inlinecodemath{dot}}, {\inlinecodemath{cross}}, {\inlinecodemath{sqnorm}})$ as long as intermediate products do not overflow; metric operations preserve floating-point coordinates and otherwise convert them to \inlinecode{double}. For \inlinecode{Modular}, this uses the stored representative and is not finite-field geometry.
 
 Type aliases:
 

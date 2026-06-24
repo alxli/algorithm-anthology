@@ -18,7 +18,7 @@ type. The two `compress()` functions rewrite a range in place and then discard t
 arbitrary values can be mapped to and from compressed ranks long after construction (e.g. for
 offline queries arriving separately from the array being compressed).
 
-- `CoordinateCompressor<T>(lo, hi)` constructs a compressor over the values of [`lo`, `hi`), ready
+- `CoordinateCompressor<T>(lo, hi)` constructs a compressor over the values of $[`lo`, `hi`)$, ready
   for querying. Alternatively, use the default constructor and register values with `add(x)`, then
   call `build()` once after all values are registered and before the first query.
 - `size()` returns the number of distinct registered values $k$.

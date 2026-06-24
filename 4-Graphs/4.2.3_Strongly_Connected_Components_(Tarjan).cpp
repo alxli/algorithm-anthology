@@ -7,7 +7,7 @@ search keeps visited nodes on a stack and tracks each node's low-link, the small
 reachable from its subtree; a node whose low-link equals its own entry time roots a component, which
 is popped off the stack in one piece.
 
-- `TarjanSCC(n)` constructs a directed graph of `n` nodes numbered [$0$, `n`).
+- `TarjanSCC(n)` constructs a directed graph of `n` nodes numbered $[0, `n`)$.
 - `add_edge(u, v)` adds the directed edge from `u` to `v`.
 - `build_scc()` populates `scc` with the strongly connected components and `component[v]` with
   the component ID containing vertex `v`. Component IDs are in reverse topological order: for every

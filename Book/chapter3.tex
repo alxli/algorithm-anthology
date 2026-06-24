@@ -205,7 +205,7 @@ Find and Replace:
   \item \inlinecode{ends\_with(s, suffix)} returns whether \inlinecode{s} ends with \inlinecode{suffix}.
   \item \inlinecode{contains(s, needle)} returns whether \inlinecode{needle} occurs in \inlinecode{s}.
   \item \inlinecode{find\_all(haystack, needle)} returns a vector of all positions where the string \inlinecode{needle} appears in the string \inlinecode{haystack}. Matches may overlap; e.g. \inlinecode{find\_all("aaa", "aa")} returns \inlinecode{\{0, 1\}}.
-  \item \inlinecode{count(haystack, needle)} returns the number of non-overlapping occurrences of \inlinecode{needle} in \inlinecode{haystack}, like Python's \inlinecode{str.count}. This differs from \inlinecode{find\_all().size()}, which counts overlapping matches; e.g. \inlinecode{count("aaa", "aa")} returns \inlinecode{1}, but \inlinecode{find\_all("aaa", "aa")} finds two.
+  \item \inlinecode{count(haystack, needle)} returns the number of non-overlapping occurrences of \inlinecode{needle} in \inlinecode{haystack}, like Python's \inlinecode{str.count}. This differs from \inlinecode{find\_all().size()}, which counts overlapping matches; e.g. \inlinecode{count("aaa", "aa")} returns $1$, but \inlinecode{find\_all("aaa", "aa")} finds $2$.
   \item \inlinecode{replace(s, old, replacement)} returns a copy of \inlinecode{s} with all occurrences of the string \inlinecode{old} replaced with the given \inlinecode{replacement}.
   \item \inlinecode{regex\_find\_all(s, pattern)} returns every substring of \inlinecode{s} matched by \inlinecode{pattern}.
   \item \inlinecode{regex\_groups(s, pattern)} returns the capture groups of the first match of \inlinecode{pattern} in \inlinecode{s}, excluding the full match. If there is no match, returns an empty vector.
@@ -753,16 +753,16 @@ int main() {
 \subsection{Rolling Hash}
 Computes polynomial rolling hashes for sequences, supporting $O(1)$ contiguous subsequence hash queries after preprocessing. This is useful for probabilistic string matching, substring equality checks, repeated subarray detection, and binary-searching over candidate lengths.
 
-Given a sequence $a_0, a_1, \ldots, a_{n-1}$ and a value hash $h(a_i)$ for each element, the hash is the polynomial $H(a) = \sum_{i=0}^{n-1} h(a_i) B^{n-1-i} \pmod M$, where $B$ is \inlinecode{HASH\_BASE} and $M$ is \inlinecode{HASH\_MOD}. Equivalently, it is built left-to-right by the recurrence \inlinecode{pref[i + 1] = pref[i] * HASH\_BASE + h(a[i])}. A subsequence hash for [\inlinecode{l}, \inlinecode{r}) is obtained by subtracting away the prefix before $l$: \inlinecode{pref[r] - pref[l] * pow(HASH\_BASE, r - l)}.
+Given a sequence $a_0, a_1, \ldots, a_{n-1}$ and a value hash $h(a_i)$ for each element, the hash is the polynomial $H(a) = \sum_{i=0}^{n-1} h(a_i) B^{n-1-i} \pmod M$, where $B$ is \inlinecode{HASH\_BASE} and $M$ is \inlinecode{HASH\_MOD}. Equivalently, it is built left-to-right by the recurrence \inlinecode{pref[i + 1] = pref[i] * HASH\_BASE + h(a[i])}. A subsequence hash for $[{\inlinecodemath{l}}, {\inlinecodemath{r}})$ is obtained by subtracting away the prefix before $l$: \inlinecode{pref[r] - pref[l] * pow(HASH\_BASE, r - l)}.
 
 The implementation works modulo the Mersenne prime $2^{61} - 1$, using \inlinecode{\_\_uint128\_t} for the multiplication where available and falling back to a double-and-add modular multiply otherwise. The base \inlinecode{HASH\_BASE} should be changed or chosen randomly for open-hacking environments. With a fixed base, hashing remains fast and practical, but it is still probabilistic and should not be used as proof of equality when exact verification is required.
 
-By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For non-integer element types, pass a custom value hasher that maps each element to a stable nonzero value in [$1$, \inlinecode{HASH\_MOD}).
+By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For non-integer element types, pass a custom value hasher that maps each element to a stable nonzero value in $[1, {\inlinecodemath{HASH_MOD}})$.
 
 \begin{compactitem}
   \item \inlinecode{RollingHash\textless{}T, ValueHasher\textgreater{}(first, last)} constructs prefix hashes for any iterator range of values accepted by the value hasher.
   \item \inlinecode{RollingHash\textless{}T, ValueHasher\textgreater{}(v)} constructs prefix hashes for vector \inlinecode{v}.
-  \item \inlinecode{get(l, r)} returns the hash of the half-open subsequence [\inlinecode{l}, \inlinecode{r}).
+  \item \inlinecode{get(l, r)} returns the hash of the half-open subsequence $[{\inlinecodemath{l}}, {\inlinecodemath{r}})$.
   \item \inlinecode{hash(first, last)} returns the hash of an iterator range.
   \item \inlinecode{hash(v)} returns the hash of vector \inlinecode{v}.
   \item \inlinecode{concat(left, right, right\_len)} returns the hash of the concatenation of a sequence with hash \inlinecode{left} and a sequence with hash \inlinecode{right} and length \inlinecode{right\_len}.
@@ -1146,7 +1146,7 @@ Element values must be nonnegative. As with any polynomial hash, comparing subse
   \item \inlinecode{DynamicHash(a)} builds prefix hashes over the integer sequence \inlinecode{a}.
   \item \inlinecode{size()} returns the length of the sequence.
   \item \inlinecode{set(i, x)} assigns the value at index \inlinecode{i} to \inlinecode{x}.
-  \item \inlinecode{hash(lo, hi)} returns the pair of hashes of the half-open subsequence [\inlinecode{lo}, \inlinecode{hi}). Two ranges are equal with high probability if and only if their \inlinecode{hash()} pairs are equal.
+  \item \inlinecode{hash(lo, hi)} returns the pair of hashes of the half-open subsequence $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$. Two ranges are equal with high probability if and only if their \inlinecode{hash()} pairs are equal.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1279,7 +1279,7 @@ This technique is useful for probabilistic equality checks on sets, distinct-pre
   \item \inlinecode{ZobristHash\textless{}T\textgreater{}(seed)} constructs a token generator with initial value \inlinecode{seed}.
   \item \inlinecode{get(x)} returns the stable token assigned to key \inlinecode{x}, creating it if needed.
   \item \inlinecode{toggle(h, x)} returns the hash obtained by inserting \inlinecode{x} into set hash \inlinecode{h} if absent, or removing \inlinecode{x} from \inlinecode{h} if present.
-  \item \inlinecode{distinct\_prefix\_hashes(lo, hi)} returns prefix hashes where each distinct key in the range [\inlinecode{lo}, \inlinecode{hi}) contributes only on its first occurrence.
+  \item \inlinecode{distinct\_prefix\_hashes(lo, hi)} returns prefix hashes where each distinct key in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ contributes only on its first occurrence.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1676,11 +1676,11 @@ Matched "abccab" at position 0.
 \subsection{Palindrome Searching (Manacher)}
 Computes all odd- and even-length palindromic radii of a string in linear time using Manacher's algorithm. These radii can be used to test whether any substring is a palindrome in $O(1)$, find the longest palindromic substring, or count all palindromic substrings. The algorithm tracks the rightmost known palindrome and seeds each new center with the radius of its mirror inside that window, so characters are only ever compared when a palindrome is extended past the window.
 
-For odd palindromes, \inlinecode{odd[i]} is the radius centered at character \inlinecode{s[i]}, including the center character. Thus the palindrome spans [\inlinecode{i} - \inlinecode{odd[i]} + 1, \inlinecode{i} + \inlinecode{odd[i]}). For even palindromes, \inlinecode{even[i]} is the radius centered between \inlinecode{s[i - 1]} and \inlinecode{s[i]}. Thus the palindrome spans [\inlinecode{i} - \inlinecode{even[i]}, \inlinecode{i} + \inlinecode{even[i]}).
+For odd palindromes, \inlinecode{odd[i]} is the radius centered at character \inlinecode{s[i]}, including the center character. Thus the palindrome spans $[{\inlinecodemath{i}} - {\inlinecodemath{odd[i]}} + 1, {\inlinecodemath{i}} + {\inlinecodemath{odd[i]}})$. For even palindromes, \inlinecode{even[i]} is the radius centered between \inlinecode{s[i - 1]} and \inlinecode{s[i]}. Thus the palindrome spans $[{\inlinecodemath{i}} - {\inlinecodemath{even[i]}}, {\inlinecodemath{i}} + {\inlinecodemath{even[i]}})$.
 
 \begin{compactitem}
   \item \inlinecode{Manacher(s)} constructs the palindromic radii arrays for string \inlinecode{s}.
-  \item \inlinecode{is\_palindrome(lo, hi)} returns whether substring [\inlinecode{lo}, \inlinecode{hi}) is a palindrome.
+  \item \inlinecode{is\_palindrome(lo, hi)} returns whether substring $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ is a palindrome.
   \item \inlinecode{longest\_palindrome()} returns one longest palindromic substring of \inlinecode{s}.
   \item \inlinecode{count\_palindromes()} returns the total number of palindromic substrings of \inlinecode{s}, counted with multiplicity by position.
 \end{compactitem}
@@ -3888,9 +3888,9 @@ An arbitrary operand type is supported by changing the \inlinecode{Operand} alia
 Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either [\inlinecode{"+"}, \inlinecode{"+"}] or [\inlinecode{"++"}] depending on the lexicographical ordering of conflicting operators.
 
 \begin{compactitem}
-  \item \inlinecode{RecursiveDescentParser(unary\_op, binary\_op)} initializes a parser with operators specified by hash tables \inlinecode{unary\_op} (of operator to unary function object) and \inlinecode{binary\_op} (of operator to pair of binary function object and operator precedence). Operator precedences should be numbered upwards starting at 0 (lowest precedence, evaluated last).
+  \item \inlinecode{RecursiveDescentParser(unary\_op, binary\_op)} initializes a parser with operators specified by hash tables \inlinecode{unary\_op} (of operator to unary function object) and \inlinecode{binary\_op} (of operator to pair of binary function object and operator precedence). Operator precedences should be numbered upwards starting at $0$ (lowest precedence, evaluated last).
   \item \inlinecode{split(s)} returns a vector of tokens for the expression \inlinecode{s}, split on the given operators during construction. Each parenthesis, operator, and operand satisfying \inlinecode{is\_operand()} will be split into a separate token. The algorithm is naive, matching operators lazily in the case of overlapping operators as mentioned above. Under these circumstances, the parse may not always succeed.
-  \item \inlinecode{eval(lo, hi)} returns the evaluation of a range [\inlinecode{lo}, \inlinecode{hi}) of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
+  \item \inlinecode{eval(lo, hi)} returns the evaluation of a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
   \item \inlinecode{eval(s)} returns the evaluation of expression \inlinecode{s}, after first calling \inlinecode{split(s)} to obtain the tokens.
 \end{compactitem}
 
@@ -4128,9 +4128,9 @@ An arbitrary operand type is supported by changing the \inlinecode{Operand} alia
 Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either [\inlinecode{"+"}, \inlinecode{"+"}] or [\inlinecode{"++"}] depending on the lexicographical ordering of conflicting operators.
 
 \begin{compactitem}
-  \item \inlinecode{ShuntingYardParser(unary\_op, binary\_op)} initializes a parser with operators specified by hash tables \inlinecode{unary\_op} (of operator to unary function object) and \inlinecode{binary\_op} (of operator to pair of binary function object and operator precedence). Operator precedences should be numbered upwards starting at 0 (lowest precedence, evaluated last).
+  \item \inlinecode{ShuntingYardParser(unary\_op, binary\_op)} initializes a parser with operators specified by hash tables \inlinecode{unary\_op} (of operator to unary function object) and \inlinecode{binary\_op} (of operator to pair of binary function object and operator precedence). Operator precedences should be numbered upwards starting at $0$ (lowest precedence, evaluated last).
   \item \inlinecode{split(s)} returns a vector of tokens for the expression \inlinecode{s}, split on the given operators during construction. Each parenthesis, operator, and operand satisfying \inlinecode{is\_operand()} will be split into a separate token. The algorithm is naive, matching operators lazily in the case of overlapping operators as mentioned above. Under these circumstances, the parse may not always succeed.
-  \item \inlinecode{eval(lo, hi)} returns the evaluation of a range [\inlinecode{lo}, \inlinecode{hi}) of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
+  \item \inlinecode{eval(lo, hi)} returns the evaluation of a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
   \item \inlinecode{eval(s)} returns the evaluation of expression \inlinecode{s}, after first calling \inlinecode{split(s)} to obtain the tokens.
 \end{compactitem}
 
@@ -4478,7 +4478,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Run-Length Encoding}
-Encodes consecutive equal characters as (character, count) runs. Run-length encoding is a simple lossless compression technique that works well when strings contain long repeated blocks and poorly when repetitions are rare.
+Encodes consecutive equal characters as $(character, count)$ runs. Run-length encoding is a simple lossless compression technique that works well when strings contain long repeated blocks and poorly when repetitions are rare.
 
 The representation below stores runs in a vector of pairs rather than formatting them as a string. This avoids ambiguity when the original text contains digits or separator characters.
 

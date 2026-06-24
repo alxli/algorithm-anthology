@@ -15,7 +15,7 @@ divisors of $m$, so `count_coprime(n, m)` equals $\sum_{d \mid m} \mu(d) \lfloor
 - `mobius(n)` returns $\mu(n)$ for a single `n` by trial division.
 - `mobius_sieve(n)` returns a vector of length $n + 1$ where index $i$ holds $\mu(i)$, computed
   together with a linear sieve.
-- `count_coprime(n, m)` returns the number of integers in [$1$, `n`] that are coprime to $m$, via
+- `count_coprime(n, m)` returns the number of integers in $[1, `n`]$ that are coprime to $m$, via
   inclusion-exclusion over the distinct prime factors of `m`.
 
 Time Complexity:

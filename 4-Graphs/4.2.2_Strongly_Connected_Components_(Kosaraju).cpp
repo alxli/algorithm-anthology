@@ -7,7 +7,7 @@ algorithm runs two passes of depth-first search: the first records the order in 
 and the second explores the transposed graph in reverse finish order, with each search collecting
 exactly one component.
 
-- `KosarajuSCC(n)` constructs a directed graph of `n` nodes numbered [$0$, `n`).
+- `KosarajuSCC(n)` constructs a directed graph of `n` nodes numbered $[0, `n`)$.
 - `add_edge(u, v)` adds the directed edge from `u` to `v`.
 - `build_scc()` populates `scc` with the strongly connected components and `component[v]` with
   the component ID containing vertex `v`. Component IDs are in topological order: for every edge

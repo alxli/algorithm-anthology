@@ -15,7 +15,7 @@ matters.
 - `toggle(h, x)` returns the hash obtained by inserting `x` into set hash `h` if absent, or removing
   `x` from `h` if present.
 - `distinct_prefix_hashes(lo, hi)` returns prefix hashes where each distinct key in the range
-  [`lo`, `hi`) contributes only on its first occurrence.
+  $[`lo`, `hi`)$ contributes only on its first occurrence.
 
 Time Complexity:
 - O(1) expected per call to `get(x)` and `toggle(h, x)`.

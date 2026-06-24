@@ -3,7 +3,7 @@
 A permutation is an ordered list consisting of $n$ (not necessarily distinct) elements.
 
 - `next_permutation_(lo, hi)` is analogous to `std::next_permutation(lo, hi)`, taking two
-  BidirectionalIterators as a range [`lo`, `hi`) for which the function tries to rearrange to the
+  BidirectionalIterators as a range $[`lo`, `hi`)$ for which the function tries to rearrange to the
   next lexicographically greater permutation. The function returns true if such a permutation
   exists, or false if the range is already in descending order (in which case the values are
   unchanged). This implementation requires an ordering on the set of possible elements defined by

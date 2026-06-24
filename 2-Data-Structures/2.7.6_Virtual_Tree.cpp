@@ -17,15 +17,15 @@ binary lifting so it is self-contained; given an existing lowest common ancestor
 sort-and-stack logic applies directly.
 
 - `VirtualTree(adj, root)` builds the structure over a tree rooted at `root`, given a bidirectional
-  adjacency list `adj` of nodes numbered [$0$, `n`), where `n` is `adj.size()`.
+  adjacency list `adj` of nodes numbered $[0, `n`)$, where `n` is `adj.size()`.
 - `lca(u, v)` returns the lowest common ancestor of nodes `u` and `v`.
 - `depth_of(u)` returns the depth of `u` in the original tree (the root has depth 0). The original
-  path length of a virtual-tree edge (`p`, `c`) is `depth_of(c) - depth_of(p)`.
+  path length of a virtual-tree edge $(`p`, `c`)$ is `depth_of(c) - depth_of(p)`.
 - `build(nodes)` returns the virtual tree induced by `nodes`. The result has `root` set to the
   topmost node (the common ancestor of `nodes`), `vertices` listing every original node ID in the
-  virtual tree sorted by entry time, and `edges` listing each (`p`, `c`) pair in original IDs. Both
-  the vertex set and the edges use the node numbering of the original tree. An empty input yields an
-  empty result with `root` = $-1$.
+  virtual tree sorted by entry time, and `edges` listing each $(`p`, `c`)$ pair in original IDs.
+  Both the vertex set and the edges use the node numbering of the original tree. An empty input
+  yields an empty result with `root` $= -1$.
 
 Time Complexity:
 - O(n log n) for construction, where $n$ is the number of nodes.

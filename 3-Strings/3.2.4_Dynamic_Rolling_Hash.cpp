@@ -24,7 +24,7 @@ so that trailing zeros cannot make a shorter sequence collide with a longer one.
 - `DynamicHash(a)` builds prefix hashes over the integer sequence `a`.
 - `size()` returns the length of the sequence.
 - `set(i, x)` assigns the value at index `i` to `x`.
-- `hash(lo, hi)` returns the pair of hashes of the half-open subsequence [`lo`, `hi`). Two ranges
+- `hash(lo, hi)` returns the pair of hashes of the half-open subsequence $[`lo`, `hi`)$. Two ranges
   are equal with high probability if and only if their `hash()` pairs are equal.
 
 Time Complexity:

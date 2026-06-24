@@ -12,17 +12,17 @@ defined on the numeric key type `K`.
 - `IntervalTreap<K, V>()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
-- `insert(lo, hi, v)` adds an entry with key [`lo`, `hi`] and value `v` to the map, returning `true`
+- `insert(lo, hi, v)` adds an entry with key $[`lo`, `hi`]$ and value `v` to the map, returning `true`
   if a new interval was added or `false` if the interval already exists (in which case the map is
   unchanged and the old value associated with the key is preserved).
-- `erase(lo, hi)` removes the entry with key [`lo`, `hi`] from the map, returning `true` if the
+- `erase(lo, hi)` removes the entry with key $[`lo`, `hi`]$ from the map, returning `true` if the
   removal was successful or `false` if the interval was not found.
 - `find_key(lo, hi)` returns a pointer to a const `std::pair` representing the key of some interval
-  in the map which intersects with [`lo`, `hi`], or `nullptr` if no such entry was found.
+  in the map which intersects with $[`lo`, `hi`]$, or `nullptr` if no such entry was found.
 - `find_value(lo, hi)` returns a pointer to a const value of some entry in the map with a key that
-  intersects with [`lo`, `hi`], or `nullptr` if no such entry was found.
+  intersects with $[`lo`, `hi`]$, or `nullptr` if no such entry was found.
 - `find_all(lo, hi, f)` calls the function `f(lo, hi, v)` on each entry in the map that overlaps
-  with [`lo`, `hi`], in lexicographically ascending order of intervals.
+  with $[`lo`, `hi`]$, in lexicographically ascending order of intervals.
 - `entries()` returns all intervals and their values in lexicographically ascending order of
   intervals.
 

@@ -1,9 +1,9 @@
 /*
 
 A wavelet tree is a static structure over an integer array with values in a known range
-[`min_val`, `max_val`]. The root splits the value range at its midpoint, recording for every prefix
-of the array how many of its elements belong to the lower value half, then stably partitions the
-array so that those elements form the left child and the rest form the right child. Recursing on
+$[`min_val`, `max_val`]$. The root splits the value range at its midpoint, recording for every
+prefix of the array how many of its elements belong to the lower value half, then stably partitions
+the array so that those elements form the left child and the rest form the right child. Recursing on
 each half builds a balanced tree of height O(log \sigma), where $\sigma$ is the size of the value
 range.
 
@@ -12,15 +12,16 @@ corresponding range of positions in either child, so a single root-to-leaf desce
 statistics and rank queries. This is strictly more powerful than a merge sort tree: besides counting
 values below a threshold, it reports the $k$-th smallest value of a range in O(log \sigma) time.
 
-All position ranges are inclusive [`lo`, `hi`] with 0-based indices. If the values are large or
+All position ranges are inclusive $[`lo`, `hi`]$ with 0-based indices. If the values are large or
 sparse, compress them to a small contiguous range first.
 
 - `WaveletTree(a, min_val, max_val)` builds the tree over the array `a`, whose values must all lie
-  in [`min_val`, `max_val`].
-- `kth_smallest(lo, hi, k)` returns the `k`-th smallest value among positions [`lo`, `hi`], where
+  in $[`min_val`, `max_val`]$.
+- `kth_smallest(lo, hi, k)` returns the `k`-th smallest value among positions $[`lo`, `hi`]$, where
   `k` is 1-based (so `k == 1` returns the minimum).
-- `count_leq(lo, hi, x)` returns the number of positions `i` in [`lo`, `hi`] with `a[i]` $\leq$ `x`.
-- `count_in(lo, hi, x, y)` returns the number of positions `i` in [`lo`, `hi`] with
+- `count_leq(lo, hi, x)` returns the number of positions `i` in $[`lo`, `hi`]$ with `a[i]` $\leq$
+  `x`.
+- `count_in(lo, hi, x, y)` returns the number of positions `i` in $[`lo`, `hi`]$ with
   `x` $\leq$ `a[i]` $\leq$ `y`.
 
 Time Complexity:

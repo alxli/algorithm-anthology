@@ -10,11 +10,12 @@ endpoints may be integer (`PointI`) or floating-point (`Point`/`PointD`), but mu
 `seg_intersection` are exact for integer endpoints, so intersection detection is exact.
 
 - `find_intersection(lo, hi, &res1, &res2, TOUCH_IS_INTERSECT)` returns whether any pair of segments
-  intersect given a range [`lo`, `hi`) of segments, where `lo` and `hi` are random-access iterators.
-  If an intersection is found, then one such pair of segments will be stored into pointers `res1`
-  and `res2`. The `TOUCH_IS_INTERSECT` flag (default `true`) controls whether segments that meet
-  only at an endpoint count as intersecting; set it to `false` to report proper crossings only,
-  as when testing a polygon for self-intersection among edges that legitimately share endpoints.
+  intersect given a range $[`lo`, `hi`)$ of segments, where `lo` and `hi` are random-access
+  iterators. If an intersection is found, then one such pair of segments will be stored into
+  pointers `res1` and `res2`. The `TOUCH_IS_INTERSECT` flag (default `true`) controls whether
+  segments that meet only at an endpoint count as intersecting; set it to `false` to report proper
+  crossings only, as when testing a polygon for self-intersection among edges that legitimately
+  share endpoints.
 
 Overflow warning: `seg_intersection` forms the usual quadratic cross products, but the $y$-ordering
 cross-multiplication (`ay * bdx`) is cubic in the coordinate magnitude. With 32-bit `int` endpoints

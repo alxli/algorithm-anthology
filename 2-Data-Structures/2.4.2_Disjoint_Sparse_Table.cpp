@@ -8,7 +8,7 @@ products where overlapping the two query halves would double-count.
 The array is divided into blocks whose size doubles at each of the O(log n) levels. At the level
 whose block size is $2^{k+1}$, every block is split at its center, and the table stores, for each
 position, the fold of the contiguous run from that position up to (or down to) the center. To answer
-a query [`lo`, `hi`], find the level at which `lo` and `hi` first fall on opposite sides of a
+a query $[`lo`, `hi`]$, find the level at which `lo` and `hi` first fall on opposite sides of a
 center: this is the position of the highest set bit of `lo ^ hi`. At that level, `lo` lies in the
 block's left half and `hi` in its right half, so the answer is the stored suffix fold ending at the
 center combined with the stored prefix fold beginning at the center.

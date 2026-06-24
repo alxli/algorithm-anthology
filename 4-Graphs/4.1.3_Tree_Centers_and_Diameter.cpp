@@ -5,7 +5,7 @@ peeling away the leaves of the tree until one or two nodes remain. The diameter 
 that the farthest node from any start is always one endpoint of a diameter, so a second traversal
 from that endpoint measures the full diameter. The following functions apply to a global,
 bidirectionally pre-populated adjacency list `adj` which must form a valid tree with nodes numbered
-[0, `n`), where `n` is `adj.size()`.
+$[0, `n`)$, where `n` is `adj.size()`.
 
 - `find_centers()` returns a vector of either one or two tree Jordan centers. The Jordan center of a
   tree is the set of all nodes with minimum eccentricity, that is, the set of all nodes where the

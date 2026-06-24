@@ -16,7 +16,7 @@ unmatched whenever staying unmatched is at least as good as any incident edge.
 All edge weights must be positive; an absent edge is treated as weight 0. The node count should be
 kept modest, as the algorithm uses dense storage.
 
-- `WeightedGeneralMatching(n)` creates a graph of `n` nodes numbered [$0$, `n`).
+- `WeightedGeneralMatching(n)` creates a graph of `n` nodes numbered $[0, `n`)$.
 - `add_edge(u, v, w)` adds an undirected edge of positive weight `w` between `u` and `v`. If several
   edges join the same pair, the last weight set is used.
 - `solve()` computes a maximum-weight matching and returns its total weight.

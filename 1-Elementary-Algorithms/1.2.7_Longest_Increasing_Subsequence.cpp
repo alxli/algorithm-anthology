@@ -11,7 +11,7 @@ one of these tails, located in O(log n) by binary search; predecessor links then
 subsequence.
 
 - `longest_increasing_subsequence(lo, hi)` returns the indices relative to `lo` of one longest
-  strictly increasing subsequence of [`lo`, `hi`), in order.
+  strictly increasing subsequence of $[`lo`, `hi`)$, in order.
 
 Time Complexity:
 - O(n log n) per call to either function, where $n$ is the distance between `lo` and `hi`.

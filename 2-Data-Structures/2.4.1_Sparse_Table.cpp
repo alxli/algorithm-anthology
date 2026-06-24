@@ -6,7 +6,7 @@ and idempotent, meaning `combine(x, x) == x`. The canonical examples are "min", 
 the bitwise "and" and "or".
 
 For each level $j$, the entry `dp[j][i]` holds the result of `combine()` over the half-open range
-$[i, i + 2^j)$, built by combining two ranges of length $2^{j-1}$. A query over [`lo`, `hi`] is
+$[i, i + 2^j)$, built by combining two ranges of length $2^{j-1}$. A query over $[`lo`, `hi`]$ is
 answered by combining the two overlapping ranges of length $2^j$ that are anchored at `lo` and at
 `hi`, where $2^j$ is the largest power of two not exceeding the length of the range. Because these
 two ranges overlap whenever the query length is not a power of two, the elements in the overlap are

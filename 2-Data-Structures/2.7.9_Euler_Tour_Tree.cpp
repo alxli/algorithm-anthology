@@ -10,7 +10,7 @@ This version supports dynamic connectivity, `link`, `cut`, rerooting, and listin
 connected component. It does not store vertex aggregates. To add component aggregates, a common
 extension is to insert one self-loop occurrence per vertex and maintain aggregate data in the treap.
 
-- `EulerTourTree(n)` constructs a forest on vertices numbered [$0$, `n`).
+- `EulerTourTree(n)` constructs a forest on vertices numbered $[0, `n`)$.
 - `connected(u, v)` returns whether `u` and `v` are in the same tree.
 - `link(u, v)` adds an edge between different trees and returns false if the edge would create a
   cycle or already exists.

@@ -7,7 +7,7 @@ distances to marked nodes, nearest special node, and other "path through a centr
 
 - `CentroidDecomposition(adj)` builds the centroid decomposition of the tree given by a
   bidirectional adjacency list `adj`, which must form a valid tree with `n` nodes numbered
-  [$0$, `n`), where `n` is `adj.size()`.
+  $[0, `n`)$, where `n` is `adj.size()`.
 - `parent(u)` returns the parent of node `u` in the centroid tree, or $-1$ if `u` is the root
   centroid.
 

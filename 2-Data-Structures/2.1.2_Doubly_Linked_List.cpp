@@ -18,7 +18,7 @@ at the front and back of the list.
 - `move_to_front(sentinel, node)` moves an already-linked `node` to the front of the list.
 - `empty(sentinel)` returns whether the list has no data nodes.
 - `splice(pos, node)` moves an already-linked `node` so it appears immediately before `pos`.
-- `splice_range(pos, first, last)` moves the half-open range [`first`, `last`) so it appears
+- `splice_range(pos, first, last)` moves the half-open range $[`first`, `last`)$ so it appears
   immediately before `pos`.
 
 The data nodes passed to insertion functions must be detached, meaning their `prev` and `next`

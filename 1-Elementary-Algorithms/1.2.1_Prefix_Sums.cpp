@@ -7,10 +7,10 @@ it, so any range sum is the difference of two entries; in two dimensions, rectan
 four entries by inclusion-exclusion.
 
 - `prefix_sums(a)` returns array `pref` with `pref[0] = 0` and `pref[i + 1] = a[0] + ... + a[i]`.
-- `range_sum(pref, lo, hi)` returns the sum of the inclusive range [`lo`, `hi`].
+- `range_sum(pref, lo, hi)` returns the sum of the inclusive range $[`lo`, `hi`]$.
 - `prefix_sums_2d(a)` returns a two-dimensional prefix sum table for matrix `a`.
 - `rectangle_sum(pref, r1, c1, r2, c2)` returns the sum of the rectangle with top left at
-  (`r1`, `c1`) and bottom right at (`r2`, `c2`).
+  $(`r1`, `c1`)$ and bottom right at $(`r2`, `c2`)$.
 
 Time Complexity:
 - O(n) per call to `prefix_sums(a)`, where $n$ is the array size.

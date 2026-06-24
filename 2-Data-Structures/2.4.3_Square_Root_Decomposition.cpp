@@ -16,7 +16,7 @@ single updated index. The default definition below supports updates that "set" t
 index to a new value. Another possible update operation is "increment", in which case
 `apply_delta(v, d)` should return `v + d`.
 
-- `SqrtDecomposition<T>(n, v)` constructs an array of size `n` with indices [$0$, `n`), and all
+- `SqrtDecomposition<T>(n, v)` constructs an array of size `n` with indices $[0, `n`)$, and all
   values initialized to `v`.
 - `SqrtDecomposition<T>(lo, hi)` constructs an array from two random-access iterators, initialized
   to the elements of the range in the same order.

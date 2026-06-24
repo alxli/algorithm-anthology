@@ -17,10 +17,10 @@ performing their updates sequentially. The default code below defines range assi
 increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, len)` should return
 `v + d` for range-min/range-max queries, and `v + d * len` for range-sum queries.
 
-- `LazySegTree<T>(n, v)` constructs an array of size `n` with indices [$0$, `n`), and all values
+- `LazySegTree<T>(n, v)` constructs an array of size `n` with indices $[0, `n`)$, and all values
   initialized to `v`.
 - `LazySegTree<T>(lo, hi)` constructs an array from two random-access iterators as a range
-  [`lo`, `hi`), initialized to the elements of the range in the same order.
+  $[`lo`, `hi`)$, initialized to the elements of the range in the same order.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.
 - `query(lo, hi)` returns the result of `combine()` applied to all indices from `lo` to `hi`,
@@ -29,9 +29,9 @@ increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, 
 - `update(lo, hi, d)` modifies the value at each array index from `lo` to `hi`, inclusive, by
   applying the delta `d` to each value.
 - `max_right(lo, pred)` returns the largest boundary `hi` such that the aggregate over the half-open
-  range [`lo`, `hi`) satisfies `pred`. It returns `size()` if `pred` remains true to the end.
+  range $[`lo`, `hi`)$ satisfies `pred`. It returns `size()` if `pred` remains true to the end.
 - `min_left(hi, pred)` returns the smallest boundary `lo` such that the aggregate over the half-open
-  range [`lo`, `hi`) satisfies `pred`. It returns $0$ if `pred` remains true to the beginning.
+  range $[`lo`, `hi`)$ satisfies `pred`. It returns $0$ if `pred` remains true to the beginning.
 
 For the boundary-search functions, `pred` takes aggregate `T` values of candidate ranges. As a range
 grows, `pred` may change from true to false but never back to true; The empty range is considered

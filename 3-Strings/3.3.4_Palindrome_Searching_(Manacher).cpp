@@ -7,12 +7,12 @@ rightmost known palindrome and seeds each new center with the radius of its mirr
 window, so characters are only ever compared when a palindrome is extended past the window.
 
 For odd palindromes, `odd[i]` is the radius centered at character `s[i]`, including the center
-character. Thus the palindrome spans [`i` - `odd[i]` + 1, `i` + `odd[i]`). For even palindromes,
+character. Thus the palindrome spans $[`i` - `odd[i]` + 1, `i` + `odd[i]`)$. For even palindromes,
 `even[i]` is the radius centered between `s[i - 1]` and `s[i]`. Thus the palindrome spans
-[`i` - `even[i]`, `i` + `even[i]`).
+$[`i` - `even[i]`, `i` + `even[i]`)$.
 
 - `Manacher(s)` constructs the palindromic radii arrays for string `s`.
-- `is_palindrome(lo, hi)` returns whether substring [`lo`, `hi`) is a palindrome.
+- `is_palindrome(lo, hi)` returns whether substring $[`lo`, `hi`)$ is a palindrome.
 - `longest_palindrome()` returns one longest palindromic substring of `s`.
 - `count_palindromes()` returns the total number of palindromic substrings of `s`, counted with
   multiplicity by position.

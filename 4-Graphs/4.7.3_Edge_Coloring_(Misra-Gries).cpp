@@ -17,7 +17,7 @@ The graph must be simple: the implementation stores one color per ordered node p
 matrix, so self-loops and parallel edges between the same pair cannot be represented.
 
 - `edge_coloring(n, edges)` returns a vector of colors, one per entry of `edges`, using colors in
-  the range $[0, D]$ where $D$ is the maximum degree. Nodes are numbered [$0$, `n`), and `edges[i]`
+  the range $[0, D]$ where $D$ is the maximum degree. Nodes are numbered $[0, `n`)$, and `edges[i]`
   is an undirected edge `u`-`v`.
 
 Time Complexity:

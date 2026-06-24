@@ -11,7 +11,7 @@ technique's success heavily depends on the behavior of $f$ and the initial guess
 result is not guaranteed to be the global minimum.
 
 - `find_min(f, x0, y0, &critical_x, &critical_y)` returns a candidate global minimum value of
-  function `f` reached by hill-climbing from the starting guess (`x0`, `y0`). If the optional
+  function `f` reached by hill-climbing from the starting guess $(`x0`, `y0`)$. If the optional
   pointers `critical_x` and `critical_y` are supplied, the point attaining the returned value is
   stored through them. The step-size bounds and number of directions sampled are additional optional
   parameters.

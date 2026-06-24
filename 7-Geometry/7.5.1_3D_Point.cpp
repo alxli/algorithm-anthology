@@ -3,9 +3,9 @@
 A 3D point class template supporting vector arithmetic, dot and cross products, distances, angles,
 unit vectors, normals, and rotation about an axis. Point equality and ordering are exact, while
 `EQ(p, q)` provides epsilon equality for floating-point coordinates. Integer coordinates are
-suitable for exact algebraic predicates (`dot`, `cross`, `sqnorm`) as long as intermediate products
-do not overflow; metric operations preserve floating-point coordinates and otherwise convert them
-to `double`. For `Modular`, this uses the stored representative and is not finite-field geometry.
+suitable for exact algebraic predicates $(`dot`, `cross`, `sqnorm`)$ as long as intermediate
+products do not overflow; metric operations preserve floating-point coordinates and otherwise
+convert them to `double`.
 
 Type aliases:
 - `Point3I = TPoint3<int>`

@@ -20,7 +20,7 @@ This implementation requires an ordering on the key type `K` defined by `operato
 - `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was
   not found.
 - `find_by_order(k)` returns a key-value pair of the node with a key of 0-based rank `k`, throwing
-  an exception if the rank is not in the range [$0$, `size()`).
+  an exception if the rank is not in the range $[0, `size()`)$.
 - `order_of_key(x)` returns the number of keys strictly less than `x`. The key does not need to be
   present in the map.
 - `entries()` returns all key-value entries in ascending order of keys.

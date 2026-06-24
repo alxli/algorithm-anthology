@@ -9,7 +9,7 @@ by `push()`, the feature pairing heaps are best known for.
 
 - `PairingHeap<T>()` constructs an empty priority queue.
 - `PairingHeap<T>(lo, hi)` constructs a priority queue from two ForwardIterators, consisting of
-  elements in the range [`lo`, `hi`).
+  elements in the range $[`lo`, `hi`)$.
 - `size()` returns the size of the priority queue.
 - `empty()` returns whether the priority queue is empty.
 - `push(v)` inserts the value `v` and returns a handle to the new element. The handle remains valid

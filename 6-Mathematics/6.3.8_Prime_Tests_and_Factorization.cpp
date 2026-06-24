@@ -5,8 +5,8 @@ Miller-Rabin test writes $n - 1 = d \cdot 2^r$ and squares $a^d$ repeatedly, che
 sequence behaves the only way it can for a prime; a base $a$ that breaks the pattern is a witness
 that $n$ is composite. For large composite inputs, Pollard's rho iterates a pseudorandom map modulo
 $n$; two iterates that collide modulo a hidden prime factor reveal that factor through a GCD with
-their difference. Prime factorizations are represented as sorted vectors of (prime, exponent) pairs.
-For $0$ and $1$, the prime factorization is empty.
+their difference. Prime factorizations are represented as sorted vectors of $(`prime`, `exponent`)$
+pairs. For $0$ and $1$, the prime factorization is empty.
 
 - `is_prime_slow(n)` returns whether the integer `n` is prime using trial division.
 - `factorize_slow(n)` returns the prime factorization of `n` using trial division.

@@ -10,7 +10,7 @@ and predicates are templated on the point type `Pt` and only read `.x`/`.y`, so 
 
 - `Circle()` constructs the zero-radius circle centered at the origin.
 - `Circle(r)` constructs a circle of radius `abs(r)` centered at the origin.
-- `Circle(h, k, r)` constructs a circle of radius `abs(r)` centered at (`h`, `k`).
+- `Circle(h, k, r)` constructs a circle of radius `abs(r)` centered at $(`h`, `k`)$.
 - `Circle(o, r)` constructs a circle of radius `abs(r)` centered at point `o`.
 - `Circle(a, b)` constructs the circle whose diameter is segment `a`-`b`.
 - `Circle(a, b, c)` constructs the circumcircle through non-collinear points `a`, `b`, and `c`,

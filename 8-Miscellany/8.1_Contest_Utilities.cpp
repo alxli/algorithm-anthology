@@ -8,7 +8,7 @@ algorithm-specific policy and are meant to be pasted near the top of a solution 
 - `ckmin(a, b)` assigns `a = b` and returns true if `b` < `a` before the assignment.
 - `ckmax(a, b)` assigns `a = b` and returns true if `a` < `b` before the assignment.
 - `between(x, a, b)` returns whether `a` $\leq$ `x` $\leq$ `b`.
-- `clmp(x, a, b)` returns `x` clamped into the interval [`a`, `b`]. This is not needed on C++17 and
+- `clmp(x, a, b)` returns `x` clamped into the interval $[`a`, `b`]$. This is not needed on C++17 and
   later, where std::clamp() is available.
 - `floor_div(a, b)` and `ceil_div(a, b)` divide signed integers with mathematical rounding toward
   negative or positive infinity. Requires `b != 0`.
@@ -18,9 +18,9 @@ algorithm-specific policy and are meant to be pasted near the top of a solution 
 - `min_priority_queue<T>` is a min-heap alias.
 - `RNG()` constructs a 64-bit Mersenne Twister seeded from the steady clock.
 - `RNG(seed)` constructs a reproducible 64-bit Mersenne Twister.
-- `rng.uniform_int(lo, hi)` returns a random integer in the inclusive range [`lo`, `hi`].
-- `rng.uniform_real(lo, hi)` returns a random real number in the half-open range [`lo`, `hi`).
-- `rng.shuffle(lo, hi)` randomly shuffles the range [`lo`, `hi`).
+- `rng.uniform_int(lo, hi)` returns a random integer in the inclusive range $[`lo`, `hi`]$.
+- `rng.uniform_real(lo, hi)` returns a random real number in the half-open range $[`lo`, `hi`)$.
+- `rng.shuffle(lo, hi)` randomly shuffles the range $[`lo`, `hi`)$.
 - `y_combinator(f)` wraps a recursive lambda so that the lambda can call itself as its first
   argument.
 

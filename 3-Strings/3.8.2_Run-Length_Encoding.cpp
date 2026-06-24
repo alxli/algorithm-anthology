@@ -1,6 +1,6 @@
 /*
 
-Encodes consecutive equal characters as (character, count) runs. Run-length encoding is a simple
+Encodes consecutive equal characters as $(character, count)$ runs. Run-length encoding is a simple
 lossless compression technique that works well when strings contain long repeated blocks and poorly
 when repetitions are rare.
 

@@ -4,12 +4,12 @@ A combination is a subset of size $k$ chosen from a total of $n$ (not necessaril
 elements, where order does not matter.
 
 - `next_combination(lo, mid, hi)` takes random-access iterators `lo`, `mid`, and `hi` as a range
-  [`lo`, `hi`) of $n$ elements for which the function will rearrange such that the $k$ elements in
-  [`lo`, `mid`) become the next lexicographically greater combination. The function returns true if
-  such a combination exists, or false if [`lo`, `mid`) already consists of the lexicographically
-  greatest combination of the elements in [`lo`, `hi`) (in which case the values are unchanged).
-  This implementation requires an ordering on the set of possible elements defined by `operator<` on
-  the iterator's value type.
+  $[`lo`, `hi`)$ of $n$ elements for which the function will rearrange such that the $k$ elements in
+  $[`lo`, `mid`)$ become the next lexicographically greater combination. The function returns true
+  if such a combination exists, or false if $[`lo`, `mid`)$ already consists of the
+  lexicographically greatest combination of the elements in $[`lo`, `hi`)$ (in which case the values
+  are unchanged). This implementation requires an ordering on the set of possible elements defined
+  by `operator<` on the iterator's value type.
 - `next_combination(n, a)` rearranges `a` to become the next lexicographically greater combination
   of distinct integers in the range $[0, n)$. The vector `a` must be sorted and contain distinct
   integers in the range $[0, n)$.

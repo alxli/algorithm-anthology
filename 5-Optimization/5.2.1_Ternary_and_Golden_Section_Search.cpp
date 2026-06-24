@@ -23,13 +23,13 @@ candidates remain and then scanning them. It returns the index of the optimum ra
 coordinate. As with ternary search on reals, the function must be strictly unimodal.
 
 - `ternary_search_min(lo, hi, f)` and `ternary_search_max(lo, hi, f)` return a `double` `x` in
-  [`lo`, `hi`] optimizing the continuous unimodal function `f`, to within the optional absolute
+  $[`lo`, `hi`]$ optimizing the continuous unimodal function `f`, to within the optional absolute
   error `EPS`.
 - `golden_section_min(lo, hi, f)` and `golden_section_max(lo, hi, f)` do the same with one function
   evaluation per iteration.
 - `discrete_ternary_min(lo, hi, f)` and `discrete_ternary_max(lo, hi, f)` return the integer index
-  in the inclusive range [`lo`, `hi`] optimizing the unimodal function `f`, breaking ties toward the
-  smaller index.
+  in the inclusive range $[`lo`, `hi`]$ optimizing the unimodal function `f`, breaking ties toward
+  the smaller index.
 
 Time Complexity:
 - O(log(n / `EPS`)) calls to `f()` for the continuous searches, where $n$ is the distance between

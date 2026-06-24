@@ -8,7 +8,7 @@ with total weight at most `w` after processing some prefix of the items. Iterati
 decreasing order is what enforces the 0-1 constraint; it prevents the same item from being reused
 during the current item update.
 
-- `knapsack_01(weight, value, capacity)` returns a pair (`value`, `items`) containing the maximum
+- `knapsack_01(weight, value, capacity)` returns a pair $(`value`, `items`)$ containing the maximum
   value and the selected item indices in increasing order, where item `i` has weight `weight[i]` and
   value `value[i]`. All weights must be nonnegative integers. Items with weight $0$ are allowed and
   can each be taken once. The take/skip decision for every item and capacity is stored to

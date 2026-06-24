@@ -13,7 +13,7 @@ nodes, or when manual pointer manipulation is the point of the exercise.
 - `split_half(head, &second)` cuts a list into two halves, returning the first half and storing the
   second half in `second`.
 - `splice_after(pos, before)` moves the node after `before` so it appears after `pos`.
-- `splice_range_after(pos, before_first, last)` moves the half-open range (`before_first`, `last`)
+- `splice_range_after(pos, before_first, last)` moves the half-open range $(`before_first`, `last`)$
   so it appears after `pos`.
 
 The splicing helpers use the same "after" convention as `std::forward_list::splice_after()`. They

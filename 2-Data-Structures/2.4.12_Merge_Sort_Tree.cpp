@@ -6,12 +6,12 @@ sorted list is the merge of its two children's lists. This supports queries that
 range of indices, how many values fall below a threshold or inside a value interval: decompose the
 index range into O(log n) canonical nodes and binary search each node's sorted list.
 
-The structure is built once and not modified afterward. All index ranges are inclusive [`lo`, `hi`]
-with 0-based indices, and values may be of any comparable type.
+The structure is built once and not modified afterward. All index ranges are inclusive
+$[`lo`, `hi`]$ with 0-based indices, and values may be of any comparable type.
 
 - `MergeSortTree<T>(a)` builds the tree over the array `a`.
-- `count_leq(lo, hi, x)` returns the number of indices `i` in [`lo`, `hi`] with `a[i]` $\leq$ `x`.
-- `count_in(lo, hi, x, y)` returns the number of indices `i` in [`lo`, `hi`] with
+- `count_leq(lo, hi, x)` returns the number of indices `i` in $[`lo`, `hi`]$ with `a[i]` $\leq$ `x`.
+- `count_in(lo, hi, x, y)` returns the number of indices `i` in $[`lo`, `hi`]$ with
   `x` $\leq$ `a[i]` $\leq$ `y`.
 
 Time Complexity:

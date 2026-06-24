@@ -14,15 +14,15 @@ $\sum_{d \mid n} \phi(d) = n$ to subtract each `v[i]` from its multiples, which 
 
 The overload `phi_table(lo, hi)` computes the totients of a high but narrow range with a segmented
 sieve, analogous to the segmented prime sieve. It sieves the primes up to $\sqrt{`hi`}$, applies
-each one's $(1 - 1/p)$ factor to its multiples within [`lo`, `hi`] while dividing that prime out of
-a parallel copy of every value, and finally folds in any single leftover prime factor greater than
-$\sqrt{`hi`}$ (a number at most `hi` can have at most one such factor).
+each one's $(1 - 1/p)$ factor to its multiples within $[`lo`, `hi`]$ while dividing that prime out
+of a parallel copy of every value, and finally folds in any single leftover prime factor greater
+than $\sqrt{`hi`}$ (a number at most `hi` can have at most one such factor).
 
 - `phi(n)` returns Euler's totient of `n`.
 - `phi_table(n)` returns a vector `v` of length `n + 1` such that `v[i]` stores `phi(i)` for every
   `i` in the range $[0, n]$.
 - `phi_table(lo, hi)` returns a vector `v` of length $`hi` - `lo` + 1$ such that `v[i - lo]` stores
-  `phi(i)` for every `i` in the range [`lo`, `hi`]. This overload assumes `lo` $\geq 0$; if `hi` <
+  `phi(i)` for every `i` in the range $[`lo`, `hi`]$. This overload assumes `lo` $\geq 0$; if `hi` <
   `lo`, it returns an empty vector.
 
 Time Complexity:

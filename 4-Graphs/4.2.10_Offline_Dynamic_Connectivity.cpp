@@ -13,7 +13,7 @@ joins by size or rank without path compression, recording each change on a stack
 reversed. Path compression is incompatible with rollback, so finding a representative costs
 O(log n) rather than near-constant time.
 
-- `OfflineDynamicConnectivity(n)` creates a structure of `n` nodes numbered [$0$, `n`), initially
+- `OfflineDynamicConnectivity(n)` creates a structure of `n` nodes numbered $[0, `n`)$, initially
   with no edges.
 - `add_edge(u, v)` and `remove_edge(u, v)` record adding or removing the undirected edge `u`-`v` at
   the current time, then advance the time by one step. Each edge may be present at most once at a

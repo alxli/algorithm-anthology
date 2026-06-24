@@ -9,7 +9,7 @@ nodes that may still be added and the set of nodes already excluded. Choosing a 
 branching on its neighbors prunes large parts of the search, keeping it efficient on most graphs.
 
 - `max_clique()` returns the maximum clique size for a global, bidirectionally pre-populated
-  adjacency matrix `adj` which must consist of nodes numbered [$0$, `n`), where `n` is `adj.size()`.
+  adjacency matrix `adj` which must consist of nodes numbered $[0, `n`)$, where `n` is `adj.size()`.
 - `max_clique_weighted()` additionally uses global `w` and returns the maximum clique weight.
 
 These implementations use bitmasks of unsigned 64-bit integers, so the number of nodes must be less

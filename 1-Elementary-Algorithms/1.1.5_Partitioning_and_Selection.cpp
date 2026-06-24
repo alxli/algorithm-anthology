@@ -13,12 +13,13 @@ that would appear there in sorted order, all earlier positions contain values no
 all later positions contain values no smaller than it. Choosing pivots uniformly at random gives
 expected linear time, while the three-way split avoids unnecessary work on duplicate-heavy inputs.
 
-- `partition_three_way(lo, hi, pivot)` rearranges [`lo`, `hi`) in-place and returns iterators
-  (`mid_lo`, `mid_hi`), where [`lo`, `mid_lo`) is less than `pivot`, [`mid_lo`, `mid_hi`) is equal
-  to `pivot`, and [`mid_hi`, `hi`) is greater than `pivot`.
+- `partition_three_way(lo, hi, pivot)` rearranges $[`lo`, `hi`)$ in-place and returns iterators
+  $(`mid_lo`, `mid_hi`)$, where $[`lo`, `mid_lo`)$ is less than `pivot`, $[`mid_lo`, `mid_hi`)$ is
+  equal to `pivot`, and $[`mid_hi`, `hi`)$ is greater than `pivot`.
 - `sort_012(lo, hi)` sorts a range consisting only of the values 0, 1, and 2.
-- `nth_element2(lo, nth, hi)` rearranges the range [`lo`, `hi`) around the 0-based rank represented
-  by iterator `nth`. This requires random-access iterators and `operator<` on the value type.
+- `nth_element2(lo, nth, hi)` rearranges the range $[`lo`, `hi`)$ around the 0-based rank
+  represented by iterator `nth`. This requires random-access iterators and `operator<` on the value
+  type.
 
 Time Complexity:
 - O(n) per call to `partition_three_way()` or `sort_012()`, where $n$ is the range length.

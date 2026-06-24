@@ -6,10 +6,10 @@ sufficient when intervals have weights. With intervals sorted by finish time, th
 first $i$ intervals either skips interval $i$ or adds its weight to the best total over intervals
 finishing no later than its start, with that predecessor located by binary search.
 
-Intervals are represented as half-open ranges [`start`, `finish`), so two intervals are compatible
+Intervals are represented as half-open ranges $[`start`, `finish`)$, so two intervals are compatible
 if the next interval's `start` is at least the previous interval's `finish`.
 
-- `select_weighted_intervals(intervals)` returns a pair (`weight`, `selected`) containing that
+- `select_weighted_intervals(intervals)` returns a pair $(`weight`, `selected`)$ containing that
   maximum weight and the selected intervals as original input indices in execution order, from an
   input vector of `WeightedInterval` with fields `start`, `finish`, and `weight`. `dp[i]` stores the
   best answer using the first `i` intervals after sorting by finish time.

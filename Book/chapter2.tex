@@ -13,7 +13,7 @@ For production C++, prefer containers such as \inlinecode{std::list}, \inlinecod
   \item \inlinecode{merge\_sorted\_lists(a, b)} merges two sorted lists using a dummy node and returns the merged head.
   \item \inlinecode{split\_half(head, \&second)} cuts a list into two halves, returning the first half and storing the second half in \inlinecode{second}.
   \item \inlinecode{splice\_after(pos, before)} moves the node after \inlinecode{before} so it appears after \inlinecode{pos}.
-  \item \inlinecode{splice\_range\_after(pos, before\_first, last)} moves the half-open range (\inlinecode{before\_first}, \inlinecode{last}) so it appears after \inlinecode{pos}.
+  \item \inlinecode{splice\_range\_after(pos, before\_first, last)} moves the half-open range $({\inlinecodemath{before_first}}, {\inlinecodemath{last}})$ so it appears after \inlinecode{pos}.
 \end{compactitem}
 
 The splicing helpers use the same ``after'' convention as \inlinecode{std::forward\_list::splice\_after()}. They work naturally with a dummy head node, which makes insertions and removals at the beginning of a list match all other positions. For doubly linked list splicing, use the next section.
@@ -169,7 +169,7 @@ The functions below use a circular sentinel node. When the list is empty, \inlin
   \item \inlinecode{move\_to\_front(sentinel, node)} moves an already-linked \inlinecode{node} to the front of the list.
   \item \inlinecode{empty(sentinel)} returns whether the list has no data nodes.
   \item \inlinecode{splice(pos, node)} moves an already-linked \inlinecode{node} so it appears immediately before \inlinecode{pos}.
-  \item \inlinecode{splice\_range(pos, first, last)} moves the half-open range [\inlinecode{first}, \inlinecode{last}) so it appears immediately before \inlinecode{pos}.
+  \item \inlinecode{splice\_range(pos, first, last)} moves the half-open range $[{\inlinecodemath{first}}, {\inlinecodemath{last}})$ so it appears immediately before \inlinecode{pos}.
 \end{compactitem}
 
 The data nodes passed to insertion functions must be detached, meaning their \inlinecode{prev} and \inlinecode{next} pointers are both null. The node passed to \inlinecode{erase()} or \inlinecode{move\_to\_front()} must already be linked into a list and must not be the sentinel. For \inlinecode{splice\_range(pos, first, last)}, the \inlinecode{pos} node must not lie inside the moved range.
@@ -407,7 +407,7 @@ Maintain a min-priority queue, that is, a collection of elements with support fo
 
 \begin{compactitem}
   \item \inlinecode{BinaryHeap\textless{}T\textgreater{}()} constructs an empty priority queue.
-  \item \inlinecode{BinaryHeap\textless{}T\textgreater{}(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range [\inlinecode{lo}, \inlinecode{hi}).
+  \item \inlinecode{BinaryHeap\textless{}T\textgreater{}(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the size of the priority queue.
   \item \inlinecode{empty()} returns whether the priority queue is empty.
   \item \inlinecode{push(v)} inserts the value \inlinecode{v} into the priority queue.
@@ -527,7 +527,7 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
 
 \begin{compactitem}
   \item \inlinecode{LeftistHeap\textless{}T\textgreater{}()} constructs an empty priority queue.
-  \item \inlinecode{LeftistHeap\textless{}T\textgreater{}(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range [\inlinecode{lo}, \inlinecode{hi}).
+  \item \inlinecode{LeftistHeap\textless{}T\textgreater{}(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the size of the priority queue.
   \item \inlinecode{empty()} returns whether the priority queue is empty.
   \item \inlinecode{push(v)} inserts the value \inlinecode{v} into the priority queue.
@@ -672,7 +672,7 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
 
 \begin{compactitem}
   \item \inlinecode{SkewHeap\textless{}T\textgreater{}()} constructs an empty priority queue.
-  \item \inlinecode{SkewHeap\textless{}T\textgreater{}(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range [\inlinecode{lo}, \inlinecode{hi}).
+  \item \inlinecode{SkewHeap\textless{}T\textgreater{}(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the size of the priority queue.
   \item \inlinecode{empty()} returns whether the priority queue is empty.
   \item \inlinecode{push(v)} inserts the value \inlinecode{v} into the priority queue.
@@ -811,7 +811,7 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
 
 \begin{compactitem}
   \item \inlinecode{PairingHeap\textless{}T\textgreater{}()} constructs an empty priority queue.
-  \item \inlinecode{PairingHeap\textless{}T\textgreater{}(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range [\inlinecode{lo}, \inlinecode{hi}).
+  \item \inlinecode{PairingHeap\textless{}T\textgreater{}(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the size of the priority queue.
   \item \inlinecode{empty()} returns whether the priority queue is empty.
   \item \inlinecode{push(v)} inserts the value \inlinecode{v} and returns a handle to the new element. The handle remains valid until that element is removed by \inlinecode{pop()} or \inlinecode{erase()}.
@@ -2123,7 +2123,7 @@ This implementation requires an ordering on the key type \inlinecode{K} defined 
   \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if a new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
   \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
   \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{nullptr} if the key was not found.
-  \item \inlinecode{find\_by\_order(k)} returns a key-value pair of the node with a key of 0-based rank \inlinecode{k}, throwing an exception if the rank is not in the range [$0$, \inlinecode{size()}).
+  \item \inlinecode{find\_by\_order(k)} returns a key-value pair of the node with a key of 0-based rank \inlinecode{k}, throwing an exception if the rank is not in the range $[0, {\inlinecodemath{size()}})$.
   \item \inlinecode{order\_of\_key(x)} returns the number of keys strictly less than \inlinecode{x}. The key does not need to be present in the map.
   \item \inlinecode{entries()} returns all key-value entries in ascending order of keys.
 \end{compactitem}
@@ -2381,11 +2381,11 @@ This implementation uses \inlinecode{std::pair} to represent intervals, requirin
   \item \inlinecode{IntervalTreap\textless{}K, V\textgreater{}()} constructs an empty map.
   \item \inlinecode{size()} returns the size of the map.
   \item \inlinecode{empty()} returns whether the map is empty.
-  \item \inlinecode{insert(lo, hi, v)} adds an entry with key [\inlinecode{lo}, \inlinecode{hi}] and value \inlinecode{v} to the map, returning \inlinecode{true} if a new interval was added or \inlinecode{false} if the interval already exists (in which case the map is unchanged and the old value associated with the key is preserved).
-  \item \inlinecode{erase(lo, hi)} removes the entry with key [\inlinecode{lo}, \inlinecode{hi}] from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the interval was not found.
-  \item \inlinecode{find\_key(lo, hi)} returns a pointer to a const \inlinecode{std::pair} representing the key of some interval in the map which intersects with [\inlinecode{lo}, \inlinecode{hi}], or \inlinecode{nullptr} if no such entry was found.
-  \item \inlinecode{find\_value(lo, hi)} returns a pointer to a const value of some entry in the map with a key that intersects with [\inlinecode{lo}, \inlinecode{hi}], or \inlinecode{nullptr} if no such entry was found.
-  \item \inlinecode{find\_all(lo, hi, f)} calls the function \inlinecode{f(lo, hi, v)} on each entry in the map that overlaps with [\inlinecode{lo}, \inlinecode{hi}], in lexicographically ascending order of intervals.
+  \item \inlinecode{insert(lo, hi, v)} adds an entry with key $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ and value \inlinecode{v} to the map, returning \inlinecode{true} if a new interval was added or \inlinecode{false} if the interval already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item \inlinecode{erase(lo, hi)} removes the entry with key $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the interval was not found.
+  \item \inlinecode{find\_key(lo, hi)} returns a pointer to a const \inlinecode{std::pair} representing the key of some interval in the map which intersects with $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$, or \inlinecode{nullptr} if no such entry was found.
+  \item \inlinecode{find\_value(lo, hi)} returns a pointer to a const value of some entry in the map with a key that intersects with $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$, or \inlinecode{nullptr} if no such entry was found.
+  \item \inlinecode{find\_all(lo, hi, f)} calls the function \inlinecode{f(lo, hi, v)} on each entry in the map that overlaps with $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$, in lexicographically ascending order of intervals.
   \item \inlinecode{entries()} returns all intervals and their values in lexicographically ascending order of intervals.
 \end{compactitem}
 
@@ -3312,7 +3312,7 @@ bcde
 \subsection{Sparse Table}
 Given a static array, precompute a table that answers range minimum queries in constant time. More generally, the sparse table works for any range query whose combining operation is both associative and idempotent, meaning \inlinecode{combine(x, x) == x}. The canonical examples are ``min'', ``max'', ``gcd'', and the bitwise ``and'' and ``or''.
 
-For each level $j$, the entry \inlinecode{dp[j][i]} holds the result of \inlinecode{combine()} over the half-open range $[i, i + 2^j)$, built by combining two ranges of length $2^{j-1}$. A query over [\inlinecode{lo}, \inlinecode{hi}] is answered by combining the two overlapping ranges of length $2^j$ that are anchored at \inlinecode{lo} and at \inlinecode{hi}, where $2^j$ is the largest power of two not exceeding the length of the range. Because these two ranges overlap whenever the query length is not a power of two, the elements in the overlap are folded in twice; this is harmless only when \inlinecode{combine()} is idempotent. To support a non-idempotent but associative operation such as ``sum'' or ``XOR'' in constant time, use the disjoint sparse table in the next section instead, whose ranges meet at a center and never overlap.
+For each level $j$, the entry \inlinecode{dp[j][i]} holds the result of \inlinecode{combine()} over the half-open range $[i, i + 2^j)$, built by combining two ranges of length $2^{j-1}$. A query over $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ is answered by combining the two overlapping ranges of length $2^j$ that are anchored at \inlinecode{lo} and at \inlinecode{hi}, where $2^j$ is the largest power of two not exceeding the length of the range. Because these two ranges overlap whenever the query length is not a power of two, the elements in the overlap are folded in twice; this is harmless only when \inlinecode{combine()} is idempotent. To support a non-idempotent but associative operation such as ``sum'' or ``XOR'' in constant time, use the disjoint sparse table in the next section instead, whose ranges meet at a center and never overlap.
 
 The query operation is defined by an associative and idempotent function \inlinecode{combine(a, b)}. The default code below returns the ``min'' of the range; for ``gcd'', \inlinecode{combine(a, b)} should return \inlinecode{gcd(a, b)}.
 
@@ -3395,7 +3395,7 @@ int main() {
 \subsection{Disjoint Sparse Table}
 Given a static array, precompute a table that answers range queries for any associative operation in constant time. Unlike the ordinary sparse table for range minimum queries, the disjoint sparse table does not require the operation to be idempotent, so it also handles sums, products, and matrix products where overlapping the two query halves would double-count.
 
-The array is divided into blocks whose size doubles at each of the $O(\log n)$ levels. At the level whose block size is $2^{k+1}$, every block is split at its center, and the table stores, for each position, the fold of the contiguous run from that position up to (or down to) the center. To answer a query [\inlinecode{lo}, \inlinecode{hi}], find the level at which \inlinecode{lo} and \inlinecode{hi} first fall on opposite sides of a center: this is the position of the highest set bit of \inlinecode{lo \textasciicircum{} hi}. At that level, \inlinecode{lo} lies in the block's left half and \inlinecode{hi} in its right half, so the answer is the stored suffix fold ending at the center combined with the stored prefix fold beginning at the center.
+The array is divided into blocks whose size doubles at each of the $O(\log n)$ levels. At the level whose block size is $2^{k+1}$, every block is split at its center, and the table stores, for each position, the fold of the contiguous run from that position up to (or down to) the center. To answer a query $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$, find the level at which \inlinecode{lo} and \inlinecode{hi} first fall on opposite sides of a center: this is the position of the highest set bit of \inlinecode{lo \textasciicircum{} hi}. At that level, \inlinecode{lo} lies in the block's left half and \inlinecode{hi} in its right half, so the answer is the stored suffix fold ending at the center combined with the stored prefix fold beginning at the center.
 
 The query operation is defined by an associative function \inlinecode{combine(a, b)}. The default code below returns the ``min'' of the range; for ``sum'', \inlinecode{combine(a, b)} should return \inlinecode{a + b}.
 
@@ -3498,7 +3498,7 @@ The query operation is defined by an associative aggregate function \inlinecode{
 The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at a single updated index. The default definition below supports updates that ``set'' the chosen array index to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return \inlinecode{v + d}.
 
 \begin{compactitem}
-  \item \inlinecode{SqrtDecomposition\textless{}T\textgreater{}(n, v)} constructs an array of size \inlinecode{n} with indices [$0$, \inlinecode{n}), and all values initialized to \inlinecode{v}.
+  \item \inlinecode{SqrtDecomposition\textless{}T\textgreater{}(n, v)} constructs an array of size \inlinecode{n} with indices $[0, {\inlinecodemath{n}})$, and all values initialized to \inlinecode{v}.
   \item \inlinecode{SqrtDecomposition\textless{}T\textgreater{}(lo, hi)} constructs an array from two random-access iterators, initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
@@ -3617,7 +3617,7 @@ int main() {
 Values: 6 -2 4 8 10
 \end{exampleoutput}
 \subsection{Mo's Algorithm}
-Mo's algorithm answers a batch of range queries offline by reordering them so that the current window [\inlinecode{cur\_l}, \inlinecode{cur\_r}] can be transformed into the next query's range with as few single-element insertions and deletions as possible. It applies whenever there is no fast direct formula, but extending or shrinking the window by one element updates the answer cheaply, as with the number of distinct values in a range or the sum of squares of element frequencies.
+Mo's algorithm answers a batch of range queries offline by reordering them so that the current window $[{\inlinecodemath{cur_l}}, {\inlinecodemath{cur_r}}]$ can be transformed into the next query's range with as few single-element insertions and deletions as possible. It applies whenever there is no fast direct formula, but extending or shrinking the window by one element updates the answer cheaply, as with the number of distinct values in a range or the sum of squares of element frequencies.
 
 The trick is the query order. Sort queries by the block of their left endpoint, where each block spans about $n / \sqrt{q}$ indices, breaking ties by right endpoint. The left pointer then travels $O(n / \sqrt{q})$ per query, for $O(n \sqrt{q})$ moves in all, while within each block the right pointer sweeps monotonically across the array, contributing $O(n)$ per block over the $\sqrt{q}$ blocks, again $O(n \sqrt{q})$. So the pointers move $O(n \sqrt{q})$ times in total. Sorting the right endpoint in alternating directions between consecutive blocks (a ``boustrophedon'' order) avoids resetting the right pointer at every block boundary.
 
@@ -3703,14 +3703,14 @@ The query operation is defined by an associative aggregate function \inlinecode{
 The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at a single updated index. The default definition below supports updates that ``set'' the chosen array index to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return \inlinecode{v + d}.
 
 \begin{compactitem}
-  \item \inlinecode{SegTree\textless{}T\textgreater{}(n, v)} constructs an array of size \inlinecode{n} with indices [$0$, \inlinecode{n}), and all values initialized to \inlinecode{v}.
-  \item \inlinecode{SegTree\textless{}T\textgreater{}(lo, hi)} constructs an array from two random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}), initialized to the elements of the range in the same order.
+  \item \inlinecode{SegTree\textless{}T\textgreater{}(n, v)} constructs an array of size \inlinecode{n} with indices $[0, {\inlinecodemath{n}})$, and all values initialized to \inlinecode{v}.
+  \item \inlinecode{SegTree\textless{}T\textgreater{}(lo, hi)} constructs an array from two random-access iterators as a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If \inlinecode{lo == hi}, then the single specified value is returned.
   \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{apply\_delta(v, d)}.
-  \item \inlinecode{max\_right(lo, pred)} returns the largest boundary \inlinecode{hi} such that the aggregate over the half-open range [\inlinecode{lo}, \inlinecode{hi}) satisfies \inlinecode{pred}. It returns \inlinecode{size()} if \inlinecode{pred} remains true to the end.
-  \item \inlinecode{min\_left(hi, pred)} returns the smallest boundary \inlinecode{lo} such that the aggregate over the half-open range [\inlinecode{lo}, \inlinecode{hi}) satisfies \inlinecode{pred}. It returns $0$ if \inlinecode{pred} remains true to the beginning.
+  \item \inlinecode{max\_right(lo, pred)} returns the largest boundary \inlinecode{hi} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred}. It returns \inlinecode{size()} if \inlinecode{pred} remains true to the end.
+  \item \inlinecode{min\_left(hi, pred)} returns the smallest boundary \inlinecode{lo} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred}. It returns $0$ if \inlinecode{pred} remains true to the beginning.
 \end{compactitem}
 
 For the boundary-search functions, \inlinecode{pred} takes aggregate \inlinecode{T} values of candidate ranges. As a range grows, \inlinecode{pred} may change from true to false but never back to true; The empty range is considered valid. E.g. for \inlinecode{combine = min}, use \inlinecode{pred(mn) = (mn \textgreater{} x)} to find the first value \inlinecode{\textless{}= x}, or for \inlinecode{combine = sum}, use \inlinecode{pred(sum) = (sum \textless{}= x)} with nonnegative values to find the longest range within the limit \inlinecode{x}.
@@ -3923,15 +3923,15 @@ The query operation is defined by an associative aggregate function \inlinecode{
 Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
 \begin{compactitem}
-  \item \inlinecode{LazySegTree\textless{}T\textgreater{}(n, v)} constructs an array of size \inlinecode{n} with indices [$0$, \inlinecode{n}), and all values initialized to \inlinecode{v}.
-  \item \inlinecode{LazySegTree\textless{}T\textgreater{}(lo, hi)} constructs an array from two random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}), initialized to the elements of the range in the same order.
+  \item \inlinecode{LazySegTree\textless{}T\textgreater{}(n, v)} constructs an array of size \inlinecode{n} with indices $[0, {\inlinecodemath{n}})$, and all values initialized to \inlinecode{v}.
+  \item \inlinecode{LazySegTree\textless{}T\textgreater{}(lo, hi)} constructs an array from two random-access iterators as a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If \inlinecode{lo == hi}, then the single specified value is returned.
   \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{apply\_delta(v, d)}.
   \item \inlinecode{update(lo, hi, d)} modifies the value at each array index from \inlinecode{lo} to \inlinecode{hi}, inclusive, by applying the delta \inlinecode{d} to each value.
-  \item \inlinecode{max\_right(lo, pred)} returns the largest boundary \inlinecode{hi} such that the aggregate over the half-open range [\inlinecode{lo}, \inlinecode{hi}) satisfies \inlinecode{pred}. It returns \inlinecode{size()} if \inlinecode{pred} remains true to the end.
-  \item \inlinecode{min\_left(hi, pred)} returns the smallest boundary \inlinecode{lo} such that the aggregate over the half-open range [\inlinecode{lo}, \inlinecode{hi}) satisfies \inlinecode{pred}. It returns $0$ if \inlinecode{pred} remains true to the beginning.
+  \item \inlinecode{max\_right(lo, pred)} returns the largest boundary \inlinecode{hi} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred}. It returns \inlinecode{size()} if \inlinecode{pred} remains true to the end.
+  \item \inlinecode{min\_left(hi, pred)} returns the smallest boundary \inlinecode{lo} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred}. It returns $0$ if \inlinecode{pred} remains true to the beginning.
 \end{compactitem}
 
 For the boundary-search functions, \inlinecode{pred} takes aggregate \inlinecode{T} values of candidate ranges. As a range grows, \inlinecode{pred} may change from true to false but never back to true; The empty range is considered valid. E.g. for \inlinecode{combine = min}, use \inlinecode{pred(mn) = (mn \textgreater{} x)} to find the first value \inlinecode{\textless{}= x}, or for \inlinecode{combine = sum}, use \inlinecode{pred(sum) = (sum \textless{}= x)} with nonnegative values to find the longest range within the limit \inlinecode{x}.
@@ -4178,14 +4178,14 @@ The query operation is defined by an associative aggregate function \inlinecode{
 The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at a single updated index. The default definition below supports updates that ``set'' the chosen array index to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return \inlinecode{v + d}.
 
 \begin{compactitem}
-  \item \inlinecode{IterativeSegTree\textless{}T\textgreater{}(n, v)} constructs an array of size \inlinecode{n} with indices [$0$, \inlinecode{n}), and all values initialized to \inlinecode{v}.
-  \item \inlinecode{IterativeSegTree\textless{}T\textgreater{}(lo, hi)} constructs an array from two random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}), initialized to the elements of the range in the same order.
+  \item \inlinecode{IterativeSegTree\textless{}T\textgreater{}(n, v)} constructs an array of size \inlinecode{n} with indices $[0, {\inlinecodemath{n}})$, and all values initialized to \inlinecode{v}.
+  \item \inlinecode{IterativeSegTree\textless{}T\textgreater{}(lo, hi)} constructs an array from two random-access iterators as a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If \inlinecode{lo == hi}, then the single specified value is returned.
   \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{apply\_delta(v, d)}.
-  \item \inlinecode{max\_right(lo, pred)} returns the largest boundary \inlinecode{hi} such that the aggregate over the half-open range [\inlinecode{lo}, \inlinecode{hi}) satisfies \inlinecode{pred}. It returns \inlinecode{size()} if \inlinecode{pred} remains true to the end.
-  \item \inlinecode{min\_left(hi, pred)} returns the smallest boundary \inlinecode{lo} such that the aggregate over the half-open range [\inlinecode{lo}, \inlinecode{hi}) satisfies \inlinecode{pred}. It returns $0$ if \inlinecode{pred} remains true to the beginning.
+  \item \inlinecode{max\_right(lo, pred)} returns the largest boundary \inlinecode{hi} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred}. It returns \inlinecode{size()} if \inlinecode{pred} remains true to the end.
+  \item \inlinecode{min\_left(hi, pred)} returns the smallest boundary \inlinecode{lo} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred}. It returns $0$ if \inlinecode{pred} remains true to the beginning.
 \end{compactitem}
 
 For the boundary-search functions, \inlinecode{pred} takes aggregate \inlinecode{T} values of candidate ranges. As a range grows, \inlinecode{pred} may change from true to false but never back to true; The empty range is considered valid. E.g. for \inlinecode{combine = min}, use \inlinecode{pred(mn) = (mn \textgreater{} x)} to find the first value \inlinecode{\textless{}= x}, or for \inlinecode{combine = sum}, use \inlinecode{pred(sum) = (sum \textless{}= x)} with nonnegative values to find the longest range within the limit \inlinecode{x}.
@@ -4372,15 +4372,15 @@ The query operation is defined by an associative aggregate function \inlinecode{
 Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
 \begin{compactitem}
-  \item \inlinecode{IterativeLazySegTree\textless{}T\textgreater{}(n, v)} constructs an array of size \inlinecode{n} with indices [$0$, \inlinecode{n}), and all values initialized to \inlinecode{v}.
-  \item \inlinecode{IterativeLazySegTree\textless{}T\textgreater{}(lo, hi)} constructs an array from two random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}), initialized to the elements of the range in the same order.
+  \item \inlinecode{IterativeLazySegTree\textless{}T\textgreater{}(n, v)} constructs an array of size \inlinecode{n} with indices $[0, {\inlinecodemath{n}})$, and all values initialized to \inlinecode{v}.
+  \item \inlinecode{IterativeLazySegTree\textless{}T\textgreater{}(lo, hi)} constructs an array from two random-access iterators as a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If \inlinecode{lo == hi}, then the single specified value is returned.
   \item \inlinecode{update(i, d)} assigns the value at index \inlinecode{i} by applying the delta \inlinecode{d}.
   \item \inlinecode{update(lo, hi, d)} modifies the value at each array index from \inlinecode{lo} to \inlinecode{hi}, inclusive, by applying the delta \inlinecode{d} to each value.
-  \item \inlinecode{max\_right(lo, pred)} returns the largest boundary \inlinecode{hi} such that the aggregate over the half-open range [\inlinecode{lo}, \inlinecode{hi}) satisfies \inlinecode{pred}. It returns \inlinecode{size()} if \inlinecode{pred} remains true to the end.
-  \item \inlinecode{min\_left(hi, pred)} returns the smallest boundary \inlinecode{lo} such that the aggregate over the half-open range [\inlinecode{lo}, \inlinecode{hi}) satisfies \inlinecode{pred}. It returns $0$ if \inlinecode{pred} remains true to the beginning.
+  \item \inlinecode{max\_right(lo, pred)} returns the largest boundary \inlinecode{hi} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred}. It returns \inlinecode{size()} if \inlinecode{pred} remains true to the end.
+  \item \inlinecode{min\_left(hi, pred)} returns the smallest boundary \inlinecode{lo} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred}. It returns $0$ if \inlinecode{pred} remains true to the beginning.
 \end{compactitem}
 
 For the boundary-search functions, \inlinecode{pred} takes aggregate \inlinecode{T} values of candidate ranges. As a range grows, \inlinecode{pred} may change from true to false but never back to true; The empty range is considered valid. E.g. for \inlinecode{combine = min}, use \inlinecode{pred(mn) = (mn \textgreater{} x)} to find the first value \inlinecode{\textless{}= x}, or for \inlinecode{combine = sum}, use \inlinecode{pred(sum) = (sum \textless{}= x)} with nonnegative values to find the longest range within the limit \inlinecode{x}.
@@ -4653,12 +4653,12 @@ Maintain a fixed-size array under the range ``chmin'' update \inlinecode{a[i] = 
 The break condition is what makes this efficient: a potential-function argument on the number of distinct values along root-to-leaf paths shows the total work over any sequence of clamps is amortized $O(\log^{2} n)$ each, even though a single clamp can momentarily descend deep. The same scheme extends to range ``chmax'' by tracking the symmetric minimum trio, and to mixed clamp-and-add workloads by carrying an additional add tag; only the chmin / sum / max core is shown here. Unlike the generic lazy segment tree, this structure cannot be reduced to a pluggable \inlinecode{combine} and \inlinecode{apply}, because a clamp acts on only the maximal entries of a node rather than uniformly on all of them, so each operation set must be hand-written and its amortized bound argued separately.
 
 \begin{compactitem}
-  \item \inlinecode{SegTreeBeats\textless{}T\textgreater{}(n, v)} constructs an array of size \inlinecode{n}, indices [$0$, \inlinecode{n}), all equal to \inlinecode{v}.
-  \item \inlinecode{SegTreeBeats\textless{}T\textgreater{}(lo, hi)} constructs an array from two random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}), initialized to the elements of the range in the same order.
+  \item \inlinecode{SegTreeBeats\textless{}T\textgreater{}(n, v)} constructs an array of size \inlinecode{n}, indices $[0, {\inlinecodemath{n}})$, all equal to \inlinecode{v}.
+  \item \inlinecode{SegTreeBeats\textless{}T\textgreater{}(lo, hi)} constructs an array from two random-access iterators as a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of the array.
-  \item \inlinecode{chmin(lo, hi, t)} replaces \inlinecode{a[i]} with \inlinecode{min(a[i], t)} for every \inlinecode{i} in [\inlinecode{lo}, \inlinecode{hi}], inclusive.
-  \item \inlinecode{query\_sum(lo, hi)} returns the sum of \inlinecode{a[i]} over \inlinecode{i} in [\inlinecode{lo}, \inlinecode{hi}], inclusive.
-  \item \inlinecode{query\_max(lo, hi)} returns the maximum of \inlinecode{a[i]} over \inlinecode{i} in [\inlinecode{lo}, \inlinecode{hi}], inclusive.
+  \item \inlinecode{chmin(lo, hi, t)} replaces \inlinecode{a[i]} with \inlinecode{min(a[i], t)} for every \inlinecode{i} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$, inclusive.
+  \item \inlinecode{query\_sum(lo, hi)} returns the sum of \inlinecode{a[i]} over \inlinecode{i} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$, inclusive.
+  \item \inlinecode{query\_max(lo, hi)} returns the maximum of \inlinecode{a[i]} over \inlinecode{i} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$, inclusive.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
 \end{compactitem}
 
@@ -4869,13 +4869,13 @@ The query operation is defined by an associative aggregate function \inlinecode{
 Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
 \begin{compactitem}
-  \item \inlinecode{SparseSegTree\textless{}T, N\textgreater{}(v)} constructs an array over indices [$0$, \inlinecode{N}], with every value implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
+  \item \inlinecode{SparseSegTree\textless{}T, N\textgreater{}(v)} constructs an array over indices $[0, {\inlinecodemath{N}}]$, with every value implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} is between $0$ and \inlinecode{N}.
   \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If \inlinecode{lo == hi}, then the single specified value is returned.
   \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{apply\_delta(v, d)}.
   \item \inlinecode{update(lo, hi, d)} modifies the value at each array index from \inlinecode{lo} to \inlinecode{hi}, inclusive, by applying the delta \inlinecode{d} to each value.
-  \item \inlinecode{max\_right(lo, pred)} returns the largest boundary \inlinecode{hi} such that the aggregate over the half-open range [\inlinecode{lo}, \inlinecode{hi}) satisfies \inlinecode{pred}. It returns $N + 1$ if \inlinecode{pred} remains true to the end.
-  \item \inlinecode{min\_left(hi, pred)} returns the smallest boundary \inlinecode{lo} such that the aggregate over the half-open range [\inlinecode{lo}, \inlinecode{hi}) satisfies \inlinecode{pred}. It returns $0$ if \inlinecode{pred} remains true to the beginning.
+  \item \inlinecode{max\_right(lo, pred)} returns the largest boundary \inlinecode{hi} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred}. It returns $N + 1$ if \inlinecode{pred} remains true to the end.
+  \item \inlinecode{min\_left(hi, pred)} returns the smallest boundary \inlinecode{lo} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred}. It returns $0$ if \inlinecode{pred} remains true to the beginning.
 \end{compactitem}
 
 For the boundary-search functions, \inlinecode{pred} takes aggregate \inlinecode{T} values of candidate ranges. As a range grows, \inlinecode{pred} may change from true to false but never back to true; The empty range is considered valid. E.g. for \inlinecode{combine = min}, use \inlinecode{pred(mn) = (mn \textgreater{} x)} to find the first value \inlinecode{\textless{}= x}, or for \inlinecode{combine = sum}, use \inlinecode{pred(sum) = (sum \textless{}= x)} with nonnegative values to find the longest range within the limit \inlinecode{x}.
@@ -5138,10 +5138,10 @@ The query operation is defined by an associative aggregate function \inlinecode{
 The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at a single updated index. The default definition below supports updates that ``set'' the chosen array index to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return \inlinecode{v + d}.
 
 \begin{compactitem}
-  \item \inlinecode{PersistentSegTree\textless{}T\textgreater{}(n, v)} constructs version 0 of an array of size \inlinecode{n} with indices [$0$, \inlinecode{n}), and all values initialized to \inlinecode{v}.
-  \item \inlinecode{PersistentSegTree\textless{}T\textgreater{}(lo, hi)} constructs version 0 from two random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}), initialized to the elements of the range in the same order.
+  \item \inlinecode{PersistentSegTree\textless{}T\textgreater{}(n, v)} constructs version $0$ of an array of size \inlinecode{n} with indices $[0, {\inlinecodemath{n}})$, and all values initialized to \inlinecode{v}.
+  \item \inlinecode{PersistentSegTree\textless{}T\textgreater{}(lo, hi)} constructs version $0$ from two random-access iterators as a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of every version of the array.
-  \item \inlinecode{versions()} returns the number of stored versions. Versions are numbered starting from 0.
+  \item \inlinecode{versions()} returns the number of stored versions. Versions are numbered starting from $0$.
   \item \inlinecode{at(version, i)} returns the value at index \inlinecode{i} in the specified version.
   \item \inlinecode{query(version, lo, hi)} returns the result of \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi} in the specified version, inclusive. If \inlinecode{lo == hi}, then the single specified value is returned.
   \item \inlinecode{update(version, i, d)} creates and returns a new version in which the value at index \inlinecode{i} is assigned to \inlinecode{apply\_delta(v, d)}. The specified version remains unchanged.
@@ -5292,12 +5292,12 @@ int main() {
 \subsection{Merge Sort Tree}
 A merge sort tree is a static segment tree in which every node stores the sorted multiset of the values in its range. The nodes are exactly the ranges visited by a merge sort, and each node's sorted list is the merge of its two children's lists. This supports queries that count, within a range of indices, how many values fall below a threshold or inside a value interval: decompose the index range into $O(\log n)$ canonical nodes and binary search each node's sorted list.
 
-The structure is built once and not modified afterward. All index ranges are inclusive [\inlinecode{lo}, \inlinecode{hi}] with 0-based indices, and values may be of any comparable type.
+The structure is built once and not modified afterward. All index ranges are inclusive $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ with 0-based indices, and values may be of any comparable type.
 
 \begin{compactitem}
   \item \inlinecode{MergeSortTree\textless{}T\textgreater{}(a)} builds the tree over the array \inlinecode{a}.
-  \item \inlinecode{count\_leq(lo, hi, x)} returns the number of indices \inlinecode{i} in [\inlinecode{lo}, \inlinecode{hi}] with \inlinecode{a[i]} $\leq$ \inlinecode{x}.
-  \item \inlinecode{count\_in(lo, hi, x, y)} returns the number of indices \inlinecode{i} in [\inlinecode{lo}, \inlinecode{hi}] with \inlinecode{x} $\leq$ \inlinecode{a[i]} $\leq$ \inlinecode{y}.
+  \item \inlinecode{count\_leq(lo, hi, x)} returns the number of indices \inlinecode{i} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ with \inlinecode{a[i]} $\leq$ \inlinecode{x}.
+  \item \inlinecode{count\_in(lo, hi, x, y)} returns the number of indices \inlinecode{i} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ with \inlinecode{x} $\leq$ \inlinecode{a[i]} $\leq$ \inlinecode{y}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -5393,17 +5393,17 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Wavelet Tree}
-A wavelet tree is a static structure over an integer array with values in a known range [\inlinecode{min\_val}, \inlinecode{max\_val}]. The root splits the value range at its midpoint, recording for every prefix of the array how many of its elements belong to the lower value half, then stably partitions the array so that those elements form the left child and the rest form the right child. Recursing on each half builds a balanced tree of height $O(\log \sigma)$, where $\sigma$ is the size of the value range.
+A wavelet tree is a static structure over an integer array with values in a known range $[{\inlinecodemath{min_val}}, {\inlinecodemath{max_val}}]$. The root splits the value range at its midpoint, recording for every prefix of the array how many of its elements belong to the lower value half, then stably partitions the array so that those elements form the left child and the rest form the right child. Recursing on each half builds a balanced tree of height $O(\log \sigma)$, where $\sigma$ is the size of the value range.
 
 The recorded prefix counts let a query at any node translate a range of array positions into the corresponding range of positions in either child, so a single root-to-leaf descent answers order statistics and rank queries. This is strictly more powerful than a merge sort tree: besides counting values below a threshold, it reports the $k$-th smallest value of a range in $O(\log \sigma)$ time.
 
-All position ranges are inclusive [\inlinecode{lo}, \inlinecode{hi}] with 0-based indices. If the values are large or sparse, compress them to a small contiguous range first.
+All position ranges are inclusive $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ with 0-based indices. If the values are large or sparse, compress them to a small contiguous range first.
 
 \begin{compactitem}
-  \item \inlinecode{WaveletTree(a, min\_val, max\_val)} builds the tree over the array \inlinecode{a}, whose values must all lie in [\inlinecode{min\_val}, \inlinecode{max\_val}].
-  \item \inlinecode{kth\_smallest(lo, hi, k)} returns the \inlinecode{k}-th smallest value among positions [\inlinecode{lo}, \inlinecode{hi}], where \inlinecode{k} is 1-based (so \inlinecode{k == 1} returns the minimum).
-  \item \inlinecode{count\_leq(lo, hi, x)} returns the number of positions \inlinecode{i} in [\inlinecode{lo}, \inlinecode{hi}] with \inlinecode{a[i]} $\leq$ \inlinecode{x}.
-  \item \inlinecode{count\_in(lo, hi, x, y)} returns the number of positions \inlinecode{i} in [\inlinecode{lo}, \inlinecode{hi}] with \inlinecode{x} $\leq$ \inlinecode{a[i]} $\leq$ \inlinecode{y}.
+  \item \inlinecode{WaveletTree(a, min\_val, max\_val)} builds the tree over the array \inlinecode{a}, whose values must all lie in $[{\inlinecodemath{min_val}}, {\inlinecodemath{max_val}}]$.
+  \item \inlinecode{kth\_smallest(lo, hi, k)} returns the \inlinecode{k}-th smallest value among positions $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$, where \inlinecode{k} is 1-based (so \inlinecode{k == 1} returns the minimum).
+  \item \inlinecode{count\_leq(lo, hi, x)} returns the number of positions \inlinecode{i} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ with \inlinecode{a[i]} $\leq$ \inlinecode{x}.
+  \item \inlinecode{count\_in(lo, hi, x, y)} returns the number of positions \inlinecode{i} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ with \inlinecode{x} $\leq$ \inlinecode{a[i]} $\leq$ \inlinecode{y}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -5601,8 +5601,8 @@ The query operation is defined by an associative aggregate function \inlinecode{
 Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
 \begin{compactitem}
-  \item \inlinecode{ImplicitTreap\textless{}T\textgreater{}(n, v)} constructs an array of size \inlinecode{n}, with indices [$0$, \inlinecode{n}), with all values initialized to \inlinecode{v}.
-  \item \inlinecode{ImplicitTreap\textless{}T\textgreater{}(lo, hi)} constructs an array from two iterators as a range [\inlinecode{lo}, \inlinecode{hi}), initialized to the elements of the range in the same order.
+  \item \inlinecode{ImplicitTreap\textless{}T\textgreater{}(n, v)} constructs an array of size \inlinecode{n}, with indices $[0, {\inlinecodemath{n}})$, with all values initialized to \inlinecode{v}.
+  \item \inlinecode{ImplicitTreap\textless{}T\textgreater{}(lo, hi)} constructs an array from two iterators as a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{empty()} returns whether the array is empty.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
@@ -5881,10 +5881,10 @@ The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which 
 Choose this over a sparse 2D segment tree when the grid is huge and touched cells or queried rectangles are sparse or naturally align with large quadrants. Choose the sparse 2D segment tree instead when many thin or adversarial rectangles are expected and a predictable $O(\log\left(R\right) \cdot \log\left(C\right))$ bound matters more than lower constant factors on aligned regions.
 
 \begin{compactitem}
-  \item \inlinecode{Quadtree\textless{}T, R, C\textgreater{}(v)} constructs a two-dimensional array with rows from 0 to $R$ (inclusive) and columns from 0 to $C$ (inclusive). All array values are initialized to \inlinecode{v}.
+  \item \inlinecode{Quadtree\textless{}T, R, C\textgreater{}(v)} constructs a two-dimensional array with rows from $0$ to $R$ (inclusive) and columns from $0$ to $C$ (inclusive). All array values are initialized to \inlinecode{v}.
   \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
   \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{combine()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2}, inclusive, and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
-  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{apply\_delta(v, d)}.
+  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at $({\inlinecodemath{r}}, {\inlinecodemath{c}})$ to \inlinecode{apply\_delta(v, d)}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -6089,10 +6089,10 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, area)}, which applie
 Choose this over a sparse 2D segment tree when rectangle updates or queries often cover large aligned regions of a huge sparse grid. Choose a sparse 2D segment tree when worst-case rectangles may be long, thin, or otherwise poorly aligned with quadrant boundaries; the quadtree can visit many boundary nodes in those cases.
 
 \begin{compactitem}
-  \item \inlinecode{LazyQuadtree\textless{}T, R, C\textgreater{}(v)} constructs a 2D array with rows 0 to $R$ (inclusive) and columns 0 to $C$ (inclusive), where template parameters \inlinecode{R} and \inlinecode{C}. All array values are implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
+  \item \inlinecode{LazyQuadtree\textless{}T, R, C\textgreater{}(v)} constructs a 2D array with rows $0$ to $R$ (inclusive) and columns $0$ to $C$ (inclusive), where template parameters \inlinecode{R} and \inlinecode{C}. All array values are implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
   \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
   \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{combine()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2} and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
-  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{apply\_delta(v, d)}.
+  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at $({\inlinecodemath{r}}, {\inlinecodemath{c}})$ to \inlinecode{apply\_delta(v, d)}.
   \item \inlinecode{update(r1, c1, r2, c2)} modifies the value at each index of the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2} and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive, by applying the delta \inlinecode{d} to each value.
 \end{compactitem}
 
@@ -6339,10 +6339,10 @@ Compared with the quadtrees in the previous sections, this structure splits rows
 For dense additive rectangle sums, prefer the simple 2D Fenwick tree in 2.6.5. A dense vector-backed 2D segment tree can be simpler and faster on modest grids with custom aggregates such as min/max, but it needs $O(R \cdot C)$ storage with large constants, so this sparse version is usually the safer codebook default.
 
 \begin{compactitem}
-  \item \inlinecode{SegTree2D\textless{}T, R, C\textgreater{}(v)} constructs a two-dimensional array with rows from 0 to $R$ (inclusive) and columns from 0 to $C$ (inclusive). All array values are implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
+  \item \inlinecode{SegTree2D\textless{}T, R, C\textgreater{}(v)} constructs a two-dimensional array with rows from $0$ to $R$ (inclusive) and columns from $0$ to $C$ (inclusive). All array values are implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
   \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
   \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{combine()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2}, inclusive, and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
-  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{apply\_delta(v, d)}.
+  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at $({\inlinecodemath{r}}, {\inlinecodemath{c}})$ to \inlinecode{apply\_delta(v, d)}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -6626,7 +6626,7 @@ Maintain a set of two-dimensional points while supporting queries for all points
 Use this for static point-reporting queries when guaranteed worst-case bounds are more important than memory. Compared with a range k-d tree, it uses more space but gives $O(\log^{2}(n) + m)$ query time regardless of point distribution; the k-d tree is lighter and often faster on typical inputs, but its pruning is more distribution-dependent.
 
 \begin{compactitem}
-  \item \inlinecode{RangeTree\textless{}T\textgreater{}(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range [\inlinecode{lo}, \inlinecode{hi}) of points.
+  \item \inlinecode{RangeTree\textless{}T\textgreater{}(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of points.
   \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(i, p)} on each point in the set that falls into the rectangular region consisting of rows from \inlinecode{x1} to \inlinecode{x2}, inclusive, and columns from \inlinecode{y1} to \inlinecode{y2}, inclusive. The first argument to \inlinecode{f} is the 0-based index of the point in the original range given to the constructor. The second argument is the point itself as an \inlinecode{std::pair}.
 \end{compactitem}
 
@@ -6755,7 +6755,7 @@ This implementation uses \inlinecode{std::pair} to represent points, requiring o
 Use this for static point-reporting queries when $O(n)$ space and good average performance are more important than a strict worst-case guarantee. Use the 2D range tree instead when adversarial point sets or query rectangles are expected and the extra $O(n \log n)$ space is acceptable.
 
 \begin{compactitem}
-  \item \inlinecode{RangeKDTree\textless{}T\textgreater{}(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range [\inlinecode{lo}, \inlinecode{hi}) of points.
+  \item \inlinecode{RangeKDTree\textless{}T\textgreater{}(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of points.
   \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(i, p)} on each point in the set that falls into the rectangular region consisting of rows from \inlinecode{x1} to \inlinecode{x2}, inclusive, and columns from \inlinecode{y1} to \inlinecode{y2}, inclusive. The first argument to \inlinecode{f} is the 0-based index of the point in the original range given to the constructor. The second argument is the point itself as an \inlinecode{std::pair}.
 \end{compactitem}
 
@@ -6893,8 +6893,8 @@ This implementation uses \inlinecode{std::pair} to represent points, requiring o
 Use this for static nearest-neighbor queries on point sets in low dimensions. It is a geometric search tree rather than an aggregate structure: for rectangle reporting use the range k-d tree or 2D range tree, and for grid cell updates or rectangle sums/minima use a Fenwick tree, quadtree, or 2D segment tree.
 
 \begin{compactitem}
-  \item \inlinecode{NearestKDTree\textless{}T\textgreater{}(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range [\inlinecode{lo}, \inlinecode{hi}) of points.
-  \item \inlinecode{nearest(x, y, can\_equal)} returns a point in the set that is closest to (\inlinecode{x}, \inlinecode{y}) by Euclidean distance. This may be equal to (\inlinecode{x}, \inlinecode{y}) only if \inlinecode{can\_equal} is \inlinecode{true}.
+  \item \inlinecode{NearestKDTree\textless{}T\textgreater{}(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of points.
+  \item \inlinecode{nearest(x, y, can\_equal)} returns a point in the set that is closest to $({\inlinecodemath{x}}, {\inlinecodemath{y}})$ by Euclidean distance. This may be equal to $({\inlinecodemath{x}}, {\inlinecodemath{y}})$ only if \inlinecode{can\_equal} is \inlinecode{true}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -7024,14 +7024,14 @@ Maintain a numerical array while supporting point increments and range-sum queri
 When prefix sums are nondecreasing, \inlinecode{max\_prefix(c)} answers prefix-boundary queries by binary lifting: it walks the implicit power-of-two block structure to find the longest prefix with sum at most \inlinecode{c}. This lets the same structure double as a dynamic multiset over a bounded integer domain, useful for coordinate-compressed $k$-th element lookups and online rank queries.
 
 \begin{compactitem}
-  \item \inlinecode{Fenwick\textless{}T\textgreater{}(n)} constructs an array with 0-based indices [$0$, \inlinecode{n}), with all values initialized to 0.
+  \item \inlinecode{Fenwick\textless{}T\textgreater{}(n)} constructs an array with 0-based indices $[0, {\inlinecodemath{n}})$, with all values initialized to $0$.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{add(i, x)} adds \inlinecode{x} to the value at index \inlinecode{i}.
   \item \inlinecode{set(i, x)} assigns the value at index \inlinecode{i} to \inlinecode{x}.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
-  \item \inlinecode{sum(hi)} returns the sum of all values at indices from 0 to \inlinecode{hi}, inclusive.
+  \item \inlinecode{sum(hi)} returns the sum of all values at indices from $0$ to \inlinecode{hi}, inclusive.
   \item \inlinecode{sum(lo, hi)} returns the sum of all values at indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
-  \item \inlinecode{max\_prefix(c)} returns the largest boundary \inlinecode{hi} such that \inlinecode{sum(0, hi - 1) \textless{}= c}, assuming prefix sums are nondecreasing. It may return any value from 0 to \inlinecode{size()}.
+  \item \inlinecode{max\_prefix(c)} returns the largest boundary \inlinecode{hi} such that \inlinecode{sum(0, hi - 1) \textless{}= c}, assuming prefix sums are nondecreasing. It may return any value from $0$ to \inlinecode{size()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -7126,10 +7126,10 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Fenwick Tree (Range Update, Point Query)}
-Maintain a numerical array while supporting range increments and point queries. This is done by storing the difference array in a Fenwick tree: adding \inlinecode{x} to [\inlinecode{lo}, \inlinecode{hi}] adds \inlinecode{+x} at \inlinecode{lo} and \inlinecode{-x} after \inlinecode{hi}, and the value at index \inlinecode{i} is the prefix sum of those differences through \inlinecode{i}.
+Maintain a numerical array while supporting range increments and point queries. This is done by storing the difference array in a Fenwick tree: adding \inlinecode{x} to $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ adds \inlinecode{+x} at \inlinecode{lo} and \inlinecode{-x} after \inlinecode{hi}, and the value at index \inlinecode{i} is the prefix sum of those differences through \inlinecode{i}.
 
 \begin{compactitem}
-  \item \inlinecode{FenwickRUPQ\textless{}T\textgreater{}(n)} constructs an array with 0-based indices [$0$, \inlinecode{n}), with values set to 0.
+  \item \inlinecode{FenwickRUPQ\textless{}T\textgreater{}(n)} constructs an array with 0-based indices $[0, {\inlinecodemath{n}})$, with values set to $0$.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{add(i, x)} adds \inlinecode{x} to the value at index \inlinecode{i}.
@@ -7213,15 +7213,15 @@ Values: 5 10 15 10 10
 Maintain a numerical array while supporting range increments and range-sum queries. This uses two Fenwick trees to recover prefix sums after difference-array updates: if the difference array stores range additions, then the prefix sum through \inlinecode{hi} can be written as \inlinecode{hi*sum(t1, hi) - sum(t2, hi)}.
 
 \begin{compactitem}
-  \item \inlinecode{FenwickRURQ\textless{}T\textgreater{}(n)} constructs an array with 0-based indices [$0$, \inlinecode{n}), with values set to 0.
+  \item \inlinecode{FenwickRURQ\textless{}T\textgreater{}(n)} constructs an array with 0-based indices $[0, {\inlinecodemath{n}})$, with values set to $0$.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{add(i, x)} increments the value at index \inlinecode{i} by \inlinecode{x}.
   \item \inlinecode{add(lo, hi, x)} adds \inlinecode{x} to the values at all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
   \item \inlinecode{set(i, x)} assigns the value at index \inlinecode{i} to \inlinecode{x}.
-  \item \inlinecode{sum(hi)} returns the sum of all values at indices from 0 to \inlinecode{hi}, inclusive.
+  \item \inlinecode{sum(hi)} returns the sum of all values at indices from $0$ to \inlinecode{hi}, inclusive.
   \item \inlinecode{sum(lo, hi)} returns the sum of all values at indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
-  \item \inlinecode{max\_prefix(c)} returns the largest boundary \inlinecode{hi} such that \inlinecode{sum(0, hi - 1) \textless{}= c}, assuming prefix sums are nondecreasing. It may return any value from 0 to \inlinecode{size()}.
+  \item \inlinecode{max\_prefix(c)} returns the largest boundary \inlinecode{hi} such that \inlinecode{sum(0, hi - 1)} $\leq$ \inlinecode{c}, assuming prefix sums are nondecreasing. It may return any value from $0$ to \inlinecode{size()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -7347,14 +7347,14 @@ Values: 15 6 7 -5 4
 Maintain a numerical array over a huge index range while supporting range increments and range-sum queries. This is the sparse version of the two-tree Fenwick range-update/range-query trick: only Fenwick nodes reached by previous operations are stored, using \inlinecode{std::unordered\_map} instead of dense vectors.
 
 \begin{compactitem}
-  \item \inlinecode{SparseFenwick\textless{}T, N\textgreater{}()} constructs an array with 0-based indices [$0$, \inlinecode{N}), implicitly initialized to 0.
+  \item \inlinecode{SparseFenwick\textless{}T, N\textgreater{}()} constructs an array with 0-based indices $[0, {\inlinecodemath{N}})$, implicitly initialized to $0$.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{add(i, x)} adds \inlinecode{x} to the value at index \inlinecode{i}.
   \item \inlinecode{add(lo, hi, x)} adds \inlinecode{x} to the values at all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
   \item \inlinecode{set(i, x)} assigns the value at index \inlinecode{i} to \inlinecode{x}.
-  \item \inlinecode{sum(hi)} returns the sum of all values at indices from 0 to \inlinecode{hi}, inclusive.
+  \item \inlinecode{sum(hi)} returns the sum of all values at indices from $0$ to \inlinecode{hi}, inclusive.
   \item \inlinecode{sum(lo, hi)} returns the sum of all values at indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
-  \item \inlinecode{max\_prefix(c)} returns the largest boundary \inlinecode{hi} such that \inlinecode{sum(0, hi - 1) \textless{}= c}, assuming prefix sums are nondecreasing. It may return any value from 0 to \inlinecode{N}.
+  \item \inlinecode{max\_prefix(c)} returns the largest boundary \inlinecode{hi} such that \inlinecode{sum(0, hi - 1)} $\leq$ \inlinecode{c}, assuming prefix sums are nondecreasing. It may return any value from $0$ to \inlinecode{N}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(\log N)$ per call to all member functions.
@@ -7481,13 +7481,13 @@ Maintain a two-dimensional numerical array while supporting point increments and
 Choose among the three 2D Fenwick trees by coordinate range and update style. Use this dense version when the rows and columns are small enough to allocate the full grid: it has the simplest code and the best constants, supporting point updates and rectangle sums. Use the sparse 2D Fenwick tree (next section) when the coordinates are too large to store densely and the updates arrive online; it relies on hashing and is the only one of the three that also supports rectangle updates. Use the offline 2D Fenwick tree when the coordinates are large but every updated cell is known before the queries begin, which lets it coordinate-compress instead of hashing for markedly better constants than the sparse version. For non-additive aggregates such as min/max with custom updates, use a 2D segment tree or quadtree instead, since Fenwick-tree algebra relies on addition and subtraction.
 
 \begin{compactitem}
-  \item \inlinecode{Fenwick2D\textless{}T\textgreater{}(rows, cols)} constructs a \inlinecode{rows} by \inlinecode{cols} array with 0-based indices, with all values initialized to 0.
+  \item \inlinecode{Fenwick2D\textless{}T\textgreater{}(rows, cols)} constructs a \inlinecode{rows} by \inlinecode{cols} array with 0-based indices, with all values initialized to $0$.
   \item \inlinecode{size\_rows()} and \inlinecode{size\_cols()} return the number of rows and columns.
-  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
-  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
-  \item \inlinecode{at(r, c)} returns the value at index (\inlinecode{r}, \inlinecode{c}).
-  \item \inlinecode{sum(r, c)} returns the sum of the rectangle with corners (\inlinecode{0}, \inlinecode{0}) and (\inlinecode{r}, \inlinecode{c}), inclusive.
-  \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with upper-left corner (\inlinecode{r1}, \inlinecode{c1}) and lower-right corner (\inlinecode{r2}, \inlinecode{c2}), inclusive.
+  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index $({\inlinecodemath{r}}, {\inlinecodemath{c}})$.
+  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index $({\inlinecodemath{r}}, {\inlinecodemath{c}})$.
+  \item \inlinecode{at(r, c)} returns the value at index $({\inlinecodemath{r}}, {\inlinecodemath{c}})$.
+  \item \inlinecode{sum(r, c)} returns the sum of the rectangle with corners $(0, 0)$ and $({\inlinecodemath{r}}, {\inlinecodemath{c}})$, inclusive.
+  \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with upper-left corner $({\inlinecodemath{r1}}, {\inlinecodemath{c1}})$ and lower-right corner $({\inlinecodemath{r2}}, {\inlinecodemath{c2}})$, inclusive.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -7574,13 +7574,13 @@ Maintain a 2D numerical array over a huge index range while supporting rectangle
 Choose this for huge sparse grids when the operation is additive: point or rectangle increments and rectangle sums. It avoids allocating the dense \inlinecode{R*C} table of the dense 2D Fenwick tree, and unlike the dense and offline variants it supports rectangle updates, not just point updates. Prefer it over the offline 2D Fenwick tree only when updates arrive online; if every updated cell is known in advance, that version compresses coordinates instead of hashing and runs with better constants. It is less general than the sparse 2D segment tree or quadtrees because Fenwick-tree algebra relies on addition and subtraction.
 
 \begin{compactitem}
-  \item \inlinecode{SparseFenwick2D\textless{}T, R, C\textgreater{}()} constructs a 2D array over rows 0 to $R - 1$ (inclusive) and columns 0 to $C - 1$ (inclusive). All values are implicitly initialized to 0, as nodes are allocated lazily as indices are touched.
-  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
-  \item \inlinecode{add(r1, c1, r2, c2, x)} adds \inlinecode{x} to all indices in the rectangle with upper-left corner (\inlinecode{r1}, \inlinecode{c1}) and lower-right corner (\inlinecode{r2}, \inlinecode{c2}).
-  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
-  \item \inlinecode{sum(r, c)} returns the sum of the rectangle with upper-left corner (0, 0) and lower-right corner (\inlinecode{r}, \inlinecode{c}).
-  \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with upper-left corner (\inlinecode{r1}, \inlinecode{c1}) and lower-right corner (\inlinecode{r2}, \inlinecode{c2}).
-  \item \inlinecode{at(r, c)} returns the value at index (\inlinecode{r}, \inlinecode{c}).
+  \item \inlinecode{SparseFenwick2D\textless{}T, R, C\textgreater{}()} constructs a 2D array over rows $0$ to $R - 1$ (inclusive) and columns $0$ to $C - 1$ (inclusive). All values are implicitly initialized to $0$, as nodes are allocated lazily as indices are touched.
+  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index $({\inlinecodemath{r}}, {\inlinecodemath{c}})$.
+  \item \inlinecode{add(r1, c1, r2, c2, x)} adds \inlinecode{x} to all indices in the rectangle with upper-left corner $({\inlinecodemath{r1}}, {\inlinecodemath{c1}})$ and lower-right corner $({\inlinecodemath{r2}}, {\inlinecodemath{c2}})$.
+  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index $({\inlinecodemath{r}}, {\inlinecodemath{c}})$.
+  \item \inlinecode{sum(r, c)} returns the sum of the rectangle with upper-left corner $(0, 0)$ and lower-right corner $({\inlinecodemath{r}}, {\inlinecodemath{c}})$.
+  \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with upper-left corner $({\inlinecodemath{r1}}, {\inlinecodemath{c1}})$ and lower-right corner $({\inlinecodemath{r2}}, {\inlinecodemath{c2}})$.
+  \item \inlinecode{at(r, c)} returns the value at index $({\inlinecodemath{r}}, {\inlinecodemath{c}})$.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(\log\left(R\right) \cdot \log\left(C\right))$ per call to all member functions.
@@ -7708,13 +7708,13 @@ Usage is two-phase. First declare every cell that will be updated with \inlineco
 
 \begin{compactitem}
   \item \inlinecode{OfflineFenwick2D\textless{}T\textgreater{}()} constructs an empty structure in the declaration phase.
-  \item \inlinecode{reserve(r, c)} declares that the cell (\inlinecode{r}, \inlinecode{c}) may later be updated. Call before \inlinecode{build()}.
+  \item \inlinecode{reserve(r, c)} declares that the cell $({\inlinecodemath{r}}, {\inlinecodemath{c}})$ may later be updated. Call before \inlinecode{build()}.
   \item \inlinecode{build()} finalizes the coordinate compression. Call exactly once, after all \inlinecode{reserve()} calls.
-  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}), which must have been reserved.
-  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}), which must have been reserved.
-  \item \inlinecode{sum(r, c)} returns the sum of the rectangle with corners (\inlinecode{0}, \inlinecode{0}) and (\inlinecode{r}, \inlinecode{c}), inclusive.
-  \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with upper-left corner (\inlinecode{r1}, \inlinecode{c1}) and lower-right corner (\inlinecode{r2}, \inlinecode{c2}), inclusive.
-  \item \inlinecode{at(r, c)} returns the value at index (\inlinecode{r}, \inlinecode{c}).
+  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index $({\inlinecodemath{r}}, {\inlinecodemath{c}})$, which must have been reserved.
+  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index $({\inlinecodemath{r}}, {\inlinecodemath{c}})$, which must have been reserved.
+  \item \inlinecode{sum(r, c)} returns the sum of the rectangle with corners $(0, 0)$ and $({\inlinecodemath{r}}, {\inlinecodemath{c}})$, inclusive.
+  \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with upper-left corner $({\inlinecodemath{r1}}, {\inlinecodemath{c1}})$ and lower-right corner $({\inlinecodemath{r2}}, {\inlinecodemath{c2}})$, inclusive.
+  \item \inlinecode{at(r, c)} returns the value at index $({\inlinecodemath{r}}, {\inlinecodemath{c}})$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -7864,10 +7864,10 @@ int main() {
 \subsection{Disjoint Set Union}
 Maintain a set of elements partitioned into non-overlapping subsets. Each partition is assigned a unique representative known as the parent, or root. Each subset is stored as a tree whose nodes point toward its root: finding a representative follows parent pointers, redirecting visited nodes straight to the root along the way (path compression), while unions attach the smaller tree beneath the root of the larger one (union-by-size). Together these keep the trees nearly flat. Union-by-size is interchangeable with the union-by-rank strategy used by Sparse Disjoint Set Union and yields the same complexity bounds, but union-by-size additionally supports \inlinecode{set\_size()} queries.
 
-This version is simplified to work only on the fixed set of integer elements [$0$, \inlinecode{n}), chosen at construction. For arbitrary element types, see Sparse Disjoint Set Union.
+This version is simplified to work only on the fixed set of integer elements $[0, {\inlinecodemath{n}})$, chosen at construction. For arbitrary element types, see Sparse Disjoint Set Union.
 
 \begin{compactitem}
-  \item \inlinecode{DSU(n)} constructs \inlinecode{n} singleton partitions over elements [$0$, \inlinecode{n}).
+  \item \inlinecode{DSU(n)} constructs \inlinecode{n} singleton partitions over elements $[0, {\inlinecodemath{n}})$.
   \item \inlinecode{find\_root(u)} returns the unique representative of the partition containing \inlinecode{u}.
   \item \inlinecode{sets()} returns the current number of partitions.
   \item \inlinecode{set\_size(u)} returns the number of elements in the partition containing \inlinecode{u}.
@@ -8097,7 +8097,7 @@ Maintains disjoint sets while supporting rollback to previous snapshots. Rollbac
 Path compression is intentionally not used, because it is hard to undo. Union by size keeps tree height logarithmic, and every successful union records enough information to restore the previous state.
 
 \begin{compactitem}
-  \item \inlinecode{RollbackDSU(n)} constructs \inlinecode{n} singleton sets over elements [$0$, \inlinecode{n}).
+  \item \inlinecode{RollbackDSU(n)} constructs \inlinecode{n} singleton sets over elements $[0, {\inlinecodemath{n}})$.
   \item \inlinecode{count\_sets()} returns the current number of disjoint sets.
   \item \inlinecode{find\_root(u)} returns the representative of the set containing \inlinecode{u}.
   \item \inlinecode{is\_united(u, v)} returns whether \inlinecode{u} and \inlinecode{v} are in the same set.
@@ -8210,7 +8210,7 @@ Given a rooted tree or forest, determine the lowest common ancestor of any two n
 This implementation preprocesses binary ancestor jumps. During depth-first search, it records entry and exit times so ancestry can be tested in $O(1)$, records each node's depth and root, and stores \inlinecode{up[u][i]}, the $2^i$-th ancestor of each node \inlinecode{u}. To answer \inlinecode{lca(u, v)}, it first handles the case where one node is already an ancestor of the other, then jumps \inlinecode{u} upward by decreasing powers of two until its parent is the lowest common ancestor.
 
 \begin{compactitem}
-  \item \inlinecode{SparseTableLCA(adj)} builds the structure over a forest represented by a bidirectional adjacency list \inlinecode{adj} of nodes numbered [$0$, \inlinecode{n}), where \inlinecode{n} is \inlinecode{adj.size()}.
+  \item \inlinecode{SparseTableLCA(adj)} builds the structure over a forest represented by a bidirectional adjacency list \inlinecode{adj} of nodes numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}.
   \item \inlinecode{go\_up(u, k)} returns the $k$-th ancestor of node \inlinecode{u}, stopping at that tree's root if \inlinecode{k} is larger than \inlinecode{u}'s depth.
   \item \inlinecode{lca(u, v)} returns the lowest common ancestor of nodes \inlinecode{u} and \inlinecode{v}, or $-1$ if they are in different trees.
   \item \inlinecode{is\_ancestor(parent, child)} returns whether \inlinecode{parent} is an ancestor of \inlinecode{child}.
@@ -8355,7 +8355,7 @@ Given a rooted tree or forest, determine the lowest common ancestor of any two n
 This reduces LCA to a range-minimum query. An Euler tour of the forest records, at each visit to a node, that node's depth; the lowest common ancestor of $u$ and $v$ in the same tree is the shallowest node visited between their first occurrences in the tour, found by a range-minimum query over the depth sequence. This version answers those queries with a segment tree.
 
 \begin{compactitem}
-  \item \inlinecode{SegTreeLCA(adj)} builds the structure over a forest represented by a bidirectional adjacency list \inlinecode{adj} of nodes numbered [$0$, \inlinecode{n}), where \inlinecode{n} is \inlinecode{adj.size()}.
+  \item \inlinecode{SegTreeLCA(adj)} builds the structure over a forest represented by a bidirectional adjacency list \inlinecode{adj} of nodes numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}.
   \item \inlinecode{lca(u, v)} returns the lowest common ancestor of nodes \inlinecode{u} and \inlinecode{v}, or $-1$ if they are in different trees.
   \item \inlinecode{dist(u, v)} returns the number of edges on the path between nodes \inlinecode{u} and \inlinecode{v}, or $-1$ if they are in different trees.
 \end{compactitem}
@@ -8494,10 +8494,10 @@ Given a rooted tree and a subset of its nodes, build the virtual tree (also call
 The construction sorts the subset by depth-first entry time, which lists the nodes in the order a walk of the tree would meet them. The lowest common ancestor of any contiguous span of the subset is the minimum-depth node among the pairwise LCAs of adjacent entries, so it suffices to add the LCA of each adjacent pair, re-sort, and deduplicate. A single stack pass over the resulting nodes then links each one to its parent in the virtual tree: ancestors that are no longer on the path to the current node are popped, and the node on top becomes the parent. This implementation carries its own binary lifting so it is self-contained; given an existing lowest common ancestor structure, the same sort-and-stack logic applies directly.
 
 \begin{compactitem}
-  \item \inlinecode{VirtualTree(adj, root)} builds the structure over a tree rooted at \inlinecode{root}, given a bidirectional adjacency list \inlinecode{adj} of nodes numbered [$0$, \inlinecode{n}), where \inlinecode{n} is \inlinecode{adj.size()}.
+  \item \inlinecode{VirtualTree(adj, root)} builds the structure over a tree rooted at \inlinecode{root}, given a bidirectional adjacency list \inlinecode{adj} of nodes numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}.
   \item \inlinecode{lca(u, v)} returns the lowest common ancestor of nodes \inlinecode{u} and \inlinecode{v}.
-  \item \inlinecode{depth\_of(u)} returns the depth of \inlinecode{u} in the original tree (the root has depth 0). The original path length of a virtual-tree edge (\inlinecode{p}, \inlinecode{c}) is \inlinecode{depth\_of(c) - depth\_of(p)}.
-  \item \inlinecode{build(nodes)} returns the virtual tree induced by \inlinecode{nodes}. The result has \inlinecode{root} set to the topmost node (the common ancestor of \inlinecode{nodes}), \inlinecode{vertices} listing every original node ID in the virtual tree sorted by entry time, and \inlinecode{edges} listing each (\inlinecode{p}, \inlinecode{c}) pair in original IDs. Both the vertex set and the edges use the node numbering of the original tree. An empty input yields an empty result with \inlinecode{root} = $-1$.
+  \item \inlinecode{depth\_of(u)} returns the depth of \inlinecode{u} in the original tree (the root has depth 0). The original path length of a virtual-tree edge $({\inlinecodemath{p}}, {\inlinecodemath{c}})$ is \inlinecode{depth\_of(c) - depth\_of(p)}.
+  \item \inlinecode{build(nodes)} returns the virtual tree induced by \inlinecode{nodes}. The result has \inlinecode{root} set to the topmost node (the common ancestor of \inlinecode{nodes}), \inlinecode{vertices} listing every original node ID in the virtual tree sorted by entry time, and \inlinecode{edges} listing each $({\inlinecodemath{p}}, {\inlinecodemath{c}})$ pair in original IDs. Both the vertex set and the edges use the node numbering of the original tree. An empty input yields an empty result with \inlinecode{root} = $-1$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -8681,7 +8681,7 @@ Given a rooted tree or forest with weighted edges, aggregate the edge weights al
 The aggregate is a commutative monoid defined by \inlinecode{combine()} and its identity \inlinecode{identity()}. The two must be edited together; the defaults below compute the maximum edge weight on the path. For the minimum, use \inlinecode{std::min} with \inlinecode{std::numeric\_limits\textless{}W\textgreater{}::max()}; for the sum (the path length), use \inlinecode{a + b} with \inlinecode{W()}. Commutativity is required because the two half-paths are merged without regard to orientation. For an invertible aggregate such as the sum, an alternative that avoids the \inlinecode{agg} table is to store each node's weighted depth \inlinecode{dw[u]} and return \inlinecode{dw[u] + dw[v] - 2*dw[lca]}.
 
 \begin{compactitem}
-  \item \inlinecode{WeightedTreePath\textless{}W\textgreater{}(adj)} builds the structure over a forest given by a weighted, bidirectional adjacency list \inlinecode{adj}, where \inlinecode{adj[u]} holds \inlinecode{\{v, w\}} pairs for each edge \inlinecode{u}-\inlinecode{v} of weight \inlinecode{w}, over nodes numbered [$0$, \inlinecode{n}), where \inlinecode{n} is \inlinecode{adj.size()}.
+  \item \inlinecode{WeightedTreePath\textless{}W\textgreater{}(adj)} builds the structure over a forest given by a weighted, bidirectional adjacency list \inlinecode{adj}, where \inlinecode{adj[u]} holds \inlinecode{\{v, w\}} pairs for each edge \inlinecode{u}-\inlinecode{v} of weight \inlinecode{w}, over nodes numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}.
   \item \inlinecode{lca(u, v)} returns the lowest common ancestor of \inlinecode{u} and \inlinecode{v}, or $-1$ if they lie in different trees.
   \item \inlinecode{kth\_ancestor(u, k)} returns the $k$-th ancestor of \inlinecode{u}, stopping at that tree's root if \inlinecode{k} exceeds \inlinecode{u}'s depth.
   \item \inlinecode{is\_ancestor(parent, child)} returns whether \inlinecode{parent} is an ancestor of \inlinecode{child}.
@@ -8869,7 +8869,7 @@ The query operation is defined by an associative \inlinecode{combine()} function
 The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{compose\_deltas()}. A delta must act on an aggregate summary of a path of length \inlinecode{len}: \inlinecode{apply\_delta(v, d, len)} returns the aggregate after applying update \inlinecode{d} to every element represented by aggregate \inlinecode{v}. Pending deltas are combined in chronological order by \inlinecode{compose\_deltas(old, d)}, meaning ``apply \inlinecode{old}, then apply \inlinecode{d}''. These hooks do not support arbitrary query/update pairings; the delta operation must distribute over \inlinecode{combine()}, and composed deltas must have the same effect as applying their updates sequentially. The default code below defines updates that ``set'' a path's edges or nodes to a new value. For range increment updates, \inlinecode{apply\_delta(v, d, len)} would return \inlinecode{v + d} for min/max queries, or \inlinecode{v + d * len} for sum queries, and \inlinecode{compose\_deltas(old, d)} would return \inlinecode{old + d}.
 
 \begin{compactitem}
-  \item \inlinecode{HeavyLight\textless{}T\textgreater{}(adj, v)} constructs a new heavy light decomposition on a forest defined by the adjacency list \inlinecode{adj}, with all values initialized to \inlinecode{v}. The adjacency list must consist of only the integers [$0$, \inlinecode{n}), where \inlinecode{n} is \inlinecode{adj.size()}. No duplicate edges should exist.
+  \item \inlinecode{HeavyLight\textless{}T\textgreater{}(adj, v)} constructs a new heavy light decomposition on a forest defined by the adjacency list \inlinecode{adj}, with all values initialized to \inlinecode{v}. The adjacency list must consist of only the integers $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}. No duplicate edges should exist.
   \item \inlinecode{query(u, v)} returns the result of \inlinecode{combine()} applied to all values on the path from node \inlinecode{u} to node \inlinecode{v}. The nodes must be in the same tree.
   \item \inlinecode{update(u, v, d)} modifies all values on the path from node \inlinecode{u} to node \inlinecode{v} by respectively applying the delta \inlinecode{d}. The nodes must be in the same tree.
   \item \inlinecode{for\_each\_path(u, v, include\_lca, f)} decomposes the path from node \inlinecode{u} to node \inlinecode{v} into heavy path ranges and calls \inlinecode{f(path, lo, hi, up)} on each range, where \inlinecode{up} says the path segment is traversed upward from \inlinecode{u} toward the LCA. If values are stored on edges, pass \inlinecode{include\_lca = false} to skip the LCA's vertex slot. Returns false if \inlinecode{u} and \inlinecode{v} are in different trees.
@@ -9152,7 +9152,7 @@ Maintain an undirected forest dynamically using Euler Tour Trees. Each tree is r
 This version supports dynamic connectivity, \inlinecode{link}, \inlinecode{cut}, rerooting, and listing the vertices in a connected component. It does not store vertex aggregates. To add component aggregates, a common extension is to insert one self-loop occurrence per vertex and maintain aggregate data in the treap.
 
 \begin{compactitem}
-  \item \inlinecode{EulerTourTree(n)} constructs a forest on vertices numbered [$0$, \inlinecode{n}).
+  \item \inlinecode{EulerTourTree(n)} constructs a forest on vertices numbered $[0, {\inlinecodemath{n}})$.
   \item \inlinecode{connected(u, v)} returns whether \inlinecode{u} and \inlinecode{v} are in the same tree.
   \item \inlinecode{link(u, v)} adds an edge between different trees and returns false if the edge would create a cycle or already exists.
   \item \inlinecode{cut(u, v)} removes an existing edge and returns false if it is not present.
