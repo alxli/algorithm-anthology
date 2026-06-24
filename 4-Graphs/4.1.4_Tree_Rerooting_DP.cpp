@@ -169,9 +169,9 @@ vector<int64_t> sum_distances_all_roots(RerootingTree &tree) {
 }
 
 int main() {
-  // 0--1--2
-  //    |
-  //    3--4
+  // 0---1---2
+  //     |
+  //     3---4
   RerootingTree tree(5);
   tree.add_edge(0, 1);
   tree.add_edge(1, 2);

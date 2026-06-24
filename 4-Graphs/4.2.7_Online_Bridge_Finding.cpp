@@ -147,6 +147,9 @@ struct OnlineBridges {
 #include <cassert>
 
 int main() {
+  // 0---1
+  //   \ |
+  //     2---3
   OnlineBridges g(4);
   g.add_edge(0, 1);
   assert(g.bridges == 1);

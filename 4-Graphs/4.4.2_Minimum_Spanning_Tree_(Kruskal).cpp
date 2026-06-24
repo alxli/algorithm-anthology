@@ -85,25 +85,21 @@ Total distance: 13
 #include <iostream>
 using namespace std;
 
-void add_edge(int u, int v, int w) {
-  edges.emplace_back(w, u, v);
-}
-
 int main() {
   // Two connected components; MST routine returns a minimum spanning forest.
   //      w=4              w=1
   //   0 ----- 1        3 ----- 4
-  //    \     /                /  \.
-  // w=3 \   / w=6        w=2 /    \ w=4
-  //      \ /                / w=3  \.
-  //       2                5 ------ 6
-  add_edge(0, 1, 4);
-  add_edge(1, 2, 6);
-  add_edge(2, 0, 3);
-  add_edge(3, 4, 1);
-  add_edge(4, 5, 2);
-  add_edge(5, 6, 3);
-  add_edge(6, 4, 4);
+  //    \     /               / |
+  // w=3 \   / w=6      w=2 /   | w=4
+  //      \ /             / w=3 |
+  //       2            5 ----- 6
+  edges.emplace_back(4, 0, 1);  // (weight, u, v)
+  edges.emplace_back(6, 1, 2);
+  edges.emplace_back(3, 2, 0);
+  edges.emplace_back(1, 3, 4);
+  edges.emplace_back(2, 4, 5);
+  edges.emplace_back(3, 5, 6);
+  edges.emplace_back(4, 6, 4);
   int total = kruskal_mst(7);
   assert(total == 13);
   assert(mst.size() == 5);

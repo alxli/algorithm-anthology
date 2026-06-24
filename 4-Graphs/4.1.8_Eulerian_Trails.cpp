@@ -203,13 +203,38 @@ class EulerianGraph {
   }
 };
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+Directed Eulerian cycle: 0->1->3->4->1->2->0
+Undirected Eulerian cycle: 0->1->4->3->1->2->0
+Parallel-edge cycle: 0->1->0
+Directed Eulerian path: 0->1->2
+
+***/
 
 #include <cassert>
+#include <iostream>
 using namespace std;
+
+void print_vertices(const string &label, const vector<int> &vertices) {
+  cout << label << ": ";
+  for (int i = 0; i < static_cast<int>(vertices.size()); i++) {
+    if (i > 0) {
+      cout << "->";
+    }
+    cout << vertices[i];
+  }
+  cout << endl;
+}
 
 int main() {
   {
+    // 0 <--- 2
+    // |    ^ ^
+    // |   /  |
+    // v /    |
+    // 1 ---> 3 ---> 4
+    // ^_____________|
     EulerianGraph g(5, true);
     g.add_edge(0, 1);
     g.add_edge(1, 2);
@@ -221,8 +246,15 @@ int main() {
     assert(trail.edges.size() == 6);
     assert(trail.vertices.front() == 0 && trail.vertices.back() == 0);
     assert(trail.is_cycle());
+    print_vertices("Directed Eulerian cycle", trail.vertices);
   }
   {
+    // 0 ---- 2
+    // |     /|
+    // |   /  |
+    // | /    |
+    // 1 ---- 3 ---- 4
+    // |_____________|
     EulerianGraph g(5, false);
     g.add_edge(0, 1);
     g.add_edge(1, 2);
@@ -234,6 +266,7 @@ int main() {
     assert(trail.edges.size() == 6);
     assert(trail.vertices.front() == trail.vertices.back());
     assert(trail.is_cycle());
+    print_vertices("Undirected Eulerian cycle", trail.vertices);
   }
   {
     EulerianGraph g(2, false);
@@ -242,6 +275,7 @@ int main() {
     auto trail = g.eulerian_path(0);
     assert(trail.is_cycle());
     assert((trail.edges == vector<int>{a, b} || trail.edges == vector<int>{b, a}));
+    print_vertices("Parallel-edge cycle", trail.vertices);
   }
   {
     EulerianGraph g(3, true);
@@ -251,6 +285,7 @@ int main() {
     assert(trail.start == 0);
     assert((trail.vertices == vector<int>{0, 1, 2}));
     assert(!trail.is_cycle());
+    print_vertices("Directed Eulerian path", trail.vertices);
   }
   return 0;
 }

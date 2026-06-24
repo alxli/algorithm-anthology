@@ -92,13 +92,17 @@ std::pair<int64_t, std::vector<int>> stoer_wagner(std::vector<std::vector<int64_
 using namespace std;
 
 int main() {
-  // Triangle with edge weights 0-1: 2, 1-2: 3, 0-2: 1.
-  // Cuts: {0}|{1,2} = 3, {1}|{0,2} = 5, {2}|{0,1} = 4. Minimum is 3.
+  //      w=2
+  //   0 ----- 1
+  //    \     /
+  // w=1 \   / w=3
+  //       2
   vector<vector<int64_t>> adj{
       {0, 2, 1},
       {2, 0, 3},
       {1, 3, 0},
   };
+  // Cuts: {0}|{1,2} = 3, {1}|{0,2} = 5, {2}|{0,1} = 4. Minimum is 3.
   auto [weight, side] = stoer_wagner(adj);
   assert(weight == 3);
   assert((side == vector<int>{1, 2}));  // The shore {1, 2}, opposite the single vertex 0.

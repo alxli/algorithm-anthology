@@ -14,7 +14,7 @@ semantics in one place.
   $(i, i)$ for containing side $i \to i+1$, or $(i, j)$ for crossing sides $i \to i+1$ and
   $j \to j+1$.
 - `convex_polygon_tangents(poly, p)` returns the two tangent vertex indices from an outside point
-  `p` as $(left, right)$. The left tangent has all polygon vertices on or to the left of the
+  `p` as (`left`, `right`). The left tangent has all polygon vertices on or to the left of the
   directed line `p` $\to$ `poly[left]`; the right tangent is analogous for the right side.
 
 For integer-coordinate inputs, all tests are exact provided the cross products do not overflow.

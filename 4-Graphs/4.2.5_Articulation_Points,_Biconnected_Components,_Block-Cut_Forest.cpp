@@ -149,11 +149,11 @@ struct BiconnectedComponents {
 
 Articulation points: 1 5
 Biconnected components:
-1 2 
-4 5 
-0 1 5 
-3 7 
-6 
+1 2
+4 5
+0 1 5
+3 7
+6
 Adjacency List for Block-Cut Forest:
 0 => 5
 1 => 6
@@ -169,6 +169,9 @@ Adjacency List for Block-Cut Forest:
 using namespace std;
 
 int main() {
+  // 0---1---2    3---7
+  //   \ |
+  //     5---4
   BiconnectedComponents g(8);
   g.add_edge(0, 1);
   g.add_edge(0, 5);

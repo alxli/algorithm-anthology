@@ -120,7 +120,6 @@ class EdmondsKarp {
 #include <cassert>
 
 int main() {
-  EdmondsKarp<int> g(6);
   // Example graph after max flow, with each edge labeled flow/capacity:
   //            2/2
   //       1 --------> 3
@@ -132,6 +131,7 @@ int main() {
   // 2/3 \   / 2/2
   //      v /
   //       2
+  EdmondsKarp<int> g(6);
   g.add_edge(0, 1, 4);
   g.add_edge(0, 2, 3);
   g.add_edge(1, 3, 2);

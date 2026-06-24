@@ -90,12 +90,12 @@ void print_path(int u, int v) {
 }
 
 int main() {
-  init_floyd(3);
   //    w=1      w=2
   // 0 -----> 1 -----> 2
   // |                 ^
   // +-----------------+
   //         w=5
+  init_floyd(3);
   dist[0][1] = 1;
   dist[1][2] = 2;
   dist[0][2] = 5;

@@ -78,11 +78,11 @@ void print_path(int dest) {
 }
 
 int main() {
+  // 0 --> 1 --> 2
+  //       |     |
+  //       v     |
+  //       3 <---+
   adj.assign(4, {});
-  // 0 -> 1 -> 2
-  //      |    | 
-  //      v    |
-  //      3 <--+
   adj[0].push_back(1);
   adj[1].push_back(2);
   adj[1].push_back(3);

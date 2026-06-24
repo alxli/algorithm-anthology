@@ -83,10 +83,6 @@ Take the path: 0->1->3->4.
 #include <iostream>
 using namespace std;
 
-void add_edge(int u, int v, int w) {
-  adj[u].emplace_back(v, w);
-}
-
 void print_path(int dest) {
   vector<int> path;
   for (int j = dest; pred[j] != -1; j = pred[j]) {
@@ -101,20 +97,20 @@ void print_path(int dest) {
 }
 
 int main() {
-  int start = 0, dest = 4;
-  adj.assign(5, {});
   //        w=1    w=-2     w=3  
   //     0 ----> 1 ----> 3 -----> 4
   //     |     /        ^
   // w=5 |   / w=1     /
   //     v v          /w=1
   //     2 ----------+
-  add_edge(0, 1, 1);
-  add_edge(0, 2, 5);
-  add_edge(1, 2, 1);
-  add_edge(1, 3, -2);  // A negative edge, which Dijkstra could not handle.
-  add_edge(2, 3, 1);
-  add_edge(3, 4, 3);
+  adj.assign(5, {});
+  adj[0].emplace_back(1, 1);
+  adj[0].emplace_back(2, 5);
+  adj[1].emplace_back(2, 1);
+  adj[1].emplace_back(3, -2);  // A negative edge, which Dijkstra could not handle.
+  adj[2].emplace_back(3, 1);
+  adj[3].emplace_back(4, 3);
+  int start = 0, dest = 4;
   dag_shortest_path(start);
   assert(dist[dest] == 2);
   assert(pred[dest] == 3 && pred[3] == 1);

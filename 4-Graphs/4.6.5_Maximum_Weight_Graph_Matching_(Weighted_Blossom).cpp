@@ -379,24 +379,30 @@ class WeightedGeneralMatching {
 using namespace std;
 
 int main() {
-  // A 5-cycle 0-1-2-3-4-0; the heaviest matching picks two disjoint edges.
+  //   w=5   w=6   w=5   w=6
+  // 0-----1-----2-----3-----4
+  //  \_____________________/
+  //            w=5
   WeightedGeneralMatching m(5);
   m.add_edge(0, 1, 5);
   m.add_edge(1, 2, 6);
   m.add_edge(2, 3, 5);
   m.add_edge(3, 4, 6);
   m.add_edge(4, 0, 5);
-  assert(m.solve() == 12);  // Edges (1,2) and (3,4) with weights 6 + 6.
+  assert(m.solve() == 12);  // Edges 1-2 and 3-4 with weights 6 + 6.
   assert(m.partner(1) == 2 && m.partner(2) == 1);
   assert(m.partner(3) == 4 && m.partner(4) == 3);
   assert(m.partner(0) == -1);  // Node 0 is left unmatched.
 
-  // A triangle plus a pendant edge: taking the pendant can beat a single triangle edge.
+  //   w=3   w=3   w=5
+  // 0-----1-----2-----3
+  //  \_________/
+  //      w=3
   WeightedGeneralMatching t(4);
   t.add_edge(0, 1, 3);
   t.add_edge(1, 2, 3);
   t.add_edge(0, 2, 3);
   t.add_edge(2, 3, 5);
-  assert(t.solve() == 8);  // (0,1) weight 3 and (2,3) weight 5.
+  assert(t.solve() == 8);  // Edges 0-1 and 2-3 with weights 3 + 5.
   return 0;
 }

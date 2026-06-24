@@ -104,9 +104,14 @@ struct TwoSAT {
   }
 };
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+Assignment: 1 1 1
+
+***/
 
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 int main() {
@@ -121,5 +126,10 @@ int main() {
   solver.add(1, true, 2, false);
   assert(solver.satisfiable());
   assert(solver.answer[0]);
+  cout << "Assignment:";
+  for (bool value : solver.answer) {
+    cout << " " << value;
+  }
+  cout << endl;
   return 0;
 }

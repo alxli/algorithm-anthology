@@ -12,8 +12,8 @@ residual edges carry negated costs.
 - `edge_flow(id)` returns the flow through a previously added edge.
 - `clear_flow()` resets all edge flows to zero.
 - `min_cost_flow(source, sink, target_flow)` sends up to `target_flow` additional units of flow and
-  returns $(flow, cost)$ for the flow sent by that call. If the returned flow is smaller than
-  `target_flow`, the residual network cannot carry the requested amount.
+  returns a pair (`flow`, `cost`) for the flow sent by that call. If the returned flow is smaller
+  than `target_flow`, the residual network cannot carry the requested amount.
 
 This implementation uses shortest augmenting paths with SPFA, so it supports negative edge costs as
 long as the residual graph has no reachable negative-cost cycle. For dense or adversarial inputs, a
@@ -129,7 +129,6 @@ class MinCostMaxFlow {
 using namespace std;
 
 int main() {
-  MinCostMaxFlow<int> g(6);
   // Example graph after max flow, with each edge labeled flow/capacity:
   //            2/2
   //       1 --------> 3
@@ -141,6 +140,7 @@ int main() {
   // 2/3 \   / 2/2
   //      v /
   //       2
+  MinCostMaxFlow<int> g(6);
   int id01 = g.add_edge(0, 1, 4, 1);
   g.add_edge(0, 2, 3, 1);
   g.add_edge(1, 3, 2, 1);

@@ -135,17 +135,27 @@ Cycle: 0->1->2->0
 using namespace std;
 
 int main() {
+  // Complete directed graph where 0->1->2->0 costs 1 + 2 + 3.
+  // The reverse cycle is intentionally more expensive.
+  //         0 <-------+
+  //       ^ | \       |
+  //      /  |  \      |
+  //     /   |   \     |
+  // w=7| w=1|    \w=1 |w=3
+  //    |    |     \   |
+  //    |    |      \  |
+  //    |    v  w=2  v |
+  //    +--- 1 ------> 2
+  //          ^_______/
+  //             w=5
   int nodes = 3;
   adj.assign(nodes, std::vector<int64_t>(nodes));
-  // Complete directed graph where 0 -> 1 -> 2 costs 1 + 2 + 3.
-  // The reverse cycle is intentionally more expensive.
   adj[0][1] = 1;
   adj[0][2] = 1;
   adj[1][0] = 7;
   adj[1][2] = 2;
   adj[2][0] = 3;
   adj[2][1] = 5;
-
   int64_t path_len = shortest_hamiltonian_path();
   assert(path_len == 3);
   assert((path == vector<int>{0, 1, 2}));

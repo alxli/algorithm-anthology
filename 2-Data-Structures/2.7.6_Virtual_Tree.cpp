@@ -151,9 +151,7 @@ int main() {
   //        / |
   //       1  2
   //      /|  |
-  //     3 4  5
-  //    /     |
-  //   6      7
+  //  6--3 4  5--7
   vector<vector<int>> adj(8);
   add_edge(adj, 0, 1);
   add_edge(adj, 0, 2);

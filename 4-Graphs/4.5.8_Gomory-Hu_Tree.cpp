@@ -10,7 +10,7 @@ computations. After computing the minimum cut between vertex $s$ and its current
 the $s$ side of that cut are reparented under $s$, gradually refining the cut-equivalent tree.
 
 - `gomory_hu(n, edges)` returns the $`n` - 1$ edges of a Gomory-Hu tree as $(`u`, `v`, `weight`)$
-  tripes for an undirected, weighted graph with `n` nodes and `edges` of the same shape.
+  triplets for an undirected, weighted graph with `n` nodes and `edges` of the same shape.
 - `min_cut_value(n, tree, source, sink)` returns the minimum cut value between two vertices using a
   Gomory-Hu tree. Note that for many pairwise cut queries on the same tree, it's more efficient to
   prebuild the tree adjacency once and answer minimum edge-on-path queries with LCA/binary lifting
@@ -189,12 +189,26 @@ T min_cut_value(int n, const std::vector<Edge<T>> &tree, int source, int sink) {
   return min_cut_value_dfs(adj, seen, source, sink, std::numeric_limits<T>::max());
 }
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+Gomory-Hu tree:
+1 -- 0 (5)
+2 -- 1 (5)
+3 -- 2 (6)
+mincut(2, 3) = 6
+
+***/
 
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 int main() {
+  //      w=3      w=2
+  //   0 -----> 1 -----> 3
+  //    \    w=1|       ^
+  // w=2 \      v      / w=4
+  //      +---> 2 ----+
   vector<Edge<int>> edges{
       {0, 1, 3}, {0, 2, 2}, {1, 2, 1}, {1, 3, 2}, {2, 3, 4},
   };
@@ -204,5 +218,10 @@ int main() {
   assert(min_cut_value(4, tree, 0, 2) == 5);
   assert(min_cut_value(4, tree, 0, 3) == 5);
   assert(min_cut_value(4, tree, 2, 3) == 6);
+  cout << "Gomory-Hu tree:" << endl;
+  for (auto [u, v, w] : tree) {
+    cout << u << " -- " << v << " (" << w << ")" << endl;
+  }
+  cout << "mincut(2, 3) = " << min_cut_value(4, tree, 2, 3) << endl;
   return 0;
 }

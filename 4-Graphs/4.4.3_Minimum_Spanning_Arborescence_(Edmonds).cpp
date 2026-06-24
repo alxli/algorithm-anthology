@@ -15,7 +15,7 @@ cycle remains.
 
 - `directed_mst(n, root, edges)` returns the total weight of the minimum spanning arborescence
   rooted at `root` over `n` nodes numbered $[0, `n`)$, or $-1$ if some node is unreachable from the
-  root (no arborescence exists). Edges are given as $(`from`, `to`, `weight`)$ triples; parallel edges
+  root (no arborescence exists). Edges are given as (`from`, `to`, `weight`) triples; parallel edges
   and self-loops are allowed, with self-loops simply ignored.
 
 Time Complexity:
@@ -27,23 +27,21 @@ Space Complexity:
 */
 
 #include <cstdint>
+#include <tuple>
 #include <vector>
 
-struct Edge {
-  int u, v;
-  int64_t weight;
-};
+using Edge = std::tuple<int, int, int64_t>;  // (u, v, weight)
 
 int64_t directed_mst(int n, int root, std::vector<Edge> edges) {
   const int64_t INF = INT64_MAX / 4;
-  int64_t result = 0;
+  int64_t total_dist = 0;
   while (true) {
     std::vector<int64_t> min_in(n, INF);
     std::vector<int> pre(n, -1);
-    for (const Edge &e : edges) {
-      if (e.u != e.v && e.weight < min_in[e.v]) {
-        min_in[e.v] = e.weight;
-        pre[e.v] = e.u;
+    for (const auto &[u, v, w] : edges) {
+      if (u != v && w < min_in[v]) {
+        min_in[v] = w;
+        pre[v] = u;
       }
     }
     for (int v = 0; v < n; v++) {
@@ -56,7 +54,7 @@ int64_t directed_mst(int n, int root, std::vector<Edge> edges) {
     std::vector<int> comp(n, -1), seen(n, -1);
     min_in[root] = 0;
     for (int v = 0; v < n; v++) {
-      result += min_in[v];
+      total_dist += min_in[v];
       int u = v;
       while (seen[u] != v && comp[u] == -1 && u != root) {
         seen[u] = v;
@@ -78,34 +76,52 @@ int64_t directed_mst(int n, int root, std::vector<Edge> edges) {
         comp[v] = cycles++;
       }
     }
-    for (Edge &e : edges) {
-      int u = comp[e.u], v = comp[e.v];
-      if (u != v) {
-        e.weight -= min_in[e.v];
+    for (auto &[u, v, w] : edges) {
+      int cu = comp[u], cv = comp[v];
+      if (cu != cv) {
+        w -= min_in[v];
       }
-      e.u = u;
-      e.v = v;
+      u = cu;
+      v = cv;
     }
     n = cycles;
     root = comp[root];
   }
-  return result;
+  return total_dist;
 }
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+Minimum arborescence weight: 6
+Disconnected arborescence weight: -1
+
+***/
 
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 int main() {
-  // Root 0. Cheapest incoming edges 1<-0 (1), 2<-1 (2), 3<-2 (3) form a tree of weight 6.
+  //          w=1
+  // root=0 -----> 1 <-----+
+  //      |      / |       |
+  //      |   w=2  |       |
+  //   w=5|  /     |w=2    |w=4
+  //      v v      v       |
+  //      2 -----> 3 ------+
+  //          w=3
   vector<Edge> edges{
       {0, 1, 1}, {0, 2, 5}, {1, 2, 2}, {2, 3, 3}, {3, 1, 4},
   };
-  assert(directed_mst(4, 0, edges) == 6);
+  int64_t weight = directed_mst(4, 0, edges);
+  assert(weight == 6);  // Cheapest edges 0->1->2->3 form a tree of weight 6.
+  cout << "Minimum arborescence weight: " << weight << endl;
 
-  // Node 3 is unreachable from root 0.
+  //        w=1    w=2
+  // root=0 ---> 1 ---> 2       3
   vector<Edge> disconnected{{0, 1, 1}, {1, 2, 1}};
-  assert(directed_mst(4, 0, disconnected) == -1);
+  int64_t disconnected_weight = directed_mst(4, 0, disconnected);
+  assert(disconnected_weight == -1);  // Node 3 is unreachable from root 0.
+  cout << "Disconnected arborescence weight: " << disconnected_weight << endl;
   return 0;
 }

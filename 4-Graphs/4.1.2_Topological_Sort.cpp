@@ -94,7 +94,6 @@ The topological order: 2 1 0 4 3 7 6 5
 using namespace std;
 
 int main() {
-  adj.assign(8, {});
   //        1
   //        |
   //        v
@@ -102,8 +101,8 @@ int main() {
   // |      | ╲
   // v      v  v
   // 4 ---> 6  7 <--- 2
-  // ^                |
-  //  \_______________|
+  // ^________________|
+  adj.assign(8, {});
   adj[0].push_back(3);
   adj[0].push_back(4);
   adj[1].push_back(3);

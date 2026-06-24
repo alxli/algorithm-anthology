@@ -124,8 +124,6 @@ std::vector<char> min_cut(int source) {
 #include <cassert>
 
 int main() {
-  int nodes = 6;
-  cap.assign(nodes, std::vector<int>(nodes));
   // Example graph after max flow, with each edge labeled flow/capacity:
   //            2/2
   //       1 --------> 3
@@ -137,6 +135,8 @@ int main() {
   // 2/3 \   / 2/2
   //      v /
   //       2
+  int nodes = 6;
+  cap.assign(nodes, std::vector<int>(nodes));
   cap[0][1] = 4;
   cap[0][2] = 3;
   cap[1][3] = 2;

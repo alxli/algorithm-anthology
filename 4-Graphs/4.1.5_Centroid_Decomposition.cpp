@@ -74,20 +74,21 @@ class CentroidDecomposition {
 #include <cassert>
 using namespace std;
 
-void add_edge(vector<vector<int>> &adj, int u, int v) {
-  adj[u].push_back(v);
-  adj[v].push_back(u);
-}
-
 int main() {
+  // 0---1---3---5---6
+  //     |   |
+  //     2   4
   vector<vector<int>> adj(7);
-  add_edge(adj, 0, 1);
-  add_edge(adj, 1, 2);
-  add_edge(adj, 1, 3);
-  add_edge(adj, 3, 4);
-  add_edge(adj, 3, 5);
-  add_edge(adj, 5, 6);
-
+  auto add_edge = [&](int u, int v) {
+    adj[u].push_back(v);
+    adj[v].push_back(u);
+  };
+  add_edge(0, 1);
+  add_edge(1, 2);
+  add_edge(1, 3);
+  add_edge(3, 4);
+  add_edge(3, 5);
+  add_edge(5, 6);
   CentroidDecomposition tree(adj);
   assert(tree.parent(3) == -1);
   assert(tree.parent(1) == 3);

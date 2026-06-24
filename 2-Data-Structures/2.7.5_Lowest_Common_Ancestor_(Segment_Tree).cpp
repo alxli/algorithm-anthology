@@ -119,6 +119,9 @@ void add_edge(vector<vector<int>> &adj, int u, int v) {
 }
 
 int main() {
+  // 0---1---2    5---6
+  // |   |
+  // 4   3
   vector<vector<int>> adj(7);
   add_edge(adj, 0, 1);
   add_edge(adj, 0, 4);

@@ -148,26 +148,36 @@ int matching_size(const vector<int> &match) {
 };
 
 int main() {
-  int nodes = 4;
-  adj.assign(nodes, {});
-  add_edge(0, 1);
-  add_edge(1, 2);
-  add_edge(2, 3);
-  add_edge(3, 0);
-  vector<int> match = blossom(adj);
-  cout << "Matched " << matching_size(match) << " pair(s):" << endl;
-  for (int i = 0; i < nodes; i++) {
-    if (match[i] != -1 && i < match[i]) {
-      cout << i << " " << match[i] << endl;
+  {
+    // 0---1---2
+    //  \      |
+    //   \____ 3
+    int nodes = 4;
+    adj.assign(nodes, {});
+    add_edge(0, 1);
+    add_edge(1, 2);
+    add_edge(2, 3);
+    add_edge(3, 0);
+    vector<int> match = blossom(adj);
+    cout << "Matched " << matching_size(match) << " pair(s):" << endl;
+    for (int i = 0; i < nodes; i++) {
+      if (match[i] != -1 && i < match[i]) {
+        cout << i << " " << match[i] << endl;
+      }
     }
   }
-  nodes = 5;
-  adj.assign(nodes, {});
-  add_edge(0, 1);
-  add_edge(1, 2);
-  add_edge(2, 0);
-  add_edge(0, 3);
-  add_edge(1, 4);
-  assert(matching_size(blossom(adj)) == 2);
+  {
+    // 3---0---1---4
+    //     |   |
+    //     +---2
+    int nodes = 5;
+    adj.assign(nodes, {});
+    add_edge(0, 1);
+    add_edge(1, 2);
+    add_edge(2, 0);
+    add_edge(0, 3);
+    add_edge(1, 4);
+    assert(matching_size(blossom(adj)) == 2);
+  }
   return 0;
 }

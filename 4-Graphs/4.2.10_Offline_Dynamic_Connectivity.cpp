@@ -171,15 +171,18 @@ using namespace std;
 
 int main() {
   OfflineDynamicConnectivity dc(4);
+  // 0   1   2   3
   dc.count_components();  // 4 isolated vertices.
   dc.add_edge(0, 1);
   dc.add_edge(2, 3);
-  dc.count_components();  // {0,1} {2,3} -> 2 components.
+  // 0---1   2---3
+  dc.count_components();  // 2 components.
   dc.add_edge(1, 2);
-  dc.count_components();  // All four connected -> 1 component.
+  // 0---1---2---3
+  dc.count_components();  // All connected => 1 component.
   dc.remove_edge(1, 2);
+  // 0---1   2---3
   dc.count_components();  // Back to 2 components.
-
   assert((dc.solve() == vector<int>{4, 2, 1, 2}));
   return 0;
 }

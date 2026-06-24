@@ -98,13 +98,13 @@ Components:
 using namespace std;
 
 int main() {
-  TarjanSCC g(8);
   // 0 ---> 1 ----> 2 <---> 3
   // ^    / |       |       ^
   // |   /  |       |       |
   // |  /   |       |       v
   // | v    v       v       7
   // 4 ---> 5 <---> 6 <----/
+  TarjanSCC g(8);
   g.add_edge(0, 1);
   g.add_edge(1, 2);
   g.add_edge(1, 4);

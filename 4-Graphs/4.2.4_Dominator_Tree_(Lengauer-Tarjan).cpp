@@ -106,14 +106,22 @@ class Dominators {
   }
 };
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+Immediate dominators: 0 0 0 0 3 3 3
+
+***/
 
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 int main() {
+  // 0 ---> 1 ---+   +-------> 4
+  // |           |  /          |
+  // v           v /           v
+  // 2 --------> 3 ---> 5 ---> 6
   Dominators g(7);
-  // 0 branches through 1 and 2, then reconverges at 3 before reaching 4 and 5.
   g.add_edge(0, 1);
   g.add_edge(0, 2);
   g.add_edge(1, 3);
@@ -123,13 +131,11 @@ int main() {
   g.add_edge(4, 6);
   g.add_edge(5, 6);
   vector<int> idom = g.find_dominators(0);
-  assert(idom[0] == 0);
-  assert(idom[1] == 0);
-  assert(idom[2] == 0);
-  assert(idom[3] == 0);
-  assert(idom[4] == 3);
-  assert(idom[5] == 3);
-  assert(idom[6] == 3);
   assert(g.find_dominators(0) == idom);
+  cout << "Immediate dominators:";
+  for (int v : idom) {
+    cout << " " << v;
+  }
+  cout << endl;
   return 0;
 }

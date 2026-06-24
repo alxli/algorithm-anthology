@@ -111,14 +111,13 @@ void add_edge(int u, int v) {
 }
 
 int main() {
+  //      0
+  //    /  |
+  //   1---4---2
+  //    \ /   /
+  //     3---+
   int nodes = 5;
   adj.assign(nodes, std::vector<char>(nodes));
-  // Wheel-like graph with vertex 4 adjacent to every outer edge endpoint.
-  //     0
-  //    / \.
-  //   1---4---2
-  //    \ / \ /
-  //     3---+
   add_edge(0, 1);
   add_edge(0, 4);
   add_edge(1, 3);

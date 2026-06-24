@@ -140,16 +140,24 @@ class FunctionalGraph {
   }
 };
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+Cycle count: 1
+dist_to_cycle[5] = 3
+successor(5, 4) = 2
+
+***/
 
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 int main() {
-  // Cycle 0 -> 1 -> 2 -> 0, with a tail 5 -> 4 -> 3 -> 1 and 6 -> 2.
-  vector<int> f{1, 2, 0, 1, 3, 4, 2};
-  FunctionalGraph g(f);
-
+  // 0 --> 1 <-- 3 <-- 4 <-- 5
+  //  ^   /
+  //   \ v
+  //    2 <-- 6
+  FunctionalGraph g({1, 2, 0, 1, 3, 4, 2});
   assert(g.on_cycle(0) && g.on_cycle(1) && g.on_cycle(2));
   assert(!g.on_cycle(3) && !g.on_cycle(5));
   assert(g.num_cycles() == 1);
@@ -164,5 +172,8 @@ int main() {
   assert(g.successor(5, 3) == 1);    // 5 -> 4 -> 3 -> 1.
   assert(g.successor(5, 4) == 2);    // One more step around into the cycle.
   assert(g.successor(0, 100) == 1);  // 100 mod 3 == 1 step around the cycle.
+  cout << "Cycle count: " << g.num_cycles() << endl;
+  cout << "dist_to_cycle[5] = " << g.dist_to_cycle(5) << endl;
+  cout << "successor(5, 4) = " << g.successor(5, 4) << endl;
   return 0;
 }

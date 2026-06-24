@@ -111,6 +111,15 @@ void add_edge(int u, int v) {
 }
 
 int main() {
+  //          0(10)
+  //         / / |
+  //       /  /  |
+  //     /   /   |
+  // 1(20)---+---3(40)---4(50)
+  //     \   |   /      /
+  //      \  |  /      /
+  //       \ | /      /
+  //        2(30)----+
   int nodes = 5;
   adj.assign(nodes, std::vector<char>(nodes));
   w.assign(nodes, 0);

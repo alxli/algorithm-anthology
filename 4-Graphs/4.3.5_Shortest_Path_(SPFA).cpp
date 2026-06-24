@@ -81,10 +81,6 @@ Take the path: 0->1->2->3.
 #include <iostream>
 using namespace std;
 
-void add_edge(int u, int v, int w) {
-  adj[u].emplace_back(v, w);
-}
-
 void print_path(int dest) {
   vector<int> path;
   for (int j = dest; pred[j] != -1; j = pred[j]) {
@@ -99,7 +95,6 @@ void print_path(int dest) {
 }
 
 int main() {
-  adj.assign(4, {});
   //        w=4
   //     0 ----> 1
   //     |      /
@@ -107,10 +102,11 @@ int main() {
   //     |  /
   //     v v   w=3
   //     2 ---------> 3
-  add_edge(0, 1, 4);
-  add_edge(0, 2, 5);
-  add_edge(1, 2, -2);
-  add_edge(2, 3, 3);
+  adj.assign(4, {});
+  adj[0].emplace_back(1, 4);
+  adj[0].emplace_back(2, 5);
+  adj[1].emplace_back(2, -2);
+  adj[2].emplace_back(3, 3);
   int start = 0, dest = 3;
   spfa(start);
   assert(dist[dest] == 5);

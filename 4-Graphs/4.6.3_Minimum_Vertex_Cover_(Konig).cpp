@@ -129,10 +129,8 @@ int main() {
   adj[1].push_back(2);
   adj[2].push_back(2);
   adj[2].push_back(3);
-
   vector<int> cover = min_vertex_cover(n2);
   assert(cover.size() == 3);  // Equals the maximum matching size, by Koenig's theorem.
-
   // The cover is valid: every edge has at least one endpoint in it.
   for (int u = 0; u < n1; u++) {
     for (int v : adj[u]) {

@@ -76,8 +76,6 @@ Take the path: 0->1->2->3.
 #include <iostream>
 using namespace std;
 
-vector<vector<pair<int, int64_t>>> adj;
-
 void print_path(const vector<int> &pred, int dest) {
   vector<int> path;
   for (int j = dest; pred[j] != -1; j = pred[j]) {
@@ -92,13 +90,13 @@ void print_path(const vector<int> &pred, int dest) {
 }
 
 int main() {
-  adj.assign(4, {});
   //     w=2     w=2    
   //  0 ----> 1 ----> 2
   //   \      |      /
   // w=8\  w=4|     /w=1
   //     \    v    /
   //      --> 3 <--
+  vector<vector<pair<int, int64_t>>> adj(4);
   adj[0].emplace_back(1, 2);
   adj[0].emplace_back(3, 8);
   adj[1].emplace_back(2, 2);

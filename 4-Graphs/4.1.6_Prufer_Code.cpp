@@ -97,12 +97,16 @@ std::vector<std::pair<int, int>> decode_prufer(const std::vector<int> &code) {
 using namespace std;
 
 int main() {
-  vector<vector<int>> adj;
+  //     0
+  //     |
+  // 1---3---2
+  //     |
+  //     4
+  vector<vector<int>> adj(5);
   auto add_edge = [&](int u, int v) {
     adj[u].push_back(v);
     adj[v].push_back(u);
   };
-  adj.assign(5, {});
   add_edge(0, 3);
   add_edge(1, 3);
   add_edge(2, 3);

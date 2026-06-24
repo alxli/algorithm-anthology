@@ -13,8 +13,8 @@ remain nonnegative on the updated residual graph.
 - `edge_flow(id)` returns the flow through a previously added edge.
 - `clear_flow()` resets all edge flows to zero.
 - `min_cost_flow(source, sink, target_flow)` sends up to `target_flow` additional units of flow and
-  returns $(flow, cost)$ for the flow sent by that call. If the returned flow is smaller than
-  `target_flow`, the residual network cannot carry the requested amount.
+  returns a pair (`flow`, `cost`) for the flow sent by that call. If the returned flow is smaller
+  than `target_flow`, the residual network cannot carry the requested amount.
 
 If all initial edge costs are nonnegative, the initial potentials can be zero and the first shortest
 path search is already Dijkstra-safe. If negative costs are present, this implementation first runs
@@ -179,7 +179,6 @@ class MinCostMaxFlow {
 using namespace std;
 
 int main() {
-  MinCostMaxFlow<int> g(6);
   // Example graph after max flow, with each edge labeled flow/capacity:
   //            2/2
   //       1 --------> 3
@@ -191,6 +190,7 @@ int main() {
   // 2/3 \   / 2/2
   //      v /
   //       2
+  MinCostMaxFlow<int> g(6);
   int id01 = g.add_edge(0, 1, 4, 1);
   g.add_edge(0, 2, 3, 1);
   g.add_edge(1, 3, 2, 1);

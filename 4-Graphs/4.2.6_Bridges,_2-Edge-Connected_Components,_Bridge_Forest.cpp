@@ -124,12 +124,12 @@ Bridges:
 5 4
 3 7
 2-edge-connected components:
-0 1 5 
-2 
-3 
-4 
-6 
-7 
+0 1 5
+2
+3
+4
+6
+7
 Adjacency List for Bridge Forest:
 0 => 1 3
 1 => 0
@@ -144,6 +144,9 @@ Adjacency List for Bridge Forest:
 using namespace std;
 
 int main() {
+  // 0---1---2    3---7
+  //   \ |
+  //     5---4
   BridgeDecomposition g(8);
   g.add_edge(0, 1);
   g.add_edge(0, 5);

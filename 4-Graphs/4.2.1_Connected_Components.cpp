@@ -59,6 +59,7 @@ void add_edge(int u, int v) {
 }
 
 int main() {
+  // 0---1---2    3---4
   adj.assign(6, {});
   add_edge(0, 1);
   add_edge(1, 2);

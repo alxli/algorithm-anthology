@@ -102,12 +102,12 @@ Matched 3 pair(s):
 using namespace std;
 
 int main() {
-  int n1 = 3, n2 = 4;
-  adj.assign(n1, {});
   // Left vertices L0..L2, right vertices R0..R3:
   //   L0 -- R1
   //   L1 -- R0, R1, R2
   //   L2 -- R2, R3
+  int n1 = 3, n2 = 4;
+  adj.assign(n1, {});
   adj[0].push_back(1);
   adj[1].push_back(0);
   adj[1].push_back(1);

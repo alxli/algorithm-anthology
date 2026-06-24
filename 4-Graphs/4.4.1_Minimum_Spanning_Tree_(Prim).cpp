@@ -96,14 +96,15 @@ void add_edge(int u, int v, int w) {
 }
 
 int main() {
-  adj.assign(7, {});
   // Two connected components; MST routine returns a minimum spanning forest.
   //      w=4              w=1
   //   0 ----- 1        3 ----- 4
-  //    \     /                /  \.
-  // w=3 \   / w=6        w=2 /    \ w=4
-  //      \ /                / w=3  \.
-  //       2                5 ------ 6
+  //    \     /               / |
+  // w=3 \   / w=6      w=2 /   | w=4
+  //      \ /             / w=3 |
+  //       2            5 ----- 6
+  adj.assign(7, {});
+  edge_endpoints.clear();
   add_edge(0, 1, 4);
   add_edge(1, 2, 6);
   add_edge(2, 0, 3);
