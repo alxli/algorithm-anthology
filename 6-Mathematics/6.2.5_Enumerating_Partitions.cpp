@@ -3,6 +3,11 @@
 A partition of a natural number $n$ is a way to write $n$ as a sum of positive integers where the
 order of the addends does not matter.
 
+The lexicographic successor edits the suffix of a non-increasing partition: increase the rightmost
+part that can grow without breaking the order, then refill the remaining sum with ones. Ranking and
+unranking use a dynamic-programming table that counts partitions of a remaining sum by their next
+part. This lets the algorithms skip whole blocks of partitions sharing a common prefix.
+
 - `next_partition(p)` takes a reference to a vector `p` of positive integers as a partition of $n$
   for which the function will re-assign to become the next lexicographically greater partition. The
   function returns true if such a partition exists, or false if `p` already consists of the

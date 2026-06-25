@@ -5,6 +5,12 @@ size $k$ subset of the integers from $0$ to $n - 1$, for $0 \leq k \leq n$. Ther
 \mathbin{\text{permute}} k$ possible arrangements, but $n^k$ possible arrangements if repeated
 values are allowed.
 
+For arrangements without repeats, each prefix fixes some used values and leaves a shrinking set of
+choices for the remaining positions. Ranking counts how many unused smaller choices could have been
+placed at the current position, multiplied by the number of possible suffix arrangements; unranking
+performs the inverse search by subtracting those block sizes. With repeats allowed, the sequence is
+just a base-$n$ counter.
+
 - `next_arrangement(n, a)` tries to rearrange `a` to the next lexicographically greater
   arrangement, returning true if such an arrangement exists or false if the array is already in
   descending order (in which case `a` is unchanged). The input `a` must consist of distinct integers

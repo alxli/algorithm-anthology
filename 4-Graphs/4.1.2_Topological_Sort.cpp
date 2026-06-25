@@ -3,6 +3,12 @@
 Given a directed acyclic graph, find one of possibly many orderings of the nodes such that for every
 edge from node $u$ to $v$, $u$ comes before $v$ in the ordering.
 
+The DFS version uses the fact that every outgoing dependency of a node is finished before the node
+itself is appended, so reversing DFS post-order places each prerequisite before everything it can
+reach. Kahn's algorithm instead repeatedly removes nodes with indegree zero: these are exactly the
+nodes whose remaining prerequisites have all already been placed. If at some point not every node
+can be removed, the leftover nodes must lie on a directed cycle.
+
 - `toposort_dfs()` returns a valid topological ordering using DFS post-order, or throws if the
   graph contains a cycle.
 - `toposort_kahn()` returns a valid topological ordering using indegrees and a queue, or returns an

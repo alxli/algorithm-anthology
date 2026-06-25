@@ -3,6 +3,12 @@
 A combination is a subset of size $k$ chosen from a total of $n$ (not necessarily distinct)
 elements, where order does not matter.
 
+The lexicographic successor advances the rightmost chosen position that can still move right, then
+packs every later position as far left as possible. Ranking and unranking use the combinatorial
+number system: at each position, count how many combinations would be skipped by choosing a smaller
+next value, then either add that count to the rank or subtract it while searching for the requested
+rank. Bitmask successors use the same order as increasing integers with a fixed popcount.
+
 - `next_combination(lo, mid, hi)` takes random-access iterators `lo`, `mid`, and `hi` as a range
   $[`lo`, `hi`)$ of $n$ elements for which the function will rearrange such that the $k$ elements in
   $[`lo`, `mid`)$ become the next lexicographically greater combination. The function returns true

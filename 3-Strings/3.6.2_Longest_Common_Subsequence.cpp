@@ -4,6 +4,12 @@ Given two strings, determine their longest common subsequence. A subsequence is 
 derived from the original string by deleting some elements without changing the order of the
 remaining elements (e.g. `"ACE"` is a subsequence of `"ABCDE"`, but `"BAE"` is not).
 
+The dynamic program compares prefixes: if the last characters match, they can extend an optimal
+subsequence of the smaller prefixes; otherwise, one of the two last characters must be skipped.
+Following the filled table backward reconstructs one optimal subsequence. Hirschberg's algorithm
+keeps only one DP row at a time, using forward and backward length rows to choose where an optimal
+answer crosses the midpoint of the longer string.
+
 - `longest_common_subsequence(s1, s2)` returns the longest common subsequence of strings `s1` and
   `s2` using a classic dynamic programming approach. This implementation computes `dp[i][j]` (the
   length of the longest common subsequence for the length $i$ prefix of `s1` and the length $j$

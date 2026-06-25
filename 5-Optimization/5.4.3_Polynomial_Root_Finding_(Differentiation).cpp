@@ -4,6 +4,11 @@ Finds every root $x$ for a polynomial $p$ such that $p(x) = 0$ by differentiatio
 pair of local extrema is searched using the bisection method, where local extrema are recursively
 found by finding the root of the derivative.
 
+The key observation is that derivative roots split the real line into intervals where the polynomial
+is monotone. A monotone interval contains at most one root, and if the endpoint values have opposite
+signs, bisection isolates that root. Recursively solving the derivative therefore provides all
+interval boundaries needed to find every real root in the requested range.
+
 - `horner_eval(p, x)` evaluates the polynomial `p` of degree $d$ (represented as a vector of size
   $d + 1$ where `p[i]` stores the coefficient for the $x^i$ term) at `x`, using Horner's method.
 - `find_one_root(p, a, b, EPS)` returns a root in the interval $[`a`, `b`]$ for a polynomial `p`

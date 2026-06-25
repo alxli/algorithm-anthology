@@ -2,6 +2,13 @@
 
 A permutation is an ordered list consisting of $n$ (not necessarily distinct) elements.
 
+The lexicographic successor is found by locating the rightmost ascent, increasing that position by
+the smallest possible amount, then reversing the suffix into its minimum order. Ranking and
+unranking permutations use the factorial number system: each position contributes the number of
+unused smaller values before the chosen one, scaled by the number of possible suffix permutations.
+The cycle decomposition views a permutation as a function on indices and follows each unvisited
+orbit until it returns to its start.
+
 - `next_permutation_(lo, hi)` is analogous to `std::next_permutation(lo, hi)`, taking two
   BidirectionalIterators as a range $[`lo`, `hi`)$ for which the function tries to rearrange to the
   next lexicographically greater permutation. The function returns true if such a permutation

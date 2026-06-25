@@ -6,6 +6,12 @@ equal. The total cost of an alignment given a `gap_cost` (insertion or deletion 
 `sub_cost` (substitution, i.e. mismatch cost) is `gap_cost` times the number of inserted gaps, plus
 `sub_cost` times the number of indices at which the two aligned strings differ.
 
+The dynamic program compares prefixes and chooses the cheapest last operation: align the final
+characters together, leave a gap in the first string, or leave a gap in the second string. Following
+the filled table backward reconstructs one minimum-cost alignment. Hirschberg's algorithm uses the
+same recurrence with only one DP row at a time, splitting the problem where an optimal alignment
+crosses the midpoint of the longer string.
+
 - `align_sequences(s1, s2, gap_cost, sub_cost)` returns a pair of aligned strings for strings `s1`
   and `s2`, using a classic dynamic programming approach. This implementation first computes
   `dp[i][j]` (the cost of aligning the length $i$ prefix of `s1` with the length $j$ prefix of `s2`)
