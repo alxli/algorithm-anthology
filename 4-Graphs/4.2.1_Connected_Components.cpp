@@ -48,9 +48,17 @@ void connected_components() {
   }
 }
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+Connected components:
+0: 0 1 2
+1: 3 4
+2: 5
+
+***/
 
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 void add_edge(int u, int v) {
@@ -69,5 +77,13 @@ int main() {
   assert(comp_id[0] == comp_id[2]);
   assert(comp_id[0] != comp_id[3]);
   assert(comp_id[5] == 2);
+  cout << "Connected components:\n";
+  for (int i = 0; i < static_cast<int>(components.size()); i++) {
+    cout << i << ":";
+    for (int u : components[i]) {
+      cout << " " << u;
+    }
+    cout << "\n";
+  }
   return 0;
 }

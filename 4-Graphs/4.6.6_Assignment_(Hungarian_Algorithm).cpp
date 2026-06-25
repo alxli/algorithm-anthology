@@ -89,8 +89,14 @@ T hungarian(const std::vector<std::vector<T>> &cost, std::vector<int> *assignmen
   return -v[0];
 }
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
 
+Minimum assignment cost: 9
+Assignments: (0->1) (1->0) (2->2)
+
+***/
+
+#include <iostream>
 using namespace std;
 
 int main() {
@@ -100,9 +106,16 @@ int main() {
       {5, 8, 1, 8},
   };
   vector<int> assignment;
-  assert(hungarian(cost, &assignment) == 9);
+  int64_t total = hungarian(cost, &assignment);
+  assert(total == 9);
   assert(assignment[0] == 1);
   assert(assignment[1] == 0);
   assert(assignment[2] == 2);
+  cout << "Minimum assignment cost: " << total << "\n";
+  cout << "Assignments:";
+  for (int worker = 0; worker < static_cast<int>(assignment.size()); worker++) {
+    cout << " (" << worker << "->" << assignment[worker] << ")";
+  }
+  cout << "\n";
   return 0;
 }

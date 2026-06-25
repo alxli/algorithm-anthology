@@ -173,9 +173,16 @@ class MinCostMaxFlow {
   }
 };
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+Flow sent: 5
+Minimum cost: 16
+Flow on edge 0->1: 3
+
+***/
 
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 int main() {
@@ -202,6 +209,9 @@ int main() {
   assert(flow == 5);
   assert(cost == 16);
   assert(g.edge_flow(id01) == 3);
+  cout << "Flow sent: " << flow << "\n";
+  cout << "Minimum cost: " << cost << "\n";
+  cout << "Flow on edge 0->1: " << g.edge_flow(id01) << "\n";
   g.clear_flow();
   auto [flow2, cost2] = g.min_cost_flow(0, 5, 5);
   assert(flow2 == 5);

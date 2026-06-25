@@ -149,17 +149,21 @@ std::pair<string, string> hirschberg_align_sequences(
   return {res1, res2};
 }
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+Aligned strings:
+AGGGCT
+A_GGCA
+
+***/
 
 #include <cassert>
+#include <iostream>
 
 int main() {
-  assert(
-      align_sequences("AGGGCT", "AGGCA", 2, 3) == (std::pair<string, string>{"AGGGCT", "A_GGCA"})
-  );
-  assert(
-      hirschberg_align_sequences("AGGGCT", "AGGCA", 2, 3) ==
-      (std::pair<string, string>{"AGGGCT", "A_GGCA"})
-  );
+  auto alignment = align_sequences("AGGGCT", "AGGCA", 2, 3);
+  assert(alignment == (std::pair<string, string>{"AGGGCT", "A_GGCA"}));
+  assert(hirschberg_align_sequences("AGGGCT", "AGGCA", 2, 3) == alignment);
+  std::cout << "Aligned strings:\n" << alignment.first << "\n" << alignment.second << "\n";
   return 0;
 }

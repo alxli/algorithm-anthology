@@ -112,9 +112,15 @@ auto diametral_pair(It lo, It hi) {
   return res;
 }
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+Convex hull: (-1,3) (1,3) (2,1) (0,0)
+Diametral pair: (0,0) (4,4)
+
+***/
 
 #include <cassert>
+#include <iostream>
 #include <vector>
 using namespace std;
 
@@ -134,12 +140,19 @@ int main() {
     std::shuffle(v.begin(), v.end(), rng);
     vector<PointI> h{{-1, 3}, {1, 3}, {2, 1}, {0, 0}};
     assert(convex_hull(v.begin(), v.end()) == h);
+    cout << "Convex hull:";
+    for (const PointI &p : h) {
+      cout << " (" << p.x << "," << p.y << ")";
+    }
+    cout << "\n";
   }
   {
     vector<PointI> v{{0, 0}, {3, 0}, {0, 3}, {1, 1}, {4, 4}};
     auto [p1, p2] = diametral_pair(v.begin(), v.end());
     assert(p1 == PointI(0, 0));
     assert(p2 == PointI(4, 4));
+    cout << "Diametral pair: (" << p1.x << "," << p1.y << ") (" << p2.x << "," << p2.y
+         << ")\n";
   }
   {
     vector<PointI> v{{0, 0}, {4, 0}, {4, 4}, {0, 4}, {2, 2}};

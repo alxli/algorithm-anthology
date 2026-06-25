@@ -69,9 +69,14 @@ class CentroidDecomposition {
   int parent(int u) const { return par[u]; }
 };
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+Centroid parents: 1 3 1 -1 3 3 5
+
+***/
 
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 int main() {
@@ -93,5 +98,10 @@ int main() {
   assert(tree.parent(3) == -1);
   assert(tree.parent(1) == 3);
   assert(tree.parent(5) == 3);
+  cout << "Centroid parents:";
+  for (int u = 0; u < 7; u++) {
+    cout << " " << tree.parent(u);
+  }
+  cout << "\n";
   return 0;
 }

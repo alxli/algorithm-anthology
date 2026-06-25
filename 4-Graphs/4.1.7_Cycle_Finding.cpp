@@ -116,11 +116,26 @@ class CycleFinder {
   }
 };
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+Undirected cycle vertices: 0 1 2
+Parallel-edge cycle vertices: 0 1
+Directed cycle vertices: 0 1 2
+
+***/
 
 #include <algorithm>
 #include <cassert>
+#include <iostream>
 using namespace std;
+
+void print_vertices(const string &label, const vector<int> &vertices) {
+  cout << label << ":";
+  for (int v : vertices) {
+    cout << " " << v;
+  }
+  cout << "\n";
+}
 
 int main() {
   {
@@ -135,6 +150,9 @@ int main() {
     assert((cycles[0] == vector<int>{a, b, c}));
     vector<int> vertices = g.cycle_vertices(cycles[0]);
     assert(vertices.size() == 3);
+    sort(vertices.begin(), vertices.end());
+    assert((vertices == vector<int>{0, 1, 2}));
+    print_vertices("Undirected cycle vertices", vertices);
   }
   {
     CycleFinder g(2, false);
@@ -144,13 +162,21 @@ int main() {
     assert(cycles.size() == 1);
     sort(cycles[0].begin(), cycles[0].end());
     assert((cycles[0] == vector<int>{a, b}));
+    vector<int> vertices = g.cycle_vertices(cycles[0]);
+    assert((vertices == vector<int>{0, 1}));
+    print_vertices("Parallel-edge cycle vertices", vertices);
   }
   {
     CycleFinder g(3, true);
     g.add_edge(0, 1);
     g.add_edge(1, 2);
     g.add_edge(2, 0);
-    assert(g.find_cycles(1).size() == 1);
+    vector<vector<int>> cycles = g.find_cycles(1);
+    assert(cycles.size() == 1);
+    vector<int> vertices = g.cycle_vertices(cycles[0]);
+    sort(vertices.begin(), vertices.end());
+    assert((vertices == vector<int>{0, 1, 2}));
+    print_vertices("Directed cycle vertices", vertices);
   }
   return 0;
 }
