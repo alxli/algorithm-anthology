@@ -13,7 +13,7 @@ For production C++, prefer containers such as \inlinecode{std::list}, \inlinecod
   \item \inlinecode{merge\_sorted\_lists(a, b)} merges two sorted lists using a dummy node and returns the merged head.
   \item \inlinecode{split\_half(head, \&second)} cuts a list into two halves, returning the first half and storing the second half in \inlinecode{second}.
   \item \inlinecode{splice\_after(pos, before)} moves the node after \inlinecode{before} so it appears after \inlinecode{pos}.
-  \item \inlinecode{splice\_range\_after(pos, before\_first, last)} moves the half-open range $({\inlinecodemath{before_first}}, {\inlinecodemath{last}})$ so it appears after \inlinecode{pos}.
+  \item \inlinecode{splice\_range\_after(pos, before\_first, last)} moves the half-open range (\inlinecode{before\_first}, \inlinecode{last}) so it appears after \inlinecode{pos}.
 \end{compactitem}
 
 The splicing helpers use the same ``after'' convention as \inlinecode{std::forward\_list::splice\_after()}. They work naturally with a dummy head node, which makes insertions and removals at the beginning of a list match all other positions. For doubly linked list splicing, use the next section.
@@ -3667,7 +3667,7 @@ int main() {
 Values: 6 -2 4 8 10
 \end{exampleoutput}
 \subsection{Mo's Algorithm}
-Mo's algorithm answers a batch of range queries offline by reordering them so that the current window $[{\inlinecodemath{cur_l}}, {\inlinecodemath{cur_r}}]$ can be transformed into the next query's range with as few single-element insertions and deletions as possible. It applies whenever there is no fast direct formula, but extending or shrinking the window by one element updates the answer cheaply, as with the number of distinct values in a range or the sum of squares of element frequencies.
+Mo's algorithm answers a batch of range queries offline by reordering them so that the current window [\inlinecode{cur\_l}, \inlinecode{cur\_r}] can be transformed into the next query's range with as few single-element insertions and deletions as possible. It applies whenever there is no fast direct formula, but extending or shrinking the window by one element updates the answer cheaply, as with the number of distinct values in a range or the sum of squares of element frequencies.
 
 The trick is the query order. Sort queries by the block of their left endpoint, where each block spans about $n / \sqrt{q}$ indices, breaking ties by right endpoint. The left pointer then travels $O(n / \sqrt{q})$ per query, for $O(n \sqrt{q})$ moves in all, while within each block the right pointer sweeps monotonically across the array, contributing $O(n)$ per block over the $\sqrt{q}$ blocks, again $O(n \sqrt{q})$. So the pointers move $O(n \sqrt{q})$ times in total. Sorting the right endpoint in alternating directions between consecutive blocks (a ``boustrophedon'' order) avoids resetting the right pointer at every block boundary.
 
@@ -5443,14 +5443,14 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Wavelet Tree}
-A wavelet tree is a static structure over an integer array with values in a known range $[{\inlinecodemath{min_val}}, {\inlinecodemath{max_val}}]$. The root splits the value range at its midpoint, recording for every prefix of the array how many of its elements belong to the lower value half, then stably partitions the array so that those elements form the left child and the rest form the right child. Recursing on each half builds a balanced tree of height $O(\log \sigma)$, where $\sigma$ is the size of the value range.
+A wavelet tree is a static structure over an integer array with values in a known range [\inlinecode{min\_val}, \inlinecode{max\_val}]. The root splits the value range at its midpoint, recording for every prefix of the array how many of its elements belong to the lower value half, then stably partitions the array so that those elements form the left child and the rest form the right child. Recursing on each half builds a balanced tree of height $O(\log \sigma)$, where $\sigma$ is the size of the value range.
 
 The recorded prefix counts let a query at any node translate a range of array positions into the corresponding range of positions in either child, so a single root-to-leaf descent answers order statistics and rank queries. This is strictly more powerful than a merge sort tree: besides counting values below a threshold, it reports the $k$-th smallest value of a range in $O(\log \sigma)$ time.
 
 All position ranges are inclusive $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ with 0-based indices. If the values are large or sparse, compress them to a small contiguous range first.
 
 \begin{compactitem}
-  \item \inlinecode{WaveletTree(a, min\_val, max\_val)} builds the tree over the array \inlinecode{a}, whose values must all lie in $[{\inlinecodemath{min_val}}, {\inlinecodemath{max_val}}]$.
+  \item \inlinecode{WaveletTree(a, min\_val, max\_val)} builds the tree over the array \inlinecode{a}, whose values must all lie in [\inlinecode{min\_val}, \inlinecode{max\_val}].
   \item \inlinecode{kth\_smallest(lo, hi, k)} returns the \inlinecode{k}-th smallest value among positions $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$, where \inlinecode{k} is 1-based (so \inlinecode{k == 1} returns the minimum).
   \item \inlinecode{count\_leq(lo, hi, x)} returns the number of positions \inlinecode{i} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ with \inlinecode{a[i]} $\leq$ \inlinecode{x}.
   \item \inlinecode{count\_in(lo, hi, x, y)} returns the number of positions \inlinecode{i} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ with \inlinecode{x} $\leq$ \inlinecode{a[i]} $\leq$ \inlinecode{y}.

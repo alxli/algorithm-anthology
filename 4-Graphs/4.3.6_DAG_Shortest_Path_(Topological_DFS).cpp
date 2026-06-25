@@ -97,7 +97,7 @@ void print_path(int dest) {
 }
 
 int main() {
-  //        w=1    w=-2     w=3  
+  //        w=1    w=-2     w=3
   //     0 ----> 1 ----> 3 -----> 4
   //     |     /        ^
   // w=5 |   / w=1     /

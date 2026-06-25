@@ -781,7 +781,7 @@ Partition a range around a pivot, or select the element with a given sorted rank
 Quickselect repeatedly applies this partition and continues only into the group containing the desired rank. This is the same task as \inlinecode{std::nth\_element()}: after the call, \inlinecode{*nth} is the value that would appear there in sorted order, all earlier positions contain values no larger than it, and all later positions contain values no smaller than it. Choosing pivots uniformly at random gives expected linear time, while the three-way split avoids unnecessary work on duplicate-heavy inputs.
 
 \begin{compactitem}
-  \item \inlinecode{partition\_three\_way(lo, hi, pivot)} rearranges $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ in-place and returns iterators $({\inlinecodemath{mid_lo}}, {\inlinecodemath{mid_hi}})$, where $[{\inlinecodemath{lo}}, {\inlinecodemath{mid_lo}})$ is less than \inlinecode{pivot}, $[{\inlinecodemath{mid_lo}}, {\inlinecodemath{mid_hi}})$ is equal to \inlinecode{pivot}, and $[{\inlinecodemath{mid_hi}}, {\inlinecodemath{hi}})$ is greater than \inlinecode{pivot}.
+  \item \inlinecode{partition\_three\_way(lo, hi, pivot)} rearranges $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ in-place and returns iterators $({\inlinecodemath{mid1}}, {\inlinecodemath{mid2}})$, where $[{\inlinecodemath{lo}}, {\inlinecodemath{mid1}})$ is less than \inlinecode{pivot}, $[{\inlinecodemath{mid1}}, {\inlinecodemath{mid2}})$ is equal to \inlinecode{pivot}, and $[{\inlinecodemath{mid2}}, {\inlinecodemath{hi}})$ is greater than \inlinecode{pivot}.
   \item \inlinecode{sort\_012(lo, hi)} sorts a range consisting only of the values $0$, $1$, and $2$.
   \item \inlinecode{nth\_element2(lo, nth, hi)} rearranges the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ around the 0-based rank represented by iterator \inlinecode{nth}. This requires random-access iterators and \inlinecode{operator\textless{}} on the value type.
 \end{compactitem}
@@ -853,14 +853,14 @@ int main() {
   }
 
   vector<int> b{4, 2, 5, 3, 3, 1};
-  auto [mid_lo, mid_hi] = partition_three_way(b.begin(), b.end(), 3);
-  for (auto it = b.begin(); it != mid_lo; ++it) {
+  auto [mid1, mid2] = partition_three_way(b.begin(), b.end(), 3);
+  for (auto it = b.begin(); it != mid1; ++it) {
     assert(*it < 3);
   }
-  for (auto it = mid_lo; it != mid_hi; ++it) {
+  for (auto it = mid1; it != mid2; ++it) {
     assert(*it == 3);
   }
-  for (auto it = mid_hi; it != b.end(); ++it) {
+  for (auto it = mid2; it != b.end(); ++it) {
     assert(*it > 3);
   }
 
@@ -1530,7 +1530,7 @@ int main() {
   assert(q.fold() == 3);  // min(3, 8)
   q.pop();                // Removes 3.
   assert(q.fold() == 8);
-  q.pop();                // Removes 8.
+  q.pop();  // Removes 8.
   assert(q.empty());
 
   // Canonical use: the minimum of every width-3 window, advancing the window by push/pop.
@@ -2465,9 +2465,7 @@ std::vector<int> partition_intervals(std::vector<PartitionInterval> intervals) {
       }
   );
   std::vector<int> room(intervals.size());
-  std::priority_queue<
-      std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<std::pair<int, int>>>
-      pq;
+  std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<>> pq;
   int rooms = 0;
   for (const auto &[start, finish, id] : intervals) {
     if (!pq.empty() && pq.top().first <= start) {

@@ -126,9 +126,7 @@ class MinCostMaxFlow {
     std::vector<int> parent_edge(nodes);
     while (flow < target_flow) {
       std::fill(dist.begin(), dist.end(), INF_COST);
-      std::priority_queue<
-          std::pair<C, int>, std::vector<std::pair<C, int>>, std::greater<std::pair<C, int>>>
-          pq;
+      std::priority_queue<std::pair<C, int>, std::vector<std::pair<C, int>>, std::greater<>> pq;
       dist[source] = 0;
       pq.push({0, source});
       while (!pq.empty()) {

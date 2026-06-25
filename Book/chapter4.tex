@@ -270,7 +270,7 @@ int main() {
   //        |
   //        v
   // 0 ---> 3 ---> 5
-  // |      | ╲
+  // |      | /
   // v      v  v
   // 4 ---> 6  7 <--- 2
   // ^________________|
@@ -308,6 +308,291 @@ int main() {
 \begin{exampleoutput}
 The topological order: 2 1 0 4 3 7 6 5
 \end{exampleoutput}
+\subsection{Cycle Finding}
+Given a directed or undirected graph, find simple cycles encountered by a depth-first search. The free functions return one cycle of a simple graph as a list of vertices. For undirected graphs, an edge to a visited non-parent vertex closes a cycle. For directed graphs, only an edge to a vertex still on the recursion stack closes a cycle; edges to already-finished vertices do not.
+
+Both functions remember the DFS parent of each vertex. When a closing edge \inlinecode{u} $\to$ \inlinecode{cycle\_start} is found, the answer is reconstructed by walking parents backward from \inlinecode{u} to \inlinecode{cycle\_start}. In \inlinecode{find\_cycle\_directed()}, \inlinecode{state[v]} is $0$ for unvisited vertices, $1$ for vertices currently on the recursion stack, and $2$ for finished vertices.
+
+\begin{compactitem}
+  \item \inlinecode{find\_cycle\_undirected(adj)} returns one vertex cycle in a simple undirected graph, or an empty vector if no cycle exists.
+  \item \inlinecode{find\_cycle\_directed(adj)} returns one vertex cycle in a simple directed graph, or an empty vector if no cycle exists.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{find\_cycle\_undirected()} and \inlinecode{find\_cycle\_directed()}, where $n$ is the number of nodes and $m$ is the number of edges.
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(\max\left(n, m\right))$ for storage of the graph.
+  \item $O(n)$ auxiliary stack and heap space for the DFS and returned cycle.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <vector>
+
+std::vector<int> find_cycle_undirected(const std::vector<std::vector<int>> &adj) {
+  int n = static_cast<int>(adj.size());
+  if (n == 0) {
+    return {};
+  }
+  std::vector<char> visit(n, false);
+  std::vector<int> parent(n, -1), cycle;
+  int cycle_start = -1, cycle_end = -1;
+  auto dfs = [&](auto &&dfs, int u, int p) -> bool {
+    visit[u] = true;
+    for (int v : adj[u]) {
+      if (v == p) {
+        continue;
+      }
+      if (visit[v]) {
+        cycle_start = v;
+        cycle_end = u;
+        return true;
+      }
+      parent[v] = u;
+      if (dfs(dfs, v, u)) {
+        return true;
+      }
+    }
+    return false;
+  };
+  for (int u = 0; u < n && cycle_start == -1; u++) {
+    if (!visit[u]) {
+      dfs(dfs, u, -1);
+    }
+  }
+  if (cycle_start == -1) {
+    return {};
+  }
+  cycle.push_back(cycle_start);
+  for (int u = cycle_end; u != cycle_start; u = parent[u]) {
+    cycle.push_back(u);
+  }
+  std::reverse(cycle.begin() + 1, cycle.end());
+  return cycle;
+}
+
+std::vector<int> find_cycle_directed(const std::vector<std::vector<int>> &adj) {
+  int n = static_cast<int>(adj.size());
+  if (n == 0) {
+    return {};
+  }
+  std::vector<char> state(n, 0);  // 0 = unvisited, 1 = currently on DFS stack, 2 = finished.
+  std::vector<int> parent(n, -1), cycle;
+  int cycle_start = -1, cycle_end = -1;
+  auto dfs = [&](auto &&dfs, int u) -> bool {
+    state[u] = 1;
+    for (int v : adj[u]) {
+      if (state[v] == 0) {
+        parent[v] = u;
+        if (dfs(dfs, v)) {
+          return true;
+        }
+      } else if (state[v] == 1) {
+        cycle_start = v;
+        cycle_end = u;
+        return true;
+      }
+    }
+    state[u] = 2;
+    return false;
+  };
+  for (int u = 0; u < n && cycle_start == -1; u++) {
+    if (state[u] == 0) {
+      dfs(dfs, u);
+    }
+  }
+  if (cycle_start == -1) {
+    return {};
+  }
+  cycle.push_back(cycle_start);
+  for (int u = cycle_end; u != cycle_start; u = parent[u]) {
+    cycle.push_back(u);
+  }
+  std::reverse(cycle.begin() + 1, cycle.end());
+  return cycle;
+}
+\end{lstlisting}
+The \inlinecode{CycleFinder} class is the more general multigraph variant. Its cycles are returned as edge IDs rather than vertex lists, which makes the representation robust for parallel edges. In an undirected graph, the cycles found this way form a DFS cycle basis: one cycle for each non-tree edge. In a directed graph, this finds cycles created by back edges to vertices still on the recursion stack. Here \inlinecode{state[v]} is $-1$ before discovery, $-2$ after finishing, and otherwise the index where the vertex first appeared in the current edge stack; that index marks which stack suffix forms a cycle.
+
+\begin{compactitem}
+  \item \inlinecode{CycleFinder(n, directed)} constructs a graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$. The graph is directed if \inlinecode{directed} is true, or undirected otherwise.
+  \item \inlinecode{add\_edge(u, v)} adds an edge and returns its edge ID.
+  \item \inlinecode{find\_cycles(max\_cycles, max\_total\_size)} returns simple cycles as vectors of edge IDs, stopping once either optional limit is reached.
+  \item \inlinecode{cycle\_vertices(edge\_cycle)} converts one edge-ID cycle into a corresponding cyclic list of vertices.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to the constructor, where $n$ is the number of nodes.
+  \item $O(1)$ per call to \inlinecode{add\_edge()}.
+  \item $O(\max\left(n, m + s\right))$ per call to \inlinecode{find\_cycles()}, where $n$ is the number of nodes, $m$ is the number of edges, and $s$ is the total size of the returned cycles.
+  \item $O(k)$ per call to \inlinecode{cycle\_vertices()}, where $k$ is the number of edges in the cycle.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(\max\left(n, m\right))$ for storage of the graph.
+  \item $O(\max\left(n, s\right))$ auxiliary stack and heap space for \inlinecode{find\_cycles()}, where $s$ is the total size of the returned cycles.
+  \item $O(k)$ auxiliary heap space for \inlinecode{cycle\_vertices()}, where $k$ is the number of edges in the cycle.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+class CycleFinder {
+  std::vector<std::pair<int, int>> edges;
+  std::vector<std::vector<int>> adj;
+  bool directed;
+
+  void dfs_cycles(
+      int u, int parent_edge, int max_cycles, int max_total_size, std::vector<int> &state,
+      std::vector<int> &stack, std::vector<std::vector<int>> &cycles, int &total_size
+  ) const {
+    if (static_cast<int>(cycles.size()) >= max_cycles || total_size >= max_total_size) {
+      return;
+    }
+    // -1 = unvisited, -2 = finished, otherwise the vertex's index in the current edge stack.
+    state[u] = static_cast<int>(stack.size());
+    for (int id : adj[u]) {
+      if (!directed && id == parent_edge) {
+        continue;
+      }
+      const auto &[eu, ev] = edges[id];
+      int v = directed ? ev : eu ^ ev ^ u;
+      if (state[v] >= 0) {
+        std::vector<int> cycle{id};
+        for (int i = state[v]; i < static_cast<int>(stack.size()); i++) {
+          cycle.push_back(stack[i]);
+        }
+        cycles.push_back(cycle);
+        total_size += static_cast<int>(cycle.size());
+        if (static_cast<int>(cycles.size()) >= max_cycles || total_size >= max_total_size) {
+          return;
+        }
+      } else if (state[v] == -1) {
+        stack.push_back(id);
+        dfs_cycles(v, id, max_cycles, max_total_size, state, stack, cycles, total_size);
+        stack.pop_back();
+      }
+    }
+    state[u] = -2;
+  }
+
+ public:
+  CycleFinder(int n, bool directed) : adj(n), directed(directed) {}
+
+  int add_edge(int u, int v) {
+    int id = static_cast<int>(edges.size());
+    edges.emplace_back(u, v);
+    adj[u].push_back(id);
+    if (!directed) {
+      adj[v].push_back(id);
+    }
+    return id;
+  }
+
+  std::vector<std::vector<int>> find_cycles(
+      int max_cycles = 1 << 30, int max_total_size = 1 << 30
+  ) const {
+    int n = static_cast<int>(adj.size());
+    std::vector<int> state(n, -1), stack;
+    std::vector<std::vector<int>> cycles;
+    int total_size = 0;
+    for (int u = 0; u < n; u++) {
+      if (state[u] == -1) {
+        dfs_cycles(u, -1, max_cycles, max_total_size, state, stack, cycles, total_size);
+      }
+    }
+    return cycles;
+  }
+
+  std::vector<int> cycle_vertices(const std::vector<int> &edge_cycle) const {
+    int size = static_cast<int>(edge_cycle.size());
+    std::vector<int> vertices;
+    if (size == 0) {
+      return vertices;
+    }
+    if (size <= 2) {
+      vertices.push_back(edges[edge_cycle[0]].first);
+      if (size == 2) {
+        vertices.push_back(edges[edge_cycle[0]].second);
+      }
+      return vertices;
+    }
+    for (int i = 0; i < size; i++) {
+      const auto &[au, av] = edges[edge_cycle[i]];
+      const auto &[bu, bv] = edges[edge_cycle[(i + 1) % size]];
+      vertices.push_back((bu == au || bv == au) ? av : au);
+    }
+    return vertices;
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+using namespace std;
+
+int main() {
+  {
+    vector<vector<int>> adj(5);
+    auto add_edge = [&](int u, int v) {
+      adj[u].push_back(v);
+      adj[v].push_back(u);
+    };
+    add_edge(0, 1);
+    add_edge(1, 2);
+    add_edge(2, 0);
+    add_edge(3, 4);
+    assert((find_cycle_undirected(adj) == vector<int>{0, 1, 2}));
+  }
+  {
+    vector<vector<int>> adj(6);
+    adj[0].push_back(1);
+    adj[1].push_back(2);
+    adj[3].push_back(4);
+    adj[4].push_back(5);
+    adj[5].push_back(3);
+    assert((find_cycle_directed(adj) == vector<int>{3, 4, 5}));
+    assert(find_cycle_directed({{1}, {2}, {}}).empty());
+  }
+  {
+    CycleFinder g(4, false);
+    int a = g.add_edge(0, 1);
+    int b = g.add_edge(1, 2);
+    int c = g.add_edge(2, 0);
+    g.add_edge(2, 3);
+    vector<vector<int>> cycles = g.find_cycles();
+    assert(cycles.size() == 1);
+    sort(cycles[0].begin(), cycles[0].end());
+    assert((cycles[0] == vector<int>{a, b, c}));
+    vector<int> vertices = g.cycle_vertices(cycles[0]);
+    assert(vertices.size() == 3);
+  }
+  {
+    CycleFinder g(2, false);
+    int a = g.add_edge(0, 1);
+    int b = g.add_edge(0, 1);
+    vector<vector<int>> cycles = g.find_cycles();
+    assert(cycles.size() == 1);
+    sort(cycles[0].begin(), cycles[0].end());
+    assert((cycles[0] == vector<int>{a, b}));
+  }
+  {
+    CycleFinder g(3, true);
+    g.add_edge(0, 1);
+    g.add_edge(1, 2);
+    g.add_edge(2, 0);
+    assert(g.find_cycles(1).size() == 1);
+  }
+  return 0;
+}
+\end{lstlisting}
 \subsection{Tree Centers and Diameter}
 An unweighted tree possesses a center, centroid, and diameter. The centers are found by repeatedly peeling away the leaves of the tree until one or two nodes remain. The diameter relies on the fact that the farthest node from any start is always one endpoint of a diameter, so a second traversal from that endpoint measures the full diameter. The following functions apply to a global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must form a valid tree with nodes numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}.
 
@@ -803,166 +1088,94 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Cycle Finding}
-Given a directed or undirected graph, find simple cycles encountered by a depth-first search. Cycles are returned as edge IDs rather than vertex lists, which makes the representation robust for multigraphs with parallel edges. In an undirected graph, the cycles found this way form a DFS cycle basis: one cycle for each non-tree edge. In a directed graph, this finds cycles created by back edges to vertices still on the recursion stack.
+\subsection{Eulerian Trails (Hierholzer)}
+A Eulerian trail is a path in a graph which contains every edge exactly once. A Eulerian cycle or circuit is an Eulerian trail which begins and ends on the same node. A directed graph has a Eulerian trail when all nonzero-degree nodes belong to one connected part of the underlying graph, and either every node has equal in-degree and out-degree or exactly one node has one extra outgoing edge and exactly one node has one extra incoming edge.
+
+Hierholzer's algorithm walks unused edges until stuck, then backtracks to splice each closed detour into the final trail. For a directed graph known to have a trail from \inlinecode{start}, the core algorithm can simply consume outgoing edges by popping them from a local copy of the adjacency list.
 
 \begin{compactitem}
-  \item \inlinecode{CycleFinder(n, directed)} constructs a graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$. The graph is directed if \inlinecode{directed} is true, or undirected otherwise.
-  \item \inlinecode{add\_edge(u, v)} adds an edge and returns its edge ID.
-  \item \inlinecode{find\_cycles(max\_cycles, max\_total\_size)} returns simple cycles as vectors of edge IDs, stopping once either optional limit is reached.
-  \item \inlinecode{cycle\_vertices(edge\_cycle)} converts one edge-ID cycle into a corresponding cyclic list of vertices.
+  \item \inlinecode{known\_eulerian\_path\_directed(adj, start)} returns a vertex trail using every directed edge in \inlinecode{adj} exactly once, assuming such a trail exists and begins at \inlinecode{start}.
+  \item \inlinecode{eulerian\_path\_directed(adj, start)} returns a vertex trail using every directed edge in \inlinecode{adj} exactly once, or an empty vector if no such trail exists. If \inlinecode{start} $= -1$, a valid start is chosen automatically; otherwise the trail must begin at \inlinecode{start}.
 \end{compactitem}
 
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(\max\left(n, m + s\right))$ per call to \inlinecode{find\_cycles()}, where $n$ is the number of nodes, $m$ is the number of edges, and $s$ is the total size of the returned cycles.
-  \item $O(k)$ per call to \inlinecode{cycle\_vertices()}, where $k$ is the number of edges in the cycle.
-\end{compactitem}
+Parallel directed edges are supported by storing duplicate neighbors in \inlinecode{adj}. Since these functions return only vertices, use \inlinecode{EulerianGraph} below when edge IDs are needed.
 
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(\max\left(n, m + s\right))$ for graph storage, DFS state, and returned cycles.
-  \item $O(n)$ auxiliary stack space for the DFS.
-\end{compactitem}
+\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{known\_eulerian\_path\_directed()} and \inlinecode{eulerian\_path\_directed()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
-\begin{lstlisting}[language=C++]
-#include <cassert>
-#include <vector>
+\textbf{Space Complexity}: $O(\max\left(n, m\right))$ auxiliary stack and heap space for \inlinecode{known\_eulerian\_path\_directed()} and \inlinecode{eulerian\_path\_directed()}.
 
-class CycleFinder {
-  std::vector<std::pair<int, int>> edges;
-  std::vector<std::vector<int>> adj;
-  bool directed;
-
-  void dfs_cycles(
-      int u, int parent_edge, int max_cycles, int max_total_size, std::vector<int> &state,
-      std::vector<int> &stack, std::vector<std::vector<int>> &cycles, int &total_size
-  ) const {
-    if (static_cast<int>(cycles.size()) >= max_cycles || total_size >= max_total_size) {
-      return;
-    }
-    state[u] = static_cast<int>(stack.size());
-    for (int id : adj[u]) {
-      if (!directed && id == parent_edge) {
-        continue;
-      }
-      const auto &[eu, ev] = edges[id];
-      int v = directed ? ev : eu ^ ev ^ u;
-      if (state[v] >= 0) {
-        std::vector<int> cycle{id};
-        for (int i = state[v]; i < static_cast<int>(stack.size()); i++) {
-          cycle.push_back(stack[i]);
-        }
-        cycles.push_back(cycle);
-        total_size += static_cast<int>(cycle.size());
-        if (static_cast<int>(cycles.size()) >= max_cycles || total_size >= max_total_size) {
-          return;
-        }
-      } else if (state[v] == -1) {
-        stack.push_back(id);
-        dfs_cycles(v, id, max_cycles, max_total_size, state, stack, cycles, total_size);
-        stack.pop_back();
-      }
-    }
-    state[u] = -2;
-  }
-
- public:
-  CycleFinder(int n, bool directed) : adj(n), directed(directed) {}
-
-  int add_edge(int u, int v) {
-    int id = static_cast<int>(edges.size());
-    edges.emplace_back(u, v);
-    adj[u].push_back(id);
-    if (!directed) {
-      adj[v].push_back(id);
-    }
-    return id;
-  }
-
-  std::vector<std::vector<int>> find_cycles(
-      int max_cycles = 1 << 30, int max_total_size = 1 << 30
-  ) const {
-    int n = static_cast<int>(adj.size());
-    std::vector<int> state(n, -1), stack;
-    std::vector<std::vector<int>> cycles;
-    int total_size = 0;
-    for (int u = 0; u < n; u++) {
-      if (state[u] == -1) {
-        dfs_cycles(u, -1, max_cycles, max_total_size, state, stack, cycles, total_size);
-      }
-    }
-    return cycles;
-  }
-
-  std::vector<int> cycle_vertices(const std::vector<int> &edge_cycle) const {
-    int size = static_cast<int>(edge_cycle.size());
-    std::vector<int> vertices;
-    if (size == 0) {
-      return vertices;
-    }
-    if (size <= 2) {
-      vertices.push_back(edges[edge_cycle[0]].first);
-      if (size == 2) {
-        vertices.push_back(edges[edge_cycle[0]].second);
-      }
-      return vertices;
-    }
-    for (int i = 0; i < size; i++) {
-      const auto &[au, av] = edges[edge_cycle[i]];
-      const auto &[bu, bv] = edges[edge_cycle[(i + 1) % size]];
-      vertices.push_back((bu == au || bv == au) ? av : au);
-    }
-    return vertices;
-  }
-};
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-using namespace std;
+#include <vector>
 
-int main() {
-  {
-    CycleFinder g(4, false);
-    int a = g.add_edge(0, 1);
-    int b = g.add_edge(1, 2);
-    int c = g.add_edge(2, 0);
-    g.add_edge(2, 3);
-    vector<vector<int>> cycles = g.find_cycles();
-    assert(cycles.size() == 1);
-    sort(cycles[0].begin(), cycles[0].end());
-    assert((cycles[0] == vector<int>{a, b, c}));
-    vector<int> vertices = g.cycle_vertices(cycles[0]);
-    assert(vertices.size() == 3);
+std::vector<int> known_eulerian_path_directed(std::vector<std::vector<int>> adj, int start) {
+  assert(0 <= start && start < static_cast<int>(adj.size()));
+  std::vector<int> stack{start}, path;
+  while (!stack.empty()) {
+    int u = stack.back();
+    if (adj[u].empty()) {
+      path.push_back(u);
+      stack.pop_back();
+    } else {
+      stack.push_back(adj[u].back());
+      adj[u].pop_back();
+    }
   }
-  {
-    CycleFinder g(2, false);
-    int a = g.add_edge(0, 1);
-    int b = g.add_edge(0, 1);
-    vector<vector<int>> cycles = g.find_cycles();
-    assert(cycles.size() == 1);
-    sort(cycles[0].begin(), cycles[0].end());
-    assert((cycles[0] == vector<int>{a, b}));
+  std::reverse(path.begin(), path.end());
+  return path;
+}
+
+std::vector<int> eulerian_path_directed(const std::vector<std::vector<int>> &adj, int start = -1) {
+  int n = static_cast<int>(adj.size()), m = 0;
+  if (n == 0) {
+    return {};
   }
-  {
-    CycleFinder g(3, true);
-    g.add_edge(0, 1);
-    g.add_edge(1, 2);
-    g.add_edge(2, 0);
-    assert(g.find_cycles(1).size() == 1);
+  assert(-1 <= start && start < n);
+  std::vector<int> indeg(n), outdeg(n);
+  for (int u = 0; u < n; u++) {
+    outdeg[u] = static_cast<int>(adj[u].size());
+    m += outdeg[u];
+    for (int v : adj[u]) {
+      indeg[v]++;
+    }
   }
-  return 0;
+  if (m == 0) {
+    return {start == -1 ? 0 : start};
+  }
+  int source = -1, sources = 0, sinks = 0;
+  for (int u = 0; u < n; u++) {
+    int diff = outdeg[u] - indeg[u];
+    if (diff == 1) {
+      source = u;
+      sources++;
+    } else if (diff == -1) {
+      sinks++;
+    } else if (diff != 0) {
+      return {};
+    }
+  }
+  if (!((sources == 0 && sinks == 0) || (sources == 1 && sinks == 1))) {
+    return {};
+  }
+  if (start == -1) {
+    if (source != -1) {
+      start = source;
+    } else {
+      for (int u = 0; u < n && start == -1; u++) {
+        if (outdeg[u] > 0) {
+          start = u;
+        }
+      }
+    }
+  } else if ((source != -1 && start != source) || (source == -1 && outdeg[start] == 0 && m > 0)) {
+    return {};
+  }
+  std::vector<int> path = known_eulerian_path_directed(adj, start);
+  return static_cast<int>(path.size()) == m + 1 ? path : std::vector<int>();
 }
 \end{lstlisting}
-\subsection{Eulerian Trails}
-A Eulerian trail is a path in a graph which contains every edge exactly once. A Eulerian cycle or circuit is an Eulerian trail which begins and ends on the same node. A directed graph has a Eulerian trail when all nonzero-degree nodes belong to one connected part of the underlying graph, and either every node has equal in-degree and out-degree or exactly one node has one extra outgoing edge and exactly one node has one extra incoming edge. An undirected graph has a Eulerian trail when all nonzero-degree nodes are connected and either zero or two nodes have odd degree.
-
-Hierholzer's algorithm walks unused edges until stuck, then backtracks to splice each closed detour into the final trail. This implementation stores and returns edge IDs, which supports multigraphs: parallel edges are distinct because each edge receives its own ID.
+The \inlinecode{EulerianGraph} class is the more general edge-ID variant. An undirected graph has a Eulerian trail when all nonzero-degree nodes are connected and either zero or two nodes have odd degree. This class stores and returns edge IDs, which supports directed graphs, undirected graphs, and multigraphs: parallel edges are distinct because each edge receives its own ID.
 
 \begin{compactitem}
   \item \inlinecode{EulerianGraph(n, directed)} constructs a graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$. The graph is directed if \inlinecode{directed} is true, or undirected otherwise.
@@ -976,9 +1189,6 @@ Hierholzer's algorithm walks unused edges until stuck, then backtracks to splice
 \textbf{Space Complexity}: $O(\max\left(n, m\right))$ for graph storage and auxiliary arrays.
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <vector>
-
 class EulerianGraph {
   std::vector<std::pair<int, int>> edges;
   std::vector<std::vector<int>> adj;
@@ -1172,6 +1382,22 @@ void print_vertices(const string &label, const vector<int> &vertices) {
 
 int main() {
   {
+    // 3 <-- 0 --> 1
+    //        ^    |
+    //         \   v
+    //          +--2
+    vector<vector<int>> adj(4);
+    adj[0].push_back(1);
+    adj[1].push_back(2);
+    adj[2].push_back(0);
+    adj[0].push_back(3);
+    assert((known_eulerian_path_directed(adj, 0) == vector<int>{0, 1, 2, 0, 3}));
+    vector<int> path = eulerian_path_directed(adj);
+    assert((path == vector<int>{0, 1, 2, 0, 3}));
+    assert(eulerian_path_directed(adj, 1).empty());
+    print_vertices("Simple directed path", path);
+  }
+  {
     // 0 <--- 2
     // |    ^ ^
     // |   /  |
@@ -1234,6 +1460,7 @@ int main() {
 }
 \end{lstlisting}
 \begin{exampleoutput}
+Simple directed path: 0->1->2->0->3
 Directed Eulerian cycle: 0->1->3->4->1->2->0
 Undirected Eulerian cycle: 0->1->4->3->1->2->0
 Parallel-edge cycle: 0->1->0
@@ -2916,7 +3143,7 @@ Given a starting node in a weighted, directed graph with nonnegative weights onl
 Dijkstra's algorithm repeatedly selects the unvisited node of smallest tentative distance using a priority queue and relaxes its outgoing edges. Dijkstra's algorithm requires nonnegative edge weights. Use Bellman-Ford or SPFA instead when negative edges are present. Because the weights are nonnegative, a node's distance is final the first time it is removed from the queue.
 
 \begin{compactitem}
-  \item \inlinecode{dijkstra(start, adj, dist, pred)} returns a pair of vectors \inlinecode{dist} and \inlinecode{pred} for an adjacency list \inlinecode{adj} which must consist of nodes numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}. Each edge is stored as $({\inlinecodemath{neighbor}}, {\inlinecodemath{weight}})$, where \inlinecode{weight} is nonnegative.
+  \item \inlinecode{dijkstra(adj, start)} returns a pair of vectors \inlinecode{dist} and \inlinecode{pred} for an adjacency list \inlinecode{adj} which must consist of nodes numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}. Each edge is stored as $({\inlinecodemath{neighbor}}, {\inlinecodemath{weight}})$, where \inlinecode{weight} is nonnegative.
 \end{compactitem}
 
 For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
@@ -2931,6 +3158,7 @@ For path reconstruction, \inlinecode{pred[v]} stores the node immediately before
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <cstdint>
 #include <functional>
 #include <limits>
@@ -2942,14 +3170,13 @@ template<typename T>
 std::pair<std::vector<T>, std::vector<int>> dijkstra(
     const std::vector<std::vector<std::pair<int, T>>> &adj, int start
 ) {
-  const T INF = std::numeric_limits<T>::max() / 4;
+  static const T INF = std::numeric_limits<T>::max() / 4;
   int n = static_cast<int>(adj.size());
+  assert(0 <= start && start < n);
   std::vector<T> dist(n, INF);
   std::vector<int> pred(n, -1);
   dist[start] = 0;
-  std::priority_queue<
-      std::pair<T, int>, std::vector<std::pair<T, int>>, std::greater<std::pair<T, int>>>
-      pq;
+  std::priority_queue<std::pair<T, int>, std::vector<std::pair<T, int>>, std::greater<>> pq;
   pq.emplace(0, start);
   while (!pq.empty()) {
     auto [du, u] = pq.top();
@@ -3449,7 +3676,7 @@ Prim's algorithm grows the tree from an arbitrary start node, repeatedly adding 
   \item \inlinecode{prim\_mst()} populates \inlinecode{mst} with the edge IDs in the minimum spanning tree (returning the total MST weight) for a global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}. Edges are stored as (\inlinecode{neighbor}, \inlinecode{weight}, \inlinecode{edge\_id}).
 \end{compactitem}
 
-The priority queue stores candidate edges as $({\inlinecodemath{weight}}, {\inlinecodemath{from}}, {\inlinecodemath{to}}, {\inlinecodemath{edge_id}})$ and uses \inlinecode{std::greater} to make it a min-heap. To find a maximum spanning tree instead, use the default max-heap ordering. Multigraphs are supported; parallel edges are stored as separate adjacency entries and the algorithm automatically selects the minimum-weight one to each unvisited node.
+The priority queue stores candidate edges as (\inlinecode{weight}, \inlinecode{from}, \inlinecode{to}, \inlinecode{edge\_id}) and uses \inlinecode{std::greater} to make it a min-heap. To find a maximum spanning tree instead, use the default max-heap ordering. Multigraphs are supported; parallel edges are stored as separate adjacency entries and the algorithm automatically selects the minimum-weight one to each unvisited node.
 
 \textbf{Time Complexity}: $O(m \log n)$ per call, where $m$ is the number of edges and $n$ is the number of nodes.
 
@@ -3481,7 +3708,7 @@ int prim_mst() {
     }
     visit[i] = true;
     using qnode = std::tuple<int, int, int, int>;  // (weight, u, v, edge_id)
-    std::priority_queue<qnode, std::vector<qnode>, std::greater<qnode>> pq;
+    std::priority_queue<qnode, std::vector<qnode>, std::greater<>> pq;
     for (auto &[v, w, id] : adj[i]) {
       pq.emplace(w, i, v, id);
     }
@@ -4871,9 +5098,7 @@ class MinCostMaxFlow {
     std::vector<int> parent_edge(nodes);
     while (flow < target_flow) {
       std::fill(dist.begin(), dist.end(), INF_COST);
-      std::priority_queue<
-          std::pair<C, int>, std::vector<std::pair<C, int>>, std::greater<std::pair<C, int>>>
-          pq;
+      std::priority_queue<std::pair<C, int>, std::vector<std::pair<C, int>>, std::greater<>> pq;
       dist[source] = 0;
       pq.push({0, source});
       while (!pq.empty()) {

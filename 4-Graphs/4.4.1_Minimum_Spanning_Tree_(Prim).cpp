@@ -14,7 +14,7 @@ edge at each step.
   nodes numbered $[0, `n`)$, where `n` is `adj.size()`. Edges are stored as (`neighbor`, `weight`,
   `edge_id`).
 
-The priority queue stores candidate edges as $(`weight`, `from`, `to`, `edge_id`)$ and uses
+The priority queue stores candidate edges as (`weight`, `from`, `to`, `edge_id`) and uses
 `std::greater` to make it a min-heap. To find a maximum spanning tree instead, use the default
 max-heap ordering. Multigraphs are supported; parallel edges are stored as separate adjacency
 entries and the algorithm automatically selects the minimum-weight one to each unvisited node.
@@ -49,7 +49,7 @@ int prim_mst() {
     }
     visit[i] = true;
     using qnode = std::tuple<int, int, int, int>;  // (weight, u, v, edge_id)
-    std::priority_queue<qnode, std::vector<qnode>, std::greater<qnode>> pq;
+    std::priority_queue<qnode, std::vector<qnode>, std::greater<>> pq;
     for (auto &[v, w, id] : adj[i]) {
       pq.emplace(w, i, v, id);
     }

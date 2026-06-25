@@ -4,12 +4,107 @@ A Eulerian trail is a path in a graph which contains every edge exactly once. A 
 circuit is an Eulerian trail which begins and ends on the same node. A directed graph has a
 Eulerian trail when all nonzero-degree nodes belong to one connected part of the underlying graph,
 and either every node has equal in-degree and out-degree or exactly one node has one extra outgoing
-edge and exactly one node has one extra incoming edge. An undirected graph has a Eulerian trail when
-all nonzero-degree nodes are connected and either zero or two nodes have odd degree.
+edge and exactly one node has one extra incoming edge.
 
 Hierholzer's algorithm walks unused edges until stuck, then backtracks to splice each closed detour
-into the final trail. This implementation stores and returns edge IDs, which supports multigraphs:
-parallel edges are distinct because each edge receives its own ID.
+into the final trail. For a directed graph known to have a trail from `start`, the core algorithm
+can simply consume outgoing edges by popping them from a local copy of the adjacency list.
+
+- `known_eulerian_path_directed(adj, start)` returns a vertex trail using every directed edge in
+  `adj` exactly once, assuming such a trail exists and begins at `start`.
+- `eulerian_path_directed(adj, start)` returns a vertex trail using every directed edge in `adj`
+  exactly once, or an empty vector if no such trail exists. If `start` $= -1$, a valid start is
+  chosen automatically; otherwise the trail must begin at `start`.
+
+Parallel directed edges are supported by storing duplicate neighbors in `adj`. Since these functions
+return only vertices, use `EulerianGraph` below when edge IDs are needed.
+
+Time Complexity:
+- O(max(n, m)) per call to `known_eulerian_path_directed()` and `eulerian_path_directed()`, where
+  $n$ is the number of nodes and $m$ is the number of edges.
+
+Space Complexity:
+- O(max(n, m)) auxiliary stack and heap space for `known_eulerian_path_directed()` and
+  `eulerian_path_directed()`.
+
+*/
+
+#include <algorithm>
+#include <cassert>
+#include <vector>
+
+std::vector<int> known_eulerian_path_directed(std::vector<std::vector<int>> adj, int start) {
+  assert(0 <= start && start < static_cast<int>(adj.size()));
+  std::vector<int> stack{start}, path;
+  while (!stack.empty()) {
+    int u = stack.back();
+    if (adj[u].empty()) {
+      path.push_back(u);
+      stack.pop_back();
+    } else {
+      stack.push_back(adj[u].back());
+      adj[u].pop_back();
+    }
+  }
+  std::reverse(path.begin(), path.end());
+  return path;
+}
+
+std::vector<int> eulerian_path_directed(const std::vector<std::vector<int>> &adj, int start = -1) {
+  int n = static_cast<int>(adj.size()), m = 0;
+  if (n == 0) {
+    return {};
+  }
+  assert(-1 <= start && start < n);
+  std::vector<int> indeg(n), outdeg(n);
+  for (int u = 0; u < n; u++) {
+    outdeg[u] = static_cast<int>(adj[u].size());
+    m += outdeg[u];
+    for (int v : adj[u]) {
+      indeg[v]++;
+    }
+  }
+  if (m == 0) {
+    return {start == -1 ? 0 : start};
+  }
+  int source = -1, sources = 0, sinks = 0;
+  for (int u = 0; u < n; u++) {
+    int diff = outdeg[u] - indeg[u];
+    if (diff == 1) {
+      source = u;
+      sources++;
+    } else if (diff == -1) {
+      sinks++;
+    } else if (diff != 0) {
+      return {};
+    }
+  }
+  if (!((sources == 0 && sinks == 0) || (sources == 1 && sinks == 1))) {
+    return {};
+  }
+  if (start == -1) {
+    if (source != -1) {
+      start = source;
+    } else {
+      for (int u = 0; u < n && start == -1; u++) {
+        if (outdeg[u] > 0) {
+          start = u;
+        }
+      }
+    }
+  } else if ((source != -1 && start != source) || (source == -1 && outdeg[start] == 0 && m > 0)) {
+    return {};
+  }
+  std::vector<int> path = known_eulerian_path_directed(adj, start);
+  return static_cast<int>(path.size()) == m + 1 ? path : std::vector<int>();
+}
+
+/*
+
+The `EulerianGraph` class is the more general edge-ID variant. An undirected graph has a Eulerian
+trail when all nonzero-degree nodes are connected and either zero or two nodes have odd degree. This
+class stores and returns edge IDs, which supports directed graphs, undirected graphs, and
+multigraphs: parallel edges are distinct because each edge receives its own ID.
 
 - `EulerianGraph(n, directed)` constructs a graph of `n` nodes numbered $[0, `n`)$. The graph is
   directed if `directed` is true, or undirected otherwise.
@@ -26,9 +121,6 @@ Space Complexity:
 - O(max(n, m)) for graph storage and auxiliary arrays.
 
 */
-
-#include <algorithm>
-#include <vector>
 
 class EulerianGraph {
   std::vector<std::pair<int, int>> edges;
@@ -205,6 +297,7 @@ class EulerianGraph {
 
 /*** Example Usage and Output:
 
+Simple directed path: 0->1->2->0->3
 Directed Eulerian cycle: 0->1->3->4->1->2->0
 Undirected Eulerian cycle: 0->1->4->3->1->2->0
 Parallel-edge cycle: 0->1->0
@@ -228,6 +321,22 @@ void print_vertices(const string &label, const vector<int> &vertices) {
 }
 
 int main() {
+  {
+    // 3 <-- 0 --> 1
+    //        ^    |
+    //         \   v
+    //          +--2
+    vector<vector<int>> adj(4);
+    adj[0].push_back(1);
+    adj[1].push_back(2);
+    adj[2].push_back(0);
+    adj[0].push_back(3);
+    assert((known_eulerian_path_directed(adj, 0) == vector<int>{0, 1, 2, 0, 3}));
+    vector<int> path = eulerian_path_directed(adj);
+    assert((path == vector<int>{0, 1, 2, 0, 3}));
+    assert(eulerian_path_directed(adj, 1).empty());
+    print_vertices("Simple directed path", path);
+  }
   {
     // 0 <--- 2
     // |    ^ ^

@@ -45,9 +45,7 @@ std::vector<int> partition_intervals(std::vector<PartitionInterval> intervals) {
       }
   );
   std::vector<int> room(intervals.size());
-  std::priority_queue<
-      std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<std::pair<int, int>>>
-      pq;
+  std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<>> pq;
   int rooms = 0;
   for (const auto &[start, finish, id] : intervals) {
     if (!pq.empty() && pq.top().first <= start) {

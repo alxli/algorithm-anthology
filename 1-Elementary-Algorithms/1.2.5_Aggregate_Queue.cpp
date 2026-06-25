@@ -108,7 +108,7 @@ int main() {
   assert(q.fold() == 3);  // min(3, 8)
   q.pop();                // Removes 3.
   assert(q.fold() == 8);
-  q.pop();                // Removes 8.
+  q.pop();  // Removes 8.
   assert(q.empty());
 
   // Canonical use: the minimum of every width-3 window, advancing the window by push/pop.

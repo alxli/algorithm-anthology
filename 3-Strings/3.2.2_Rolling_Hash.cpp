@@ -17,7 +17,7 @@ base, hashing remains fast and practical, but it is still probabilistic and shou
 proof of equality when exact verification is required.
 
 By default, each sequence value is cast to `uint64_t` and mixed. For non-integer element types, pass
-a custom value hasher that maps each element to a stable nonzero value in $[1, `HASH_MOD`)$.
+a custom value hasher that maps each element to a stable nonzero value in [`1`, `HASH_MOD`).
 
 - `RollingHash<T, ValueHasher>(first, last)` constructs prefix hashes for any iterator range of
   values accepted by the value hasher.

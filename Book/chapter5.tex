@@ -557,7 +557,7 @@ Computes one layer of a dynamic programming recurrence whose optimal transition 
 The function below computes \inlinecode{dp\_cur[l..r]} by evaluating the midpoint first, then recursing on the left half with a restricted upper bound on the optimal \inlinecode{k}, and on the right half with a restricted lower bound. The caller is responsible for checking that the recurrence satisfies the required monotonicity condition.
 
 \begin{compactitem}
-  \item \inlinecode{compute\_dc\_layer(dp\_prev, dp\_cur, l, r, opt\_l, opt\_r, cost)} fills \inlinecode{dp\_cur[l..r]} using candidate transition indices in $[{\inlinecodemath{opt_l}}, {\inlinecodemath{opt_r}}]$. The template parameter \inlinecode{cost} must be callable such that \inlinecode{cost(k, i)} returns the transition cost from previous state \inlinecode{k} to current state \inlinecode{i}.
+  \item \inlinecode{compute\_dc\_layer(dp\_prev, dp\_cur, l, r, opt\_l, opt\_r, cost)} fills \inlinecode{dp\_cur[l..r]} using candidate transition indices in [\inlinecode{opt\_l}, \inlinecode{opt\_r}]. The template parameter \inlinecode{cost} must be callable such that \inlinecode{cost(k, i)} returns the transition cost from previous state \inlinecode{k} to current state \inlinecode{i}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ calls to \inlinecode{cost(k, i)} per layer when each state has $O(n)$ possible transitions.

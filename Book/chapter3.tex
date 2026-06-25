@@ -757,7 +757,7 @@ Given a sequence $a_0, a_1, \ldots, a_{n-1}$ and a value hash $h(a_i)$ for each 
 
 The implementation works modulo the Mersenne prime $2^{61} - 1$, using \inlinecode{\_\_uint128\_t} for the multiplication where available and falling back to a double-and-add modular multiply otherwise. The base \inlinecode{HASH\_BASE} should be changed or chosen randomly for open-hacking environments. With a fixed base, hashing remains fast and practical, but it is still probabilistic and should not be used as proof of equality when exact verification is required.
 
-By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For non-integer element types, pass a custom value hasher that maps each element to a stable nonzero value in $[1, {\inlinecodemath{HASH_MOD}})$.
+By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For non-integer element types, pass a custom value hasher that maps each element to a stable nonzero value in [\inlinecode{1}, \inlinecode{HASH\_MOD}).
 
 \begin{compactitem}
   \item \inlinecode{RollingHash\textless{}T, ValueHasher\textgreater{}(first, last)} constructs prefix hashes for any iterator range of values accepted by the value hasher.
@@ -1674,9 +1674,12 @@ int main() {
     matches.push_back({needle, pos});
   });
   sort(matches.begin(), matches.end());
-  assert((matches == vector<pair<string, int>>{
-                         {"a", 0}, {"a", 4}, {"ab", 0}, {"ab", 4}, {"abccab", 0}, {"bc", 1},
-                         {"c", 2}, {"c", 3}}));
+  assert(
+      (matches ==
+       vector<pair<string, int>>{
+           {"a", 0}, {"a", 4}, {"ab", 0}, {"ab", 4}, {"abccab", 0}, {"bc", 1}, {"c", 2}, {"c", 3}
+       })
+  );
 
   vector<pair<string, int>> none;
   ac.find_all_in("zzzz", [&](const string &needle, int pos) { none.push_back({needle, pos}); });
