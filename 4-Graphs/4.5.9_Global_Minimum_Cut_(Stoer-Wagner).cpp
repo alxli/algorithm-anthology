@@ -86,9 +86,15 @@ std::pair<int64_t, std::vector<int>> stoer_wagner(std::vector<std::vector<int64_
   return best;
 }
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+Global min cut weight: 3
+One side: 1 2
+
+***/
 
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 int main() {
@@ -106,5 +112,11 @@ int main() {
   auto [weight, side] = stoer_wagner(adj);
   assert(weight == 3);
   assert((side == vector<int>{1, 2}));  // The shore {1, 2}, opposite the single vertex 0.
+  cout << "Global min cut weight: " << weight << "\n";
+  cout << "One side:";
+  for (int u : side) {
+    cout << " " << u;
+  }
+  cout << "\n";
   return 0;
 }

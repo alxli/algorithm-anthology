@@ -115,9 +115,15 @@ class EdmondsKarp {
   }
 };
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+Maximum flow: 5
+Min-cut source side: 0 1 2
+
+***/
 
 #include <cassert>
+#include <iostream>
 
 int main() {
   // Example graph after max flow, with each edge labeled flow/capacity:
@@ -139,10 +145,19 @@ int main() {
   g.add_edge(2, 4, 2);
   g.add_edge(3, 5, 2);
   g.add_edge(4, 5, 3);
-  assert(g.max_flow(0, 5) == 5);
+  int flow = g.max_flow(0, 5);
+  assert(flow == 5);
   assert(g.max_flow(0, 5) == 5);
   std::vector<char> cut = g.min_cut(0);
   assert(cut[0] && !cut[5]);
+  std::cout << "Maximum flow: " << flow << "\n";
+  std::cout << "Min-cut source side:";
+  for (int u = 0; u < static_cast<int>(cut.size()); u++) {
+    if (cut[u]) {
+      std::cout << " " << u;
+    }
+  }
+  std::cout << "\n";
   g.clear_flow();
   assert(g.max_flow(0, 5) == 5);
   return 0;

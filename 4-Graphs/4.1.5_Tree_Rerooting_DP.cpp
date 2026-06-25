@@ -139,9 +139,14 @@ class RerootingTree {
   }
 };
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+Sum of distances from each root: 8 5 8 6 9
+
+***/
 
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 vector<int64_t> sum_distances_all_roots(RerootingTree &tree) {
@@ -185,5 +190,10 @@ int main() {
   assert(!tree.is_ancestor(3, 2));
   vector<int64_t> distances = sum_distances_all_roots(tree);
   assert((distances == vector<int64_t>{8, 5, 8, 6, 9}));
+  cout << "Sum of distances from each root:";
+  for (int64_t d : distances) {
+    cout << " " << d;
+  }
+  cout << "\n";
   return 0;
 }

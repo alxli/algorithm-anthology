@@ -110,9 +110,15 @@ class SuffixArrayManberMyers {
   }
 };
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+Suffix array: 5 3 1 0 4 2
+LCP array: 1 3 0 0 2
+
+***/
 
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 int main() {
@@ -124,5 +130,14 @@ int main() {
   assert(lcp == lcp_expected);
   assert(sa.find("ana") == 1);
   assert(sa.find("x") == string::npos);
+  cout << "Suffix array:";
+  for (int pos : sarr) {
+    cout << " " << pos;
+  }
+  cout << "\nLCP array:";
+  for (int len : lcp) {
+    cout << " " << len;
+  }
+  cout << "\n";
   return 0;
 }

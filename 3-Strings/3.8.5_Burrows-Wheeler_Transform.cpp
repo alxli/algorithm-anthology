@@ -88,15 +88,36 @@ std::string inverse_bwt(const std::string &code) {
   return res.substr(1);  // Drop the leading sentinel.
 }
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+BWT(banana): annb\0aa
+inverse: banana
+
+***/
 
 #include <cassert>
+#include <iostream>
 using namespace std;
+
+string escaped(const string &s) {
+  string res;
+  for (char c : s) {
+    if (c == '\0') {
+      res += "\\0";
+    } else {
+      res += c;
+    }
+  }
+  return res;
+}
 
 int main() {
   string code = bwt("banana");
   assert(code.size() == 7);  // "banana" plus the sentinel.
+  assert(escaped(code) == "annb\\0aa");
   assert(inverse_bwt(code) == "banana");
+  cout << "BWT(banana): " << escaped(code) << "\n";
+  cout << "inverse: " << inverse_bwt(code) << "\n";
 
   // The transform clusters equal characters: "mississippi" yields long runs.
   string text = "mississippi";
