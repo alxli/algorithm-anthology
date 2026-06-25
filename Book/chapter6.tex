@@ -723,6 +723,8 @@ int main() {
 \subsection{Enumerating Arrangements}
 For the purposes of this section, we define a ``size $k$ arrangement of $n$'' to be a permutation of a size $k$ subset of the integers from $0$ to $n - 1$, for $0 \leq k \leq n$. There are $n \mathbin{\text{permute}} k$ possible arrangements, but $n^k$ possible arrangements if repeated values are allowed.
 
+For arrangements without repeats, each prefix fixes some used values and leaves a shrinking set of choices for the remaining positions. Ranking counts how many unused smaller choices could have been placed at the current position, multiplied by the number of possible suffix arrangements; unranking performs the inverse search by subtracting those block sizes. With repeats allowed, the sequence is just a base-$n$ counter.
+
 \begin{compactitem}
   \item \inlinecode{next\_arrangement(n, a)} tries to rearrange \inlinecode{a} to the next lexicographically greater arrangement, returning true if such an arrangement exists or false if the array is already in descending order (in which case \inlinecode{a} is unchanged). The input \inlinecode{a} must consist of distinct integers in the range $[0, n)$.
   \item \inlinecode{arrangement\_by\_rank(n, k, r)} returns the size $k$ arrangement of $n$ which is lexicographically ranked $r$ out of all size $k$ arrangements of $n$, where $r$ is a 0-based rank in the range $[0, n \mathbin{\text{permute}} k)$.
@@ -856,6 +858,7 @@ int main() {
         cout << endl;
       }
     } while (next_arrangement(n, a));
+    assert(count == 24);
     cout << endl;
   }
   {
@@ -870,6 +873,7 @@ int main() {
         cout << endl;
       }
     } while (next_arrangement_with_repeats(n, a));
+    assert(count == 16);
     cout << endl;
   }
   return 0;
@@ -887,6 +891,8 @@ int main() {
 \end{exampleoutput}
 \subsection{Enumerating Permutations}
 A permutation is an ordered list consisting of $n$ (not necessarily distinct) elements.
+
+The lexicographic successor is found by locating the rightmost ascent, increasing that position by the smallest possible amount, then reversing the suffix into its minimum order. Ranking and unranking permutations use the factorial number system: each position contributes the number of unused smaller values before the chosen one, scaled by the number of possible suffix permutations. The cycle decomposition views a permutation as a function on indices and follows each unvisited orbit until it returns to its start.
 
 \begin{compactitem}
   \item \inlinecode{next\_permutation\_(lo, hi)} is analogous to \inlinecode{std::next\_permutation(lo, hi)}, taking two BidirectionalIterators as a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ for which the function tries to rearrange to the next lexicographically greater permutation. The function returns true if such a permutation exists, or false if the range is already in descending order (in which case the values are unchanged). This implementation requires an ordering on the set of possible elements defined by the \inlinecode{\textless{}} operator on the iterator's value type.
@@ -1066,6 +1072,7 @@ int main() {
       std::next_permutation(b.begin(), b.end());
       next_permutation(c);
     } while (next_permutation(a));
+    assert(count == 24);
     cout << endl;
   }
   {  // Permutations of binary digits.
@@ -1073,15 +1080,21 @@ int main() {
     cout << "\nPermutations of 2 zeros and 3 ones:" << endl;
     int lo = bitset<5>(string("00111")).to_ulong();
     int hi = bitset<6>(string("100011")).to_ulong();
+    int count = 0;
     do {
       cout << bitset<n>(lo).to_string() << " ";
+      count++;
     } while ((lo = next_permutation(lo)) != hi);
+    assert(count == 10);
     cout << endl;
   }
   {  // Decomposition into cycles.
     vector<int> a{3, 1, 0, 2};
     cout << "\nDecomposition of {3,1,0,2} into cycles:" << endl;
     cycles c = permutation_cycles(a);
+    assert(c.size() == 2);
+    assert((c[0] == vector<int>{0, 3, 2}));
+    assert((c[1] == vector<int>{1}));
     for (const auto &cycle : c) {
       print_range(cycle.begin(), cycle.end());
     }
@@ -1104,6 +1117,8 @@ Decomposition of {3,1,0,2} into cycles:
 \end{exampleoutput}
 \subsection{Enumerating Combinations}
 A combination is a subset of size $k$ chosen from a total of $n$ (not necessarily distinct) elements, where order does not matter.
+
+The lexicographic successor advances the rightmost chosen position that can still move right, then packs every later position as far left as possible. Ranking and unranking use the combinatorial number system: at each position, count how many combinations would be skipped by choosing a smaller next value, then either add that count to the rank or subtract it while searching for the requested rank. Bitmask successors use the same order as increasing integers with a fixed popcount.
 
 \begin{compactitem}
   \item \inlinecode{next\_combination(lo, mid, hi)} takes random-access iterators \inlinecode{lo}, \inlinecode{mid}, and \inlinecode{hi} as a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of $n$ elements for which the function will rearrange such that the $k$ elements in $[{\inlinecodemath{lo}}, {\inlinecodemath{mid}})$ become the next lexicographically greater combination. The function returns true if such a combination exists, or false if $[{\inlinecodemath{lo}}, {\inlinecodemath{mid}})$ already consists of the lexicographically greatest combination of the elements in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ (in which case the values are unchanged). This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator\textless{}} on the iterator's value type.
@@ -1282,9 +1297,12 @@ int main() {
     int k = 3;
     string s = "11234";
     cout << "\"" << s << "\" choose " << k << ":" << endl;
+    int count = 0;
     do {
       cout << s.substr(0, k) << " ";
+      count++;
     } while (next_combination(s.begin(), s.begin() + k, s.end()));
+    assert(count == 7);  // Duplicate '1' values collapse equal output strings.
     cout << endl;
   }
   {  // Unordered combinations using masks.
@@ -1298,6 +1316,7 @@ int main() {
     for (int i = k - 1; i < n; i++) {
       dest |= (1 << i);
     }
+    int count = 0;
     do {
       for (int i = 0; i < n; i++) {
         if ((mask >> i) & 1) {
@@ -1305,8 +1324,10 @@ int main() {
         }
       }
       cout << " ";
+      count++;
       mask = next_combination_mask(mask);
     } while (mask != dest);
+    assert(count == 9);  // Stops before the sentinel mask.
     cout << endl;
   }
   {  // Combinations of distinct integers from 0 to n - 1.
@@ -1321,15 +1342,19 @@ int main() {
       assert(rank_by_combination(n, a) == count);
       count++;
     } while (next_combination(n, a));
+    assert(count == 10);
     cout << endl;
   }
   {  // Combinations with repeats.
     int n = 3, k = 2;
     vector<int> a{0, 0};
     cout << "\n" << n << " multichoose " << k << ":" << endl;
+    int count = 0;
     do {
       print_range(a.begin(), a.end());
+      count++;
     } while (next_combination_with_repeats(n, a));
+    assert(count == 6);
     cout << endl;
   }
   return 0;
@@ -1350,6 +1375,8 @@ abc abd acd bcd abe ace bce ade bde
 \end{exampleoutput}
 \subsection{Enumerating Partitions}
 A partition of a natural number $n$ is a way to write $n$ as a sum of positive integers where the order of the addends does not matter.
+
+The lexicographic successor edits the suffix of a non-increasing partition: increase the rightmost part that can grow without breaking the order, then refill the remaining sum with ones. Ranking and unranking use a dynamic-programming table that counts partitions of a remaining sum by their next part. This lets the algorithms skip whole blocks of partitions sharing a common prefix.
 
 \begin{compactitem}
   \item \inlinecode{next\_partition(p)} takes a reference to a vector \inlinecode{p} of positive integers as a partition of $n$ for which the function will re-assign to become the next lexicographically greater partition. The function returns true if such a partition exists, or false if \inlinecode{p} already consists of the lexicographically greatest partition (i.e. the single integer $n$).
@@ -1441,8 +1468,7 @@ int64_t rank_by_partition(const std::vector<int> &p) {
   return res;
 }
 
-using Fn = void (*)(std::vector<int>::iterator, std::vector<int>::iterator);
-
+template<typename Fn>
 void generate_increasing_partitions(int left, int prev, int i, std::vector<int> &p, Fn f) {
   if (left == 0) {
     f(p.begin(), p.begin() + i);
@@ -1453,6 +1479,7 @@ void generate_increasing_partitions(int left, int prev, int i, std::vector<int> 
   }
 }
 
+template<typename Fn>
 void generate_increasing_partitions(int n, Fn f) {
   std::vector<int> p(n, 0);
   generate_increasing_partitions(n, 0, 0, p, f);
@@ -1487,12 +1514,18 @@ int main() {
       assert(rank_by_partition(a) == count);
       count++;
     } while (next_partition(a));
+    assert(count == 5);
     cout << endl;
   }
   {
     int n = 8;
     cout << "\nIncreasing partitions of " << n << ":" << endl;
-    generate_increasing_partitions(n, print_range);
+    int count = 0;
+    generate_increasing_partitions(n, [&](auto lo, auto hi) {
+      print_range(lo, hi);
+      count++;
+    });
+    assert(count == 6);
     cout << endl;
   }
   return 0;
@@ -1679,6 +1712,7 @@ class PartitionEnumerator : public AbstractEnumerator {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -1695,25 +1729,49 @@ int main() {
   {
     cout << "3 permute 2 arrangements:" << endl;
     ArrangementEnumerator arr(3, 2);
-    arr.enumerate([](auto lo, auto hi) { print_range(lo, hi); });
+    int count = 0;
+    arr.enumerate([&](auto lo, auto hi) {
+      print_range(lo, hi);
+      count++;
+    });
+    assert(count == 6);
+    assert((arr.from_rank(5) == vector<int>{2, 1}));
+    assert(arr.to_rank(vector<int>{2, 1}) == 5);
     cout << endl;
   }
   {
     cout << "\nPermutations of [$0$, 3):" << endl;
     PermutationEnumerator perm(3);
-    perm.enumerate([](auto lo, auto hi) { print_range(lo, hi); });
+    int count = 0;
+    perm.enumerate([&](auto lo, auto hi) {
+      print_range(lo, hi);
+      count++;
+    });
+    assert(count == 6);
     cout << endl;
   }
   {
     cout << "\n4 choose 3 combinations:" << endl;
     CombinationEnumerator comb(4, 3);
-    comb.enumerate([](auto lo, auto hi) { print_range(lo, hi); });
+    int count = 0;
+    comb.enumerate([&](auto lo, auto hi) {
+      print_range(lo, hi);
+      count++;
+    });
+    assert(count == 4);
+    assert((comb.from_rank(3) == vector<int>{1, 2, 3}));
+    assert(comb.to_rank(vector<int>{1, 2, 3}) == 3);
     cout << endl;
   }
   {
     cout << "\nPartition of 4:" << endl;
     PartitionEnumerator part(4);
-    part.enumerate([](auto lo, auto hi) { print_range(lo, hi); });
+    int count = 0;
+    part.enumerate([&](auto lo, auto hi) {
+      print_range(lo, hi);
+      count++;
+    });
+    assert(count == 5);
     cout << endl;
   }
   return 0;
@@ -2841,6 +2899,8 @@ int main() {
   auto p = sieve(pmax);
   delta = static_cast<double>((clock() - start)) / CLOCKS_PER_SEC;
   cout << "sieve(n=" << pmax << "): " << delta << "s" << endl;
+  assert((sieve(1) == vector<int>{}));
+  assert((sieve(10) == vector<int>{2, 3, 5, 7}));
 
   vector<int> least;
   assert(linear_sieve(pmax, &least) == p);
@@ -2852,6 +2912,9 @@ int main() {
   p = sieve(l, h);
   delta = static_cast<double>((clock() - start)) / CLOCKS_PER_SEC;
   cout << "sieve([" << l << ", " << h << "]): " << delta << "s" << endl;
+  assert((sieve(14, 16) == vector<int>{}));
+  assert((sieve(17, 19) == vector<int>{17, 19}));
+  assert(!p.empty() && p.front() >= l && p.back() <= h);
   return 0;
 }
 \end{lstlisting}
@@ -5078,6 +5141,7 @@ int main() {
   assert(rotate(a, 180) == a180);
   assert(rotate(a, 270) == a270);
   assert(rotate(a, 360) == a);
+  assert(rotate(a, 450) == a90);
 
   matrix b{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
   for (int d = -360; d <= 360; d += 90) {
@@ -5093,6 +5157,7 @@ int main() {
   m[0][0] += 5;
   assert(m[0][0] == 25 && m[1][1] == 20);
   assert((m ^ 0) == identity_matrix(5));
+  assert((identity_matrix<int>(3) ^ 5) == identity_matrix<int>(3));
   assert(power_sum(m, 3) == m + m * m + (m ^ 3));
 
   Matrix<double> d = make_matrix<double>(2, 2, 0.5);
@@ -6359,6 +6424,8 @@ int main() {
   vector<int64_t> a{1, 2, 3}, b{4, 5, 6};
   vector<int64_t> c = convolve(a, b);
   assert((c == vector<int64_t>{4, 13, 28, 27, 18}));
+  assert(convolve({}, b).empty());
+  assert((convolve(vector<int64_t>{5}, vector<int64_t>{7}) == vector<int64_t>{35}));
   vector<int64_t> ones(160, 1);
   vector<int64_t> d = convolve(ones, ones);
   assert(d[0] == 1 && d[159] == 160 && d[318] == 1);
@@ -6478,6 +6545,8 @@ int main() {
   vector<int64_t> a{1, 2, 3}, b{4, 5, 6};
   vector<int64_t> c = convolve(a, b);
   assert((c == vector<int64_t>{4, 13, 28, 27, 18}));
+  assert(convolve({}, b).empty());
+  assert((convolve(vector<int64_t>{5}, vector<int64_t>{7}) == vector<int64_t>{35}));
   vector<int64_t> ones(160, 1);
   vector<int64_t> d = convolve(ones, ones);
   assert(d[0] == 1 && d[159] == 160 && d[318] == 1);
@@ -7044,7 +7113,7 @@ This is the base case of the Sprague-Grundy theorem: every finite impartial game
 \begin{compactitem}
   \item \inlinecode{nim\_sum(piles)} returns the XOR of all pile sizes.
   \item \inlinecode{first\_player\_wins(piles)} returns whether the player to move has a winning strategy.
-  \item \inlinecode{winning\_move(piles)} returns a move $(pile, new_size)$ that moves to XOR 0, or $(-1, -1)$ if the position is losing.
+  \item \inlinecode{winning\_move(piles)} returns a move (\inlinecode{pile}, \inlinecode{new\_size}) that moves to XOR 0, or $(-1, -1)$ if the position is losing.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ per call, where $n$ is the number of piles.

@@ -11,7 +11,7 @@ The following class implements a simple graph using adjacency lists, along with 
 \begin{compactitem}
   \item \inlinecode{Graph(directed)} constructs an empty graph, directed if \inlinecode{directed} is true (the default) and undirected otherwise.
   \item \inlinecode{nodes()} returns the current number of nodes.
-  \item \inlinecode{operator[n]} returns a reference to the adjacency list (a \inlinecode{std::vector\textless{}int\textgreater{}}) of node \inlinecode{n}.
+  \item \inlinecode{operator[n]} returns a reference to the adjacency list (\inlinecode{std::vector\textless{}int\textgreater{}}) of node \inlinecode{n}.
   \item \inlinecode{add\_edge(u, v)} adds an edge from \inlinecode{u} to \inlinecode{v}, plus the reverse edge if the graph is undirected, growing the node count to accommodate the larger index if necessary.
   \item \inlinecode{dfs(start, f)} runs a depth-first search from node \inlinecode{start}, calling \inlinecode{f(n)} on each node \inlinecode{n} in the order it is first visited.
   \item \inlinecode{has\_cycle()} returns whether the graph contains a cycle.
@@ -123,6 +123,16 @@ using namespace std;
 
 int main() {
   {
+    //           0
+    //       /  /  |
+    //      v  v   v
+    //      1  6   7
+    //    / |     / |
+    //   v  v    v  v
+    //   2  5    8  11
+    //  / |     /|
+    // v  v    v v
+    // 3  4    9 10
     Graph g;
     g.add_edge(0, 1);
     g.add_edge(0, 6);
@@ -143,6 +153,11 @@ int main() {
     assert(!g.has_cycle());
   }
   {
+    //       0
+    //     /  |
+    //    1   2
+    //  / |
+    // 3  4
     Graph tree(false);
     tree.add_edge(0, 1);
     tree.add_edge(0, 2);
@@ -161,6 +176,8 @@ DFS order: 0 1 2 3 4 5 6 7 8 9 10 11
 \end{exampleoutput}
 \subsection{Topological Sort}
 Given a directed acyclic graph, find one of possibly many orderings of the nodes such that for every edge from node $u$ to $v$, $u$ comes before $v$ in the ordering.
+
+The DFS version uses the fact that every outgoing dependency of a node is finished before the node itself is appended, so reversing DFS post-order places each prerequisite before everything it can reach. Kahn's algorithm instead repeatedly removes nodes with indegree zero: these are exactly the nodes whose remaining prerequisites have all already been placed. If at some point not every node can be removed, the leftover nodes must lie on a directed cycle.
 
 \begin{compactitem}
   \item \inlinecode{toposort\_dfs()} returns a valid topological ordering using DFS post-order, or throws if the graph contains a cycle.
@@ -249,6 +266,14 @@ std::vector<int> toposort_kahn() {
 using namespace std;
 
 int main() {
+  //        1
+  //        |
+  //        v
+  // 0 ---> 3 ---> 5
+  // |      | ╲
+  // v      v  v
+  // 4 ---> 6  7 <--- 2
+  // ^________________|
   adj.assign(8, {});
   adj[0].push_back(3);
   adj[0].push_back(4);
@@ -266,6 +291,8 @@ int main() {
   }
   cout << endl;
   vector<int> kahn = toposort_kahn();
+  assert(dfs_res.size() == adj.size());
+  assert(kahn.size() == adj.size());
   vector<int> position(kahn.size());
   for (int i = 0; i < static_cast<int>(kahn.size()); i++) {
     position[kahn[i]] = i;
@@ -375,6 +402,9 @@ void add_edge(int u, int v) {
 }
 
 int main() {
+  // 0---1---4---3
+  //     |   |
+  //     2   5
   adj.assign(6, {});
   add_edge(0, 1);
   add_edge(1, 2);
@@ -548,9 +578,9 @@ vector<int64_t> sum_distances_all_roots(RerootingTree &tree) {
 }
 
 int main() {
-  // 0--1--2
-  //    |
-  //    3--4
+  // 0---1---2
+  //     |
+  //     3---4
   RerootingTree tree(5);
   tree.add_edge(0, 1);
   tree.add_edge(1, 2);
@@ -640,20 +670,21 @@ class CentroidDecomposition {
 #include <cassert>
 using namespace std;
 
-void add_edge(vector<vector<int>> &adj, int u, int v) {
-  adj[u].push_back(v);
-  adj[v].push_back(u);
-}
-
 int main() {
+  // 0---1---3---5---6
+  //     |   |
+  //     2   4
   vector<vector<int>> adj(7);
-  add_edge(adj, 0, 1);
-  add_edge(adj, 1, 2);
-  add_edge(adj, 1, 3);
-  add_edge(adj, 3, 4);
-  add_edge(adj, 3, 5);
-  add_edge(adj, 5, 6);
-
+  auto add_edge = [&](int u, int v) {
+    adj[u].push_back(v);
+    adj[v].push_back(u);
+  };
+  add_edge(0, 1);
+  add_edge(1, 2);
+  add_edge(1, 3);
+  add_edge(3, 4);
+  add_edge(3, 5);
+  add_edge(5, 6);
   CentroidDecomposition tree(adj);
   assert(tree.parent(3) == -1);
   assert(tree.parent(1) == 3);
@@ -751,12 +782,16 @@ std::vector<std::pair<int, int>> decode_prufer(const std::vector<int> &code) {
 using namespace std;
 
 int main() {
-  vector<vector<int>> adj;
+  //     0
+  //     |
+  // 1---3---2
+  //     |
+  //     4
+  vector<vector<int>> adj(5);
   auto add_edge = [&](int u, int v) {
     adj[u].push_back(v);
     adj[v].push_back(u);
   };
-  adj.assign(5, {});
   add_edge(0, 3);
   add_edge(1, 3);
   add_edge(2, 3);
@@ -1121,10 +1156,28 @@ class EulerianGraph {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <iostream>
 using namespace std;
+
+void print_vertices(const string &label, const vector<int> &vertices) {
+  cout << label << ": ";
+  for (int i = 0; i < static_cast<int>(vertices.size()); i++) {
+    if (i > 0) {
+      cout << "->";
+    }
+    cout << vertices[i];
+  }
+  cout << endl;
+}
 
 int main() {
   {
+    // 0 <--- 2
+    // |    ^ ^
+    // |   /  |
+    // v /    |
+    // 1 ---> 3 ---> 4
+    // ^_____________|
     EulerianGraph g(5, true);
     g.add_edge(0, 1);
     g.add_edge(1, 2);
@@ -1136,8 +1189,15 @@ int main() {
     assert(trail.edges.size() == 6);
     assert(trail.vertices.front() == 0 && trail.vertices.back() == 0);
     assert(trail.is_cycle());
+    print_vertices("Directed Eulerian cycle", trail.vertices);
   }
   {
+    // 0 ---- 2
+    // |     /|
+    // |   /  |
+    // | /    |
+    // 1 ---- 3 ---- 4
+    // |_____________|
     EulerianGraph g(5, false);
     g.add_edge(0, 1);
     g.add_edge(1, 2);
@@ -1149,6 +1209,7 @@ int main() {
     assert(trail.edges.size() == 6);
     assert(trail.vertices.front() == trail.vertices.back());
     assert(trail.is_cycle());
+    print_vertices("Undirected Eulerian cycle", trail.vertices);
   }
   {
     EulerianGraph g(2, false);
@@ -1157,6 +1218,7 @@ int main() {
     auto trail = g.eulerian_path(0);
     assert(trail.is_cycle());
     assert((trail.edges == vector<int>{a, b} || trail.edges == vector<int>{b, a}));
+    print_vertices("Parallel-edge cycle", trail.vertices);
   }
   {
     EulerianGraph g(3, true);
@@ -1166,10 +1228,17 @@ int main() {
     assert(trail.start == 0);
     assert((trail.vertices == vector<int>{0, 1, 2}));
     assert(!trail.is_cycle());
+    print_vertices("Directed Eulerian path", trail.vertices);
   }
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Directed Eulerian cycle: 0->1->3->4->1->2->0
+Undirected Eulerian cycle: 0->1->4->3->1->2->0
+Parallel-edge cycle: 0->1->0
+Directed Eulerian path: 0->1->2
+\end{exampleoutput}
 
 \section{\texorpdfstring{Connectivity}{4.2 Connectivity}}
 \setcounter{section}{2}
@@ -1232,6 +1301,7 @@ void add_edge(int u, int v) {
 }
 
 int main() {
+  // 0---1---2    3---4
   adj.assign(6, {});
   add_edge(0, 1);
   add_edge(1, 2);
@@ -1326,10 +1396,17 @@ struct KosarajuSCC {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <iostream>
 using namespace std;
 
 int main() {
+  // 0 ---> 1 ----> 2 <---> 3
+  // ^    / |       |       ^
+  // |   /  |       |       |
+  // |  /   |       |       v
+  // | v    v       v       7
+  // 4 ---> 5 <---> 6 <----/
   KosarajuSCC g(8);
   g.add_edge(0, 1);
   g.add_edge(1, 2);
@@ -1346,6 +1423,14 @@ int main() {
   g.add_edge(7, 3);
   g.add_edge(7, 6);
   g.build_scc();
+  // SCC condensation DAG:
+  // {0,1,4} -> {2,3,7} -> {5,6}
+  //     \-------------------^
+  assert(g.scc.size() == 3);
+  assert(g.component[0] == g.component[1] && g.component[1] == g.component[4]);
+  assert(g.component[2] == g.component[3] && g.component[3] == g.component[7]);
+  assert(g.component[5] == g.component[6]);
+  assert(g.component[0] != g.component[2] && g.component[2] != g.component[5]);
   cout << "Components:" << endl;
   for (auto &component : g.scc) {
     for (int v : component) {
@@ -1445,10 +1530,17 @@ struct TarjanSCC {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <iostream>
 using namespace std;
 
 int main() {
+  // 0 ---> 1 ----> 2 <---> 3
+  // ^    / |       |       ^
+  // |   /  |       |       |
+  // |  /   |       |       v
+  // | v    v       v       7
+  // 4 ---> 5 <---> 6 <----/
   TarjanSCC g(8);
   g.add_edge(0, 1);
   g.add_edge(1, 2);
@@ -1465,6 +1557,14 @@ int main() {
   g.add_edge(7, 3);
   g.add_edge(7, 6);
   g.build_scc();
+  // SCC condensation DAG:
+  // {0,1,4} -> {2,3,7} -> {5,6}
+  //     \-------------------^
+  assert(g.scc.size() == 3);
+  assert(g.component[0] == g.component[1] && g.component[1] == g.component[4]);
+  assert(g.component[2] == g.component[3] && g.component[3] == g.component[7]);
+  assert(g.component[5] == g.component[6]);
+  assert(g.component[0] != g.component[2] && g.component[2] != g.component[5]);
   cout << "Components:" << endl;
   for (auto &component : g.scc) {
     for (int v : component) {
@@ -1587,11 +1687,15 @@ class Dominators {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 int main() {
+  // 0 ---> 1 ---+   +-------> 4
+  // |           |  /          |
+  // v           v /           v
+  // 2 --------> 3 ---> 5 ---> 6
   Dominators g(7);
-  // 0 branches through 1 and 2, then reconverges at 3 before reaching 4 and 5.
   g.add_edge(0, 1);
   g.add_edge(0, 2);
   g.add_edge(1, 3);
@@ -1601,17 +1705,18 @@ int main() {
   g.add_edge(4, 6);
   g.add_edge(5, 6);
   vector<int> idom = g.find_dominators(0);
-  assert(idom[0] == 0);
-  assert(idom[1] == 0);
-  assert(idom[2] == 0);
-  assert(idom[3] == 0);
-  assert(idom[4] == 3);
-  assert(idom[5] == 3);
-  assert(idom[6] == 3);
   assert(g.find_dominators(0) == idom);
+  cout << "Immediate dominators:";
+  for (int v : idom) {
+    cout << " " << v;
+  }
+  cout << endl;
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Immediate dominators: 0 0 0 0 3 3 3
+\end{exampleoutput}
 \subsection{Articulation Points, Biconnected Components, Block-Cut Forest}
 Given an undirected graph, compute articulation points, vertex-biconnected components (BCCs), and the block-cut forest using Tarjan's algorithm. An articulation point (a.k.a. cut vertex) is a vertex whose removal increases the number of connected components in the graph. A vertex-biconnected component is a maximal subgraph that cannot be disconnected by removing one vertex, with single-edge and isolated-vertex components handled as degenerate cases. A single depth-first search tracks each node's low-link, the earliest entry time reachable from its subtree: a node is an articulation point exactly when some child's subtree cannot reach above it, and the edges of each BCC are collected on a stack popped at that moment.
 
@@ -1754,6 +1859,9 @@ struct BiconnectedComponents {
 using namespace std;
 
 int main() {
+  // 0---1---2    3---7
+  //   \ |
+  //     5---4
   BiconnectedComponents g(8);
   g.add_edge(0, 1);
   g.add_edge(0, 5);
@@ -1919,6 +2027,9 @@ struct BridgeDecomposition {
 using namespace std;
 
 int main() {
+  // 0---1---2    3---7
+  //   \ |
+  //     5---4
   BridgeDecomposition g(8);
   g.add_edge(0, 1);
   g.add_edge(0, 5);
@@ -2109,6 +2220,9 @@ struct OnlineBridges {
 #include <cassert>
 
 int main() {
+  // 0---1
+  //   \ |
+  //     2---3
   OnlineBridges g(4);
   g.add_edge(0, 1);
   assert(g.bridges == 1);
@@ -2226,6 +2340,7 @@ struct TwoSAT {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 int main() {
@@ -2240,16 +2355,24 @@ int main() {
   solver.add(1, true, 2, false);
   assert(solver.satisfiable());
   assert(solver.answer[0]);
+  cout << "Assignment:";
+  for (bool value : solver.answer) {
+    cout << " " << value;
+  }
+  cout << endl;
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Assignment: 1 1 1
+\end{exampleoutput}
 \subsection{Functional Graph}
 A functional graph is a directed graph in which every node has exactly one outgoing edge, given by a successor function \inlinecode{f}, where \inlinecode{f[i]} is the node reached in one step from node \inlinecode{i}. Following the edges from any node eventually enters a cycle, so each weakly connected component consists of one directed cycle with trees of nodes feeding into it. This structure underlies problems about iterating a function: where a sequence \inlinecode{i}, \inlinecode{f[i]}, \inlinecode{f[f[i]]}, ... ends up, and how far it is from repeating.
 
 Building the structure peels away nodes of in-degree zero to expose the cycles (the survivors), then labels each cycle and walks the remaining tail nodes to record their distance to the cycle. A binary lifting table stores \inlinecode{f} applied $2^k$ times, so any number of steps can be taken in logarithmic time. Together these answer, for any node, which cycle it eventually reaches, how many steps until it gets there, and exactly where it lands after a huge number of steps.
 
 \begin{compactitem}
-  \item \inlinecode{FunctionalGraph(f)} builds the structure for the successor function \inlinecode{f} over nodes numbered [0, \inlinecode{n}), where \inlinecode{n} is \inlinecode{f.size()}.
+  \item \inlinecode{FunctionalGraph(f)} builds the structure for the successor function \inlinecode{f} over nodes numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{f.size()}.
   \item \inlinecode{on\_cycle(i)} returns whether node \inlinecode{i} lies on a cycle.
   \item \inlinecode{dist\_to\_cycle(i)} returns the number of steps from \inlinecode{i} to the first cycle node it reaches ($0$ if \inlinecode{i} is itself on a cycle).
   \item \inlinecode{cycle\_id(i)} returns an identifier for the cycle that \inlinecode{i} eventually reaches; two nodes share an identifier exactly when they funnel into the same cycle.
@@ -2378,13 +2501,15 @@ class FunctionalGraph {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 int main() {
-  // Cycle 0 -> 1 -> 2 -> 0, with a tail 5 -> 4 -> 3 -> 1 and 6 -> 2.
-  vector<int> f{1, 2, 0, 1, 3, 4, 2};
-  FunctionalGraph g(f);
-
+  // 0 --> 1 <-- 3 <-- 4 <-- 5
+  //  ^   /
+  //   \ v
+  //    2 <-- 6
+  FunctionalGraph g({1, 2, 0, 1, 3, 4, 2});
   assert(g.on_cycle(0) && g.on_cycle(1) && g.on_cycle(2));
   assert(!g.on_cycle(3) && !g.on_cycle(5));
   assert(g.num_cycles() == 1);
@@ -2399,9 +2524,17 @@ int main() {
   assert(g.successor(5, 3) == 1);    // 5 -> 4 -> 3 -> 1.
   assert(g.successor(5, 4) == 2);    // One more step around into the cycle.
   assert(g.successor(0, 100) == 1);  // 100 mod 3 == 1 step around the cycle.
+  cout << "Cycle count: " << g.num_cycles() << endl;
+  cout << "dist_to_cycle[5] = " << g.dist_to_cycle(5) << endl;
+  cout << "successor(5, 4) = " << g.successor(5, 4) << endl;
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Cycle count: 1
+dist_to_cycle[5] = 3
+successor(5, 4) = 2
+\end{exampleoutput}
 \subsection{Offline Dynamic Connectivity}
 Maintains the number of connected components of an undirected graph as edges are added and removed over time, answering queries offline once the entire sequence of operations is known. Each edge is alive over a contiguous interval of time, from when it is added until it is removed. These intervals are placed into a segment tree over the time axis, so that for $T$ operations, each edge appears in $O(\log T)$ nodes whose ranges it spans. A depth-first traversal of this segment tree unites the edges stored at each node on the way down and undoes them on the way back up, so at each leaf the disjoint set forest reflects exactly the edges alive at that moment.
 
@@ -2562,15 +2695,18 @@ using namespace std;
 
 int main() {
   OfflineDynamicConnectivity dc(4);
+  // 0   1   2   3
   dc.count_components();  // 4 isolated vertices.
   dc.add_edge(0, 1);
   dc.add_edge(2, 3);
-  dc.count_components();  // {0,1} {2,3} -> 2 components.
+  // 0---1   2---3
+  dc.count_components();  // 2 components.
   dc.add_edge(1, 2);
-  dc.count_components();  // All four connected -> 1 component.
+  // 0---1---2---3
+  dc.count_components();  // All connected => 1 component.
   dc.remove_edge(1, 2);
+  // 0---1   2---3
   dc.count_components();  // Back to 2 components.
-
   assert((dc.solve() == vector<int>{4, 2, 1, 2}));
   return 0;
 }
@@ -2631,6 +2767,7 @@ void bfs(int start) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -2648,13 +2785,19 @@ void print_path(int dest) {
 }
 
 int main() {
-  int nodes = 4, start = 0, dest = 3;
-  adj.assign(nodes, {});
+  // 0 --> 1 --> 2
+  //       |     |
+  //       v     |
+  //       3 <---+
+  adj.assign(4, {});
   adj[0].push_back(1);
   adj[1].push_back(2);
   adj[1].push_back(3);
   adj[2].push_back(3);
+  int start = 0, dest = 3;
   bfs(start);
+  assert(dist[dest] == 2);
+  assert(pred[dest] == 1);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
        << endl;
   print_path(dest);
@@ -2723,12 +2866,9 @@ void bfs_zero_one(int start) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <iostream>
 using namespace std;
-
-void add_edge(int u, int v, int w) {
-  adj[u].emplace_back(v, w);
-}
 
 void print_path(int dest) {
   vector<int> path;
@@ -2744,14 +2884,23 @@ void print_path(int dest) {
 }
 
 int main() {
-  int start = 0, dest = 3;
+  //         w=1
+  //     0 -------> 1
+  //     |        ^ |
+  // w=0 |    w=0   | w=1
+  //     v  /       v
+  //     2 -------> 3
+  //         w=1
   adj.assign(4, {});
-  add_edge(0, 1, 1);
-  add_edge(0, 2, 0);
-  add_edge(2, 1, 0);
-  add_edge(1, 3, 1);
-  add_edge(2, 3, 1);
+  adj[0].emplace_back(1, 1);
+  adj[0].emplace_back(2, 0);
+  adj[2].emplace_back(1, 0);
+  adj[1].emplace_back(3, 1);
+  adj[2].emplace_back(3, 1);
+  int start = 0, dest = 3;
   bfs_zero_one(start);
+  assert(dist[dest] == 1);
+  assert(pred[dest] == 2);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
   print_path(dest);
   return 0;
@@ -2822,10 +2971,9 @@ std::pair<std::vector<T>, std::vector<int>> dijkstra(
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <iostream>
 using namespace std;
-
-vector<vector<pair<int, int64_t>>> adj;
 
 void print_path(const vector<int> &pred, int dest) {
   vector<int> path;
@@ -2841,14 +2989,22 @@ void print_path(const vector<int> &pred, int dest) {
 }
 
 int main() {
-  int start = 0, dest = 3;
-  adj.assign(4, {});
+  //     w=2     w=2
+  //  0 ----> 1 ----> 2
+  //   \      |      /
+  // w=8\  w=4|     /w=1
+  //     \    v    /
+  //      --> 3 <--
+  vector<vector<pair<int, int64_t>>> adj(4);
   adj[0].emplace_back(1, 2);
   adj[0].emplace_back(3, 8);
   adj[1].emplace_back(2, 2);
   adj[1].emplace_back(3, 4);
   adj[2].emplace_back(3, 1);
+  int start = 0, dest = 3;
   auto [dist, pred] = dijkstra(adj, start);
+  assert(dist[dest] == 5);
+  assert(pred[dest] == 2 && pred[2] == 1 && pred[1] == 0);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
   print_path(pred, dest);
   return 0;
@@ -2914,6 +3070,7 @@ void bellman_ford(int n, int start) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -2931,11 +3088,18 @@ void print_path(int dest) {
 }
 
 int main() {
+  //    w=1      w=2
+  // 0 -----> 1 -----> 2
+  // |                 ^
+  // +-----------------+
+  //         w=5
   edges.emplace_back(0, 1, 1);
   edges.emplace_back(1, 2, 2);
   edges.emplace_back(0, 2, 5);
   int start = 0, dest = 2;
   bellman_ford(3, start);
+  assert(dist[dest] == 3);
+  assert(pred[dest] == 1);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
   print_path(dest);
   return 0;
@@ -3009,12 +3173,9 @@ bool spfa(int start) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <iostream>
 using namespace std;
-
-void add_edge(int u, int v, int w) {
-  adj[u].emplace_back(v, w);
-}
 
 void print_path(int dest) {
   vector<int> path;
@@ -3030,13 +3191,22 @@ void print_path(int dest) {
 }
 
 int main() {
-  int start = 0, dest = 3;
+  //        w=4
+  //     0 ----> 1
+  //     |      /
+  // w=5 |    / w=-2
+  //     |  /
+  //     v v   w=3
+  //     2 ---------> 3
   adj.assign(4, {});
-  add_edge(0, 1, 4);
-  add_edge(0, 2, 5);
-  add_edge(1, 2, -2);
-  add_edge(2, 3, 3);
+  adj[0].emplace_back(1, 4);
+  adj[0].emplace_back(2, 5);
+  adj[1].emplace_back(2, -2);
+  adj[2].emplace_back(3, 3);
+  int start = 0, dest = 3;
   spfa(start);
+  assert(dist[dest] == 5);
+  assert(pred[dest] == 2 && pred[2] == 1);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
   print_path(dest);
   return 0;
@@ -3114,6 +3284,7 @@ void dag_shortest_path(int start) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -3131,13 +3302,23 @@ void print_path(int dest) {
 }
 
 int main() {
-  int start = 0, dest = 4;
+  //        w=1    w=-2     w=3
+  //     0 ----> 1 ----> 3 -----> 4
+  //     |     /        ^
+  // w=5 |   / w=1     /
+  //     v v          /w=1
+  //     2 ----------+
   adj.assign(5, {});
-  adj[0] = {{1, 1}, {2, 5}};
-  adj[1] = {{2, 1}, {3, -2}};  // A negative edge, which Dijkstra could not handle.
-  adj[2] = {{3, 1}};
-  adj[3] = {{4, 3}};
+  adj[0].emplace_back(1, 1);
+  adj[0].emplace_back(2, 5);
+  adj[1].emplace_back(2, 1);
+  adj[1].emplace_back(3, -2);  // A negative edge, which Dijkstra could not handle.
+  adj[2].emplace_back(3, 1);
+  adj[3].emplace_back(4, 3);
+  int start = 0, dest = 4;
   dag_shortest_path(start);
+  assert(dist[dest] == 2);
+  assert(pred[dest] == 3 && pred[3] == 1);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
   print_path(dest);
   return 0;
@@ -3218,6 +3399,7 @@ void floyd_warshall() {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -3231,12 +3413,19 @@ void print_path(int u, int v) {
 }
 
 int main() {
+  //    w=1      w=2
+  // 0 -----> 1 -----> 2
+  // |                 ^
+  // +-----------------+
+  //         w=5
   init_floyd(3);
   dist[0][1] = 1;
   dist[1][2] = 2;
   dist[0][2] = 5;
   floyd_warshall();
   int start = 0, dest = 2;
+  assert(dist[start][dest] == 3);
+  assert(next_node[start][dest] == 1);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[start][dest]
        << ".\n";
   print_path(start, dest);
@@ -3317,6 +3506,7 @@ int prim_mst() {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -3330,8 +3520,15 @@ void add_edge(int u, int v, int w) {
 }
 
 int main() {
-  int nodes = 7;
-  adj.assign(nodes, {});
+  // Two connected components; MST routine returns a minimum spanning forest.
+  //      w=4              w=1
+  //   0 ----- 1        3 ----- 4
+  //    \     /               / |
+  // w=3 \   / w=6      w=2 /   | w=4
+  //      \ /             / w=3 |
+  //       2            5 ----- 6
+  adj.assign(7, {});
+  edge_endpoints.clear();
   add_edge(0, 1, 4);
   add_edge(1, 2, 6);
   add_edge(2, 0, 3);
@@ -3339,7 +3536,10 @@ int main() {
   add_edge(4, 5, 2);
   add_edge(5, 6, 3);
   add_edge(6, 4, 4);
-  cout << "Total distance: " << prim_mst() << endl;
+  int total = prim_mst();
+  assert(total == 13);
+  assert(mst.size() == 5);
+  cout << "Total distance: " << total << endl;
   for (int id : mst) {
     auto &[u, v] = edge_endpoints[id];
     cout << u << " <-> " << v << endl;
@@ -3422,22 +3622,29 @@ int kruskal_mst(int n) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <iostream>
 using namespace std;
 
-void add_edge(int u, int v, int w) {
-  edges.emplace_back(w, u, v);
-}
-
 int main() {
-  add_edge(0, 1, 4);
-  add_edge(1, 2, 6);
-  add_edge(2, 0, 3);
-  add_edge(3, 4, 1);
-  add_edge(4, 5, 2);
-  add_edge(5, 6, 3);
-  add_edge(6, 4, 4);
-  cout << "Total distance: " << kruskal_mst(7) << endl;
+  // Two connected components; MST routine returns a minimum spanning forest.
+  //      w=4              w=1
+  //   0 ----- 1        3 ----- 4
+  //    \     /               / |
+  // w=3 \   / w=6      w=2 /   | w=4
+  //      \ /             / w=3 |
+  //       2            5 ----- 6
+  edges.emplace_back(4, 0, 1);  // (weight, u, v)
+  edges.emplace_back(6, 1, 2);
+  edges.emplace_back(3, 2, 0);
+  edges.emplace_back(1, 3, 4);
+  edges.emplace_back(2, 4, 5);
+  edges.emplace_back(3, 5, 6);
+  edges.emplace_back(4, 6, 4);
+  int total = kruskal_mst(7);
+  assert(total == 13);
+  assert(mst.size() == 5);
+  cout << "Total distance: " << total << endl;
   for (int id : mst) {
     auto &[w, u, v] = edges[id];
     cout << u << " <-> " << v << endl;
@@ -3459,7 +3666,7 @@ A spanning arborescence rooted at a node \inlinecode{root} of a weighted, direct
 Edmonds' (a.k.a. the Chu-Liu/Edmonds) algorithm computes the arborescence by first selecting, for each non-root node, its cheapest incoming edge. If these choices form no cycle, they already constitute the answer. Otherwise each cycle is contracted into a single supernode, and every edge entering the cycle has its weight reduced by the cost of the edge it would replace inside the cycle. Solving the problem on the contracted graph and expanding the cycles back yields the optimum. The implementation below repeats this contraction in rounds, accumulating the selected weights, until no cycle remains.
 
 \begin{compactitem}
-  \item \inlinecode{directed\_mst(n, root, edges)} returns the total weight of the minimum spanning arborescence rooted at \inlinecode{root} over \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$, or $-1$ if some node is unreachable from the root (no arborescence exists). Edges are given as $({\inlinecodemath{from}}, {\inlinecodemath{to}}, {\inlinecodemath{weight}})$ triples; parallel edges and self-loops are allowed, with self-loops simply ignored.
+  \item \inlinecode{directed\_mst(n, root, edges)} returns the total weight of the minimum spanning arborescence rooted at \inlinecode{root} over \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$, or $-1$ if some node is unreachable from the root (no arborescence exists). Edges are given as (\inlinecode{from}, \inlinecode{to}, \inlinecode{weight}) triples; parallel edges and self-loops are allowed, with self-loops simply ignored.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \cdot m)$ per call, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -3468,23 +3675,21 @@ Edmonds' (a.k.a. the Chu-Liu/Edmonds) algorithm computes the arborescence by fir
 
 \begin{lstlisting}[language=C++]
 #include <cstdint>
+#include <tuple>
 #include <vector>
 
-struct Edge {
-  int u, v;
-  int64_t weight;
-};
+using Edge = std::tuple<int, int, int64_t>;  // (u, v, weight)
 
 int64_t directed_mst(int n, int root, std::vector<Edge> edges) {
   const int64_t INF = INT64_MAX / 4;
-  int64_t result = 0;
+  int64_t total_dist = 0;
   while (true) {
     std::vector<int64_t> min_in(n, INF);
     std::vector<int> pre(n, -1);
-    for (const Edge &e : edges) {
-      if (e.u != e.v && e.weight < min_in[e.v]) {
-        min_in[e.v] = e.weight;
-        pre[e.v] = e.u;
+    for (const auto &[u, v, w] : edges) {
+      if (u != v && w < min_in[v]) {
+        min_in[v] = w;
+        pre[v] = u;
       }
     }
     for (int v = 0; v < n; v++) {
@@ -3497,7 +3702,7 @@ int64_t directed_mst(int n, int root, std::vector<Edge> edges) {
     std::vector<int> comp(n, -1), seen(n, -1);
     min_in[root] = 0;
     for (int v = 0; v < n; v++) {
-      result += min_in[v];
+      total_dist += min_in[v];
       int u = v;
       while (seen[u] != v && comp[u] == -1 && u != root) {
         seen[u] = v;
@@ -3519,39 +3724,56 @@ int64_t directed_mst(int n, int root, std::vector<Edge> edges) {
         comp[v] = cycles++;
       }
     }
-    for (Edge &e : edges) {
-      int u = comp[e.u], v = comp[e.v];
-      if (u != v) {
-        e.weight -= min_in[e.v];
+    for (auto &[u, v, w] : edges) {
+      int cu = comp[u], cv = comp[v];
+      if (cu != cv) {
+        w -= min_in[v];
       }
-      e.u = u;
-      e.v = v;
+      u = cu;
+      v = cv;
     }
     n = cycles;
     root = comp[root];
   }
-  return result;
+  return total_dist;
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 int main() {
-  // Root 0. Cheapest incoming edges 1<-0 (1), 2<-1 (2), 3<-2 (3) form a tree of weight 6.
+  //          w=1
+  // root=0 -----> 1 <-----+
+  //      |      / |       |
+  //      |   w=2  |       |
+  //   w=5|  /     |w=2    |w=4
+  //      v v      v       |
+  //      2 -----> 3 ------+
+  //          w=3
   vector<Edge> edges{
       {0, 1, 1}, {0, 2, 5}, {1, 2, 2}, {2, 3, 3}, {3, 1, 4},
   };
-  assert(directed_mst(4, 0, edges) == 6);
+  int64_t weight = directed_mst(4, 0, edges);
+  assert(weight == 6);  // Cheapest edges 0->1->2->3 form a tree of weight 6.
+  cout << "Minimum arborescence weight: " << weight << endl;
 
-  // Node 3 is unreachable from root 0.
+  //        w=1    w=2
+  // root=0 ---> 1 ---> 2       3
   vector<Edge> disconnected{{0, 1, 1}, {1, 2, 1}};
-  assert(directed_mst(4, 0, disconnected) == -1);
+  int64_t disconnected_weight = directed_mst(4, 0, disconnected);
+  assert(disconnected_weight == -1);  // Node 3 is unreachable from root 0.
+  cout << "Disconnected arborescence weight: " << disconnected_weight << endl;
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Minimum arborescence weight: 6
+Disconnected arborescence weight: -1
+\end{exampleoutput}
 
 \section{\texorpdfstring{Flows and Cuts}{4.5 Flows and Cuts}}
 \setcounter{section}{5}
@@ -3623,8 +3845,6 @@ int64_t ford_fulkerson(int source, int sink) {
 #include <cassert>
 
 int main() {
-  int nodes = 6;
-  cap.assign(nodes, std::vector<int>(nodes));
   // Example graph after max flow, with each edge labeled flow/capacity:
   //            2/2
   //       1 --------> 3
@@ -3636,6 +3856,8 @@ int main() {
   // 2/3 \   / 2/2
   //      v /
   //       2
+  int nodes = 6;
+  cap.assign(nodes, std::vector<int>(nodes));
   cap[0][1] = 4;
   cap[0][2] = 3;
   cap[1][3] = 2;
@@ -3764,7 +3986,6 @@ class EdmondsKarp {
 #include <cassert>
 
 int main() {
-  EdmondsKarp<int> g(6);
   // Example graph after max flow, with each edge labeled flow/capacity:
   //            2/2
   //       1 --------> 3
@@ -3776,6 +3997,7 @@ int main() {
   // 2/3 \   / 2/2
   //      v /
   //       2
+  EdmondsKarp<int> g(6);
   g.add_edge(0, 1, 4);
   g.add_edge(0, 2, 3);
   g.add_edge(1, 3, 2);
@@ -3934,7 +4156,6 @@ class Dinic {
 #include <cassert>
 
 int main() {
-  Dinic<int> g(6);
   // Example graph after max flow, with each edge labeled flow/capacity:
   //            2/2
   //       1 --------> 3
@@ -3946,6 +4167,7 @@ int main() {
   // 2/3 \   / 2/2
   //      v /
   //       2
+  Dinic<int> g(6);
   g.add_edge(0, 1, 4);
   g.add_edge(0, 2, 3);
   g.add_edge(1, 3, 2);
@@ -4167,7 +4389,6 @@ class Dinic {
 using namespace std;
 
 int main() {
-  Dinic<int> g(6);
   // Example graph after max flow, with each edge labeled flow/capacity:
   //            2/2
   //       1 --------> 3
@@ -4179,6 +4400,7 @@ int main() {
   // 2/3 \   / 2/2
   //      v /
   //       2
+  Dinic<int> g(6);
   int id01 = g.add_edge(0, 1, 4);
   int id02 = g.add_edge(0, 2, 3);
   int id13 = g.add_edge(1, 3, 2);
@@ -4353,8 +4575,6 @@ std::vector<char> min_cut(int source) {
 #include <cassert>
 
 int main() {
-  int nodes = 6;
-  cap.assign(nodes, std::vector<int>(nodes));
   // Example graph after max flow, with each edge labeled flow/capacity:
   //            2/2
   //       1 --------> 3
@@ -4366,6 +4586,8 @@ int main() {
   // 2/3 \   / 2/2
   //      v /
   //       2
+  int nodes = 6;
+  cap.assign(nodes, std::vector<int>(nodes));
   cap[0][1] = 4;
   cap[0][2] = 3;
   cap[1][3] = 2;
@@ -4387,7 +4609,7 @@ Given a flow network with capacities and edge costs, find a minimum-cost flow fr
   \item \inlinecode{add\_edge(u, v, cap, cost, rev\_cap = 0)} adds a directed residual-network edge and returns its edge ID.
   \item \inlinecode{edge\_flow(id)} returns the flow through a previously added edge.
   \item \inlinecode{clear\_flow()} resets all edge flows to zero.
-  \item \inlinecode{min\_cost\_flow(source, sink, target\_flow)} sends up to \inlinecode{target\_flow} additional units of flow and returns $(flow, cost)$ for the flow sent by that call. If the returned flow is smaller than \inlinecode{target\_flow}, the residual network cannot carry the requested amount.
+  \item \inlinecode{min\_cost\_flow(source, sink, target\_flow)} sends up to \inlinecode{target\_flow} additional units of flow and returns a pair (\inlinecode{flow}, \inlinecode{cost}) for the flow sent by that call. If the returned flow is smaller than \inlinecode{target\_flow}, the residual network cannot carry the requested amount.
 \end{compactitem}
 
 This implementation uses shortest augmenting paths with SPFA, so it supports negative edge costs as long as the residual graph has no reachable negative-cost cycle. For dense or adversarial inputs, a potential-based Dijkstra version is usually faster when reduced costs are nonnegative. The capacity type \inlinecode{T} should be signed, since reverse residual edges store negative flow.
@@ -4502,7 +4724,6 @@ class MinCostMaxFlow {
 using namespace std;
 
 int main() {
-  MinCostMaxFlow<int> g(6);
   // Example graph after max flow, with each edge labeled flow/capacity:
   //            2/2
   //       1 --------> 3
@@ -4514,6 +4735,7 @@ int main() {
   // 2/3 \   / 2/2
   //      v /
   //       2
+  MinCostMaxFlow<int> g(6);
   int id01 = g.add_edge(0, 1, 4, 1);
   g.add_edge(0, 2, 3, 1);
   g.add_edge(1, 3, 2, 1);
@@ -4540,7 +4762,7 @@ Given a flow network with capacities and edge costs, find a minimum-cost flow fr
   \item \inlinecode{add\_edge(u, v, cap, cost, rev\_cap = 0)} adds a directed residual-network edge and returns its edge ID.
   \item \inlinecode{edge\_flow(id)} returns the flow through a previously added edge.
   \item \inlinecode{clear\_flow()} resets all edge flows to zero.
-  \item \inlinecode{min\_cost\_flow(source, sink, target\_flow)} sends up to \inlinecode{target\_flow} additional units of flow and returns $(flow, cost)$ for the flow sent by that call. If the returned flow is smaller than \inlinecode{target\_flow}, the residual network cannot carry the requested amount.
+  \item \inlinecode{min\_cost\_flow(source, sink, target\_flow)} sends up to \inlinecode{target\_flow} additional units of flow and returns a pair (\inlinecode{flow}, \inlinecode{cost}) for the flow sent by that call. If the returned flow is smaller than \inlinecode{target\_flow}, the residual network cannot carry the requested amount.
 \end{compactitem}
 
 If all initial edge costs are nonnegative, the initial potentials can be zero and the first shortest path search is already Dijkstra-safe. If negative costs are present, this implementation first runs SPFA to compute valid initial potentials; it assumes there is no reachable negative-cost cycle. The capacity type \inlinecode{T} should be signed, since reverse residual edges store negative flow.
@@ -4703,7 +4925,6 @@ class MinCostMaxFlow {
 using namespace std;
 
 int main() {
-  MinCostMaxFlow<int> g(6);
   // Example graph after max flow, with each edge labeled flow/capacity:
   //            2/2
   //       1 --------> 3
@@ -4715,6 +4936,7 @@ int main() {
   // 2/3 \   / 2/2
   //      v /
   //       2
+  MinCostMaxFlow<int> g(6);
   int id01 = g.add_edge(0, 1, 4, 1);
   g.add_edge(0, 2, 3, 1);
   g.add_edge(1, 3, 2, 1);
@@ -4739,7 +4961,7 @@ Given an undirected graph with nonnegative edge weights, build a Gomory-Hu tree:
 The algorithm starts with every vertex attached to vertex 0, then performs $n - 1$ max-flow/min-cut computations. After computing the minimum cut between vertex $s$ and its current parent, vertices on the $s$ side of that cut are reparented under $s$, gradually refining the cut-equivalent tree.
 
 \begin{compactitem}
-  \item \inlinecode{gomory\_hu(n, edges)} returns the ${\inlinecodemath{n}} - 1$ edges of a Gomory-Hu tree as $({\inlinecodemath{u}}, {\inlinecodemath{v}}, {\inlinecodemath{weight}})$ tripes for an undirected, weighted graph with \inlinecode{n} nodes and \inlinecode{edges} of the same shape.
+  \item \inlinecode{gomory\_hu(n, edges)} returns the ${\inlinecodemath{n}} - 1$ edges of a Gomory-Hu tree as $({\inlinecodemath{u}}, {\inlinecodemath{v}}, {\inlinecodemath{weight}})$ triplets for an undirected, weighted graph with \inlinecode{n} nodes and \inlinecode{edges} of the same shape.
   \item \inlinecode{min\_cut\_value(n, tree, source, sink)} returns the minimum cut value between two vertices using a Gomory-Hu tree. Note that for many pairwise cut queries on the same tree, it's more efficient to prebuild the tree adjacency once and answer minimum edge-on-path queries with LCA/binary lifting instead of calling \inlinecode{min\_cut\_value()} each time.
 \end{compactitem}
 
@@ -4920,9 +5142,15 @@ T min_cut_value(int n, const std::vector<Edge<T>> &tree, int source, int sink) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 int main() {
+  //      w=3      w=2
+  //   0 -----> 1 -----> 3
+  //    \    w=1|       ^
+  // w=2 \      v      / w=4
+  //      +---> 2 ----+
   vector<Edge<int>> edges{
       {0, 1, 3}, {0, 2, 2}, {1, 2, 1}, {1, 3, 2}, {2, 3, 4},
   };
@@ -4932,9 +5160,21 @@ int main() {
   assert(min_cut_value(4, tree, 0, 2) == 5);
   assert(min_cut_value(4, tree, 0, 3) == 5);
   assert(min_cut_value(4, tree, 2, 3) == 6);
+  cout << "Gomory-Hu tree:" << endl;
+  for (auto [u, v, w] : tree) {
+    cout << u << " -- " << v << " (" << w << ")" << endl;
+  }
+  cout << "mincut(2, 3) = " << min_cut_value(4, tree, 2, 3) << endl;
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Gomory-Hu tree:
+1 -- 0 (5)
+2 -- 1 (5)
+3 -- 2 (6)
+mincut(2, 3) = 6
+\end{exampleoutput}
 \subsection{Global Minimum Cut (Stoer-Wagner)}
 Given a connected, undirected graph with nonnegative edge weights, the global minimum cut is the partition of the vertices into two nonempty sets that minimizes the total weight of edges crossing between them. Unlike a minimum $s$-$t$ cut, no source or sink is fixed; the goal is the cheapest way to split the graph in two. The Stoer-Wagner algorithm finds it without any maximum flow computation by repeatedly running a ``minimum cut phase''.
 
@@ -5014,13 +5254,17 @@ std::pair<int64_t, std::vector<int>> stoer_wagner(std::vector<std::vector<int64_
 using namespace std;
 
 int main() {
-  // Triangle with edge weights 0-1: 2, 1-2: 3, 0-2: 1.
-  // Cuts: {0}|{1,2} = 3, {1}|{0,2} = 5, {2}|{0,1} = 4. Minimum is 3.
+  //      w=2
+  //   0 ----- 1
+  //    \     /
+  // w=1 \   / w=3
+  //       2
   vector<vector<int64_t>> adj{
       {0, 2, 1},
       {2, 0, 3},
       {1, 3, 0},
   };
+  // Cuts: {0}|{1,2} = 3, {1}|{0,2} = 5, {2}|{0,1} = 4. Minimum is 3.
   auto [weight, side] = stoer_wagner(adj);
   assert(weight == 3);
   assert((side == vector<int>{1, 2}));  // The shore {1, 2}, opposite the single vertex 0.
@@ -5091,10 +5335,15 @@ int kuhn(int n2) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <iostream>
 using namespace std;
 
 int main() {
+  // Left vertices L0..L2, right vertices R0..R3:
+  //   L0 -- R1
+  //   L1 -- R0, R1, R2
+  //   L2 -- R2, R3
   int n1 = 3, n2 = 4;
   adj.assign(n1, {});
   adj[0].push_back(1);
@@ -5103,7 +5352,9 @@ int main() {
   adj[1].push_back(2);
   adj[2].push_back(2);
   adj[2].push_back(3);
-  cout << "Matched " << kuhn(n2) << " pair(s):" << endl;
+  int pairs = kuhn(n2);
+  assert(pairs == 3);
+  cout << "Matched " << pairs << " pair(s):" << endl;
   for (int i = 0; i < n2; i++) {
     if (match_right[i] != -1) {
       cout << match_right[i] << " " << i << endl;
@@ -5206,10 +5457,15 @@ int hopcroft_karp(int n2) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <iostream>
 using namespace std;
 
 int main() {
+  // Left vertices L0..L2, right vertices R0..R3:
+  //   L0 -- R1
+  //   L1 -- R0, R1, R2
+  //   L2 -- R2, R3
   int n1 = 3, n2 = 4;
   adj.assign(n1, {});
   adj[0].push_back(1);
@@ -5218,7 +5474,9 @@ int main() {
   adj[1].push_back(2);
   adj[2].push_back(2);
   adj[2].push_back(3);
-  cout << "Matched " << hopcroft_karp(n2) << " pair(s):" << endl;
+  int pairs = hopcroft_karp(n2);
+  assert(pairs == 3);
+  cout << "Matched " << pairs << " pair(s):" << endl;
   for (int i = 0; i < n2; i++) {
     if (match[i] != -1) {
       cout << match[i] << " " << i << endl;
@@ -5351,10 +5609,8 @@ int main() {
   adj[1].push_back(2);
   adj[2].push_back(2);
   adj[2].push_back(3);
-
   vector<int> cover = min_vertex_cover(n2);
   assert(cover.size() == 3);  // Equals the maximum matching size, by Koenig's theorem.
-
   // The cover is valid: every edge has at least one endpoint in it.
   for (int u = 0; u < n1; u++) {
     for (int v : adj[u]) {
@@ -5504,27 +5760,37 @@ int matching_size(const vector<int> &match) {
 };
 
 int main() {
-  int nodes = 4;
-  adj.assign(nodes, {});
-  add_edge(0, 1);
-  add_edge(1, 2);
-  add_edge(2, 3);
-  add_edge(3, 0);
-  vector<int> match = blossom(adj);
-  cout << "Matched " << matching_size(match) << " pair(s):" << endl;
-  for (int i = 0; i < nodes; i++) {
-    if (match[i] != -1 && i < match[i]) {
-      cout << i << " " << match[i] << endl;
+  {
+    // 0---1---2
+    //  \      |
+    //   \____ 3
+    int nodes = 4;
+    adj.assign(nodes, {});
+    add_edge(0, 1);
+    add_edge(1, 2);
+    add_edge(2, 3);
+    add_edge(3, 0);
+    vector<int> match = blossom(adj);
+    cout << "Matched " << matching_size(match) << " pair(s):" << endl;
+    for (int i = 0; i < nodes; i++) {
+      if (match[i] != -1 && i < match[i]) {
+        cout << i << " " << match[i] << endl;
+      }
     }
   }
-  nodes = 5;
-  adj.assign(nodes, {});
-  add_edge(0, 1);
-  add_edge(1, 2);
-  add_edge(2, 0);
-  add_edge(0, 3);
-  add_edge(1, 4);
-  assert(matching_size(blossom(adj)) == 2);
+  {
+    // 3---0---1---4
+    //     |   |
+    //     +---2
+    int nodes = 5;
+    adj.assign(nodes, {});
+    add_edge(0, 1);
+    add_edge(1, 2);
+    add_edge(2, 0);
+    add_edge(0, 3);
+    add_edge(1, 4);
+    assert(matching_size(blossom(adj)) == 2);
+  }
   return 0;
 }
 \end{lstlisting}
@@ -5901,25 +6167,31 @@ class WeightedGeneralMatching {
 using namespace std;
 
 int main() {
-  // A 5-cycle 0-1-2-3-4-0; the heaviest matching picks two disjoint edges.
+  //   w=5   w=6   w=5   w=6
+  // 0-----1-----2-----3-----4
+  //  \_____________________/
+  //            w=5
   WeightedGeneralMatching m(5);
   m.add_edge(0, 1, 5);
   m.add_edge(1, 2, 6);
   m.add_edge(2, 3, 5);
   m.add_edge(3, 4, 6);
   m.add_edge(4, 0, 5);
-  assert(m.solve() == 12);  // Edges (1,2) and (3,4) with weights 6 + 6.
+  assert(m.solve() == 12);  // Edges 1-2 and 3-4 with weights 6 + 6.
   assert(m.partner(1) == 2 && m.partner(2) == 1);
   assert(m.partner(3) == 4 && m.partner(4) == 3);
   assert(m.partner(0) == -1);  // Node 0 is left unmatched.
 
-  // A triangle plus a pendant edge: taking the pendant can beat a single triangle edge.
+  //   w=3   w=3   w=5
+  // 0-----1-----2-----3
+  //  \_________/
+  //      w=3
   WeightedGeneralMatching t(4);
   t.add_edge(0, 1, 3);
   t.add_edge(1, 2, 3);
   t.add_edge(0, 2, 3);
   t.add_edge(2, 3, 5);
-  assert(t.solve() == 8);  // (0,1) weight 3 and (2,3) weight 5.
+  assert(t.solve() == 8);  // Edges 0-1 and 2-3 with weights 3 + 5.
   return 0;
 }
 \end{lstlisting}
@@ -6202,6 +6474,15 @@ void add_edge(int u, int v) {
 }
 
 int main() {
+  //          0(10)
+  //         / / |
+  //       /  /  |
+  //     /   /   |
+  // 1(20)---+---3(40)---4(50)
+  //     \   |   /      /
+  //      \  |  /      /
+  //       \ | /      /
+  //        2(30)----+
   int nodes = 5;
   adj.assign(nodes, std::vector<char>(nodes));
   w.assign(nodes, 0);
@@ -6326,6 +6607,11 @@ void add_edge(int u, int v) {
 }
 
 int main() {
+  //      0
+  //    /  |
+  //   1---4---2
+  //    \ /   /
+  //     3---+
   int nodes = 5;
   adj.assign(nodes, std::vector<char>(nodes));
   add_edge(0, 1);
@@ -6336,6 +6622,14 @@ int main() {
   add_edge(2, 4);
   add_edge(3, 4);
   int colors = color_graph();
+  assert(colors == 3);
+  for (int u = 0; u < nodes; u++) {
+    for (int v = u + 1; v < nodes; v++) {
+      if (adj[u][v]) {
+        assert(color[u] != color[v]);
+      }
+    }
+  }
   cout << "Colored using " << colors << " color(s):" << endl;
   for (int i = 0; i < colors; i++) {
     cout << "Color " << i + 1 << ":";
@@ -6626,10 +6920,24 @@ int64_t shortest_hamiltonian_cycle() {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <iostream>
 using namespace std;
 
 int main() {
+  // Complete directed graph where 0->1->2->0 costs 1 + 2 + 3.
+  // The reverse cycle is intentionally more expensive.
+  //         0 <-------+
+  //       ^ | \       |
+  //      /  |  \      |
+  //     /   |   \     |
+  // w=7| w=1|    \w=1 |w=3
+  //    |    |     \   |
+  //    |    |      \  |
+  //    |    v  w=2  v |
+  //    +--- 1 ------> 2
+  //          ^_______/
+  //             w=5
   int nodes = 3;
   adj.assign(nodes, std::vector<int64_t>(nodes));
   adj[0][1] = 1;
@@ -6638,14 +6946,19 @@ int main() {
   adj[1][2] = 2;
   adj[2][0] = 3;
   adj[2][1] = 5;
-
-  cout << "Shortest Hamiltonian path length: " << shortest_hamiltonian_path() << endl;
+  int64_t path_len = shortest_hamiltonian_path();
+  assert(path_len == 3);
+  assert((path == vector<int>{0, 1, 2}));
+  cout << "Shortest Hamiltonian path length: " << path_len << endl;
   cout << "Path: " << path[0];
   for (int i = 1; i < nodes; i++) {
     cout << "->" << path[i];
   }
   cout << "\n\n";
-  cout << "Shortest Hamiltonian cycle length: " << shortest_hamiltonian_cycle() << endl;
+  int64_t cycle_len = shortest_hamiltonian_cycle();
+  assert(cycle_len == 6);
+  assert((path == vector<int>{0, 1, 2}));
+  cout << "Shortest Hamiltonian cycle length: " << cycle_len << endl;
   cout << "Cycle: ";
   for (int i = 0; i < nodes; i++) {
     cout << path[i] << "->";

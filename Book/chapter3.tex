@@ -1442,7 +1442,11 @@ class KMP {
 #include <cassert>
 
 int main() {
-  assert(15 == KMP("ABCDABD").find_in("ABC ABCDAB ABCDABCDABDE"));
+  KMP kmp("ABCDABD");
+  assert(kmp.find_in("ABC ABCDAB ABCDABCDABDE") == 15);
+  assert(kmp.find_in("ABC ABCDAB ABCDABCDA") == string::npos);
+  assert(KMP("aa").find_in("aaa") == 0);  // First overlapping occurrence.
+  assert(KMP("").find_in("abc") == 0);
   return 0;
 }
 \end{lstlisting}
@@ -1525,7 +1529,11 @@ std::size_t find(const string &haystack, const string &needle) {
 #include <cassert>
 
 int main() {
-  assert(15 == find("ABC ABCDAB ABCDABCDABDE", "ABCDABD"));
+  assert((z_array(string("aaaaa")) == std::vector<int>{0, 4, 3, 2, 1}));
+  assert(find("ABC ABCDAB ABCDABCDABDE", "ABCDABD") == 15);
+  assert(find("ABC ABCDAB ABCDABCDA", "ABCDABD") == string::npos);
+  assert(find("aaa", "aa") == 0);  // First overlapping occurrence.
+  assert(find("abc", "") == 0);
   return 0;
 }
 \end{lstlisting}
@@ -1643,7 +1651,10 @@ class AhoCorasick {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
 #include <iostream>
+#include <utility>
 using namespace std;
 
 int main() {
@@ -1657,7 +1668,21 @@ int main() {
   needles.push_back("caa");
   needles.push_back("abccab");
 
-  AhoCorasick(needles).find_all_in("abccab", [](const string &needle, int pos) {
+  AhoCorasick ac(needles);
+  vector<pair<string, int>> matches;
+  ac.find_all_in("abccab", [&](const string &needle, int pos) {
+    matches.push_back({needle, pos});
+  });
+  sort(matches.begin(), matches.end());
+  assert((matches == vector<pair<string, int>>{
+                         {"a", 0}, {"a", 4}, {"ab", 0}, {"ab", 4}, {"abccab", 0}, {"bc", 1},
+                         {"c", 2}, {"c", 3}}));
+
+  vector<pair<string, int>> none;
+  ac.find_all_in("zzzz", [&](const string &needle, int pos) { none.push_back({needle, pos}); });
+  assert(none.empty());
+
+  ac.find_all_in("abccab", [](const string &needle, int pos) {
     cout << "Matched \"" << needle << "\" at position " << pos << "." << endl;
   });
   return 0;
@@ -3543,11 +3568,16 @@ string longest_common_substring(const string &s1, const string &s2) {
 
 int main() {
   assert(longest_common_substring("bbbabca", "aababcd") == "babc");
+  assert(longest_common_substring("abc", "def") == "");
+  assert(longest_common_substring("", "abc") == "");
+  assert(longest_common_substring("xyabc", "zzabczz") == "abc");
   return 0;
 }
 \end{lstlisting}
 \subsection{Longest Common Subsequence}
 Given two strings, determine their longest common subsequence. A subsequence is a string that can be derived from the original string by deleting some elements without changing the order of the remaining elements (e.g. \inlinecode{"ACE"} is a subsequence of \inlinecode{"ABCDE"}, but \inlinecode{"BAE"} is not).
+
+The dynamic program compares prefixes: if the last characters match, they can extend an optimal subsequence of the smaller prefixes; otherwise, one of the two last characters must be skipped. Following the filled table backward reconstructs one optimal subsequence. Hirschberg's algorithm keeps only one DP row at a time, using forward and backward length rows to choose where an optimal answer crosses the midpoint of the longer string.
 
 \begin{compactitem}
   \item \inlinecode{longest\_common\_subsequence(s1, s2)} returns the longest common subsequence of strings \inlinecode{s1} and \inlinecode{s2} using a classic dynamic programming approach. This implementation computes \inlinecode{dp[i][j]} (the length of the longest common subsequence for the length $i$ prefix of \inlinecode{s1} and the length $j$ prefix of \inlinecode{s2}) before following the path backwards to construct the answer.
@@ -3657,11 +3687,17 @@ string hirschberg_lcs(const string &s1, const string &s2) {
 int main() {
   assert(longest_common_subsequence("xmjyauz", "mzjawxu") == "mjau");
   assert(hirschberg_lcs("xmjyauz", "mzjawxu") == "mjau");
+  assert(longest_common_subsequence("abc", "def") == "");
+  assert(hirschberg_lcs("abc", "def") == "");
+  assert(longest_common_subsequence("", "abc") == "");
+  assert(hirschberg_lcs("", "abc") == "");
   return 0;
 }
 \end{lstlisting}
 \subsection{Sequence Alignment (Needleman-Wunsch)}
 Given two strings, determine their minimum-cost alignment. An alignment of two strings is a transformation of both strings by inserting gap characters \inlinecode{\_} in some way to make the final lengths equal. The total cost of an alignment given a \inlinecode{gap\_cost} (insertion or deletion cost) and a \inlinecode{sub\_cost} (substitution, i.e. mismatch cost) is \inlinecode{gap\_cost} times the number of inserted gaps, plus \inlinecode{sub\_cost} times the number of indices at which the two aligned strings differ.
+
+The dynamic program compares prefixes and chooses the cheapest last operation: align the final characters together, leave a gap in the first string, or leave a gap in the second string. Following the filled table backward reconstructs one minimum-cost alignment. Hirschberg's algorithm uses the same recurrence with only one DP row at a time, splitting the problem where an optimal alignment crosses the midpoint of the longer string.
 
 \begin{compactitem}
   \item \inlinecode{align\_sequences(s1, s2, gap\_cost, sub\_cost)} returns a pair of aligned strings for strings \inlinecode{s1} and \inlinecode{s2}, using a classic dynamic programming approach. This implementation first computes \inlinecode{dp[i][j]} (the cost of aligning the length $i$ prefix of \inlinecode{s1} with the length $j$ prefix of \inlinecode{s2}) before following the path backwards to construct the answer. For \inlinecode{gap\_cost = sub\_cost = 1}, \inlinecode{dp[n][m]} will be the Levenshtein edit distance, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
@@ -4478,7 +4514,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Run-Length Encoding}
-Encodes consecutive equal characters as $(character, count)$ runs. Run-length encoding is a simple lossless compression technique that works well when strings contain long repeated blocks and poorly when repetitions are rare.
+Encodes consecutive equal characters as (\inlinecode{character}, \inlinecode{count}) runs. Run-length encoding is a simple lossless compression technique that works well when strings contain long repeated blocks and poorly when repetitions are rare.
 
 The representation below stores runs in a vector of pairs rather than formatting them as a string. This avoids ambiguity when the original text contains digits or separator characters.
 
@@ -4535,6 +4571,9 @@ int main() {
   assert(runs[0] == (pair<char, int>{'a', 3}));
   assert(runs[2] == (pair<char, int>{'c', 4}));
   assert(run_length_decode(runs) == s);
+  assert(run_length_encode("").empty());
+  assert(run_length_decode({}) == "");
+  assert((run_length_encode("z") == vector<pair<char, int>>{{'z', 1}}));
   return 0;
 }
 \end{lstlisting}
@@ -4610,6 +4649,10 @@ string base64_decode(const string &text) {
 #include <cassert>
 
 int main() {
+  assert(base64_encode("") == "");
+  assert(base64_decode("") == "");
+  assert(base64_encode("f") == "Zg==");
+  assert(base64_encode("fo") == "Zm8=");
   assert(base64_encode("hello") == "aGVsbG8=");
   assert(base64_decode("aGVsbG8=") == "hello");
   assert(base64_decode(base64_encode("abc123!?")) == "abc123!?");
@@ -4749,6 +4792,14 @@ int main() {
   string bits = h.encode(text);
   assert(h.decode(bits) == text);
   assert(bits.size() < text.size() * 8);
+
+  HuffmanTree single("aaaa");
+  assert(single.encode("aaaa") == "0000");
+  assert(single.decode(single.encode("aaaa")) == "aaaa");
+
+  HuffmanTree empty("");
+  assert(empty.encode("") == "");
+  assert(empty.decode("") == "");
   return 0;
 }
 \end{lstlisting}
