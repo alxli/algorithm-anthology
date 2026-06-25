@@ -20,7 +20,8 @@ again pushed and popped at most once.
 
 The examples below cover sorted 2-sum/3-sum variants, finding the shortest subarray with sum at
 least a target when all values are nonnegative, and finding the longest subarray with at most `k`
-distinct values. They also cover the minimum or maximum of every fixed-length window.
+distinct values. They also cover the minimum or maximum of every fixed-length window and an online
+dynamic programming recurrence.
 
 - `two_sum_sorted(a, target)` returns two indices whose values sum to `target`, or $(-1, -1)$ if no
   such pair exists. The input array must be sorted.
@@ -167,6 +168,60 @@ std::vector<T> sliding_window_extrema(const std::vector<T> &a, int k, Compare co
   return res;
 }
 
+/*
+
+A monotone queue can be used to maintain the minimum or maximum value in an online sliding window.
+This is useful for dynamic programming recurrences where each transition may only come from one of
+the last $w$ states, such as `dp[i] = a[i] + min(dp[j])` for $j \in [i - w, i - 1)$.
+
+The queue stores candidate (`index`, `value`) pairs in monotone order. Expired indices are removed
+from the front, and dominated values are removed from the back before inserting a new candidate.
+
+- `MonotoneQueue<T, Compare>()` constructs an empty queue. Use `std::less<T>` for minimum queries
+  and `std::greater<T>` for maximum queries.
+- `push(index, value)` inserts candidate `value` at position `index`, removing dominated
+  candidates from the back.
+- `expire(first_valid)` removes candidates with index less than `first_valid`.
+- `top()` returns the best active (`index`, `value`) pair. The queue must be nonempty.
+- `empty()` returns whether the queue has no active candidates.
+
+Time Complexity:
+- O(n) for any sequence of $n$ calls to `push(index, value)` and `expire(first_valid)`.
+- O(1) amortized per call to `push(index, value)` and `expire(first_valid)`.
+- O(1) worst-case per call to `top()` and `empty()`.
+
+Space Complexity:
+- O(w) auxiliary heap space for a sliding window of width $w$.
+
+*/
+
+template<typename T, typename Compare>
+class MonotoneQueue {
+  std::deque<std::pair<int, T>> q;
+  Compare better;
+
+ public:
+  bool empty() const { return q.empty(); }
+
+  void push(int index, const T &value) {
+    while (!q.empty() && !better(q.back().second, value)) {
+      q.pop_back();
+    }
+    q.emplace_back(index, value);
+  }
+
+  void expire(int first_valid) {
+    while (!q.empty() && q.front().first < first_valid) {
+      q.pop_front();
+    }
+  }
+
+  std::pair<int, T> top() const {
+    assert(!q.empty());
+    return q.front();
+  }
+};
+
 /*** Example Usage ***/
 
 using namespace std;
@@ -198,5 +253,17 @@ int main() {
   vector<int> e{1, 3, -1, -3, 5, 3, 6, 7};
   assert((sliding_window_extrema(e, 3) == vector<int>{-1, -3, -3, -3, 3, 3}));
   assert((sliding_window_extrema(e, 3, greater<>()) == vector<int>{3, 3, 5, 5, 6, 7}));
+
+  vector<int> f{4, 2, 7, 1, 3, 6};
+  vector<int> dp(f.size());
+  MonotoneQueue<int, less<int>> best;
+  dp[0] = f[0];
+  best.push(0, dp[0]);
+  for (int i = 1; i < static_cast<int>(f.size()); i++) {
+    best.expire(i - 2);
+    dp[i] = f[i] + best.top().second;
+    best.push(i, dp[i]);
+  }
+  assert(dp[5] == 13);
   return 0;
 }

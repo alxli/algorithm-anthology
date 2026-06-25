@@ -679,6 +679,7 @@ int diameter() {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 void add_edge(int u, int v) {
@@ -700,9 +701,20 @@ int main() {
   assert(centers.size() == 2 && centers[0] == 1 && centers[1] == 4);
   assert(find_centroid() == 4);
   assert(diameter() == 3);
+  cout << "Centers:";
+  for (int u : centers) {
+    cout << " " << u;
+  }
+  cout << "\nCentroid: " << find_centroid() << "\n";
+  cout << "Diameter length: " << diameter() << "\n";
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Centers: 1 4
+Centroid: 4
+Diameter length: 3
+\end{exampleoutput}
 \subsection{Tree Rerooting DP}
 Given a tree DP that can answer one rooted query with a recursive \inlinecode{dfs(u, p)}, compute that same answer for every possible root. Rerooting DP first stores parent pointers, depths, preorder, subtree sizes, and entry/exit times. A bottom-up pass computes the usual child-to-parent DFS values, then a top-down pass uses prefix/suffix aggregation to compute the missing parent-to-child values. The prefix/suffix aggregation requires \inlinecode{combine} to be associative for a running time of $O(n)$, which is usually preferred, but a segment-tree/exclusive-combine variant can support a left-fold style interface in $O(n \log n)$.
 
@@ -836,6 +848,7 @@ class RerootingTree {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 vector<int64_t> sum_distances_all_roots(RerootingTree &tree) {
@@ -879,9 +892,17 @@ int main() {
   assert(!tree.is_ancestor(3, 2));
   vector<int64_t> distances = sum_distances_all_roots(tree);
   assert((distances == vector<int64_t>{8, 5, 8, 6, 9}));
+  cout << "Sum of distances from each root:";
+  for (int64_t d : distances) {
+    cout << " " << d;
+  }
+  cout << "\n";
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Sum of distances from each root: 8 5 8 6 9
+\end{exampleoutput}
 \subsection{Centroid Decomposition}
 Given a tree, build its centroid decomposition. A centroid is a node whose removal splits the current subtree into connected components of size at most half of that subtree. Recursively choosing centroids creates a decomposition tree of height $O(\log n)$, which is useful for queries based on distances to marked nodes, nearest special node, and other ``path through a centroid'' problems.
 
@@ -953,6 +974,7 @@ class CentroidDecomposition {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 int main() {
@@ -974,9 +996,17 @@ int main() {
   assert(tree.parent(3) == -1);
   assert(tree.parent(1) == 3);
   assert(tree.parent(5) == 3);
+  cout << "Centroid parents:";
+  for (int u = 0; u < 7; u++) {
+    cout << " " << tree.parent(u);
+  }
+  cout << "\n";
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Centroid parents: 1 3 1 -1 3 3 5
+\end{exampleoutput}
 \subsection{Prufer Code}
 Encode and decode labeled trees using Prufer codes. A Prufer code is a sequence of length $n - 2$ that uniquely represents a labeled tree on nodes $0, 1, \ldots, n - 1$. It is useful for counting labeled trees, generating test cases, and converting between trees and compact sequences. Encoding repeatedly removes a leaf and records its neighbor until two nodes remain; decoding reverses this, deducing each removed leaf from the node degrees implied by the code. Both functions choose the smallest available leaf at each step. This makes the implementation deterministic and matches the usual textbook convention.
 
@@ -1520,6 +1550,7 @@ void connected_components() {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 void add_edge(int u, int v) {
@@ -1538,9 +1569,23 @@ int main() {
   assert(comp_id[0] == comp_id[2]);
   assert(comp_id[0] != comp_id[3]);
   assert(comp_id[5] == 2);
+  cout << "Connected components:\n";
+  for (int i = 0; i < static_cast<int>(components.size()); i++) {
+    cout << i << ":";
+    for (int u : components[i]) {
+      cout << " " << u;
+    }
+    cout << "\n";
+  }
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Connected components:
+0: 0 1 2
+1: 3 4
+2: 5
+\end{exampleoutput}
 \subsection{Strongly Connected Components (Kosaraju)}
 Given a directed graph, determine the strongly connected components (SCCs) using the Kosaraju-Sharir algorithm. A strongly connected component is a maximal set of vertices where every vertex can reach every other vertex. Condensing each SCC into one node produces a directed acyclic graph. The algorithm runs two passes of depth-first search: the first records the order in which nodes finish, and the second explores the transposed graph in reverse finish order, with each search collecting exactly one component.
 
@@ -4211,6 +4256,7 @@ class EdmondsKarp {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <iostream>
 
 int main() {
   // Example graph after max flow, with each edge labeled flow/capacity:
@@ -4232,15 +4278,28 @@ int main() {
   g.add_edge(2, 4, 2);
   g.add_edge(3, 5, 2);
   g.add_edge(4, 5, 3);
-  assert(g.max_flow(0, 5) == 5);
+  int flow = g.max_flow(0, 5);
+  assert(flow == 5);
   assert(g.max_flow(0, 5) == 5);
   std::vector<char> cut = g.min_cut(0);
   assert(cut[0] && !cut[5]);
+  std::cout << "Maximum flow: " << flow << "\n";
+  std::cout << "Min-cut source side:";
+  for (int u = 0; u < static_cast<int>(cut.size()); u++) {
+    if (cut[u]) {
+      std::cout << " " << u;
+    }
+  }
+  std::cout << "\n";
   g.clear_flow();
   assert(g.max_flow(0, 5) == 5);
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Maximum flow: 5
+Min-cut source side: 0 1 2
+\end{exampleoutput}
 \subsection{Maximum Flow (Dinic)}
 Given a flow network with integer or floating-point capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink.
 
@@ -4381,6 +4440,7 @@ class Dinic {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <iostream>
 
 int main() {
   // Example graph after max flow, with each edge labeled flow/capacity:
@@ -4402,15 +4462,28 @@ int main() {
   g.add_edge(2, 4, 2);
   g.add_edge(3, 5, 2);
   g.add_edge(4, 5, 3);
-  assert(g.max_flow(0, 5) == 5);
+  int flow = g.max_flow(0, 5);
+  assert(flow == 5);
   assert(g.max_flow(0, 5) == 5);
   std::vector<char> cut = g.min_cut(0);
   assert(cut[0] && !cut[5]);
+  std::cout << "Maximum flow: " << flow << "\n";
+  std::cout << "Min-cut source side:";
+  for (int u = 0; u < static_cast<int>(cut.size()); u++) {
+    if (cut[u]) {
+      std::cout << " " << u;
+    }
+  }
+  std::cout << "\n";
   g.clear_flow();
   assert(g.max_flow(0, 5) == 5);
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Maximum flow: 5
+Min-cut source side: 0 1 2
+\end{exampleoutput}
 \subsection{Maximum Flow (Dinic with Decomposition)}
 Given a flow network with integer or floating-point capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink.
 
@@ -4948,6 +5021,7 @@ class MinCostMaxFlow {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 int main() {
@@ -4974,6 +5048,9 @@ int main() {
   assert(flow == 5);
   assert(cost == 16);
   assert(g.edge_flow(id01) == 3);
+  cout << "Flow sent: " << flow << "\n";
+  cout << "Minimum cost: " << cost << "\n";
+  cout << "Flow on edge 0->1: " << g.edge_flow(id01) << "\n";
   g.clear_flow();
   auto [flow2, cost2] = g.min_cost_flow(0, 5, 5);
   assert(flow2 == 5);
@@ -4981,6 +5058,11 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Flow sent: 5
+Minimum cost: 16
+Flow on edge 0->1: 3
+\end{exampleoutput}
 \subsection{Minimum-Cost Maximum-Flow (Potentials)}
 Given a flow network with capacities and edge costs, find a minimum-cost flow from a source node to a sink node. This is the successive shortest path method with Johnson potentials. A node potential $h[v]$ transforms each edge cost $c(u, v)$ into a reduced cost $c(u, v) + h[u] - h[v]$; when all reduced costs are nonnegative, Dijkstra's algorithm can find the shortest augmenting path safely. After each augmentation, $h$ is updated with the new shortest-path distances so that reduced costs remain nonnegative on the updated residual graph.
 
@@ -5147,6 +5229,7 @@ class MinCostMaxFlow {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 int main() {
@@ -5173,6 +5256,9 @@ int main() {
   assert(flow == 5);
   assert(cost == 16);
   assert(g.edge_flow(id01) == 3);
+  cout << "Flow sent: " << flow << "\n";
+  cout << "Minimum cost: " << cost << "\n";
+  cout << "Flow on edge 0->1: " << g.edge_flow(id01) << "\n";
   g.clear_flow();
   auto [flow2, cost2] = g.min_cost_flow(0, 5, 5);
   assert(flow2 == 5);
@@ -5180,6 +5266,11 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Flow sent: 5
+Minimum cost: 16
+Flow on edge 0->1: 3
+\end{exampleoutput}
 \subsection{Gomory-Hu Tree}
 Given an undirected graph with nonnegative edge weights, build a Gomory-Hu tree: a weighted tree on the same vertices that represents every pairwise minimum $s$-$t$ cut value. For any two vertices $u$ and $v$, the minimum cut value between them in the original graph is the minimum edge weight on the path from $u$ to $v$ in the Gomory-Hu tree.
 
@@ -5476,6 +5567,7 @@ std::pair<int64_t, std::vector<int>> stoer_wagner(std::vector<std::vector<int64_
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 int main() {
@@ -5493,9 +5585,19 @@ int main() {
   auto [weight, side] = stoer_wagner(adj);
   assert(weight == 3);
   assert((side == vector<int>{1, 2}));  // The shore {1, 2}, opposite the single vertex 0.
+  cout << "Global min cut weight: " << weight << "\n";
+  cout << "One side:";
+  for (int u : side) {
+    cout << " " << u;
+  }
+  cout << "\n";
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Global min cut weight: 3
+One side: 1 2
+\end{exampleoutput}
 
 \section{\texorpdfstring{Matching and Assignment}{4.6 Matching and Assignment}}
 \setcounter{section}{6}
@@ -6389,6 +6491,7 @@ class WeightedGeneralMatching {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 int main() {
@@ -6402,10 +6505,20 @@ int main() {
   m.add_edge(2, 3, 5);
   m.add_edge(3, 4, 6);
   m.add_edge(4, 0, 5);
-  assert(m.solve() == 12);  // Edges 1-2 and 3-4 with weights 6 + 6.
+  int64_t weight = m.solve();
+  assert(weight == 12);  // Edges 1-2 and 3-4 with weights 6 + 6.
   assert(m.partner(1) == 2 && m.partner(2) == 1);
   assert(m.partner(3) == 4 && m.partner(4) == 3);
   assert(m.partner(0) == -1);  // Node 0 is left unmatched.
+  cout << "Maximum matching weight: " << weight << "\n";
+  cout << "Matched pairs:";
+  for (int u = 0; u < 5; u++) {
+    int v = m.partner(u);
+    if (u < v) {
+      cout << " (" << u << "," << v << ")";
+    }
+  }
+  cout << "\n";
 
   //   w=3   w=3   w=5
   // 0-----1-----2-----3
@@ -6420,6 +6533,10 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Maximum matching weight: 12
+Matched pairs: (1,2) (3,4)
+\end{exampleoutput}
 \subsection{Assignment (Hungarian Algorithm)}
 Solves the minimum-cost assignment problem for a rectangular cost matrix. Given $n$ workers and $m$ jobs (with $n \leq m$) where assigning worker \inlinecode{i} to complete job \inlinecode{j} would cost \inlinecode{cost[i][j]}, choose a distinct job for each worker so that the total assignment cost is minimized.
 
@@ -6503,6 +6620,7 @@ T hungarian(const std::vector<std::vector<T>> &cost, std::vector<int> *assignmen
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <iostream>
 using namespace std;
 
 int main() {
@@ -6512,13 +6630,24 @@ int main() {
       {5, 8, 1, 8},
   };
   vector<int> assignment;
-  assert(hungarian(cost, &assignment) == 9);
+  int64_t total = hungarian(cost, &assignment);
+  assert(total == 9);
   assert(assignment[0] == 1);
   assert(assignment[1] == 0);
   assert(assignment[2] == 2);
+  cout << "Minimum assignment cost: " << total << "\n";
+  cout << "Assignments:";
+  for (int worker = 0; worker < static_cast<int>(assignment.size()); worker++) {
+    cout << " (" << worker << "->" << assignment[worker] << ")";
+  }
+  cout << "\n";
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Minimum assignment cost: 9
+Assignments: (0->1) (1->0) (2->2)
+\end{exampleoutput}
 \subsection{Stable Marriage (Gale-Shapley)}
 The stable marriage problem pairs $n$ men with $n$ women, given that every person ranks all members of the opposite group in strict order of preference. A perfect matching is stable if no man and woman both prefer each other to their assigned partners; such a pair would otherwise abandon their matches. Unlike maximum matching, the goal is not the size of the matching (it is always perfect) but its stability with respect to the preference lists.
 

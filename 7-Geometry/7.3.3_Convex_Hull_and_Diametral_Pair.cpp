@@ -151,8 +151,7 @@ int main() {
     auto [p1, p2] = diametral_pair(v.begin(), v.end());
     assert(p1 == PointI(0, 0));
     assert(p2 == PointI(4, 4));
-    cout << "Diametral pair: (" << p1.x << "," << p1.y << ") (" << p2.x << "," << p2.y
-         << ")\n";
+    cout << "Diametral pair: (" << p1.x << "," << p1.y << ") (" << p2.x << "," << p2.y << ")\n";
   }
   {
     vector<PointI> v{{0, 0}, {4, 0}, {4, 4}, {0, 4}, {2, 2}};

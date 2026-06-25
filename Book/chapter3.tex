@@ -2092,6 +2092,7 @@ class SuffixArrayManberMyers {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 int main() {
@@ -2103,9 +2104,22 @@ int main() {
   assert(lcp == lcp_expected);
   assert(sa.find("ana") == 1);
   assert(sa.find("x") == string::npos);
+  cout << "Suffix array:";
+  for (int pos : sarr) {
+    cout << " " << pos;
+  }
+  cout << "\nLCP array:";
+  for (int len : lcp) {
+    cout << " " << len;
+  }
+  cout << "\n";
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Suffix array: 5 3 1 0 4 2
+LCP array: 1 3 0 0 2
+\end{exampleoutput}
 \subsection{Suffix Array and LCP (Counting Sort)}
 Given a string $s$, a suffix array is the array of the smallest starting positions for the sorted suffixes of $s$. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of $s$. For example, $s$ = \inlinecode{"cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
 
@@ -3836,18 +3850,21 @@ std::pair<string, string> hirschberg_align_sequences(
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <iostream>
 
 int main() {
-  assert(
-      align_sequences("AGGGCT", "AGGCA", 2, 3) == (std::pair<string, string>{"AGGGCT", "A_GGCA"})
-  );
-  assert(
-      hirschberg_align_sequences("AGGGCT", "AGGCA", 2, 3) ==
-      (std::pair<string, string>{"AGGGCT", "A_GGCA"})
-  );
+  auto alignment = align_sequences("AGGGCT", "AGGCA", 2, 3);
+  assert(alignment == (std::pair<string, string>{"AGGGCT", "A_GGCA"}));
+  assert(hirschberg_align_sequences("AGGGCT", "AGGCA", 2, 3) == alignment);
+  std::cout << "Aligned strings:\n" << alignment.first << "\n" << alignment.second << "\n";
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Aligned strings:
+AGGGCT
+A_GGCA
+\end{exampleoutput}
 
 \section{\texorpdfstring{Expression Parsing}{3.7 Expression Parsing}}
 \setcounter{section}{7}
@@ -4889,12 +4906,28 @@ std::string inverse_bwt(const std::string &code) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <iostream>
 using namespace std;
+
+string escaped(const string &s) {
+  string res;
+  for (char c : s) {
+    if (c == '\0') {
+      res += "\\0";
+    } else {
+      res += c;
+    }
+  }
+  return res;
+}
 
 int main() {
   string code = bwt("banana");
   assert(code.size() == 7);  // "banana" plus the sentinel.
+  assert(escaped(code) == "annb\\0aa");
   assert(inverse_bwt(code) == "banana");
+  cout << "BWT(banana): " << escaped(code) << "\n";
+  cout << "inverse: " << inverse_bwt(code) << "\n";
 
   // The transform clusters equal characters: "mississippi" yields long runs.
   string text = "mississippi";
@@ -4910,3 +4943,7 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+BWT(banana): annb\0aa
+inverse: banana
+\end{exampleoutput}

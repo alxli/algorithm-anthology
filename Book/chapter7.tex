@@ -2322,6 +2322,7 @@ auto diametral_pair(It lo, It hi) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <iostream>
 #include <vector>
 using namespace std;
 
@@ -2341,12 +2342,18 @@ int main() {
     std::shuffle(v.begin(), v.end(), rng);
     vector<PointI> h{{-1, 3}, {1, 3}, {2, 1}, {0, 0}};
     assert(convex_hull(v.begin(), v.end()) == h);
+    cout << "Convex hull:";
+    for (const PointI &p : h) {
+      cout << " (" << p.x << "," << p.y << ")";
+    }
+    cout << "\n";
   }
   {
     vector<PointI> v{{0, 0}, {3, 0}, {0, 3}, {1, 1}, {4, 4}};
     auto [p1, p2] = diametral_pair(v.begin(), v.end());
     assert(p1 == PointI(0, 0));
     assert(p2 == PointI(4, 4));
+    cout << "Diametral pair: (" << p1.x << "," << p1.y << ") (" << p2.x << "," << p2.y << ")\n";
   }
   {
     vector<PointI> v{{0, 0}, {4, 0}, {4, 4}, {0, 4}, {2, 2}};
@@ -2362,6 +2369,10 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Convex hull: (-1,3) (1,3) (2,1) (0,0)
+Diametral pair: (0,0) (4,4)
+\end{exampleoutput}
 \subsection{Convex Polygon Queries}
 Given a convex polygon in counter-clockwise order, answer containment and tangent/intersection queries. Point containment is logarithmic by splitting the polygon into triangles sharing \inlinecode{poly[0]}. The line and tangent helpers below are written as simple linear scans; this is often shorter and less assumption-heavy than the classic logarithmic versions, while still documenting the exact query semantics in one place.
 
@@ -3181,6 +3192,7 @@ The function is templated on the input point type. Side classification is done w
 \textbf{Space Complexity}: $O(n)$ auxiliary space for the returned polygon.
 
 \begin{lstlisting}[language=C++]
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
@@ -3265,6 +3277,7 @@ std::vector<Point> convex_cut(It lo, It hi, const Pt &p, const Pt &q) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <iostream>
 using namespace std;
 
 struct PointI {
@@ -3284,7 +3297,13 @@ int main() {
     vector<Point> v{{1, 3}, {2, 2}, {2, 1}, {0, 0}, {-1, 3}};
     // Cut using the vertical line through (0, 0).
     vector<Point> c{{-1, 3}, {0, 3}, {0, 0}};
-    assert(EQ(convex_cut(v.begin(), v.end(), Point(0, 0), Point(0, 1)), c));
+    vector<Point> cut = convex_cut(v.begin(), v.end(), Point(0, 0), Point(0, 1));
+    assert(EQ(cut, c));
+    cout << "Cut polygon:";
+    for (const Point &p : cut) {
+      cout << " (" << p.x << "," << p.y << ")";
+    }
+    cout << "\n";
   }
   {  // On a non-convex input, the result may be multiple disjoint polygons!
     vector<Point> v{{0, 0}, {2, 2}, {0, 4}, {3, 4}, {3, 0}};
@@ -3299,6 +3318,9 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Cut polygon: (-1,3) (0,3) (0,0)
+\end{exampleoutput}
 \subsection{Half-Plane Intersection}
 Given a list of directed lines, compute the convex polygon contained in every left half-plane. Half-plane intersection sorts the lines by angle, keeps only the tightest representative among parallel lines, and maintains a deque of lines whose pairwise intersections form the current boundary. Angles are sorted exactly to satisfy \inlinecode{std::sort}'s strict ordering requirement. \inlinecode{EPS} is then used outside the comparator to group parallel directions and retain only the tightest half-plane in each group.
 

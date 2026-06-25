@@ -1088,7 +1088,7 @@ A sliding window applies the same idea when extending and shrinking a range chan
 
 For fixed-length windows, a monotonic deque of indices can report every minimum or maximum in linear total time. It stores only candidates that could still become the answer, ordered from the current extreme at the front to the least useful value at the back. A new element removes every older value that it dominates, while expired indices are removed from the front. Each index is again pushed and popped at most once.
 
-The examples below cover sorted 2-sum/3-sum variants, finding the shortest subarray with sum at least a target when all values are nonnegative, and finding the longest subarray with at most \inlinecode{k} distinct values. They also cover the minimum or maximum of every fixed-length window.
+The examples below cover sorted 2-sum/3-sum variants, finding the shortest subarray with sum at least a target when all values are nonnegative, and finding the longest subarray with at most \inlinecode{k} distinct values. They also cover the minimum or maximum of every fixed-length window and an online dynamic programming recurrence.
 
 \begin{compactitem}
   \item \inlinecode{two\_sum\_sorted(a, target)} returns two indices whose values sum to \inlinecode{target}, or $(-1, -1)$ if no such pair exists. The input array must be sorted.
@@ -1235,6 +1235,56 @@ std::vector<T> sliding_window_extrema(const std::vector<T> &a, int k, Compare co
   return res;
 }
 \end{lstlisting}
+A monotone queue can be used to maintain the minimum or maximum value in an online sliding window. This is useful for dynamic programming recurrences where each transition may only come from one of the last $w$ states, such as \inlinecode{dp[i] = a[i] + min(dp[j])} for $j \in [i - w, i - 1)$.
+
+The queue stores candidate (\inlinecode{index}, \inlinecode{value}) pairs in monotone order. Expired indices are removed from the front, and dominated values are removed from the back before inserting a new candidate.
+
+\begin{compactitem}
+  \item \inlinecode{MonotoneQueue\textless{}T, Compare\textgreater{}()} constructs an empty queue. Use \inlinecode{std::less\textless{}T\textgreater{}} for minimum queries and \inlinecode{std::greater\textless{}T\textgreater{}} for maximum queries.
+  \item \inlinecode{push(index, value)} inserts candidate \inlinecode{value} at position \inlinecode{index}, removing dominated candidates from the back.
+  \item \inlinecode{expire(first\_valid)} removes candidates with index less than \inlinecode{first\_valid}.
+  \item \inlinecode{top()} returns the best active (\inlinecode{index}, \inlinecode{value}) pair. The queue must be nonempty.
+  \item \inlinecode{empty()} returns whether the queue has no active candidates.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for any sequence of $n$ calls to \inlinecode{push(index, value)} and \inlinecode{expire(first\_valid)}.
+  \item $O(1)$ amortized per call to \inlinecode{push(index, value)} and \inlinecode{expire(first\_valid)}.
+  \item $O(1)$ worst-case per call to \inlinecode{top()} and \inlinecode{empty()}.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(w)$ auxiliary heap space for a sliding window of width $w$.
+
+\begin{lstlisting}[language=C++]
+template<typename T, typename Compare>
+class MonotoneQueue {
+  std::deque<std::pair<int, T>> q;
+  Compare better;
+
+ public:
+  bool empty() const { return q.empty(); }
+
+  void push(int index, const T &value) {
+    while (!q.empty() && !better(q.back().second, value)) {
+      q.pop_back();
+    }
+    q.emplace_back(index, value);
+  }
+
+  void expire(int first_valid) {
+    while (!q.empty() && q.front().first < first_valid) {
+      q.pop_front();
+    }
+  }
+
+  std::pair<int, T> top() const {
+    assert(!q.empty());
+    return q.front();
+  }
+};
+\end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
@@ -1267,6 +1317,18 @@ int main() {
   vector<int> e{1, 3, -1, -3, 5, 3, 6, 7};
   assert((sliding_window_extrema(e, 3) == vector<int>{-1, -3, -3, -3, 3, 3}));
   assert((sliding_window_extrema(e, 3, greater<>()) == vector<int>{3, 3, 5, 5, 6, 7}));
+
+  vector<int> f{4, 2, 7, 1, 3, 6};
+  vector<int> dp(f.size());
+  MonotoneQueue<int, less<int>> best;
+  dp[0] = f[0];
+  best.push(0, dp[0]);
+  for (int i = 1; i < static_cast<int>(f.size()); i++) {
+    best.expire(i - 2);
+    dp[i] = f[i] + best.top().second;
+    best.push(i, dp[i]);
+  }
+  assert(dp[5] == 13);
   return 0;
 }
 \end{lstlisting}
