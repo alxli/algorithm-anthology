@@ -79,7 +79,7 @@ double anneal_min(Fn f, double x0, double y0, double *best_x = nullptr, double *
 
 #include <cassert>
 
-bool close(double a, double b) {
+bool EQ(double a, double b) {
   return fabs(a - b) < 1e-2;
 }
 
@@ -93,7 +93,7 @@ int main() {
   double value = anneal_min(f, 0, 0, &x, &y);
   assert(value < 1e-4);
   // value < 1e-4 already forces |x-2|, |y+3| < 1e-2 = sqrt(1e-4); these confirm the out-params.
-  assert(close(x, 2));
-  assert(close(y, -3));
+  assert(EQ(x, 2));
+  assert(EQ(y, -3));
   return 0;
 }

@@ -48,31 +48,31 @@ class OnlineStatistics {
 #include <cassert>
 #include <cmath>
 
-bool close(double a, double b) {
+bool EQ(double a, double b) {
   return fabs(a - b) < 1e-9;
 }
 
 int main() {
   OnlineStatistics empty;
   assert(empty.count() == 0);
-  assert(close(empty.mean(), 0.0));
-  assert(close(empty.variance_population(), 0.0));
-  assert(close(empty.variance_sample(), 0.0));
+  assert(EQ(empty.mean(), 0.0));
+  assert(EQ(empty.variance_population(), 0.0));
+  assert(EQ(empty.variance_sample(), 0.0));
 
   OnlineStatistics singleton;
   singleton.add(7);
   assert(singleton.count() == 1);
-  assert(close(singleton.mean(), 7.0));
-  assert(close(singleton.variance_population(), 0.0));
-  assert(close(singleton.variance_sample(), 0.0));
+  assert(EQ(singleton.mean(), 7.0));
+  assert(EQ(singleton.variance_population(), 0.0));
+  assert(EQ(singleton.variance_sample(), 0.0));
 
   OnlineStatistics stats;
   for (int x = 1; x <= 5; x++) {
     stats.add(x);
   }
   assert(stats.count() == 5);
-  assert(close(stats.mean(), 3.0));
-  assert(close(stats.variance_population(), 2.0));
-  assert(close(stats.variance_sample(), 2.5));
+  assert(EQ(stats.mean(), 3.0));
+  assert(EQ(stats.variance_population(), 2.0));
+  assert(EQ(stats.variance_sample(), 2.5));
   return 0;
 }

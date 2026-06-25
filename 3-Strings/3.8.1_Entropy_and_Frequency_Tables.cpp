@@ -81,7 +81,7 @@ double expected_code_length(const std::vector<int> &freq, const std::vector<int>
 #include <cmath>
 using namespace std;
 
-bool close(double a, double b) {
+bool EQ(double a, double b) {
   return fabs(a - b) < 1e-9;
 }
 
@@ -89,12 +89,12 @@ int main() {
   vector<int> freq = byte_frequencies("aabb");
   assert(freq['a'] == 2);
   assert(freq['b'] == 2);
-  assert(close(entropy(freq), 1.0));
-  assert(close(entropy("aaaa"), 0.0));
+  assert(EQ(entropy(freq), 1.0));
+  assert(EQ(entropy("aaaa"), 0.0));
 
   vector<int> length(256, 0);
   length['a'] = 1;
   length['b'] = 1;
-  assert(close(expected_code_length(freq, length), 1.0));
+  assert(EQ(expected_code_length(freq, length), 1.0));
   return 0;
 }
