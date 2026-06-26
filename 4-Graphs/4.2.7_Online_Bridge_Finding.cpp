@@ -26,7 +26,7 @@ Space Complexity:
 
 */
 
-#include <algorithm>
+#include <utility>
 #include <vector>
 
 struct OnlineBridges {

@@ -18,6 +18,7 @@ formatting local to this snippet.
 
 */
 
+#include <cstddef>
 #include <iomanip>
 #include <iostream>
 #include <sstream>

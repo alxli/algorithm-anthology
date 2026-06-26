@@ -28,9 +28,9 @@ Space Complexity:
 
 */
 
-#include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <utility>
 #include <vector>
 
 int simplex_solve(

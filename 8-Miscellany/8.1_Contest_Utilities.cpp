@@ -8,8 +8,8 @@ algorithm-specific policy and are meant to be pasted near the top of a solution 
 - `ckmin(a, b)` assigns `a = b` and returns true if `b` < `a` before the assignment.
 - `ckmax(a, b)` assigns `a = b` and returns true if `a` < `b` before the assignment.
 - `between(x, a, b)` returns whether `a` $\leq$ `x` $\leq$ `b`.
-- `clmp(x, a, b)` returns `x` clamped into the interval $[`a`, `b`]$. This is not needed on C++17 and
-  later, where std::clamp() is available.
+- `clmp(x, a, b)` returns `x` clamped into the interval $[`a`, `b`]$. This is not needed on C++17
+  and later, where std::clamp() is available.
 - `floor_div(a, b)` and `ceil_div(a, b)` divide signed integers with mathematical rounding toward
   negative or positive infinity. Requires `b != 0`.
 - `sort_unique(v)` sorts a vector and removes duplicates.
@@ -30,6 +30,7 @@ algorithm-specific policy and are meant to be pasted near the top of a solution 
 #include <cassert>
 #include <chrono>
 #include <cstdint>
+#include <functional>
 #include <queue>
 #include <random>
 #include <type_traits>
@@ -44,10 +45,14 @@ algorithm-specific policy and are meant to be pasted near the top of a solution 
 
 // clang-format off
 template<typename C> int sz(const C &c) { return static_cast<int>(c.size()); }
-template<typename T, typename U> bool ckmin(T &a, const U &b) { return b < a ? a = b, true : false; }
-template<typename T, typename U> bool ckmax(T &a, const U &b) { return a < b ? a = b, true : false; }
-template<typename T> bool between(const T &x, const T &a, const T &b) { return !(x < a) && !(b < x); }
-template<typename T> T clmp(const T &x, const T &a, const T &b) { return std::min(std::max(x, a), b); }
+template<typename T, typename U>
+bool ckmin(T &a, const U &b) { return b < a ? a = b, true : false; }
+template<typename T, typename U>
+bool ckmax(T &a, const U &b) { return a < b ? a = b, true : false; }
+template<typename T>
+bool between(const T &x, const T &a, const T &b) { return !(x < a) && !(b < x); }
+template<typename T>
+T clmp(const T &x, const T &a, const T &b) { return std::min(std::max(x, a), b); }
 // clang-format on
 
 template<typename T>

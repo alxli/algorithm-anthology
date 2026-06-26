@@ -30,9 +30,9 @@ Space Complexity:
 
 */
 
-#include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <utility>
 
 template<typename T>
 class SkewHeap {

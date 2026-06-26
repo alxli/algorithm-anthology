@@ -328,6 +328,7 @@ Type aliases:
 \begin{lstlisting}[language=C++]
 #include <cmath>
 #include <cstdint>
+#include <iomanip>
 #include <limits>
 #include <ostream>
 #include <type_traits>
@@ -560,6 +561,7 @@ The floating-point constructors and predicates use an absolute tolerance \inline
 \begin{lstlisting}[language=C++]
 #include <cmath>
 #include <cstdint>
+#include <iomanip>
 #include <ostream>
 #include <stdexcept>
 #include <type_traits>
@@ -2235,6 +2237,7 @@ Overflow warning: \inlinecode{cross()} and the squared distance in \inlinecode{d
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <iterator>
 #include <random>
 #include <utility>
 #include <vector>
@@ -2398,6 +2401,7 @@ For integer-coordinate inputs, all tests are exact provided the cross products d
 #include <array>
 #include <cassert>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 template<typename Pt>
@@ -3119,6 +3123,7 @@ Given a set of points with integer coordinates, compute the maximum number of po
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <map>
 #include <numeric>
@@ -4352,6 +4357,8 @@ Given points in the plane, produce a small set of candidate edges guaranteed to 
 #include <cstdint>
 #include <map>
 #include <numeric>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 struct Point {
@@ -4557,10 +4564,10 @@ Preconditions: at least four points, and no four points coplanar. For coplanar o
 \textbf{Space Complexity}: $O(n^{2})$ auxiliary.
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cmath>
+#include <utility>
 #include <vector>
 
 const double EPS = 1e-9;

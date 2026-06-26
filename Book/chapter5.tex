@@ -954,6 +954,7 @@ This implementation stores the lower envelope of lines over the inclusive domain
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <utility>
 
 const int64_t INF = INT64_MAX / 4;
 
@@ -1325,8 +1326,10 @@ Finds every complex root $x$ for a polynomial $p$ with complex coefficients such
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cmath>
 #include <complex>
 #include <random>
+#include <utility>
 #include <vector>
 
 using cdouble = std::complex<double>;
@@ -1478,6 +1481,7 @@ This routine is intended for well-scaled polynomials when all complex roots are 
 #include <algorithm>
 #include <cmath>
 #include <complex>
+#include <utility>
 #include <vector>
 
 using LD = long double;
@@ -1746,9 +1750,9 @@ The implementation uses a two-phase simplex tableau. Phase 1 introduces an artif
 \textbf{Space Complexity}: $O(m \cdot n)$ auxiliary heap space.
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <utility>
 #include <vector>
 
 int simplex_solve(

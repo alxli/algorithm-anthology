@@ -34,6 +34,7 @@ Common mathematic constants and functions, most of which already have standard S
 #include <random>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #ifndef M_PI
@@ -923,6 +924,7 @@ The lexicographic successor is found by locating the rightmost ascent, increasin
 #include <algorithm>
 #include <cstdint>
 #include <numeric>
+#include <utility>
 #include <vector>
 
 template<typename It>
@@ -1149,6 +1151,7 @@ The lexicographic successor advances the rightmost chosen position that can stil
 #include <algorithm>
 #include <cstdint>
 #include <iterator>
+#include <utility>
 #include <vector>
 
 template<typename It>
@@ -3716,6 +3719,7 @@ This version is intentionally small and decimal-oriented. Addition and subtracti
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <cstddef>
 #include <cstdint>
 #include <stdexcept>
 #include <string>
@@ -3943,6 +3947,7 @@ Perform operations on arbitrary precision big integers internally represented as
 #include <cstring>
 #include <iomanip>
 #include <istream>
+#include <iterator>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -4801,6 +4806,7 @@ Exponentiation uses the usual iterative binary exponentiation pattern: keep an a
 #include <cstddef>
 #include <iomanip>
 #include <ostream>
+#include <utility>
 #include <vector>
 
 template<typename T>
@@ -5185,10 +5191,10 @@ Converts a matrix to reduced row echelon form using Gaussian elimination to solv
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+#include <utility>
 #include <vector>
 
 const double EPS = 1e-9;
@@ -5342,6 +5348,7 @@ Computes the determinant and inverse of a square matrix using Gaussian eliminati
 #include <cmath>
 #include <cstdint>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 template<typename SquareMatrix>
@@ -5743,6 +5750,7 @@ A direct expansion would cost a determinant per coefficient. Instead the matrix 
 
 \begin{lstlisting}[language=C++]
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 const int64_t MOD = 998244353;
@@ -6328,6 +6336,7 @@ The transform replaces a coefficient vector with its evaluations at the powers o
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 const int64_t MOD = 998244353;
@@ -6462,6 +6471,7 @@ The trade-off is precision. Complex arithmetic in double precision accumulates r
 #include <cmath>
 #include <complex>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 typedef std::complex<double> cd;
@@ -6587,6 +6597,7 @@ The inverse is a formal power series inverse modulo $x^n$: it finds $b$ such tha
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 using Coeff = int64_t;

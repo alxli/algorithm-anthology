@@ -18,6 +18,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <map>
 #include <numeric>

@@ -23,6 +23,7 @@ Space Complexity:
 
 */
 
+#include <cstddef>
 #include <string>
 #include <vector>
 using std::string;

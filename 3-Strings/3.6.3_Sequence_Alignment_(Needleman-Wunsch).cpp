@@ -35,6 +35,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <iterator>
 #include <string>
 #include <utility>
 #include <vector>

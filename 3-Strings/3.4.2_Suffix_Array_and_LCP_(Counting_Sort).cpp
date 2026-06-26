@@ -39,6 +39,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cstddef>
 #include <numeric>
 #include <string>
 #include <utility>

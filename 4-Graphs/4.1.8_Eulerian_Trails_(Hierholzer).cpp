@@ -31,6 +31,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
+#include <utility>
 #include <vector>
 
 std::vector<int> known_eulerian_path_directed(std::vector<std::vector<int>> adj, int start) {

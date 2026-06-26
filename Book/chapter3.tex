@@ -15,6 +15,7 @@ Common string functions, many of which already have standard STL equivalents. Mo
 
 \begin{lstlisting}[language=C++]
 #include <cctype>
+#include <cstddef>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
@@ -1395,6 +1396,7 @@ Given a single string (needle) and subsequent queries of texts (haystacks) to be
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cstddef>
 #include <string>
 #include <vector>
 using std::string;
@@ -1478,6 +1480,7 @@ The \inlinecode{find()} function below calls the Z algorithm on the concatenatio
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cstddef>
 #include <string>
 #include <vector>
 using std::string;
@@ -2016,6 +2019,7 @@ The original Manber-Myers doubling algorithm comparison-sorts the suffixes by th
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cstddef>
 #include <numeric>
 #include <string>
 #include <utility>
@@ -2153,6 +2157,7 @@ The original Manber-Myers doubling algorithm comparison-sorts the suffixes by th
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cstddef>
 #include <numeric>
 #include <string>
 #include <utility>
@@ -2285,6 +2290,7 @@ The DC3/skew algorithm recursively constructs the suffix array of the suffixes s
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cstddef>
 #include <string>
 #include <utility>
 #include <vector>
@@ -3732,6 +3738,7 @@ The dynamic program compares prefixes and chooses the cheapest last operation: a
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <iterator>
 #include <string>
 #include <utility>
 #include <vector>

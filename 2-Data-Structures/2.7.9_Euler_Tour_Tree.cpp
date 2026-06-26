@@ -30,11 +30,11 @@ Space Complexity:
 
 */
 
-#include <algorithm>
 #include <cassert>
 #include <random>
 #include <set>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 class EulerTourTree {

@@ -330,6 +330,7 @@ Both functions remember the DFS parent of each vertex. When a closing edge \inli
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
+#include <utility>
 #include <vector>
 
 std::vector<int> find_cycle_undirected(const std::vector<std::vector<int>> &adj) {
@@ -1137,6 +1138,7 @@ Parallel directed edges are supported by storing duplicate neighbors in \inlinec
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
+#include <utility>
 #include <vector>
 
 std::vector<int> known_eulerian_path_directed(std::vector<std::vector<int>> adj, int start) {
@@ -2370,7 +2372,7 @@ Parallel edges are supported. Adding a second edge between two nodes that are al
 \textbf{Space Complexity}: $O(n)$ for the disjoint-set arrays and auxiliary parent links.
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
+#include <utility>
 #include <vector>
 
 struct OnlineBridges {
@@ -5973,6 +5975,7 @@ The graph must be simple; parallel edges and self-loops are not supported.
 #include <algorithm>
 #include <numeric>
 #include <queue>
+#include <utility>
 #include <vector>
 
 std::vector<int> blossom(const std::vector<std::vector<int>> &adj) {
@@ -6148,6 +6151,7 @@ All edge weights must be positive; an absent edge is treated as weight 0. The no
 #include <algorithm>
 #include <cstdint>
 #include <queue>
+#include <utility>
 #include <vector>
 
 class WeightedGeneralMatching {
@@ -6878,6 +6882,7 @@ This implementation finds the chromatic number by backtracking: nodes (ordered b
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <utility>
 #include <vector>
 
 std::vector<std::vector<char>> adj;

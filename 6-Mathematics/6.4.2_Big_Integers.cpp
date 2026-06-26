@@ -69,6 +69,7 @@ Space Complexity:
 #include <cstring>
 #include <iomanip>
 #include <istream>
+#include <iterator>
 #include <ostream>
 #include <sstream>
 #include <string>

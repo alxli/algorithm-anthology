@@ -31,8 +31,10 @@ Space Complexity:
 
 */
 
+#include <cmath>
 #include <complex>
 #include <random>
+#include <utility>
 #include <vector>
 
 using cdouble = std::complex<double>;

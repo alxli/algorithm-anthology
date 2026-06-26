@@ -22,6 +22,8 @@ Space Complexity:
 #include <cstdint>
 #include <map>
 #include <numeric>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 struct Point {

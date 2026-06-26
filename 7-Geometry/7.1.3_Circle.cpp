@@ -42,6 +42,7 @@ Space Complexity:
 */
 #include <cmath>
 #include <cstdint>
+#include <iomanip>
 #include <ostream>
 #include <stdexcept>
 #include <type_traits>

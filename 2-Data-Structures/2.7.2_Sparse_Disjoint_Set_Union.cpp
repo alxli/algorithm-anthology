@@ -44,7 +44,6 @@ Space Complexity:
 
 */
 
-#include <algorithm>
 #include <unordered_map>
 #include <vector>
 
@@ -114,6 +113,7 @@ class SparseDSU {
 
 ***/
 
+#include <algorithm>
 #include <cassert>
 #include <iostream>
 using namespace std;

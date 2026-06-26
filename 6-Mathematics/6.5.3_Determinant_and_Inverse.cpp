@@ -40,6 +40,7 @@ Space Complexity:
 #include <cmath>
 #include <cstdint>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 template<typename SquareMatrix>

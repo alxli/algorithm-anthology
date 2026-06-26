@@ -27,6 +27,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
+#include <utility>
 #include <vector>
 
 std::vector<int> find_cycle_undirected(const std::vector<std::vector<int>> &adj) {

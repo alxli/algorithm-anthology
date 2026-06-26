@@ -17,10 +17,10 @@ Space Complexity:
 
 */
 
-#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cmath>
+#include <utility>
 #include <vector>
 
 const double EPS = 1e-9;

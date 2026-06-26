@@ -431,8 +431,8 @@ Maintain a min-priority queue, that is, a collection of elements with support fo
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <cassert>
+#include <utility>
 #include <vector>
 
 template<typename T>
@@ -559,9 +559,9 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <utility>
 
 template<typename T>
 class LeftistHeap {
@@ -711,9 +711,9 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <utility>
 
 template<typename T>
 class SkewHeap {
@@ -3389,6 +3389,7 @@ The query operation is defined by an associative and idempotent function \inline
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
+#include <utility>
 #include <vector>
 
 template<typename T>
@@ -6845,6 +6846,7 @@ Use this for static point-reporting queries when $O(n)$ space and good average p
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <iterator>
 #include <utility>
 #include <vector>
 
@@ -6996,6 +6998,7 @@ Use this for static nearest-neighbor queries on point sets in low dimensions. It
 #include <algorithm>
 #include <cassert>
 #include <cfloat>
+#include <iterator>
 #include <utility>
 #include <vector>
 
@@ -8072,7 +8075,6 @@ A precondition to the last three operations is that \inlinecode{make\_set()} mus
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <unordered_map>
 #include <vector>
 
@@ -8139,6 +8141,7 @@ class SparseDSU {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <algorithm>
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -8610,6 +8613,7 @@ The construction sorts the subset by depth-first entry time, which lists the nod
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <utility>
 #include <vector>
 
 class VirtualTree {
@@ -9266,11 +9270,11 @@ This version supports dynamic connectivity, \inlinecode{link}, \inlinecode{cut},
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <cassert>
 #include <random>
 #include <set>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 class EulerTourTree {
@@ -9543,6 +9547,7 @@ The forest is unrooted: a tree's root is whichever node was most recently establ
 #include <cassert>
 #include <cstddef>
 #include <unordered_map>
+#include <utility>
 
 template<typename T>
 class LinkCut {

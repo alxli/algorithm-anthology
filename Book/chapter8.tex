@@ -28,6 +28,7 @@ Small contest-template helpers that are useful across many algorithms. These sni
 #include <cassert>
 #include <chrono>
 #include <cstdint>
+#include <functional>
 #include <queue>
 #include <random>
 #include <type_traits>
@@ -41,10 +42,14 @@ Small contest-template helpers that are useful across many algorithms. These sni
 #define Each(x, C) for (auto &x : (C))
 
 template<typename C> int sz(const C &c) { return static_cast<int>(c.size()); }
-template<typename T, typename U> bool ckmin(T &a, const U &b) { return b < a ? a = b, true : false; }
-template<typename T, typename U> bool ckmax(T &a, const U &b) { return a < b ? a = b, true : false; }
-template<typename T> bool between(const T &x, const T &a, const T &b) { return !(x < a) && !(b < x); }
-template<typename T> T clmp(const T &x, const T &a, const T &b) { return std::min(std::max(x, a), b); }
+template<typename T, typename U>
+bool ckmin(T &a, const U &b) { return b < a ? a = b, true : false; }
+template<typename T, typename U>
+bool ckmax(T &a, const U &b) { return a < b ? a = b, true : false; }
+template<typename T>
+bool between(const T &x, const T &a, const T &b) { return !(x < a) && !(b < x); }
+template<typename T>
+T clmp(const T &x, const T &a, const T &b) { return std::min(std::max(x, a), b); }
 
 template<typename T>
 T floor_div(T a, T b) {
@@ -467,6 +472,7 @@ Local-only debug printing for contest code. The macro expands to a no-op unless 
 Avoid naming these helpers \inlinecode{to\_string()} unless you want them mixed into overload resolution with \inlinecode{std::to\_string()} and other user-defined \inlinecode{to\_string()} functions. A separate name keeps debug formatting local to this snippet.
 
 \begin{lstlisting}[language=C++]
+#include <cstddef>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -1093,18 +1099,16 @@ struct BumpAllocator {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 int main() {
-  std::size_t before_new = bump_pos;
   int *x = new int(42);
   assert(*x == 42);
-  assert(bump_pos < before_new);
-  std::size_t after_new = bump_pos;
-  delete x;  // No-op.
-  assert(bump_pos == after_new);
+  delete x;
 
+  std::size_t before_vector = bump_pos;
   std::vector<int, BumpAllocator<int>> v;
   for (int i = 0; i < 1000; i++) {
     v.push_back(i);
   }
+  assert(bump_pos < before_vector);
   assert(v.size() == 1000);
   assert(v[123] == 123);
   assert(v.back() == 999);

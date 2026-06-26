@@ -32,6 +32,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cstddef>
 #include <string>
 #include <vector>
 using std::string;
