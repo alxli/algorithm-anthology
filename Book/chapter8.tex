@@ -10,7 +10,7 @@ Small contest-template helpers that are useful across many algorithms. These sni
   \item \inlinecode{ckmin(a, b)} assigns \inlinecode{a = b} and returns true if \inlinecode{b} \textless{} \inlinecode{a} before the assignment.
   \item \inlinecode{ckmax(a, b)} assigns \inlinecode{a = b} and returns true if \inlinecode{a} \textless{} \inlinecode{b} before the assignment.
   \item \inlinecode{between(x, a, b)} returns whether \inlinecode{a} $\leq$ \inlinecode{x} $\leq$ \inlinecode{b}.
-  \item \inlinecode{clmp(x, a, b)} returns \inlinecode{x} clamped into the interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$. This is not needed on C++17 and later, where std::clamp() is available.
+  \item \inlinecode{clmp(x, a, b)} returns \inlinecode{x} clamped into the interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$. This is not needed on C++17 and later, where \inlinecode{std::clamp()} is available.
   \item \inlinecode{floor\_div(a, b)} and \inlinecode{ceil\_div(a, b)} divide signed integers with mathematical rounding toward negative or positive infinity. Requires \inlinecode{b != 0}.
   \item \inlinecode{sort\_unique(v)} sorts a vector and removes duplicates.
   \item \inlinecode{erase\_one(c, x)} erases one existing value from an associative container, asserting that it is present.
@@ -42,14 +42,10 @@ Small contest-template helpers that are useful across many algorithms. These sni
 #define Each(x, C) for (auto &x : (C))
 
 template<typename C> int sz(const C &c) { return static_cast<int>(c.size()); }
-template<typename T, typename U>
-bool ckmin(T &a, const U &b) { return b < a ? a = b, true : false; }
-template<typename T, typename U>
-bool ckmax(T &a, const U &b) { return a < b ? a = b, true : false; }
-template<typename T>
-bool between(const T &x, const T &a, const T &b) { return !(x < a) && !(b < x); }
-template<typename T>
-T clmp(const T &x, const T &a, const T &b) { return std::min(std::max(x, a), b); }
+template<typename T, typename U> bool ckmin(T &a, const U &b) { return b < a ? a = b, true : false; }
+template<typename T, typename U> bool ckmax(T &a, const U &b) { return a < b ? a = b, true : false; }
+template<typename T> bool between(const T &x, const T &a, const T &b) { return !(x < a) && !(b < x); }
+template<typename T> T clmp(const T &x, const T &a, const T &b) { return std::min(std::max(x, a), b); }
 
 template<typename T>
 T floor_div(T a, T b) {
