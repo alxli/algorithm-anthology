@@ -147,10 +147,12 @@ int main() {
   vector<Point> square{{0, 0}, {1, 0}, {1, 1}, {0, 1}};
   vector<Point> tri{{0, 0}, {2, 0}, {0, 2}};
   vector<Point> sum = minkowski_sum(square, tri);
+  // The square thickens the triangle by one unit in the positive x/y directions.
   vector<Point> expected{{0, 0}, {3, 0}, {3, 1}, {1, 3}, {0, 3}};
   assert(sum == expected);
 
   vector<Point> shifted = minkowski_sum(square, {Point(2, 3)});
+  // Adding a single point translates the polygon.
   vector<Point> expected_shifted{{2, 3}, {3, 3}, {3, 4}, {2, 4}};
   assert(shifted == expected_shifted);
 

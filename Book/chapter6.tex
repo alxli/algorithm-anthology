@@ -7168,10 +7168,12 @@ using namespace std;
 
 int main() {
   vector<int> piles{3, 4, 5};
+  // 3 ^ 4 ^ 5 = 2, so the position is winning.
   assert(nim_sum(piles) == 2);
   assert(first_player_wins(piles));
   auto [pile_idx, new_size] = winning_move(piles);
   piles[pile_idx] = new_size;
+  // A winning move always leaves xor 0 for the opponent.
   assert(nim_sum(piles) == 0);
 
   vector<int> losing{1, 2, 3};
@@ -7345,6 +7347,7 @@ using namespace std;
 int main() {
   vector<int> moves{1, 3, 4};
   auto g = subtraction_game_grundy(10, moves);
+  // With moves 1, 3, 4, pile size 2 is losing and pile size 4 has mex {0, 1} = 2.
   assert(g[0] == 0);
   assert(g[1] == 1);
   assert(g[2] == 0);
@@ -7352,6 +7355,7 @@ int main() {
   assert(g[7] == 0);
 
   vector<int> heaps{g[5], g[7], g[10]};
+  // Independent games combine by xor of their Grundy numbers.
   assert(sum_grundy(heaps) == (g[5] ^ g[7] ^ g[10]));
   return 0;
 }
@@ -7408,10 +7412,12 @@ using namespace std;
 int main() {
   vector<vector<int>> g{{1, 2}, {3}, {3, 4}, {}, {}};
   auto grundy = grundy_on_dag(g);
+  // Terminal vertices have Grundy 0; their predecessors have mex {0} = 1.
   assert(grundy[3] == 0);
   assert(grundy[4] == 0);
   assert(grundy[1] == 1);
   assert(grundy[2] == 1);
+  // Vertex 0 can move to two positions with Grundy 1, so mex {1} = 0.
   assert(grundy[0] == 0);
   return 0;
 }

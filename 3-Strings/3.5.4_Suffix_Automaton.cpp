@@ -153,7 +153,9 @@ int main() {
   assert(sa.contains("aba"));
   assert(sa.contains("bab"));
   assert(!sa.contains("abba"));
+  // "ababa" has 9 distinct nonempty substrings.
   assert(sa.count_distinct_substrings() == 9);
+  // The longest substring shared by "ababa" and "zzbabab" is "baba".
   assert(sa.longest_common_substring("zzbabab") == "baba");
   assert(sa.first_occurrence("aba") == 0);
   assert(sa.first_occurrence("bab") == 1);

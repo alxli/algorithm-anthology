@@ -57,6 +57,7 @@ using namespace std;
 int main() {
   vector<Interval> intervals{{1, 4, 0}, {3, 5, 1}, {0, 6, 2}, {5, 7, 3}, {8, 9, 4}};
   vector<Interval> chosen = schedule_intervals(intervals);
+  // Earliest-finish greedy chooses ids 0, 3, 4.
   assert(chosen.size() == 3);
   assert(chosen[0].id == 0);
   assert(chosen[1].id == 3);

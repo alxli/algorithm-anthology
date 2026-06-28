@@ -86,6 +86,7 @@ using namespace std;
 int main() {
   vector<Job> jobs{{2, 100}, {1, 19}, {2, 27}, {1, 25}, {3, 15}};
   auto [profit, slot] = select_deadline_jobs(jobs);
+  // Jobs 0, 2, 4 fill slots 2, 1, 3 for total profit 100 + 27 + 15.
   assert(profit == 142);
   assert((slot == vector<int>{2, -1, 1, -1, 3}));
   return 0;

@@ -122,6 +122,7 @@ using namespace std;
 int main() {
   vector<Point3D> tetra{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
   auto faces = convex_hull_3d(tetra);
+  // A tetrahedron has four triangular faces.
   assert(faces.size() == 4);
   for (const Face &f : faces) {
     assert(f.a != f.b && f.b != f.c && f.c != f.a);
@@ -129,6 +130,7 @@ int main() {
 
   tetra.push_back(Point3D(1, 1, 1));
   faces = convex_hull_3d(tetra);
+  // Adding the opposite point makes a triangular bipyramid with six triangular faces.
   assert(faces.size() == 6);
   for (const Face &f : faces) {
     assert(0 <= f.a && f.a < static_cast<int>(tetra.size()));

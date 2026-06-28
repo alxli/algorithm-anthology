@@ -5632,12 +5632,14 @@ void inorder(const CartesianTree &t, int u, vector<int> *order) {
 int main() {
   vector<int> a{3, 2, 6, 1, 9};
   CartesianTree t(a);
+  // The minimum value is a[3] = 1, so index 3 is the min Cartesian tree root.
   assert(t.root == 3);
   assert(t.parent[1] == 3);
   assert(t.parent[4] == 3);
 
   vector<int> order;
   inorder(t, t.root, &order);
+  // Cartesian trees preserve the original array order under inorder traversal.
   for (int i = 0; i < 5; i++) {
     assert(order[i] == i);
   }

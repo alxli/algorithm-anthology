@@ -55,10 +55,12 @@ using namespace std;
 
 int main() {
   vector<int> piles{3, 4, 5};
+  // 3 ^ 4 ^ 5 = 2, so the position is winning.
   assert(nim_sum(piles) == 2);
   assert(first_player_wins(piles));
   auto [pile_idx, new_size] = winning_move(piles);
   piles[pile_idx] = new_size;
+  // A winning move always leaves xor 0 for the opponent.
   assert(nim_sum(piles) == 0);
 
   vector<int> losing{1, 2, 3};

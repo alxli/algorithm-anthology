@@ -113,6 +113,7 @@ class Eertree {
 
 int main() {
   Eertree t("abacaba");
+  // Distinct palindromes: a, b, c, aba, aca, bacab, abacaba.
   assert(t.count_distinct_palindromes() == 7);
   assert(t.longest_suffix_length() == 7);
 
@@ -128,6 +129,7 @@ int main() {
   assert(duplicate.add('a'));
   assert(duplicate.add('b'));
   assert(duplicate.add('c'));
+  // The second 'a' creates substring "abca", but palindrome "a" already exists.
   assert(!duplicate.add('a'));
 
   std::vector<int> occ = t.count_occurrences();

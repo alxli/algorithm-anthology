@@ -188,6 +188,8 @@ int main() {
   assert(line_convex_polygon_intersection(square, PointI(0, 0), PointI(4, 0)) == make_pair(0, 0));
   assert(line_convex_polygon_intersection(square, PointI(5, 0), PointI(5, 4)) == make_pair(-1, -1));
 
+  // From the point to the right of the square, the upper-right and lower-right vertices are
+  // tangent.
   auto tangents = convex_polygon_tangents(square, PointI(6, 2));
   assert(tangents == make_pair(2, 1));
   return 0;

@@ -68,6 +68,7 @@ using namespace std;
 int main() {
   vector<int> moves{1, 3, 4};
   auto g = subtraction_game_grundy(10, moves);
+  // With moves 1, 3, 4, pile size 2 is losing and pile size 4 has mex {0, 1} = 2.
   assert(g[0] == 0);
   assert(g[1] == 1);
   assert(g[2] == 0);
@@ -75,6 +76,7 @@ int main() {
   assert(g[7] == 0);
 
   vector<int> heaps{g[5], g[7], g[10]};
+  // Independent games combine by xor of their Grundy numbers.
   assert(sum_grundy(heaps) == (g[5] ^ g[7] ^ g[10]));
   return 0;
 }

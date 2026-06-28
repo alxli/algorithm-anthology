@@ -2558,6 +2558,8 @@ int main() {
   assert(line_convex_polygon_intersection(square, PointI(0, 0), PointI(4, 0)) == make_pair(0, 0));
   assert(line_convex_polygon_intersection(square, PointI(5, 0), PointI(5, 4)) == make_pair(-1, -1));
 
+  // From the point to the right of the square, the upper-right and lower-right vertices are
+  // tangent.
   auto tangents = convex_polygon_tangents(square, PointI(6, 2));
   assert(tangents == make_pair(2, 1));
   return 0;
@@ -3616,10 +3618,12 @@ int main() {
   vector<Point> square{{0, 0}, {1, 0}, {1, 1}, {0, 1}};
   vector<Point> tri{{0, 0}, {2, 0}, {0, 2}};
   vector<Point> sum = minkowski_sum(square, tri);
+  // The square thickens the triangle by one unit in the positive x/y directions.
   vector<Point> expected{{0, 0}, {3, 0}, {3, 1}, {1, 3}, {0, 3}};
   assert(sum == expected);
 
   vector<Point> shifted = minkowski_sum(square, {Point(2, 3)});
+  // Adding a single point translates the polygon.
   vector<Point> expected_shifted{{2, 3}, {3, 3}, {3, 4}, {2, 4}};
   assert(shifted == expected_shifted);
 
@@ -4670,6 +4674,7 @@ using namespace std;
 int main() {
   vector<Point3D> tetra{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
   auto faces = convex_hull_3d(tetra);
+  // A tetrahedron has four triangular faces.
   assert(faces.size() == 4);
   for (const Face &f : faces) {
     assert(f.a != f.b && f.b != f.c && f.c != f.a);
@@ -4677,6 +4682,7 @@ int main() {
 
   tetra.push_back(Point3D(1, 1, 1));
   faces = convex_hull_3d(tetra);
+  // Adding the opposite point makes a triangular bipyramid with six triangular faces.
   assert(faces.size() == 6);
   for (const Face &f : faces) {
     assert(0 <= f.a && f.a < static_cast<int>(tetra.size()));

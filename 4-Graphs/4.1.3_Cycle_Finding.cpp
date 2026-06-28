@@ -251,6 +251,7 @@ int main() {
     add_edge(1, 2);
     add_edge(2, 0);
     add_edge(3, 4);
+    // DFS encounters the triangle component before the acyclic 3-4 component.
     assert((find_cycle_undirected(adj) == vector<int>{0, 1, 2}));
   }
   {
@@ -280,6 +281,7 @@ int main() {
     CycleFinder g(2, false);
     int a = g.add_edge(0, 1);
     int b = g.add_edge(0, 1);
+    // Parallel undirected edges form a 2-edge cycle; edge IDs make this representable.
     vector<vector<int>> cycles = g.find_cycles();
     assert(cycles.size() == 1);
     sort(cycles[0].begin(), cycles[0].end());

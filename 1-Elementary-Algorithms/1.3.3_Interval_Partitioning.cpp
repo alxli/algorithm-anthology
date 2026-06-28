@@ -69,6 +69,7 @@ using namespace std;
 int main() {
   vector<PartitionInterval> intervals{{0, 30, 0}, {5, 10, 1}, {15, 20, 2}};
   vector<int> room = partition_intervals(intervals);
+  // The long interval overlaps both short intervals, but the short intervals can share a room.
   assert(1 + *max_element(room.begin(), room.end()) == 2);
   assert(room[1] == room[2]);
   assert(room[0] != room[1]);

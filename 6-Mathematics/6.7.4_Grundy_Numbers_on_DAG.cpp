@@ -56,10 +56,12 @@ using namespace std;
 int main() {
   vector<vector<int>> g{{1, 2}, {3}, {3, 4}, {}, {}};
   auto grundy = grundy_on_dag(g);
+  // Terminal vertices have Grundy 0; their predecessors have mex {0} = 1.
   assert(grundy[3] == 0);
   assert(grundy[4] == 0);
   assert(grundy[1] == 1);
   assert(grundy[2] == 1);
+  // Vertex 0 can move to two positions with Grundy 1, so mex {1} = 0.
   assert(grundy[0] == 0);
   return 0;
 }

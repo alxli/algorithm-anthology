@@ -82,6 +82,7 @@ using namespace std;
 int main() {
   vector<WeightedInterval> intervals{{1, 3, 5}, {2, 5, 6}, {4, 6, 5}, {6, 7, 4}, {5, 8, 11}};
   auto [weight, selected] = select_weighted_intervals(intervals);
+  // Taking ids 1 and 4 beats the earliest-finish unweighted-looking choices.
   assert(weight == 17);
   assert((selected == vector<int>{1, 4}));
 

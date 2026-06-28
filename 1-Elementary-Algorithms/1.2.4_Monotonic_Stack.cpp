@@ -151,6 +151,7 @@ int main() {
   assert((next_greater(a) == vector<int>{2, 2, 4, 4}));
 
   vector<int> hist{2, 1, 5, 6, 2, 3};
+  // The best histogram rectangle uses bars 2 and 3: min height 5 times width 2.
   assert(largest_rectangle(hist) == 10);
 
   vector<vector<char>> grid{
@@ -160,6 +161,7 @@ int main() {
       {1, 0, 0, 1, 0, 0},
       {1, 0, 1, 0, 0, 1}
   };
+  // The largest zero rectangle has 3 rows and 2 columns.
   assert(largest_zero_submatrix(grid) == 6);
   return 0;
 }

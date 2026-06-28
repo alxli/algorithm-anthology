@@ -105,6 +105,7 @@ int main() {
   h.add_line(0, 6);
   h.add_line(1, 2);
   h.add_line(2, 1);
+  // Minimize among y = 3x, 6, x + 2, and 2x + 1.
   assert(h.query(0) == 0);
   assert(h.query(2) == 4);
   assert(h.query(1) == 3);
@@ -114,6 +115,7 @@ int main() {
   mx.add_line(3, 0);
   mx.add_line(0, 6);
   mx.add_line(1, 2);
+  // Same interface can maximize when constructed with query_max = true.
   assert(mx.query(0) == 6);
   assert(mx.query(3) == 9);
   return 0;
