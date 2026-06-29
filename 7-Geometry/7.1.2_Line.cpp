@@ -8,12 +8,12 @@ to $a = 1$ for vertical lines; this supports floating-point and `Modular` coeffi
 proportional valid coefficient vectors have the same canonical representation, up to floating-point
 rounding.
 
-Set the template flag `CANONICALIZE` to `false` to preserve the supplied coefficients. `EXACT`
-defaults to true only for built-in integral types; set it explicitly for custom types such as
-`BigInt` and `Rational`. The internal Euclidean GCD only requires `%`, comparisons, and basic
-arithmetic. Calling `canonicalized()` returns a canonical copy. `operator==` always compares stored
-coefficients exactly, while `EQ(l1, l2)` canonicalizes raw lines if necessary and uses `EPS` for
-floating-point coefficients.
+Set the template flag `CANONICALIZE = false` to preserve the supplied coefficients. `EXACT` defaults
+to `true` only for built-in integral types; set it explicitly for custom types such as `BigInt` and
+`Rational`. The internal Euclidean GCD only requires `%`, comparisons, and basic arithmetic. Calling
+`canonicalized()` returns a canonical copy. `operator==` always compares stored coefficients
+exactly, while `EQ(l1, l2)` canonicalizes raw lines if necessary and uses `EPS` for floating-point
+coefficients.
 
 Storage and the predicates `contains()`, `is_parallel()`, and `is_perpendicular()` stay exact for
 integral type `T`. The inherently-fractional operations `slope()`, `x()`, and `y()` return `fp_t`,

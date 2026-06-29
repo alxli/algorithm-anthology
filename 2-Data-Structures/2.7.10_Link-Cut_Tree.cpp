@@ -25,8 +25,8 @@ queries, and `compose_deltas(old, d)` would return `old + d`.
 - `LinkCut<T>()` constructs an empty forest.
 - `size()` returns the number of nodes in the forest.
 - `trees()` returns the number of trees in the forest.
-- `add_node(i, v)` adds a new single-node tree to the forest, labeled with the integer `i` and with
-  value initialized to `v`.
+- `add_node(i, value)` adds a new single-node tree to the forest, labeled with the integer `i` and
+  with value initialized to `value`.
 - `is_connected(a, b)` returns whether nodes `a` and `b` are connected.
 - `link(a, b)` adds an edge between the nodes `a` and `b`, both of which must exist and not be
   connected.
@@ -74,10 +74,10 @@ class LinkCut {
     bool rev, pending;
     Node *left, *right, *parent;
 
-    Node(int id, const T &v)
+    Node(int id, const T &value)
         : id(id),
-          value(v),
-          subtree_value(v),
+          value(value),
+          subtree_value(value),
           size(1),
           rev(false),
           pending(false),
@@ -224,9 +224,9 @@ class LinkCut {
   int size() const { return static_cast<int>(nodes.size()); }
   int trees() const { return num_trees; }
 
-  void add_node(int i, const T &v = T()) {
+  void add_node(int i, const T &value = T()) {
     assert(nodes.find(i) == nodes.end());
-    Node *n = new Node(i, v);
+    Node *n = new Node(i, value);
     expose(n);
     n->rev = !n->rev;
     nodes[i] = n;
@@ -320,6 +320,11 @@ class LinkCut {
 using namespace std;
 
 int main() {
+  // v=10      v=40      v=20      v=10
+  //  0---------1---------2---------3
+  //                      |
+  //                      +---------4
+  //                               v=30
   LinkCut<int> lcf;
   lcf.add_node(0, 10);
   lcf.add_node(1, 40);
@@ -333,12 +338,6 @@ int main() {
   lcf.link(2, 3);
   lcf.link(2, 4);
   assert(lcf.trees() == 1);
-
-  // v=10      v=40      v=20      v=10
-  //  0---------1---------2---------3
-  //                      |
-  //                      +---------4
-  //                               v=30
   assert(lcf.query(1, 4) == 20);
 
   // find_root and lca are relative to the current root, set explicitly via reroot.

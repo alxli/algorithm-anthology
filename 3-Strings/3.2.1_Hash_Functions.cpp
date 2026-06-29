@@ -168,16 +168,15 @@ struct IntHasher {
 template<typename T>
 struct GenericHasher;
 
-// Use std::hash by default.
-template<typename T, bool IsInteger>
-struct ScalarHasher {
-  std::size_t operator()(const T &x) const { return std::hash<T>()(x); }
-};
-
-// Optional: Use our seeded hasher for ints in open-hacking environments.
+// Use the seeded hasher for integers, and std::hash by default for everything else.
 template<typename T>
-struct ScalarHasher<T, true> {
-  std::size_t operator()(T x) const { return IntHasher<T>{}(x); }
+struct ScalarHasher {
+  std::size_t operator()(const T &x) const {
+    if constexpr (std::is_integral_v<T>) {
+      return IntHasher<T>{}(x);
+    }
+    return std::hash<T>()(x);
+  }
 };
 
 // A self-contained hasher for std::pair<int, int> keys: copy just this struct when you do not need
@@ -232,7 +231,7 @@ struct TupleHasher {
 };
 
 template<typename T>
-struct GenericHasher : ScalarHasher<T, std::is_integral<T>::value> {};
+struct GenericHasher : ScalarHasher<T> {};
 
 template<typename A, typename B>
 struct GenericHasher<std::pair<A, B>> : PairHasher<A, B> {};

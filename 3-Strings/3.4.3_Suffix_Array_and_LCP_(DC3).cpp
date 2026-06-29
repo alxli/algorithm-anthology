@@ -52,12 +52,12 @@ class SuffixArrayDC3 {
   }
 
   template<typename It>
-  static void radix_pass(It a, It b, It r, int n, int K) {
-    std::vector<int> cnt(K + 1);
+  static void radix_pass(It a, It b, It r, int n, int alphabet) {
+    std::vector<int> cnt(alphabet + 1);
     for (int i = 0; i < n; i++) {
       cnt[r[a[i]]]++;
     }
-    for (int i = 1; i <= K; i++) {
+    for (int i = 1; i <= alphabet; i++) {
       cnt[i] += cnt[i - 1];
     }
     for (int i = n - 1; i >= 0; i--) {
@@ -66,7 +66,7 @@ class SuffixArrayDC3 {
   }
 
   template<typename It>
-  static void suffix_array_dc3(It s, It sa, int n, int K) {
+  static void suffix_array_dc3(It s, It sa, int n, int alphabet) {
     int n0 = (n + 2) / 3, n1 = (n + 1) / 3, n2 = n / 3, n02 = n0 + n2;
     std::vector<int> s12(n02 + 3), sa12(n02 + 3), s0(n0), sa0(n0);
     s12[n02] = s12[n02 + 1] = s12[n02 + 2] = 0;
@@ -76,9 +76,9 @@ class SuffixArrayDC3 {
         s12[j++] = i;
       }
     }
-    radix_pass(s12.begin(), sa12.begin(), s + 2, n02, K);
-    radix_pass(sa12.begin(), s12.begin(), s + 1, n02, K);
-    radix_pass(s12.begin(), sa12.begin(), s, n02, K);
+    radix_pass(s12.begin(), sa12.begin(), s + 2, n02, alphabet);
+    radix_pass(sa12.begin(), s12.begin(), s + 1, n02, alphabet);
+    radix_pass(s12.begin(), sa12.begin(), s, n02, alphabet);
     int name = 0, c0 = -1, c1 = -1, c2 = -1;
     for (int i = 0; i < n02; i++) {
       if (s[sa12[i]] != c0 || s[sa12[i] + 1] != c1 || s[sa12[i] + 2] != c2) {
@@ -104,7 +104,7 @@ class SuffixArrayDC3 {
         s0[j++] = 3 * sa12[i];
       }
     }
-    radix_pass(s0.begin(), sa0.begin(), s, n0, K);
+    radix_pass(s0.begin(), sa0.begin(), s, n0, alphabet);
     for (int p = 0, t = n0 - n1, k = 0; k < n; k++) {
       int i = (sa12[t] < n0) ? 3 * sa12[t] + 1 : 3 * (sa12[t] - n0) + 2, j = sa0[p];
       if (sa12[t] < n0

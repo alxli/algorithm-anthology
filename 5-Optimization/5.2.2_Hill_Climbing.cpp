@@ -10,11 +10,10 @@ the step size is reduced and the same process repeats until a desired absolute e
 technique's success heavily depends on the behavior of $f$ and the initial guess. Therefore, the
 result is not guaranteed to be the global minimum.
 
-- `find_min(f, x0, y0, &critical_x, &critical_y)` returns a candidate global minimum value of
-  function `f` reached by hill-climbing from the starting guess $(`x0`, `y0`)$. If the optional
-  pointers `critical_x` and `critical_y` are supplied, the point attaining the returned value is
-  stored through them. The step-size bounds and number of directions sampled are additional optional
-  parameters.
+- `find_min(f, x0, y0, &critical_x, &critical_y, step_min = 1e-9, step_max = 1e6, directions = 6)`
+  returns a candidate global minimum value of function `f` reached by hill-climbing from the
+  starting guess $(`x0`, `y0`)$. If the optional pointers `critical_x` and `critical_y` are
+  supplied, the point attaining the returned value is stored through them.
 
 Time Complexity:
 - O(d log n) calls will be made to `f()`, where $d$ is the number of directions considered at each
@@ -32,15 +31,15 @@ Space Complexity:
 template<typename Fn>
 double find_min(
     Fn f, double x0, double y0, double *critical_x = nullptr, double *critical_y = nullptr,
-    const double STEP_MIN = 1e-9, const double STEP_MAX = 1e6, const int NUM_DIRECTIONS = 6
+    const double step_min = 1e-9, const double step_max = 1e6, const int directions = 6
 ) {
   static const double PI = acos(-1.0);
   double x = x0, y = y0, res = f(x0, y0);
-  for (double step = STEP_MAX; step > STEP_MIN;) {
+  for (double step = step_max; step > step_min;) {
     double best = res, best_x = x, best_y = y;
     bool found = false;
-    for (int i = 0; i < NUM_DIRECTIONS; i++) {
-      double a = 2.0 * PI * i / NUM_DIRECTIONS;
+    for (int i = 0; i < directions; i++) {
+      double a = 2.0 * PI * i / directions;
       double x2 = x + step * cos(a), y2 = y + step * sin(a);
       double value = f(x2, y2);
       if (best > value) {

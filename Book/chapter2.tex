@@ -8594,7 +8594,7 @@ The construction sorts the subset by depth-first entry time, which lists the nod
 \begin{compactitem}
   \item \inlinecode{VirtualTree(adj, root)} builds the structure over a tree rooted at \inlinecode{root}, given a bidirectional adjacency list \inlinecode{adj} of nodes numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}.
   \item \inlinecode{lca(u, v)} returns the lowest common ancestor of nodes \inlinecode{u} and \inlinecode{v}.
-  \item \inlinecode{depth\_of(u)} returns the depth of \inlinecode{u} in the original tree (the root has depth 0). The original path length of a virtual-tree edge $({\inlinecodemath{p}}, {\inlinecodemath{c}})$ is \inlinecode{depth\_of(c) - depth\_of(p)}.
+  \item \inlinecode{depth\_of(u)} returns the depth of \inlinecode{u} in the original tree (the root has depth $0$). The original path length of a virtual-tree edge $({\inlinecodemath{p}}, {\inlinecodemath{c}})$ is \inlinecode{depth\_of(c)} $-$ \inlinecode{depth\_of(p)}.
   \item \inlinecode{build(nodes)} returns the virtual tree induced by \inlinecode{nodes}. The result has \inlinecode{root} set to the topmost node (the common ancestor of \inlinecode{nodes}), \inlinecode{vertices} listing every original node ID in the virtual tree sorted by entry time, and \inlinecode{edges} listing each $({\inlinecodemath{p}}, {\inlinecodemath{c}})$ pair in original IDs. Both the vertex set and the edges use the node numbering of the original tree. An empty input yields an empty result with \inlinecode{root} $= -1$.
 \end{compactitem}
 
@@ -8747,6 +8747,10 @@ int main() {
   assert(vt.depth_of(7) - vt.depth_of(0) == 3);
 
   // Virtual tree of {6, 7}: their LCA is 0, so the tree is 0 -> {6, 7} with edges compressed.
+  //
+  //      0
+  //   +--+--+
+  //   6     7
   VirtualTree::Tree t = vt.build({6, 7});
   assert(t.root == 0);
   assert((t.vertices == vector<int>{0, 6, 7}));
@@ -8756,6 +8760,12 @@ int main() {
   }
 
   // Virtual tree of {6, 4, 7}: node 1 becomes a branch point (LCA of 6 and 4).
+  //
+  //      0
+  //   +--+--+
+  //   1     7
+  // +-+-+
+  // 6   4
   VirtualTree::Tree u = vt.build({6, 4, 7});
   assert(u.root == 0);
   assert((u.vertices == vector<int>{0, 1, 6, 4, 7}));
@@ -8773,12 +8783,12 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Weighted Tree Path Queries (Binary Lifting)}
-Given a rooted tree or forest with weighted edges, aggregate the edge weights along the path between any two nodes in the same tree. This builds on the same binary lifting table as LCA: alongside \inlinecode{up[u][i]}, the $2^i$-th ancestor of \inlinecode{u}, it stores \inlinecode{agg[u][i]}, the combined weight of the $2^i$ edges traversed by that jump. A path query splits the path \inlinecode{u}-\inlinecode{v} at their lowest common ancestor and merges the two upward climbs.
+Given a tree or forest with weighted edges, aggregate the edge weights along the path between any two nodes in the same tree. The input is undirected; construction roots each component at the first unvisited node in index order. This builds on the same binary lifting table as LCA: alongside \inlinecode{up[u][i]}, the $2^i$-th ancestor of \inlinecode{u}, it stores \inlinecode{agg[u][i]}, the combined weight of the $2^i$ edges traversed by that jump. A path query splits the path \inlinecode{u}-\inlinecode{v} at their lowest common ancestor and merges the two upward climbs.
 
 The aggregate is a commutative monoid defined by \inlinecode{combine()} and its identity \inlinecode{identity()}. The two must be edited together; the defaults below compute the maximum edge weight on the path. For the minimum, use \inlinecode{std::min} with \inlinecode{std::numeric\_limits\textless{}W\textgreater{}::max()}; for the sum (the path length), use \inlinecode{a + b} with \inlinecode{W()}. Commutativity is required because the two half-paths are merged without regard to orientation. For an invertible aggregate such as the sum, an alternative that avoids the \inlinecode{agg} table is to store each node's weighted depth \inlinecode{dw[u]} and return \inlinecode{dw[u] + dw[v] - 2*dw[lca]}.
 
 \begin{compactitem}
-  \item \inlinecode{WeightedTreePath\textless{}W\textgreater{}(adj)} builds the structure over a forest given by a weighted, bidirectional adjacency list \inlinecode{adj}, where \inlinecode{adj[u]} holds \inlinecode{\{v, w\}} pairs for each edge \inlinecode{u}-\inlinecode{v} of weight \inlinecode{w}, over nodes numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}.
+  \item \inlinecode{WeightedTree\textless{}W\textgreater{}(adj)} builds the structure over a forest given by a weighted, bidirectional adjacency list \inlinecode{adj}, where \inlinecode{adj[u]} holds \inlinecode{\{v, w\}} pairs for each edge \inlinecode{u}-\inlinecode{v} of weight \inlinecode{w}, over nodes numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}. Each connected component is rooted at its first node reached by the constructor's outer loop.
   \item \inlinecode{lca(u, v)} returns the lowest common ancestor of \inlinecode{u} and \inlinecode{v}, or $-1$ if they lie in different trees.
   \item \inlinecode{kth\_ancestor(u, k)} returns the $k$-th ancestor of \inlinecode{u}, stopping at that tree's root if \inlinecode{k} exceeds \inlinecode{u}'s depth.
   \item \inlinecode{is\_ancestor(parent, child)} returns whether \inlinecode{parent} is an ancestor of \inlinecode{child}.
@@ -8808,10 +8818,7 @@ The aggregate is a commutative monoid defined by \inlinecode{combine()} and its 
 #include <vector>
 
 template<typename W>
-class WeightedTreePath {
-  // Edit combine() and identity() together for the desired commutative monoid.
-  // The defaults give the maximum edge weight on the path; for the minimum use std::min with
-  // std::numeric_limits<W>::max(), and for the sum (path length) use a + b with W().
+class WeightedTree {
   static W combine(const W &a, const W &b) { return std::max(a, b); }
   static W identity() { return std::numeric_limits<W>::lowest(); }
 
@@ -8851,7 +8858,7 @@ class WeightedTreePath {
   }
 
  public:
-  explicit WeightedTreePath(const std::vector<std::vector<std::pair<int, W>>> &adj) : timer(0) {
+  explicit WeightedTree(const std::vector<std::vector<std::pair<int, W>>> &adj) : timer(0) {
     int n = static_cast<int>(adj.size());
     len = 1;
     while ((1 << len) <= std::max(1, n)) {
@@ -8923,11 +8930,11 @@ void add_edge(vector<vector<pair<int, int>>> &adj, int u, int v, int w) {
 }
 
 int main() {
-  //            0
-  //      (4) /   \ (2)
-  //         1     2
-  //   (7) / | (1) | \ (3)
-  //      3  4  (5)5  6
+  //             0
+  //     w=4 /       \ w=2
+  //       1           2
+  //  w=7 / \w=1   w=5/ \ w=3
+  //     3   4       5   6
   vector<vector<pair<int, int>>> adj(7);
   add_edge(adj, 0, 1, 4);
   add_edge(adj, 0, 2, 2);
@@ -8935,7 +8942,7 @@ int main() {
   add_edge(adj, 1, 4, 1);
   add_edge(adj, 2, 5, 5);
   add_edge(adj, 2, 6, 3);
-  WeightedTreePath<int> tree(adj);
+  WeightedTree<int> tree(adj);
 
   assert(tree.lca(3, 4) == 1);
   assert(tree.lca(5, 6) == 2);
@@ -8952,7 +8959,7 @@ int main() {
   assert(tree.path_query(0, 3) == 7);  // 0-1 (4), 1-3 (7).
 
   vector<vector<pair<int, int>>> forest(2);
-  WeightedTreePath<int> disconnected(forest);
+  WeightedTree<int> disconnected(forest);
   assert(disconnected.lca(0, 1) == -1);
   assert(disconnected.path_query(0, 1) == numeric_limits<int>::lowest());
   return 0;
@@ -8966,10 +8973,10 @@ The query operation is defined by an associative \inlinecode{combine()} function
 The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{compose\_deltas()}. A delta must act on an aggregate summary of a path of length \inlinecode{len}: \inlinecode{apply\_delta(v, d, len)} returns the aggregate after applying update \inlinecode{d} to every element represented by aggregate \inlinecode{v}. Pending deltas are combined in chronological order by \inlinecode{compose\_deltas(old, d)}, meaning ``apply \inlinecode{old}, then apply \inlinecode{d}''. These hooks do not support arbitrary query/update pairings; the delta operation must distribute over \inlinecode{combine()}, and composed deltas must have the same effect as applying their updates sequentially. The default code below defines updates that ``set'' a path's edges or nodes to a new value. For range increment updates, \inlinecode{apply\_delta(v, d, len)} would return \inlinecode{v + d} for min/max queries, or \inlinecode{v + d * len} for sum queries, and \inlinecode{compose\_deltas(old, d)} would return \inlinecode{old + d}.
 
 \begin{compactitem}
-  \item \inlinecode{HeavyLight\textless{}T\textgreater{}(adj, v)} constructs a new heavy light decomposition on a forest defined by the adjacency list \inlinecode{adj}, with all values initialized to \inlinecode{v}. The adjacency list must consist of only the integers $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}. No duplicate edges should exist.
+  \item \inlinecode{HeavyLight\textless{}T, VALUES\_ON\_EDGES = true\textgreater{}(adj, value)} constructs a new heavy light decomposition on a forest defined by the adjacency list \inlinecode{adj}, with all values initialized to \inlinecode{value}. The adjacency list must consist of only the integers $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}. No duplicate edges should exist. Set \inlinecode{VALUES\_ON\_EDGES} to false to store values on nodes instead.
   \item \inlinecode{query(u, v)} returns the result of \inlinecode{combine()} applied to all values on the path from node \inlinecode{u} to node \inlinecode{v}. The nodes must be in the same tree.
   \item \inlinecode{update(u, v, d)} modifies all values on the path from node \inlinecode{u} to node \inlinecode{v} by respectively applying the delta \inlinecode{d}. The nodes must be in the same tree.
-  \item \inlinecode{for\_each\_path(u, v, include\_lca, f)} decomposes the path from node \inlinecode{u} to node \inlinecode{v} into heavy path ranges and calls \inlinecode{f(path, lo, hi, up)} on each range, where \inlinecode{up} says the path segment is traversed upward from \inlinecode{u} toward the LCA. If values are stored on edges, pass \inlinecode{include\_lca = false} to skip the LCA's vertex slot. Returns false if \inlinecode{u} and \inlinecode{v} are in different trees.
+  \item \inlinecode{for\_each\_path(u, v, include\_lca, f)} decomposes the path from node \inlinecode{u} to node \inlinecode{v} into heavy path ranges and calls \inlinecode{f(path, lo, hi, up)} on each range, where \inlinecode{up} says the path segment is traversed upward from \inlinecode{u} toward the LCA. If \inlinecode{VALUES\_ON\_EDGES = true}, pass \inlinecode{include\_lca = false} to skip the LCA's vertex slot. Returns false if \inlinecode{u} and \inlinecode{v} are in different trees.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -8995,11 +9002,8 @@ The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{c
 #include <utility>
 #include <vector>
 
-template<typename T>
+template<typename T, bool VALUES_ON_EDGES = true>
 class HeavyLight {
-  // Set this to true to store values on edges, false to store values on nodes.
-  static const bool VALUES_ON_EDGES = true;
-
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T apply_delta(const T &v, const T &d, int len) { return d; }
   static T compose_deltas(const T &old, const T &d) { return d; }
@@ -9116,7 +9120,7 @@ class HeavyLight {
   }
 
  public:
-  explicit HeavyLight(const std::vector<std::vector<int>> &adj, const T &v = T())
+  explicit HeavyLight(const std::vector<std::vector<int>> &adj, const T &initial_value = T())
       : adj(adj),
         size(adj.size()),
         parent(adj.size()),
@@ -9141,7 +9145,7 @@ class HeavyLight {
     len.resize(paths);
     for (int i = 0; i < paths; i++) {
       int m = pathlen[i];
-      value[i].assign(2 * m, v);
+      value[i].assign(2 * m, initial_value);
       delta[i].resize(2 * m);
       pending[i].assign(2 * m, false);
       len[i].assign(2 * m, 1);
@@ -9211,23 +9215,23 @@ class HeavyLight {
 \begin{lstlisting}[language=C++]
 using namespace std;
 
+void add_edge(vector<vector<int>> &adj, int u, int v) {
+  adj[u].push_back(v);
+  adj[v].push_back(u);
+}
+
 int main() {
-  //   w=40   w=20   w=10
+  //   v=40   v=20   v=10
   // 0------1------2------3    5------6
   //               |
   //               +------4
-  //                 w=30
+  //                 v=30
   vector<vector<int>> adj(7);
-  adj[0].push_back(1);
-  adj[1].push_back(0);
-  adj[1].push_back(2);
-  adj[2].push_back(1);
-  adj[2].push_back(3);
-  adj[3].push_back(2);
-  adj[2].push_back(4);
-  adj[4].push_back(2);
-  adj[5].push_back(6);
-  adj[6].push_back(5);
+  add_edge(adj, 0, 1);
+  add_edge(adj, 1, 2);
+  add_edge(adj, 2, 3);
+  add_edge(adj, 2, 4);
+  add_edge(adj, 5, 6);
   HeavyLight<int> hld(adj, 0);
   hld.update(0, 1, 40);
   hld.update(1, 2, 20);
@@ -9236,10 +9240,43 @@ int main() {
   assert(hld.query(0, 3) == 10);
   assert(hld.query(2, 4) == 30);
   hld.update(3, 4, 5);
+
+  // Update path 3-2-4 to value 5:
+  //
+  //   v=40   v=20    v=5
+  // 0------1------2------3    5------6
+  //               |
+  //               +------4
+  //                  v=5
   assert(hld.query(1, 4) == 5);
   hld.update(5, 6, 7);
+
+  // The disconnected component can be updated independently:
+  //
+  // 5------6
+  //   v=7
   assert(hld.query(5, 6) == 7);
   assert(!hld.for_each_path(0, 5, true, [](int, int, int, bool) {}));
+
+  // v=100  v=100  v=100  v=100    v=100  v=100
+  //   0------1------2------3        5------6
+  //                 |
+  //                 +------4
+  //                      v=100
+  HeavyLight<int, false> node_hld(adj, 100);
+  node_hld.update(1, 4, 8);
+
+  // Update nodes on path 1-2-4 to value 8:
+  //
+  // v=100   v=8    v=8   v=100    v=100  v=100
+  //   0------1------2------3        5------6
+  //                 |
+  //                 +------4
+  //                       v=8
+  assert(node_hld.query(0, 3) == 8);    // Min over nodes 0, 1, 2, 3.
+  assert(node_hld.query(5, 5) == 100);  // Single-node paths are allowed.
+  node_hld.update(5, 5, 7);
+  assert(node_hld.query(5, 5) == 7);
   return 0;
 }
 \end{lstlisting}
@@ -9486,6 +9523,8 @@ int main() {
   assert(ett.link(0, 1));
   assert(ett.link(1, 2));
   assert(ett.link(3, 4));
+
+  // 0---1---2    3---4    5
   assert(ett.connected(0, 2));
   assert(!ett.connected(0, 4));
   assert(!ett.link(0, 2));  // Would create a cycle.
@@ -9496,10 +9535,14 @@ int main() {
   ett.reroot(2);
   assert(ett.connected(0, 2));
   assert(ett.cut(1, 2));
+
+  // 0---1     2    3---4    5
   assert(!ett.connected(0, 2));
   assert((ett.component_vertices(2) == std::vector<int>{2}));
 
   assert(ett.link(2, 3));
+
+  // 0---1     2---3---4    5
   assert(ett.connected(0, 4) == false);
   assert(ett.connected(2, 4));
   assert(!ett.cut(0, 5));
@@ -9517,7 +9560,7 @@ The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{c
   \item \inlinecode{LinkCut\textless{}T\textgreater{}()} constructs an empty forest.
   \item \inlinecode{size()} returns the number of nodes in the forest.
   \item \inlinecode{trees()} returns the number of trees in the forest.
-  \item \inlinecode{add\_node(i, v)} adds a new single-node tree to the forest, labeled with the integer \inlinecode{i} and with value initialized to \inlinecode{v}.
+  \item \inlinecode{add\_node(i, value)} adds a new single-node tree to the forest, labeled with the integer \inlinecode{i} and with value initialized to \inlinecode{value}.
   \item \inlinecode{is\_connected(a, b)} returns whether nodes \inlinecode{a} and \inlinecode{b} are connected.
   \item \inlinecode{link(a, b)} adds an edge between the nodes \inlinecode{a} and \inlinecode{b}, both of which must exist and not be connected.
   \item \inlinecode{cut(a, b)} removes the edge between the nodes \inlinecode{a} and \inlinecode{b}, both of which must exist and be connected.
@@ -9564,10 +9607,10 @@ class LinkCut {
     bool rev, pending;
     Node *left, *right, *parent;
 
-    Node(int id, const T &v)
+    Node(int id, const T &value)
         : id(id),
-          value(v),
-          subtree_value(v),
+          value(value),
+          subtree_value(value),
           size(1),
           rev(false),
           pending(false),
@@ -9714,9 +9757,9 @@ class LinkCut {
   int size() const { return static_cast<int>(nodes.size()); }
   int trees() const { return num_trees; }
 
-  void add_node(int i, const T &v = T()) {
+  void add_node(int i, const T &value = T()) {
     assert(nodes.find(i) == nodes.end());
-    Node *n = new Node(i, v);
+    Node *n = new Node(i, value);
     expose(n);
     n->rev = !n->rev;
     nodes[i] = n;
@@ -9811,6 +9854,11 @@ class LinkCut {
 using namespace std;
 
 int main() {
+  // v=10      v=40      v=20      v=10
+  //  0---------1---------2---------3
+  //                      |
+  //                      +---------4
+  //                               v=30
   LinkCut<int> lcf;
   lcf.add_node(0, 10);
   lcf.add_node(1, 40);
@@ -9824,12 +9872,6 @@ int main() {
   lcf.link(2, 3);
   lcf.link(2, 4);
   assert(lcf.trees() == 1);
-
-  // v=10      v=40      v=20      v=10
-  //  0---------1---------2---------3
-  //                      |
-  //                      +---------4
-  //                               v=30
   assert(lcf.query(1, 4) == 20);
 
   // find_root and lca are relative to the current root, set explicitly via reroot.
@@ -9873,14 +9915,14 @@ This is an advanced alternative to Link-Cut Trees. Link-Cut Trees are usually si
 The aggregate operation is defined by an identity element \inlinecode{identity()} and an associative \inlinecode{combine(a, b)}. The default code below computes sums over vertex and edge values. For minimum queries, use \inlinecode{std::numeric\_limits\textless{}T\textgreater{}::max()} as the identity and \inlinecode{std::min(a, b)} as the combine function. For non-commutative aggregates, store enough information in \inlinecode{T} to support reversing a path, and update \inlinecode{flip\_path()} accordingly.
 
 \begin{compactitem}
-  \item \inlinecode{TopTree(n, v)} constructs a forest on vertices $[0, {\inlinecodemath{n}})$ with every vertex value initialized to \inlinecode{v}.
+  \item \inlinecode{TopTree(n, value)} constructs a forest on vertices $[0, {\inlinecodemath{n}})$ with every vertex value initialized to \inlinecode{value}.
   \item \inlinecode{size()} returns the number of vertices in the forest.
   \item \inlinecode{edges()} returns the number of edge nodes that have been created.
   \item \inlinecode{connected(u, v)} returns whether vertices \inlinecode{u} and \inlinecode{v} are in the same tree.
-  \item \inlinecode{link(u, v, w)} adds an edge with value \inlinecode{w} between different trees, returning its edge id or $-1$ if the edge would create a cycle.
+  \item \inlinecode{link(u, v, value)} adds an edge with value \inlinecode{value} between different trees, returning its edge id or $-1$ if the edge would create a cycle.
   \item \inlinecode{cut(e)} removes edge id \inlinecode{e}. The edge id must currently be present.
-  \item \inlinecode{set\_vertex(u, v)} changes vertex \inlinecode{u}'s value to \inlinecode{v}.
-  \item \inlinecode{set\_edge(e, v)} changes edge \inlinecode{e}'s value to \inlinecode{v}. The edge id must currently be present.
+  \item \inlinecode{set\_vertex(u, value)} changes vertex \inlinecode{u}'s value to \inlinecode{value}.
+  \item \inlinecode{set\_edge(e, value)} changes edge \inlinecode{e}'s value to \inlinecode{value}. The edge id must currently be present.
   \item \inlinecode{path\_query(u, v)} returns the aggregate over all vertex and edge values on the path from \inlinecode{u} to \inlinecode{v}. The vertices must be connected.
   \item \inlinecode{subtree\_query(root, u)} reroots the represented tree at \inlinecode{root} and returns the aggregate over the rooted subtree of \inlinecode{u}.
   \item \inlinecode{reroot(u)} makes vertex \inlinecode{u} the root of its represented tree.
@@ -9920,12 +9962,12 @@ class TopTree {
     int vertex_id, edge_id;
     bool is_path, is_vert, lazy_flip_path, alive;
 
-    Node(const T &v, int vertex_id, int edge_id)
+    Node(const T &value, int vertex_id, int edge_id)
         : p(nullptr),
           c{nullptr, nullptr, nullptr},
-          value(v),
-          path_value(v),
-          subtree_value(v),
+          value(value),
+          path_value(value),
+          subtree_value(value),
           vertex_id(vertex_id),
           edge_id(edge_id),
           is_path(vertex_id != -1),
@@ -10348,10 +10390,10 @@ class TopTree {
   }
 
  public:
-  explicit TopTree(int n, const T &v = T()) {
+  explicit TopTree(int n, const T &value = T()) {
     verts.reserve(n);
     for (int i = 0; i < n; i++) {
-      verts.push_back(new Node(v, i, -1));
+      verts.push_back(new Node(value, i, -1));
     }
   }
 
@@ -10375,14 +10417,14 @@ class TopTree {
     return u == v || maybe_lca_node(verts[u], verts[v]) != nullptr;
   }
 
-  int link(int u, int v, const T &w = T()) {
+  int link(int u, int v, const T &value = T()) {
     assert(0 <= u && u < size());
     assert(0 <= v && v < size());
     if (connected(u, v)) {
       return -1;
     }
     int id = edges();
-    edge_nodes.push_back(new Node(w, -1, id));
+    edge_nodes.push_back(new Node(value, -1, id));
     link_nodes(edge_nodes.back(), verts[u], verts[v]);
     return id;
   }
@@ -10392,18 +10434,18 @@ class TopTree {
     cut_node(edge_nodes[e]);
   }
 
-  void set_vertex(int u, const T &v) {
+  void set_vertex(int u, const T &value) {
     assert(0 <= u && u < size());
     verts[u]->expose();
-    verts[u]->value = v;
+    verts[u]->value = value;
     verts[u]->pull_all();
   }
 
-  void set_edge(int e, const T &v) {
+  void set_edge(int e, const T &value) {
     assert(0 <= e && e < edges());
     assert(edge_nodes[e]->alive);
     edge_nodes[e]->expose_edge();
-    edge_nodes[e]->value = v;
+    edge_nodes[e]->value = value;
     edge_nodes[e]->pull_all();
   }
 
@@ -10453,19 +10495,52 @@ int main() {
   assert(e01 == 0 && e12 == 1 && e13 == 2 && e34 == 3);
   assert(tree.link(0, 4, 100) == -1);
 
+  //       0
+  //  v=10 |
+  //       1
+  // v=20 / \ v=30
+  //     2   3
+  //         | v=40
+  //         4
   assert(tree.path_query(2, 4) == 104);
   assert(tree.subtree_query(0, 3) == 49);
   assert(tree.lca(2, 4) == 1);
 
   tree.cut(e13);
+
+  // Cut edge 1-3:
+  //
+  //       0
+  //  v=10 |
+  //       1       3
+  // v=20 /        | v=40
+  //     2         4
   assert(!tree.connected(2, 4));
   assert(tree.maybe_lca(2, 4) == -1);
   e13 = tree.link(2, 4, 30);
   assert(e13 == 4);
+
+  // Re-link 2-4 with value 30:
+  //
+  //       0
+  //  v=10 |
+  //       1        3
+  // v=20 /         | v=40
+  //     2----------4
+  //         v=30
   assert(tree.path_query(0, 3) == 115);
 
   tree.set_edge(e34, 4);
   tree.set_vertex(4, 50);
+
+  // Change edge 3-4 to value 4 and vertex 4 to value 50:
+  //
+  //       0
+  //  v=10 |
+  //       1        3
+  // v=20 /         | v=4
+  //     2----------4
+  //        v=30   v=50
   assert(tree.subtree_query(2, 4) == 58);
   cout << tree.path_query(0, 3) << endl;
   return 0;

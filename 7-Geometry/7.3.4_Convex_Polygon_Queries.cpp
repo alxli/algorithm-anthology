@@ -6,9 +6,9 @@ The line and tangent helpers below are written as simple linear scans; this is o
 less assumption-heavy than the classic logarithmic versions, while still documenting the exact query
 semantics in one place.
 
-- `point_in_convex_polygon(poly, p, EDGE_IS_INSIDE)` returns whether point `p` lies inside the
-  convex polygon `poly`. The polygon must be in counter-clockwise order, with no repeated final
-  vertex. Points on the boundary count as inside unless `EDGE_IS_INSIDE` is set to `false`.
+- `point_in_convex_polygon(poly, p, edge_is_inside = true)` returns whether point `p` lies inside
+  the convex polygon `poly`. The polygon must be in counter-clockwise order, with no repeated final
+  vertex. Points on the boundary count as inside unless `edge_is_inside` is set to `false`.
 - `line_convex_polygon_intersection(poly, a, b)` describes where the infinite directed line through
   `a` $\to$ `b` hits the polygon: $(-1, -1)$ for no intersection, $(i, -1)$ for touching vertex $i$,
   $(i, i)$ for containing side $i \to i+1$, or $(i, j)$ for crossing sides $i \to i+1$ and
@@ -54,17 +54,17 @@ bool on_segment(const Pt &p, const Pt &a, const Pt &b) {
 
 template<typename Pt>
 bool point_in_convex_polygon(
-    const std::vector<Pt> &poly, const Pt &p, const bool EDGE_IS_INSIDE = true
+    const std::vector<Pt> &poly, const Pt &p, const bool edge_is_inside = true
 ) {
   int n = static_cast<int>(poly.size());
   if (n == 0) {
     return false;
   }
   if (n == 1) {
-    return EDGE_IS_INSIDE && p.x == poly[0].x && p.y == poly[0].y;
+    return edge_is_inside && p.x == poly[0].x && p.y == poly[0].y;
   }
   if (n == 2) {
-    return EDGE_IS_INSIDE && on_segment(p, poly[0], poly[1]);
+    return edge_is_inside && on_segment(p, poly[0], poly[1]);
   }
   int left = sgn(cross(poly[1], p, poly[0]));
   int right = sgn(cross(poly[n - 1], p, poly[0]));
@@ -72,10 +72,10 @@ bool point_in_convex_polygon(
     return false;
   }
   if (left == 0) {
-    return EDGE_IS_INSIDE && on_segment(p, poly[0], poly[1]);
+    return edge_is_inside && on_segment(p, poly[0], poly[1]);
   }
   if (right == 0) {
-    return EDGE_IS_INSIDE && on_segment(p, poly[0], poly[n - 1]);
+    return edge_is_inside && on_segment(p, poly[0], poly[n - 1]);
   }
   int lo = 1, hi = n - 1;
   while (hi - lo > 1) {
@@ -87,7 +87,7 @@ bool point_in_convex_polygon(
     }
   }
   int s = sgn(cross(poly[lo + 1], p, poly[lo]));
-  return EDGE_IS_INSIDE ? s >= 0 : s > 0;
+  return edge_is_inside ? s >= 0 : s > 0;
 }
 
 template<typename Pt>

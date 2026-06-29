@@ -14,16 +14,16 @@ queries, use `std::numeric_limits<T>::max()` as the identity and `std::min(a, b)
 function. For non-commutative aggregates, store enough information in `T` to support reversing a
 path, and update `flip_path()` accordingly.
 
-- `TopTree(n, v)` constructs a forest on vertices $[0, `n`)$ with every vertex value initialized to
-  `v`.
+- `TopTree(n, value)` constructs a forest on vertices $[0, `n`)$ with every vertex value
+  initialized to `value`.
 - `size()` returns the number of vertices in the forest.
 - `edges()` returns the number of edge nodes that have been created.
 - `connected(u, v)` returns whether vertices `u` and `v` are in the same tree.
-- `link(u, v, w)` adds an edge with value `w` between different trees, returning its edge id or $-1$
-  if the edge would create a cycle.
+- `link(u, v, value)` adds an edge with value `value` between different trees, returning its edge id
+  or $-1$ if the edge would create a cycle.
 - `cut(e)` removes edge id `e`. The edge id must currently be present.
-- `set_vertex(u, v)` changes vertex `u`'s value to `v`.
-- `set_edge(e, v)` changes edge `e`'s value to `v`. The edge id must currently be present.
+- `set_vertex(u, value)` changes vertex `u`'s value to `value`.
+- `set_edge(e, value)` changes edge `e`'s value to `value`. The edge id must currently be present.
 - `path_query(u, v)` returns the aggregate over all vertex and edge values on the path from `u` to
   `v`. The vertices must be connected.
 - `subtree_query(root, u)` reroots the represented tree at `root` and returns the aggregate over the
@@ -62,12 +62,12 @@ class TopTree {
     int vertex_id, edge_id;
     bool is_path, is_vert, lazy_flip_path, alive;
 
-    Node(const T &v, int vertex_id, int edge_id)
+    Node(const T &value, int vertex_id, int edge_id)
         : p(nullptr),
           c{nullptr, nullptr, nullptr},
-          value(v),
-          path_value(v),
-          subtree_value(v),
+          value(value),
+          path_value(value),
+          subtree_value(value),
           vertex_id(vertex_id),
           edge_id(edge_id),
           is_path(vertex_id != -1),
@@ -490,10 +490,10 @@ class TopTree {
   }
 
  public:
-  explicit TopTree(int n, const T &v = T()) {
+  explicit TopTree(int n, const T &value = T()) {
     verts.reserve(n);
     for (int i = 0; i < n; i++) {
-      verts.push_back(new Node(v, i, -1));
+      verts.push_back(new Node(value, i, -1));
     }
   }
 
@@ -517,14 +517,14 @@ class TopTree {
     return u == v || maybe_lca_node(verts[u], verts[v]) != nullptr;
   }
 
-  int link(int u, int v, const T &w = T()) {
+  int link(int u, int v, const T &value = T()) {
     assert(0 <= u && u < size());
     assert(0 <= v && v < size());
     if (connected(u, v)) {
       return -1;
     }
     int id = edges();
-    edge_nodes.push_back(new Node(w, -1, id));
+    edge_nodes.push_back(new Node(value, -1, id));
     link_nodes(edge_nodes.back(), verts[u], verts[v]);
     return id;
   }
@@ -534,18 +534,18 @@ class TopTree {
     cut_node(edge_nodes[e]);
   }
 
-  void set_vertex(int u, const T &v) {
+  void set_vertex(int u, const T &value) {
     assert(0 <= u && u < size());
     verts[u]->expose();
-    verts[u]->value = v;
+    verts[u]->value = value;
     verts[u]->pull_all();
   }
 
-  void set_edge(int e, const T &v) {
+  void set_edge(int e, const T &value) {
     assert(0 <= e && e < edges());
     assert(edge_nodes[e]->alive);
     edge_nodes[e]->expose_edge();
-    edge_nodes[e]->value = v;
+    edge_nodes[e]->value = value;
     edge_nodes[e]->pull_all();
   }
 
@@ -594,19 +594,52 @@ int main() {
   assert(e01 == 0 && e12 == 1 && e13 == 2 && e34 == 3);
   assert(tree.link(0, 4, 100) == -1);
 
+  //       0
+  //  v=10 |
+  //       1
+  // v=20 / \ v=30
+  //     2   3
+  //         | v=40
+  //         4
   assert(tree.path_query(2, 4) == 104);
   assert(tree.subtree_query(0, 3) == 49);
   assert(tree.lca(2, 4) == 1);
 
   tree.cut(e13);
+
+  // Cut edge 1-3:
+  //
+  //       0
+  //  v=10 |
+  //       1       3
+  // v=20 /        | v=40
+  //     2         4
   assert(!tree.connected(2, 4));
   assert(tree.maybe_lca(2, 4) == -1);
   e13 = tree.link(2, 4, 30);
   assert(e13 == 4);
+
+  // Re-link 2-4 with value 30:
+  //
+  //       0
+  //  v=10 |
+  //       1        3
+  // v=20 /         | v=40
+  //     2----------4
+  //         v=30
   assert(tree.path_query(0, 3) == 115);
 
   tree.set_edge(e34, 4);
   tree.set_vertex(4, 50);
+
+  // Change edge 3-4 to value 4 and vertex 4 to value 50:
+  //
+  //       0
+  //  v=10 |
+  //       1        3
+  // v=20 /         | v=4
+  //     2----------4
+  //        v=30   v=50
   assert(tree.subtree_query(2, 4) == 58);
   cout << tree.path_query(0, 3) << endl;
   return 0;

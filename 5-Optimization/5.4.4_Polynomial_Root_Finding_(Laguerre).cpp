@@ -9,19 +9,21 @@ repeats on the lower-degree quotient until every root has been extracted.
   size $d + 1$ where `p[i]` stores the complex coefficient for the $x^i$ term) at `x`, using
   Horner's method, returning a pair where the first value is the final result $p(x)$ and the second
   value is the quotient polynomial $q$ from the identity $p(t) = (t - x)q(t) + p(x)$.
-- `find_one_root(p, x0)` returns a complex root $x$ for a polynomial `p` (represented as a vector of
-  size $d + 1$ where `p[i]` stores the complex coefficient for the $x^i$ term) using an initial
-  guess `x0` which should be relatively close to $x$. The root is found to a tolerance of `EPS` in
-  absolute or relative error (whichever is reached first).
-- `find_all_roots(p)` returns a vector of all complex roots for a complex polynomial `p`. The roots
-  are found to a tolerance of `EPS` in absolute or relative error (whichever is reached first).
+- `find_one_root(p, x0, eps = 1e-15, iterations = 10000)` returns a complex root $x$ for
+  polynomial `p` (represented as a vector of size $d + 1$ where `p[i]` stores the complex
+  coefficient for the $x^i$ term) using an initial guess `x0` which should be relatively close to
+  $x$. The root is found to a tolerance of `eps` in absolute or relative error (whichever is reached
+  first).
+- `find_all_roots(p, eps = 1e-15, iterations = 10000)` returns a vector of all complex roots for a
+  complex polynomial `p`. The roots are found to a tolerance of `eps` in absolute or relative error
+  (whichever is reached first).
 
 Time Complexity:
 - O(n) per call to `horner_eval()`, where $n$ is the degree of the polynomial.
 - O(n log d) per call to `find_one_root()`, where $n$ is the degree of the polynomial and
-  $d = -\log_{10}(`EPS`)$ is the number of digits of absolute or relative precision that is desired.
+  $d = -\log_{10}(`eps`)$ is the number of digits of absolute or relative precision that is desired.
 - O(n^2 log d) per call to `find_all_roots()`, where $n$ is the degree of the polynomial and
-  $d = -\log_{10}(`EPS`)$ is the number of digits of absolute or relative precision that is desired.
+  $d = -\log_{10}(`eps`)$ is the number of digits of absolute or relative precision that is desired.
 
 Space Complexity:
 - O(n) auxiliary heap space and O(1) auxiliary stack space for `horner_eval()` and
@@ -58,29 +60,29 @@ cpoly derivative(const cpoly &p) {
   return res;
 }
 
-int comp(const cdouble &a, const cdouble &b, const double EPS = 1e-15) {
+int comp(const cdouble &a, const cdouble &b, const double eps = 1e-15) {
   double diff = std::abs(a) - std::abs(b);
-  return (diff < -EPS) ? -1 : (diff > EPS ? 1 : 0);
+  return (diff < -eps) ? -1 : (diff > eps ? 1 : 0);
 }
 
 cdouble find_one_root(
-    const cpoly &p, const cdouble &x0, const double EPS = 1e-15, const int ITERATIONS = 10000
+    const cpoly &p, const cdouble &x0, const double eps = 1e-15, const int iterations = 10000
 ) {
   cdouble x = x0;
   int n = static_cast<int>(p.size()) - 1;
   cpoly p1 = derivative(p), p2 = derivative(p1);
-  for (int i = 0; i < ITERATIONS; i++) {
+  for (int i = 0; i < iterations; i++) {
     cdouble y0 = horner_eval(p, x).first;
-    if (comp(y0, 0, EPS) == 0) {
+    if (comp(y0, 0, eps) == 0) {
       break;
     }
     cdouble g = horner_eval(p1, x).first / y0;
     cdouble h = g * g - horner_eval(p2, x).first / y0;
     cdouble r = std::sqrt(cdouble(n - 1) * (h * cdouble(n) - g * g));
     cdouble d1 = g + r, d2 = g - r;
-    cdouble a = cdouble(n) / (comp(d1, d2, EPS) > 0 ? d1 : d2);
+    cdouble a = cdouble(n) / (comp(d1, d2, eps) > 0 ? d1 : d2);
     x -= a;
-    if (comp(a, 0, EPS) == 0) {
+    if (comp(a, 0, eps) == 0) {
       break;
     }
   }
@@ -88,7 +90,7 @@ cdouble find_one_root(
 }
 
 std::vector<cdouble> find_all_roots(
-    const cpoly &p, const double EPS = 1e-15, const int ITERATIONS = 10000
+    const cpoly &p, const double eps = 1e-15, const int iterations = 10000
 ) {
   std::vector<cdouble> res;
   cpoly q = p;
@@ -96,7 +98,7 @@ std::vector<cdouble> find_all_roots(
   std::uniform_real_distribution<double> unit(0.0, 1.0);
   while (q.size() > 2) {
     cdouble z(unit(rng), unit(rng));
-    z = find_one_root(p, find_one_root(q, z, EPS, ITERATIONS), EPS, ITERATIONS);
+    z = find_one_root(p, find_one_root(q, z, eps, iterations), eps, iterations);
     q = horner_eval(q, z).second;
     res.push_back(z);
   }

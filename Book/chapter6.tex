@@ -161,14 +161,14 @@ Double round_half_from0(const Double &x) {
 }
 
 template<typename Double>
-Double round_half_even(const Double &x, const Double &EPS = 1e-9) {
+Double round_half_even(const Double &x, const Double &eps = 1e-9) {
   if (x < 0.0) {
-    return -round_half_even(-x, EPS);
+    return -round_half_even(-x, eps);
   }
   Double ipart;
   modf(x, &ipart);
-  if (fabs(x - (ipart + 0.5)) < EPS) {  // exactly halfway: break the tie towards even
-    return (fmod(ipart, 2.0) < EPS) ? ipart : ceil0(ipart + 0.5);
+  if (fabs(x - (ipart + 0.5)) < eps) {  // exactly halfway: break the tie towards even
+    return (fmod(ipart, 2.0) < eps) ? ipart : ceil0(ipart + 0.5);
   }
   return round_half_from0(x);
 }
@@ -5325,7 +5325,7 @@ Computes the determinant and inverse of a square matrix using Gaussian eliminati
 
 \begin{compactitem}
   \item \inlinecode{det\_naive(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a}, using the classic divide-and-conquer algorithm by Laplace expansions. It is division-free and computes in the matrix's element type, so an integer matrix yields an exact integer determinant; but at $O(n!)$ it is only practical for tiny \inlinecode{n}, so prefer \inlinecode{det\_bareiss} for exact integer determinants.
-  \item \inlinecode{det(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a} using Gaussian elimination.
+  \item \inlinecode{det(a, eps = 1e-10)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a} using Gaussian elimination.
   \item \inlinecode{det\_bareiss(a)} returns the exact determinant of an integer matrix \inlinecode{a} using fraction-free elimination, with no rounding error. Intermediate values are bounded by the magnitudes of the matrix's minors, so the entries must stay within \inlinecode{int64\_t}; substitute a big-integer type for large matrices.
   \item \inlinecode{invert(a)} assigns the $n$ by $n$ matrix \inlinecode{a} to its inverse (if it exists), returning a reference to the modified argument itself. If \inlinecode{a} is not invertible, then its assigned values after the function call will be undefined (\inlinecode{+/-Inf} or \inlinecode{+/-NaN}).
 \end{compactitem}
@@ -5382,7 +5382,7 @@ auto det_naive(const SquareMatrix &a) {
 }
 
 template<typename SquareMatrix>
-double det(const SquareMatrix &a, double EPS = 1e-10) {
+double det(const SquareMatrix &a, double eps = 1e-10) {
   int n = static_cast<int>(a.size());
   SquareMatrix b(a);
   double res = 1.0;
@@ -5396,7 +5396,7 @@ double det(const SquareMatrix &a, double EPS = 1e-10) {
         p = r;
       }
     }
-    if (fabs(b[p][i]) < EPS) {
+    if (fabs(b[p][i]) < eps) {
       return 0;
     }
     if (p != i) {
@@ -5522,8 +5522,8 @@ int main() {
 The LU decomposition of a matrix $a$ with row-partial pivoting is a factorization of $a$ (after some rows are possibly permuted by a permutation matrix $p$) as a product of a lower triangular matrix $l$ and an upper triangular matrix $u$. This factorization can be used to tackle many common problems in linear algebra such as solving systems of linear equations and computing determinants. An improvement on basic row reduction, LU decomposition by row-partial pivoting keeps the relative magnitude of matrix values small, thus reducing the relative error due to rounding in computed solutions.
 
 \begin{compactitem}
-  \item \inlinecode{lu\_decompose(a, \&p1col)} assigns the $m$ by $n$ matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}, returning either $0$ or $1$ denoting the ``sign'' of the permutation parity ($0$ if the number of overall row swaps performed is even, or $1$ if it is odd), or $-1$ denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix \inlinecode{lu} has \inlinecode{lu[i][j]} = \inlinecode{l[i][j]} for \inlinecode{i} \textgreater{} \inlinecode{j} and \inlinecode{lu[i][j]} = \inlinecode{u[i][j]} for \inlinecode{i} $\leq$ \inlinecode{j}. Note that the algorithm always yields an atomic lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to $1$, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optionally, a \inlinecode{vector\textless{}int\textgreater{}} pointer \inlinecode{p1col} may be passed to return the permutation vector \inlinecode{p1col} where \inlinecode{p1col[i]} stores the only column that is equal to $1$ in row $i$ of the permutation matrix $p$ (all other columns in row $i$ of $p$ are implicitly $0$). The permutation matrix $p$ corresponding to \inlinecode{p1col} satisfies $pa = lu$.
-  \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning $0$ if there is one solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then the output pointer \inlinecode{x} is populated with the solution vector of length $n$.
+  \item \inlinecode{lu\_decompose(a, \&p1col, eps = 1e-10)} assigns the $m$ by $n$ matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}, returning either $0$ or $1$ denoting the ``sign'' of the permutation parity ($0$ if the number of overall row swaps performed is even, or $1$ if it is odd), or $-1$ denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix \inlinecode{lu} has \inlinecode{lu[i][j]} = \inlinecode{l[i][j]} for \inlinecode{i} \textgreater{} \inlinecode{j} and \inlinecode{lu[i][j]} = \inlinecode{u[i][j]} for \inlinecode{i} $\leq$ \inlinecode{j}. Note that the algorithm always yields an atomic lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to $1$, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optionally, a \inlinecode{vector\textless{}int\textgreater{}} pointer \inlinecode{p1col} may be passed to return the permutation vector \inlinecode{p1col} where \inlinecode{p1col[i]} stores the only column that is equal to $1$ in row $i$ of the permutation matrix $p$ (all other columns in row $i$ of $p$ are implicitly $0$). The permutation matrix $p$ corresponding to \inlinecode{p1col} satisfies $pa = lu$.
+  \item \inlinecode{solve\_system(a, b, \&x, eps = 1e-10)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning $0$ if there is one solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then the output pointer \inlinecode{x} is populated with the solution vector of length $n$.
   \item \inlinecode{det(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a} using LU decomposition.
   \item \inlinecode{invert(a)} assigns the $n$ by $n$ matrix \inlinecode{a} to its inverse (if it exists), returning $0$ if the inversion was successful or $-1$ if \inlinecode{a} has no inverse.
 \end{compactitem}
@@ -5552,7 +5552,7 @@ The LU decomposition of a matrix $a$ with row-partial pivoting is a factorizatio
 #include <vector>
 
 template<typename Matrix>
-int lu_decompose(Matrix &a, std::vector<int> *p1col = nullptr, const double EPS = 1e-10) {
+int lu_decompose(Matrix &a, std::vector<int> *p1col = nullptr, const double eps = 1e-10) {
   int rows = static_cast<int>(a.size());
   int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
   int parity = 0;
@@ -5567,7 +5567,7 @@ int lu_decompose(Matrix &a, std::vector<int> *p1col = nullptr, const double EPS 
         pi = k;
       }
     }
-    if (fabs(a[pi][i]) < EPS) {
+    if (fabs(a[pi][i]) < eps) {
       return -1;
     }
     if (pi != i) {
@@ -5599,7 +5599,7 @@ double getu(const Matrix &lu, int i, int j) {
 
 template<typename Matrix, typename T>
 int solve_system(
-    const Matrix &a, const std::vector<T> &b, std::vector<T> *x, const double EPS = 1e-10
+    const Matrix &a, const std::vector<T> &b, std::vector<T> *x, const double eps = 1e-10
 ) {
   int rows = static_cast<int>(a.size());
   int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
@@ -5609,7 +5609,7 @@ int solve_system(
   x->resize(cols);
   std::vector<int> p1col;
   Matrix lu;
-  int status = lu_decompose(lu = a, &p1col, EPS);
+  int status = lu_decompose(lu = a, &p1col, eps);
   if (status < 0) {
     return status;
   }
@@ -5632,7 +5632,7 @@ int solve_system(
     }
     // Mixed absolute/relative tolerance: dividing by b[i] alone would skip the check for negative
     // b[i] (ratio goes negative) and divide by zero when b[i] == 0.
-    if (fabs(val - b[i]) > EPS * (1.0 + fabs(b[i]))) {
+    if (fabs(val - b[i]) > eps * (1.0 + fabs(b[i]))) {
       return -1;
     }
   }

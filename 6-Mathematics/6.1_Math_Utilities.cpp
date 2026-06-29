@@ -186,14 +186,14 @@ Double round_half_from0(const Double &x) {
 }
 
 template<typename Double>
-Double round_half_even(const Double &x, const Double &EPS = 1e-9) {
+Double round_half_even(const Double &x, const Double &eps = 1e-9) {
   if (x < 0.0) {
-    return -round_half_even(-x, EPS);
+    return -round_half_even(-x, eps);
   }
   Double ipart;
   modf(x, &ipart);
-  if (fabs(x - (ipart + 0.5)) < EPS) {  // exactly halfway: break the tie towards even
-    return (fmod(ipart, 2.0) < EPS) ? ipart : ceil0(ipart + 0.5);
+  if (fabs(x - (ipart + 0.5)) < eps) {  // exactly halfway: break the tie towards even
+    return (fmod(ipart, 2.0) < eps) ? ipart : ceil0(ipart + 0.5);
   }
   return round_half_from0(x);
 }

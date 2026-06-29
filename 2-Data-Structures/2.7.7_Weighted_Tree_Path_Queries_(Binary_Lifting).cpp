@@ -1,7 +1,8 @@
 /*
 
-Given a rooted tree or forest with weighted edges, aggregate the edge weights along the path between
-any two nodes in the same tree. This builds on the same binary lifting table as LCA: alongside
+Given a tree or forest with weighted edges, aggregate the edge weights along the path between any
+two nodes in the same tree. The input is undirected; construction roots each component at the first
+unvisited node in index order. This builds on the same binary lifting table as LCA: alongside
 `up[u][i]`, the $2^i$-th ancestor of `u`, it stores `agg[u][i]`, the combined weight of the $2^i$
 edges traversed by that jump. A path query splits the path `u`-`v` at their lowest common ancestor
 and merges the two upward climbs.
@@ -13,9 +14,10 @@ minimum, use `std::min` with `std::numeric_limits<W>::max()`; for the sum (the p
 to orientation. For an invertible aggregate such as the sum, an alternative that avoids the `agg`
 table is to store each node's weighted depth `dw[u]` and return `dw[u] + dw[v] - 2*dw[lca]`.
 
-- `WeightedTreePath<W>(adj)` builds the structure over a forest given by a weighted, bidirectional
+- `WeightedTree<W>(adj)` builds the structure over a forest given by a weighted, bidirectional
   adjacency list `adj`, where `adj[u]` holds `{v, w}` pairs for each edge `u`-`v` of weight `w`,
-  over nodes numbered $[0, `n`)$, where `n` is `adj.size()`.
+  over nodes numbered $[0, `n`)$, where `n` is `adj.size()`. Each connected component is rooted at
+  its first node reached by the constructor's outer loop.
 - `lca(u, v)` returns the lowest common ancestor of `u` and `v`, or $-1$ if they lie in different
   trees.
 - `kth_ancestor(u, k)` returns the $k$-th ancestor of `u`, stopping at that tree's root if `k`
@@ -43,10 +45,7 @@ Space Complexity:
 #include <vector>
 
 template<typename W>
-class WeightedTreePath {
-  // Edit combine() and identity() together for the desired commutative monoid.
-  // The defaults give the maximum edge weight on the path; for the minimum use std::min with
-  // std::numeric_limits<W>::max(), and for the sum (path length) use a + b with W().
+class WeightedTree {
   static W combine(const W &a, const W &b) { return std::max(a, b); }
   static W identity() { return std::numeric_limits<W>::lowest(); }
 
@@ -86,7 +85,7 @@ class WeightedTreePath {
   }
 
  public:
-  explicit WeightedTreePath(const std::vector<std::vector<std::pair<int, W>>> &adj) : timer(0) {
+  explicit WeightedTree(const std::vector<std::vector<std::pair<int, W>>> &adj) : timer(0) {
     int n = static_cast<int>(adj.size());
     len = 1;
     while ((1 << len) <= std::max(1, n)) {
@@ -157,11 +156,11 @@ void add_edge(vector<vector<pair<int, int>>> &adj, int u, int v, int w) {
 }
 
 int main() {
-  //            0
-  //      (4) /   \ (2)
-  //         1     2
-  //   (7) / | (1) | \ (3)
-  //      3  4  (5)5  6
+  //             0
+  //     w=4 /       \ w=2
+  //       1           2
+  //  w=7 / \w=1   w=5/ \ w=3
+  //     3   4       5   6
   vector<vector<pair<int, int>>> adj(7);
   add_edge(adj, 0, 1, 4);
   add_edge(adj, 0, 2, 2);
@@ -169,7 +168,7 @@ int main() {
   add_edge(adj, 1, 4, 1);
   add_edge(adj, 2, 5, 5);
   add_edge(adj, 2, 6, 3);
-  WeightedTreePath<int> tree(adj);
+  WeightedTree<int> tree(adj);
 
   assert(tree.lca(3, 4) == 1);
   assert(tree.lca(5, 6) == 2);
@@ -186,7 +185,7 @@ int main() {
   assert(tree.path_query(0, 3) == 7);  // 0-1 (4), 1-3 (7).
 
   vector<vector<pair<int, int>>> forest(2);
-  WeightedTreePath<int> disconnected(forest);
+  WeightedTree<int> disconnected(forest);
   assert(disconnected.lca(0, 1) == -1);
   assert(disconnected.path_query(0, 1) == numeric_limits<int>::lowest());
   return 0;

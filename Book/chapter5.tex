@@ -158,15 +158,15 @@ Golden-section search places the probes at the golden ratio so that one probe is
 The discrete version operates on an integer domain, narrowing by thirds until at most three candidates remain and then scanning them. It returns the index of the optimum rather than a real coordinate. As with ternary search on reals, the function must be strictly unimodal.
 
 \begin{compactitem}
-  \item \inlinecode{ternary\_search\_min(lo, hi, f)} and \inlinecode{ternary\_search\_max(lo, hi, f)} return a \inlinecode{double} \inlinecode{x} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ optimizing the continuous unimodal function \inlinecode{f}, to within the optional absolute error \inlinecode{EPS}.
-  \item \inlinecode{golden\_section\_min(lo, hi, f)} and \inlinecode{golden\_section\_max(lo, hi, f)} do the same with one function evaluation per iteration.
+  \item \inlinecode{ternary\_search\_min(lo, hi, f, eps = 1e-12)} and \inlinecode{ternary\_search\_max(lo, hi, f, eps = 1e-12)} return a \inlinecode{double} \inlinecode{x} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ optimizing the continuous unimodal function \inlinecode{f}, to within the optional absolute error \inlinecode{eps}.
+  \item \inlinecode{golden\_section\_min(lo, hi, f, eps = 1e-12)} and \inlinecode{golden\_section\_max(lo, hi, f, eps = 1e-12)} do the same with one function evaluation per iteration.
   \item \inlinecode{discrete\_ternary\_min(lo, hi, f)} and \inlinecode{discrete\_ternary\_max(lo, hi, f)} return the integer index in the inclusive range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ optimizing the unimodal function \inlinecode{f}, breaking ties toward the smaller index.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(\log\left(n / {\inlinecodemath{EPS}}\right))$ calls to \inlinecode{f()} for the continuous searches, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}. Golden-section makes about half as many per iteration as ternary search.
+  \item $O(\log\left(n / {\inlinecodemath{eps}}\right))$ calls to \inlinecode{f()} for the continuous searches, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}. Golden-section makes about half as many per iteration as ternary search.
   \item $O(\log n)$ calls to \inlinecode{f()} for the discrete searches.
 \end{compactitem}
 
@@ -174,8 +174,8 @@ The discrete version operates on an integer domain, narrowing by thirds until at
 
 \begin{lstlisting}[language=C++]
 template<typename Fn>
-double ternary_search_min(double lo, double hi, Fn f, double EPS = 1e-12) {
-  while (hi - lo > EPS) {
+double ternary_search_min(double lo, double hi, Fn f, double eps = 1e-12) {
+  while (hi - lo > eps) {
     double m1 = lo + (hi - lo) / 3, m2 = hi - (hi - lo) / 3;
     if (f(m1) < f(m2)) {
       hi = m2;
@@ -187,16 +187,16 @@ double ternary_search_min(double lo, double hi, Fn f, double EPS = 1e-12) {
 }
 
 template<typename Fn>
-double ternary_search_max(double lo, double hi, Fn f, double EPS = 1e-12) {
-  return ternary_search_min(lo, hi, [&](double x) { return -f(x); }, EPS);
+double ternary_search_max(double lo, double hi, Fn f, double eps = 1e-12) {
+  return ternary_search_min(lo, hi, [&](double x) { return -f(x); }, eps);
 }
 
 template<typename Fn>
-double golden_section_min(double lo, double hi, Fn f, double EPS = 1e-12) {
+double golden_section_min(double lo, double hi, Fn f, double eps = 1e-12) {
   const double r = 0.6180339887498949;  // 1 / phi = (sqrt(5) - 1) / 2.
   double m1 = hi - r * (hi - lo), m2 = lo + r * (hi - lo);
   double f1 = f(m1), f2 = f(m2);
-  while (hi - lo > EPS) {
+  while (hi - lo > eps) {
     if (f1 < f2) {
       hi = m2;
       m2 = m1;
@@ -215,8 +215,8 @@ double golden_section_min(double lo, double hi, Fn f, double EPS = 1e-12) {
 }
 
 template<typename Fn>
-double golden_section_max(double lo, double hi, Fn f, double EPS = 1e-12) {
-  return golden_section_min(lo, hi, [&](double x) { return -f(x); }, EPS);
+double golden_section_max(double lo, double hi, Fn f, double eps = 1e-12) {
+  return golden_section_min(lo, hi, [&](double x) { return -f(x); }, eps);
 }
 
 template<typename Int, typename Fn>
@@ -285,7 +285,7 @@ Given a continuous function $f(x, y)$ returning a real number and a (possibly ar
 Hill-climbing is a heuristic which starts at the guess, then considers taking a single step in each of a fixed number of directions. The direction with the best (in this case, minimum) value is chosen, and further steps are taken in it until the answer no longer improves. When this happens, the step size is reduced and the same process repeats until a desired absolute error is reached. The technique's success heavily depends on the behavior of $f$ and the initial guess. Therefore, the result is not guaranteed to be the global minimum.
 
 \begin{compactitem}
-  \item \inlinecode{find\_min(f, x0, y0, \&critical\_x, \&critical\_y)} returns a candidate global minimum value of function \inlinecode{f} reached by hill-climbing from the starting guess $({\inlinecodemath{x0}}, {\inlinecodemath{y0}})$. If the optional pointers \inlinecode{critical\_x} and \inlinecode{critical\_y} are supplied, the point attaining the returned value is stored through them. The step-size bounds and number of directions sampled are additional optional parameters.
+  \item \inlinecode{find\_min(f, x0, y0, \&critical\_x, \&critical\_y, step\_min = 1e-9, step\_max = 1e6, directions = 6)} returns a candidate global minimum value of function \inlinecode{f} reached by hill-climbing from the starting guess $({\inlinecodemath{x0}}, {\inlinecodemath{y0}})$. If the optional pointers \inlinecode{critical\_x} and \inlinecode{critical\_y} are supplied, the point attaining the returned value is stored through them.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(d \log n)$ calls will be made to \inlinecode{f()}, where $d$ is the number of directions considered at each position and $n$ is the search space that is approximately proportional to the maximum possible step size divided by the minimum possible step size.
@@ -299,15 +299,15 @@ Hill-climbing is a heuristic which starts at the guess, then considers taking a 
 template<typename Fn>
 double find_min(
     Fn f, double x0, double y0, double *critical_x = nullptr, double *critical_y = nullptr,
-    const double STEP_MIN = 1e-9, const double STEP_MAX = 1e6, const int NUM_DIRECTIONS = 6
+    const double step_min = 1e-9, const double step_max = 1e6, const int directions = 6
 ) {
   static const double PI = acos(-1.0);
   double x = x0, y = y0, res = f(x0, y0);
-  for (double step = STEP_MAX; step > STEP_MIN;) {
+  for (double step = step_max; step > step_min;) {
     double best = res, best_x = x, best_y = y;
     bool found = false;
-    for (int i = 0; i < NUM_DIRECTIONS; i++) {
-      double a = 2.0 * PI * i / NUM_DIRECTIONS;
+    for (int i = 0; i < directions; i++) {
+      double a = 2.0 * PI * i / directions;
       double x2 = x + step * cos(a), y2 = y + step * sin(a);
       double value = f(x2, y2);
       if (best > value) {
@@ -534,7 +534,7 @@ Finds the position of the minimum in every row of a totally monotone matrix in t
 The SMAWK algorithm interleaves two steps. REDUCE discards columns that cannot hold the minimum of any remaining row, leaving at most as many candidate columns as active rows. INTERPOLATE recurses on the odd-indexed active rows, then recovers each even-indexed active row's minimum by scanning only the candidate-column range bounded by its already-solved neighbors; total monotonicity guarantees those scans advance monotonically and cost $O(R + C)$ overall, where $R$ is the number of rows and $C$ is the number of columns in the original matrix. This removes the logarithmic factor of divide-and-conquer DP optimization, but unlike that technique it is purely offline: every matrix entry must be available on demand from the oracle, so it cannot be used when an entry depends on a row minimum computed earlier in the same pass.
 
 \begin{compactitem}
-  \item \inlinecode{smawk\_row\_minima(R, C, get)} returns a vector \inlinecode{arg} of length \inlinecode{R}, where \inlinecode{arg[r]} is the column index minimizing \inlinecode{get(r, c)} over $0 \leq {\inlinecodemath{c}} < {\inlinecodemath{C}}$ (on ties, the smallest qualifying column is chosen). The input matrix is supplied as a totally monotone function \inlinecode{get(r, c)} with bounds \inlinecode{R} $\geq 0$ and \inlinecode{C} $\geq 1$.
+  \item \inlinecode{smawk\_row\_minima(rows, cols, get)} returns a vector \inlinecode{arg} of length \inlinecode{rows}, where \inlinecode{arg[r]} is the column index minimizing \inlinecode{get(r, c)} over $0 \leq {\inlinecodemath{c}} < {\inlinecodemath{cols}}$ (on ties, the smallest qualifying column is chosen). The input matrix is supplied as a totally monotone function \inlinecode{get(r, c)} with bounds \inlinecode{rows} $\geq 0$ and \inlinecode{cols} $\geq 1$.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(R + C)$ evaluations of \inlinecode{get} per call to \inlinecode{smawk\_row\_minima(R, C, get)}.
@@ -610,12 +610,12 @@ std::vector<int> smawk_rec(
 }
 
 template<typename Get>
-std::vector<int> smawk_row_minima(int R, int C, const Get &get) {
-  std::vector<int> row_ids(R), col_ids(C);
-  for (int i = 0; i < R; i++) {
+std::vector<int> smawk_row_minima(int rows, int cols, const Get &get) {
+  std::vector<int> row_ids(rows), col_ids(cols);
+  for (int i = 0; i < rows; i++) {
     row_ids[i] = i;
   }
-  for (int j = 0; j < C; j++) {
+  for (int j = 0; j < cols; j++) {
     col_ids[j] = j;
   }
   return smawk_rec(get, row_ids, col_ids);
@@ -1060,8 +1060,8 @@ int main() {
 Finds an $x$ in an interval $[a, b]$ for a continuous function $f$ such that $f(x) = 0$. By the intermediate value theorem, a root must exist in $[a, b]$ if the signs of $f(a)$ and $f(b)$ differ. Each bisection step evaluates the midpoint of the interval and keeps the half whose endpoints still differ in sign, so a root always remains bracketed. The answer is found with an absolute error of roughly $1 / 2^n$, where $n$ is the number of iterations. Although it is possible to control the error by looping while $b - a$ is greater than an arbitrary epsilon, it is simpler to let the loop run for a desired number of iterations until floating point arithmetic breaks down. 100 iterations is usually sufficient, since the search space will be reduced to $2^{-100}$ (roughly $10^{-30}$) times its original size.
 
 \begin{compactitem}
-  \item \inlinecode{bisection\_root(f, a, b)} returns a root in an interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a continuous function $f$ where $\operatorname{sgn}(f(a)) \neq \operatorname{sgn}(f(b))$, using the bisection method.
-  \item \inlinecode{falsi\_illinois\_root(f, a, b)} returns a root in an interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a continuous function $f$ where $\operatorname{sgn}(f(a)) \neq \operatorname{sgn}(f(b))$, using the Illinois algorithm variant of the false position (a.k.a. regula falsi) method.
+  \item \inlinecode{bisection\_root(f, a, b, iterations = 100)} returns a root in an interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a continuous function $f$ where $\operatorname{sgn}(f(a)) \neq \operatorname{sgn}(f(b))$, using the bisection method.
+  \item \inlinecode{falsi\_illinois\_root(f, a, b, iterations = 100)} returns a root in an interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a continuous function $f$ where $\operatorname{sgn}(f(a)) \neq \operatorname{sgn}(f(b))$, using the Illinois algorithm variant of the false position (a.k.a. regula falsi) method.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ calls will be made to \inlinecode{f()} in \inlinecode{bisection\_root()} and \inlinecode{falsi\_illinois\_root()}, where $n$ is the number of iterations performed.
@@ -1072,10 +1072,10 @@ Finds an $x$ in an interval $[a, b]$ for a continuous function $f$ such that $f(
 #include <cassert>
 
 template<typename Fn>
-double bisection_root(Fn f, double a, double b, const int ITERATIONS = 100) {
+double bisection_root(Fn f, double a, double b, const int iterations = 100) {
   assert(a <= b && f(a) * f(b) <= 0);
   double m, fa = f(a);
-  for (int i = 0; i < ITERATIONS; i++) {
+  for (int i = 0; i < iterations; i++) {
     m = a + (b - a) / 2;
     double fm = f(m);
     if (fa * fm >= 0) {
@@ -1089,11 +1089,11 @@ double bisection_root(Fn f, double a, double b, const int ITERATIONS = 100) {
 }
 
 template<typename Fn>
-double falsi_illinois_root(Fn f, double a, double b, const int ITERATIONS = 100) {
+double falsi_illinois_root(Fn f, double a, double b, const int iterations = 100) {
   assert(a <= b && f(a) * f(b) <= 0);
   double m, fm, fa = f(a), fb = f(b);
   int side = 0;
-  for (int i = 0; i < ITERATIONS; i++) {
+  for (int i = 0; i < iterations; i++) {
     m = (fa * b - fb * a) / (fa - fb);
     fm = f(m);
     if (fb * fm > 0) {
@@ -1136,8 +1136,8 @@ int main() {
 Finds an $x$ for a continuous function $f$ such that $f(x) = 0$ using iterative approximation by an initial guess that is close to the answer. Each step follows the tangent line at the current guess down to its $x$-intercept, that is, $x \leftarrow x - f(x)/f'(x)$. Newton's method requires an explicit definition of the function's derivative while the secant method starts with two initial guesses and approximates the derivative using the secant slope from the previous iteration. For $n$ iterations and a good initial guess, the methods below compute approximately $2^n$ digits of precision, with the secant method converging approximately $1.6$ times slower than Newton's.
 
 \begin{compactitem}
-  \item \inlinecode{newton\_root(f, fprime, x0)} returns a root $x$ for a function \inlinecode{f} with derivative \inlinecode{fprime} using an initial guess \inlinecode{x0} which should be relatively close to $x$.
-  \item \inlinecode{secant\_root(f, x0, x1)} returns a root $x$ for a function \inlinecode{f} using two initial guesses \inlinecode{x0} and \inlinecode{x1} which should be relatively close to $x$.
+  \item \inlinecode{newton\_root(f, fprime, x0, eps = 1e-15, iterations = 100)} returns a root $x$ for a function \inlinecode{f} with derivative \inlinecode{fprime} using an initial guess \inlinecode{x0} which should be relatively close to $x$.
+  \item \inlinecode{secant\_root(f, x0, x1, eps = 1e-15, iterations = 100)} returns a root $x$ for a function \inlinecode{f} using two initial guesses \inlinecode{x0} and \inlinecode{x1} which should be relatively close to $x$.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ calls will be made to \inlinecode{f()} in \inlinecode{newton\_root()} and \inlinecode{secant\_root()}, where $n$ is the number of iterations performed.
@@ -1150,15 +1150,15 @@ Finds an $x$ for a continuous function $f$ such that $f(x) = 0$ using iterative 
 
 template<typename Fn>
 double newton_root(
-    Fn f, Fn fprime, double x0, const double EPS = 1e-15, const int ITERATIONS = 100
+    Fn f, Fn fprime, double x0, const double eps = 1e-15, const int iterations = 100
 ) {
-  double x = x0, error = EPS + 1;
-  for (int i = 0; error > EPS && i < ITERATIONS; i++) {
+  double x = x0, error = eps + 1;
+  for (int i = 0; error > eps && i < iterations; i++) {
     double xnew = x - f(x) / fprime(x);
     error = fabs(xnew - x);
     x = xnew;
   }
-  if (error > EPS) {
+  if (error > eps) {
     throw std::runtime_error("Newton's method failed to converge.");
   }
   return x;
@@ -1166,10 +1166,10 @@ double newton_root(
 
 template<typename Fn>
 double secant_root(
-    Fn f, double x0, double x1, const double EPS = 1e-15, const int ITERATIONS = 100
+    Fn f, double x0, double x1, const double eps = 1e-15, const int iterations = 100
 ) {
-  double xold = x0, fxold = f(x0), x = x1, error = EPS + 1;
-  for (int i = 0; error > EPS && i < ITERATIONS; i++) {
+  double xold = x0, fxold = f(x0), x = x1, error = eps + 1;
+  for (int i = 0; error > eps && i < iterations; i++) {
     double fx = f(x);
     double xnew = x - fx * ((x - xold) / (fx - fxold));
     xold = x;
@@ -1177,7 +1177,7 @@ double secant_root(
     error = fabs(xnew - x);
     x = xnew;
   }
-  if (error > EPS) {
+  if (error > eps) {
     throw std::runtime_error("Secant method failed to converge.");
   }
   return x;
@@ -1209,16 +1209,16 @@ The key observation is that derivative roots split the real line into intervals 
 
 \begin{compactitem}
   \item \inlinecode{horner\_eval(p, x)} evaluates the polynomial \inlinecode{p} of degree $d$ (represented as a vector of size $d + 1$ where \inlinecode{p[i]} stores the coefficient for the $x^i$ term) at \inlinecode{x}, using Horner's method.
-  \item \inlinecode{find\_one\_root(p, a, b, EPS)} returns a root in the interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a polynomial \inlinecode{p} where $\operatorname{sgn}(f(a)) \neq \operatorname{sgn}(f(b))$, using the bisection method. If this precondition is not satisfied, then \inlinecode{NaN} is returned. The root is found to a tolerance of \inlinecode{EPS} in absolute or relative error (whichever is reached first).
-  \item \inlinecode{find\_all\_roots(p, a, b, EPS)} returns a vector of all roots in the interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a polynomial \inlinecode{p} using the bisection method. The roots are found to a tolerance of \inlinecode{EPS} in absolute or relative error (whichever is reached first).
+  \item \inlinecode{find\_one\_root(p, a, b, eps = 1e-15)} returns a root in the interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a polynomial \inlinecode{p} where $\operatorname{sgn}(f(a)) \neq \operatorname{sgn}(f(b))$, using the bisection method. If this precondition is not satisfied, then \inlinecode{NaN} is returned. The root is found to a tolerance of \inlinecode{eps} in absolute or relative error (whichever is reached first).
+  \item \inlinecode{find\_all\_roots(p, a = -1e20, b = 1e20, eps = 1e-15)} returns a vector of all roots in the interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a polynomial \inlinecode{p} using the bisection method. The roots are found to a tolerance of \inlinecode{eps} in absolute or relative error (whichever is reached first).
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{horner\_eval()}, where $n$ is the degree of the polynomial.
-  \item $O(n \log d)$ per call to \inlinecode{find\_one\_root()}, where $n$ is the degree of the polynomial and $d = -\log_{10}({\inlinecodemath{EPS}})$ is the number of digits of absolute or relative precision that is desired.
-  \item $O(n^{3} \log d)$ per call to \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial and $d = -\log_{10}({\inlinecodemath{EPS}})$ is the number of digits of absolute or relative precision that is desired.
+  \item $O(n \log d)$ per call to \inlinecode{find\_one\_root()}, where $n$ is the degree of the polynomial and $d = -\log_{10}({\inlinecodemath{eps}})$ is the number of digits of absolute or relative precision that is desired.
+  \item $O(n^{3} \log d)$ per call to \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial and $d = -\log_{10}({\inlinecodemath{eps}})$ is the number of digits of absolute or relative precision that is desired.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1242,13 +1242,13 @@ double horner_eval(const std::vector<double> &p, double x) {
   return res;
 }
 
-double find_one_root(const std::vector<double> &p, double a, double b, const double EPS = 1e-15) {
+double find_one_root(const std::vector<double> &p, double a, double b, const double eps = 1e-15) {
   double pa = horner_eval(p, a), pb = horner_eval(p, b);
   bool paneg = pa < 0, pbneg = pb < 0;
   if (paneg == pbneg) {
     return std::numeric_limits<double>::quiet_NaN();
   }
-  while (b - a > EPS && a * (1 + EPS) < b && a < b * (1 + EPS)) {
+  while (b - a > eps && a * (1 + eps) < b && a < b * (1 + eps)) {
     double m = a + (b - a) / 2;
     if ((horner_eval(p, m) < 0) == paneg) {
       a = m;
@@ -1260,7 +1260,7 @@ double find_one_root(const std::vector<double> &p, double a, double b, const dou
 }
 
 std::vector<double> find_all_roots(
-    const std::vector<double> &p, double a = -1e20, double b = 1e20, const double EPS = 1e-15
+    const std::vector<double> &p, double a = -1e20, double b = 1e20, const double eps = 1e-15
 ) {
   std::vector<double> pprime;
   pprime.reserve(p.size() > 0 ? p.size() - 1 : 0);
@@ -1270,10 +1270,10 @@ std::vector<double> find_all_roots(
   if (pprime.empty()) {
     return {};
   }
-  std::vector<double> res, r = find_all_roots(pprime, a, b, EPS);
+  std::vector<double> res, r = find_all_roots(pprime, a, b, eps);
   r.push_back(b);
   for (int i = 0; i < static_cast<int>(r.size()); i++) {
-    double root = find_one_root(p, i == 0 ? a : r[i - 1], r[i], EPS);
+    double root = find_one_root(p, i == 0 ? a : r[i - 1], r[i], eps);
     if (!std::isnan(root) && (res.empty() || root != res.back())) {
       res.push_back(root);
     }
@@ -1308,16 +1308,16 @@ Finds every complex root $x$ for a polynomial $p$ with complex coefficients such
 
 \begin{compactitem}
   \item \inlinecode{horner\_eval(p, x)} evaluates a complex polynomial $p$ of degree $d$ (represented as a vector of size $d + 1$ where \inlinecode{p[i]} stores the complex coefficient for the $x^i$ term) at \inlinecode{x}, using Horner's method, returning a pair where the first value is the final result $p(x)$ and the second value is the quotient polynomial $q$ from the identity $p(t) = (t - x)q(t) + p(x)$.
-  \item \inlinecode{find\_one\_root(p, x0)} returns a complex root $x$ for a polynomial \inlinecode{p} (represented as a vector of size $d + 1$ where \inlinecode{p[i]} stores the complex coefficient for the $x^i$ term) using an initial guess \inlinecode{x0} which should be relatively close to $x$. The root is found to a tolerance of \inlinecode{EPS} in absolute or relative error (whichever is reached first).
-  \item \inlinecode{find\_all\_roots(p)} returns a vector of all complex roots for a complex polynomial \inlinecode{p}. The roots are found to a tolerance of \inlinecode{EPS} in absolute or relative error (whichever is reached first).
+  \item \inlinecode{find\_one\_root(p, x0, eps = 1e-15, iterations = 10000)} returns a complex root $x$ for polynomial \inlinecode{p} (represented as a vector of size $d + 1$ where \inlinecode{p[i]} stores the complex coefficient for the $x^i$ term) using an initial guess \inlinecode{x0} which should be relatively close to $x$. The root is found to a tolerance of \inlinecode{eps} in absolute or relative error (whichever is reached first).
+  \item \inlinecode{find\_all\_roots(p, eps = 1e-15, iterations = 10000)} returns a vector of all complex roots for a complex polynomial \inlinecode{p}. The roots are found to a tolerance of \inlinecode{eps} in absolute or relative error (whichever is reached first).
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{horner\_eval()}, where $n$ is the degree of the polynomial.
-  \item $O(n \log d)$ per call to \inlinecode{find\_one\_root()}, where $n$ is the degree of the polynomial and $d = -\log_{10}({\inlinecodemath{EPS}})$ is the number of digits of absolute or relative precision that is desired.
-  \item $O(n^{2} \log d)$ per call to \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial and $d = -\log_{10}({\inlinecodemath{EPS}})$ is the number of digits of absolute or relative precision that is desired.
+  \item $O(n \log d)$ per call to \inlinecode{find\_one\_root()}, where $n$ is the degree of the polynomial and $d = -\log_{10}({\inlinecodemath{eps}})$ is the number of digits of absolute or relative precision that is desired.
+  \item $O(n^{2} \log d)$ per call to \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial and $d = -\log_{10}({\inlinecodemath{eps}})$ is the number of digits of absolute or relative precision that is desired.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1355,29 +1355,29 @@ cpoly derivative(const cpoly &p) {
   return res;
 }
 
-int comp(const cdouble &a, const cdouble &b, const double EPS = 1e-15) {
+int comp(const cdouble &a, const cdouble &b, const double eps = 1e-15) {
   double diff = std::abs(a) - std::abs(b);
-  return (diff < -EPS) ? -1 : (diff > EPS ? 1 : 0);
+  return (diff < -eps) ? -1 : (diff > eps ? 1 : 0);
 }
 
 cdouble find_one_root(
-    const cpoly &p, const cdouble &x0, const double EPS = 1e-15, const int ITERATIONS = 10000
+    const cpoly &p, const cdouble &x0, const double eps = 1e-15, const int iterations = 10000
 ) {
   cdouble x = x0;
   int n = static_cast<int>(p.size()) - 1;
   cpoly p1 = derivative(p), p2 = derivative(p1);
-  for (int i = 0; i < ITERATIONS; i++) {
+  for (int i = 0; i < iterations; i++) {
     cdouble y0 = horner_eval(p, x).first;
-    if (comp(y0, 0, EPS) == 0) {
+    if (comp(y0, 0, eps) == 0) {
       break;
     }
     cdouble g = horner_eval(p1, x).first / y0;
     cdouble h = g * g - horner_eval(p2, x).first / y0;
     cdouble r = std::sqrt(cdouble(n - 1) * (h * cdouble(n) - g * g));
     cdouble d1 = g + r, d2 = g - r;
-    cdouble a = cdouble(n) / (comp(d1, d2, EPS) > 0 ? d1 : d2);
+    cdouble a = cdouble(n) / (comp(d1, d2, eps) > 0 ? d1 : d2);
     x -= a;
-    if (comp(a, 0, EPS) == 0) {
+    if (comp(a, 0, eps) == 0) {
       break;
     }
   }
@@ -1385,7 +1385,7 @@ cdouble find_one_root(
 }
 
 std::vector<cdouble> find_all_roots(
-    const cpoly &p, const double EPS = 1e-15, const int ITERATIONS = 10000
+    const cpoly &p, const double eps = 1e-15, const int iterations = 10000
 ) {
   std::vector<cdouble> res;
   cpoly q = p;
@@ -1393,7 +1393,7 @@ std::vector<cdouble> find_all_roots(
   std::uniform_real_distribution<double> unit(0.0, 1.0);
   while (q.size() > 2) {
     cdouble z(unit(rng), unit(rng));
-    z = find_one_root(p, find_one_root(q, z, EPS, ITERATIONS), EPS, ITERATIONS);
+    z = find_one_root(p, find_one_root(q, z, eps, iterations), eps, iterations);
     q = horner_eval(q, z).second;
     res.push_back(z);
   }
@@ -1462,21 +1462,21 @@ This routine is intended for well-scaled polynomials when all complex roots are 
 
 \begin{compactitem}
   \item \inlinecode{eval\_with\_derivative(p, x)} returns a pair $(p(x), p'(x))$ for a polynomial $p$ given as a vector \inlinecode{p} where \inlinecode{p[i]} stores the coefficient for the $x^i$ term.
-  \item \inlinecode{find\_all\_roots(p, EPS, ITERATIONS)} returns a vector of all complex roots for a complex polynomial given by the vector of coefficients \inlinecode{p}. A \inlinecode{vector\textless{}LD\textgreater{}} overload is provided for polynomials with real coefficients. The roots are found to a tolerance of \inlinecode{EPS} in absolute or relative error (whichever is reached first), and zero roots are removed exactly before the simultaneous iteration starts.
+  \item \inlinecode{find\_all\_roots(p, eps = ROOT\_EPS, iterations = 2000)} returns a vector of all complex roots for a complex polynomial given by the vector of coefficients \inlinecode{p}. A \inlinecode{vector\textless{}dbl\textgreater{}} overload is provided for polynomials with real coefficients. The roots are found to a tolerance of \inlinecode{eps} in absolute or relative error (whichever is reached first), and zero roots are removed exactly before the simultaneous iteration starts.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{eval\_with\_derivative(p, x)}, where $n$ is the degree of the polynomial.
-  \item $O(n^{2} t)$ per call to \inlinecode{find\_all\_roots(p, EPS, ITERATIONS)}, where $n$ is the degree of the polynomial and $t$ is the number of iterations required to reach the desired precision.
+  \item $O(n^{2} t)$ per call to \inlinecode{find\_all\_roots(p, eps, iterations)}, where $n$ is the degree of the polynomial and $t$ is the number of iterations required to reach the desired precision.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary space for \inlinecode{eval\_with\_derivative(p, x)}.
-  \item $O(n)$ auxiliary heap space for \inlinecode{find\_all\_roots(p, EPS, ITERATIONS)}, where $n$ is the degree of the polynomial.
+  \item $O(n)$ auxiliary heap space for \inlinecode{find\_all\_roots(p, eps, iterations)}, where $n$ is the degree of the polynomial.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1486,26 +1486,26 @@ This routine is intended for well-scaled polynomials when all complex roots are 
 #include <utility>
 #include <vector>
 
-using LD = long double;
-using cdouble = std::complex<LD>;
-using cpoly = std::vector<cdouble>;
+using dbl = long double;
+using cdbl = std::complex<dbl>;
+using cpoly = std::vector<cdbl>;
 
-const LD PI = acosl(-1.0L);
-const LD ZERO_EPS = 1e-30L;   // Treat coefficients and denominators this small as zero.
-const LD ROOT_EPS = 1e-18L;   // Stop once root updates are this small relative to the root.
-const LD CHECK_EPS = 1e-12L;  // Residual tolerance used by the example assertions.
+const dbl PI = acosl(-1.0L);
+const dbl ZERO_EPS = 1e-30L;   // Treat coefficients and denominators this small as zero.
+const dbl ROOT_EPS = 1e-18L;   // Stop once root updates are this small relative to the root.
+const dbl CHECK_EPS = 1e-12L;  // Residual tolerance used by the example assertions.
 
-bool is_zero(const cdouble &z, const LD EPS = ZERO_EPS) {
-  return std::abs(z) <= EPS;
+bool is_zero(const cdbl &z, const dbl eps = ZERO_EPS) {
+  return std::abs(z) <= eps;
 }
 
-bool is_finite(const cdouble &z) {
+bool is_finite(const cdbl &z) {
   return std::isfinite(static_cast<double>(z.real())) &&
          std::isfinite(static_cast<double>(z.imag()));
 }
 
-std::pair<cdouble, cdouble> eval_with_derivative(const cpoly &p, const cdouble &x) {
-  cdouble value = p.back(), derivative = 0;
+std::pair<cdbl, cdbl> eval_with_derivative(const cpoly &p, const cdbl &x) {
+  cdbl value = p.back(), derivative = 0;
   for (int i = static_cast<int>(p.size()) - 2; i >= 0; i--) {
     derivative = derivative * x + value;
     value = value * x + p[i];
@@ -1513,26 +1513,26 @@ std::pair<cdouble, cdouble> eval_with_derivative(const cpoly &p, const cdouble &
   return {value, derivative};
 }
 
-LD root_bound(const cpoly &p) {
-  LD res = 0;
+dbl root_bound(const cpoly &p) {
+  dbl res = 0;
   int n = static_cast<int>(p.size()) - 1;
   for (int i = 0; i < n; i++) {
-    LD ratio = std::abs(p[i] / p.back());
+    dbl ratio = std::abs(p[i] / p.back());
     if (ratio > 0) {
       res = std::max(res, powl(ratio, 1.0L / (n - i)));
     }
   }
-  return 2 * std::max((LD)1, res);
+  return 2 * std::max((dbl)1, res);
 }
 
-bool root_less(const cdouble &a, const cdouble &b) {
+bool root_less(const cdbl &a, const cdbl &b) {
   if (a.real() != b.real()) {
     return a.real() < b.real();
   }
   return a.imag() < b.imag();
 }
 
-cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS, const int ITERATIONS = 2000) {
+cpoly find_all_roots(cpoly p, const dbl eps = ROOT_EPS, const int iterations = 2000) {
   while (!p.empty() && is_zero(p.back())) {
     p.pop_back();
   }
@@ -1544,7 +1544,7 @@ cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS, const int ITERATIONS = 20
   if (p.size() <= 1) {
     return roots;
   }
-  LD scale = 0;
+  dbl scale = 0;
   for (int i = 0; i < static_cast<int>(p.size()); i++) {
     scale = std::max(scale, std::abs(p[i]));
   }
@@ -1557,43 +1557,43 @@ cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS, const int ITERATIONS = 20
     return roots;
   }
   cpoly z(n);
-  LD radius = root_bound(p), offset = PI / (2 * n);
-  LD max_radius = 2 * radius;
+  dbl radius = root_bound(p), offset = PI / (2 * n);
+  dbl max_radius = 2 * radius;
   for (int i = 0; i < n; i++) {
-    LD angle = offset + 2 * PI * i / n;
-    z[i] = radius * cdouble(cosl(angle), sinl(angle));
+    dbl angle = offset + 2 * PI * i / n;
+    z[i] = radius * cdbl(cosl(angle), sinl(angle));
   }
-  for (int it = 0; it < ITERATIONS; it++) {
+  for (int it = 0; it < iterations; it++) {
     bool done = true;
     cpoly next = z;
     for (int i = 0; i < n; i++) {
       auto [fx, dfx] = eval_with_derivative(p, z[i]);
-      if (std::abs(fx) <= EPS) {
+      if (std::abs(fx) <= eps) {
         continue;
       }
-      cdouble repulsion = 0;
+      cdbl repulsion = 0;
       for (int j = 0; j < n; j++) {
         if (i != j) {
-          cdouble diff = z[i] - z[j];
-          if (std::abs(diff) <= EPS * EPS) {
-            LD angle = 2 * PI * (i + 1) / (n + 1);
-            diff = EPS * (1 + std::abs(z[i])) * cdouble(cosl(angle), sinl(angle));
+          cdbl diff = z[i] - z[j];
+          if (std::abs(diff) <= eps * eps) {
+            dbl angle = 2 * PI * (i + 1) / (n + 1);
+            diff = eps * (1 + std::abs(z[i])) * cdbl(cosl(angle), sinl(angle));
           }
-          repulsion += cdouble(1) / diff;
+          repulsion += cdbl(1) / diff;
         }
       }
-      cdouble denom = dfx - fx * repulsion;
+      cdbl denom = dfx - fx * repulsion;
       if (is_zero(denom)) {
         continue;
       }
-      cdouble step = fx / denom;
+      cdbl step = fx / denom;
       if (!is_finite(step) && !is_zero(dfx)) {
         step = fx / dfx;
       }
       if (!is_finite(step)) {
         continue;
       }
-      LD limit = 2 * max_radius;
+      dbl limit = 2 * max_radius;
       if (std::abs(step) > limit) {
         step *= limit / std::abs(step);
       }
@@ -1605,7 +1605,7 @@ cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS, const int ITERATIONS = 20
       if (std::abs(next[i]) > max_radius) {
         next[i] *= max_radius / std::abs(next[i]);
       }
-      if (std::abs(step) > EPS * (1 + std::abs(next[i]))) {
+      if (std::abs(step) > eps * (1 + std::abs(next[i]))) {
         done = false;
       }
     }
@@ -1621,11 +1621,11 @@ cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS, const int ITERATIONS = 20
   return roots;
 }
 
-std::vector<cdouble> find_all_roots(
-    const std::vector<LD> &p, const LD EPS = ROOT_EPS, const int ITERATIONS = 2000
+std::vector<cdbl> find_all_roots(
+    const std::vector<dbl> &p, const dbl eps = ROOT_EPS, const int iterations = 2000
 ) {
   cpoly q(p.begin(), p.end());
-  return find_all_roots(q, EPS, ITERATIONS);
+  return find_all_roots(q, eps, iterations);
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -1635,17 +1635,17 @@ std::vector<cdouble> find_all_roots(
 #include <cstdio>
 using namespace std;
 
-cdouble eval(const cpoly &p, const cdouble &x) {
+cdbl eval(const cpoly &p, const cdbl &x) {
   return eval_with_derivative(p, x).first;
 }
 
-void print_roots(vector<cdouble> x) {
-  sort(x.begin(), x.end(), [](const cdouble &a, const cdouble &b) {
+void print_roots(vector<cdbl> x) {
+  sort(x.begin(), x.end(), [](const cdbl &a, const cdbl &b) {
     return abs(a.real() - b.real()) > 0.5e-5 ? a.real() < b.real() : a.imag() < b.imag();
   });
   for (const auto &z : x) {
-    LD real = abs(z.real()) < 0.5e-5 ? 0 : z.real();
-    LD imag = abs(z.imag()) < 0.5e-5 ? 0 : z.imag();
+    dbl real = abs(z.real()) < 0.5e-5 ? 0 : z.real();
+    dbl imag = abs(z.imag()) < 0.5e-5 ? 0 : z.imag();
     printf("(%.5Lf, %.5Lf)\n", real, imag);
   }
 }
@@ -1653,8 +1653,8 @@ void print_roots(vector<cdouble> x) {
 int main() {
   {  // -1 + 2x - 6x^2 + 2x^3
     printf("Roots of -1 + 2x - 6x^2 + 2x^3:\n");
-    vector<LD> p{-1.0, 2.0, -6.0, 2.0};
-    vector<cdouble> roots = find_all_roots(p);
+    vector<dbl> p{-1.0, 2.0, -6.0, 2.0};
+    vector<cdbl> roots = find_all_roots(p);
     assert(roots.size() == 3);
     for (const auto &root : roots) {
       assert(abs(eval(cpoly(p.begin(), p.end()), root)) < CHECK_EPS);
@@ -1670,7 +1670,7 @@ int main() {
     p.emplace_back(-30, 40);
     p.emplace_back(-26, 12);
     p.emplace_back(-6, 4);
-    vector<cdouble> roots = find_all_roots(p);
+    vector<cdbl> roots = find_all_roots(p);
     assert(roots.size() == 4);
     for (const auto &root : roots) {
       assert(abs(eval(p, root)) < CHECK_EPS);
@@ -1744,7 +1744,7 @@ The simplex algorithm walks between vertices of the feasible polytope, at each s
 The implementation uses a two-phase simplex tableau. Phase 1 introduces an artificial variable to find a feasible starting basis, which is essential when some constraint bounds are negative. Phase 2 then optimizes the original objective. The \inlinecode{basis} and \inlinecode{nonbasis} arrays track which variable each tableau row or column currently represents, making solution recovery independent of pivot order.
 
 \begin{compactitem}
-  \item \inlinecode{simplex\_solve(a, b, c, \&x)} solves the linear programming problem for an $m$ by $n$ matrix \inlinecode{a} of real values, a length $m$ vector \inlinecode{b}, and a length $n$ vector \inlinecode{c}, returning $0$ if an optimum was found, $-1$ if there are no feasible solutions, or $1$ if the objective is unbounded. If an optimum is found, then the vector pointed to by \inlinecode{x} is populated with a dense solution vector.
+  \item \inlinecode{simplex\_solve(a, b, c, \&x, maximize = true, eps = 1e-10)} solves the linear programming problem for an $m$ by $n$ matrix \inlinecode{a} of real values, a length $m$ vector \inlinecode{b}, and a length $n$ vector \inlinecode{c}, returning $0$ if an optimum was found, $-1$ if there are no feasible solutions, or $1$ if the objective is unbounded. If an optimum is found, then the vector pointed to by \inlinecode{x} is populated with a dense solution vector.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(2^{n})$ pivots in the worst case, where $n$ is the number of unknowns, although simplex typically runs much faster in practice.
@@ -1759,8 +1759,8 @@ The implementation uses a two-phase simplex tableau. Phase 1 introduces an artif
 
 int simplex_solve(
     const std::vector<std::vector<double>> &a, const std::vector<double> &b,
-    const std::vector<double> &c, std::vector<double> *x, const bool MAXIMIZE = true,
-    const double EPS = 1e-10
+    const std::vector<double> &c, std::vector<double> *x, const bool maximize = true,
+    const double eps = 1e-10
 ) {
   int m = static_cast<int>(a.size()), n = static_cast<int>(c.size());
   assert(x != nullptr && b.size() == a.size());
@@ -1779,14 +1779,14 @@ int simplex_solve(
   }
   for (int j = 0; j < n; j++) {
     nonbasis[j] = j;
-    tab[m][j] = MAXIMIZE ? -c[j] : c[j];
+    tab[m][j] = maximize ? -c[j] : c[j];
   }
   nonbasis[n] = -1;
   tab[m + 1][n] = 1;
   auto pivot = [&](int row, int col) {
     double inv = 1.0 / tab[row][col];
     for (int i = 0; i < m + 2; i++) {
-      if (i == row || fabs(tab[i][col]) <= EPS) {
+      if (i == row || fabs(tab[i][col]) <= eps) {
         continue;
       }
       double factor = tab[i][col] * inv;
@@ -1813,22 +1813,22 @@ int simplex_solve(
         if (phase == 2 && nonbasis[j] == -1) {
           continue;
         }
-        if (col == -1 || tab[objective][j] < tab[objective][col] - EPS ||
-            (fabs(tab[objective][j] - tab[objective][col]) <= EPS && nonbasis[j] < nonbasis[col])) {
+        if (col == -1 || tab[objective][j] < tab[objective][col] - eps ||
+            (fabs(tab[objective][j] - tab[objective][col]) <= eps && nonbasis[j] < nonbasis[col])) {
           col = j;
         }
       }
-      if (tab[objective][col] >= -EPS) {
+      if (tab[objective][col] >= -eps) {
         return true;
       }
       int row = -1;
       for (int i = 0; i < m; i++) {
-        if (tab[i][col] <= EPS) {
+        if (tab[i][col] <= eps) {
           continue;
         }
         double cur = tab[i][n + 1] / tab[i][col];
         double best = row == -1 ? 0 : tab[row][n + 1] / tab[row][col];
-        if (row == -1 || cur < best - EPS || (fabs(cur - best) <= EPS && basis[i] < basis[row])) {
+        if (row == -1 || cur < best - eps || (fabs(cur - best) <= eps && basis[i] < basis[row])) {
           row = i;
         }
       }
@@ -1844,9 +1844,9 @@ int simplex_solve(
       row = i;
     }
   }
-  if (m > 0 && tab[row][n + 1] < -EPS) {
+  if (m > 0 && tab[row][n + 1] < -eps) {
     pivot(row, n);
-    if (!simplex(1) || fabs(tab[m + 1][n + 1]) > EPS) {
+    if (!simplex(1) || fabs(tab[m + 1][n + 1]) > eps) {
       return -1;
     }
     for (int i = 0; i < m; i++) {
@@ -1855,7 +1855,7 @@ int simplex_solve(
       }
       int col = -1;
       for (int j = 0; j <= n; j++) {
-        if (fabs(tab[i][j]) > EPS && (col == -1 || nonbasis[j] < nonbasis[col])) {
+        if (fabs(tab[i][j]) > eps && (col == -1 || nonbasis[j] < nonbasis[col])) {
           col = j;
         }
       }

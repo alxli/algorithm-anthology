@@ -11,20 +11,20 @@ interval boundaries needed to find every real root in the requested range.
 
 - `horner_eval(p, x)` evaluates the polynomial `p` of degree $d$ (represented as a vector of size
   $d + 1$ where `p[i]` stores the coefficient for the $x^i$ term) at `x`, using Horner's method.
-- `find_one_root(p, a, b, EPS)` returns a root in the interval $[`a`, `b`]$ for a polynomial `p`
-  where $\operatorname{sgn}(f(a)) \neq \operatorname{sgn}(f(b))$, using the bisection method. If
+- `find_one_root(p, a, b, eps = 1e-15)` returns a root in the interval $[`a`, `b`]$ for a polynomial
+  `p` where $\operatorname{sgn}(f(a)) \neq \operatorname{sgn}(f(b))$, using the bisection method. If
   this precondition is not satisfied, then `NaN` is returned. The root is found to a tolerance of
-  `EPS` in absolute or relative error (whichever is reached first).
-- `find_all_roots(p, a, b, EPS)` returns a vector of all roots in the interval $[`a`, `b`]$ for a
-  polynomial `p` using the bisection method. The roots are found to a tolerance of `EPS` in absolute
-  or relative error (whichever is reached first).
+  `eps` in absolute or relative error (whichever is reached first).
+- `find_all_roots(p, a = -1e20, b = 1e20, eps = 1e-15)` returns a vector of all roots in the
+  interval $[`a`, `b`]$ for a polynomial `p` using the bisection method. The roots are found to a
+  tolerance of `eps` in absolute or relative error (whichever is reached first).
 
 Time Complexity:
 - O(n) per call to `horner_eval()`, where $n$ is the degree of the polynomial.
 - O(n log d) per call to `find_one_root()`, where $n$ is the degree of the polynomial and
-  $d = -\log_{10}(`EPS`)$ is the number of digits of absolute or relative precision that is desired.
+  $d = -\log_{10}(`eps`)$ is the number of digits of absolute or relative precision that is desired.
 - O(n^3 log d) per call to `find_all_roots()`, where $n$ is the degree of the polynomial and
-  $d = -\log_{10}(`EPS`)$ is the number of digits of absolute or relative precision that is desired.
+  $d = -\log_{10}(`eps`)$ is the number of digits of absolute or relative precision that is desired.
 
 Space Complexity:
 - O(1) auxiliary space for `horner_eval()` and `find_one_root()`.
@@ -46,13 +46,13 @@ double horner_eval(const std::vector<double> &p, double x) {
   return res;
 }
 
-double find_one_root(const std::vector<double> &p, double a, double b, const double EPS = 1e-15) {
+double find_one_root(const std::vector<double> &p, double a, double b, const double eps = 1e-15) {
   double pa = horner_eval(p, a), pb = horner_eval(p, b);
   bool paneg = pa < 0, pbneg = pb < 0;
   if (paneg == pbneg) {
     return std::numeric_limits<double>::quiet_NaN();
   }
-  while (b - a > EPS && a * (1 + EPS) < b && a < b * (1 + EPS)) {
+  while (b - a > eps && a * (1 + eps) < b && a < b * (1 + eps)) {
     double m = a + (b - a) / 2;
     if ((horner_eval(p, m) < 0) == paneg) {
       a = m;
@@ -64,7 +64,7 @@ double find_one_root(const std::vector<double> &p, double a, double b, const dou
 }
 
 std::vector<double> find_all_roots(
-    const std::vector<double> &p, double a = -1e20, double b = 1e20, const double EPS = 1e-15
+    const std::vector<double> &p, double a = -1e20, double b = 1e20, const double eps = 1e-15
 ) {
   std::vector<double> pprime;
   pprime.reserve(p.size() > 0 ? p.size() - 1 : 0);
@@ -74,10 +74,10 @@ std::vector<double> find_all_roots(
   if (pprime.empty()) {
     return {};
   }
-  std::vector<double> res, r = find_all_roots(pprime, a, b, EPS);
+  std::vector<double> res, r = find_all_roots(pprime, a, b, eps);
   r.push_back(b);
   for (int i = 0; i < static_cast<int>(r.size()); i++) {
-    double root = find_one_root(p, i == 0 ? a : r[i - 1], r[i], EPS);
+    double root = find_one_root(p, i == 0 ? a : r[i - 1], r[i], eps);
     if (!std::isnan(root) && (res.empty() || root != res.back())) {
       res.push_back(root);
     }

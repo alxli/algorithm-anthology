@@ -243,6 +243,8 @@ int main() {
   assert(ett.link(0, 1));
   assert(ett.link(1, 2));
   assert(ett.link(3, 4));
+
+  // 0---1---2    3---4    5
   assert(ett.connected(0, 2));
   assert(!ett.connected(0, 4));
   assert(!ett.link(0, 2));  // Would create a cycle.
@@ -253,10 +255,14 @@ int main() {
   ett.reroot(2);
   assert(ett.connected(0, 2));
   assert(ett.cut(1, 2));
+
+  // 0---1     2    3---4    5
   assert(!ett.connected(0, 2));
   assert((ett.component_vertices(2) == std::vector<int>{2}));
 
   assert(ett.link(2, 3));
+
+  // 0---1     2---3---4    5
   assert(ett.connected(0, 4) == false);
   assert(ett.connected(2, 4));
   assert(!ett.cut(0, 5));

@@ -8,22 +8,22 @@ An improvement on basic row reduction, LU decomposition by row-partial pivoting 
 magnitude of matrix values small, thus reducing the relative error due to rounding in computed
 solutions.
 
-- `lu_decompose(a, &p1col)` assigns the $m$ by $n$ matrix `a` to merged LU decomposition matrix
-  `lu`, returning either $0$ or $1$ denoting the "sign" of the permutation parity ($0$ if the number
-  of overall row swaps performed is even, or $1$ if it is odd), or $-1$ denoting a degenerate matrix
-  (i.e. singular for square matrices). The merged matrix `lu` has `lu[i][j]` = `l[i][j]` for `i` >
-  `j` and `lu[i][j]` = `u[i][j]` for `i` $\leq$ `j`. Note that the algorithm always yields an atomic
-  lower triangular matrix for which the diagonal entries `l[i][i]` are always equal to $1$, so this
-  is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of
-  the lower and upper triangular matrices should be accessed via the `getl(lu, i, j)` and
-  `getu(lu, i, j)` functions. Optionally, a `vector<int>` pointer `p1col` may be passed to return
-  the permutation vector `p1col` where `p1col[i]` stores the only column that is equal to $1$ in row
-  $i$ of the permutation matrix $p$ (all other columns in row $i$ of $p$ are implicitly $0$). The
-  permutation matrix $p$ corresponding to `p1col` satisfies $pa = lu$.
-- `solve_system(a, b, &x)` solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix
-  `a` of real values, and a length $m$ vector `b`, returning $0$ if there is one solution or $-1$ if
-  there are zero or infinite solutions. If there is exactly one solution, then the output pointer
-  `x` is populated with the solution vector of length $n$.
+- `lu_decompose(a, &p1col, eps = 1e-10)` assigns the $m$ by $n$ matrix `a` to merged LU
+  decomposition matrix `lu`, returning either $0$ or $1$ denoting the "sign" of the permutation
+  parity ($0$ if the number of overall row swaps performed is even, or $1$ if it is odd), or $-1$
+  denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix `lu` has
+  `lu[i][j]` = `l[i][j]` for `i` > `j` and `lu[i][j]` = `u[i][j]` for `i` $\leq$ `j`. Note that the
+  algorithm always yields an atomic lower triangular matrix for which the diagonal entries `l[i][i]`
+  are always equal to $1$, so this is not explicitly stored in the resulting merged matrix. For
+  general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via
+  the `getl(lu, i, j)` and `getu(lu, i, j)` functions. Optionally, a `vector<int>` pointer `p1col`
+  may be passed to return the permutation vector `p1col` where `p1col[i]` stores the only column
+  that is equal to $1$ in row $i$ of the permutation matrix $p$ (all other columns in row $i$ of $p$
+  are implicitly $0$). The permutation matrix $p$ corresponding to `p1col` satisfies $pa = lu$.
+- `solve_system(a, b, &x, eps = 1e-10)` solves the system of linear equations $ax = b$ given an $m$
+  by $n$ matrix `a` of real values, and a length $m$ vector `b`, returning $0$ if there is one
+  solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then
+  the output pointer `x` is populated with the solution vector of length $n$.
 - `det(a)` returns the determinant of an $n$ by $n$ matrix `a` using LU decomposition.
 - `invert(a)` assigns the $n$ by $n$ matrix `a` to its inverse (if it exists), returning $0$ if the
   inversion was successful or $-1$ if `a` has no inverse.
@@ -48,7 +48,7 @@ Space Complexity:
 #include <vector>
 
 template<typename Matrix>
-int lu_decompose(Matrix &a, std::vector<int> *p1col = nullptr, const double EPS = 1e-10) {
+int lu_decompose(Matrix &a, std::vector<int> *p1col = nullptr, const double eps = 1e-10) {
   int rows = static_cast<int>(a.size());
   int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
   int parity = 0;
@@ -63,7 +63,7 @@ int lu_decompose(Matrix &a, std::vector<int> *p1col = nullptr, const double EPS 
         pi = k;
       }
     }
-    if (fabs(a[pi][i]) < EPS) {
+    if (fabs(a[pi][i]) < eps) {
       return -1;
     }
     if (pi != i) {
@@ -95,7 +95,7 @@ double getu(const Matrix &lu, int i, int j) {
 
 template<typename Matrix, typename T>
 int solve_system(
-    const Matrix &a, const std::vector<T> &b, std::vector<T> *x, const double EPS = 1e-10
+    const Matrix &a, const std::vector<T> &b, std::vector<T> *x, const double eps = 1e-10
 ) {
   int rows = static_cast<int>(a.size());
   int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
@@ -105,7 +105,7 @@ int solve_system(
   x->resize(cols);
   std::vector<int> p1col;
   Matrix lu;
-  int status = lu_decompose(lu = a, &p1col, EPS);
+  int status = lu_decompose(lu = a, &p1col, eps);
   if (status < 0) {
     return status;
   }
@@ -128,7 +128,7 @@ int solve_system(
     }
     // Mixed absolute/relative tolerance: dividing by b[i] alone would skip the check for negative
     // b[i] (ratio goes negative) and divide by zero when b[i] == 0.
-    if (fabs(val - b[i]) > EPS * (1.0 + fabs(b[i]))) {
+    if (fabs(val - b[i]) > eps * (1.0 + fabs(b[i]))) {
       return -1;
     }
   }

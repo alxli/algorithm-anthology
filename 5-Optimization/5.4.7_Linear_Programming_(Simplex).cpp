@@ -14,10 +14,11 @@ find a feasible starting basis, which is essential when some constraint bounds a
 then optimizes the original objective. The `basis` and `nonbasis` arrays track which variable each
 tableau row or column currently represents, making solution recovery independent of pivot order.
 
-- `simplex_solve(a, b, c, &x)` solves the linear programming problem for an $m$ by $n$ matrix `a` of
-  real values, a length $m$ vector `b`, and a length $n$ vector `c`, returning $0$ if an optimum was
-  found, $-1$ if there are no feasible solutions, or $1$ if the objective is unbounded. If an
-  optimum is found, then the vector pointed to by `x` is populated with a dense solution vector.
+- `simplex_solve(a, b, c, &x, maximize = true, eps = 1e-10)` solves the linear programming problem
+  for an $m$ by $n$ matrix `a` of real values, a length $m$ vector `b`, and a length $n$ vector `c`,
+  returning $0$ if an optimum was found, $-1$ if there are no feasible solutions, or $1$ if the
+  objective is unbounded. If an optimum is found, then the vector pointed to by `x` is populated
+  with a dense solution vector.
 
 Time Complexity:
 - O(2^n) pivots in the worst case, where $n$ is the number of unknowns, although simplex typically
@@ -35,8 +36,8 @@ Space Complexity:
 
 int simplex_solve(
     const std::vector<std::vector<double>> &a, const std::vector<double> &b,
-    const std::vector<double> &c, std::vector<double> *x, const bool MAXIMIZE = true,
-    const double EPS = 1e-10
+    const std::vector<double> &c, std::vector<double> *x, const bool maximize = true,
+    const double eps = 1e-10
 ) {
   int m = static_cast<int>(a.size()), n = static_cast<int>(c.size());
   assert(x != nullptr && b.size() == a.size());
@@ -55,14 +56,14 @@ int simplex_solve(
   }
   for (int j = 0; j < n; j++) {
     nonbasis[j] = j;
-    tab[m][j] = MAXIMIZE ? -c[j] : c[j];
+    tab[m][j] = maximize ? -c[j] : c[j];
   }
   nonbasis[n] = -1;
   tab[m + 1][n] = 1;
   auto pivot = [&](int row, int col) {
     double inv = 1.0 / tab[row][col];
     for (int i = 0; i < m + 2; i++) {
-      if (i == row || fabs(tab[i][col]) <= EPS) {
+      if (i == row || fabs(tab[i][col]) <= eps) {
         continue;
       }
       double factor = tab[i][col] * inv;
@@ -89,22 +90,22 @@ int simplex_solve(
         if (phase == 2 && nonbasis[j] == -1) {
           continue;
         }
-        if (col == -1 || tab[objective][j] < tab[objective][col] - EPS ||
-            (fabs(tab[objective][j] - tab[objective][col]) <= EPS && nonbasis[j] < nonbasis[col])) {
+        if (col == -1 || tab[objective][j] < tab[objective][col] - eps ||
+            (fabs(tab[objective][j] - tab[objective][col]) <= eps && nonbasis[j] < nonbasis[col])) {
           col = j;
         }
       }
-      if (tab[objective][col] >= -EPS) {
+      if (tab[objective][col] >= -eps) {
         return true;
       }
       int row = -1;
       for (int i = 0; i < m; i++) {
-        if (tab[i][col] <= EPS) {
+        if (tab[i][col] <= eps) {
           continue;
         }
         double cur = tab[i][n + 1] / tab[i][col];
         double best = row == -1 ? 0 : tab[row][n + 1] / tab[row][col];
-        if (row == -1 || cur < best - EPS || (fabs(cur - best) <= EPS && basis[i] < basis[row])) {
+        if (row == -1 || cur < best - eps || (fabs(cur - best) <= eps && basis[i] < basis[row])) {
           row = i;
         }
       }
@@ -120,9 +121,9 @@ int simplex_solve(
       row = i;
     }
   }
-  if (m > 0 && tab[row][n + 1] < -EPS) {
+  if (m > 0 && tab[row][n + 1] < -eps) {
     pivot(row, n);
-    if (!simplex(1) || fabs(tab[m + 1][n + 1]) > EPS) {
+    if (!simplex(1) || fabs(tab[m + 1][n + 1]) > eps) {
       return -1;
     }
     for (int i = 0; i < m; i++) {
@@ -131,7 +132,7 @@ int simplex_solve(
       }
       int col = -1;
       for (int j = 0; j <= n; j++) {
-        if (fabs(tab[i][j]) > EPS && (col == -1 || nonbasis[j] < nonbasis[col])) {
+        if (fabs(tab[i][j]) > eps && (col == -1 || nonbasis[j] < nonbasis[col])) {
           col = j;
         }
       }

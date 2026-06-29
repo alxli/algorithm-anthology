@@ -8,10 +8,10 @@ guesses and approximates the derivative using the secant slope from the previous
 $n$ iterations and a good initial guess, the methods below compute approximately $2^n$ digits of
 precision, with the secant method converging approximately $1.6$ times slower than Newton's.
 
-- `newton_root(f, fprime, x0)` returns a root $x$ for a function `f` with derivative `fprime` using
-  an initial guess `x0` which should be relatively close to $x$.
-- `secant_root(f, x0, x1)` returns a root $x$ for a function `f` using two initial guesses `x0` and
-  `x1` which should be relatively close to $x$.
+- `newton_root(f, fprime, x0, eps = 1e-15, iterations = 100)` returns a root $x$ for a function `f`
+  with derivative `fprime` using an initial guess `x0` which should be relatively close to $x$.
+- `secant_root(f, x0, x1, eps = 1e-15, iterations = 100)` returns a root $x$ for a function `f`
+  using two initial guesses `x0` and `x1` which should be relatively close to $x$.
 
 Time Complexity:
 - O(n) calls will be made to `f()` in `newton_root()` and `secant_root()`, where $n$ is the number
@@ -27,15 +27,15 @@ Space Complexity:
 
 template<typename Fn>
 double newton_root(
-    Fn f, Fn fprime, double x0, const double EPS = 1e-15, const int ITERATIONS = 100
+    Fn f, Fn fprime, double x0, const double eps = 1e-15, const int iterations = 100
 ) {
-  double x = x0, error = EPS + 1;
-  for (int i = 0; error > EPS && i < ITERATIONS; i++) {
+  double x = x0, error = eps + 1;
+  for (int i = 0; error > eps && i < iterations; i++) {
     double xnew = x - f(x) / fprime(x);
     error = fabs(xnew - x);
     x = xnew;
   }
-  if (error > EPS) {
+  if (error > eps) {
     throw std::runtime_error("Newton's method failed to converge.");
   }
   return x;
@@ -43,10 +43,10 @@ double newton_root(
 
 template<typename Fn>
 double secant_root(
-    Fn f, double x0, double x1, const double EPS = 1e-15, const int ITERATIONS = 100
+    Fn f, double x0, double x1, const double eps = 1e-15, const int iterations = 100
 ) {
-  double xold = x0, fxold = f(x0), x = x1, error = EPS + 1;
-  for (int i = 0; error > EPS && i < ITERATIONS; i++) {
+  double xold = x0, fxold = f(x0), x = x1, error = eps + 1;
+  for (int i = 0; error > eps && i < iterations; i++) {
     double fx = f(x);
     double xnew = x - fx * ((x - xold) / (fx - fxold));
     xold = x;
@@ -54,7 +54,7 @@ double secant_root(
     error = fabs(xnew - x);
     x = xnew;
   }
-  if (error > EPS) {
+  if (error > eps) {
     throw std::runtime_error("Secant method failed to converge.");
   }
   return x;

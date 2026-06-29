@@ -51,7 +51,7 @@ bool LE(T a, U b) {
   return !LT(b, a);
 }
 
-// Specialized version of seg_intersection() from 7.2.3, simplified for TOUCH_IS_INTERSECT = false,
+// Specialized version of seg_intersection() from 7.2.3, simplified for touch_is_intersect = false,
 // i.e. we're detecting proper crossings of two non-parallel segments whose interiors intersect.
 template<typename Pt>
 bool proper_seg_intersection(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {

@@ -17,10 +17,10 @@ divide-and-conquer DP optimization, but unlike that technique it is purely offli
 entry must be available on demand from the oracle, so it cannot be used when an entry depends on a
 row minimum computed earlier in the same pass.
 
-- `smawk_row_minima(R, C, get)` returns a vector `arg` of length `R`, where `arg[r]` is the column
-  index minimizing `get(r, c)` over $0 \leq `c` < `C`$ (on ties, the smallest qualifying column is
-  chosen). The input matrix is supplied as a totally monotone function `get(r, c)` with bounds `R`
-  $\geq 0$ and `C` $\geq 1$.
+- `smawk_row_minima(rows, cols, get)` returns a vector `arg` of length `rows`, where `arg[r]` is the
+  column index minimizing `get(r, c)` over $0 \leq `c` < `cols`$ (on ties, the smallest qualifying
+  column is chosen). The input matrix is supplied as a totally monotone function `get(r, c)` with
+  bounds `rows` $\geq 0$ and `cols` $\geq 1$.
 
 Time Complexity:
 - O(R + C) evaluations of `get` per call to `smawk_row_minima(R, C, get)`.
@@ -98,12 +98,12 @@ std::vector<int> smawk_rec(
 }
 
 template<typename Get>
-std::vector<int> smawk_row_minima(int R, int C, const Get &get) {
-  std::vector<int> row_ids(R), col_ids(C);
-  for (int i = 0; i < R; i++) {
+std::vector<int> smawk_row_minima(int rows, int cols, const Get &get) {
+  std::vector<int> row_ids(rows), col_ids(cols);
+  for (int i = 0; i < rows; i++) {
     row_ids[i] = i;
   }
-  for (int j = 0; j < C; j++) {
+  for (int j = 0; j < cols; j++) {
     col_ids[j] = j;
   }
   return smawk_rec(get, row_ids, col_ids);

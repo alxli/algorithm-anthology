@@ -16,7 +16,8 @@ divisions are always exact and the arithmetic stays in integers.
   divide-and-conquer algorithm by Laplace expansions. It is division-free and computes in the
   matrix's element type, so an integer matrix yields an exact integer determinant; but at O(n!) it
   is only practical for tiny `n`, so prefer `det_bareiss` for exact integer determinants.
-- `det(a)` returns the determinant of an $n$ by $n$ matrix `a` using Gaussian elimination.
+- `det(a, eps = 1e-10)` returns the determinant of an $n$ by $n$ matrix `a` using Gaussian
+  elimination.
 - `det_bareiss(a)` returns the exact determinant of an integer matrix `a` using fraction-free
   elimination, with no rounding error. Intermediate values are bounded by the magnitudes of the
   matrix's minors, so the entries must stay within `int64_t`; substitute a big-integer type for
@@ -74,7 +75,7 @@ auto det_naive(const SquareMatrix &a) {
 }
 
 template<typename SquareMatrix>
-double det(const SquareMatrix &a, double EPS = 1e-10) {
+double det(const SquareMatrix &a, double eps = 1e-10) {
   int n = static_cast<int>(a.size());
   SquareMatrix b(a);
   double res = 1.0;
@@ -88,7 +89,7 @@ double det(const SquareMatrix &a, double EPS = 1e-10) {
         p = r;
       }
     }
-    if (fabs(b[p][i]) < EPS) {
+    if (fabs(b[p][i]) < eps) {
       return 0;
     }
     if (p != i) {

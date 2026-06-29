@@ -5,9 +5,9 @@ each circle. External tangents touch both circles on the same side of the line j
 centers; internal tangents cross between the circles. A point can be treated as a zero-radius
 circle, so this also covers tangents from a point to a circle.
 
-- `circle_tangents(c1, r1, c2, r2, INTERNAL)` returns $0$, $1$, or $2$ tangent point pairs. Each
-  pair `{p, q}` means the tangent line touches the first circle at `p` and the second circle at `q`.
-  Set `INTERNAL = true` to get internal tangents; otherwise external tangents are returned.
+- `circle_tangents(c1, r1, c2, r2, internal = false)` returns $0$, $1$, or $2$ tangent point pairs.
+  Each pair `{p, q}` means the tangent line touches the first circle at `p` and the second circle at
+  `q`. Set `internal = true` to get internal tangents; otherwise external tangents are returned.
 - `all_circle_tangents(c1, r1, c2, r2)` returns all external and internal tangents.
 
 If the two circles are identical, there are infinitely many tangents and the functions return an
@@ -57,11 +57,11 @@ struct Point {
 
 template<typename PtA, typename PtB>
 std::vector<std::pair<Point, Point>> circle_tangents(
-    const PtA &c1, double r1, const PtB &c2, double r2, const bool INTERNAL = false
+    const PtA &c1, double r1, const PtB &c2, double r2, const bool internal = false
 ) {
   r1 = fabs(r1);
   r2 = fabs(r2);
-  if (INTERNAL) {
+  if (internal) {
     r2 = -r2;
   }
   Point d(c2.x - c1.x, c2.y - c1.y);

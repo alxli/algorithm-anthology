@@ -65,7 +65,7 @@ bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
          LE(std::min(a.y, b.y), p.y) && LE(p.y, std::max(a.y, b.y));
 }
 
-// Specialized version of seg_intersection() from 7.2.3, simplified for TOUCH_IS_INTERSECT = true,
+// Specialized version of seg_intersection() from 7.2.3, simplified for touch_is_intersect = true,
 // returning -1 for no intersection, 0 for one intersection point, 1 for positive length overlap.
 template<typename Pt>
 int seg_intersection1(

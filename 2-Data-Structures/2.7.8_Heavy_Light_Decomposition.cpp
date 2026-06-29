@@ -24,18 +24,18 @@ The default code below defines updates that "set" a path's edges or nodes to a n
 increment updates, `apply_delta(v, d, len)` would return `v + d` for min/max queries, or
 `v + d * len` for sum queries, and `compose_deltas(old, d)` would return `old + d`.
 
-- `HeavyLight<T>(adj, v)` constructs a new heavy light decomposition on a forest defined by the
-  adjacency list `adj`, with all values initialized to `v`. The adjacency list must consist of only
-  the integers $[0, `n`)$, where `n` is `adj.size()`. No duplicate edges should exist.
+- `HeavyLight<T, VALUES_ON_EDGES = true>(adj, value)` constructs a new heavy light decomposition on
+  a forest defined by the adjacency list `adj`, with all values initialized to `value`. The
+  adjacency list must consist of only the integers $[0, `n`)$, where `n` is `adj.size()`. No
+  duplicate edges should exist. Set `VALUES_ON_EDGES` to false to store values on nodes instead.
 - `query(u, v)` returns the result of `combine()` applied to all values on the path from node `u` to
   node `v`. The nodes must be in the same tree.
 - `update(u, v, d)` modifies all values on the path from node `u` to node `v` by respectively
   applying the delta `d`. The nodes must be in the same tree.
 - `for_each_path(u, v, include_lca, f)` decomposes the path from node `u` to node `v` into heavy
   path ranges and calls `f(path, lo, hi, up)` on each range, where `up` says the path segment is
-  traversed upward from `u` toward the LCA. If values are stored on edges, pass
-  `include_lca = false` to skip the LCA's vertex slot. Returns false if `u` and `v` are in
-  different trees.
+  traversed upward from `u` toward the LCA. If `VALUES_ON_EDGES = true`, pass `include_lca = false`
+  to skip the LCA's vertex slot. Returns false if `u` and `v` are in different trees.
 
 Time Complexity:
 - O(n) per call to the constructor, where $n$ is the number of nodes.
@@ -55,11 +55,8 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<typename T>
+template<typename T, bool VALUES_ON_EDGES = true>
 class HeavyLight {
-  // Set this to true to store values on edges, false to store values on nodes.
-  static const bool VALUES_ON_EDGES = true;
-
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T apply_delta(const T &v, const T &d, int len) { return d; }
   static T compose_deltas(const T &old, const T &d) { return d; }
@@ -176,7 +173,7 @@ class HeavyLight {
   }
 
  public:
-  explicit HeavyLight(const std::vector<std::vector<int>> &adj, const T &v = T())
+  explicit HeavyLight(const std::vector<std::vector<int>> &adj, const T &initial_value = T())
       : adj(adj),
         size(adj.size()),
         parent(adj.size()),
@@ -201,7 +198,7 @@ class HeavyLight {
     len.resize(paths);
     for (int i = 0; i < paths; i++) {
       int m = pathlen[i];
-      value[i].assign(2 * m, v);
+      value[i].assign(2 * m, initial_value);
       delta[i].resize(2 * m);
       pending[i].assign(2 * m, false);
       len[i].assign(2 * m, 1);
@@ -270,23 +267,23 @@ class HeavyLight {
 
 using namespace std;
 
+void add_edge(vector<vector<int>> &adj, int u, int v) {
+  adj[u].push_back(v);
+  adj[v].push_back(u);
+}
+
 int main() {
-  //   w=40   w=20   w=10
+  //   v=40   v=20   v=10
   // 0------1------2------3    5------6
   //               |
   //               +------4
-  //                 w=30
+  //                 v=30
   vector<vector<int>> adj(7);
-  adj[0].push_back(1);
-  adj[1].push_back(0);
-  adj[1].push_back(2);
-  adj[2].push_back(1);
-  adj[2].push_back(3);
-  adj[3].push_back(2);
-  adj[2].push_back(4);
-  adj[4].push_back(2);
-  adj[5].push_back(6);
-  adj[6].push_back(5);
+  add_edge(adj, 0, 1);
+  add_edge(adj, 1, 2);
+  add_edge(adj, 2, 3);
+  add_edge(adj, 2, 4);
+  add_edge(adj, 5, 6);
   HeavyLight<int> hld(adj, 0);
   hld.update(0, 1, 40);
   hld.update(1, 2, 20);
@@ -295,9 +292,42 @@ int main() {
   assert(hld.query(0, 3) == 10);
   assert(hld.query(2, 4) == 30);
   hld.update(3, 4, 5);
+
+  // Update path 3-2-4 to value 5:
+  //
+  //   v=40   v=20    v=5
+  // 0------1------2------3    5------6
+  //               |
+  //               +------4
+  //                  v=5
   assert(hld.query(1, 4) == 5);
   hld.update(5, 6, 7);
+
+  // The disconnected component can be updated independently:
+  //
+  // 5------6
+  //   v=7
   assert(hld.query(5, 6) == 7);
   assert(!hld.for_each_path(0, 5, true, [](int, int, int, bool) {}));
+
+  // v=100  v=100  v=100  v=100    v=100  v=100
+  //   0------1------2------3        5------6
+  //                 |
+  //                 +------4
+  //                      v=100
+  HeavyLight<int, false> node_hld(adj, 100);
+  node_hld.update(1, 4, 8);
+
+  // Update nodes on path 1-2-4 to value 8:
+  //
+  // v=100   v=8    v=8   v=100    v=100  v=100
+  //   0------1------2------3        5------6
+  //                 |
+  //                 +------4
+  //                       v=8
+  assert(node_hld.query(0, 3) == 8);    // Min over nodes 0, 1, 2, 3.
+  assert(node_hld.query(5, 5) == 100);  // Single-node paths are allowed.
+  node_hld.update(5, 5, 7);
+  assert(node_hld.query(5, 5) == 7);
   return 0;
 }

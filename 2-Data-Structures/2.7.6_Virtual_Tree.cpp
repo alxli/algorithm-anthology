@@ -19,8 +19,8 @@ sort-and-stack logic applies directly.
 - `VirtualTree(adj, root)` builds the structure over a tree rooted at `root`, given a bidirectional
   adjacency list `adj` of nodes numbered $[0, `n`)$, where `n` is `adj.size()`.
 - `lca(u, v)` returns the lowest common ancestor of nodes `u` and `v`.
-- `depth_of(u)` returns the depth of `u` in the original tree (the root has depth 0). The original
-  path length of a virtual-tree edge $(`p`, `c`)$ is `depth_of(c) - depth_of(p)`.
+- `depth_of(u)` returns the depth of `u` in the original tree (the root has depth $0$). The original
+  path length of a virtual-tree edge $(`p`, `c`)$ is `depth_of(c)` $-$ `depth_of(p)`.
 - `build(nodes)` returns the virtual tree induced by `nodes`. The result has `root` set to the
   topmost node (the common ancestor of `nodes`), `vertices` listing every original node ID in the
   virtual tree sorted by entry time, and `edges` listing each $(`p`, `c`)$ pair in original IDs.
@@ -170,6 +170,10 @@ int main() {
   assert(vt.depth_of(7) - vt.depth_of(0) == 3);
 
   // Virtual tree of {6, 7}: their LCA is 0, so the tree is 0 -> {6, 7} with edges compressed.
+  //
+  //      0
+  //   +--+--+
+  //   6     7
   VirtualTree::Tree t = vt.build({6, 7});
   assert(t.root == 0);
   assert((t.vertices == vector<int>{0, 6, 7}));
@@ -179,6 +183,12 @@ int main() {
   }
 
   // Virtual tree of {6, 4, 7}: node 1 becomes a branch point (LCA of 6 and 4).
+  //
+  //      0
+  //   +--+--+
+  //   1     7
+  // +-+-+
+  // 6   4
   VirtualTree::Tree u = vt.build({6, 4, 7});
   assert(u.root == 0);
   assert((u.vertices == vector<int>{0, 1, 6, 4, 7}));
