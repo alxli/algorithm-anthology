@@ -26,7 +26,7 @@ Time Complexity:
 Space Complexity:
 - O(m*l) for storage of the automaton, where $m$ is the number of needles and $l$ is the maximum
   length for any needle.
-- O(1) auxiliary space per call to `find_all_in(haystack, report_match)`.
+- O(1) auxiliary for `find_all_in(haystack, report_match)`.
 
 */
 

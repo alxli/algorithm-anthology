@@ -17,7 +17,7 @@ Time Complexity:
 - O(n log n) per call due to sorting, with near-constant disjoint-set operations.
 
 Space Complexity:
-- O(n) auxiliary heap space.
+- O(n) auxiliary.
 
 */
 

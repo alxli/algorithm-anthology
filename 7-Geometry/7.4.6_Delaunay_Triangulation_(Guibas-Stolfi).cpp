@@ -28,7 +28,7 @@ Time Complexity:
 - O(n log n) per call, where $n$ is the number of input points.
 
 Space Complexity:
-- O(n) heap space for the quad-edge structure and returned triangulation.
+- O(n) for the quad-edge structure and returned triangulation.
 
 */
 

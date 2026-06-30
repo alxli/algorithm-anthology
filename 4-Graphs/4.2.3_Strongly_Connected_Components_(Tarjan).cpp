@@ -9,9 +9,9 @@ is popped off the stack in one piece.
 
 - `TarjanSCC(n)` constructs a directed graph of `n` nodes numbered $[0, `n`)$.
 - `add_edge(u, v)` adds the directed edge from `u` to `v`.
-- `build_scc()` populates `scc` with the strongly connected components and `component[v]` with
-  the component ID containing vertex `v`. Component IDs are in reverse topological order: for every
-  edge from component $a$ to a different component $b$, $a > b$.
+- `build_scc()` populates `scc` with the strongly connected components and `component[v]` with the
+  component ID containing vertex `v`. Component IDs are in reverse topological order: for every edge
+  from component $a$ to a different component $b$, $a > b$.
 
 Time Complexity:
 - O(max(n, m)) per call to `build_scc()`, where $n$ is the number of nodes and $m$ is the number of

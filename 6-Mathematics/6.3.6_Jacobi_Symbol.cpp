@@ -12,8 +12,8 @@ residuosity, so it is the fast way to test whether a modular square root exists.
 beware that $(a / n) = 1$ does not guarantee that $a$ is a quadratic residue; this asymmetry is what
 the Solovay-Strassen primality test exploits.
 
-- `jacobi(a, n)` returns the Jacobi symbol (`a` / `n`) as one of $-1$, $0$, or $1$. The modulus
-  `n` must be a positive odd integer; `a` is reduced modulo `n` internally and may be negative. The
+- `jacobi(a, n)` returns the Jacobi symbol (`a` / `n`) as one of $-1$, $0$, or $1$. The modulus `n`
+  must be a positive odd integer; `a` is reduced modulo `n` internally and may be negative. The
   result is $0$ exactly when `a` and `n` share a common factor.
 
 Time Complexity:

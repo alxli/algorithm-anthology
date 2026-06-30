@@ -22,7 +22,7 @@ Time Complexity:
 - O(n^2) per call to `interpolate()` and `interpolate_at()`, where $n$ is the number of points.
 
 Space Complexity:
-- O(n) auxiliary heap space.
+- O(n) auxiliary.
 
 */
 

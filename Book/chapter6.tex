@@ -19,9 +19,9 @@ Common mathematic constants and functions, most of which already have standard S
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for most operations.
-  \item $O(d + e)$ auxiliary heap space for \inlinecode{convert\_base(d, a, b)}, where $d$ is the number of input digits and $e$ is the number of output digits.
-  \item $O(e)$ auxiliary heap space for \inlinecode{to\_base(x, b)}, where $e$ is the number of output digits.
-  \item $O(x / 1000 + 1)$ auxiliary heap space for \inlinecode{to\_roman(x)}.
+  \item $O(d + e)$ auxiliary for \inlinecode{convert\_base(d, a, b)}, where $d$ is the number of input digits and $e$ is the number of output digits.
+  \item $O(e)$ auxiliary for \inlinecode{to\_base(x, b)}, where $e$ is the number of output digits.
+  \item $O(x / 1000 + 1)$ auxiliary for \inlinecode{to\_roman(x)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -523,8 +523,8 @@ The following functions implement common operations in combinatorics. All inputs
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n^{2})$ auxiliary heap space for \inlinecode{binomial\_table(n, m)}.
-  \item $O(n \cdot k)$ auxiliary heap space for \inlinecode{partitions(n, k, m)}, \inlinecode{stirling1(n, k, m)}, \inlinecode{stirling2(n, k, m)}, \inlinecode{eulerian1(n, k, m)}, and \inlinecode{eulerian2(n, k, m)}.
+  \item $O(n^{2})$ auxiliary for \inlinecode{binomial\_table(n, m)}.
+  \item $O(n \cdot k)$ auxiliary for \inlinecode{partitions(n, k, m)}, \inlinecode{stirling1(n, k, m)}, \inlinecode{stirling2(n, k, m)}, \inlinecode{eulerian1(n, k, m)}, and \inlinecode{eulerian2(n, k, m)}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -743,7 +743,7 @@ For arrangements without repeats, each prefix fixes some used values and leaves 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ auxiliary heap space for \inlinecode{next\_arrangement()}, \inlinecode{arrangement\_by\_rank()}, and \inlinecode{rank\_by\_arrangement()}.
+  \item $O(n)$ auxiliary for \inlinecode{next\_arrangement()}, \inlinecode{arrangement\_by\_rank()}, and \inlinecode{rank\_by\_arrangement()}.
   \item $O(1)$ auxiliary for \inlinecode{next\_arrangement\_with\_repeats()}.
 \end{compactitem}
 
@@ -917,7 +917,7 @@ The lexicographic successor is found by locating the rightmost ascent, increasin
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for \inlinecode{next\_permutation\_()} and \inlinecode{next\_permutation()}.
-  \item $O(n)$ auxiliary heap space for \inlinecode{permutation\_by\_rank()}, \inlinecode{rank\_by\_permutation()}, and \inlinecode{permutation\_cycles()}.
+  \item $O(n)$ auxiliary for \inlinecode{permutation\_by\_rank()}, \inlinecode{rank\_by\_permutation()}, and \inlinecode{permutation\_cycles()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1143,7 +1143,7 @@ The lexicographic successor advances the rightmost chosen position that can stil
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(k)$ auxiliary heap space for \inlinecode{combination\_by\_rank(n, k, r)}.
+  \item $O(k)$ auxiliary for \inlinecode{combination\_by\_rank(n, k, r)}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -1564,7 +1564,7 @@ Let $A$ be the number of candidate values considered at each position (the base 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(L)$ auxiliary heap space per call to \inlinecode{to\_rank()}, \inlinecode{from\_rank()}, and \inlinecode{enumerate()}, excluding output storage.
+  \item $O(L)$ auxiliary per call to \inlinecode{to\_rank()}, \inlinecode{from\_rank()}, and \inlinecode{enumerate()}, excluding output storage.
   \item $O(1)$ object storage for \inlinecode{ArrangementEnumerator} and \inlinecode{PermutationEnumerator}.
   \item $O(A^{2})$ object storage for \inlinecode{CombinationEnumerator} and $O(L^{2})$ object storage for \inlinecode{PartitionEnumerator} tables.
 \end{compactitem}
@@ -1825,9 +1825,9 @@ Common number theory operations relating to modular arithmetic.
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(p)$ auxiliary heap space for \inlinecode{generate\_inverse(p)}.
-  \item $O(n)$ auxiliary heap space for \inlinecode{garner\_restore(a, p)} and \inlinecode{garner\_restore\_mod(a, p, m)}.
-  \item $O(1)$ auxiliary space for all other operations.
+  \item $O(p)$ auxiliary for \inlinecode{generate\_inverse(p)}.
+  \item $O(n)$ auxiliary for \inlinecode{garner\_restore(a, p)} and \inlinecode{garner\_restore\_mod(a, p, m)}.
+  \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -2358,9 +2358,9 @@ For a prime modulus $p$, this reduces to the common contest test: factor $p - 1$
 
 Modular multiplication uses \inlinecode{\_\_uint128\_t} when available for speed, with a slower portable double-and-add fallback to avoid overflow on compilers without 128-bit integers.
 
-\textbf{Time Complexity}: $O(\sqrt{m} + g \cdot k \cdot \log m)$, where \inlinecode{g} is the answer candidate tested and $k$ is the number of distinct prime factors of $\phi(m)$.
+\textbf{Time Complexity}: $O(\sqrt{m} + g \cdot k \cdot \log m)$ per call, where \inlinecode{g} is the answer candidate tested and $k$ is the number of distinct prime factors of $\phi(m)$.
 
-\textbf{Space Complexity}: $O(k)$ auxiliary heap space.
+\textbf{Space Complexity}: $O(k)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <cstdint>
@@ -2492,7 +2492,7 @@ The baby-step giant-step method writes $x = np - q$ for a block size $n$ near th
 
 \textbf{Time Complexity}: $O(\sqrt{m} \cdot \log\left(m\right))$ per call, dominated by the hashed baby-step table.
 
-\textbf{Space Complexity}: $O(\sqrt{m})$ auxiliary heap space for the table.
+\textbf{Space Complexity}: $O(\sqrt{m})$ auxiliary for the table.
 
 \begin{lstlisting}[language=C++]
 #include <cmath>
@@ -2789,9 +2789,9 @@ The range overload \inlinecode{sieve(lo, hi)} uses a segmented sieve, letting pr
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ auxiliary heap space per call to \inlinecode{sieve(n)}.
-  \item $O({\inlinecodemath{hi}} - {\inlinecodemath{lo}} + \sqrt{{\inlinecodemath{hi}}})$ auxiliary heap space per call to \inlinecode{sieve(lo, hi)}.
-  \item $O(n)$ auxiliary heap space per call to \inlinecode{linear\_sieve(n, least\_out)}.
+  \item $O(n)$ auxiliary per call to \inlinecode{sieve(n)}.
+  \item $O({\inlinecodemath{hi}} - {\inlinecodemath{lo}} + \sqrt{{\inlinecodemath{hi}}})$ auxiliary per call to \inlinecode{sieve(lo, hi)}.
+  \item $O(n)$ auxiliary per call to \inlinecode{linear\_sieve(n, least\_out)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -2931,7 +2931,7 @@ Test whether an integer is prime and compute the prime factorization of an integ
 \begin{compactitem}
   \item \inlinecode{is\_prime\_slow(n)} returns whether the integer \inlinecode{n} is prime using trial division.
   \item \inlinecode{factorize\_slow(n)} returns the prime factorization of \inlinecode{n} using trial division.
-  \item \inlinecode{is\_probable\_prime(n, k)} returns whether \inlinecode{n} is probably prime using \inlinecode{k} random Miller-Rabin bases. The result is guaranteed correct when \inlinecode{n} is prime. When \inlinecode{n} is composite, it returns false with probability at least $1 - (1 / 4)^k$, so a true result has one-sided error probability at most $(1 / 4)^k$. This is mostly useful when adapting Miller-Rabin outside the known 64-bit deterministic setting.
+  \item \inlinecode{is\_probable\_prime(n, k)} returns whether \inlinecode{n} is probably prime using \inlinecode{k} random Miller-Rabin bases. The result is guaranteed correct when \inlinecode{n} is prime. For composite \inlinecode{n}, it returns false with probability at least $1 - (1 / 4)^k$. Thus a true result has one-sided error probability at most $(1 / 4)^k$. This is mostly useful when adapting Miller-Rabin outside the known 64-bit deterministic setting.
   \item \inlinecode{rho\_factor(n)} returns a factor of \inlinecode{n} that is not necessarily prime using Pollard's rho with Brent's optimization. If \inlinecode{n} is prime, then \inlinecode{n} itself is returned. While this algorithm is non-deterministic and may fail to detect factors on certain runs of the same input, it can be retried until a nontrivial factor is found, as done in \inlinecode{factorize()}.
   \item \inlinecode{is\_prime(n)} returns whether the signed 64-bit integer \inlinecode{n} is prime using deterministic Miller-Rabin bases sufficient up to and including $2^{63} - 1$.
   \item \inlinecode{cached\_sieve(n)} returns a cached linear sieve up to and including \inlinecode{n}, storing both primes and least prime factors.
@@ -2958,8 +2958,8 @@ Modular multiplication inside Miller-Rabin and Pollard's rho uses \inlinecode{\_
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(f)$ auxiliary heap space for all operations, where $f$ is the number of factors returned.
-  \item $O(c)$ cached heap space for the largest \inlinecode{cached\_sieve(c)} call.
+  \item $O(f)$ auxiliary for all operations, where $f$ is the number of factors returned.
+  \item $O(c)$ cached space for the largest \inlinecode{cached\_sieve(c)} call.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3439,9 +3439,9 @@ The overload \inlinecode{phi\_table(lo, hi)} computes the totients of a high but
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(1)$ auxiliary space for \inlinecode{phi(n)}.
-  \item $O(n)$ auxiliary heap space for \inlinecode{phi\_table(n)}.
-  \item $O({\inlinecodemath{hi}} - {\inlinecodemath{lo}} + \sqrt{{\inlinecodemath{hi}}})$ auxiliary heap space for \inlinecode{phi\_table(lo, hi)}.
+  \item $O(1)$ auxiliary for \inlinecode{phi(n)}.
+  \item $O(n)$ auxiliary for \inlinecode{phi\_table(n)}.
+  \item $O({\inlinecodemath{hi}} - {\inlinecodemath{lo}} + \sqrt{{\inlinecodemath{hi}}})$ auxiliary for \inlinecode{phi\_table(lo, hi)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3576,8 +3576,8 @@ Inclusion-exclusion itself counts the size of a union by alternately adding and 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ auxiliary heap space for \inlinecode{mobius\_sieve(n)}.
-  \item $O(k)$ auxiliary heap space for \inlinecode{count\_coprime(n, m)}.
+  \item $O(n)$ auxiliary for \inlinecode{mobius\_sieve(n)}.
+  \item $O(k)$ auxiliary for \inlinecode{count\_coprime(n, m)}.
   \item $O(1)$ auxiliary for \inlinecode{mobius(n)}.
 \end{compactitem}
 
@@ -3712,7 +3712,7 @@ This version is intentionally small and decimal-oriented. Addition and subtracti
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the big integer, where $n$ is the number of digits.
-  \item $O(n)$ auxiliary heap space for \inlinecode{to\_string()}, \inlinecode{add()}, \inlinecode{sub()}, \inlinecode{mul()}, and \inlinecode{div()}, where $n$ is the total number of digits in the arguments and result for each operation.
+  \item $O(n)$ auxiliary for \inlinecode{to\_string()}, \inlinecode{add()}, \inlinecode{sub()}, \inlinecode{mul()}, and \inlinecode{div()}, where $n$ is the total number of digits in the arguments and result for each operation.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3933,8 +3933,8 @@ Perform operations on arbitrary precision big integers internally represented as
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the big integer.
-  \item $O(n)$ auxiliary heap space for negation, addition, subtraction, multiplication, division, \inlinecode{abs()}, \inlinecode{sqrt()}, \inlinecode{pow()}, and \inlinecode{nth\_root()}.
-  \item $O(1)$ auxiliary space for all other operations.
+  \item $O(n)$ auxiliary for negation, addition, subtraction, multiplication, division, \inlinecode{abs()}, \inlinecode{sqrt()}, \inlinecode{pow()}, and \inlinecode{nth\_root()}.
+  \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -4590,7 +4590,7 @@ Perform operations on rational numbers internally represented as two integers: a
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ for storage of the rational number.
-  \item $O(1)$ auxiliary space for all operations.
+  \item $O(1)$ auxiliary for all operations.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -4794,10 +4794,10 @@ Exponentiation uses the usual iterative binary exponentiation pattern: keep an a
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(1)$ auxiliary space for \inlinecode{rows()}, \inlinecode{columns()}, \inlinecode{a[i][j]} access, comparison operators, and in-place operations.
-  \item $O(n^{2})$ auxiliary heap space for exponentiation of an $n$ by $n$ matrix to power $p$.
-  \item $O(n^{2})$ auxiliary heap space for \inlinecode{power\_sum()} of an $n$ by $n$ matrix up to power $p$.
-  \item $O(m \cdot n)$ auxiliary heap space for all non-in-place operations returning an $m$ by $n$ matrix, \inlinecode{transpose()}, and \inlinecode{rotate()}.
+  \item $O(1)$ auxiliary for \inlinecode{rows()}, \inlinecode{columns()}, \inlinecode{a[i][j]} access, comparison operators, and in-place operations.
+  \item $O(n^{2})$ auxiliary for exponentiation of an $n$ by $n$ matrix to power $p$.
+  \item $O(n^{2})$ auxiliary for \inlinecode{power\_sum()} of an $n$ by $n$ matrix up to power $p$.
+  \item $O(m \cdot n)$ auxiliary for all non-in-place operations returning an $m$ by $n$ matrix, \inlinecode{transpose()}, and \inlinecode{rotate()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -5187,7 +5187,7 @@ Converts a matrix to reduced row echelon form using Gaussian elimination to solv
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for \inlinecode{row\_reduce(a)}.
-  \item $O(m \cdot n)$ auxiliary heap space for \inlinecode{matrix\_rank(a)} and \inlinecode{solve\_system(a)}.
+  \item $O(m \cdot n)$ auxiliary for \inlinecode{matrix\_rank(a)} and \inlinecode{solve\_system(a)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -5540,7 +5540,7 @@ The LU decomposition of a matrix $a$ with row-partial pivoting is a factorizatio
 \begin{compactitem}
   \item $O(1)$ auxiliary for \inlinecode{lu\_decompose()}.
   \item $O(n^{2})$ for \inlinecode{det(a)} and \inlinecode{invert(a)}.
-  \item $O(m \cdot n)$ auxiliary heap space for \inlinecode{solve\_system(a, b)}.
+  \item $O(m \cdot n)$ auxiliary for \inlinecode{solve\_system(a, b)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -5746,7 +5746,7 @@ A direct expansion would cost a determinant per coefficient. Instead the matrix 
 
 \textbf{Time Complexity}: $O(n^{3})$ per call, where $n$ is the dimension of the matrix.
 
-\textbf{Space Complexity}: $O(n^{2})$ auxiliary heap space.
+\textbf{Space Complexity}: $O(n^{2})$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <cstdint>
@@ -5866,7 +5866,7 @@ The determinant is evaluated modulo a prime by Gaussian elimination, so the coun
 
 \textbf{Time Complexity}: $O(n^{3})$ per call, where $n$ is the number of nodes.
 
-\textbf{Space Complexity}: $O(n^{2})$ auxiliary heap space.
+\textbf{Space Complexity}: $O(n^{2})$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <cstdint>
@@ -6014,7 +6014,7 @@ Sparse elimination chooses, in each pivot column, the available pivot row with t
 \begin{compactitem}
   \item $O(n)$ storage.
   \item $O(1)$ auxiliary for \inlinecode{get()}, \inlinecode{set()}, \inlinecode{add()}, \inlinecode{row()}, \inlinecode{column()}, and \inlinecode{transpose()}.
-  \item $O(h)$ auxiliary heap space for \inlinecode{multiply\_vector()}.
+  \item $O(h)$ auxiliary for \inlinecode{multiply\_vector()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -6329,7 +6329,7 @@ The transform replaces a coefficient vector with its evaluations at the powers o
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for \inlinecode{ntt()}, transforming in place.
-  \item $O(n)$ auxiliary heap space for \inlinecode{convolve()}.
+  \item $O(n)$ auxiliary for \inlinecode{convolve()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -6462,7 +6462,7 @@ The trade-off is precision. Complex arithmetic in double precision accumulates r
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for \inlinecode{fft()}, transforming in place.
-  \item $O(n)$ auxiliary heap space for \inlinecode{convolve()}.
+  \item $O(n)$ auxiliary for \inlinecode{convolve()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -6591,7 +6591,7 @@ The inverse is a formal power series inverse modulo $x^n$: it finds $b$ such tha
   \item $O(n \log n + m \log^{2} m)$ for \inlinecode{divide()} and \inlinecode{modulo()}, where $n$ is the output quotient length and $m$ is the divisor length.
 \end{compactitem}
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space.
+\textbf{Space Complexity}: $O(n)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -6830,7 +6830,7 @@ The code operates modulo the prime 998244353; change \inlinecode{MOD} to use a d
 
 \textbf{Time Complexity}: $O(n^{2} + L \log p)$ per call, where $n$ is the length of \inlinecode{s}, $L$ is the order of the recurrence found, and $p$ is the modulus.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space.
+\textbf{Space Complexity}: $O(n)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <cstdint>
@@ -6916,7 +6916,7 @@ The key identity is that the $n$-th term is a fixed linear combination of the fi
 
 \textbf{Time Complexity}: $O(L^{2} \log n)$ per call.
 
-\textbf{Space Complexity}: $O(L)$ auxiliary heap space.
+\textbf{Space Complexity}: $O(L)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -7018,7 +7018,7 @@ Coefficient recovery uses Newton's divided differences. It first replaces the sa
 
 \textbf{Time Complexity}: $O(n^{2})$ per call to \inlinecode{interpolate()} and \inlinecode{interpolate\_at()}, where $n$ is the number of points.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space.
+\textbf{Space Complexity}: $O(n)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <cstdint>
@@ -7296,7 +7296,7 @@ For a sum of independent impartial games, the combined Grundy number is the XOR 
 
 \textbf{Time Complexity}: $O(n \cdot m)$ for \inlinecode{subtraction\_game\_grundy(max\_stones, moves)}, where $n$ is \inlinecode{max\_stones} and $m$ is the number of allowed moves.
 
-\textbf{Space Complexity}: $O(n + m)$ auxiliary heap space.
+\textbf{Space Complexity}: $O(n + m)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <vector>
@@ -7369,9 +7369,9 @@ The implementation uses memoized DFS. It assumes the graph is acyclic; if cycles
   \item \inlinecode{grundy\_on\_dag(g)} returns the Grundy number of every vertex in graph \inlinecode{g}, where \inlinecode{g[u]} contains all positions reachable from position \inlinecode{u} in one move.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n + m + s)$, where $n$ is the number of vertices, $m$ is the number of edges, and $s$ is the total cost of MEX sets over outgoing edges.
+\textbf{Time Complexity}: $O(n + m + s)$ per call, where $n$ is the number of vertices, $m$ is the number of edges, and $s$ is the total cost of MEX sets over outgoing edges.
 
-\textbf{Space Complexity}: $O(n + d)$ auxiliary heap and stack space, where $d$ is DFS depth.
+\textbf{Space Complexity}: $O(d)$ auxiliary stack space and $O(n)$ auxiliary heap space, where $d$ is DFS depth.
 
 \begin{lstlisting}[language=C++]
 #include <vector>

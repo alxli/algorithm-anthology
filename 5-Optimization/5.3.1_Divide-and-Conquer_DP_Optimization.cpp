@@ -11,8 +11,8 @@ lower bound. The caller is responsible for checking that the recurrence satisfie
 monotonicity condition.
 
 - `compute_dc_layer(dp_prev, dp_cur, l, r, opt_l, opt_r, cost)` fills `dp_cur[l..r]` using candidate
-  transition indices in [`opt_l`, `opt_r`]. The template parameter `cost` must be callable such
-  that `cost(k, i)` returns the transition cost from previous state `k` to current state `i`.
+  transition indices in [`opt_l`, `opt_r`]. The template parameter `cost` must be callable such that
+  `cost(k, i)` returns the transition cost from previous state `k` to current state `i`.
 
 Time Complexity:
 - O(n log n) calls to `cost(k, i)` per layer when each state has O(n) possible transitions.

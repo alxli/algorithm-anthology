@@ -12,7 +12,7 @@ Time Complexity:
 - O(n) per call, where $n$ is the length of `s`.
 
 Space Complexity:
-- O(n) auxiliary stack space for `eval(s)`, where $n$ is the length of `s`.
+- O(n) auxiliary stack space per call, where $n$ is the length of `s`.
 
 */
 

@@ -9,11 +9,10 @@ repeats on the lower-degree quotient until every root has been extracted.
   size $d + 1$ where `p[i]` stores the complex coefficient for the $x^i$ term) at `x`, using
   Horner's method, returning a pair where the first value is the final result $p(x)$ and the second
   value is the quotient polynomial $q$ from the identity $p(t) = (t - x)q(t) + p(x)$.
-- `find_one_root(p, x0, eps = 1e-15, iterations = 10000)` returns a complex root $x$ for
-  polynomial `p` (represented as a vector of size $d + 1$ where `p[i]` stores the complex
-  coefficient for the $x^i$ term) using an initial guess `x0` which should be relatively close to
-  $x$. The root is found to a tolerance of `eps` in absolute or relative error (whichever is reached
-  first).
+- `find_one_root(p, x0, eps = 1e-15, iterations = 10000)` returns a complex root $x$ for polynomial
+  `p` (represented as a vector of size $d + 1$ where `p[i]` stores the complex coefficient for the
+  $x^i$ term) using an initial guess `x0` which should be relatively close to $x$. The root is found
+  to a tolerance of `eps` in absolute or relative error (whichever is reached first).
 - `find_all_roots(p, eps = 1e-15, iterations = 10000)` returns a vector of all complex roots for a
   complex polynomial `p`. The roots are found to a tolerance of `eps` in absolute or relative error
   (whichever is reached first).
@@ -26,10 +25,9 @@ Time Complexity:
   $d = -\log_{10}(`eps`)$ is the number of digits of absolute or relative precision that is desired.
 
 Space Complexity:
-- O(n) auxiliary heap space and O(1) auxiliary stack space for `horner_eval()` and
-  `find_one_root()`, where $n$ is the degree of the polynomial.
-- O(n) auxiliary heap and O(1) auxiliary stack space for `find_one_root()` and `find_all_roots()`,
-  where $n$ is the degree of the polynomial.
+- O(n) auxiliary for `horner_eval()` and `find_one_root()`, where $n$ is the degree of the
+  polynomial.
+- O(n) auxiliary for `find_all_roots()`, where $n$ is the degree of the polynomial.
 
 */
 

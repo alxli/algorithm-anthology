@@ -36,8 +36,8 @@ Time Complexity:
 - O(r*c) per call to `largest_zero_submatrix()`, where $r$ and $c$ are the matrix dimensions.
 
 Space Complexity:
-- O(n) auxiliary heap space for the stack and result.
-- O(c) auxiliary heap space for `largest_zero_submatrix()`.
+- O(n) auxiliary for the stack and result.
+- O(c) auxiliary for `largest_zero_submatrix()`.
 
 */
 

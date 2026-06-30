@@ -31,9 +31,9 @@ Time Complexity:
 - O((`hi` - `lo`)*log(log(`hi`)) + sqrt(`hi`)) per call to `phi_table(lo, hi)`.
 
 Space Complexity:
-- O(1) auxiliary space for `phi(n)`.
-- O(n) auxiliary heap space for `phi_table(n)`.
-- O(`hi` - `lo` + sqrt(`hi`)) auxiliary heap space for `phi_table(lo, hi)`.
+- O(1) auxiliary for `phi(n)`.
+- O(n) auxiliary for `phi_table(n)`.
+- O(`hi` - `lo` + sqrt(`hi`)) auxiliary for `phi_table(lo, hi)`.
 
 */
 

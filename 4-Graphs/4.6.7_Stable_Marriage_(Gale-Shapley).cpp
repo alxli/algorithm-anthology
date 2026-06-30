@@ -22,7 +22,7 @@ Time Complexity:
 - O(n^2) per call, where $n$ is the number of men (equivalently, women).
 
 Space Complexity:
-- O(n^2) auxiliary heap space for the precomputed rankings.
+- O(n^2) auxiliary for the precomputed rankings.
 
 */
 

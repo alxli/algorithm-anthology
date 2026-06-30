@@ -18,10 +18,10 @@ period $p$ divides $n$.
   length-$n$ windows that wrap past the end are exactly the ones still needed to cover all strings.
 
 Time Complexity:
-- O(k^n) per call to `de_bruijn(k, n)`, which is optimal since the output itself has length $k^n$.
+- O(k^n) per call, which is optimal since the output itself has length $k^n$.
 
 Space Complexity:
-- O(k^n) heap space for the returned sequence, plus O(n) auxiliary space for the recursion.
+- O(k^n) for the returned sequence, plus O(n) auxiliary stack space for the recursion.
 
 */
 

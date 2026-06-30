@@ -29,8 +29,8 @@ Time Complexity:
   `ArrangementEnumerator::count()` and `PartitionEnumerator::count()` are O(L).
 
 Space Complexity:
-- O(L) auxiliary heap space per call to `to_rank()`, `from_rank()`, and `enumerate()`, excluding
-  output storage.
+- O(L) auxiliary per call to `to_rank()`, `from_rank()`, and `enumerate()`, excluding output
+  storage.
 - O(1) object storage for `ArrangementEnumerator` and `PermutationEnumerator`.
 - O(A^2) object storage for `CombinationEnumerator` and O(L^2) object storage for
   `PartitionEnumerator` tables.

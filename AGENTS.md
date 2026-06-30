@@ -107,12 +107,25 @@ sections elsewhere, include both `Time Complexity:` and `Space Complexity:`.
 - Use bullets like ``- `func(args)` returns ...`` for APIs. Include default parameters in the bullet
   when they are semantically relevant.
 - Write big-O as plain text: `O(n log n)`, not `$O(n \log n)$`.
+- Use single-letter variables inside big-O expressions. Quantify named parameters afterward, e.g.
+  `O(r*c*2^c)`, where $r$ and $c$ are the number of rows and columns, and not `O(rows*cols*2^cols)`.
+- In a complexity block for a section with only one exposed API, write `per call` without repeating
+  the function signature. Keep names for callbacks or helper operations when they are the thing
+  being counted, e.g. O(n) calls to the callback `pred()` per call.
+- In space complexity, use plain `O(...) auxiliary` for ordinary temporary memory when there is
+  no nearby stack-space comparison. If the same block also mentions recursive or call-stack memory,
+  call the non-stack temporary memory `auxiliary heap space` so the two costs are distinct. Use
+  `for storage of ...` or `for the returned ...` when describing persistent storage or output size.
 - Use math mode for variables and inequalities in prose: `$n$`, `$\leq$`, `$\geq$`, `$-1$`.
 - Code identifiers inside math expressions should remain backticked, e.g. $[`lo`, `hi`)$ or
   $0 \leq `i` < `n`$.
+- Do not split math mode, code spans, or backticked identifiers just to satisfy the 100-column
+  limit. A long equation or unbreakable expression over 100 columns is better than malformed TeX or
+  confusing generated output.
 - Literal operators and function names stay in backticks: `<=`, `operator<`, `combine()`.
 - Prefer relative paths for cross-references to other sections.
-- Reflow edited prose to the 100-column limit by hand; clang-format does not reflow comments.
+- Reflow edited prose to the 100-column limit by hand; clang-format does not reflow comments. Do
+  not leave very short continuation lines when the text would still fit on the previous line.
 
 ## Examples
 

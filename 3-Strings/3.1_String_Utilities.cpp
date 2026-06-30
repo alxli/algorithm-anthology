@@ -9,8 +9,8 @@ Time Complexity:
   all input strings. Exceptions are noted with the individual functions below.
 
 Space Complexity:
-- O(n) auxiliary heap space per call to operations that return a new string or vector of strings.
-- O(1) auxiliary space per call to in-place operations.
+- O(n) auxiliary per call to operations that return a new string or vector of strings.
+- O(1) auxiliary for in-place operations.
 
 */
 
@@ -28,8 +28,8 @@ using std::string;
 Integer Conversion:
 
 - `to_str(i)` returns the string representation of integer `i`, much like `std::to_string()`.
-- `to_int(s)` returns the integer representation of string `s`, much like `std::atoi()`, except
-  here we handle special cases of overflow by throwing an exception.
+- `to_int(s)` returns the integer representation of string `s`, much like `std::atoi()`, except here
+  we handle special cases of overflow by throwing an exception.
 - `itoa(value, &str, base)` implements the non-standard C function which converts `value` into a C
   string, storing it into pointer `str` in the given `base`. For more generalized base conversion,
   see the math utilities section.

@@ -19,10 +19,10 @@ sparse, compress them to a small contiguous range first.
   in [`min_val`, `max_val`].
 - `kth_smallest(lo, hi, k)` returns the `k`-th smallest value among positions $[`lo`, `hi`]$, where
   `k` is 1-based (so `k == 1` returns the minimum).
-- `count_leq(lo, hi, x)` returns the number of positions `i` in $[`lo`, `hi`]$ with `a[i]` $\leq$
-  `x`.
-- `count_in(lo, hi, x, y)` returns the number of positions `i` in $[`lo`, `hi`]$ with
-  `x` $\leq$ `a[i]` $\leq$ `y`.
+- `count_leq(lo, hi, x)` returns the number of positions `i` $\in [`lo`, `hi`]$ such that `a[i]`
+  $\leq$ `x`.
+- `count_in(lo, hi, x, y)` returns the number of positions `i` $\in [`lo`, `hi`]$ such that `a[i]`
+  $\in [`x`, `y`]$.
 
 Time Complexity:
 - O(n log \sigma) per call to the constructor, where $n$ is the size of the array and $\sigma$ is

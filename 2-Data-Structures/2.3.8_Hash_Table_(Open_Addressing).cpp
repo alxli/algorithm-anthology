@@ -47,8 +47,8 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the map elements.
-- O(1) auxiliary heap space for `insert()` and `operator[]` amortized over a sequence of
-  operations (excluding occasional table rehashes).
+- O(1) auxiliary for `insert()` and `operator[]` amortized over a sequence of operations (excluding
+  occasional table rehashes).
 - O(1) auxiliary for all other operations.
 
 */

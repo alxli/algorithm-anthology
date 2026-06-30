@@ -19,7 +19,7 @@ Time Complexity:
 - O(m) per call to `entropy(freq)` and `expected_code_length(freq, length)`.
 
 Space Complexity:
-- O(m) auxiliary heap space for `byte_frequencies(s)`.
+- O(m) auxiliary for `byte_frequencies(s)`.
 - O(1) auxiliary for the other operations.
 
 */

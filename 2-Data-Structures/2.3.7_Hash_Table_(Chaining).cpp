@@ -40,7 +40,7 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the map elements.
-- O(n) auxiliary heap space for `insert()`.
+- O(n) auxiliary for `insert()`.
 - O(1) auxiliary for all other operations.
 
 */

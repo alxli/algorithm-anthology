@@ -24,9 +24,8 @@ Time Complexity:
   is the number of points in the second polygon (or equivalently O(N^3 log N) for $N = n + m$).
 
 Space Complexity:
-- O(nm) auxiliary heap space for `intersection_area(lo1, hi1, lo2, hi2)` and
-  `union_area(lo1, hi1, lo2, hi2)`, where $n$ is the sum of distances between `lo1` and `hi1` and
-  `lo2` and `hi2` respectively.
+- O(n*m) auxiliary for `intersection_area(lo1, hi1, lo2, hi2)` and `union_area(lo1, hi1, lo2, hi2)`,
+  where $n$ is the sum of distances between `lo1` and `hi1` and `lo2` and `hi2` respectively.
 
 */
 

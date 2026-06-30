@@ -191,7 +191,7 @@ The DFS version uses the fact that every outgoing dependency of a node is finish
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
   \item $O(n)$ auxiliary stack space for \inlinecode{toposort\_dfs()}.
-  \item $O(n)$ auxiliary indegree and queue space for \inlinecode{toposort\_kahn()}.
+  \item $O(n)$ auxiliary heap space for the indegree array and queue in \inlinecode{toposort\_kahn()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -324,7 +324,7 @@ Both functions remember the DFS parent of each vertex. When a closing edge \inli
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph.
-  \item $O(n)$ auxiliary stack and heap space for the DFS and returned cycle.
+  \item $O(n)$ auxiliary stack space for the DFS, plus $O(n)$ auxiliary heap space for the returned cycle.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -438,7 +438,7 @@ The \inlinecode{CycleFinder} class is the more general multigraph variant. Its c
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph.
-  \item $O(\max\left(n, s\right))$ auxiliary stack and heap space for \inlinecode{find\_cycles()}, where $s$ is the total size of the returned cycles.
+  \item $O(n)$ auxiliary stack space plus $O(s)$ auxiliary heap space for \inlinecode{find\_cycles()}, where $s$ is the total size of the returned cycles.
   \item $O(k)$ auxiliary heap space for \inlinecode{cycle\_vertices()}, where $k$ is the number of edges in the cycle.
 \end{compactitem}
 
@@ -1020,7 +1020,7 @@ Encode and decode labeled trees using Prufer codes. A Prufer code is a sequence 
 
 \textbf{Time Complexity}: $O(n \log n)$ per call to \inlinecode{encode\_prufer()} or \inlinecode{decode\_prufer()}, where $n$ is the number of nodes in the tree.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary space per call to \inlinecode{encode\_prufer()} or \inlinecode{decode\_prufer()}.
+\textbf{Space Complexity}: $O(n)$ auxiliary per call to \inlinecode{encode\_prufer()} or \inlinecode{decode\_prufer()}.
 
 \begin{lstlisting}[language=C++]
 #include <set>
@@ -1135,7 +1135,7 @@ Parallel directed edges are supported by storing duplicate neighbors in \inlinec
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{known\_eulerian\_path\_directed()} and \inlinecode{eulerian\_path\_directed()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
-\textbf{Space Complexity}: $O(\max\left(n, m\right))$ auxiliary stack and heap space for \inlinecode{known\_eulerian\_path\_directed()} and \inlinecode{eulerian\_path\_directed()}.
+\textbf{Space Complexity}: $O(m)$ auxiliary stack space and $O(\max\left(n, m\right))$ auxiliary heap space for \inlinecode{known\_eulerian\_path\_directed()} and \inlinecode{eulerian\_path\_directed()}.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -1214,7 +1214,7 @@ The \inlinecode{EulerianGraph} class is the more general edge-ID variant. An und
 \begin{compactitem}
   \item \inlinecode{EulerianGraph(n, directed)} constructs a graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$. The graph is directed if \inlinecode{directed} is true, or undirected otherwise.
   \item \inlinecode{add\_edge(u, v)} adds an edge and returns its edge ID.
-  \item \inlinecode{eulerian\_path(start)} returns a trail using every edge exactly once, or a result with \inlinecode{start} $= -1$ if no such trail exists. If \inlinecode{start} $= -1$, a valid start is chosen automatically.
+  \item \inlinecode{eulerian\_path(start)} returns a trail using every edge exactly once, or a result with \inlinecode{start = -1} if no such trail exists. If \inlinecode{start = -1}, a valid start is chosen automatically.
   \item \inlinecode{EulerianTrail::is\_cycle()} returns whether the trail begins and ends on the same node.
 \end{compactitem}
 
@@ -1517,7 +1517,7 @@ Given an undirected graph, label every node with its connected component and col
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(n)$ auxiliary stack space for \inlinecode{dfs()}.
+  \item $O(n)$ auxiliary stack space per call.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1873,7 +1873,7 @@ Lengauer-Tarjan's algorithm numbers vertices by DFS order, computes each reachab
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for the graph and auxiliary arrays.
+  \item $O(\max\left(n, m\right))$ for the graph and auxiliary heap arrays.
   \item $O(n)$ auxiliary stack space for the DFS.
 \end{compactitem}
 
@@ -2830,7 +2830,7 @@ Undoing unions requires a disjoint set forest with rollback (see the disjoint se
   \item $O(1)$ amortized per call to \inlinecode{add\_edge()}, \inlinecode{remove\_edge()}, and \inlinecode{count\_components()}.
 \end{compactitem}
 
-\textbf{Space Complexity}: $O(n + m \log T)$ auxiliary heap space.
+\textbf{Space Complexity}: $O(n + m \log T)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -3006,7 +3006,7 @@ For path reconstruction, \inlinecode{pred[v]} stores the node immediately before
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(n)$ auxiliary heap space for \inlinecode{bfs()}.
+  \item $O(n)$ auxiliary.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3101,7 +3101,7 @@ For path reconstruction, \inlinecode{pred[v]} stores the node immediately before
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(n)$ auxiliary deque space for \inlinecode{bfs\_zero\_one()}.
+  \item $O(n)$ auxiliary deque space per call.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3197,13 +3197,13 @@ Dijkstra's algorithm repeatedly selects the unvisited node of smallest tentative
 
 For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
 
-\textbf{Time Complexity}: $O(m \log n)$ for \inlinecode{dijkstra()}, where $m$ is the number of edges and $n$ is the number of nodes.
+\textbf{Time Complexity}: $O(m \log n)$ per call, where $m$ is the number of edges and $n$ is the number of nodes.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(m)$ auxiliary heap space for \inlinecode{dijkstra()}.
+  \item $O(m)$ auxiliary.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3307,7 +3307,7 @@ For path reconstruction, \inlinecode{pred[v]} stores the node immediately before
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(n)$ auxiliary heap space for \inlinecode{bellman\_ford()}, where $n$ is the number of nodes.
+  \item $O(n)$ auxiliary.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3394,13 +3394,13 @@ Given a starting node in a weighted directed graph, compute shortest paths even 
 
 For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
 
-\textbf{Time Complexity}: $O(n \cdot m)$ in the worst case for \inlinecode{spfa()}, where $n$ is the number of nodes and $m$ is the number of edges.
+\textbf{Time Complexity}: $O(n \cdot m)$ per call in the worst case, where $n$ is the number of nodes and $m$ is the number of edges.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(n)$ auxiliary queue space for \inlinecode{spfa()}.
+  \item $O(n)$ auxiliary queue space per call.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3507,7 +3507,7 @@ For path reconstruction, \inlinecode{pred[v]} stores the node immediately before
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph.
-  \item $O(n)$ auxiliary heap space for \inlinecode{dag\_shortest\_path()}.
+  \item $O(n)$ auxiliary.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3627,7 +3627,7 @@ For path reconstruction, \inlinecode{next\_node[i][j]} stores the next node to v
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n^{2})$ for storage of the graph, where $n$ is the number of nodes.
-  \item $O(n^{2})$ auxiliary heap space for \inlinecode{init\_floyd()} and \inlinecode{floyd\_warshall()}.
+  \item $O(n^{2})$ auxiliary for \inlinecode{init\_floyd()} and \inlinecode{floyd\_warshall()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3733,7 +3733,7 @@ The priority queue stores candidate edges as (\inlinecode{weight}, \inlinecode{f
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(m)$ auxiliary heap space for \inlinecode{prim\_mst()}.
+  \item $O(m)$ auxiliary.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3848,7 +3848,7 @@ Multigraphs are supported; parallel edges appear as separate entries in \inlinec
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges
-  \item $O(n)$ auxiliary stack space for \inlinecode{kruskal\_mst()}.
+  \item $O(n)$ auxiliary stack space per call.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3947,7 +3947,7 @@ Edmonds' (a.k.a. the Chu-Liu/Edmonds) algorithm computes the arborescence by fir
 
 \textbf{Time Complexity}: $O(n \cdot m)$ per call, where $n$ is the number of nodes and $m$ is the number of edges.
 
-\textbf{Space Complexity}: $O(n + m)$ auxiliary heap space.
+\textbf{Space Complexity}: $O(n + m)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <cstdint>
@@ -4069,7 +4069,7 @@ The Ford-Fulkerson method repeatedly finds any augmenting path from source to si
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n^{2})$ for storage of the flow network, where $n$ is the number of nodes.
-  \item $O(n)$ auxiliary stack space for \inlinecode{ford\_fulkerson()}.
+  \item $O(n)$ auxiliary stack space per call.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -4330,7 +4330,7 @@ Repeated calls to \inlinecode{max\_flow()} continue augmenting from the current 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the flow network.
-  \item $O(n)$ auxiliary stack and heap space for \inlinecode{max\_flow()}.
+  \item $O(n)$ auxiliary stack space and $O(n)$ auxiliary heap space for \inlinecode{max\_flow()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -4517,7 +4517,7 @@ Repeated calls to \inlinecode{max\_flow()} continue augmenting from the current 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the flow network.
-  \item $O(n)$ auxiliary stack and heap space for \inlinecode{max\_flow()}.
+  \item $O(n)$ auxiliary stack space and $O(n)$ auxiliary heap space for \inlinecode{max\_flow()}.
   \item $O(n + m)$ auxiliary heap space for \inlinecode{decompose()}, not counting the returned paths.
 \end{compactitem}
 
@@ -4777,7 +4777,7 @@ Although the push-relabel algorithm is considered one of the most efficient maxi
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n^{2})$ for storage of the flow network, where $n$ is the number of nodes.
-  \item $O(n)$ auxiliary heap space for \inlinecode{push\_relabel()}.
+  \item $O(n)$ auxiliary for \inlinecode{push\_relabel()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -5508,7 +5508,7 @@ Parallel edges should be pre-summed into the adjacency matrix before calling: \i
 
 \textbf{Time Complexity}: $O(n^{3})$ per call, where $n$ is the number of vertices.
 
-\textbf{Space Complexity}: $O(n^{2})$ auxiliary heap space.
+\textbf{Space Complexity}: $O(n^{2})$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -5617,7 +5617,7 @@ Kuhn's algorithm builds the matching one left node at a time. For each, a depth-
 
 \textbf{Time Complexity}: $O(m \cdot (n_1 + n_2))$ per call, where $m$ is the number of edges.
 
-\textbf{Space Complexity}: $O(n_1 + n_2)$ auxiliary stack space for \inlinecode{kuhn()}.
+\textbf{Space Complexity}: $O(n_1 + n_2)$ auxiliary stack space per call.
 
 \begin{lstlisting}[language=C++]
 #include <vector>
@@ -5715,7 +5715,7 @@ Hopcroft-Karp augments along many shortest augmenting paths per phase. Each phas
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(n_1 + n_2)$ auxiliary stack and heap space for \inlinecode{hopcroft\_karp()}.
+  \item $O(n_1 + n_2)$ auxiliary stack space and $O(n_1 + n_2)$ auxiliary heap space per call.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -5835,7 +5835,7 @@ The adjacency list \inlinecode{adj} is shared with the matching routine: \inline
 
 \textbf{Time Complexity}: $O(m \cdot (n_1 + n_2))$ per call, dominated by the matching, where $m$ is the number of edges.
 
-\textbf{Space Complexity}: $O(n_1 + n_2)$ auxiliary space.
+\textbf{Space Complexity}: $O(n_1 + n_2)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <vector>
@@ -5970,7 +5970,7 @@ The graph must be simple; parallel edges and self-loops are not supported.
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(n)$ auxiliary heap space for \inlinecode{blossom()}, where $n$ is the number of nodes.
+  \item $O(n)$ auxiliary.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -6552,9 +6552,9 @@ The classical Hungarian algorithm using potentials transforms a cost matrix usin
   \item \inlinecode{hungarian(cost, \&assignment)} returns the minimum total assignment cost for a 0-based \inlinecode{cost} matrix, while populating \inlinecode{assignment} with $n$ values where \inlinecode{assignment[i]} is the chosen job for worker \inlinecode{i}, using 0-based job numbers.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n^{2} \cdot m)$, where \inlinecode{cost} has $n$ rows and $m$ columns.
+\textbf{Time Complexity}: $O(n^{2} \cdot m)$ per call, where \inlinecode{cost} has $n$ rows and $m$ columns.
 
-\textbf{Space Complexity}: $O(n + m)$ auxiliary heap space, not counting the input matrix and returned assignment.
+\textbf{Space Complexity}: $O(n + m)$ auxiliary, not counting the input matrix and returned assignment.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -6665,7 +6665,7 @@ The Gale-Shapley algorithm produces a stable matching, and a stable matching alw
 
 \textbf{Time Complexity}: $O(n^{2})$ per call, where $n$ is the number of men (equivalently, women).
 
-\textbf{Space Complexity}: $O(n^{2})$ auxiliary heap space for the precomputed rankings.
+\textbf{Space Complexity}: $O(n^{2})$ auxiliary for the precomputed rankings.
 
 \begin{lstlisting}[language=C++]
 #include <queue>
@@ -6879,7 +6879,7 @@ This implementation finds the chromatic number by backtracking: nodes (ordered b
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n^{2})$ for storage of the graph, where $n$ is the number of nodes.
-  \item $O(n)$ auxiliary stack and heap space for \inlinecode{color\_graph()}.
+  \item $O(n)$ auxiliary stack space and $O(n)$ auxiliary heap space per call.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -7021,7 +7021,7 @@ The graph must be simple: the implementation stores one color per ordered node p
   \item \inlinecode{edge\_coloring(n, edges)} returns a vector of colors, one per entry of \inlinecode{edges}, using colors in the range $[0, D]$ where $D$ is the maximum degree. Nodes are numbered $[0, {\inlinecodemath{n}})$, and \inlinecode{edges[i]} is an undirected edge \inlinecode{u}-\inlinecode{v}.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n^{2} \cdot m)$ in the worst case for \inlinecode{edge\_coloring()}, where $n$ is the number of nodes and $m$ the number of edges; substantially faster in practice.
+\textbf{Time Complexity}: $O(n^{2} \cdot m)$ per call in the worst case, where $n$ is the number of nodes and $m$ the number of edges; substantially faster in practice.
 
 \textbf{Space Complexity}: $O(n^{2})$ to store the per-edge colors.
 
@@ -7178,7 +7178,7 @@ Since this implementation uses bitmasks with signed 32-bit integers, the maximum
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n^{2})$ for storage of the graph, where $n$ is the number of nodes.
-  \item $O(2^{n} \cdot n)$ auxiliary heap space.
+  \item $O(2^{n} \cdot n)$ auxiliary.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]

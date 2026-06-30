@@ -24,8 +24,7 @@ Time Complexity:
 
 Space Complexity:
 - O(1) auxiliary for `max_subarray_sum()`.
-- O(m) auxiliary heap space for `max_submatrix_sum()`, where $m$ is the number of rows in the
-  matrix.
+- O(m) auxiliary for `max_submatrix_sum()`, where $m$ is the number of rows in the matrix.
 
 */
 

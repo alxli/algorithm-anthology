@@ -27,9 +27,9 @@ Time Complexity:
   $d = -\log_{10}(`eps`)$ is the number of digits of absolute or relative precision that is desired.
 
 Space Complexity:
-- O(1) auxiliary space for `horner_eval()` and `find_one_root()`.
-- O(n^2) auxiliary heap and O(n) auxiliary stack space for `find_all_roots()`, where $n$ is the
-  degree of the polynomial.
+- O(1) auxiliary for `horner_eval()` and `find_one_root()`.
+- O(n) auxiliary stack space and O(n^2) auxiliary heap space for `find_all_roots()`, where $n$ is
+  the degree of the polynomial.
 
 */
 

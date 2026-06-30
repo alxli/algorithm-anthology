@@ -28,7 +28,7 @@ Time Complexity:
 
 Space Complexity:
 - O(1) auxiliary for `fft()`, transforming in place.
-- O(n) auxiliary heap space for `convolve()`.
+- O(n) auxiliary for `convolve()`.
 
 */
 

@@ -7,8 +7,8 @@ starting node; this cycle version is the traveling salesman problem (TSP).
 Both functions use the Held-Karp subset dynamic program, where `dp[S][i]` is the shortest path
 visiting exactly the nodes in `S` and ending at node `i`.
 
-- `shortest_hamiltonian_path()` populates `path` and returns the minimum Hamiltonian path length
-  for a global, pre-populated adjacency matrix `adj`.
+- `shortest_hamiltonian_path()` populates `path` and returns the minimum Hamiltonian path length for
+  a global, pre-populated adjacency matrix `adj`.
 - `shortest_hamiltonian_cycle()` fixes the start at node 0, populates `path`, and returns the
   minimum Hamiltonian cycle length for a global, pre-populated adjacency matrix `adj`.
 
@@ -20,7 +20,7 @@ Time Complexity:
 
 Space Complexity:
 - O(n^2) for storage of the graph, where $n$ is the number of nodes.
-- O(2^n * n) auxiliary heap space.
+- O(2^n * n) auxiliary.
 
 */
 

@@ -18,7 +18,7 @@ Time Complexity:
   of iterations performed.
 
 Space Complexity:
-- O(1) auxiliary space for both operations.
+- O(1) auxiliary for both operations.
 
 */
 

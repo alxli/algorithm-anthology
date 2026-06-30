@@ -14,10 +14,10 @@ subsequence.
   strictly increasing subsequence of $[`lo`, `hi`)$, in order.
 
 Time Complexity:
-- O(n log n) per call to either function, where $n$ is the distance between `lo` and `hi`.
+- O(n log n) per call, where $n$ is the distance between `lo` and `hi`.
 
 Space Complexity:
-- O(n) auxiliary heap space.
+- O(n) auxiliary.
 
 */
 

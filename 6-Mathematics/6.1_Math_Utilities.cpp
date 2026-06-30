@@ -7,20 +7,20 @@ heavily optimized as their standard library counterparts.
 
 Time Complexity:
 - O(1) for most operations.
-- O(1) per call to `mulmod()` with `__uint128_t`, or O(log n) with the portable fallback, where
-  $n$ is the second argument.
+- O(1) per call to `mulmod()` with `__uint128_t`, or O(log n) with the portable fallback, where $n$
+  is the second argument.
 - O(log n) calls to `mulmod()` per call to `powmod(x, n, m)`.
-- O(d*e) for `convert_base(d, a, b)`, where $d$ is the number of input digits and $e$ is the
-  number of output digits.
+- O(d*e) for `convert_base(d, a, b)`, where $d$ is the number of input digits and $e$ is the number
+  of output digits.
 - O(log_b(x + 1) + 1) for `to_base(x, b)`.
 - O(x / 1000 + 1) for `to_roman(x)`, due to the repeated `M` prefix.
 
 Space Complexity:
 - O(1) auxiliary for most operations.
-- O(d + e) auxiliary heap space for `convert_base(d, a, b)`, where $d$ is the number of input
-  digits and $e$ is the number of output digits.
-- O(e) auxiliary heap space for `to_base(x, b)`, where $e$ is the number of output digits.
-- O(x / 1000 + 1) auxiliary heap space for `to_roman(x)`.
+- O(d + e) auxiliary for `convert_base(d, a, b)`, where $d$ is the number of input digits and $e$ is
+  the number of output digits.
+- O(e) auxiliary for `to_base(x, b)`, where $e$ is the number of output digits.
+- O(x / 1000 + 1) auxiliary for `to_roman(x)`.
 
 */
 
@@ -58,8 +58,8 @@ Epsilon Comparisons:
   types without floating-point arithmetic (e.g. integers, `Modular`, `Rational`) compose as well.
 - `rEQ(ref, val)` returns whether `val` equals reference `ref` within relative error `EPS`. The
   tolerance scales with $|`ref`|$, so `rEQ(ref, val)` is NOT the same as `rEQ(val, ref)`. Use this
-  when one argument is a known exact value and the other is a computed approximation. Degenerates
-  to exact comparison when `ref` is $0$, since the tolerance collapses to $0$; use `EQ` near zero.
+  when one argument is a known exact value and the other is a computed approximation. Degenerates to
+  exact comparison when `ref` is $0$, since the tolerance collapses to $0$; use `EQ` near zero.
 - `rEQ_sym(x, y)` is the symmetric (commutative) variant: tolerance scales with
   $\max(|`x`|, |`y`|)$, so the result is the same regardless of argument order. Still degenerates
   near zero when both arguments are close to $0$.

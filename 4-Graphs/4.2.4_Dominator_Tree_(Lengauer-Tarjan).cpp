@@ -20,7 +20,7 @@ Time Complexity:
   $n$ is the number of nodes and $m$ is the number of edges.
 
 Space Complexity:
-- O(max(n, m)) for the graph and auxiliary arrays.
+- O(max(n, m)) for the graph and auxiliary heap arrays.
 - O(n) auxiliary stack space for the DFS.
 
 */

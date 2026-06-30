@@ -19,8 +19,8 @@ interface in O(n log n).
   the added edges define a connected tree of size `n`.
 
 The aggregation scheme for `rerooting_dp()` is defined by the following pieces:
-- `Data` is the return type of a normal fixed-root DFS call `dfs(u, p)`. It summarizes the
-  component containing `u` after removing edge `u`-`p`, with all values measured from node `u`.
+- `Data` is the return type of a normal fixed-root DFS call `dfs(u, p)`. It summarizes the component
+  containing `u` after removing edge `u`-`p`, with all values measured from node `u`.
 - `identity` is the neutral value for an empty component, which for all aggregate values `a` must
   satisfy `combine(a, identity) = combine(identity, a) = a`.
 - `combine(a, b)` merges two independent neighbor contributions into the same node `u`, like two

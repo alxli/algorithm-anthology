@@ -16,10 +16,10 @@ calculations are 1-based.
   worker `i`, using 0-based job numbers.
 
 Time Complexity:
-- O(n^2*m), where `cost` has $n$ rows and $m$ columns.
+- O(n^2*m) per call, where `cost` has $n$ rows and $m$ columns.
 
 Space Complexity:
-- O(n + m) auxiliary heap space, not counting the input matrix and returned assignment.
+- O(n + m) auxiliary, not counting the input matrix and returned assignment.
 
 */
 

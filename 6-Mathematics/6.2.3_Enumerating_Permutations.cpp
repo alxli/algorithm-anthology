@@ -40,8 +40,7 @@ Time Complexity:
 
 Space Complexity:
 - O(1) auxiliary for `next_permutation_()` and `next_permutation()`.
-- O(n) auxiliary heap space for `permutation_by_rank()`, `rank_by_permutation()`, and
-  `permutation_cycles()`.
+- O(n) auxiliary for `permutation_by_rank()`, `rank_by_permutation()`, and `permutation_cycles()`.
 
 */
 

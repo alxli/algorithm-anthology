@@ -2699,7 +2699,7 @@ This is an educational implementation; in practice prefer one of the standard op
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the map elements.
-  \item $O(n)$ auxiliary heap space for \inlinecode{insert()}.
+  \item $O(n)$ auxiliary for \inlinecode{insert()}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -2914,7 +2914,7 @@ This is an educational implementation; in practice prefer one of the standard op
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the map elements.
-  \item $O(1)$ auxiliary heap space for \inlinecode{insert()} and \inlinecode{operator[]} amortized over a sequence of operations (excluding occasional table rehashes).
+  \item $O(1)$ auxiliary for \inlinecode{insert()} and \inlinecode{operator[]} amortized over a sequence of operations (excluding occasional table rehashes).
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -3178,7 +3178,7 @@ Maintain an ordered map, that is, an ordered collection of key-value pairs such 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ on average for storage of the map elements.
-  \item $O(n)$ auxiliary heap space for \inlinecode{insert()} and \inlinecode{erase()}.
+  \item $O(n)$ auxiliary for \inlinecode{insert()} and \inlinecode{erase()}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -4255,7 +4255,7 @@ Both boundary searches are iterative to demonstrate how the flat-array layout ca
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the array elements.
-  \item $O(1)$ auxiliary space for all operations.
+  \item $O(1)$ auxiliary for all operations.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -4450,7 +4450,7 @@ Both boundary searches are iterative to demonstrate how the flat-array layout ca
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the array elements and lazy deltas.
-  \item $O(1)$ auxiliary space for all operations.
+  \item $O(1)$ auxiliary for all operations.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -5348,7 +5348,7 @@ The structure is built once and not modified afterward. All index ranges are inc
 \begin{compactitem}
   \item \inlinecode{MergeSortTree\textless{}T\textgreater{}(a)} builds the tree over the array \inlinecode{a}.
   \item \inlinecode{count\_leq(lo, hi, x)} returns the number of indices \inlinecode{i} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ with \inlinecode{a[i]} $\leq$ \inlinecode{x}.
-  \item \inlinecode{count\_in(lo, hi, x, y)} returns the number of indices \inlinecode{i} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ with \inlinecode{x} $\leq$ \inlinecode{a[i]} $\leq$ \inlinecode{y}.
+  \item \inlinecode{count\_in(lo, hi, x, y)} returns the number of indices \inlinecode{i} $\in [{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ such that \inlinecode{a[i]} $\in [{\inlinecodemath{x}}, {\inlinecodemath{y}}]$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -5453,8 +5453,8 @@ All position ranges are inclusive $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}
 \begin{compactitem}
   \item \inlinecode{WaveletTree(a, min\_val, max\_val)} builds the tree over the array \inlinecode{a}, whose values must all lie in [\inlinecode{min\_val}, \inlinecode{max\_val}].
   \item \inlinecode{kth\_smallest(lo, hi, k)} returns the \inlinecode{k}-th smallest value among positions $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$, where \inlinecode{k} is 1-based (so \inlinecode{k == 1} returns the minimum).
-  \item \inlinecode{count\_leq(lo, hi, x)} returns the number of positions \inlinecode{i} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ with \inlinecode{a[i]} $\leq$ \inlinecode{x}.
-  \item \inlinecode{count\_in(lo, hi, x, y)} returns the number of positions \inlinecode{i} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ with \inlinecode{x} $\leq$ \inlinecode{a[i]} $\leq$ \inlinecode{y}.
+  \item \inlinecode{count\_leq(lo, hi, x)} returns the number of positions \inlinecode{i} $\in [{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ such that \inlinecode{a[i]} $\leq$ \inlinecode{x}.
+  \item \inlinecode{count\_in(lo, hi, x, y)} returns the number of positions \inlinecode{i} $\in [{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ such that \inlinecode{a[i]} $\in [{\inlinecodemath{x}}, {\inlinecodemath{y}}]$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -8072,7 +8072,7 @@ A precondition to the last three operations is that \inlinecode{make\_set()} mus
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the disjoint set forest elements.
-  \item $O(n)$ auxiliary heap space for \inlinecode{get\_all\_sets()}.
+  \item $O(n)$ auxiliary for \inlinecode{get\_all\_sets()}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -8610,7 +8610,7 @@ The construction sorts the subset by depth-first entry time, which lists the nod
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ to store the binary ancestor table.
-  \item $O(k)$ auxiliary space and result size per call to \inlinecode{build()}.
+  \item $O(k)$ auxiliary plus result size per call to \inlinecode{build()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]

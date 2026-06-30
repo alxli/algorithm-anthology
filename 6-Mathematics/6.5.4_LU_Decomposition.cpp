@@ -36,7 +36,7 @@ Time Complexity:
 Space Complexity:
 - O(1) auxiliary for `lu_decompose()`.
 - O(n^2) for `det(a)` and `invert(a)`.
-- O(m*n) auxiliary heap space for `solve_system(a, b)`.
+- O(m*n) auxiliary for `solve_system(a, b)`.
 
 */
 

@@ -31,14 +31,14 @@ bounded-weight case of subset sum rather than the 0-1 value knapsack.
   $2^{n/2}$.
 
 Time Complexity:
-- O(2^{n/2}) per call to `max_subset_sum_at_most()`, where $n$ is the distance between `lo`
-  and `hi`.
+- O(2^{n/2}) per call to `max_subset_sum_at_most()`, where $n$ is the distance between `lo` and
+  `hi`.
 - O(n*W) per call to `max_subset_sum_bounded()`, where $n$ is the number of items and $W$ is the
   largest weight.
 
 Space Complexity:
-- O(2^{n/2}) auxiliary heap space for `max_subset_sum_at_most()`.
-- O(W) auxiliary heap space for `max_subset_sum_bounded()`.
+- O(2^{n/2}) auxiliary for `max_subset_sum_at_most()`.
+- O(W) auxiliary for `max_subset_sum_bounded()`.
 
 */
 

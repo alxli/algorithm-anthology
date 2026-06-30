@@ -4,7 +4,7 @@
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Sorting Algorithms}
-The following functions are equivalent to \inlinecode{std::sort()}, taking random-access iterators as a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ to be sorted. Elements between \inlinecode{lo} and \inlinecode{hi} (including the element pointed to by \inlinecode{lo} but excluding the element pointed to by \inlinecode{hi}) will be sorted into ascending order after the function call. Optionally, a comparison function object specifying a strict weak ordering may be specified to replace the default \inlinecode{operator\textless{}}.
+The following functions are equivalent to \inlinecode{std::sort()}, taking random-access iterators as a half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ to be sorted. The range is sorted into ascending order after the function call. Optionally, a comparison function object specifying a strict weak ordering may be specified to replace the default \inlinecode{operator\textless{}}.
 
 \begin{compactitem}
   \item \inlinecode{quicksort(lo, hi)} sorts the range using quicksort.
@@ -530,7 +530,7 @@ The number of inversions for a sequence \inlinecode{a} is the number of ordered 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ auxiliary space and $O(\log n)$ stack space for \inlinecode{inversions(lo, hi)}.
+  \item $O(\log n)$ auxiliary stack space and $O(n)$ auxiliary heap space for \inlinecode{inversions(lo, hi)}.
   \item $O(n)$ auxiliary heap space for \inlinecode{inversions(a)}.
 \end{compactitem}
 
@@ -650,7 +650,7 @@ All implementations below take ranges as ForwardIterators and require \inlinecod
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ auxiliary heap space for \inlinecode{compress1()} and \inlinecode{compress2()}.
+  \item $O(n)$ auxiliary for \inlinecode{compress1()} and \inlinecode{compress2()}.
   \item $O(k)$ storage for \inlinecode{CoordinateCompressor}.
 \end{compactitem}
 
@@ -1111,10 +1111,10 @@ The examples below cover sorted 2-sum/3-sum variants, finding the shortest subar
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for \inlinecode{two\_sum\_sorted(a, target)}.
-  \item $O(n)$ auxiliary heap space for \inlinecode{three\_sum(a, target)}.
+  \item $O(n)$ auxiliary for \inlinecode{three\_sum(a, target)}.
   \item $O(1)$ auxiliary for \inlinecode{min\_length\_at\_least(a, target)}.
-  \item $O(k)$ auxiliary heap space for \inlinecode{longest\_at\_most\_k\_distinct(a, k)}.
-  \item $O(n)$ auxiliary heap space for the result of \inlinecode{sliding\_window\_extrema()}, plus $O(k)$ for the deque.
+  \item $O(k)$ auxiliary for \inlinecode{longest\_at\_most\_k\_distinct(a, k)}.
+  \item $O(n)$ auxiliary for the result of \inlinecode{sliding\_window\_extrema()}, plus $O(k)$ for the deque.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1255,7 +1255,7 @@ The queue stores candidate (\inlinecode{index}, \inlinecode{value}) pairs in mon
   \item $O(1)$ worst-case per call to \inlinecode{top()} and \inlinecode{empty()}.
 \end{compactitem}
 
-\textbf{Space Complexity}: $O(w)$ auxiliary heap space for a sliding window of width $w$.
+\textbf{Space Complexity}: $O(w)$ auxiliary for a sliding window of width $w$.
 
 \begin{lstlisting}[language=C++]
 template<typename T, typename Compare>
@@ -1361,8 +1361,8 @@ All functions below take a vector \inlinecode{a} of $n$ comparable values and re
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ auxiliary heap space for the stack and result.
-  \item $O(c)$ auxiliary heap space for \inlinecode{largest\_zero\_submatrix()}.
+  \item $O(n)$ auxiliary for the stack and result.
+  \item $O(c)$ auxiliary for \inlinecode{largest\_zero\_submatrix()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1636,7 +1636,7 @@ Given an array of numbers, determine the maximum possible sum of any contiguous 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for \inlinecode{max\_subarray\_sum()}.
-  \item $O(m)$ auxiliary heap space for \inlinecode{max\_submatrix\_sum()}, where $m$ is the number of rows in the matrix.
+  \item $O(m)$ auxiliary for \inlinecode{max\_submatrix\_sum()}, where $m$ is the number of rows in the matrix.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1751,9 +1751,9 @@ The answer is computed by scanning left to right while maintaining, for each len
   \item \inlinecode{longest\_increasing\_subsequence(lo, hi)} returns the indices relative to \inlinecode{lo} of one longest strictly increasing subsequence of $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, in order.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n \log n)$ per call to either function, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space.
+\textbf{Space Complexity}: $O(n)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -1835,7 +1835,7 @@ Computes the minimum excluded nonnegative (MEX) integer of a set of integers, th
   \item $O(1)$ per call to \inlinecode{get()} for \inlinecode{DynamicMex}.
 \end{compactitem}
 
-\textbf{Space Complexity}: $O(n)$ auxiliary space for both approaches.
+\textbf{Space Complexity}: $O(n)$ auxiliary for both approaches.
 
 \begin{lstlisting}[language=C++]
 #include <iterator>
@@ -2072,7 +2072,7 @@ The one-dimensional dynamic programming array \inlinecode{dp[w]} stores the best
 
 \textbf{Time Complexity}: $O(n \cdot W)$ per call, where $n$ is the number of items and $W$ is \inlinecode{capacity}.
 
-\textbf{Space Complexity}: $O(n \cdot W)$ auxiliary heap space.
+\textbf{Space Complexity}: $O(n \cdot W)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -2126,13 +2126,14 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Unbounded Knapsack and Coin Change}
-Solves two common unbounded knapsack variants, where each item may be used any number of times. In the maximum-value version, each item has a weight and value, and the goal is to maximize total value subject to a capacity limit. In the coin change version, each coin denomination may be used any number of times, and the goal is to count unordered ways to form a target sum.
+Solves two common unbounded knapsack variants, where each item may be used any number of times. In the maximum-value version, each item has a weight and value, and the goal is to maximize total value subject to a capacity limit. In coin change variants, each coin denomination may be used any number of times, and the goal is either to count unordered ways to form a target sum or to minimize the number of coins used.
 
-For unbounded maximum-value knapsack, capacities are processed in increasing order. Thus, when computing \inlinecode{dp[w]}, every smaller-capacity state \inlinecode{dp[w - weight[i]]} is already final and may itself contain item \inlinecode{i}, allowing unlimited reuse. For unordered coin change, coins are the outer loop so each multiset of coins is counted once, independent of ordering.
+For unbounded maximum-value knapsack, capacities are processed in increasing order. Thus, when computing \inlinecode{dp[w]}, every smaller-capacity state \inlinecode{dp[w - weight[i]]} is already final and may itself contain item \inlinecode{i}, allowing unlimited reuse. For unordered coin change, coins are the outer loop so each multiset of coins is counted once, independent of ordering. For minimum coins, each target sum chooses the best previous sum \inlinecode{sum - coin}, and the predecessor coin reconstructs one optimal multiset.
 
 \begin{compactitem}
   \item \inlinecode{unbounded\_knapsack(weight, value, capacity)} returns a pair $({\inlinecodemath{value}}, {\inlinecodemath{count}})$ containing the maximum value achievable with total weight at most \inlinecode{capacity} and \inlinecode{count[i]}, the number of copies selected of each item \inlinecode{i}.
   \item \inlinecode{count\_coin\_change(coins, target)} returns the number of unordered ways to make sum \inlinecode{target} using the given coin denominations.
+  \item \inlinecode{min\_coin\_change(coins, target)} returns a pair $({\inlinecodemath{count}}, {\inlinecodemath{used}})$, where \inlinecode{count} is the minimum number of coins needed to make sum \inlinecode{target}, and \inlinecode{used[i]} is the number of copies of \inlinecode{coins[i]} in one optimal multiset. If \inlinecode{target} cannot be formed, \inlinecode{count} is $-1$ and \inlinecode{used} is empty.
 \end{compactitem}
 
 All capacities must be nonnegative integers. Weights and coin denominations should be positive to avoid infinitely many uses of a zero-weight item.
@@ -2142,13 +2143,15 @@ All capacities must be nonnegative integers. Weights and coin denominations shou
 \begin{compactitem}
   \item $O(n \cdot W)$ for \inlinecode{unbounded\_knapsack()}, where $n$ is the number of items and $W$ is \inlinecode{capacity}.
   \item $O(c \cdot t)$ for \inlinecode{count\_coin\_change(coins, target)}, where $c$ is the number of coin denominations and $t$ is \inlinecode{target}.
+  \item $O(c \cdot t)$ for \inlinecode{min\_coin\_change(coins, target)}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(W)$ auxiliary heap space for \inlinecode{unbounded\_knapsack()}.
-  \item $O(t)$ auxiliary heap space for \inlinecode{count\_coin\_change(coins, target)}.
+  \item $O(W)$ auxiliary for \inlinecode{unbounded\_knapsack()}.
+  \item $O(t)$ auxiliary for \inlinecode{count\_coin\_change(coins, target)}.
+  \item $O(t + c)$ auxiliary for \inlinecode{min\_coin\_change(coins, target)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -2187,11 +2190,37 @@ int64_t count_coin_change(const std::vector<int> &coins, int target) {
   std::vector<int64_t> dp(target + 1, 0);
   dp[0] = 1;
   for (int coin : coins) {
+    assert(coin > 0);
     for (int sum = coin; sum <= target; sum++) {
       dp[sum] += dp[sum - coin];
     }
   }
   return dp[target];
+}
+
+std::pair<int, std::vector<int>> min_coin_change(const std::vector<int> &coins, int target) {
+  assert(target >= 0);
+  int n = static_cast<int>(coins.size());
+  int inf = target + 1;
+  std::vector<int> dp(target + 1, inf), choice(target + 1, -1);
+  dp[0] = 0;
+  for (int sum = 1; sum <= target; sum++) {
+    for (int i = 0; i < n; i++) {
+      assert(coins[i] > 0);
+      if (coins[i] <= sum && dp[sum] > dp[sum - coins[i]] + 1) {
+        dp[sum] = dp[sum - coins[i]] + 1;
+        choice[sum] = i;
+      }
+    }
+  }
+  if (dp[target] == inf) {
+    return {-1, {}};
+  }
+  std::vector<int> used(n, 0);
+  for (int sum = target; sum > 0; sum -= coins[choice[sum]]) {
+    used[choice[sum]]++;
+  }
+  return {dp[target], used};
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -2209,6 +2238,13 @@ int main() {
 
   vector<int> coins{1, 2, 5};
   assert(count_coin_change(coins, 5) == 4);  // 5, 2+2+1, 2+1+1+1, 1*5.
+
+  auto [coin_count, used] = min_coin_change(coins, 11);
+  assert(coin_count == 3);
+  assert((used == vector<int>{1, 0, 2}));
+
+  auto [impossible, empty_used] = min_coin_change(vector<int>{4, 7}, 6);
+  assert(impossible == -1 && empty_used.empty());
   return 0;
 }
 \end{lstlisting}
@@ -2234,8 +2270,8 @@ Pisinger's algorithm targets the opposite regime: nonnegative weights whose maxi
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(2^{n/2})$ auxiliary heap space for \inlinecode{max\_subset\_sum\_at\_most()}.
-  \item $O(W)$ auxiliary heap space for \inlinecode{max\_subset\_sum\_bounded()}.
+  \item $O(2^{n/2})$ auxiliary for \inlinecode{max\_subset\_sum\_at\_most()}.
+  \item $O(W)$ auxiliary for \inlinecode{max\_subset\_sum\_bounded()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -2351,6 +2387,118 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Grid Dynamic Programming}
+Solves basic dynamic programming problems on a rectangular grid. In grid DP, each cell represents a state and transitions usually come from already-computed neighboring cells, most commonly the cell above and the cell to the left. Processing rows from top to bottom and columns from left to right therefore makes every predecessor available when a state is computed.
+
+For path-counting, \inlinecode{dp[r][c]} stores the number of ways to reach cell $({\inlinecodemath{r}}, {\inlinecodemath{c}})$. For minimum-cost paths, \inlinecode{dp[r][c]} stores the cheapest cost to reach that cell, and a predecessor direction reconstructs one optimal path. The helpers below assume movement only down or right.
+
+\begin{compactitem}
+  \item \inlinecode{count\_grid\_paths(blocked)} returns the number of paths from the upper-left cell to the lower-right cell, moving only down or right and avoiding blocked cells marked nonzero.
+  \item \inlinecode{min\_grid\_path\_cost(cost)} returns a pair $({\inlinecodemath{sum}}, {\inlinecodemath{parent}})$, where \inlinecode{sum} is the minimum cost of a down/right path from the upper-left cell to the lower-right cell and \inlinecode{parent[r][c]} is \inlinecode{\textquotesingle{}U\textquotesingle{}} or \inlinecode{\textquotesingle{}L\textquotesingle{}}, indicating the predecessor direction for one optimal path. If the grid is empty, \inlinecode{sum} is $0$ and \inlinecode{parent} is empty.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(R \cdot C)$ per call to \inlinecode{count\_grid\_paths(blocked)} and \inlinecode{min\_grid\_path\_cost(cost)}, where $R$ and $C$ are the grid dimensions.
+
+\textbf{Space Complexity}: $O(R \cdot C)$ auxiliary for \inlinecode{count\_grid\_paths(blocked)} and \inlinecode{min\_grid\_path\_cost(cost)}.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <limits>
+#include <utility>
+#include <vector>
+
+int64_t count_grid_paths(const std::vector<std::vector<char>> &blocked) {
+  int rows = static_cast<int>(blocked.size());
+  int cols = rows == 0 ? 0 : static_cast<int>(blocked[0].size());
+  for (int r = 0; r < rows; r++) {
+    assert(static_cast<int>(blocked[r].size()) == cols);
+  }
+  if (rows == 0 || cols == 0 || blocked[0][0] || blocked[rows - 1][cols - 1]) {
+    return 0;
+  }
+  std::vector<std::vector<int64_t>> dp(rows, std::vector<int64_t>(cols, 0));
+  dp[0][0] = 1;
+  for (int r = 0; r < rows; r++) {
+    for (int c = 0; c < cols; c++) {
+      if (blocked[r][c]) {
+        dp[r][c] = 0;
+        continue;
+      }
+      if (r > 0) {
+        dp[r][c] += dp[r - 1][c];
+      }
+      if (c > 0) {
+        dp[r][c] += dp[r][c - 1];
+      }
+    }
+  }
+  return dp[rows - 1][cols - 1];
+}
+
+std::pair<int64_t, std::vector<std::vector<char>>> min_grid_path_cost(
+    const std::vector<std::vector<int>> &cost
+) {
+  int rows = static_cast<int>(cost.size());
+  int cols = rows == 0 ? 0 : static_cast<int>(cost[0].size());
+  if (rows == 0 || cols == 0) {
+    return {0, {}};
+  }
+  for (int r = 0; r < rows; r++) {
+    assert(static_cast<int>(cost[r].size()) == cols);
+  }
+  const int64_t INF = std::numeric_limits<int64_t>::max() / 4;
+  std::vector<std::vector<int64_t>> dp(rows, std::vector<int64_t>(cols, INF));
+  std::vector<std::vector<char>> parent(rows, std::vector<char>(cols, 0));
+  dp[0][0] = cost[0][0];
+  for (int r = 0; r < rows; r++) {
+    for (int c = 0; c < cols; c++) {
+      if (r > 0 && dp[r][c] > dp[r - 1][c] + cost[r][c]) {
+        dp[r][c] = dp[r - 1][c] + cost[r][c];
+        parent[r][c] = 'U';
+      }
+      if (c > 0 && dp[r][c] > dp[r][c - 1] + cost[r][c]) {
+        dp[r][c] = dp[r][c - 1] + cost[r][c];
+        parent[r][c] = 'L';
+      }
+    }
+  }
+  return {dp[rows - 1][cols - 1], parent};
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<vector<char>> blocked{
+      {0, 0, 0},
+      {0, 1, 0},
+      {0, 0, 0},
+  };
+  assert(count_grid_paths(blocked) == 2);
+
+  vector<vector<int>> cost{
+      {1, 3, 1},
+      {1, 5, 1},
+      {4, 2, 1},
+  };
+  auto [sum, parent] = min_grid_path_cost(cost);
+  assert(sum == 7);
+
+  vector<pair<int, int>> path;
+  for (int r = 2, c = 2; r || c; parent[r][c] == 'U' ? --r : --c) {
+    path.emplace_back(r, c);
+  }
+  path.emplace_back(0, 0);
+  reverse(path.begin(), path.end());
+  assert((path == vector<pair<int, int>>{{0, 0}, {0, 1}, {0, 2}, {1, 2}, {2, 2}}));
+  return 0;
+}
+\end{lstlisting}
 
 \section{\texorpdfstring{Greedy and Scheduling}{1.3 Greedy and Scheduling}}
 \setcounter{section}{3}
@@ -2368,7 +2516,7 @@ Intervals are represented as half-open ranges $[{\inlinecodemath{start}}, {\inli
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting, where $n$ is the number of intervals.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space for sorting and the answer.
+\textbf{Space Complexity}: $O(n)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -2425,7 +2573,7 @@ Intervals are represented as half-open ranges $[{\inlinecodemath{start}}, {\inli
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting and binary searching compatible intervals.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space.
+\textbf{Space Complexity}: $O(n)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -2513,7 +2661,7 @@ Intervals are treated as half-open ranges $[{\inlinecodemath{start}}, {\inlineco
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting and priority queue operations.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space.
+\textbf{Space Complexity}: $O(n)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -2582,7 +2730,7 @@ The latest-slot choice is safe because it uses the current high-profit job while
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting, with near-constant disjoint-set operations.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space.
+\textbf{Space Complexity}: $O(n)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -2668,7 +2816,7 @@ After considering jobs up to some deadline, if the accepted set no longer fits, 
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting and heap operations.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space.
+\textbf{Space Complexity}: $O(n)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -2797,7 +2945,7 @@ Each class maintains its reservoir incrementally; call \inlinecode{add(x)} once 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for \inlinecode{ReservoirSampleOne}.
-  \item $O(k)$ auxiliary heap space for \inlinecode{ReservoirSampleK}.
+  \item $O(k)$ auxiliary for \inlinecode{ReservoirSampleK}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3032,7 +3180,7 @@ The candidates are not automatically verified, since the algorithm intentionally
 
 \textbf{Time Complexity}: $O(n)$ amortized per call on average: each element either hits an existing counter, taking $O(1)$, or triggers a full-table decrement, taking $O(k)$, but the table-full event can occur at most $n/(k-1)$ times total, so the amortized cost per element is $O(1 + k/(k-1))$ = $O(1)$. In the worst case, a single call is $O(n \cdot k)$, but that cannot be sustained across a long stream.
 
-\textbf{Space Complexity}: $O(k)$ auxiliary heap space.
+\textbf{Space Complexity}: $O(k)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <unordered_map>
@@ -3681,7 +3829,7 @@ Input arrays are padded with zeros to the next power of two. For exact integer X
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for the in-place transforms.
-  \item $O(n)$ auxiliary heap space for each convolution.
+  \item $O(n)$ auxiliary for each convolution.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3827,6 +3975,137 @@ int main() {
   assert((xor_convolve(one_mask, two_mask) == vector<int64_t>{0, 0, 0, 1}));
   assert((or_convolve(one_mask, two_mask) == vector<int64_t>{0, 0, 0, 1}));
   assert((and_convolve(one_mask, two_mask) == vector<int64_t>{1, 0, 0, 0}));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Profile Dynamic Programming}
+Counts grid tilings using profile dynamic programming. A profile is a bitmask describing which cells in the next row (or next position) are already occupied by pieces placed earlier. Processing the grid left-to-right and top-to-bottom keeps the state small: at cell $({\inlinecodemath{r}}, {\inlinecodemath{c}})$, bit \inlinecode{c} of the mask says whether this cell is filled before considering new placements.
+
+For domino tilings, a filled cell is simply skipped. Otherwise, the algorithm may place a horizontal domino into the next column or a vertical domino into the same column of the next row. The mask is shifted by the row transitions implicitly because bit \inlinecode{c} represents the current column at every row.
+
+\begin{compactitem}
+  \item \inlinecode{count\_domino\_tilings(rows, cols)} returns the number of ways to tile a \inlinecode{rows} by \inlinecode{cols} rectangle with $1 \times 2$ and $2 \times 1$ dominoes.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(r \cdot c \cdot 2^{c})$ per call, where $r$ and $c$ are the number of rows and columns, respectively.
+
+\textbf{Space Complexity}: $O(2^{c})$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <vector>
+
+int64_t count_domino_tilings(int rows, int cols) {
+  assert(rows >= 0 && cols >= 0);
+  if (rows < cols) {
+    return count_domino_tilings(cols, rows);
+  }
+  assert(cols < 31);
+  int states = 1 << cols;
+  std::vector<int64_t> dp(states, 0), next(states, 0);
+  dp[0] = 1;
+  for (int r = 0; r < rows; r++) {
+    for (int c = 0; c < cols; c++) {
+      std::fill(next.begin(), next.end(), 0);
+      for (int mask = 0; mask < states; mask++) {
+        if (dp[mask] == 0) {
+          continue;
+        }
+        if (mask & (1 << c)) {
+          next[mask ^ (1 << c)] += dp[mask];
+        } else {
+          if (c + 1 < cols && (mask & (1 << (c + 1))) == 0) {
+            next[mask | (1 << (c + 1))] += dp[mask];
+          }
+          if (r + 1 < rows) {
+            next[mask | (1 << c)] += dp[mask];
+          }
+        }
+      }
+      dp.swap(next);
+    }
+  }
+  return dp[0];
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  assert(count_domino_tilings(0, 5) == 1);
+  assert(count_domino_tilings(2, 3) == 3);
+  assert(count_domino_tilings(3, 3) == 0);
+  assert(count_domino_tilings(4, 4) == 36);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Digit Dynamic Programming}
+Counts integers up to a decimal bound using digit dynamic programming. A digit DP scans the bound from most significant digit to least significant digit while tracking whether the prefix is still ``tight'' to the bound. If it is tight, the next digit cannot exceed the corresponding bound digit; otherwise, any digit from $0$ to $9$ is allowed.
+
+The \inlinecode{started} flag separates leading zeroes from digits of the represented number, so properties can choose whether the number $0$ should count. The example helper below counts numbers whose digit sum is exactly \inlinecode{target\_sum}, treating the number $0$ as having digit sum $0$.
+
+\begin{compactitem}
+  \item \inlinecode{count\_with\_digit\_sum(bound, target\_sum)} returns the number of integers $x \in [0, {\inlinecodemath{bound}}]$ such that the decimal digit sum of $x$ is exactly \inlinecode{target\_sum}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(d \cdot s \cdot 10)$ per call, where $d$ is the number of decimal digits in \inlinecode{bound} and $s$ is \inlinecode{target\_sum}.
+
+\textbf{Space Complexity}: $O(s)$ auxiliary per call.
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cstdint>
+#include <string>
+#include <vector>
+
+int64_t count_with_digit_sum(int64_t bound, int target_sum) {
+  assert(bound >= 0 && target_sum >= 0);
+  std::string digits = std::to_string(bound);
+  std::vector<std::vector<std::vector<int64_t>>> dp(
+      target_sum + 1, std::vector<std::vector<int64_t>>(2, std::vector<int64_t>(2, 0))
+  );
+  dp[0][1][0] = 1;
+  for (char ch : digits) {
+    std::vector<std::vector<std::vector<int64_t>>> next(
+        target_sum + 1, std::vector<std::vector<int64_t>>(2, std::vector<int64_t>(2, 0))
+    );
+    for (int sum = 0; sum <= target_sum; sum++) {
+      for (int tight = 0; tight <= 1; tight++) {
+        for (int started = 0; started <= 1; started++) {
+          int64_t ways = dp[sum][tight][started];
+          if (ways == 0) {
+            continue;
+          }
+          int limit = tight ? ch - '0' : 9;
+          for (int digit = 0; digit <= limit; digit++) {
+            int next_started = started || digit != 0;
+            int next_sum = sum + (next_started ? digit : 0);
+            if (next_sum <= target_sum) {
+              next[next_sum][tight && digit == limit][next_started] += ways;
+            }
+          }
+        }
+      }
+    }
+    dp.swap(next);
+  }
+  return dp[target_sum][0][0] + dp[target_sum][0][1] + dp[target_sum][1][0] + dp[target_sum][1][1];
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  assert(count_with_digit_sum(20, 2) == 3);   // 2, 11, 20.
+  assert(count_with_digit_sum(99, 9) == 10);  // 9, 18, ..., 90.
+  assert(count_with_digit_sum(0, 0) == 1);
+  assert(count_with_digit_sum(0, 1) == 0);
   return 0;
 }
 \end{lstlisting}

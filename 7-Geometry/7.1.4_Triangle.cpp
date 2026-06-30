@@ -11,8 +11,8 @@ precision is lost and cross products are never multiplied together.
 - `triangle_area_sides(s1, s2, s3)` returns the area of a triangle with side lengths `s1`, `s2`, and
   `s3`. The given lengths must be nonnegative and form a valid triangle.
 - `triangle_area_medians(m1, m2, m3)` returns the area of a triangle with medians of lengths `m1`,
-  `m2`, and `m3`. The median of a triangle is a line segment joining a vertex to the midpoint of
-  the opposing edge.
+  `m2`, and `m3`. The median of a triangle is a line segment joining a vertex to the midpoint of the
+  opposing edge.
 - `triangle_area_altitudes(h1, h2, h3)` returns the area of a triangle with altitudes `h1`, `h2`,
   and `h3`. An altitude of a triangle is the shortest line between a vertex and the infinite line
   that is extended from its opposite edge.

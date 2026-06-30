@@ -25,7 +25,7 @@ Time Complexity:
 
 Space Complexity:
 - O(1) auxiliary for `ReservoirSampleOne`.
-- O(k) auxiliary heap space for `ReservoirSampleK`.
+- O(k) auxiliary for `ReservoirSampleK`.
 
 */
 

@@ -1,10 +1,9 @@
 /*
 
-The following functions are equivalent to `std::sort()`, taking random-access iterators as a range
-$[`lo`, `hi`)$ to be sorted. Elements between `lo` and `hi` (including the element pointed to by `lo`
-but excluding the element pointed to by `hi`) will be sorted into ascending order after the function
-call. Optionally, a comparison function object specifying a strict weak ordering may be specified to
-replace the default `operator<`.
+The following functions are equivalent to `std::sort()`, taking random-access iterators as a
+half-open range $[`lo`, `hi`)$ to be sorted. The range is sorted into ascending order after the
+function call. Optionally, a comparison function object specifying a strict weak ordering may be
+specified to replace the default `operator<`.
 
 - `quicksort(lo, hi)` sorts the range using quicksort.
 - `mergesort(lo, hi)` sorts the range using merge sort, which is stable.

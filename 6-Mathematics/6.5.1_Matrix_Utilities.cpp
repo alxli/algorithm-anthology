@@ -44,12 +44,12 @@ Time Complexity:
   $n$ matrices.
 
 Space Complexity:
-- O(1) auxiliary space for `rows()`, `columns()`, `a[i][j]` access, comparison operators, and
-  in-place operations.
-- O(n^2) auxiliary heap space for exponentiation of an $n$ by $n$ matrix to power $p$.
-- O(n^2) auxiliary heap space for `power_sum()` of an $n$ by $n$ matrix up to power $p$.
-- O(m*n) auxiliary heap space for all non-in-place operations returning an $m$ by $n$ matrix,
-  `transpose()`, and `rotate()`.
+- O(1) auxiliary for `rows()`, `columns()`, `a[i][j]` access, comparison operators, and in-place
+  operations.
+- O(n^2) auxiliary for exponentiation of an $n$ by $n$ matrix to power $p$.
+- O(n^2) auxiliary for `power_sum()` of an $n$ by $n$ matrix up to power $p$.
+- O(m*n) auxiliary for all non-in-place operations returning an $m$ by $n$ matrix, `transpose()`,
+  and `rotate()`.
 
 */
 

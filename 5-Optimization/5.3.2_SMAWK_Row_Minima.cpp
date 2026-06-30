@@ -23,10 +23,10 @@ row minimum computed earlier in the same pass.
   bounds `rows` $\geq 0$ and `cols` $\geq 1$.
 
 Time Complexity:
-- O(R + C) evaluations of `get` per call to `smawk_row_minima(R, C, get)`.
+- O(r + c) evaluations of `get` per call, where $r$ is `rows` and $c$ is `cols`.
 
 Space Complexity:
-- O(R + C) auxiliary heap space.
+- O(r + c) auxiliary.
 
 */
 

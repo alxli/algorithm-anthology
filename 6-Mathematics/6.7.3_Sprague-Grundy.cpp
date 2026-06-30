@@ -17,7 +17,7 @@ Time Complexity:
   number of allowed moves.
 
 Space Complexity:
-- O(n + m) auxiliary heap space.
+- O(n + m) auxiliary.
 
 */
 

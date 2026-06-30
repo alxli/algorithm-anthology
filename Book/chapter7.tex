@@ -1331,7 +1331,7 @@ Intersection calculations in two dimensions for straight lines and line segments
 
 \begin{compactitem}
   \item \inlinecode{line\_intersection(a1, b1, c1, a2, b2, c2, \&p)} intersects lines $a_1 x + b_1 y + c_1 = 0$ and $a_2 x + b_2 y + c_2 = 0$, returning $-1$ (parallel), $0$ (one point, stored into \inlinecode{p}), or $1$ (identical).
-  \item \inlinecode{line\_intersection(p1, p2, p3, p4, \&p)} intersects the infinite lines through \inlinecode{p1}-\inlinecode{p2} and \inlinecode{p3}-\inlinecode{p4}, returning $-1$ (parallel), $0$ (one point, stored into \inlinecode{p}), or $1$ (identical).
+  \item \inlinecode{line\_intersection(p1, p2, p3, p4, \&p)} intersects the infinite lines determined by points \inlinecode{p1}, \inlinecode{p2}, \inlinecode{p3}, and \inlinecode{p4}, returning $-1$ (parallel), $0$ (one point, stored into \inlinecode{p}), or $1$ (identical).
   \item \inlinecode{seg\_intersection(a, b, c, d, \&p, \&q, touch\_is\_intersect = true)} intersects segments \inlinecode{a}-\inlinecode{b} and \inlinecode{c}-\inlinecode{d}, returning $-1$ (none), $0$ (one point), or $1$ (overlapping segment). The \inlinecode{touch\_is\_intersect} flag controls whether segments that meet only at an endpoint count as intersecting. If the intersection is a point (and \inlinecode{p} is not \inlinecode{nullptr}), it will be stored into \inlinecode{p}. If the intersection is an overlapping segment (and \inlinecode{p} and \inlinecode{q} are not \inlinecode{nullptr}) then their endpoints will be stored into pointers \inlinecode{p} and \inlinecode{q}, which must reference a floating-point point type.
   \item \inlinecode{seg\_intersection(a, b, c, d, touch\_is\_intersect = true)} is a simplified, detection-only version of the above. Both versions are exact for detection if the input point type is integral.
   \item \inlinecode{closest\_point(a, b, c, p)} returns the closest point on line $ax + by + c = 0$ to point \inlinecode{p}.
@@ -2894,7 +2894,7 @@ Overflow warning: \inlinecode{seg\_intersection} forms the usual quadratic cross
 
 \textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space for \inlinecode{find\_intersection(lo, hi, \&res1, \&res2)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\textbf{Space Complexity}: $O(n)$ auxiliary, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -3121,7 +3121,7 @@ Given a set of points with integer coordinates, compute the maximum number of po
   \item \inlinecode{max\_collinear\_points(points)} returns the largest number of collinear points. Duplicate points are counted as separate input points.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n^{2} \log n)$, where $n$ is the number of points.
+\textbf{Time Complexity}: $O(n^{2} \log n)$ per call, where $n$ is the number of points.
 
 \textbf{Space Complexity}: $O(n)$ auxiliary.
 
@@ -3199,7 +3199,7 @@ The function is templated on the input point type. Side classification is done w
 
 \textbf{Time Complexity}: $O(n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary space for the returned polygon.
+\textbf{Space Complexity}: $O(n)$ auxiliary for the returned polygon.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -3338,7 +3338,7 @@ Given a list of directed lines, compute the convex polygon contained in every le
   \item \inlinecode{half\_plane\_intersection(planes)} returns the polygon cut out by the half-planes in counter-clockwise order. Each half-plane is represented by \inlinecode{HalfPlane(p, q)}, meaning the closed region to the left of the directed line \inlinecode{p} $\to$ \inlinecode{q}. If the intersection is empty, the function returns an empty vector. If the true intersection is unbounded, the returned polygon is not meaningful; add explicit bounding-box half-planes when a bounded polygon is required.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n \log n)$, where $n$ is the number of half-planes.
+\textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the number of half-planes.
 
 \textbf{Space Complexity}: $O(n)$ auxiliary.
 
@@ -3486,7 +3486,7 @@ Given two convex polygons, compute their Minkowski sum: the set of all points $a
   \item \inlinecode{minkowski\_sum(a, b)} returns the convex polygon representing the sum. Inputs must be convex polygons in boundary order, clockwise or counter-clockwise, with no repeated final vertex. Collinear consecutive output vertices are removed.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n + m)$, where $n$ and $m$ are the polygon sizes.
+\textbf{Time Complexity}: $O(n + m)$ per call, where $n$ and $m$ are the polygon sizes.
 
 \textbf{Space Complexity}: $O(n + m)$ auxiliary.
 
@@ -3647,7 +3647,7 @@ Overflow warning: the segment-intersection tests form cross products in the inpu
 
 \textbf{Time Complexity}: $O(n \cdot m \cdot (n + m) \cdot \log\left(n + m\right))$ per call to \inlinecode{intersection\_area(lo1, hi1, lo2, hi2)} and \inlinecode{union\_area(lo1, hi1, lo2, hi2)}, where $n$ the number of vertices in the first polygon, and $m$ is the number of points in the second polygon (or equivalently $O(N^{3} \log N)$ for $N = n + m$).
 
-\textbf{Space Complexity}: $O(nm)$ auxiliary heap space for \inlinecode{intersection\_area(lo1, hi1, lo2, hi2)} and \inlinecode{union\_area(lo1, hi1, lo2, hi2)}, where $n$ is the sum of distances between \inlinecode{lo1} and \inlinecode{hi1} and \inlinecode{lo2} and \inlinecode{hi2} respectively.
+\textbf{Space Complexity}: $O(n \cdot m)$ auxiliary for \inlinecode{intersection\_area(lo1, hi1, lo2, hi2)} and \inlinecode{union\_area(lo1, hi1, lo2, hi2)}, where $n$ is the sum of distances between \inlinecode{lo1} and \inlinecode{hi1} and \inlinecode{lo2} and \inlinecode{hi2} respectively.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -3916,7 +3916,7 @@ All arithmetic uses the point's own coordinate type, so integer inputs yield an 
 
 \textbf{Time Complexity}: $O(n^{6})$ per call, where $n$ is the number of points. The empty-circumcircle test contributes $O(n^{4})$ while $O(n^{2})$ comes from checking candidate triangles against previously accepted triangles.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space, excluding the returned triangulation.
+\textbf{Space Complexity}: $O(n)$ auxiliary, excluding the returned triangulation.
 
 \begin{lstlisting}[language=C++]
 #include <cmath>
@@ -4060,7 +4060,7 @@ All arithmetic uses the point's own coordinate type, so integer inputs yield an 
 
 \textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the number of input points.
 
-\textbf{Space Complexity}: $O(n)$ heap space for the quad-edge structure and returned triangulation.
+\textbf{Space Complexity}: $O(n)$ for the quad-edge structure and returned triangulation.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -4474,7 +4474,7 @@ Type aliases:
 
 \textbf{Time Complexity}: $O(1)$ per operation.
 
-\textbf{Space Complexity}: $O(1)$ for storage and auxiliary space.
+\textbf{Space Complexity}: $O(1)$ for storage and auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -4566,7 +4566,7 @@ Given points in 3D, compute the triangular faces of their convex hull with an in
 
 Preconditions: at least four points, and no four points coplanar. For coplanar or highly degenerate inputs, perturbing points slightly or using a more robust library is recommended.
 
-\textbf{Time Complexity}: $O(n^{2})$, where $n$ is the number of points.
+\textbf{Time Complexity}: $O(n^{2})$ per call, where $n$ is the number of points.
 
 \textbf{Space Complexity}: $O(n^{2})$ auxiliary.
 
@@ -4702,7 +4702,7 @@ Given an oriented triangular mesh of a closed polyhedron, compute its signed vol
   \item \inlinecode{signed\_polyhedron\_volume(points, faces)} returns the signed volume. Each face is an index triple.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(f)$, where $f$ is the number of triangular faces.
+\textbf{Time Complexity}: $O(f)$ per call, where $f$ is the number of triangular faces.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 

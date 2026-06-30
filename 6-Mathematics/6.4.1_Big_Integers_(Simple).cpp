@@ -21,15 +21,15 @@ maintains a running remainder, and repeatedly subtracts the divisor to discover 
 - `div(a, b)` returns the quotient of big integers `a` and `b`.
 
 Time Complexity:
-- O(n) per call to the constructor, `to_string()`, `comp()`, `add()`, and `sub()`, where $n$ is
-  the total number of digits in the arguments and result for each operation.
+- O(n) per call to the constructor, `to_string()`, `comp()`, `add()`, and `sub()`, where $n$ is the
+  total number of digits in the arguments and result for each operation.
 - O(n*m) per call to `mul(a, b)` and `div(a, b)` where $n$ is the number of digits in `a` and $m$ is
   the number of digits in `b`.
 
 Space Complexity:
 - O(n) for storage of the big integer, where $n$ is the number of digits.
-- O(n) auxiliary heap space for `to_string()`, `add()`, `sub()`, `mul()`, and `div()`, where $n$ is
-  the total number of digits in the arguments and result for each operation.
+- O(n) auxiliary for `to_string()`, `add()`, `sub()`, `mul()`, and `div()`, where $n$ is the total
+  number of digits in the arguments and result for each operation.
 
 */
 

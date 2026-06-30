@@ -19,7 +19,7 @@ Time Complexity:
 
 Space Complexity:
 - O(m) for storage of the partial match table, where $m$ is the length of `needle`.
-- O(1) auxiliary space per call to `find_in(haystack)`.
+- O(1) auxiliary for `find_in(haystack)`.
 
 */
 

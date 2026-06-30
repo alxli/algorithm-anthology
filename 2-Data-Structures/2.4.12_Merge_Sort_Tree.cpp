@@ -11,8 +11,8 @@ $[`lo`, `hi`]$ with 0-based indices, and values may be of any comparable type.
 
 - `MergeSortTree<T>(a)` builds the tree over the array `a`.
 - `count_leq(lo, hi, x)` returns the number of indices `i` in $[`lo`, `hi`]$ with `a[i]` $\leq$ `x`.
-- `count_in(lo, hi, x, y)` returns the number of indices `i` in $[`lo`, `hi`]$ with
-  `x` $\leq$ `a[i]` $\leq$ `y`.
+- `count_in(lo, hi, x, y)` returns the number of indices `i` $\in [`lo`, `hi`]$ such that `a[i]`
+   $\in [`x`, `y`]$.
 
 Time Complexity:
 - O(n log n) per call to the constructor, where $n$ is the size of the array.

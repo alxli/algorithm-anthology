@@ -25,9 +25,9 @@ Time Complexity:
   the length of `needle`.
 
 Space Complexity:
-- O(n) auxiliary heap space for `z_array(s)`, where $n$ is the length of `s`.
-- O(n + m) auxiliary heap space for `find(haystack, needle)` where $n$ is the length of `haystack`
-  and $m$ is the length of `needle`.
+- O(n) auxiliary for `z_array(s)`, where $n$ is the length of `s`.
+- O(n + m) auxiliary for `find(haystack, needle)` where $n$ is the length of `haystack` and $m$ is
+  the length of `needle`.
 
 */
 

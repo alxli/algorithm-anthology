@@ -19,7 +19,7 @@ Time Complexity:
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
   edges.
-- O(n) auxiliary heap space for `bfs()`.
+- O(n) auxiliary.
 
 */
 

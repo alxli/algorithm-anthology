@@ -29,7 +29,7 @@ Time Complexity:
 
 Space Complexity:
 - O(1) for storage of the rational number.
-- O(1) auxiliary space for all operations.
+- O(1) auxiliary for all operations.
 
 */
 

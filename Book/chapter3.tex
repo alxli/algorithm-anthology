@@ -9,8 +9,8 @@ Common string functions, many of which already have standard STL equivalents. Mo
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ auxiliary heap space per call to operations that return a new string or vector of strings.
-  \item $O(1)$ auxiliary space per call to in-place operations.
+  \item $O(n)$ auxiliary per call to operations that return a new string or vector of strings.
+  \item $O(1)$ auxiliary for in-place operations.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1391,7 +1391,7 @@ Given a single string (needle) and subsequent queries of texts (haystacks) to be
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(m)$ for storage of the partial match table, where $m$ is the length of \inlinecode{needle}.
-  \item $O(1)$ auxiliary space per call to \inlinecode{find\_in(haystack)}.
+  \item $O(1)$ auxiliary for \inlinecode{find\_in(haystack)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1473,8 +1473,8 @@ The \inlinecode{find()} function below calls the Z algorithm on the concatenatio
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ auxiliary heap space for \inlinecode{z\_array(s)}, where $n$ is the length of \inlinecode{s}.
-  \item $O(n + m)$ auxiliary heap space for \inlinecode{find(haystack, needle)} where $n$ is the length of \inlinecode{haystack} and $m$ is the length of \inlinecode{needle}.
+  \item $O(n)$ auxiliary for \inlinecode{z\_array(s)}, where $n$ is the length of \inlinecode{s}.
+  \item $O(n + m)$ auxiliary for \inlinecode{find(haystack, needle)} where $n$ is the length of \inlinecode{haystack} and $m$ is the length of \inlinecode{needle}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1560,7 +1560,7 @@ This implementation stores transitions in hash tables, which keeps lookups expec
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(m \cdot l)$ for storage of the automaton, where $m$ is the number of needles and $l$ is the maximum length for any needle.
-  \item $O(1)$ auxiliary space per call to \inlinecode{find\_all\_in(haystack, report\_match)}.
+  \item $O(1)$ auxiliary for \inlinecode{find\_all\_in(haystack, report\_match)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1824,7 +1824,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Lyndon Factorization (Duval)}
-A Lyndon word is a nonempty string that is strictly smaller than all of its proper suffixes, or equivalently, strictly smaller than all of its nontrivial cyclic rotations. By the Chen-Fox-Lyndon theorem, every string has a unique factorization into a sequence of Lyndon words whose values are non-increasing: $s = w_1 w_2 \cdots w_k$ with $w_1 \geq w_2 \geq \cdots \geq w_k$. Duval's algorithm computes this factorization in linear time and constant auxiliary space by scanning the string while tracking the current candidate Lyndon prefix and the position it last matched.
+A Lyndon word is a nonempty string that is strictly smaller than all of its proper suffixes, or equivalently, strictly smaller than all of its nontrivial cyclic rotations. By the Chen-Fox-Lyndon theorem, every string has a unique factorization into a sequence of Lyndon words whose values are non-increasing: $s = w_1 w_2 \cdots w_k$ with $w_1 \geq w_2 \geq \cdots \geq w_k$. Duval's algorithm computes this factorization in linear time and constant auxiliary by scanning the string while tracking the current candidate Lyndon prefix and the position it last matched.
 
 The same scan, applied to the string viewed as a cycle, yields the starting position of its lexicographically least rotation. This is the standard way to canonicalize a necklace, for example to test whether two strings are cyclic rotations of one another.
 
@@ -1840,8 +1840,8 @@ Both functions below operate on any random-access sequence whose elements suppor
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(k)$ auxiliary heap space for \inlinecode{lyndon\_factorization(s)}, where $k$ is the number of factors.
-  \item $O(1)$ auxiliary space for \inlinecode{min\_rotation(s)}.
+  \item $O(k)$ auxiliary for \inlinecode{lyndon\_factorization(s)}, where $k$ is the number of factors.
+  \item $O(1)$ auxiliary for \inlinecode{min\_rotation(s)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1915,9 +1915,9 @@ The construction here is the Fredricksen-Kessler-Maiorana (FKM) algorithm. It co
   \item \inlinecode{de\_bruijn(k, n)} returns a vector of length $k^n$ holding one period of $B(k, n)$. Each entry lies in $[0, k)$. Both $k$ and $n$ must be at least $1$. Treat the result as cyclic: the length-$n$ windows that wrap past the end are exactly the ones still needed to cover all strings.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(k^{n})$ per call to \inlinecode{de\_bruijn(k, n)}, which is optimal since the output itself has length $k^n$.
+\textbf{Time Complexity}: $O(k^{n})$ per call, which is optimal since the output itself has length $k^n$.
 
-\textbf{Space Complexity}: $O(k^{n})$ heap space for the returned sequence, plus $O(n)$ auxiliary space for the recursion.
+\textbf{Space Complexity}: $O(k^{n})$ for the returned sequence, plus $O(n)$ auxiliary stack space for the recursion.
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -2012,8 +2012,8 @@ The original Manber-Myers doubling algorithm comparison-sorts the suffixes by th
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ auxiliary for storage of the suffix and LCP arrays.
-  \item $O(n)$ auxiliary heap space for the constructor.
-  \item $O(1)$ auxiliary space for all other operations.
+  \item $O(n)$ auxiliary for the constructor.
+  \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -2150,8 +2150,8 @@ The original Manber-Myers doubling algorithm comparison-sorts the suffixes by th
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ auxiliary for storage of the suffix and LCP arrays.
-  \item $O(n)$ auxiliary heap space for the constructor.
-  \item $O(1)$ auxiliary space for all other operations.
+  \item $O(n)$ auxiliary for the constructor.
+  \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -2283,8 +2283,8 @@ The DC3/skew algorithm recursively constructs the suffix array of the suffixes s
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ auxiliary for storage of the suffix and LCP arrays.
-  \item $O(n)$ auxiliary heap space for the constructor.
-  \item $O(1)$ auxiliary space for all other operations.
+  \item $O(n)$ auxiliary for the constructor.
+  \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3545,7 +3545,7 @@ int main() {
 \setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Longest Common Substring}
-Given two strings, determine their longest common substring: a contiguous run of characters that appears in both. A dynamic program computes, for each pair of prefixes, the length of their longest common suffix; the largest value over all pairs locates a longest common substring. Only the previous row of the table is retained, so the auxiliary space is linear in the shorter string.
+Given two strings, determine their longest common substring: a contiguous run of characters that appears in both. A dynamic program computes, for each pair of prefixes, the length of their longest common suffix; the largest value over all pairs locates a longest common substring. Only the previous row of the table is retained, so the auxiliary is linear in the shorter string.
 
 \begin{compactitem}
   \item \inlinecode{longest\_common\_substring(s1, s2)} returns a longest common substring of \inlinecode{s1} and \inlinecode{s2} (one such substring if several are tied in length), or the empty string if they have none in common.
@@ -3553,7 +3553,7 @@ Given two strings, determine their longest common substring: a contiguous run of
 
 \textbf{Time Complexity}: $O(n \cdot m)$ per call, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
 
-\textbf{Space Complexity}: $O(\min\left(n, m\right))$ auxiliary heap space, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+\textbf{Space Complexity}: $O(\min\left(n, m\right))$ auxiliary, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
 
 \begin{lstlisting}[language=C++]
 #include <string>
@@ -3720,21 +3720,23 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Sequence Alignment (Needleman-Wunsch)}
-Given two strings, determine their minimum-cost alignment. An alignment of two strings is a transformation of both strings by inserting gap characters \inlinecode{\_} in some way to make the final lengths equal. The total cost of an alignment given a \inlinecode{gap\_cost} (insertion or deletion cost) and a \inlinecode{sub\_cost} (substitution, i.e. mismatch cost) is \inlinecode{gap\_cost} times the number of inserted gaps, plus \inlinecode{sub\_cost} times the number of indices at which the two aligned strings differ.
+\subsection{Edit Distance and Sequence Alignment}
+Given two strings, determine their edit distance or a minimum-cost alignment. The Levenshtein edit distance is the minimum number of insertions, deletions, and substitutions needed to transform one string into the other. More generally, an alignment inserts gap characters \inlinecode{\_} into both strings so the final lengths match; its cost is \inlinecode{gap\_cost} times the number of inserted gaps plus \inlinecode{sub\_cost} times the number of indices where the aligned characters differ.
 
-The dynamic program compares prefixes and chooses the cheapest last operation: align the final characters together, leave a gap in the first string, or leave a gap in the second string. Following the filled table backward reconstructs one minimum-cost alignment. Hirschberg's algorithm uses the same recurrence with only one DP row at a time, splitting the problem where an optimal alignment crosses the midpoint of the longer string.
+Dynamic programming compares prefixes and chooses the cheapest last operation: align the final characters together, leave a gap in the first string, or leave a gap in the second string. Following the filled table backward reconstructs one minimum-cost alignment. This is the Needleman-Wunsch sequence-alignment recurrence. Hirschberg's algorithm uses the same recurrence with only one DP row at a time, splitting the problem where an optimal alignment crosses the longer string's midpoint.
 
 \begin{compactitem}
+  \item \inlinecode{edit\_distance(s1, s2)} returns the Levenshtein edit distance between strings \inlinecode{s1} and \inlinecode{s2}.
   \item \inlinecode{align\_sequences(s1, s2, gap\_cost, sub\_cost)} returns a pair of aligned strings for strings \inlinecode{s1} and \inlinecode{s2}, using a classic dynamic programming approach. This implementation first computes \inlinecode{dp[i][j]} (the cost of aligning the length $i$ prefix of \inlinecode{s1} with the length $j$ prefix of \inlinecode{s2}) before following the path backwards to construct the answer. For \inlinecode{gap\_cost = sub\_cost = 1}, \inlinecode{dp[n][m]} will be the Levenshtein edit distance, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
   \item \inlinecode{hirschberg\_align\_sequences(s1, s2, gap\_cost, sub\_cost)} returns the sequence alignment of strings \inlinecode{s1} and \inlinecode{s2} using the more memory efficient Hirschberg's algorithm.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{align\_sequences(s1, s2)} as well as \inlinecode{hirschberg\_align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+\textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{edit\_distance(s1, s2)}, \inlinecode{align\_sequences(s1, s2)}, and \inlinecode{hirschberg\_align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
+  \item $O(\min\left(n, m\right))$ auxiliary heap space for \inlinecode{edit\_distance(s1, s2)}.
   \item $O(n \cdot m)$ auxiliary heap space for \inlinecode{align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
   \item $O(\log\left(\max\left(n, m\right)\right))$ auxiliary stack space and $O(\min\left(n, m\right))$ auxiliary heap space for \inlinecode{hirschberg\_align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
 \end{compactitem}
@@ -3746,6 +3748,26 @@ The dynamic program compares prefixes and chooses the cheapest last operation: a
 #include <utility>
 #include <vector>
 using std::string;
+
+int edit_distance(const string &s1, const string &s2) {
+  if (s1.size() < s2.size()) {
+    return edit_distance(s2, s1);
+  }
+  int n = static_cast<int>(s1.size()), m = static_cast<int>(s2.size());
+  std::vector<int> dp(m + 1), prev(m + 1);
+  for (int j = 0; j <= m; j++) {
+    dp[j] = j;
+  }
+  for (int i = 1; i <= n; i++) {
+    dp.swap(prev);
+    dp[0] = i;
+    for (int j = 1; j <= m; j++) {
+      dp[j] =
+          (s1[i - 1] == s2[j - 1]) ? prev[j - 1] : std::min({prev[j - 1], prev[j], dp[j - 1]}) + 1;
+    }
+  }
+  return dp[m];
+}
 
 std::pair<string, string> align_sequences(
     const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1
@@ -3863,6 +3885,9 @@ std::pair<string, string> hirschberg_align_sequences(
 #include <iostream>
 
 int main() {
+  assert(edit_distance("kitten", "sitting") == 3);
+  assert(edit_distance("", "abc") == 3);
+
   auto alignment = align_sequences("AGGGCT", "AGGCA", 2, 3);
   assert(alignment == (std::pair<string, string>{"AGGGCT", "A_GGCA"}));
   assert(hirschberg_align_sequences("AGGGCT", "AGGCA", 2, 3) == alignment);
@@ -3875,6 +3900,100 @@ Aligned strings:
 AGGGCT
 A_GGCA
 \end{exampleoutput}
+\subsection{Palindrome Dynamic Programming}
+Solves basic palindrome dynamic programming problems on a string. The core interval state considers substring $[{\inlinecodemath{l}}, {\inlinecodemath{r}}]$: if the two endpoints match, they can wrap an optimal answer for the inside substring; otherwise, at least one endpoint must be skipped or inserted around the other side. Since each state depends on shorter substrings, intervals are processed by increasing length.
+
+The longest palindromic subsequence (LPS) is a maximum-length subsequence that reads the same forward and backward. The minimum number of insertions needed to make a string a palindrome is the number of characters outside an LPS, so it equals $n$ minus the LPS length.
+
+\begin{compactitem}
+  \item \inlinecode{longest\_palindromic\_subsequence(s)} returns one longest palindromic subsequence of \inlinecode{s}.
+  \item \inlinecode{min\_insertions\_palindrome(s)} returns the minimum number of characters that must be inserted anywhere in \inlinecode{s} to make it a palindrome.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n^{2})$ per call to \inlinecode{longest\_palindromic\_subsequence(s)} and \inlinecode{min\_insertions\_palindrome(s)}, where $n$ is the length of \inlinecode{s}.
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n^{2})$ auxiliary for \inlinecode{longest\_palindromic\_subsequence(s)}.
+  \item $O(n)$ auxiliary for \inlinecode{min\_insertions\_palindrome(s)}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <string>
+#include <vector>
+using std::string;
+
+string longest_palindromic_subsequence(const string &s) {
+  int n = static_cast<int>(s.size());
+  if (n == 0) {
+    return "";
+  }
+  std::vector<std::vector<int>> dp(n, std::vector<int>(n, 0));
+  for (int len = 1; len <= n; len++) {
+    for (int l = 0, r = len - 1; r < n; l++, r++) {
+      if (l == r) {
+        dp[l][r] = 1;
+      } else if (s[l] == s[r]) {
+        dp[l][r] = 2 + (l + 1 <= r - 1 ? dp[l + 1][r - 1] : 0);
+      } else {
+        dp[l][r] = std::max(dp[l + 1][r], dp[l][r - 1]);
+      }
+    }
+  }
+  string left, right;
+  for (int l = 0, r = n - 1; l <= r;) {
+    if (l == r) {
+      left += s[l];
+      break;
+    }
+    if (s[l] == s[r] && dp[l][r] == 2 + (l + 1 <= r - 1 ? dp[l + 1][r - 1] : 0)) {
+      left += s[l++];
+      right += s[r--];
+    } else if (dp[l + 1][r] >= dp[l][r - 1]) {
+      l++;
+    } else {
+      r--;
+    }
+  }
+  std::reverse(right.begin(), right.end());
+  return left + right;
+}
+
+int min_insertions_palindrome(const string &s) {
+  int n = static_cast<int>(s.size());
+  std::vector<int> dp(n, 0);
+  for (int l = n - 1; l >= 0; l--) {
+    int inside = 0;
+    for (int r = l + 1; r < n; r++) {
+      int old = dp[r];
+      if (s[l] == s[r]) {
+        dp[r] = inside;
+      } else {
+        dp[r] = 1 + std::min(dp[r], dp[r - 1]);
+      }
+      inside = old;
+    }
+  }
+  return n == 0 ? 0 : dp[n - 1];
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  assert(longest_palindromic_subsequence("bbbab") == "bbbb");
+  assert(longest_palindromic_subsequence("character") == "carac");
+  assert(min_insertions_palindrome("leetcode") == 5);
+  assert(min_insertions_palindrome("race") == 3);
+  assert(min_insertions_palindrome("") == 0);
+  return 0;
+}
+\end{lstlisting}
 
 \section{\texorpdfstring{Expression Parsing}{3.7 Expression Parsing}}
 \setcounter{section}{7}
@@ -3888,7 +4007,7 @@ Evaluate an expression in accordance to the order of operations (parentheses, un
 
 \textbf{Time Complexity}: $O(n)$ per call, where $n$ is the length of \inlinecode{s}.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary stack space for \inlinecode{eval(s)}, where $n$ is the length of \inlinecode{s}.
+\textbf{Space Complexity}: $O(n)$ auxiliary stack space per call, where $n$ is the length of \inlinecode{s}.
 
 \begin{lstlisting}[language=C++]
 #include <string>
@@ -4462,7 +4581,7 @@ For a string with symbol probabilities $p_i$, empirical entropy is $H = -\sum_i 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(m)$ auxiliary heap space for \inlinecode{byte\_frequencies(s)}.
+  \item $O(m)$ auxiliary for \inlinecode{byte\_frequencies(s)}.
   \item $O(1)$ auxiliary for the other operations.
 \end{compactitem}
 
@@ -4852,7 +4971,7 @@ The input must not contain the sentinel character \inlinecode{\textquotesingle{}
   \item $O(n \log n)$ per call to \inlinecode{inverse\_bwt(code)}.
 \end{compactitem}
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space for both functions.
+\textbf{Space Complexity}: $O(n)$ auxiliary for both functions.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>

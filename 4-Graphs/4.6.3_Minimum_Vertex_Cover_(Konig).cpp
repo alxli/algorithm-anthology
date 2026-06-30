@@ -24,7 +24,7 @@ Time Complexity:
 - O(m*(n_1 + n_2)) per call, dominated by the matching, where $m$ is the number of edges.
 
 Space Complexity:
-- O(n_1 + n_2) auxiliary space.
+- O(n_1 + n_2) auxiliary.
 
 */
 

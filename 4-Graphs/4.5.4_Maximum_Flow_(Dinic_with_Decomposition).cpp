@@ -31,7 +31,7 @@ Time Complexity:
 
 Space Complexity:
 - O(max(n, m)) for storage of the flow network.
-- O(n) auxiliary stack and heap space for `max_flow()`.
+- O(n) auxiliary stack space and O(n) auxiliary heap space for `max_flow()`.
 - O(n + m) auxiliary heap space for `decompose()`, not counting the returned paths.
 
 */

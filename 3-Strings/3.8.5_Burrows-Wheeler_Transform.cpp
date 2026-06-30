@@ -27,7 +27,7 @@ Time Complexity:
 - O(n log n) per call to `inverse_bwt(code)`.
 
 Space Complexity:
-- O(n) auxiliary heap space for both functions.
+- O(n) auxiliary for both functions.
 
 */
 

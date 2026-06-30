@@ -25,7 +25,7 @@ Time Complexity:
   found, and $p$ is the modulus.
 
 Space Complexity:
-- O(n) auxiliary heap space.
+- O(n) auxiliary.
 
 */
 

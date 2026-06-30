@@ -15,8 +15,8 @@ part. This lets the algorithms skip whole blocks of partitions sharing a common 
 - `partition_by_rank(n, r)` returns the partition of $n$ that is lexicographically ranked $r$ if
   addends in each partition were sorted in non-increasing order, where $r$ is a 0-based rank in the
   range $[0, \text{partitions}(n))$.
-- `rank_by_partition(p)` returns an integer representing the 0-based rank of the partition
-  specified by vector `p`, which must consist of positive integers sorted in non-increasing order.
+- `rank_by_partition(p)` returns an integer representing the 0-based rank of the partition specified
+  by vector `p`, which must consist of positive integers sorted in non-increasing order.
 - `generate_increasing_partitions(n, f)` calls the function `f(lo, hi)` on strictly increasing
   partitions of $n$ in lexicographically increasing order of partition, where `lo` and `hi` are
   random-access iterators to a range $[`lo`, `hi`)$ of integers. Note that non-strictly increasing

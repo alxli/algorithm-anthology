@@ -6,14 +6,14 @@ but they are available on many GNU C++ contest judges.
 
 - `HashMap<K, V>` and `HashSet<K>` behave like faster, non-standard alternatives to
   `std::unordered_map<K, V>` and `std::unordered_set<K>`, using `gp_hash_table`. The default
-  `SplitMix64Hasher` is for integer-like keys; pass a custom hash for other key types. It
-  randomizes the hash seed to avoid weak adversarial integer hashes.
+  `SplitMix64Hasher` is for integer-like keys; pass a custom hash for other key types. It randomizes
+  the hash seed to avoid weak adversarial integer hashes.
 - `OrderedSet<T>` and `OrderedMap<K, V>` behave like `std::set<T>` and `std::map<K, V>` but also
   support `find_by_order(k)` and `order_of_key(x)`.
 - `OrderedMultiset<T>` behaves like `std::multiset<T>` by storing duplicates as (value, unique ID)
   pairs.
-- `OrderedMultimap<K, V>` behaves like `std::multimap<K, V>` by storing duplicate keys as
-  (key, unique ID) pairs.
+- `OrderedMultimap<K, V>` behaves like `std::multimap<K, V>` by storing duplicate keys as (key,
+  unique ID) pairs.
 - `PairingHeap<T>` is a meldable priority queue; `push()` returns an iterator that can be passed to
   `modify()` or `erase()`.
 - `BinaryHeap<T>`, `BinomialHeap<T>`, and `RcBinomialHeap<T>` are alternative GNU priority queue
@@ -27,8 +27,8 @@ into the current one. Since this depends on `__gnu_pbds`, keep a standard librar
 when portability matters.
 
 Time Complexity:
-- `HashMap`/`HashSet`: same expected bounds as `std::unordered_map`/`std::unordered_set`
-  (expected O(1), worst-case O(n)).
+- `HashMap`/`HashSet`: same expected bounds as `std::unordered_map`/`std::unordered_set` (expected
+  O(1), worst-case O(n)).
 - `OrderedSet`/`OrderedMap`: same as `std::set`/`std::map`, with O(log n) for `find_by_order` and
   `order_of_key`.
 - `OrderedMultiset`/`OrderedMultimap`: same as `std::multiset`/`std::multimap`, with O(log n) for

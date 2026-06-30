@@ -14,10 +14,10 @@ is a `BigInt` at any given level of evaluation.
 - `size()` returns the number of digits in the base-10 representation.
 - Operators `>>` and `<<` are defined to support stream-based input and output.
 - `v.to_string()`, `v.to_llong()`, `v.to_double()`, and `v.to_ldouble()` return the big integer `v`
-  converted to an `std::string`, `int64_t`, `double`, and `long double` respectively. For the
-  latter three data types, overflow behavior is based on that of inputting from `std::istream`.
-  Equivalent conversions are also available through explicit casts to `int`, `long long`, `double`,
-  and `long double`.
+  converted to an `std::string`, `int64_t`, `double`, and `long double` respectively. For the latter
+  three data types, overflow behavior is based on that of inputting from `std::istream`. Equivalent
+  conversions are also available through explicit casts to `int`, `long long`, `double`, and
+  `long double`.
 - `v.abs()` returns the absolute value of big integer `v`.
 - `a.comp(b)` returns $-1$, $0$, or $1$ depending on whether the big integers `a` and `b` compare
   less, equal, or greater, respectively.
@@ -54,9 +54,9 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the big integer.
-- O(n) auxiliary heap space for negation, addition, subtraction, multiplication, division, `abs()`,
-  `sqrt()`, `pow()`, and `nth_root()`.
-- O(1) auxiliary space for all other operations.
+- O(n) auxiliary for negation, addition, subtraction, multiplication, division, `abs()`, `sqrt()`,
+  `pow()`, and `nth_root()`.
+- O(1) auxiliary for all other operations.
 
 */
 

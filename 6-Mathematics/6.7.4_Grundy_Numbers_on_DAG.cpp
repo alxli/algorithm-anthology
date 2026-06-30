@@ -11,11 +11,11 @@ usual finite impartial-game Grundy recurrence is not directly valid without addi
   all positions reachable from position `u` in one move.
 
 Time Complexity:
-- O(n + m + s), where $n$ is the number of vertices, $m$ is the number of edges, and $s$ is the
-  total cost of MEX sets over outgoing edges.
+- O(n + m + s) per call, where $n$ is the number of vertices, $m$ is the number of edges, and $s$ is
+  the total cost of MEX sets over outgoing edges.
 
 Space Complexity:
-- O(n + d) auxiliary heap and stack space, where $d$ is DFS depth.
+- O(d) auxiliary stack space and O(n) auxiliary heap space, where $d$ is DFS depth.
 
 */
 

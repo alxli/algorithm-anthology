@@ -6,9 +6,8 @@ approximated by a parabola, giving the approximation $\int_{a}^{b} f(x) \,dx \ap
 $h/3 \cdot [f(x_0) + 4f(x_1) + 2f(x_2) + \ldots + 4f(x_{n-1}) + f(x_n)]$ with step $h = (b - a)/n$.
 
 - `integrate(f, a, b, n)` returns the definite integral of a function `f` from `a` to `b` using `n`
-  subintervals, where `n` must be even. Larger `n` trades runtime for accuracy: the error is
-  O((b - a) * h^4), so for a smooth `f` a value of `n` on the order of $10^6$ reaches near double
-  precision.
+  subintervals, where `n` must be even. Larger `n` trades runtime for accuracy; the leading error
+  scales as `(b - a) * h^4`. For a smooth `f`, `n` near $10^6$ reaches near double precision.
 
 Unlike adaptive quadrature, the step size here is uniform, so a feature narrower than `h` may be
 under-resolved. The benefit is a simple, non-recursive routine with predictable cost that is not

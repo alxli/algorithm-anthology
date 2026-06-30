@@ -3,7 +3,7 @@
 Given two strings, determine their longest common substring: a contiguous run of characters that
 appears in both. A dynamic program computes, for each pair of prefixes, the length of their longest
 common suffix; the largest value over all pairs locates a longest common substring. Only the
-previous row of the table is retained, so the auxiliary space is linear in the shorter string.
+previous row of the table is retained, so the auxiliary is linear in the shorter string.
 
 - `longest_common_substring(s1, s2)` returns a longest common substring of `s1` and `s2` (one such
   substring if several are tied in length), or the empty string if they have none in common.
@@ -12,8 +12,7 @@ Time Complexity:
 - O(n*m) per call, where $n$ and $m$ are the lengths of `s1` and `s2`, respectively.
 
 Space Complexity:
-- O(min(n, m)) auxiliary heap space, where $n$ and $m$ are the lengths of `s1` and `s2`,
-  respectively.
+- O(min(n, m)) auxiliary, where $n$ and $m$ are the lengths of `s1` and `s2`, respectively.
 
 */
 

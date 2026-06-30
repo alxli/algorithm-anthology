@@ -30,7 +30,7 @@ Time Complexity:
 - O(1) amortized per call to `add_edge()`, `remove_edge()`, and `count_components()`.
 
 Space Complexity:
-- O(n + m log T) auxiliary heap space.
+- O(n + m log T) auxiliary.
 
 */
 

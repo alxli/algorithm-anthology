@@ -18,7 +18,7 @@ Time Complexity:
 - O(1) per call to `get()` for `DynamicMex`.
 
 Space Complexity:
-- O(n) auxiliary space for both approaches.
+- O(n) auxiliary for both approaches.
 
 */
 

@@ -19,8 +19,8 @@ matters.
 
 Time Complexity:
 - O(1) expected per call to `get(x)` and `toggle(h, x)`.
-- O(n) expected per call to `distinct_prefix_hashes(lo, hi)`, where $n$ is the distance between
-  `lo` and `hi`.
+- O(n) expected per call to `distinct_prefix_hashes(lo, hi)`, where $n$ is the distance between `lo`
+  and `hi`.
 
 Space Complexity:
 - O(n) for stored key tokens, where $n$ is the number of distinct keys seen so far.

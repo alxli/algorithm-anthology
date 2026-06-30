@@ -10,7 +10,7 @@ Preconditions: at least four points, and no four points coplanar. For coplanar o
 degenerate inputs, perturbing points slightly or using a more robust library is recommended.
 
 Time Complexity:
-- O(n^2), where $n$ is the number of points.
+- O(n^2) per call, where $n$ is the number of points.
 
 Space Complexity:
 - O(n^2) auxiliary.

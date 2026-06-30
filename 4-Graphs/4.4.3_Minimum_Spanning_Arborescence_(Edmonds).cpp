@@ -22,7 +22,7 @@ Time Complexity:
 - O(n * m) per call, where $n$ is the number of nodes and $m$ is the number of edges.
 
 Space Complexity:
-- O(n + m) auxiliary heap space.
+- O(n + m) auxiliary.
 
 */
 

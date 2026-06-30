@@ -9,8 +9,8 @@ reach. Kahn's algorithm instead repeatedly removes nodes with indegree zero: the
 nodes whose remaining prerequisites have all already been placed. If at some point not every node
 can be removed, the leftover nodes must lie on a directed cycle.
 
-- `toposort_dfs()` returns a valid topological ordering using DFS post-order, or throws if the
-  graph contains a cycle.
+- `toposort_dfs()` returns a valid topological ordering using DFS post-order, or throws if the graph
+  contains a cycle.
 - `toposort_kahn()` returns a valid topological ordering using indegrees and a queue, or returns an
   empty vector if the graph contains a cycle.
 
@@ -22,7 +22,7 @@ Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
   edges.
 - O(n) auxiliary stack space for `toposort_dfs()`.
-- O(n) auxiliary indegree and queue space for `toposort_kahn()`.
+- O(n) auxiliary heap space for the indegree array and queue in `toposort_kahn()`.
 
 */
 

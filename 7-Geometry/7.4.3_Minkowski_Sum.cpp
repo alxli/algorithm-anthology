@@ -11,7 +11,7 @@ distance checks, and diameter computations via $P + (-P)$.
   Collinear consecutive output vertices are removed.
 
 Time Complexity:
-- O(n + m), where $n$ and $m$ are the polygon sizes.
+- O(n + m) per call, where $n$ and $m$ are the polygon sizes.
 
 Space Complexity:
 - O(n + m) auxiliary.

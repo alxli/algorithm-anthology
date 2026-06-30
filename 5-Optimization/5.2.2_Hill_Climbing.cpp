@@ -16,7 +16,7 @@ result is not guaranteed to be the global minimum.
   supplied, the point attaining the returned value is stored through them.
 
 Time Complexity:
-- O(d log n) calls will be made to `f()`, where $d$ is the number of directions considered at each
+- O(d log n) calls to `f()` will be made, where $d$ is the number of directions considered at each
   position and $n$ is the search space that is approximately proportional to the maximum possible
   step size divided by the minimum possible step size.
 

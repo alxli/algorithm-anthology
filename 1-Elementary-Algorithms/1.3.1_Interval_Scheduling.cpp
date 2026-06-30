@@ -22,7 +22,7 @@ Time Complexity:
 - O(n log n) per call due to sorting, where $n$ is the number of intervals.
 
 Space Complexity:
-- O(n) auxiliary heap space for sorting and the answer.
+- O(n) auxiliary.
 
 */
 

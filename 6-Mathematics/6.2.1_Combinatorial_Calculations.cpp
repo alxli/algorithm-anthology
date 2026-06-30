@@ -33,8 +33,8 @@ Time Complexity:
   `eulerian1(n, k, m)`, and `eulerian2(n, k, m)`.
 
 Space Complexity:
-- O(n^2) auxiliary heap space for `binomial_table(n, m)`.
-- O(n*k) auxiliary heap space for `partitions(n, k, m)`, `stirling1(n, k, m)`, `stirling2(n, k, m)`,
+- O(n^2) auxiliary for `binomial_table(n, m)`.
+- O(n*k) auxiliary for `partitions(n, k, m)`, `stirling1(n, k, m)`, `stirling2(n, k, m)`,
   `eulerian1(n, k, m)`, and `eulerian2(n, k, m)`.
 - O(1) auxiliary for all other operations.
 

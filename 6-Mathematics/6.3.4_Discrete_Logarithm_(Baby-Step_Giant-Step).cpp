@@ -20,7 +20,7 @@ Time Complexity:
 - O(sqrt(m) * log(m)) per call, dominated by the hashed baby-step table.
 
 Space Complexity:
-- O(sqrt(m)) auxiliary heap space for the table.
+- O(sqrt(m)) auxiliary for the table.
 
 */
 

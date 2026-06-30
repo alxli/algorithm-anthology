@@ -8,7 +8,7 @@ orientation used by `convex_hull_3d()` in 7.5.2; take `abs()` if only the magnit
 - `signed_polyhedron_volume(points, faces)` returns the signed volume. Each face is an index triple.
 
 Time Complexity:
-- O(f), where $f$ is the number of triangular faces.
+- O(f) per call, where $f$ is the number of triangular faces.
 
 Space Complexity:
 - O(1) auxiliary.

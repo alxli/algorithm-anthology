@@ -24,7 +24,7 @@ Time Complexity:
 
 Space Complexity:
 - O(n^2) for storage of the graph, where $n$ is the number of nodes.
-- O(n^2) auxiliary heap space for `init_floyd()` and `floyd_warshall()`.
+- O(n^2) auxiliary for `init_floyd()` and `floyd_warshall()`.
 
 */
 

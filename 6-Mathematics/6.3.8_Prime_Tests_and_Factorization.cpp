@@ -11,9 +11,9 @@ pairs. For $0$ and $1$, the prime factorization is empty.
 - `is_prime_slow(n)` returns whether the integer `n` is prime using trial division.
 - `factorize_slow(n)` returns the prime factorization of `n` using trial division.
 - `is_probable_prime(n, k)` returns whether `n` is probably prime using `k` random Miller-Rabin
-  bases. The result is guaranteed correct when `n` is prime. When `n` is composite, it returns
-  false with probability at least $1 - (1 / 4)^k$, so a true result has one-sided error probability
-  at most $(1 / 4)^k$. This is mostly useful when adapting Miller-Rabin outside the known 64-bit
+  bases. The result is guaranteed correct when `n` is prime. For composite `n`, it returns false
+  with probability at least $1 - (1 / 4)^k$. Thus a true result has one-sided error probability at
+  most $(1 / 4)^k$. This is mostly useful when adapting Miller-Rabin outside the known 64-bit
   deterministic setting.
 - `rho_factor(n)` returns a factor of `n` that is not necessarily prime using Pollard's rho with
   Brent's optimization. If `n` is prime, then `n` itself is returned. While this algorithm is
@@ -47,8 +47,8 @@ Time Complexity:
 - O(n^{1/4}) approximately per call to `rho_factor(n)` and `factorize(n)`.
 
 Space Complexity:
-- O(f) auxiliary heap space for all operations, where $f$ is the number of factors returned.
-- O(c) cached heap space for the largest `cached_sieve(c)` call.
+- O(f) auxiliary for all operations, where $f$ is the number of factors returned.
+- O(c) cached space for the largest `cached_sieve(c)` call.
 
 */
 

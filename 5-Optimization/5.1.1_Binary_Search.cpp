@@ -26,15 +26,14 @@ search spaces such as real number intervals.
 - `fbinary_search(lo, hi, pred)` is the equivalent of `binary_search_first_true()` on floating point
   predicates. Since any interval of real numbers is dense, the exact target cannot be found due to
   floating point error. Instead, a value that is very close to the border between false and true is
-  returned.
-  The precision of the answer depends on the number of repetitions the function performs. Since each
-  repetition bisects the search space, the absolute error of the answer is $1/(2^n)$ times the
-  distance between `lo` and `hi` after $n$ repetitions. Although it is possible to control the error
-  by looping until the distance shrinks to an arbitrary epsilon, it is simpler to let the loop run
-  for a desired number of iterations until floating point arithmetic breaks down. 100 iterations
-  is usually sufficient, since the search space will be reduced to $2^{-100}$ (roughly $10^{-30}$)
-  times its original size. This implementation can be modified to find the "last true" point in the
-  range by simply interchanging the assignments of `lo` and `hi` in the if-else statements.
+  returned. The precision of the answer depends on the number of repetitions the function performs.
+  Since each repetition bisects the search space, the absolute error of the answer is $1/(2^n)$
+  times the distance between `lo` and `hi` after $n$ repetitions. Although the error can be
+  controlled by looping until the distance shrinks to an arbitrary epsilon, it is simpler to let the
+  loop run for a desired number of iterations until floating point arithmetic breaks down. $100$
+  iterations is usually sufficient, since the search space will be reduced to $2^{-100}$ (roughly
+  $10^{-30}$) times its original size. This implementation can be modified to find the "last true"
+  point by simply interchanging the assignments of `lo` and `hi` in the if-else statements.
 
 Time Complexity:
 - O(log n) calls will be made to `pred()` in `binary_search_first_true()` and

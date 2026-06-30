@@ -10,21 +10,21 @@ is not adversarial.
 
 - `spfa(start)` populates `dist` and `pred` for a global, pre-populated adjacency list `adj` which
   must consist of nodes numbered $[0, `n`)$, where `n` is `adj.size()`. Each edge is stored as
-  $(`neighbor`, `weight`)$. The function returns `false` if it detects a reachable negative cycle, and
-  returns `true` otherwise.
+  $(`neighbor`, `weight`)$. The function returns `false` if it detects a reachable negative cycle,
+  and returns `true` otherwise.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 `start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the
 destination to `start`, then reverse that sequence to recover the path.
 
 Time Complexity:
-- O(n*m) in the worst case for `spfa()`, where $n$ is the number of nodes and $m$ is the number of
+- O(n*m) per call in the worst case, where $n$ is the number of nodes and $m$ is the number of
   edges.
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
   edges.
-- O(n) auxiliary queue space for `spfa()`.
+- O(n) auxiliary queue space per call.
 
 */
 

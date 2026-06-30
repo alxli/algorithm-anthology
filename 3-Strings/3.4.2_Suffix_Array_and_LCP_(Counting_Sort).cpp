@@ -33,8 +33,8 @@ Time Complexity:
 
 Space Complexity:
 - O(n) auxiliary for storage of the suffix and LCP arrays.
-- O(n) auxiliary heap space for the constructor.
-- O(1) auxiliary space for all other operations.
+- O(n) auxiliary for the constructor.
+- O(1) auxiliary for all other operations.
 
 */
 

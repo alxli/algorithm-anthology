@@ -23,7 +23,7 @@ Time Complexity:
 - O(n^3) per call, where $n$ is the dimension of the matrix.
 
 Space Complexity:
-- O(n^2) auxiliary heap space.
+- O(n^2) auxiliary.
 
 */
 

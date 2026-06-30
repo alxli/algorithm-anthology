@@ -14,8 +14,8 @@ queries, use `std::numeric_limits<T>::max()` as the identity and `std::min(a, b)
 function. For non-commutative aggregates, store enough information in `T` to support reversing a
 path, and update `flip_path()` accordingly.
 
-- `TopTree(n, value)` constructs a forest on vertices $[0, `n`)$ with every vertex value
-  initialized to `value`.
+- `TopTree(n, value)` constructs a forest on vertices $[0, `n`)$ with every vertex value initialized
+  to `value`.
 - `size()` returns the number of vertices in the forest.
 - `edges()` returns the number of edge nodes that have been created.
 - `connected(u, v)` returns whether vertices `u` and `v` are in the same tree.
@@ -36,8 +36,8 @@ path, and update `flip_path()` accordingly.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `edges()`.
-- O(log n) amortized per call to all other operations, where $n$ is the number of vertices and
-  edges in the represented tree.
+- O(log n) amortized per call to all other operations, where $n$ is the number of vertices and edges
+  in the represented tree.
 
 Space Complexity:
 - O(n + m) for the vertex and edge nodes, where $m$ is the number of edges ever added.

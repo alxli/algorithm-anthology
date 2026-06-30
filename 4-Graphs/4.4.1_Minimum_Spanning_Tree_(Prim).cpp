@@ -25,7 +25,7 @@ Time Complexity:
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
   edges.
-- O(m) auxiliary heap space for `prim_mst()`.
+- O(m) auxiliary.
 
 */
 

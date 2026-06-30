@@ -24,8 +24,8 @@ Time Complexity:
   $n$ is the number of nodes and $m$ is the number of edges.
 
 Space Complexity:
-- O(max(n, m)) auxiliary stack and heap space for `known_eulerian_path_directed()` and
-  `eulerian_path_directed()`.
+- O(m) auxiliary stack space and O(max(n, m)) auxiliary heap space for
+  `known_eulerian_path_directed()` and `eulerian_path_directed()`.
 
 */
 
@@ -111,12 +111,12 @@ multigraphs: parallel edges are distinct because each edge receives its own ID.
   directed if `directed` is true, or undirected otherwise.
 - `add_edge(u, v)` adds an edge and returns its edge ID.
 - `eulerian_path(start)` returns a trail using every edge exactly once, or a result with
-  `start` $= -1$ if no such trail exists. If `start` $= -1$, a valid start is chosen automatically.
+  `start = -1` if no such trail exists. If `start = -1`, a valid start is chosen automatically.
 - `EulerianTrail::is_cycle()` returns whether the trail begins and ends on the same node.
 
 Time Complexity:
-- O(max(n, m)) per call to `eulerian_path()`, where $n$ is the number of nodes and $m$ is the
-  number of edges.
+- O(max(n, m)) per call to `eulerian_path()`, where $n$ is the number of nodes and $m$ is the number
+  of edges.
 
 Space Complexity:
 - O(max(n, m)) for graph storage and auxiliary arrays.

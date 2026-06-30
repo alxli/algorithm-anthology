@@ -18,7 +18,7 @@ Time Complexity:
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
   edges.
-- O(n_1 + n_2) auxiliary stack and heap space for `hopcroft_karp()`.
+- O(n_1 + n_2) auxiliary stack space and O(n_1 + n_2) auxiliary heap space per call.
 
 */
 

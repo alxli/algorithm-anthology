@@ -18,7 +18,7 @@ Time Complexity:
 - O(n*W) per call, where $n$ is the number of items and $W$ is `capacity`.
 
 Space Complexity:
-- O(n*W) auxiliary heap space.
+- O(n*W) auxiliary.
 
 */
 

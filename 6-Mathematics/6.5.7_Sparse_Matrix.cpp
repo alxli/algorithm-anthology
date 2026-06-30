@@ -47,7 +47,7 @@ Time Complexity:
 Space Complexity:
 - O(n) storage.
 - O(1) auxiliary for `get()`, `set()`, `add()`, `row()`, `column()`, and `transpose()`.
-- O(h) auxiliary heap space for `multiply_vector()`.
+- O(h) auxiliary for `multiply_vector()`.
 
 */
 

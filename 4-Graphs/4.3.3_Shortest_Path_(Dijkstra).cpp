@@ -19,12 +19,12 @@ For path reconstruction, `pred[v]` stores the node immediately before `v` on the
 destination to `start`, then reverse that sequence to recover the path.
 
 Time Complexity:
-- O(m log n) for `dijkstra()`, where $m$ is the number of edges and $n$ is the number of nodes.
+- O(m log n) per call, where $m$ is the number of edges and $n$ is the number of nodes.
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
   edges.
-- O(m) auxiliary heap space for `dijkstra()`.
+- O(m) auxiliary.
 
 */
 

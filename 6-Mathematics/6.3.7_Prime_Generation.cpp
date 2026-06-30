@@ -22,9 +22,9 @@ Time Complexity:
 - O(n) per call to `linear_sieve(n, least_out)`.
 
 Space Complexity:
-- O(n) auxiliary heap space per call to `sieve(n)`.
-- O(`hi` - `lo` + sqrt(`hi`)) auxiliary heap space per call to `sieve(lo, hi)`.
-- O(n) auxiliary heap space per call to `linear_sieve(n, least_out)`.
+- O(n) auxiliary per call to `sieve(n)`.
+- O(`hi` - `lo` + sqrt(`hi`)) auxiliary per call to `sieve(lo, hi)`.
+- O(n) auxiliary per call to `linear_sieve(n, least_out)`.
 
 */
 

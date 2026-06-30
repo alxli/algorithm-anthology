@@ -18,7 +18,7 @@ Time Complexity:
 - O(n log n) per call due to sorting and heap operations.
 
 Space Complexity:
-- O(n) auxiliary heap space.
+- O(n) auxiliary.
 
 */
 

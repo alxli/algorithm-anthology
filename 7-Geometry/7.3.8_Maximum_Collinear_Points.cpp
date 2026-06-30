@@ -9,7 +9,7 @@ anchor are collinear with it.
   are counted as separate input points.
 
 Time Complexity:
-- O(n^2 log n), where $n$ is the number of points.
+- O(n^2 log n) per call, where $n$ is the number of points.
 
 Space Complexity:
 - O(n) auxiliary.

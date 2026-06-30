@@ -21,8 +21,8 @@ generic `constexpr` equivalents (also named in the comments) are additionally we
   `__builtin_parity()`.
 - `ctz(x)` returns the number of trailing 0-bits (undefined for $0$), analogous to `__builtin_ctz()`
   and C++20's `std::countr_zero()`.
-- `ffs(x)` returns one plus the position of the lowest 1-bit of `x`, or $0$ if `x` is $0$,
-  analogous to `__builtin_ffs()`.
+- `ffs(x)` returns one plus the position of the lowest 1-bit of `x`, or $0$ if `x` is $0$, analogous
+  to `__builtin_ffs()`.
 - `clz(x)` returns the number of leading 0-bits (undefined for $0$), analogous to `__builtin_clz()`
   and C++20's `std::countl_zero()`.
 - `is_pow2(x)` returns whether `x` has exactly one set bit, analogous to C++20's

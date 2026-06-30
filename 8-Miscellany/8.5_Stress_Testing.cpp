@@ -4,8 +4,8 @@ A simple stress-testing harness compares a trusted brute force implementation ag
 implementation on many generated tests. This is most useful for finding small counterexamples while
 developing an algorithm.
 
-- `stress(trials, generate, solve, brute)` runs `generate()` for each trial, compares
-  `solve(test)` with `brute(test)`, and returns the first failing test if one is found.
+- `stress(trials, generate, solve, brute)` runs `generate()` for each trial, compares `solve(test)`
+  with `brute(test)`, and returns the first failing test if one is found.
 - `stress(...)` returns `std::nullopt` if all generated tests pass.
 
 The generated test type only needs to be copyable enough to store in `std::optional`, and both

@@ -23,8 +23,8 @@ Time Complexity:
   polynomial and $t$ is the number of iterations required to reach the desired precision.
 
 Space Complexity:
-- O(1) auxiliary space for `eval_with_derivative(p, x)`.
-- O(n) auxiliary heap space for `find_all_roots(p, eps, iterations)`, where $n$ is the degree of the
+- O(1) auxiliary for `eval_with_derivative(p, x)`.
+- O(n) auxiliary for `find_all_roots(p, eps, iterations)`, where $n$ is the degree of the
   polynomial.
 
 */

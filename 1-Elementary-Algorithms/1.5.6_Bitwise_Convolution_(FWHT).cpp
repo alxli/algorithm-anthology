@@ -29,7 +29,7 @@ Time Complexity:
 
 Space Complexity:
 - O(1) auxiliary for the in-place transforms.
-- O(n) auxiliary heap space for each convolution.
+- O(n) auxiliary for each convolution.
 
 */
 

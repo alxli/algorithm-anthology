@@ -28,11 +28,11 @@ Time Complexity:
 - O(|a||b|) for the small-input branch of `multiply()`, otherwise O(n log n), where $n$ is the
   padded transform length.
 - O(n log^2 n) for `inverse(a, n)`, where $n$ is the requested length.
-- O(n log n + m log^2 m) for `divide()` and `modulo()`, where $n$ is the output quotient length
-  and $m$ is the divisor length.
+- O(n log n + m log^2 m) for `divide()` and `modulo()`, where $n$ is the output quotient length and
+  $m$ is the divisor length.
 
 Space Complexity:
-- O(n) auxiliary heap space.
+- O(n) auxiliary.
 
 */
 

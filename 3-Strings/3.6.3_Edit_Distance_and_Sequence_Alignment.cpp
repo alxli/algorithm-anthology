@@ -1,17 +1,18 @@
 /*
 
-Given two strings, determine their minimum-cost alignment. An alignment of two strings is a
-transformation of both strings by inserting gap characters `_` in some way to make the final lengths
-equal. The total cost of an alignment given a `gap_cost` (insertion or deletion cost) and a
-`sub_cost` (substitution, i.e. mismatch cost) is `gap_cost` times the number of inserted gaps, plus
-`sub_cost` times the number of indices at which the two aligned strings differ.
+Given two strings, determine their edit distance or a minimum-cost alignment. The Levenshtein edit
+distance is the minimum number of insertions, deletions, and substitutions needed to transform one
+string into the other. More generally, an alignment inserts gap characters `_` into both strings so
+the final lengths match; its cost is `gap_cost` times the number of inserted gaps plus `sub_cost`
+times the number of indices where the aligned characters differ.
 
-The dynamic program compares prefixes and chooses the cheapest last operation: align the final
+Dynamic programming compares prefixes and chooses the cheapest last operation: align the final
 characters together, leave a gap in the first string, or leave a gap in the second string. Following
-the filled table backward reconstructs one minimum-cost alignment. Hirschberg's algorithm uses the
-same recurrence with only one DP row at a time, splitting the problem where an optimal alignment
-crosses the midpoint of the longer string.
+the filled table backward reconstructs one minimum-cost alignment. This is the Needleman-Wunsch
+sequence-alignment recurrence. Hirschberg's algorithm uses the same recurrence with only one DP row
+at a time, splitting the problem where an optimal alignment crosses the longer string's midpoint.
 
+- `edit_distance(s1, s2)` returns the Levenshtein edit distance between strings `s1` and `s2`.
 - `align_sequences(s1, s2, gap_cost, sub_cost)` returns a pair of aligned strings for strings `s1`
   and `s2`, using a classic dynamic programming approach. This implementation first computes
   `dp[i][j]` (the cost of aligning the length $i$ prefix of `s1` with the length $j$ prefix of `s2`)
@@ -22,10 +23,12 @@ crosses the midpoint of the longer string.
   `s1` and `s2` using the more memory efficient Hirschberg's algorithm.
 
 Time Complexity:
-- O(n*m) per call to `align_sequences(s1, s2)` as well as `hirschberg_align_sequences(s1, s2)`,
-  where $n$ and $m$ are the lengths of `s1` and `s2`, respectively.
+- O(n*m) per call to `edit_distance(s1, s2)`, `align_sequences(s1, s2)`, and
+  `hirschberg_align_sequences(s1, s2)`, where $n$ and $m$ are the lengths of `s1` and `s2`,
+  respectively.
 
 Space Complexity:
+- O(min(n, m)) auxiliary heap space for `edit_distance(s1, s2)`.
 - O(n*m) auxiliary heap space for `align_sequences(s1, s2)`, where $n$ and $m$ are the lengths of
   `s1` and `s2`, respectively.
 - O(log(max(n, m))) auxiliary stack space and O(min(n, m)) auxiliary heap space for
@@ -40,6 +43,26 @@ Space Complexity:
 #include <utility>
 #include <vector>
 using std::string;
+
+int edit_distance(const string &s1, const string &s2) {
+  if (s1.size() < s2.size()) {
+    return edit_distance(s2, s1);
+  }
+  int n = static_cast<int>(s1.size()), m = static_cast<int>(s2.size());
+  std::vector<int> dp(m + 1), prev(m + 1);
+  for (int j = 0; j <= m; j++) {
+    dp[j] = j;
+  }
+  for (int i = 1; i <= n; i++) {
+    dp.swap(prev);
+    dp[0] = i;
+    for (int j = 1; j <= m; j++) {
+      dp[j] =
+          (s1[i - 1] == s2[j - 1]) ? prev[j - 1] : std::min({prev[j - 1], prev[j], dp[j - 1]}) + 1;
+    }
+  }
+  return dp[m];
+}
 
 std::pair<string, string> align_sequences(
     const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1
@@ -162,6 +185,9 @@ A_GGCA
 #include <iostream>
 
 int main() {
+  assert(edit_distance("kitten", "sitting") == 3);
+  assert(edit_distance("", "abc") == 3);
+
   auto alignment = align_sequences("AGGGCT", "AGGCA", 2, 3);
   assert(alignment == (std::pair<string, string>{"AGGGCT", "A_GGCA"}));
   assert(hirschberg_align_sequences("AGGGCT", "AGGCA", 2, 3) == alignment);

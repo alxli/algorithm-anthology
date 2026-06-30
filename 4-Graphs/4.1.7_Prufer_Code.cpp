@@ -17,7 +17,7 @@ Time Complexity:
   the tree.
 
 Space Complexity:
-- O(n) auxiliary space per call to `encode_prufer()` or `decode_prufer()`.
+- O(n) auxiliary per call to `encode_prufer()` or `decode_prufer()`.
 
 */
 

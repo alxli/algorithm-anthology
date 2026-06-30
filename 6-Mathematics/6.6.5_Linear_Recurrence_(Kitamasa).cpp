@@ -22,7 +22,7 @@ Time Complexity:
 - O(L^2 log n) per call.
 
 Space Complexity:
-- O(L) auxiliary heap space.
+- O(L) auxiliary.
 
 */
 

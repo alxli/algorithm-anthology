@@ -23,7 +23,7 @@ Time Complexity:
 
 Space Complexity:
 - O(n^2) for storage of the flow network, where $n$ is the number of nodes.
-- O(n) auxiliary heap space for `push_relabel()`.
+- O(n) auxiliary for `push_relabel()`.
 
 */
 

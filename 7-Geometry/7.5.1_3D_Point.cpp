@@ -17,7 +17,7 @@ Time Complexity:
 - O(1) per operation.
 
 Space Complexity:
-- O(1) for storage and auxiliary space.
+- O(1) for storage and auxiliary.
 
 */
 

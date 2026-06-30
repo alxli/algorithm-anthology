@@ -34,7 +34,7 @@ Time Complexity:
 
 Space Complexity:
 - O(n log n) to store the binary ancestor table.
-- O(k) auxiliary space and result size per call to `build()`.
+- O(k) auxiliary plus result size per call to `build()`.
 
 */
 

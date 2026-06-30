@@ -39,7 +39,7 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the disjoint set forest elements.
-- O(n) auxiliary heap space for `get_all_sets()`.
+- O(n) auxiliary for `get_all_sets()`.
 - O(1) auxiliary for all other operations.
 
 */

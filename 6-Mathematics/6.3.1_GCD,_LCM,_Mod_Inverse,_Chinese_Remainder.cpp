@@ -22,27 +22,27 @@ Common number theory operations relating to modular arithmetic.
   $i \cdot `v[i]` \equiv 1 \pmod p$, where the argument $p$ is prime.
 - `crt(r1, m1, r2, m2, r, m)` merges the two congruences $x \equiv r_1 \pmod{m_1}$ and
   $x \equiv r_2 \pmod{m_2}$ for arbitrary moduli (not necessarily coprime). It returns whether the
-  system is consistent, and on success sets `m` to `lcm(m_1, m_2)` and `r` to the unique solution
-  in $[0, m)$. Fold it pairwise to merge more than two congruences.
+  system is consistent, and on success sets `m` to `lcm(m_1, m_2)` and `r` to the unique solution in
+  $[0, m)$. Fold it pairwise to merge more than two congruences.
 - `garner_restore(a, p)` returns the smallest nonnegative solution $x$ for the system of
   simultaneous congruences $x \equiv `a[i]` \pmod{`p[i]`}$ for all indices `i` in $[0, n)$, where
   `p` consists of pairwise coprime integers (unlike `crt`, which allows shared factors). The exact
   solution is unique modulo the product of all moduli, so that product and the final answer must fit
   in `int64_t`.
-- `garner_restore_mod(a, p, m)` returns that same CRT solution modulo `m`. This is the right
-  variant when the product of the moduli is too large to fit in `int64_t`.
+- `garner_restore_mod(a, p, m)` returns that same CRT solution modulo `m`. This is the right variant
+  when the product of the moduli is too large to fit in `int64_t`.
 
 Time Complexity:
-- O(log(a + b)) per call to `gcd(a, b)`, `lcm(a, b)`, `extended_euclid(a, b)`,
-  `mod_inverse(a, b)`, `diophantine(a, b, c, ...)`, and `crt(...)`.
+- O(log(a + b)) per call to `gcd(a, b)`, `lcm(a, b)`, `extended_euclid(a, b)`, `mod_inverse(a, b)`,
+  `diophantine(a, b, c, ...)`, and `crt(...)`.
 - O(1) for `mod(a, b)`.
 - O(p) for `generate_inverse(p)`.
 - O(n^2) for `garner_restore(a, p)` and `garner_restore_mod(a, p, m)`.
 
 Space Complexity:
-- O(p) auxiliary heap space for `generate_inverse(p)`.
-- O(n) auxiliary heap space for `garner_restore(a, p)` and `garner_restore_mod(a, p, m)`.
-- O(1) auxiliary space for all other operations.
+- O(p) auxiliary for `generate_inverse(p)`.
+- O(n) auxiliary for `garner_restore(a, p)` and `garner_restore_mod(a, p, m)`.
+- O(1) auxiliary for all other operations.
 
 */
 

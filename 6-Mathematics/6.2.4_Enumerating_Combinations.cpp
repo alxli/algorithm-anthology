@@ -43,7 +43,7 @@ Time Complexity:
 - O(n*k) per call to `combination_by_rank()` and `rank_by_combination()`.
 
 Space Complexity:
-- O(k) auxiliary heap space for `combination_by_rank(n, k, r)`.
+- O(k) auxiliary for `combination_by_rank(n, k, r)`.
 - O(1) auxiliary for all other operations.
 
 */

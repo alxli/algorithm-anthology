@@ -22,7 +22,7 @@ Time Complexity:
 
 Space Complexity:
 - O(1) auxiliary for `row_reduce(a)`.
-- O(m*n) auxiliary heap space for `matrix_rank(a)` and `solve_system(a)`.
+- O(m*n) auxiliary for `matrix_rank(a)` and `solve_system(a)`.
 
 */
 

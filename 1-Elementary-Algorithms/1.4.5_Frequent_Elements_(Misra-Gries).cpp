@@ -22,7 +22,7 @@ Time Complexity:
   single call is O(n*k), but that cannot be sustained across a long stream.
 
 Space Complexity:
-- O(k) auxiliary heap space.
+- O(k) auxiliary.
 
 */
 

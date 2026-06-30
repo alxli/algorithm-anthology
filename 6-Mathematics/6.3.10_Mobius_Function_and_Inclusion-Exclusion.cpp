@@ -25,8 +25,8 @@ Time Complexity:
   factors of $m$ (at most 15 for $m$ within 64-bit range).
 
 Space Complexity:
-- O(n) auxiliary heap space for `mobius_sieve(n)`.
-- O(k) auxiliary heap space for `count_coprime(n, m)`.
+- O(n) auxiliary for `mobius_sieve(n)`.
+- O(k) auxiliary for `count_coprime(n, m)`.
 - O(1) auxiliary for `mobius(n)`.
 
 */

@@ -22,7 +22,7 @@ Time Complexity:
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
   edges.
-- O(n) auxiliary deque space for `bfs_zero_one()`.
+- O(n) auxiliary deque space per call.
 
 */
 

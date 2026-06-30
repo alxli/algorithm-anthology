@@ -20,7 +20,7 @@ Time Complexity:
 - O(n log n) per call to `inversions(a)`.
 
 Space Complexity:
-- O(n) auxiliary space and O(log n) stack space for `inversions(lo, hi)`.
+- O(log n) auxiliary stack space and O(n) auxiliary heap space for `inversions(lo, hi)`.
 - O(n) auxiliary heap space for `inversions(a)`.
 
 */

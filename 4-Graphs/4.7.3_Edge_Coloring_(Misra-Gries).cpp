@@ -21,8 +21,8 @@ matrix, so self-loops and parallel edges between the same pair cannot be represe
   is an undirected edge `u`-`v`.
 
 Time Complexity:
-- O(n^2 * m) in the worst case for `edge_coloring()`, where $n$ is the number of nodes and $m$ the
-  number of edges; substantially faster in practice.
+- O(n^2*m) per call in the worst case, where $n$ is the number of nodes and $m$ the number of edges;
+  substantially faster in practice.
 
 Space Complexity:
 - O(n^2) to store the per-edge colors.

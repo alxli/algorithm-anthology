@@ -21,11 +21,11 @@ tableau row or column currently represents, making solution recovery independent
   with a dense solution vector.
 
 Time Complexity:
-- O(2^n) pivots in the worst case, where $n$ is the number of unknowns, although simplex typically
-  runs much faster in practice.
+- O(2^n) pivots per call in the worst case, where $n$ is the number of unknowns, although simplex
+  typically runs much faster in practice.
 
 Space Complexity:
-- O(m*n) auxiliary heap space.
+- O(m*n) auxiliary.
 
 */
 

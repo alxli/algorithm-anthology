@@ -23,7 +23,7 @@ Time Complexity:
   while O(n^2) comes from checking candidate triangles against previously accepted triangles.
 
 Space Complexity:
-- O(n) auxiliary heap space, excluding the returned triangulation.
+- O(n) auxiliary, excluding the returned triangulation.
 
 */
 

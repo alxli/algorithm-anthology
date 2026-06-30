@@ -25,9 +25,8 @@ coordinate. As with ternary search on reals, the function must be strictly unimo
 - `ternary_search_min(lo, hi, f, eps = 1e-12)` and `ternary_search_max(lo, hi, f, eps = 1e-12)`
   return a `double` `x` in $[`lo`, `hi`]$ optimizing the continuous unimodal function `f`, to within
   the optional absolute error `eps`.
-- `golden_section_min(lo, hi, f, eps = 1e-12)` and
-  `golden_section_max(lo, hi, f, eps = 1e-12)` do the same with one function evaluation per
-  iteration.
+- `golden_section_min(lo, hi, f, eps = 1e-12)` and `golden_section_max(lo, hi, f, eps = 1e-12)` do
+  the same with one function evaluation per iteration.
 - `discrete_ternary_min(lo, hi, f)` and `discrete_ternary_max(lo, hi, f)` return the integer index
   in the inclusive range $[`lo`, `hi`]$ optimizing the unimodal function `f`, breaking ties toward
   the smaller index.

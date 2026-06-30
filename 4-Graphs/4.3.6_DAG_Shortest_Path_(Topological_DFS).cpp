@@ -22,7 +22,7 @@ Time Complexity:
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph.
-- O(n) auxiliary heap space for `dag_shortest_path()`.
+- O(n) auxiliary.
 
 */
 

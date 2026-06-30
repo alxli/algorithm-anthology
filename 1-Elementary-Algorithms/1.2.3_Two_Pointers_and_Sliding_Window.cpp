@@ -33,8 +33,8 @@ dynamic programming recurrence.
   subarray.
 - `longest_at_most_k_distinct(a, k)` returns $(`length`, `lo`, `hi`)$, the maximum length and
   inclusive endpoints of a contiguous subarray containing at most `k` distinct values.
-- `sliding_window_extrema(a, k, comp)` returns the extreme value in each window of length `k`.
-  With the default `less<>` comparator it returns minimums; passing `greater<>` returns maximums.
+- `sliding_window_extrema(a, k, comp)` returns the extreme value in each window of length `k`. With
+  the default `less<>` comparator it returns minimums; passing `greater<>` returns maximums.
 
 Time Complexity:
 - O(n) per call to `two_sum_sorted()` and `min_length_at_least()`, where $n$ is the array size.
@@ -44,10 +44,10 @@ Time Complexity:
 
 Space Complexity:
 - O(1) auxiliary for `two_sum_sorted(a, target)`.
-- O(n) auxiliary heap space for `three_sum(a, target)`.
+- O(n) auxiliary for `three_sum(a, target)`.
 - O(1) auxiliary for `min_length_at_least(a, target)`.
-- O(k) auxiliary heap space for `longest_at_most_k_distinct(a, k)`.
-- O(n) auxiliary heap space for the result of `sliding_window_extrema()`, plus O(k) for the deque.
+- O(k) auxiliary for `longest_at_most_k_distinct(a, k)`.
+- O(n) auxiliary for the result of `sliding_window_extrema()`, plus O(k) for the deque.
 
 */
 
@@ -179,8 +179,8 @@ from the front, and dominated values are removed from the back before inserting 
 
 - `MonotoneQueue<T, Compare>()` constructs an empty queue. Use `std::less<T>` for minimum queries
   and `std::greater<T>` for maximum queries.
-- `push(index, value)` inserts candidate `value` at position `index`, removing dominated
-  candidates from the back.
+- `push(index, value)` inserts candidate `value` at position `index`, removing dominated candidates
+  from the back.
 - `expire(first_valid)` removes candidates with index less than `first_valid`.
 - `top()` returns the best active (`index`, `value`) pair. The queue must be nonempty.
 - `empty()` returns whether the queue has no active candidates.
@@ -191,7 +191,7 @@ Time Complexity:
 - O(1) worst-case per call to `top()` and `empty()`.
 
 Space Complexity:
-- O(w) auxiliary heap space for a sliding window of width $w$.
+- O(w) auxiliary for a sliding window of width $w$.
 
 */
 

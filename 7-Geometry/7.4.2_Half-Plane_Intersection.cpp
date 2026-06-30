@@ -14,7 +14,7 @@ half-plane in each group.
   meaningful; add explicit bounding-box half-planes when a bounded polygon is required.
 
 Time Complexity:
-- O(n log n), where $n$ is the number of half-planes.
+- O(n log n) per call, where $n$ is the number of half-planes.
 
 Space Complexity:
 - O(n) auxiliary.

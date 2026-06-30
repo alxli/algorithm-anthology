@@ -12,9 +12,9 @@ defined on the numeric key type `K`.
 - `IntervalTreap<K, V>()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
-- `insert(lo, hi, v)` adds an entry with key $[`lo`, `hi`]$ and value `v` to the map, returning `true`
-  if a new interval was added or `false` if the interval already exists (in which case the map is
-  unchanged and the old value associated with the key is preserved).
+- `insert(lo, hi, v)` adds an entry with key $[`lo`, `hi`]$ and value `v` to the map, returning
+  `true` if a new interval was added or `false` if the interval already exists (in which case the
+  map is unchanged and the old value associated with the key is preserved).
 - `erase(lo, hi)` removes the entry with key $[`lo`, `hi`]$ from the map, returning `true` if the
   removal was successful or `false` if the interval was not found.
 - `find_key(lo, hi)` returns a pointer to a const `std::pair` representing the key of some interval

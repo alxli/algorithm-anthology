@@ -16,7 +16,7 @@ Time Complexity:
 - O(m*(n_1 + n_2)) per call, where $m$ is the number of edges.
 
 Space Complexity:
-- O(n_1 + n_2) auxiliary stack space for `kuhn()`.
+- O(n_1 + n_2) auxiliary stack space per call.
 
 */
 

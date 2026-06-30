@@ -22,11 +22,11 @@ Modular multiplication uses `__uint128_t` when available for speed, with a slowe
 double-and-add fallback to avoid overflow on compilers without 128-bit integers.
 
 Time Complexity:
-- O(sqrt m + g*k*log m), where `g` is the answer candidate tested and $k$ is the number of distinct
-  prime factors of $\phi(m)$.
+- O(sqrt m + g*k*log m) per call, where `g` is the answer candidate tested and $k$ is the number of
+  distinct prime factors of $\phi(m)$.
 
 Space Complexity:
-- O(k) auxiliary heap space.
+- O(k) auxiliary.
 
 */
 

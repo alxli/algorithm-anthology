@@ -56,7 +56,7 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the array elements and lazy deltas.
-- O(1) auxiliary space for all operations.
+- O(1) auxiliary for all operations.
 
 */
 
