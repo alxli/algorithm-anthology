@@ -109,6 +109,10 @@ sections elsewhere, include both `Time Complexity:` and `Space Complexity:`.
 - Write big-O as plain text: `O(n log n)`, not `$O(n \log n)$`.
 - Use single-letter variables inside big-O expressions. Quantify named parameters afterward, e.g.
   `O(r*c*2^c)`, where $r$ and $c$ are the number of rows and columns, and not `O(rows*cols*2^cols)`.
+- For ranges or numeric search intervals, prefer naming the span with one letter in big-O, e.g.
+  `O(log n)`, where $n$ is the distance between `lo` and `hi`, rather than `O(log(hi - lo))`.
+  In the rare cases where endpoint names appear directly inside a math expression, keep code
+  identifiers in backticks so they render as texttt/code.
 - In a complexity block for a section with only one exposed API, write `per call` without repeating
   the function signature. Keep names for callbacks or helper operations when they are the thing
   being counted, e.g. O(n) calls to the callback `pred()` per call.
@@ -117,6 +121,8 @@ sections elsewhere, include both `Time Complexity:` and `Space Complexity:`.
   call the non-stack temporary memory `auxiliary heap space` so the two costs are distinct. Use
   `for storage of ...` or `for the returned ...` when describing persistent storage or output size.
 - Use math mode for variables and inequalities in prose: `$n$`, `$\leq$`, `$\geq$`, `$-1$`.
+- Prefer half-open interval notation for numbered domains, e.g. nodes in `$[0, n)$`, instead of
+  spelling out "from $0$ to `$n - 1`".
 - Code identifiers inside math expressions should remain backticked, e.g. $[`lo`, `hi`)$ or
   $0 \leq `i` < `n`$.
 - Do not split math mode, code spans, or backticked identifiers just to satisfy the 100-column

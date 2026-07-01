@@ -3461,6 +3461,199 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Bitmask Dynamic Programming}
+Bitmask dynamic programming uses a bitmask to represent a small set or frontier, then treats that mask as the DP state. This is useful when one dimension is small enough for $2^n$ states: assignment problems can store which jobs are already used, set cover can store which elements are covered, submask DP can split a set into groups, and grid tiling can store which cells on the current frontier are already occupied.
+
+For assignment, \inlinecode{dp[mask]} is the minimum cost after assigning the first \inlinecode{popcount(mask)} workers to the selected jobs. The next worker tries every unused job. For set cover, \inlinecode{dp[mask]} is the minimum number of chosen sets needed to cover exactly the elements in \inlinecode{mask}; adding one set moves to the union mask. For set partitioning, iterating all submasks gives the recurrence \inlinecode{dp[mask] = min(dp[mask \textasciicircum{} sub] + cost[sub])} over all masks this has $O(3^{n})$ transitions. For domino tiling, the mask is a profile of the current row; this technique is often called DP on a broken profile or plug DP. A domino covers exactly two edge-adjacent cells, so each piece is either horizontal ($1 \times 2$) or vertical ($2 \times 1$).
+
+\begin{compactitem}
+  \item \inlinecode{assignment\_min\_cost(cost)} returns a pair \inlinecode{(sum, job)}, where \inlinecode{sum} is the minimum cost of assigning each worker to a distinct job, and \inlinecode{job[i]} is the job assigned to worker \inlinecode{i}.
+  \item \inlinecode{minimum\_set\_cover(sets, universe\_size)} returns a pair \inlinecode{(count, chosen)}, where \inlinecode{count} is the minimum number of sets needed to cover all elements from $0$ to \inlinecode{universe\_size - 1}, and \inlinecode{chosen} contains one optimal list of set indices. If no cover exists, \inlinecode{count} is $-1$ and \inlinecode{chosen} is empty. Each input set is represented as a bitmask.
+  \item \inlinecode{partition\_min\_cost(group\_cost)} returns the minimum total cost to partition all elements into disjoint nonempty groups, where \inlinecode{group\_cost[mask]} is the cost of taking \inlinecode{mask} as one group.
+  \item \inlinecode{count\_domino\_tilings(rows, cols)} returns the number of ways to tile a \inlinecode{rows} by \inlinecode{cols} rectangle with $1 \times 2$ and $2 \times 1$ dominoes.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n^{2} \cdot 2^{n})$ per call to \inlinecode{assignment\_min\_cost()}, where $n$ is the number of workers and jobs.
+  \item $O(s \cdot 2^{u})$ per call to \inlinecode{minimum\_set\_cover()}, where $s$ is the number of sets and $u$ is \inlinecode{universe\_size}.
+  \item $O(3^{n})$ per call to \inlinecode{partition\_min\_cost()}, where $n$ is the number of elements.
+  \item $O(r \cdot c \cdot 2^{c})$ per call to \inlinecode{count\_domino\_tilings()}, where $r$ and $c$ are the number of rows and columns, respectively.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(2^{n} + n)$ auxiliary for \inlinecode{assignment\_min\_cost()}.
+  \item $O(2^{u} + s)$ auxiliary for \inlinecode{minimum\_set\_cover()}.
+  \item $O(2^{n})$ auxiliary for \inlinecode{partition\_min\_cost()}.
+  \item $O(2^{c})$ auxiliary for \inlinecode{count\_domino\_tilings()}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <limits>
+#include <utility>
+#include <vector>
+
+std::pair<int64_t, std::vector<int>> assignment_min_cost(
+    const std::vector<std::vector<int64_t>> &cost
+) {
+  int n = static_cast<int>(cost.size());
+  assert(n < 31);
+  for (const auto &row : cost) {
+    assert(static_cast<int>(row.size()) == n);
+  }
+  int states = 1 << n;
+  int64_t inf = std::numeric_limits<int64_t>::max() / 4;
+  std::vector<int64_t> dp(states, inf);
+  std::vector<int> parent(states, -1);
+  dp[0] = 0;
+  for (int mask = 0; mask < states; mask++) {
+    if (dp[mask] == inf) {
+      continue;
+    }
+    int worker = __builtin_popcount(static_cast<unsigned>(mask));
+    if (worker == n) {
+      continue;
+    }
+    for (int job = 0; job < n; job++) {
+      if ((mask & (1 << job)) == 0 && dp[mask | (1 << job)] > dp[mask] + cost[worker][job]) {
+        dp[mask | (1 << job)] = dp[mask] + cost[worker][job];
+        parent[mask | (1 << job)] = job;
+      }
+    }
+  }
+  std::vector<int> job(n);
+  for (int mask = states - 1, worker = n - 1; worker >= 0; worker--) {
+    job[worker] = parent[mask];
+    mask ^= 1 << job[worker];
+  }
+  return {dp[states - 1], job};
+}
+
+std::pair<int, std::vector<int>> minimum_set_cover(
+    const std::vector<int> &sets, int universe_size
+) {
+  assert(0 <= universe_size && universe_size < 31);
+  int n = static_cast<int>(sets.size());
+  int states = 1 << universe_size;
+  int full = states - 1;
+  for (int set : sets) {
+    assert((set & ~full) == 0);
+  }
+  int inf = n + 1;
+  std::vector<int> dp(states, inf), parent(states, -1), prev(states, -1);
+  dp[0] = 0;
+  for (int mask = 0; mask < states; mask++) {
+    if (dp[mask] == inf) {
+      continue;
+    }
+    for (int i = 0; i < n; i++) {
+      int next = mask | sets[i];
+      if (dp[next] > dp[mask] + 1) {
+        dp[next] = dp[mask] + 1;
+        parent[next] = i;
+        prev[next] = mask;
+      }
+    }
+  }
+  if (dp[full] == inf) {
+    return {-1, {}};
+  }
+  std::vector<int> chosen;
+  for (int mask = full; mask != 0; mask = prev[mask]) {
+    int i = parent[mask];
+    chosen.push_back(i);
+  }
+  std::reverse(chosen.begin(), chosen.end());
+  return {dp[full], chosen};
+}
+
+int64_t partition_min_cost(const std::vector<int64_t> &group_cost) {
+  int states = static_cast<int>(group_cost.size());
+  assert(states > 0 && (states & (states - 1)) == 0);
+  int64_t inf = std::numeric_limits<int64_t>::max() / 4;
+  std::vector<int64_t> dp(states, inf);
+  dp[0] = 0;
+  for (int mask = 1; mask < states; mask++) {
+    for (int sub = mask; sub > 0; sub = (sub - 1) & mask) {
+      dp[mask] = std::min(dp[mask], dp[mask ^ sub] + group_cost[sub]);
+    }
+  }
+  return dp[states - 1];
+}
+
+int64_t count_domino_tilings(int rows, int cols) {
+  assert(rows >= 0 && cols >= 0);
+  if (rows < cols) {
+    return count_domino_tilings(cols, rows);
+  }
+  assert(cols < 31);
+  int states = 1 << cols;
+  std::vector<int64_t> dp(states, 0), next(states, 0);
+  dp[0] = 1;
+  for (int r = 0; r < rows; r++) {
+    for (int c = 0; c < cols; c++) {
+      std::fill(next.begin(), next.end(), 0);
+      for (int mask = 0; mask < states; mask++) {
+        if (dp[mask] == 0) {
+          continue;
+        }
+        if (mask & (1 << c)) {
+          next[mask ^ (1 << c)] += dp[mask];
+        } else {
+          if (c + 1 < cols && (mask & (1 << (c + 1))) == 0) {
+            next[mask | (1 << (c + 1))] += dp[mask];
+          }
+          if (r + 1 < rows) {
+            next[mask | (1 << c)] += dp[mask];
+          }
+        }
+      }
+      dp.swap(next);
+    }
+  }
+  return dp[0];
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  std::vector<std::vector<int64_t>> cost{{9, 2, 7}, {6, 4, 3}, {5, 8, 1}};
+  auto [assignment_cost, job] = assignment_min_cost(cost);
+  assert(assignment_cost == 9);
+  assert((job == std::vector<int>{1, 0, 2}));
+
+  std::vector<int> sets{0b0011, 0b0110, 0b1100, 0b1000};
+  auto [cover_count, chosen] = minimum_set_cover(sets, 4);
+  assert(cover_count == 2);
+  assert((chosen == std::vector<int>{0, 2}));
+
+  auto [impossible_count, impossible_chosen] = minimum_set_cover(std::vector<int>{0b001, 0b010}, 3);
+  assert(impossible_count == -1 && impossible_chosen.empty());
+
+  std::vector<int64_t> group_cost{
+      0,        // Empty group is unused.
+      4, 6, 7,  // Singletons.
+      6, 2, 3,  // Pairs.
+      9,        // All three together.
+  };
+  assert(partition_min_cost(group_cost) == 7);  // Groups {0} and {1, 2}.
+
+  assert(count_domino_tilings(0, 5) == 1);
+  assert(count_domino_tilings(2, 3) == 3);
+  assert(count_domino_tilings(3, 3) == 0);
+  assert(count_domino_tilings(4, 4) == 36);
+  return 0;
+}
+\end{lstlisting}
 \subsection{Gray Code}
 The binary reflected Gray code is an ordering of all $2^n$ bitmasks in which consecutive masks differ in exactly one bit. It is useful whenever the cost of moving between adjacent states depends on a single bit flip: enumerating subsets while incrementally maintaining a value, hardware where only one bit may toggle at a time, and constructions like Hamiltonian paths on the hypercube.
 
@@ -3975,137 +4168,6 @@ int main() {
   assert((xor_convolve(one_mask, two_mask) == vector<int64_t>{0, 0, 0, 1}));
   assert((or_convolve(one_mask, two_mask) == vector<int64_t>{0, 0, 0, 1}));
   assert((and_convolve(one_mask, two_mask) == vector<int64_t>{1, 0, 0, 0}));
-  return 0;
-}
-\end{lstlisting}
-\subsection{Profile Dynamic Programming}
-Counts grid tilings using profile dynamic programming. A profile is a bitmask describing which cells in the next row (or next position) are already occupied by pieces placed earlier. Processing the grid left-to-right and top-to-bottom keeps the state small: at cell $({\inlinecodemath{r}}, {\inlinecodemath{c}})$, bit \inlinecode{c} of the mask says whether this cell is filled before considering new placements.
-
-For domino tilings, a filled cell is simply skipped. Otherwise, the algorithm may place a horizontal domino into the next column or a vertical domino into the same column of the next row. The mask is shifted by the row transitions implicitly because bit \inlinecode{c} represents the current column at every row.
-
-\begin{compactitem}
-  \item \inlinecode{count\_domino\_tilings(rows, cols)} returns the number of ways to tile a \inlinecode{rows} by \inlinecode{cols} rectangle with $1 \times 2$ and $2 \times 1$ dominoes.
-\end{compactitem}
-
-\textbf{Time Complexity}: $O(r \cdot c \cdot 2^{c})$ per call, where $r$ and $c$ are the number of rows and columns, respectively.
-
-\textbf{Space Complexity}: $O(2^{c})$ auxiliary.
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <cassert>
-#include <cstdint>
-#include <vector>
-
-int64_t count_domino_tilings(int rows, int cols) {
-  assert(rows >= 0 && cols >= 0);
-  if (rows < cols) {
-    return count_domino_tilings(cols, rows);
-  }
-  assert(cols < 31);
-  int states = 1 << cols;
-  std::vector<int64_t> dp(states, 0), next(states, 0);
-  dp[0] = 1;
-  for (int r = 0; r < rows; r++) {
-    for (int c = 0; c < cols; c++) {
-      std::fill(next.begin(), next.end(), 0);
-      for (int mask = 0; mask < states; mask++) {
-        if (dp[mask] == 0) {
-          continue;
-        }
-        if (mask & (1 << c)) {
-          next[mask ^ (1 << c)] += dp[mask];
-        } else {
-          if (c + 1 < cols && (mask & (1 << (c + 1))) == 0) {
-            next[mask | (1 << (c + 1))] += dp[mask];
-          }
-          if (r + 1 < rows) {
-            next[mask | (1 << c)] += dp[mask];
-          }
-        }
-      }
-      dp.swap(next);
-    }
-  }
-  return dp[0];
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-
-int main() {
-  assert(count_domino_tilings(0, 5) == 1);
-  assert(count_domino_tilings(2, 3) == 3);
-  assert(count_domino_tilings(3, 3) == 0);
-  assert(count_domino_tilings(4, 4) == 36);
-  return 0;
-}
-\end{lstlisting}
-\subsection{Digit Dynamic Programming}
-Counts integers up to a decimal bound using digit dynamic programming. A digit DP scans the bound from most significant digit to least significant digit while tracking whether the prefix is still ``tight'' to the bound. If it is tight, the next digit cannot exceed the corresponding bound digit; otherwise, any digit from $0$ to $9$ is allowed.
-
-The \inlinecode{started} flag separates leading zeroes from digits of the represented number, so properties can choose whether the number $0$ should count. The example helper below counts numbers whose digit sum is exactly \inlinecode{target\_sum}, treating the number $0$ as having digit sum $0$.
-
-\begin{compactitem}
-  \item \inlinecode{count\_with\_digit\_sum(bound, target\_sum)} returns the number of integers $x \in [0, {\inlinecodemath{bound}}]$ such that the decimal digit sum of $x$ is exactly \inlinecode{target\_sum}.
-\end{compactitem}
-
-\textbf{Time Complexity}: $O(d \cdot s \cdot 10)$ per call, where $d$ is the number of decimal digits in \inlinecode{bound} and $s$ is \inlinecode{target\_sum}.
-
-\textbf{Space Complexity}: $O(s)$ auxiliary per call.
-
-\begin{lstlisting}[language=C++]
-#include <cassert>
-#include <cstdint>
-#include <string>
-#include <vector>
-
-int64_t count_with_digit_sum(int64_t bound, int target_sum) {
-  assert(bound >= 0 && target_sum >= 0);
-  std::string digits = std::to_string(bound);
-  std::vector<std::vector<std::vector<int64_t>>> dp(
-      target_sum + 1, std::vector<std::vector<int64_t>>(2, std::vector<int64_t>(2, 0))
-  );
-  dp[0][1][0] = 1;
-  for (char ch : digits) {
-    std::vector<std::vector<std::vector<int64_t>>> next(
-        target_sum + 1, std::vector<std::vector<int64_t>>(2, std::vector<int64_t>(2, 0))
-    );
-    for (int sum = 0; sum <= target_sum; sum++) {
-      for (int tight = 0; tight <= 1; tight++) {
-        for (int started = 0; started <= 1; started++) {
-          int64_t ways = dp[sum][tight][started];
-          if (ways == 0) {
-            continue;
-          }
-          int limit = tight ? ch - '0' : 9;
-          for (int digit = 0; digit <= limit; digit++) {
-            int next_started = started || digit != 0;
-            int next_sum = sum + (next_started ? digit : 0);
-            if (next_sum <= target_sum) {
-              next[next_sum][tight && digit == limit][next_started] += ways;
-            }
-          }
-        }
-      }
-    }
-    dp.swap(next);
-  }
-  return dp[target_sum][0][0] + dp[target_sum][0][1] + dp[target_sum][1][0] + dp[target_sum][1][1];
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-
-int main() {
-  assert(count_with_digit_sum(20, 2) == 3);   // 2, 11, 20.
-  assert(count_with_digit_sum(99, 9) == 10);  // 9, 18, ..., 90.
-  assert(count_with_digit_sum(0, 0) == 1);
-  assert(count_with_digit_sum(0, 1) == 0);
   return 0;
 }
 \end{lstlisting}

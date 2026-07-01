@@ -729,6 +729,66 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Lagrangian Relaxation (Aliens Trick)}
+Given an optimization problem with a constraint on the number of chosen objects, Lagrangian relaxation moves that count into the objective by charging a penalty per object. If the relaxed problem can be solved quickly and the number chosen is monotone as the penalty changes, binary search recovers the best value for the desired count.
+
+For maximization, solve the relaxed problem as \inlinecode{score - penalty*count}, breaking ties toward larger \inlinecode{count}. As \inlinecode{penalty} increases, the optimal count never increases. The largest penalty whose relaxed optimum still chooses at least \inlinecode{target\_count} objects gives the exact constrained score after adding back \inlinecode{penalty*target\_count}.
+
+\begin{compactitem}
+  \item \inlinecode{lagrangian\_maximize(target\_count, lo, hi, solve)} returns the maximum original score using exactly \inlinecode{target\_count} objects. The callable \inlinecode{solve(penalty)} must return \inlinecode{(relaxed\_score, count)} and must tie-break toward larger \inlinecode{count}.
+\end{compactitem}
+
+This technique is often called the Aliens trick. The bounds \inlinecode{lo} and \inlinecode{hi} must contain a valid integer penalty where the relaxed count crosses \inlinecode{target\_count}; widen them when in doubt.
+
+\textbf{Time Complexity}: $O(\log n)$ calls to \inlinecode{solve()} per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <utility>
+#include <vector>
+
+template<typename Solve>
+int64_t lagrangian_maximize(int target_count, int64_t lo, int64_t hi, Solve solve) {
+  while (lo < hi) {
+    int64_t mid = lo + (hi - lo + 1) / 2;
+    if (solve(mid).second >= target_count) {
+      lo = mid;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  auto [relaxed_score, count] = solve(lo);
+  assert(count >= target_count);
+  return relaxed_score + lo * target_count;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+int main() {
+  std::vector<int64_t> value{10, 7, 3, 2};
+  auto choose_profitable = [&](int64_t penalty) {
+    int64_t score = 0;
+    int count = 0;
+    for (int64_t x : value) {
+      int64_t gain = x - penalty;
+      if (gain >= 0) {
+        score += gain;
+        count++;
+      }
+    }
+    return std::pair<int64_t, int>{score, count};
+  };
+
+  assert(lagrangian_maximize(2, 0, 20, choose_profitable) == 17);
+  assert(lagrangian_maximize(3, 0, 20, choose_profitable) == 20);
+  return 0;
+}
+\end{lstlisting}
 \subsection{Convex Hull Trick (Semi-Dynamic)}
 Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of $x$-coordinate queries each asking to find the minimum $y$-value when any of the given lines are evaluated at the specified $x$. This is useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])}. Only the lower envelope of the lines can ever answer a query, so each added line pops previously stored lines that it renders useless, and ascending queries advance a pointer along the envelope so every line is visited at most twice.
 

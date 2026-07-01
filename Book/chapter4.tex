@@ -906,6 +906,99 @@ int main() {
 \begin{exampleoutput}
 Sum of distances from each root: 8 5 8 6 9
 \end{exampleoutput}
+\subsection{Subtree Small-to-Large Merging}
+Given a rooted tree, compute a mutable summary for every subtree by merging child summaries into one kept summary. Small-to-large merging always keeps the largest child summary and absorbs smaller summaries into it. Each stored item can move only into summaries at least twice as large as before, so the total number of moved items is logarithmic per item.
+
+This pattern is often called DSU on tree, although it is unrelated to the disjoint-set union data structure used by Kruskal's algorithm. It is useful for subtree queries whose answer can be maintained by inserting all items from child summaries into one mutable summary, such as distinct colors, frequency modes, or other multiset-style statistics.
+
+\begin{compactitem}
+  \item \inlinecode{subtree\_small\_to\_large\_merge(adj, root, init, merge, answer)} visits the tree rooted at \inlinecode{root}. The callback \inlinecode{init(u)} returns the initial summary for node \inlinecode{u}; \inlinecode{merge(big, small)} absorbs one child summary into another; and \inlinecode{answer(u, summary)} records the final subtree summary for \inlinecode{u}.
+\end{compactitem}
+
+The input must be a tree. Summary objects must support \inlinecode{.size()}, and \inlinecode{merge(big, small)} should iterate over \inlinecode{small} and insert into \inlinecode{big}.
+
+\textbf{Time Complexity}: $O(n \log n)$ expected moved items per call, where $n$ is the number of nodes.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary stack space and $O(n)$ auxiliary heap space.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <unordered_map>
+#include <vector>
+
+template<typename Summary, typename Init, typename Merge, typename Answer>
+int dfs_subtree_small_to_large(
+    int u, int p, const std::vector<std::vector<int>> &adj, std::vector<Summary> &summary,
+    Init &init, Merge &merge, Answer &answer
+) {
+  int keep = u;
+  summary[u] = init(u);
+  for (int v : adj[u]) {
+    if (v == p) {
+      continue;
+    }
+    int child = dfs_subtree_small_to_large(v, u, adj, summary, init, merge, answer);
+    if (summary[keep].size() < summary[child].size()) {
+      std::swap(keep, child);
+    }
+    merge(summary[keep], summary[child]);
+  }
+  answer(u, summary[keep]);
+  return keep;
+}
+
+template<typename Init, typename Merge, typename Answer>
+void subtree_small_to_large_merge(
+    const std::vector<std::vector<int>> &adj, int root, Init init, Merge merge, Answer answer
+) {
+  int n = static_cast<int>(adj.size());
+  assert(0 <= root && root < n);
+  using Summary = decltype(init(0));
+  std::vector<Summary> summary(n);
+  dfs_subtree_small_to_large(root, -1, adj, summary, init, merge, answer);
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+int main() {
+  //          0:A
+  //       /     |
+  //     1:B    2:A
+  //    /  |     |
+  // 3:C  4:B   5:C
+  std::vector<std::vector<int>> adj(6);
+  auto add_edge = [&](int u, int v) {
+    adj[u].push_back(v);
+    adj[v].push_back(u);
+  };
+  add_edge(0, 1);
+  add_edge(0, 2);
+  add_edge(1, 3);
+  add_edge(1, 4);
+  add_edge(2, 5);
+
+  std::vector<int> color{0, 1, 0, 2, 1, 2};
+  std::vector<int> ans(6);
+  auto init = [&](int u) {
+    std::unordered_map<int, int> freq;
+    freq[color[u]] = 1;
+    return freq;
+  };
+  auto merge = [](std::unordered_map<int, int> &big, const std::unordered_map<int, int> &small) {
+    for (const auto &[c, cnt] : small) {
+      big[c] += cnt;
+    }
+  };
+  auto answer = [&](int u, const std::unordered_map<int, int> &freq) {
+    ans[u] = static_cast<int>(freq.size());
+  };
+  subtree_small_to_large_merge(adj, 0, init, merge, answer);
+  assert((ans == std::vector<int>{3, 2, 2, 1, 1, 1}));
+  return 0;
+}
+\end{lstlisting}
 \subsection{Centroid Decomposition}
 Given a tree, build its centroid decomposition. A centroid is a node whose removal splits the current subtree into connected components of size at most half of that subtree. Recursively choosing centroids creates a decomposition tree of height $O(\log n)$, which is useful for queries based on distances to marked nodes, nearest special node, and other ``path through a centroid'' problems.
 
@@ -3936,6 +4029,137 @@ Total distance: 13
 5 <-> 6
 0 <-> 1
 \end{exampleoutput}
+\subsection{Kruskal Reconstruction Tree}
+Given a connected, undirected, weighted graph, build the Kruskal reconstruction tree of its minimum spanning tree. Kruskal's algorithm adds MST edges in nondecreasing weight order; whenever it joins two components, create a new internal node whose children are the two component roots and whose value is the joining edge weight. The original graph nodes become leaves.
+
+The lowest common ancestor of two leaves is exactly the merge step that first connects their MST components, so its value is the maximum edge weight on the MST path between those two nodes. This turns bottleneck path queries into ordinary LCA queries on the reconstruction tree.
+
+\begin{compactitem}
+  \item \inlinecode{KruskalReconstructionTree(n, edges)} builds the tree from weighted edges stored as \inlinecode{(weight, u, v)}.
+  \item \inlinecode{max\_edge\_on\_path(u, v)} returns the maximum edge weight on the MST path between original nodes \inlinecode{u} and \inlinecode{v}.
+  \item \inlinecode{root()} returns the reconstruction-tree root.
+\end{compactitem}
+
+The input graph must be connected. Parallel edges are supported and are handled naturally by Kruskal's algorithm.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(m \log m + n \log n)$ for construction, where $n$ is the number of nodes and $m$ is the number of edges.
+  \item $O(\log n)$ per call to \inlinecode{max\_edge\_on\_path()}.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(n \log n + m)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <numeric>
+#include <tuple>
+#include <vector>
+
+class KruskalReconstructionTree {
+  std::vector<int> dsu_root, dsu_tree_root, depth, tin, tout;
+  std::vector<std::vector<int>> up;
+  std::vector<std::vector<int>> tree;
+  std::vector<int64_t> value;
+  int timer = 0, root_node = -1;
+
+  int find_root(int u) {
+    if (dsu_root[u] != u) {
+      dsu_root[u] = find_root(dsu_root[u]);
+    }
+    return dsu_root[u];
+  }
+
+  void dfs_lca(int u, int p) {
+    tin[u] = timer++;
+    up[0][u] = p;
+    for (int k = 1; k < static_cast<int>(up.size()); k++) {
+      up[k][u] = up[k - 1][up[k - 1][u]];
+    }
+    for (int v : tree[u]) {
+      depth[v] = depth[u] + 1;
+      dfs_lca(v, u);
+    }
+    tout[u] = timer;
+  }
+
+  bool is_ancestor(int u, int v) const { return tin[u] <= tin[v] && tout[v] <= tout[u]; }
+
+  int lca(int u, int v) const {
+    if (is_ancestor(u, v)) {
+      return u;
+    }
+    if (is_ancestor(v, u)) {
+      return v;
+    }
+    for (int k = static_cast<int>(up.size()) - 1; k >= 0; k--) {
+      if (!is_ancestor(up[k][u], v)) {
+        u = up[k][u];
+      }
+    }
+    return up[0][u];
+  }
+
+ public:
+  KruskalReconstructionTree(int n, std::vector<std::tuple<int64_t, int, int>> edges)
+      : dsu_root(2 * n - 1),
+        dsu_tree_root(2 * n - 1),
+        depth(2 * n - 1),
+        tin(2 * n - 1),
+        tout(2 * n - 1),
+        tree(2 * n - 1),
+        value(2 * n - 1) {
+    assert(n > 0);
+    std::iota(dsu_root.begin(), dsu_root.begin() + n, 0);
+    std::iota(dsu_tree_root.begin(), dsu_tree_root.begin() + n, 0);
+    std::sort(edges.begin(), edges.end());
+    int nodes = n;
+    for (const auto &[w, a, b] : edges) {
+      int u = find_root(a), v = find_root(b);
+      if (u == v) {
+        continue;
+      }
+      value[nodes] = w;
+      tree[nodes].push_back(dsu_tree_root[u]);
+      tree[nodes].push_back(dsu_tree_root[v]);
+      dsu_root[u] = nodes;
+      dsu_root[v] = nodes;
+      dsu_root[nodes] = nodes;
+      dsu_tree_root[nodes] = nodes;
+      nodes++;
+    }
+    assert(nodes == 2 * n - 1);
+    root_node = nodes - 1;
+    int lg = 1;
+    while ((1 << lg) <= nodes) {
+      lg++;
+    }
+    up.assign(lg, std::vector<int>(nodes));
+    dfs_lca(root_node, root_node);
+  }
+
+  int root() const { return root_node; }
+  int64_t max_edge_on_path(int u, int v) const { return value[lca(u, v)]; }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+int main() {
+  // MST edges are 0-1 (2), 1-2 (4), and 1-3 (5).
+  std::vector<std::tuple<int64_t, int, int>> edges{
+      {2, 0, 1}, {4, 1, 2}, {5, 1, 3}, {8, 0, 2}, {9, 2, 3}
+  };
+  KruskalReconstructionTree tree(4, edges);
+  assert(tree.root() == 6);
+  assert(tree.max_edge_on_path(0, 2) == 4);
+  assert(tree.max_edge_on_path(0, 3) == 5);
+  assert(tree.max_edge_on_path(2, 3) == 5);
+  return 0;
+}
+\end{lstlisting}
 \subsection{Minimum Spanning Arborescence (Edmonds)}
 A spanning arborescence rooted at a node \inlinecode{root} of a weighted, directed graph is a set of edges forming a tree in which every other node is reachable from the root along directed edges, that is, every node except the root has exactly one incoming edge. The minimum spanning arborescence minimizes the total edge weight, and is the directed analog of the minimum spanning tree.
 
@@ -4488,6 +4712,210 @@ int main() {
 Maximum flow: 5
 Min-cut source side: 0 1 2
 \end{exampleoutput}
+\subsection{Flow with Lower Bounds}
+Given a directed network where each edge must carry at least \inlinecode{lo} and at most \inlinecode{hi} units of flow, find whether the lower bounds can be satisfied, and optionally optimize an \inlinecode{s}-to-\inlinecode{t} flow value. Subtract each lower bound from its edge capacity, then record the forced imbalance: \inlinecode{lo} units must leave \inlinecode{u} and enter \inlinecode{v}. A super-source supplies every node with net demand, and every node with net surplus sends that surplus to a super-sink. The bounds are feasible exactly when all such auxiliary edges can be saturated.
+
+For \inlinecode{s}-to-\inlinecode{t} flow, add an infinite edge from \inlinecode{t} back to \inlinecode{s} before checking feasibility. The flow on that artificial edge is one feasible value. After removing the auxiliary nodes, augmenting from \inlinecode{s} to \inlinecode{t} maximizes the value; augmenting from \inlinecode{t} to \inlinecode{s} cancels as much flow as possible and minimizes it.
+
+\begin{compactitem}
+  \item \inlinecode{BoundedFlow(n)} constructs a directed lower-bound flow network with nodes in $[0, n)$.
+  \item \inlinecode{add\_edge(u, v, lo, hi)} adds an edge with lower capacity \inlinecode{lo} and upper capacity \inlinecode{hi}.
+  \item \inlinecode{feasible\_circulation()} returns whether all edge bounds can be satisfied with flow conserved at every node.
+  \item \inlinecode{max\_flow(source, sink)} returns the maximum feasible \inlinecode{source}-to-\inlinecode{sink} flow, or $-1$ if no feasible flow exists.
+  \item \inlinecode{min\_flow(source, sink)} returns the minimum feasible \inlinecode{source}-to-\inlinecode{sink} flow, or $-1$ if no feasible flow exists.
+  \item \inlinecode{edge\_flows()} returns one feasible flow value for each original edge after a successful call.
+\end{compactitem}
+
+All capacities should be nonnegative integers and \inlinecode{lo} $\leq$ \inlinecode{hi}. Choose \inlinecode{INF} larger than any possible finite flow value.
+
+\textbf{Time Complexity}: $O(n^{2} \cdot m)$ per feasibility check or optimized flow call, where $n$ is the number of nodes and $m$ is the number of edges.
+
+\textbf{Space Complexity}: $O(\max\left(n, m\right))$ for network storage and auxiliary arrays.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <limits>
+#include <queue>
+#include <vector>
+
+class BoundedFlow {
+  struct Edge {
+    int v, rev;
+    int64_t cap;
+  };
+
+  struct OriginalEdge {
+    int u, index;
+    int64_t lo, hi;
+  };
+
+  static constexpr int64_t INF = (1LL << 60);
+  int nodes;
+  std::vector<std::vector<Edge>> adj;
+  std::vector<OriginalEdge> original;
+  std::vector<int> level, ptr;
+
+  void add_residual_edge(int u, int v, int64_t cap) {
+    adj[u].push_back(Edge{v, static_cast<int>(adj[v].size()), cap});
+    adj[v].push_back(Edge{u, static_cast<int>(adj[u].size()) - 1, 0});
+  }
+
+  bool bfs(int source, int sink) {
+    level.assign(static_cast<int>(adj.size()), -1);
+    level[source] = 0;
+    std::queue<int> q;
+    q.push(source);
+    while (!q.empty()) {
+      int u = q.front();
+      q.pop();
+      for (const Edge &e : adj[u]) {
+        if (e.cap > 0 && level[e.v] == -1) {
+          level[e.v] = level[u] + 1;
+          q.push(e.v);
+        }
+      }
+    }
+    return level[sink] != -1;
+  }
+
+  int64_t dfs(int u, int sink, int64_t pushed) {
+    if (u == sink || pushed == 0) {
+      return pushed;
+    }
+    for (; ptr[u] < static_cast<int>(adj[u].size()); ptr[u]++) {
+      Edge &e = adj[u][ptr[u]];
+      if (e.cap > 0 && level[e.v] == level[u] + 1) {
+        int64_t next = dfs(e.v, sink, std::min(pushed, e.cap));
+        if (next > 0) {
+          e.cap -= next;
+          adj[e.v][e.rev].cap += next;
+          return next;
+        }
+      }
+    }
+    return 0;
+  }
+
+  int64_t dinic(int source, int sink) {
+    int64_t flow = 0;
+    while (bfs(source, sink)) {
+      ptr.assign(static_cast<int>(adj.size()), 0);
+      while (int64_t pushed = dfs(source, sink, INF)) {
+        flow += pushed;
+      }
+    }
+    return flow;
+  }
+
+  bool satisfy_demands(int source, int sink, int &artificial_index, int64_t &forced_flow) {
+    int super_source = static_cast<int>(adj.size());
+    int super_sink = super_source + 1;
+    adj.resize(super_sink + 1);
+    level.resize(super_sink + 1);
+    ptr.resize(super_sink + 1);
+    std::vector<int64_t> balance(nodes);
+    for (const OriginalEdge &e : original) {
+      balance[e.u] -= e.lo;
+      balance[adj[e.u][e.index].v] += e.lo;
+    }
+    if (source != -1) {
+      artificial_index = static_cast<int>(adj[sink].size());
+      add_residual_edge(sink, source, INF);
+    }
+    int64_t need = 0;
+    for (int u = 0; u < nodes; u++) {
+      if (balance[u] > 0) {
+        add_residual_edge(super_source, u, balance[u]);
+        need += balance[u];
+      } else if (balance[u] < 0) {
+        add_residual_edge(u, super_sink, -balance[u]);
+      }
+    }
+    bool ok = dinic(super_source, super_sink) == need;
+    forced_flow = source == -1 ? 0 : adj[source][adj[sink][artificial_index].rev].cap;
+    return ok;
+  }
+
+  int64_t optimize_flow(int source, int sink, bool maximize) {
+    int artificial_index = -1;
+    int64_t value = 0;
+    if (!satisfy_demands(source, sink, artificial_index, value)) {
+      return -1;
+    }
+    Edge &artificial = adj[sink][artificial_index];
+    Edge &reverse = adj[source][artificial.rev];
+    artificial.cap = reverse.cap = 0;
+    return maximize ? value + dinic(source, sink) : value - dinic(sink, source);
+  }
+
+ public:
+  explicit BoundedFlow(int n) : nodes(n), adj(n), level(n), ptr(n) {}
+
+  void add_edge(int u, int v, int64_t lo, int64_t hi) {
+    assert(0 <= u && u < nodes && 0 <= v && v < nodes);
+    assert(0 <= lo && lo <= hi);
+    original.push_back(OriginalEdge{u, static_cast<int>(adj[u].size()), lo, hi});
+    add_residual_edge(u, v, hi - lo);
+  }
+
+  bool feasible_circulation() {
+    int artificial_index = -1;
+    int64_t value = 0;
+    return satisfy_demands(-1, -1, artificial_index, value);
+  }
+
+  int64_t max_flow(int source, int sink) {
+    assert(0 <= source && source < nodes && 0 <= sink && sink < nodes);
+    return optimize_flow(source, sink, true);
+  }
+
+  int64_t min_flow(int source, int sink) {
+    assert(0 <= source && source < nodes && 0 <= sink && sink < nodes);
+    return optimize_flow(source, sink, false);
+  }
+
+  std::vector<int64_t> edge_flows() const {
+    std::vector<int64_t> flow;
+    flow.reserve(original.size());
+    for (const OriginalEdge &e : original) {
+      const Edge &forward = adj[e.u][e.index];
+      flow.push_back(e.hi - forward.cap);
+    }
+    return flow;
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+int main() {
+  BoundedFlow max_network(4);
+  max_network.add_edge(0, 1, 1, 4);
+  max_network.add_edge(0, 2, 0, 2);
+  max_network.add_edge(1, 3, 1, 3);
+  max_network.add_edge(2, 3, 0, 2);
+  assert(max_network.max_flow(0, 3) == 5);
+  std::vector<int64_t> max_flow = max_network.edge_flows();
+  assert(max_flow[0] + max_flow[1] == 5);
+
+  BoundedFlow min_network(4);
+  min_network.add_edge(0, 1, 1, 4);
+  min_network.add_edge(0, 2, 0, 2);
+  min_network.add_edge(1, 3, 1, 3);
+  min_network.add_edge(2, 3, 0, 2);
+  assert(min_network.min_flow(0, 3) == 1);
+
+  BoundedFlow circulation(3);
+  circulation.add_edge(0, 1, 2, 3);
+  circulation.add_edge(1, 2, 2, 3);
+  circulation.add_edge(2, 0, 2, 3);
+  assert(circulation.feasible_circulation());
+  assert((circulation.edge_flows() == std::vector<int64_t>{2, 2, 2}));
+  return 0;
+}
+\end{lstlisting}
 \subsection{Maximum Flow (Dinic with Decomposition)}
 Given a flow network with integer or floating-point capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink.
 
