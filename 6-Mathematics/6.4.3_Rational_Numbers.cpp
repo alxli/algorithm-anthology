@@ -23,7 +23,7 @@ arithmetic cross-multiply numerators and denominators, so instantiate with a wid
   arithmetic are hidden friends, so a raw integer operand works on either side.
 
 Time Complexity:
-- O(log(n + d)) per call to constructor `Rational(n, d)`.
+- O(log s) per call to constructor `Rational(n, d)`, where $s = |n| + |d|$.
 - O(1) per call to all other operations, assuming that corresponding operations on the template
   integer type are O(1) as well.
 

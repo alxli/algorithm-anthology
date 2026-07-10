@@ -21,7 +21,7 @@ Time Complexity:
   `hi`.
 
 Space Complexity:
-- O(n log d) worst-case node storage for $n$ line inserted, usually much less.
+- O(n log d) worst-case node storage for $n$ lines inserted, usually much less.
 - O(log d) auxiliary stack space per operation.
 
 */

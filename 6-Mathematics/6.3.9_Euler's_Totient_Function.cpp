@@ -21,19 +21,20 @@ than $\sqrt{`hi`}$ (a number at most `hi` can have at most one such factor).
 - `phi(n)` returns Euler's totient of `n`.
 - `phi_table(n)` returns a vector `v` of length `n + 1` such that `v[i]` stores `phi(i)` for every
   `i` in the range $[0, n]$.
-- `phi_table(lo, hi)` returns a vector `v` of length $`hi` - `lo` + 1$ such that `v[i - lo]` stores
+- `phi_table(lo, hi)` returns a vector `v` of length `hi - lo + 1` such that `v[i - lo]` stores
   `phi(i)` for every `i` in the range $[`lo`, `hi`]$. This overload assumes `lo` $\geq 0$; if `hi` <
   `lo`, it returns an empty vector.
 
 Time Complexity:
-- O(sqrt n) per call to `phi(n)`.
+- O(sqrt(n)) per call to `phi(n)`.
 - O(n log log n) per call to `phi_table(n)`.
-- O((`hi` - `lo`)*log(log(`hi`)) + sqrt(`hi`)) per call to `phi_table(lo, hi)`.
+- O(w*log(log(h)) + sqrt(h)) per call to `phi_table(lo, hi)`, where $w = `hi` - `lo` + 1$ and
+  $h = `hi`$.
 
 Space Complexity:
 - O(1) auxiliary for `phi(n)`.
 - O(n) auxiliary for `phi_table(n)`.
-- O(`hi` - `lo` + sqrt(`hi`)) auxiliary for `phi_table(lo, hi)`.
+- O(w + sqrt(h)) auxiliary for `phi_table(lo, hi)`.
 
 */
 

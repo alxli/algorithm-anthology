@@ -9,12 +9,12 @@ vectors.
   initialized to $0$.
 - `at(i)` returns the value at index `i`.
 - `add(i, x)` adds `x` to the value at index `i`.
-- `add(lo, hi, x)` adds `x` to the values at all indices from `lo` to `hi`, inclusive.
+- `add(lo, hi, x)` adds `x` to the values at all indices in $[`lo`, `hi`]$.
 - `set(i, x)` assigns the value at index `i` to `x`.
-- `sum(hi)` returns the sum of all values at indices from $0$ to `hi`, inclusive.
-- `sum(lo, hi)` returns the sum of all values at indices from `lo` to `hi`, inclusive.
+- `sum(hi)` returns the sum of all values at indices $[0, `hi`]$.
+- `sum(lo, hi)` returns the sum of all values at indices $[`lo`, `hi`]$.
 - `max_prefix(c)` returns the largest boundary `hi` such that `sum(0, hi - 1)` $\leq$ `c`, assuming
-  prefix sums are nondecreasing. It may return any value from $0$ to `N`.
+  prefix sums are nondecreasing. It may return any boundary in $[0, N]$.
 
 Time Complexity:
 - O(log N) per call to all member functions.

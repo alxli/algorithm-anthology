@@ -19,12 +19,15 @@ proof of equality when exact verification is required.
 By default, each sequence value is cast to `uint64_t` and mixed. For non-integer element types, pass
 a custom value hasher that maps each element to a stable nonzero value in [`1`, `HASH_MOD`).
 
-- `RollingHash<T, ValueHasher>(first, last)` constructs prefix hashes for any iterator range of
-  values accepted by the value hasher.
-- `RollingHash<T, ValueHasher>(v)` constructs prefix hashes for vector `v`.
+- `RollingHash<T, ValueHasher = RollingValueHasher<T>>(hasher = ValueHasher())` constructs an empty
+  hash sequence.
+- `RollingHash<T, ValueHasher = RollingValueHasher<T>>(first, last, hasher = ValueHasher())`
+  constructs prefix hashes for any iterator range of values accepted by the value hasher.
+- `RollingHash<T, ValueHasher = RollingValueHasher<T>>(v, hasher = ValueHasher())` constructs prefix
+  hashes for vector `v`.
 - `get(l, r)` returns the hash of the half-open subsequence $[`l`, `r`)$.
-- `hash(first, last)` returns the hash of an iterator range.
-- `hash(v)` returns the hash of vector `v`.
+- `hash(first, last, hasher = ValueHasher())` returns the hash of an iterator range.
+- `hash(v, hasher = ValueHasher())` returns the hash of vector `v`.
 - `concat(left, right, right_len)` returns the hash of the concatenation of a sequence with hash
   `left` and a sequence with hash `right` and length `right_len`.
 

@@ -28,8 +28,8 @@ coordinate. As with ternary search on reals, the function must be strictly unimo
 - `golden_section_min(lo, hi, f, eps = 1e-12)` and `golden_section_max(lo, hi, f, eps = 1e-12)` do
   the same with one function evaluation per iteration.
 - `discrete_ternary_min(lo, hi, f)` and `discrete_ternary_max(lo, hi, f)` return the integer index
-  in the inclusive range $[`lo`, `hi`]$ optimizing the unimodal function `f`, breaking ties toward
-  the smaller index.
+  in range $[`lo`, `hi`]$ optimizing the unimodal function `f`, breaking ties toward the smaller
+  index.
 
 Time Complexity:
 - O(log(n / `eps`)) calls to `f()` for the continuous searches, where $n$ is the distance between

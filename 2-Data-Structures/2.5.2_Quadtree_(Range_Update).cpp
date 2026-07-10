@@ -25,16 +25,15 @@ aligned regions of a huge sparse grid. Choose a sparse 2D segment tree when wors
 may be long, thin, or otherwise poorly aligned with quadrant boundaries; the quadtree can visit many
 boundary nodes in those cases.
 
-- `LazyQuadtree<T, R, C>(v)` constructs a 2D array with rows $0$ to $R$ (inclusive) and columns $0$
-  to $C$ (inclusive), where template parameters `R` and `C`. All array values are implicitly
-  initialized to `v`. Nodes are allocated lazily as indices are touched.
+- `LazyQuadtree<T, R, C>(v = T())` constructs a 2D array with rows $[0, R]$ and columns $[0, C]$.
+  All array values are implicitly initialized to `v`. Nodes are allocated lazily as indices are
+  touched.
 - `at(r, c)` returns the value at row `r`, column `c`.
 - `query(r1, c1, r2, c2)` returns the result of `combine()` applied to every value in the
-  rectangular region consisting of rows from `r1` to `r2` and columns from `c1` to `c2`, inclusive.
+  rectangular region consisting of rows $[`r1`, `r2`]$ and columns $[`c1`, `c2`]$.
 - `update(r, c, d)` assigns the value `v` at $(`r`, `c`)$ to `apply_delta(v, d)`.
 - `update(r1, c1, r2, c2)` modifies the value at each index of the rectangular region consisting of
-  rows from `r1` to `r2` and columns from `c1` to `c2`, inclusive, by applying the delta `d` to each
-  value.
+  rows $[`r1`, `r2`]$ and columns $[`c1`, `c2`]$ by applying the delta `d` to each value.
 
 Time Complexity:
 - O(1) per call to the constructor.

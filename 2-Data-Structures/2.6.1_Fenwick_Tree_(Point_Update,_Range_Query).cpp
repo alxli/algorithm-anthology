@@ -16,10 +16,10 @@ useful for coordinate-compressed $k$-th element lookups and online rank queries.
 - `add(i, x)` adds `x` to the value at index `i`.
 - `set(i, x)` assigns the value at index `i` to `x`.
 - `at(i)` returns the value at index `i`.
-- `sum(hi)` returns the sum of all values at indices from $0$ to `hi`, inclusive.
-- `sum(lo, hi)` returns the sum of all values at indices from `lo` to `hi`, inclusive.
+- `sum(hi)` returns the sum of all values at indices $[0, `hi`]$.
+- `sum(lo, hi)` returns the sum of all values at indices $[`lo`, `hi`]$.
 - `max_prefix(c)` returns the largest boundary `hi` such that `sum(0, hi - 1) <= c`, assuming prefix
-  sums are nondecreasing. It may return any value from $0$ to `size()`.
+  sums are nondecreasing. It may return any boundary in $[0, n]$, where $n$ is `size()`.
 
 Time Complexity:
 - O(n) per call to the constructor, where $n$ is the size of the array.

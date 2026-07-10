@@ -10,7 +10,7 @@ possible with probability roughly $q^2 / 2^{64}$ over $q$ compared fingerprints.
 plain XOR only records element parity; use a summed hash or pair it with counts if multiplicity
 matters.
 
-- `ZobristHash<T>(seed)` constructs a token generator with initial value `seed`.
+- `ZobristHash<T>(seed = 0)` constructs a token generator with initial value `seed`.
 - `get(x)` returns the stable token assigned to key `x`, creating it if needed.
 - `toggle(h, x)` returns the hash obtained by inserting `x` into set hash `h` if absent, or removing
   `x` from `h` if present.

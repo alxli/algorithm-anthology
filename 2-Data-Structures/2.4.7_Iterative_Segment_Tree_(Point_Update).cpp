@@ -16,14 +16,14 @@ single updated index. The default definition below supports updates that "set" t
 index to a new value. Another possible update operation is "increment", in which case
 `apply_delta(v, d)` should return `v + d`.
 
-- `IterativeSegTree<T>(n, v)` constructs an array of size `n` with indices $[0, `n`)$, and all
+- `IterativeSegTree<T>(n, v = T())` constructs an array of size `n` with indices $[0, `n`)$, and all
   values initialized to `v`.
 - `IterativeSegTree<T>(lo, hi)` constructs an array from two random-access iterators as a range
   $[`lo`, `hi`)$, initialized to the elements of the range in the same order.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.
-- `query(lo, hi)` returns the result of `combine()` applied to all indices from `lo` to `hi`,
-  inclusive. If `lo == hi`, then the single specified value is returned.
+- `query(lo, hi)` returns the result of `combine()` applied to all indices in $[`lo`, `hi`]$. If
+  `lo == hi`, then the single specified value is returned.
 - `update(i, d)` assigns the value `v` at index `i` to `apply_delta(v, d)`.
 - `max_right(lo, pred)` returns the largest boundary `hi` such that the aggregate over the half-open
   range $[`lo`, `hi`)$ satisfies `pred`. It returns `size()` if `pred` remains true to the end.
@@ -31,7 +31,7 @@ index to a new value. Another possible update operation is "increment", in which
   range $[`lo`, `hi`)$ satisfies `pred`. It returns $0$ if `pred` remains true to the beginning.
 
 For the boundary-search functions, `pred` takes aggregate `T` values of candidate ranges. As a range
-grows, `pred` may change from true to false but never back to true; The empty range is considered
+grows, `pred` may change from true to false but never back to true; the empty range is considered
 valid. E.g. for `combine = min`, use `pred(mn) = (mn > x)` to find the first value `<= x`, or for
 `combine = sum`, use `pred(sum) = (sum <= x)` with nonnegative values to find the longest range
 within the limit `x`.

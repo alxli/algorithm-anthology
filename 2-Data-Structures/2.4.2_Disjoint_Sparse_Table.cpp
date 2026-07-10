@@ -18,7 +18,7 @@ returns the "min" of the range; for "sum", `combine(a, b)` should return `a + b`
 
 - `DisjointSparseTable<T>(lo, hi)` builds the table from two random-access iterators.
 - `size()` returns the size of the array.
-- `query(lo, hi)` returns `combine()` applied to all indices from `lo` to `hi`, inclusive.
+- `query(lo, hi)` returns `combine()` applied to all indices in $[`lo`, `hi`]$.
 
 Time Complexity:
 - O(n log n) per call to the constructor, where $n$ is the size of the array.

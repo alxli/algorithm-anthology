@@ -8,25 +8,25 @@ lists as in a merge sort tree. A query decomposes the $x$-range into O(log n) no
 searches each node's list for the matching $y$-range.
 
 Use this for static point-reporting queries when guaranteed worst-case bounds are more important
-than memory. Compared with a range k-d tree, it uses more space but gives O(log^2(n) + m) query time
+than memory. Compared with a range k-d tree, it uses more space but gives O(log^2 n + m) query time
 regardless of point distribution; the k-d tree is lighter and often faster on typical inputs, but
 its pruning is more distribution-dependent.
 
 - `RangeTree<T>(lo, hi)` constructs a set from two random-access iterators to `std::pair` as a range
   $[`lo`, `hi`)$ of points.
 - `query(x1, y1, x2, y2, f)` calls the function `f(i, p)` on each point in the set that falls into
-  the rectangular region consisting of rows from `x1` to `x2`, inclusive, and columns from `y1` to
-  `y2`, inclusive. The first argument to `f` is the 0-based index of the point in the original range
-  given to the constructor. The second argument is the point itself as an `std::pair`.
+  the rectangular region consisting of rows $[`x1`, `x2`]$ and columns $[`y1`, `y2`]$. The first
+  argument to `f` is the 0-based index of the point in the original range given to the constructor.
+  The second argument is the point itself as an `std::pair`.
 
 Time Complexity:
 - O(n log n) per call to the constructor, where $n$ is the number of points.
-- O(log^2(n) + m) per call to `query()`, where $m$ is the number of points that are reported by the
+- O(log^2 n + m) per call to `query()`, where $m$ is the number of points that are reported by the
   query.
 
 Space Complexity:
 - O(n log n) for storage of the points.
-- O(log^2(n)) auxiliary stack space for `query()`.
+- O(log^2 n) auxiliary stack space for `query()`.
 
 */
 

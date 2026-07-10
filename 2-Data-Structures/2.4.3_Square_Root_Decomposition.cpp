@@ -16,14 +16,13 @@ single updated index. The default definition below supports updates that "set" t
 index to a new value. Another possible update operation is "increment", in which case
 `apply_delta(v, d)` should return `v + d`.
 
-- `SqrtDecomposition<T>(n, v)` constructs an array of size `n` with indices $[0, `n`)$, and all
-  values initialized to `v`.
+- `SqrtDecomposition<T>(n, v = T())` constructs an array of size `n` with indices $[0, `n`)$, and
+  all values initialized to `v`.
 - `SqrtDecomposition<T>(lo, hi)` constructs an array from two random-access iterators, initialized
   to the elements of the range in the same order.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.
-- `query(lo, hi)` returns the result of `combine()` applied to all indices from `lo` to `hi`,
-  inclusive.
+- `query(lo, hi)` returns the result of `combine()` applied to all indices in $[`lo`, `hi`]$.
 - `update(i, d)` assigns the value `v` at index `i` to `apply_delta(v, d)`.
 
 The supported operations are identical to those of the point-update segment tree in this section.
@@ -31,7 +30,7 @@ The supported operations are identical to those of the point-update segment tree
 Time Complexity:
 - O(n) per call to both constructors, where $n$ is the size of the array.
 - O(1) per call to `size()`.
-- O(sqrt n) per call to `at()`, `update()`, and `query()`.
+- O(sqrt(n)) per call to `at()`, `update()`, and `query()`.
 
 Space Complexity:
 - O(n) for storage of the array elements.

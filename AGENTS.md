@@ -106,9 +106,14 @@ sections elsewhere, include both `Time Complexity:` and `Space Complexity:`.
   structural idea.
 - Use bullets like ``- `func(args)` returns ...`` for APIs. Include default parameters in the bullet
   when they are semantically relevant.
+- Keep API bullets synchronized with the callable public signature: include meaningful template
+  parameters, current type names, and defaulted runtime arguments exactly as users should write
+  them.
 - Write big-O as plain text: `O(n log n)`, not `$O(n \log n)$`.
 - Use single-letter variables inside big-O expressions. Quantify named parameters afterward, e.g.
   `O(r*c*2^c)`, where $r$ and $c$ are the number of rows and columns, and not `O(rows*cols*2^cols)`.
+- Keep function-style parentheses when they make plain-text big-O clearer, e.g.
+  `O(log(R)*log(C))`, `O(sqrt(n))`, and `O(max(n, m))`.
 - For ranges or numeric search intervals, prefer naming the span with one letter in big-O, e.g.
   `O(log n)`, where $n$ is the distance between `lo` and `hi`, rather than `O(log(hi - lo))`.
   In the rare cases where endpoint names appear directly inside a math expression, keep code
@@ -123,6 +128,8 @@ sections elsewhere, include both `Time Complexity:` and `Space Complexity:`.
 - Use math mode for variables and inequalities in prose: `$n$`, `$\leq$`, `$\geq$`, `$-1$`.
 - Prefer half-open interval notation for numbered domains, e.g. nodes in `$[0, n)$`, instead of
   spelling out "from $0$ to `$n - 1`".
+- State whether returned endpoint pairs are inclusive or half-open, and write numeric interval
+  literals in math mode.
 - Code identifiers inside math expressions should remain backticked, e.g. $[`lo`, `hi`)$ or
   $0 \leq `i` < `n`$.
 - Do not split math mode, code spans, or backticked identifiers just to satisfy the 100-column
@@ -141,6 +148,9 @@ sections elsewhere, include both `Time Complexity:` and `Space Complexity:`.
   then use `/*** Example Usage and Output:`.
 - Examples may define helpers such as `print_range()` or `eval()` when they make the demonstration
   clearer.
+- Examples should exercise the behavior a contestant is likely to misunderstand: degenerate inputs,
+  disconnected components, non-default flags, node-vs-edge conventions, or the witness returned by
+  the API.
 - When examples rely on exact equality for floating-point-looking objects, either use `EQ()` or add
   a short comment explaining why exact equality is intentional.
 - ASCII diagrams are welcome when they make tree/graph/data-structure updates easier to follow.
@@ -188,6 +198,8 @@ Before finishing meaningful edits, run checks scaled to the touched files:
   `git diff --check -- path/to/file.cpp`
 - Check line length for touched files:
   `awk 'length($0) > 100 { print FILENAME ":" FNR ":" length($0) ":" $0 }' path/to/file.cpp`
+- Check docstring wrapping when touching comments:
+  `python3 scan_docstrings.py`
 
 Warnings from the compiler should be investigated. If a warning is known and harmless, mention it
 in the final report rather than hiding it.

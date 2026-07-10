@@ -32,9 +32,10 @@ The hasher's output must be nonnegative. As with any polynomial hash, comparing 
 different lengths is only safe when digits are positive (for example, map an alphabet to $[1, B)$)
 so that a leading zero cannot make a shorter sequence collide with a longer one.
 
-- `HashDeque<T, Hash>(hasher)` constructs an empty deque whose `hasher` maps each element to its
-  nonnegative integer digit. For integer-like `T` the default hasher casts the element to
-  `uint64_t`, so `HashDeque<char>` and `HashDeque<int>` work with no hasher supplied.
+- `HashDeque<T = int, Hash = identity_digit<T>>(hasher = Hash())` constructs an empty deque whose
+  `hasher` maps each element to its nonnegative integer digit. For integer-like `T` the default
+  hasher casts the element to `uint64_t`, so `HashDeque<char>` and `HashDeque<int>` work with no
+  hasher supplied.
 - `size()` returns the number of elements, and `empty()` whether there are none.
 - `push_back(x)` and `push_front(x)` append `x` at the back or front.
 - `pop_back()` and `pop_front()` remove the back or front element; the deque must be nonempty.

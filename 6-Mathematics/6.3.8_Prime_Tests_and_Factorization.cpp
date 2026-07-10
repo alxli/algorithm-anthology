@@ -39,10 +39,10 @@ speed, with a slower portable double-and-add fallback to avoid overflow on compi
 128-bit integers.
 
 Time Complexity:
-- O(sqrt n) per call to `is_prime_slow(n)`.
+- O(sqrt(n)) per call to `is_prime_slow(n)`.
 - O(k log^3(n)) per call to `is_probable_prime(n, k)`.
 - O(log^3(n)) per call to `is_prime(n)`.
-- O(sqrt n) per call to `factorize_slow(n)`.
+- O(sqrt(n)) per call to `factorize_slow(n)`.
 - O(n) to rebuild the prime cache in `cached_sieve(n)`.
 - O(n^{1/4}) approximately per call to `rho_factor(n)` and `factorize(n)`.
 

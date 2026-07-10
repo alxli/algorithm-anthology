@@ -2,7 +2,7 @@
 
 Maintain a two-dimensional numerical array while supporting point increments and rectangle-sum
 queries. This is the two-dimensional form of the standard Fenwick tree: each internal entry stores a
-rectangular block sum, and a prefix query combines O(log R * log C) disjoint blocks.
+rectangular block sum, and a prefix query combines O(log(R)*log(C)) disjoint blocks.
 
 Choose among the three 2D Fenwick trees by coordinate range and update style. Use this dense version
 when the rows and columns are small enough to allocate the full grid: it has the simplest code and
@@ -20,9 +20,9 @@ segment tree or quadtree instead, since Fenwick-tree algebra relies on addition 
 - `add(r, c, x)` adds `x` to the value at index $(`r`, `c`)$.
 - `set(r, c, x)` assigns `x` to the value at index $(`r`, `c`)$.
 - `at(r, c)` returns the value at index $(`r`, `c`)$.
-- `sum(r, c)` returns the sum of the rectangle with corners $(0, 0)$ and $(`r`, `c`)$, inclusive.
-- `sum(r1, c1, r2, c2)` returns the sum of the rectangle with upper-left corner $(`r1`, `c1`)$ and
-  lower-right corner $(`r2`, `c2`)$, inclusive.
+- `sum(r, c)` returns the sum of the rectangle with rows $[0, `r`]$ and columns $[0, `c`]$.
+- `sum(r1, c1, r2, c2)` returns the sum of the rectangle with rows $[`r1`, `r2`]$ and columns
+  $[`c1`, `c2`]$.
 
 Time Complexity:
 - O(R*C) per call to the constructor, where $R$ and $C$ are the number of rows and columns.

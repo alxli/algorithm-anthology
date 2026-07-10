@@ -20,7 +20,7 @@ default code below returns the "min" of the range; for "gcd", `combine(a, b)` sh
 
 - `SparseTable<T>(lo, hi)` builds the table from two random-access iterators.
 - `size()` returns the size of the array.
-- `query(lo, hi)` returns `combine()` applied to all indices from `lo` to `hi`, inclusive.
+- `query(lo, hi)` returns `combine()` applied to all indices in $[`lo`, `hi`]$.
 
 Time Complexity:
 - O(n log n) per call to the constructor, where $n$ is the size of the array.

@@ -19,9 +19,10 @@ merges the root's two subtrees.
 
 Time Complexity:
 - O(1) per call to the first constructor, `size()`, `empty()`, and `top()`.
-- O(log n) amortized auxiliary per call to `push()`, `pop()`, and `join()`, where $n$ is the number
-  of elements in the priority queue.
-- O(n) per call to the second constructor, where $n$ is the distance between `lo` and `hi`.
+- O(log n) amortized per call to `push()`, `pop()`, and `join()`, where $n$ is the number of
+  elements in the priority queue.
+- O(n log n) amortized per call to the second constructor, where $n$ is the distance between `lo`
+  and `hi`.
 
 Space Complexity:
 - O(n) for storage of the priority queue elements.

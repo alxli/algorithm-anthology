@@ -27,13 +27,12 @@ For dense additive rectangle sums, prefer the simple 2D Fenwick tree in 2.6.5. A
 but it needs O(R*C) storage with large constants, so this sparse version is usually the safer
 codebook default.
 
-- `SegTree2D<T, R, C>(v)` constructs a two-dimensional array with rows from $0$ to $R$ (inclusive)
-  and columns from $0$ to $C$ (inclusive). All array values are implicitly initialized to `v`. Nodes
-  are allocated lazily as indices are touched.
+- `SegTree2D<T, R, C>(v = T())` constructs a two-dimensional array with rows $[0, R]$ and columns
+  $[0, C]$. All array values are implicitly initialized to `v`. Nodes are allocated lazily as
+  indices are touched.
 - `at(r, c)` returns the value at row `r`, column `c`.
 - `query(r1, c1, r2, c2)` returns the result of `combine()` applied to every value in the
-  rectangular region consisting of rows from `r1` to `r2`, inclusive, and columns from `c1` to `c2`,
-  inclusive.
+  rectangular region consisting of rows $[`r1`, `r2`]$ and columns $[`c1`, `c2`]$.
 - `update(r, c, d)` assigns the value `v` at $(`r`, `c`)$ to `apply_delta(v, d)`.
 
 Time Complexity:
@@ -41,7 +40,7 @@ Time Complexity:
 - O(log(R)*log(C)) per call to `at()`, `update()`, and `query()`.
 
 Space Complexity:
-- O(n log(R) log(C)) for storage after $n$ point updates.
+- O(n*log(R)*log(C)) for storage after $n$ point updates.
 - O(log(R) + log(C)) auxiliary stack space for `update()`, `query()`, and `at()`.
 
 */

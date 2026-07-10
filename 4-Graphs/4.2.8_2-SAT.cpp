@@ -5,8 +5,8 @@ Solve a Boolean formula in 2-CNF, where each clause contains at most two literal
 formula is satisfiable if and only if no variable and its negation belong to the same strongly
 connected component of the implication graph.
 
-Variables are numbered from $0$ to $n - 1$. A literal is represented by `literal(variable, value)`,
-where `value == true` means the variable itself and `value == false` means its negation.
+Variables are numbered $[0, n)$. A literal is represented by `literal(variable, value)`, where
+`value == true` means the variable itself and `value == false` means its negation.
 
 - `TwoSAT(n)` constructs an empty formula over `n` variables.
 - `literal(variable, value)` returns the integer ID for a variable or its negation.

@@ -18,16 +18,15 @@ performing their updates sequentially. The default code below defines range assi
 increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, len)` should return
 `v + d` for range-min/range-max queries, and `v + d * len` for range-sum queries.
 
-- `ImplicitTreap<T>(n, v)` constructs an array of size `n`, with indices $[0, `n`)$, with all values
-  initialized to `v`.
+- `ImplicitTreap<T>(n = 0, v = T())` constructs an array of size `n` with indices $[0, `n`)$, with
+  all values initialized to `v`.
 - `ImplicitTreap<T>(lo, hi)` constructs an array from two iterators as a range $[`lo`, `hi`)$,
   initialized to the elements of the range in the same order.
 - `size()` returns the size of the array.
 - `empty()` returns whether the array is empty.
 - `at(i)` returns the value at index `i`.
-- `query(lo, hi)` returns the result of `combine()` applied to all indices from `lo` to `hi`,
-  inclusive.
-- `update(lo, hi, d)` applies the delta `d` to every index from `lo` to `hi`, inclusive.
+- `query(lo, hi)` returns the result of `combine()` applied to all indices in $[`lo`, `hi`]$.
+- `update(lo, hi, d)` applies the delta `d` to every index in $[`lo`, `hi`]$.
 - `update(i, d)` applies the delta `d` to the single index `i`.
 - `insert(i, v)` inserts a new value `v` before index `i`, shifting later elements one position
   right.

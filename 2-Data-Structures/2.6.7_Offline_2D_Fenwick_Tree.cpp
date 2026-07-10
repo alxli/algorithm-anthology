@@ -24,9 +24,9 @@ target reserved cells, but queries may use any coordinates.
 - `build()` finalizes the coordinate compression. Call exactly once, after all `reserve()` calls.
 - `add(r, c, x)` adds `x` to the value at index $(`r`, `c`)$, which must have been reserved.
 - `set(r, c, x)` assigns `x` to the value at index $(`r`, `c`)$, which must have been reserved.
-- `sum(r, c)` returns the sum of the rectangle with corners $(0, 0)$ and $(`r`, `c`)$, inclusive.
-- `sum(r1, c1, r2, c2)` returns the sum of the rectangle with upper-left corner $(`r1`, `c1`)$ and
-  lower-right corner $(`r2`, `c2`)$, inclusive.
+- `sum(r, c)` returns the sum of the rectangle with rows $[0, `r`]$ and columns $[0, `c`]$.
+- `sum(r1, c1, r2, c2)` returns the sum of the rectangle with rows $[`r1`, `r2`]$ and columns
+  $[`c1`, `c2`]$.
 - `at(r, c)` returns the value at index $(`r`, `c`)$.
 
 Time Complexity:

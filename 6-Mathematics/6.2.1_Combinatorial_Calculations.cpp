@@ -7,8 +7,8 @@ chosen modulus must fit in `int64_t`.
 
 - `factorial(n, m)` returns $n! \bmod m$.
 - `factorialp(n, p)` returns $n! \bmod p$, where $p$ is prime.
-- `binomial_table(n, m)` returns rows $0$ to $n$ of Pascal's triangle as a two-dimensional vector
-  $t$ such that $t[i][j] = \binom{i}{j} \bmod m$.
+- `binomial_table(n, m)` returns rows $[0, n]$ of Pascal's triangle as a two-dimensional vector $t$
+  such that $t[i][j] = \binom{i}{j} \bmod m$.
 - `permute(n, k, m)` returns $(n \mathbin{\text{permute}} k) \bmod m$.
 - `choose(n, k, p)` returns $\binom{n}{k} \bmod p$, where $p$ is prime.
 - `multichoose(n, k, p)` returns $(n \mathbin{\text{multichoose}} k) \bmod p$, where $p$ is prime.

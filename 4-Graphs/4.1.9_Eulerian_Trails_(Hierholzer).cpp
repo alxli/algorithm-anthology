@@ -12,9 +12,9 @@ can simply consume outgoing edges by popping them from a local copy of the adjac
 
 - `known_eulerian_path_directed(adj, start)` returns a vertex trail using every directed edge in
   `adj` exactly once, assuming such a trail exists and begins at `start`.
-- `eulerian_path_directed(adj, start)` returns a vertex trail using every directed edge in `adj`
-  exactly once, or an empty vector if no such trail exists. If `start` $= -1$, a valid start is
-  chosen automatically; otherwise the trail must begin at `start`.
+- `eulerian_path_directed(adj, start = -1)` returns a vertex trail using every directed edge in
+  `adj` exactly once, or an empty vector if no such trail exists. If `start` $= -1$, a valid start
+  is chosen automatically; otherwise the trail must begin at `start`.
 
 Parallel directed edges are supported by storing duplicate neighbors in `adj`. Since these functions
 return only vertices, use `EulerianGraph` below when edge IDs are needed.
@@ -110,7 +110,7 @@ multigraphs: parallel edges are distinct because each edge receives its own ID.
 - `EulerianGraph(n, directed)` constructs a graph of `n` nodes numbered $[0, `n`)$. The graph is
   directed if `directed` is true, or undirected otherwise.
 - `add_edge(u, v)` adds an edge and returns its edge ID.
-- `eulerian_path(start)` returns a trail using every edge exactly once, or a result with
+- `eulerian_path(start = -1)` returns a trail using every edge exactly once, or a result with
   `start = -1` if no such trail exists. If `start = -1`, a valid start is chosen automatically.
 - `EulerianTrail::is_cycle()` returns whether the trail begins and ends on the same node.
 

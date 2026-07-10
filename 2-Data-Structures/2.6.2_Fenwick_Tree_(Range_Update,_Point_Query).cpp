@@ -4,11 +4,12 @@ Maintain a numerical array while supporting range increments and point queries. 
 storing the difference array in a Fenwick tree: adding `x` to $[`lo`, `hi`]$ adds `+x` at `lo` and
 `-x` after `hi`, and the value at index `i` is the prefix sum of those differences through `i`.
 
-- `FenwickRUPQ<T>(n)` constructs an array with 0-based indices $[0, `n`)$, with values set to $0$.
+- `FenwickRUPQ<T>(n)` constructs an array with 0-based indices $[0, `n`)$, with all values
+  initialized to $0$.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.
 - `add(i, x)` adds `x` to the value at index `i`.
-- `add(lo, hi, x)` adds `x` to the values at all indices from `lo` to `hi`, inclusive.
+- `add(lo, hi, x)` adds `x` to the values at all indices in $[`lo`, `hi`]$.
 
 Time Complexity:
 - O(n) per call to the constructor, where $n$ is the size of the array.

@@ -18,9 +18,9 @@ horizontal ($1 \times 2$) or vertical ($2 \times 1$).
 - `assignment_min_cost(cost)` returns a pair `(sum, job)`, where `sum` is the minimum cost of
   assigning each worker to a distinct job, and `job[i]` is the job assigned to worker `i`.
 - `minimum_set_cover(sets, universe_size)` returns a pair `(count, chosen)`, where `count` is the
-  minimum number of sets needed to cover all elements from $0$ to `universe_size - 1`, and `chosen`
-  contains one optimal list of set indices. If no cover exists, `count` is $-1$ and `chosen` is
-  empty. Each input set is represented as a bitmask.
+  minimum number of sets needed to cover all elements in $[0, u)$, where $u$ is `universe_size`, and
+  `chosen` contains one optimal list of set indices. If no cover exists, `count` is $-1$ and
+  `chosen` is empty. Each input set is represented as a bitmask.
 - `partition_min_cost(group_cost)` returns the minimum total cost to partition all elements into
   disjoint nonempty groups, where `group_cost[mask]` is the cost of taking `mask` as one group.
 - `count_domino_tilings(rows, cols)` returns the number of ways to tile a `rows` by `cols` rectangle

@@ -246,7 +246,7 @@ int main() {
     assert(count == 9);  // Stops before the sentinel mask.
     cout << endl;
   }
-  {  // Combinations of distinct integers from 0 to n - 1.
+  {  // Combinations of distinct integers in [0, n).
     int n = 5, k = 3;
     vector<int> a{0, 1, 2};
     cout << "\n" << n << " choose " << k << ":" << endl;

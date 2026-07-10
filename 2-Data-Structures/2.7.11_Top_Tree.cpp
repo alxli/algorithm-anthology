@@ -14,13 +14,13 @@ queries, use `std::numeric_limits<T>::max()` as the identity and `std::min(a, b)
 function. For non-commutative aggregates, store enough information in `T` to support reversing a
 path, and update `flip_path()` accordingly.
 
-- `TopTree(n, value)` constructs a forest on vertices $[0, `n`)$ with every vertex value initialized
-  to `value`.
+- `TopTree(n, value = T())` constructs a forest on vertices $[0, `n`)$ with every vertex value
+  initialized to `value`.
 - `size()` returns the number of vertices in the forest.
 - `edges()` returns the number of edge nodes that have been created.
 - `connected(u, v)` returns whether vertices `u` and `v` are in the same tree.
-- `link(u, v, value)` adds an edge with value `value` between different trees, returning its edge id
-  or $-1$ if the edge would create a cycle.
+- `link(u, v, value = T())` adds an edge with value `value` between different trees, returning its
+  edge id or $-1$ if the edge would create a cycle.
 - `cut(e)` removes edge id `e`. The edge id must currently be present.
 - `set_vertex(u, value)` changes vertex `u`'s value to `value`.
 - `set_edge(e, value)` changes edge `e`'s value to `value`. The edge id must currently be present.
@@ -577,7 +577,11 @@ class TopTree {
   }
 };
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+124
+
+***/
 
 #include <iostream>
 using namespace std;

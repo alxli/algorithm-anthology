@@ -4,13 +4,12 @@ A wavelet tree is a static structure over an integer array with values in a know
 [`min_val`, `max_val`]. The root splits the value range at its midpoint, recording for every
 prefix of the array how many of its elements belong to the lower value half, then stably partitions
 the array so that those elements form the left child and the rest form the right child. Recursing on
-each half builds a balanced tree of height O(log \sigma), where $\sigma$ is the size of the value
-range.
+each half builds a balanced tree of height O(log s), where $s$ is the size of the value range.
 
 The recorded prefix counts let a query at any node translate a range of array positions into the
 corresponding range of positions in either child, so a single root-to-leaf descent answers order
 statistics and rank queries. This is strictly more powerful than a merge sort tree: besides counting
-values below a threshold, it reports the $k$-th smallest value of a range in O(log \sigma) time.
+values below a threshold, it reports the $k$-th smallest value of a range in O(log s) time.
 
 All position ranges are inclusive $[`lo`, `hi`]$ with 0-based indices. If the values are large or
 sparse, compress them to a small contiguous range first.
@@ -25,13 +24,13 @@ sparse, compress them to a small contiguous range first.
   $\in [`x`, `y`]$.
 
 Time Complexity:
-- O(n log \sigma) per call to the constructor, where $n$ is the size of the array and $\sigma$ is
-  the size of the value range.
-- O(log \sigma) per call to `kth_smallest()`, `count_leq()`, and `count_in()`.
+- O(n log s) per call to the constructor, where $n$ is the size of the array and $s$ is the size of
+  the value range.
+- O(log s) per call to `kth_smallest()`, `count_leq()`, and `count_in()`.
 
 Space Complexity:
-- O(n log \sigma) for storage of the tree.
-- O(log \sigma) auxiliary stack space per query.
+- O(n log s) for storage of the tree.
+- O(log s) auxiliary stack space per query.
 
 */
 

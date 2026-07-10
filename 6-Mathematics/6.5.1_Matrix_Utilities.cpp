@@ -382,7 +382,6 @@ Matrix<T> &rotate_in_place(Matrix<T> &a, int degrees = 90) {
 
 /*** Example Usage ***/
 
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -391,7 +390,6 @@ int main() {
   matrix a90{{4, 1}, {5, 2}, {6, 3}};
   matrix a180{{6, 5, 4}, {3, 2, 1}};
   matrix a270{{3, 6}, {2, 5}, {1, 4}};
-  cout << a << endl;
   assert(rotate(a, -270) == a90);
   assert(rotate(a, -180) == a180);
   assert(rotate(a, -90) == a270);

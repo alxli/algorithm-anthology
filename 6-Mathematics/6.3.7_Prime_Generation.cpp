@@ -7,8 +7,9 @@ The range overload `sieve(lo, hi)` uses a segmented sieve, letting primes in a h
 window be found without sieving everything below it. Since every composite at most `hi` has a prime
 factor at most $\sqrt{`hi`}$, it first sieves the primes up to $\sqrt{`hi`}$, then uses only those
 primes to mark composites within $[`lo`, `hi`]$ (each prime $p$ starting at the first of its
-multiples that is at least both $p^2$ and `lo`). This needs only O(`hi` - `lo` + sqrt(`hi`)) space
-instead of the O(`hi`) that sieving all of $[2, `hi`]$ would require.
+multiples that is at least both $p^2$ and `lo`). This needs only O(w + sqrt(h)) space, where
+$w = `hi` - `lo` + 1$ and $h = `hi`$, instead of the O(h) space that sieving all of $[2, `hi`]$
+would require.
 
 - `sieve(n)` returns a vector of all the primes less than or equal to `n`.
 - `sieve(lo, hi)` returns a vector of all the primes in the range $[`lo`, `hi`]$.
@@ -17,13 +18,13 @@ instead of the O(`hi`) that sieving all of $[2, `hi`]$ would require.
   of `x` for every `x` $\geq 2$.
 
 Time Complexity:
-- O(n log(log(n))) per call to `sieve(n)`.
-- O(sqrt(`hi`)*log(log(`hi` - `lo`))) per call to `sieve(lo, hi)`.
+- O(n log log n) per call to `sieve(n)`.
+- O(sqrt(h)*log(log(w))) per call to `sieve(lo, hi)`, where $w = `hi` - `lo` + 1$ and $h = `hi`$.
 - O(n) per call to `linear_sieve(n, least_out)`.
 
 Space Complexity:
 - O(n) auxiliary per call to `sieve(n)`.
-- O(`hi` - `lo` + sqrt(`hi`)) auxiliary per call to `sieve(lo, hi)`.
+- O(w + sqrt(h)) auxiliary per call to `sieve(lo, hi)`.
 - O(n) auxiliary per call to `linear_sieve(n, least_out)`.
 
 */
