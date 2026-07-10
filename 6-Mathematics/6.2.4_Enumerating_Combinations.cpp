@@ -17,8 +17,8 @@ rank. Bitmask successors use the same order as increasing integers with a fixed 
   are unchanged). This implementation requires an ordering on the set of possible elements defined
   by `operator<` on the iterator's value type.
 - `next_combination(n, a)` rearranges `a` to become the next lexicographically greater combination
-  of distinct integers in the range $[0, n)$. The vector `a` must be sorted and contain distinct
-  integers in the range $[0, n)$.
+  of distinct integers in the range $[0, `n`)$. The vector `a` must be sorted and contain distinct
+  integers in the range $[0, `n`)$.
 - `next_combination_mask(x)` interprets the bits of an integer `x` as a mask with 1-bits specifying
   the chosen items for a combination and returns the mask of the next lexicographically greater
   combination (that is, the lowest integer greater than `x` with the same number of 1 bits). Note
@@ -26,12 +26,12 @@ rank. Bitmask successors use the same order as increasing integers with a fixed 
   work if the corresponding $n$ items are not distinct (in that case, duplicate combinations will be
   generated).
 - `combination_by_rank(n, k, r)` returns the combination of $k$ distinct integers in the range
-  $[0, n)$ that is lexicographically ranked $r$, where $r$ is a 0-based rank in the range
+  $[0, `n`)$ that is lexicographically ranked $r$, where $r$ is a 0-based rank in the range
   $[0, \binom{n}{k})$.
 - `rank_by_combination(n, a)` returns an integer representing the 0-based rank of combination `a`,
-  which must contain sorted distinct integers in $[0, n)$.
+  which must contain sorted distinct integers in $[0, `n`)$.
 - `next_combination_with_repeats(n, a)` rearranges `a` to become the next lexicographically greater
-  combination of not necessarily distinct integers in the range $[0, n)$. The vector `a` must be
+  combination of not necessarily distinct integers in the range $[0, `n`)$. The vector `a` must be
   sorted. Note that there is a total of $n \mathbin{\text{multichoose}} k$ combinations if
   repetition is allowed, where $n \mathbin{\text{multichoose}} k = \binom{n + k - 1}{k}$.
 

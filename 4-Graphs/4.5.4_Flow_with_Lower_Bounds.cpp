@@ -12,7 +12,7 @@ flow on that artificial edge is one feasible value. After removing the auxiliary
 from `s` to `t` maximizes the value; augmenting from `t` to `s` cancels as much flow as possible
 and minimizes it.
 
-- `BoundedFlow(n)` constructs a directed lower-bound flow network with nodes in $[0, n)$.
+- `BoundedFlow(n)` constructs a directed lower-bound flow network with nodes in $[0, `n`)$.
 - `add_edge(u, v, lo, hi)` adds an edge with lower capacity `lo` and upper capacity `hi`.
 - `feasible_circulation()` returns whether all edge bounds can be satisfied with flow conserved at
   every node.

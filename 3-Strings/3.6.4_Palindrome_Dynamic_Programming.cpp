@@ -1,7 +1,7 @@
 /*
 
 Solves basic palindrome dynamic programming problems on a string. The core interval state considers
-substring $[`l`, `r`]$: if the two endpoints match, they can wrap an optimal answer for the inside
+substring $[l, r]$: if the two endpoints match, they can wrap an optimal answer for the inside
 substring; otherwise, at least one endpoint must be skipped or inserted around the other side. Since
 each state depends on shorter substrings, intervals are processed by increasing length.
 

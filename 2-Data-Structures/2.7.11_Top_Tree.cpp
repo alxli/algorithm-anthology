@@ -5,7 +5,7 @@ trees represent each tree as a hierarchy of clusters. A path cluster summarizes 
 while non-path clusters are raked onto vertices so that changing the preferred path only requires a
 logarithmic number of local rotations and recomputations.
 
-This is an advanced alternative to Link-Cut Trees. Link-Cut Trees are usually simpler for dynamic
+This is an advanced alternative to link/cut trees. Link/cut trees are usually simpler for dynamic
 path queries; top trees are useful when the same dynamic forest also needs rooted-subtree queries.
 
 The aggregate operation is defined by an identity element `identity()` and an associative

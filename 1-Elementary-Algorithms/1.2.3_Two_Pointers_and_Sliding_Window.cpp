@@ -33,7 +33,7 @@ dynamic programming recurrence.
   subarray.
 - `longest_at_most_k_distinct(a, k)` returns $(`length`, `lo`, `hi`)$, the maximum length and
   inclusive endpoints of a contiguous subarray containing at most `k` distinct values.
-- `sliding_window_extrema(a, k, comp = Compare())` returns the extreme value in each window of
+- `sliding_window_extrema(a, k, comp = std::less<>)` returns the extreme value in each window of
   length `k`. With the default `less<>` comparator it returns minimums; passing `greater<>` returns
   maximums.
 

@@ -222,6 +222,23 @@ conflicts with this file, appears in at least three files, or is likely to confu
 Cosmetic wording below that bar should be left alone or mentioned as backlog, not patched
 immediately.
 
+Treat each scanner rule as one repeated family of problems, such as "documented API signatures must
+show meaningful default arguments" or "long repeated literal defaults should be named constants."
+Pick one family, encode it, fix its findings, and rerun before moving to another.
+
+In prose, use math mode for mathematical variables and numeric constants (`$n$`, `$998244353$`) and
+backticks for code identifiers or parameters (`n`, `MOD`). If a bound is a purely mathematical
+quantity in explanatory prose, use a plain math interval such as `$[0, n)$`. In API bullets, keep
+backticks for parameter-bounded domains; for example, a `SegTree<T>(n)` bullet should write the
+index domain with backticked `n` inside the math interval. Keep backticks inside tuple notation when
+the entries are code-facing return-field names or parameters, but use plain math tuples like
+`$(i, j)$` in conceptual prose. If a sentence defines a math symbol from code, such as "$n$ is
+`size()`", keep later uses of that symbol in math notation, e.g. `$[0, n]$`.
+When a prose sentence is explicitly explaining code-index formulas, code-style intervals such as
+$[`l`, `r`)$ may be clearer than plain math intervals.
+When an API bullet is primarily describing a mathematical object and already uses the parameters as
+math variables throughout, prefer the local mathematical style, e.g. `$[0, k)$` for `de_bruijn(k, n)`.
+
 When a new repeated convention is accepted, encode it in one of two places before relying on it in
 future scans: `AGENTS.md` for human/agent judgment, or `scan_docstrings.py` for deterministic
 grep-style drift checks. This is the path to a stable "scan" result.

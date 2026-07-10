@@ -7,7 +7,7 @@ chosen modulus must fit in `int64_t`.
 
 - `factorial(n, m = MOD)` returns $n! \bmod m$.
 - `factorialp(n, p = MOD)` returns $n! \bmod p$, where $p$ is prime.
-- `binomial_table(n, m = MOD)` returns rows $[0, n]$ of Pascal's triangle as a two-dimensional
+- `binomial_table(n, m = MOD)` returns rows $[0, `n`]$ of Pascal's triangle as a two-dimensional
   vector $t$ such that $t[i][j] = \binom{i}{j} \bmod m$.
 - `permute(n, k, m = MOD)` returns $(n \mathbin{\text{permute}} k) \bmod m$.
 - `choose(n, k, p = MOD)` returns $\binom{n}{k} \bmod p$, where $p$ is prime.
@@ -16,11 +16,12 @@ chosen modulus must fit in `int64_t`.
 - `catalan(n, p = MOD)` returns the $n$-th Catalan number mod $p$, where $p$ is prime.
 - `partitions(n, m = MOD)` returns the number of partitions of $n$, mod $m$.
 - `partitions(n, k, m = MOD)` returns the number of partitions of $n$ into $k$ parts, mod $m$.
-- `stirling1(n, k, m = MOD)` returns the $(n, k)$ unsigned Stirling number of the 1st kind mod $m$.
-- `stirling2(n, k, m = MOD)` returns the $(n, k)$ Stirling number of the 2nd kind mod $m$.
-- `eulerian1(n, k, m = MOD)` returns the $(n, k)$ Eulerian number of the 1st kind mod $m$, where
+- `stirling1(n, k, m = MOD)` returns the $(`n`, `k`)$ unsigned Stirling number of the 1st kind mod
+  $m$.
+- `stirling2(n, k, m = MOD)` returns the $(`n`, `k`)$ Stirling number of the 2nd kind mod $m$.
+- `eulerian1(n, k, m = MOD)` returns the $(`n`, `k`)$ Eulerian number of the 1st kind mod $m$, where
   $n > k$.
-- `eulerian2(n, k, m = MOD)` returns the $(n, k)$ Eulerian number of the 2nd kind mod $m$, where
+- `eulerian2(n, k, m = MOD)` returns the $(`n`, `k`)$ Eulerian number of the 2nd kind mod $m$, where
   $n > k$.
 
 Time Complexity:

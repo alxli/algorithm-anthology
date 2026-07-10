@@ -5,7 +5,7 @@ using a sweep line algorithm. Endpoint events are processed from left to right w
 maintains the segments currently crossing the sweep line, sorted by $y$; only segments that become
 adjacent in this set need to be tested, since any leftmost intersection must involve a pair that is
 adjacent just before it occurs. The input type `Segment<Pt>` is templated on the point type, so
-endpoints may be integer (`PointI`) or floating-point (`Point`/`PointD`), but must support
+endpoints may be integer (`PointI`) or floating-point (`Point` or `PointD`), but must support
 `operator<` which orders points lexicographically. The cross-product sign tests in
 `seg_intersection` are exact for integer endpoints, so intersection detection is exact.
 

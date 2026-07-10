@@ -1,7 +1,7 @@
 /*
 
 Given a continuous function $f(x, y)$ returning a real number and a (possibly arbitrary) starting
-guess $(x_0, y_0)$, search for a global minimum using the hill-climbing heuristic.
+guess $(`x_0`, `y_0`)$, search for a global minimum using the hill-climbing heuristic.
 
 Hill-climbing is a heuristic which starts at the guess, then considers taking a single step in each
 of a fixed number of directions. The direction with the best (in this case, minimum) value is

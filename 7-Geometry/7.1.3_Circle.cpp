@@ -5,8 +5,8 @@ represented by the relation $(x - h)^2 + (y - k)^2 = r^2$, where the radius $r$ 
 nonnegative number.
 
 This implementation stores and computes circle parameters in `double`. Point-accepting constructors
-and predicates are templated on the point type `Pt` and only read `.x`/`.y`, so they accept
-`Point`/`PointD`/`PointI` from 7.1.1 or any struct with numeric `.x` and `.y` fields.
+and predicates are templated on the point type `Pt` and only read `.x`/`.y`, so they accept `Point`,
+`PointD`, or `PointI` from 7.1.1 or any struct with numeric `.x` and `.y` fields.
 
 - `Circle()` constructs the zero-radius circle centered at the origin.
 - `Circle(r)` constructs a circle of radius `abs(r)` centered at the origin.

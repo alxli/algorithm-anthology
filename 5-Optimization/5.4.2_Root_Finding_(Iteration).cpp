@@ -4,8 +4,8 @@ Finds an $x$ for a continuous function $f$ such that $f(x) = 0$ using iterative 
 initial guess that is close to the answer. Each step follows the tangent line at the current guess
 down to its $x$-intercept, that is, $x \leftarrow x - f(x)/f'(x)$. Newton's method requires an
 explicit definition of the function's derivative while the secant method starts with two initial
-guesses and approximates the derivative using the secant slope from the previous iteration. For
-$n$ iterations and a good initial guess, the methods below compute approximately $2^n$ digits of
+guesses and approximates the derivative using the secant slope from the previous iteration. For $n$
+iterations and a good initial guess, the methods below compute approximately $2^n$ digits of
 precision, with the secant method converging approximately $1.6$ times slower than Newton's.
 
 - `newton_root(f, fprime, x0, eps = 1e-15, iterations = 100)` returns a root $x$ for a function `f`

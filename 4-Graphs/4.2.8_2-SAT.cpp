@@ -1,8 +1,8 @@
 /*
 
-Solve a Boolean formula in 2-CNF, where each clause contains at most two literals. A clause like $(a
-\lor b)$ is represented by the implications $\lnot a \rightarrow b$ and $\lnot b \rightarrow a$. The
-formula is satisfiable if and only if no variable and its negation belong to the same strongly
+Solve a Boolean formula in 2-CNF, where each clause contains at most two literals. A clause like
+$(a \lor b)$ is represented by the implications $\lnot a \rightarrow b$ and $\lnot b \rightarrow a$.
+The formula is satisfiable if and only if no variable and its negation belong to the same strongly
 connected component of the implication graph.
 
 Variables are numbered $[0, n)$. A literal is represented by `literal(variable, value)`, where

@@ -2,8 +2,7 @@
 
 Given a starting node in a weighted, directed graph with possibly negative weights, visit every
 connected node and determine the minimum distance to each such node. Optionally, output the shortest
-path to a specific destination node using the shortest-path tree from the predecessor array
-`pred`.
+path to a specific destination node using the shortest-path tree from the predecessor array `pred`.
 
 Bellman-Ford relaxes every edge in the graph $n - 1$ times. Since any shortest path uses at most
 $n - 1$ edges, all distances are correct after these passes unless a negative-weight cycle keeps

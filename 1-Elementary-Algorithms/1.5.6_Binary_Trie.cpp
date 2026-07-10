@@ -6,8 +6,8 @@ Every node keeps a count of the stored values passing through it, which supports
 counting queries, and lets the trie answer XOR-extremal queries by a greedy walk down the bits.
 
 The classic application is the maximum-XOR query: to maximize `x ^ y` over all stored `y`, walk from
-the most significant bit. At each step, descend toward the child whose bit differs from that of
-`x` whenever such a branch exists, since setting a higher bit of the result always dominates any
+the most significant bit. At each step, descend toward the child whose bit differs from that of `x`
+whenever such a branch exists, since setting a higher bit of the result always dominates any
 combination of lower bits. The minimum-XOR query is the mirror image, preferring the matching bit.
 
 This is a multiset (a value may be inserted more than once), and is distinct from the XOR basis: the

@@ -1,8 +1,8 @@
 /*
 
 The Jacobi symbol $(a / n)$, defined for an odd positive integer $n$, generalizes the Legendre
-symbol. For an odd prime $p$ the Legendre symbol $(a / p)$ is $0$ when $p$ divides $a$, $1$ when
-$a$ is a nonzero quadratic residue modulo $p$, and $-1$ when $a$ is a non-residue. The Jacobi symbol
+symbol. For an odd prime $p$ the Legendre symbol $(a / p)$ is $0$ when $p$ divides $a$, $1$ when $a$
+is a nonzero quadratic residue modulo $p$, and $-1$ when $a$ is a non-residue. The Jacobi symbol
 extends this to composite $n$ by multiplying the Legendre symbols of the prime factors of $n$,
 counted with multiplicity. It is computed without factoring $n$, using the law of quadratic
 reciprocity together with the supplementary rules for $-1$ and $2$, in the style of the binary GCD.

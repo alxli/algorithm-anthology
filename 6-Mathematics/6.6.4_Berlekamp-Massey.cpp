@@ -14,7 +14,7 @@ A recurrence of order $L$ is only certified by at least $2L + 1$ terms, so the r
 only when `s` is comfortably longer than twice the returned length. If the returned $L$ is close to
 $n / 2$, the sequence is likely under-determined and the recurrence may be a spurious overfit.
 
-The code operates modulo the prime 998244353; change `MOD` to use a different prime field.
+The code operates modulo the prime $998244353$; change `MOD` to use a different prime field.
 
 - `berlekamp_massey(s)` returns the coefficients of the shortest recurrence that the sequence `s`
   satisfies, as described above. The returned length is the order $L$ of the recurrence. An empty

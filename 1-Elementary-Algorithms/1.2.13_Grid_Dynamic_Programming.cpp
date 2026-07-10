@@ -5,7 +5,7 @@ state and transitions usually come from already-computed neighboring cells, most
 above and the cell to the left. Processing rows from top to bottom and columns from left to right
 therefore makes every predecessor available when a state is computed.
 
-For path-counting, `dp[r][c]` stores the number of ways to reach cell $(`r`, `c`)$. For minimum-cost
+For path-counting, `dp[r][c]` stores the number of ways to reach cell $(r, c)$. For minimum-cost
 paths, `dp[r][c]` stores the cheapest cost to reach that cell, and a predecessor direction
 reconstructs one optimal path. The helpers below assume movement only down or right.
 

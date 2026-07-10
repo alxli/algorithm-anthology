@@ -1,7 +1,7 @@
 /*
 
 Common axis-aligned rectangle calculations in two dimensions. The functions are templated on the
-point type `Pt`, which should work with `Point`/`PointD`/`PointI` from 7.1.1, or any struct with
+point type `Pt`, which should accept `Point`, `PointD`, or `PointI` from 7.1.1, or any struct with
 numeric `.x` and `.y` fields.
 
 - `point_in_rectangle(p, v, w, h, edge_is_inside = true)` returns whether point `p` lies inside the

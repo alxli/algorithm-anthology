@@ -2,8 +2,7 @@
 
 Given a starting node in a weighted, directed graph with nonnegative weights only, visit every
 connected node and determine the minimum distance to each such node. Optionally, output the shortest
-path to a specific destination node using the shortest-path tree from the predecessor array
-`pred`.
+path to a specific destination node using the shortest-path tree from the predecessor array `pred`.
 
 Dijkstra's algorithm repeatedly selects the unvisited node of smallest tentative distance using a
 priority queue and relaxes its outgoing edges. Dijkstra's algorithm requires nonnegative edge

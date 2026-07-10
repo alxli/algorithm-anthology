@@ -1,6 +1,6 @@
 /*
 
-The number of inversions for a sequence `a` is the number of ordered pairs $(i, j)$ such that
+The number of inversions for a sequence $a$ is the number of ordered pairs $(i, j)$ such that
 $i < j$ and $a[i] > a[j]$. This is roughly how "close" an array is to being sorted, but is *not* the
 minimum number of swaps required to sort the array. If the array is sorted, then the inversion count
 is $0$. If the array is sorted in decreasing order, then the inversion count is maximal. The
@@ -8,7 +8,7 @@ following two functions are each techniques to efficiently count inversions. In 
 approach, whenever the merge step emits an element from the right half, that element jumps ahead of
 every unmerged left-half element, and exactly that many inversions are added to the count.
 
-- `inversions(lo, hi, comp = Compare())` uses merge sort to return the number of inversions given
+- `inversions(lo, hi, comp = std::less<>)` uses merge sort to return the number of inversions given
   two random-access iterators as a range $[`lo`, `hi`)$. The input range will be sorted after the
   function call. Optionally, a comparison function object specifying a strict weak ordering may be
   specified to replace the default `operator<`.

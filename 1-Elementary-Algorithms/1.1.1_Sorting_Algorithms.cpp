@@ -5,11 +5,12 @@ half-open range $[`lo`, `hi`)$ to be sorted. The range is sorted into ascending 
 function call. Optionally, a comparison function object specifying a strict weak ordering may be
 specified to replace the default `operator<`.
 
-- `quicksort(lo, hi, comp = Compare())` sorts the range using quicksort.
-- `mergesort(lo, hi, comp = Compare())` sorts the range using merge sort, which is stable.
-- `heapsort(lo, hi, comp = Compare())` sorts the range using heapsort.
-- `insertion_sort(lo, hi, comp = Compare())` sorts the range using insertion sort, which is stable.
-- `combsort(lo, hi, comp = Compare())` sorts the range using comb sort.
+- `quicksort(lo, hi, comp = std::less<>)` sorts the range using quicksort.
+- `mergesort(lo, hi, comp = std::less<>)` sorts the range using merge sort, which is stable.
+- `heapsort(lo, hi, comp = std::less<>)` sorts the range using heapsort.
+- `insertion_sort(lo, hi, comp = std::less<>)` sorts the range using insertion sort, which is
+  stable.
+- `combsort(lo, hi, comp = std::less<>)` sorts the range using comb sort.
 - `radix_sort(lo, hi)` sorts the range using least-significant-byte radix sort.
 
 `radix_sort()` is the exception to the shared interface above: it takes no comparator and requires
@@ -70,7 +71,7 @@ void quicksort(It lo, It hi, Compare comp = Compare()) {
 
 /*
 
-Merge sort first divides a list into n sublists of one element each, then recursively merges the
+Merge sort first divides a list into $n$ sublists of one element each, then recursively merges the
 sublists into sorted order until only a single sorted sublist remains. Merge sort is a stable sort,
 meaning that it preserves the relative order of elements which compare equal by `operator<` or the
 custom comparator given.
@@ -205,9 +206,9 @@ particular shrink factor in every iteration of the outer loop. The shrink factor
 empirically determined to be the most effective.
 
 Even though the worst case time complexity is O(n^2), a well chosen shrink factor ensures that the
-gap sizes are co-prime, in turn requiring astronomically large n to make the algorithm exceed O(n
-log n) steps. On random arrays, comb sort is only 2-3 times slower than merge sort. Its short code
-length relative to its good performance makes it a worthwhile algorithm to remember.
+gap sizes are co-prime, in turn requiring astronomically large $n$ to make the algorithm exceed
+O(n log n) steps. On random arrays, comb sort is only 2-3 times slower than merge sort. Its short
+code length relative to its good performance makes it a worthwhile algorithm to remember.
 
 Time Complexity (Worst): O(n^2).
 Space Complexity: O(1) auxiliary.
