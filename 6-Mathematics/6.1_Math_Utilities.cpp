@@ -140,7 +140,7 @@ Rounding Functions:
 - `round_half_down(x)` returns `x` rounded half down, towards negative infinity.
 - `round_half_to0(x)` returns `x` rounded half down, symmetrically towards zero.
 - `round_half_from0(x)` returns `x` rounded half up, symmetrically away from zero.
-- `round_half_even(x)` returns `x` rounded half to even, using banker's rounding.
+- `round_half_even(x, eps = 1e-9)` returns `x` rounded half to even, using banker's rounding.
 - `round_half_alternate(x)` returns `x` rounded, where ties are broken by alternating rounds towards
   positive and negative infinity.
 - `round_half_alternate0(x)` returns `x` rounded, where ties are broken by alternating symmetric
@@ -409,8 +409,8 @@ uint64_t powmod(uint64_t x, uint64_t n, uint64_t m) {
 
 Base Conversion:
 
-- `to_base(x, b)` returns the digits of the unsigned integer `x` in base `b`, where index 0 of the
-  result stores the least significant digit.
+- `to_base(x, b = 10)` returns the digits of the unsigned integer `x` in base `b`, where index 0 of
+  the result stores the least significant digit.
 - `to_roman(x)` returns the Roman numeral representation of the unsigned integer `x` as a string.
 - `convert_base(d, a, b)` converts an integer in base `a` as a vector `d` of digits (where `d[0]` is
   the least significant digit) to base `b` as a vector of digits (again with index 0 holding the

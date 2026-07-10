@@ -10,7 +10,7 @@ pairs. For $0$ and $1$, the prime factorization is empty.
 
 - `is_prime_slow(n)` returns whether the integer `n` is prime using trial division.
 - `factorize_slow(n)` returns the prime factorization of `n` using trial division.
-- `is_probable_prime(n, k)` returns whether `n` is probably prime using `k` random Miller-Rabin
+- `is_probable_prime(n, k = 20)` returns whether `n` is probably prime using `k` random Miller-Rabin
   bases. The result is guaranteed correct when `n` is prime. For composite `n`, it returns false
   with probability at least $1 - (1 / 4)^k$. Thus a true result has one-sided error probability at
   most $(1 / 4)^k$. This is mostly useful when adapting Miller-Rabin outside the known 64-bit
@@ -26,10 +26,10 @@ pairs. For $0$ and $1$, the prime factorization is empty.
 - `merge_factors(a, b)` merges two sorted compressed factorizations.
 - `factorize_rho(n)` returns the prime factorization of a 64-bit integer using Miller-Rabin and
   Pollard's rho without initial trial division.
-- `factorize(n, small_prime_limit)` returns the prime factorization of a 64-bit integer `n` using a
-  combination of trial division, the Miller-Rabin primality test, and Pollard's rho  algorithm.
-  `small_prime_limit` specifies the largest prime to test with trial division before falling back to
-  the rho algorithm. This supports 64-bit integers up to and including $2^{63} - 1$.
+- `factorize(n, small_prime_limit = 1000000)` returns the prime factorization of a 64-bit integer
+  `n` using a combination of trial division, the Miller-Rabin primality test, and Pollard's rho
+  algorithm. `small_prime_limit` specifies the largest prime to test with trial division before
+  falling back to the rho algorithm. This supports 64-bit integers up to and including $2^{63} - 1$.
 - `divisors_from_factors(factors)` returns all divisors from a compressed factorization.
 - `get_divisors(n)` returns all divisors of a 64-bit integer using `factorize()` followed by
   `divisors_from_factors()`.

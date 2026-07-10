@@ -33,8 +33,9 @@ dynamic programming recurrence.
   subarray.
 - `longest_at_most_k_distinct(a, k)` returns $(`length`, `lo`, `hi`)$, the maximum length and
   inclusive endpoints of a contiguous subarray containing at most `k` distinct values.
-- `sliding_window_extrema(a, k, comp)` returns the extreme value in each window of length `k`. With
-  the default `less<>` comparator it returns minimums; passing `greater<>` returns maximums.
+- `sliding_window_extrema(a, k, comp = Compare())` returns the extreme value in each window of
+  length `k`. With the default `less<>` comparator it returns minimums; passing `greater<>` returns
+  maximums.
 
 Time Complexity:
 - O(n) per call to `two_sum_sorted()` and `min_length_at_least()`, where $n$ is the array size.

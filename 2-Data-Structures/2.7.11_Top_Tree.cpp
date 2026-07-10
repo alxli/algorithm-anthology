@@ -6,7 +6,7 @@ while non-path clusters are raked onto vertices so that changing the preferred p
 logarithmic number of local rotations and recomputations.
 
 This is an advanced alternative to Link-Cut Trees. Link-Cut Trees are usually simpler for dynamic
-path queries; Top Trees are useful when the same dynamic forest also needs rooted-subtree queries.
+path queries; top trees are useful when the same dynamic forest also needs rooted-subtree queries.
 
 The aggregate operation is defined by an identity element `identity()` and an associative
 `combine(a, b)`. The default code below computes sums over vertex and edge values. For minimum

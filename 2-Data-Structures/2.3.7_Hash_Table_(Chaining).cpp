@@ -9,7 +9,7 @@ rehash never moves existing nodes, so pointers from `find()` and references from
 valid, and load factors above 1 are tolerated gracefully. The costs are a separate allocation per
 entry and cache-unfriendly pointer chasing during traversal.
 
-- `ChainingHashMap<K, V, Hash>()` constructs an empty map.
+- `ChainingHashMap<K, V, Hash>(size = 128)` constructs an empty map with `size` buckets.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if a new

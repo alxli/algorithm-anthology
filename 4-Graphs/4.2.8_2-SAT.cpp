@@ -8,7 +8,7 @@ connected component of the implication graph.
 Variables are numbered $[0, n)$. A literal is represented by `literal(variable, value)`, where
 `value == true` means the variable itself and `value == false` means its negation.
 
-- `TwoSAT(n)` constructs an empty formula over `n` variables.
+- `TwoSAT(n = 0)` constructs an empty formula over `n` variables.
 - `literal(variable, value)` returns the integer ID for a variable or its negation.
 - `add_implication(a, b)` adds the implication $a \rightarrow b$.
 - `add_or(a, b)` adds the clause $(`a` \lor `b`)$.

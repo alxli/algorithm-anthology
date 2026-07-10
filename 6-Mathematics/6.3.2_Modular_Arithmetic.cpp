@@ -34,7 +34,7 @@ Division uses the extended Euclidean algorithm, so the divisor only needs to be 
 modulus. For the factorial-table combination helper, the usual contest assumption is that $p$ is
 prime and the requested factorials are invertible modulo $p$.
 
-- `Modular<MOD>(x)` constructs the residue class of integer `x` modulo `MOD`.
+- `Modular<MOD>(x = 0)` constructs the residue class of integer `x` modulo `MOD`.
 - `value()` and `operator()()` return the stored representative in $[0, `MOD`)$.
 - Explicit casts to `int`, `long long`, `double`, and `long double` convert that stored
   representative to the corresponding primitive.

@@ -10,8 +10,8 @@ interface in O(n log n).
 
 - `RerootingTree(n)` constructs a tree with `n` nodes numbered $[0, `n`)$.
 - `add_edge(u, v)` adds an undirected edge between nodes `u` and `v`.
-- `build_rooted_tree(root)` populates `parent`, `depth`, `subtree_size`, `order`, `tin`, and `tout`
-  for the tree rooted at `root` (default 0). This must be called only after the added edges define a
+- `build_rooted_tree(root = 0)` populates `parent`, `depth`, `subtree_size`, `order`, `tin`, and
+  `tout` for the tree rooted at `root`. This must be called only after the added edges define a
   connected tree of size `n`.
 - `is_ancestor(u, v)` returns whether `u` is an ancestor of `v` in the last rooted tree.
 - `rerooting_dp(identity, combine, finalize, lift)` returns the value that `dfs(root, p)` would

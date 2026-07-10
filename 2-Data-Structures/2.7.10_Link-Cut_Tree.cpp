@@ -25,8 +25,8 @@ queries, and `compose_deltas(old, d)` would return `old + d`.
 - `LinkCut<T>()` constructs an empty forest.
 - `size()` returns the number of nodes in the forest.
 - `trees()` returns the number of trees in the forest.
-- `add_node(i, value)` adds a new single-node tree to the forest, labeled with the integer `i` and
-  with value initialized to `value`.
+- `add_node(i, value = T())` adds a new single-node tree to the forest, labeled with the integer `i`
+  and with value initialized to `value`.
 - `is_connected(a, b)` returns whether nodes `a` and `b` are connected.
 - `link(a, b)` adds an edge between the nodes `a` and `b`, both of which must exist and not be
   connected.

@@ -1,7 +1,7 @@
 /*
 
 Common string functions, many of which already have standard STL equivalents. Most of the following
-implementations are presented for educational purposes, and are not heavy optimized. They often
+implementations are presented for educational purposes, and are not heavily optimized. They often
 depend on certain `std::string` functions that have unspecified complexity.
 
 Time Complexity:
@@ -30,9 +30,9 @@ Integer Conversion:
 - `to_str(i)` returns the string representation of integer `i`, much like `std::to_string()`.
 - `to_int(s)` returns the integer representation of string `s`, much like `std::atoi()`, except here
   we handle special cases of overflow by throwing an exception.
-- `itoa(value, &str, base)` implements the non-standard C function which converts `value` into a C
-  string, storing it into pointer `str` in the given `base`. For more generalized base conversion,
-  see the math utilities section.
+- `itoa(value, &str, base = 10)` implements the non-standard C function which converts `value` into
+  a C string, storing it into pointer `str` in the given `base`. For more generalized base
+  conversion, see the math utilities section.
 - `is_integer(s)` returns whether `s` is a valid base-10 integer literal with an optional sign.
 - `is_number(s)` returns whether `s` is a decimal number literal with optional sign, decimal point,
   and exponent.
@@ -168,16 +168,20 @@ string to_title(const string &s) {
 
 Stripping:
 
-- `lstrip(s)` strips the left side of `s` in-place (that is, the input is modified) using the given
-  delimiters and returns a reference to the stripped string.
-- `rstrip(s)` strips the right side of `s` in-place using the given delimiters and returns a
-  reference to the stripped string.
-- `strip(s)` strips both sides of `s` in-place and returns a reference to the stripped string.
-- `ltrimmed(s)`, `rtrimmed(s)`, and `trimmed(s)` do not modify `s` and returns stripped copies.
+- `lstrip(s, delim = WHITESPACE)` strips the left side of `s` in-place (that is, the input is
+  modified) using the given delimiters and returns a reference to the stripped string.
+- `rstrip(s, delim = WHITESPACE)` strips the right side of `s` in-place using the given delimiters
+  and returns a reference to the stripped string.
+- `strip(s, delim = WHITESPACE)` strips both sides of `s` in-place and returns a reference to the
+  stripped string.
+- `ltrimmed(s, delim = WHITESPACE)`, `rtrimmed(s, delim = WHITESPACE)`, and
+  `trimmed(s, delim = WHITESPACE)` do not modify `s` and return stripped copies.
 
 */
 
-string &lstrip(string &s, const string &delim = " \n\t\v\f\r") {
+const string WHITESPACE = " \n\t\v\f\r";
+
+string &lstrip(string &s, const string &delim = WHITESPACE) {
   std::size_t pos = s.find_first_not_of(delim);
   if (pos != string::npos) {
     s.erase(0, pos);
@@ -185,7 +189,7 @@ string &lstrip(string &s, const string &delim = " \n\t\v\f\r") {
   return s;
 }
 
-string &rstrip(string &s, const string &delim = " \n\t\v\f\r") {
+string &rstrip(string &s, const string &delim = WHITESPACE) {
   std::size_t pos = s.find_last_not_of(delim);
   if (pos != string::npos) {
     s.erase(pos + 1);
@@ -193,19 +197,19 @@ string &rstrip(string &s, const string &delim = " \n\t\v\f\r") {
   return s;
 }
 
-string &strip(string &s, const string &delim = " \n\t\v\f\r") {
+string &strip(string &s, const string &delim = WHITESPACE) {
   return lstrip(rstrip(s));
 }
 
-string ltrimmed(string s, const string &delim = " \n\t\v\f\r") {
+string ltrimmed(string s, const string &delim = WHITESPACE) {
   return lstrip(s, delim);
 }
 
-string rtrimmed(string s, const string &delim = " \n\t\v\f\r") {
+string rtrimmed(string s, const string &delim = WHITESPACE) {
   return rstrip(s, delim);
 }
 
-string trimmed(string s, const string &delim = " \n\t\v\f\r") {
+string trimmed(string s, const string &delim = WHITESPACE) {
   return strip(s, delim);
 }
 
@@ -305,22 +309,23 @@ string regex_replace_all(const string &s, const string &pattern, const string &r
 
 Joining and Splitting:
 
-- `join(v, delim)` returns the strings in vector `v` concatenated, separated by the given delimiter.
+- `join(v, delim = " ")` returns the strings in vector `v` concatenated, separated by the given
+  delimiter.
 - `repeat(s, n)` returns `s` concatenated with itself `n` times, like Python's `s * n`. For a single
   repeated character, prefer `std::string(n, ch)`.
-- `ljust(s, width, ch)` returns `s` left-justified (padded on the right with `ch`) to at least
+- `ljust(s, width, ch = ' ')` returns `s` left-justified (padded on the right with `ch`) to at least
   `width` characters, like Python's `str.ljust`.
-- `rjust(s, width, ch)` returns `s` right-justified (padded on the left with `ch`) to at least
+- `rjust(s, width, ch = ' ')` returns `s` right-justified (padded on the left with `ch`) to at least
   `width` characters, like Python's `str.rjust`.
-- `center(s, width, ch)` returns `s` centered in a field of at least `width` characters by padding
-  both sides with `ch`, like Python's `str.center`. If the padding is uneven, the extra character
-  goes on the right.
+- `center(s, width, ch = ' ')` returns `s` centered in a field of at least `width` characters by
+  padding both sides with `ch`, like Python's `str.center`. If the padding is uneven, the extra
+  character goes on the right.
 - `split(s, char delim)` returns a vector of tokens of `s`, split on a single character delimiter.
   Empty tokens are skipped, so `split("a::b", ':')` returns `{"a", "b"}`, not `{"a", "", "b"}`.
-- `split(s, string delim)` returns a vector of tokens of `s`, split on a set of many possible single
-  character delimiters. All characters of `delim` will be removed from `s`, and the remaining
-  token(s) of `s` will be added sequentially to a vector and returned. As with the first version,
-  empty tokens are skipped. For example, `split("a::b", ":")` returns `{"a", "b"}`, not
+- `split(s, string delim = WHITESPACE)` returns a vector of tokens of `s`, split on a set of many
+  possible single character delimiters. All characters of `delim` will be removed from `s`, and the
+  remaining token(s) of `s` will be added sequentially to a vector and returned. As with the first
+  version, empty tokens are skipped. For example, `split("a::b", ":")` returns `{"a", "b"}`, not
   `{"a", "", "b"}`.
 - `explode(s, delim)` returns a vector of tokens of `s`, split on the entire delimiter string
   `delim`. Unlike the `split()` functions above, `delim` is treated as a contiguous boundary string,
@@ -383,7 +388,7 @@ std::vector<string> split(const string &s, char delim) {
   return res;
 }
 
-std::vector<string> split(const string &s, const string &delim = " \n\t\v\f\r") {
+std::vector<string> split(const string &s, const string &delim = WHITESPACE) {
   std::vector<string> res;
   string curr;
   for (char c : s) {

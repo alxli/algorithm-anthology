@@ -10,8 +10,8 @@ directed or undirected graph. The nodes of the graph are identified by integer i
 consecutively starting from $0$. The total number of nodes automatically increases based on the
 maximum node index passed to `add_edge()` so far.
 
-- `Graph(directed)` constructs an empty graph, directed if `directed` is true (the default) and
-  undirected otherwise.
+- `Graph(directed = true)` constructs an empty graph, directed if `directed` is true and undirected
+  otherwise.
 - `nodes()` returns the current number of nodes.
 - `operator[n]` returns a reference to the adjacency list (`std::vector<int>`) of node `n`.
 - `add_edge(u, v)` adds an edge from `u` to `v`, plus the reverse edge if the graph is undirected,

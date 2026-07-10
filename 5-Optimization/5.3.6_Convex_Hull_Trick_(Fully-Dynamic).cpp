@@ -12,7 +12,7 @@ and `query()` in any desired order. The tree stores the lower envelope of the li
 inserting a line removes any neighbors it dominates, and each line records the interval of queries
 for which it is the best, so a query is a single tree lookup.
 
-- `HullOptimizer(query_max)` constructs an empty hull. By default, `query(x)` minimizes; if
+- `HullOptimizer(query_max = false)` constructs an empty hull. By default, `query(x)` minimizes; if
   `query_max` is true, `query(x)` maximizes.
 - `add_line(m, b)` inserts line $y = mx + b$ (can be called in any order).
 - `query(x)` returns the best $y$-value among all inserted lines at coordinate `x`. At least one

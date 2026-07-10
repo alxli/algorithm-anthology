@@ -7,7 +7,7 @@ when false. Typical arithmetic operations involving mixed numeric primitives and
 supported through implicit construction and hidden friend operators, as long as at least one operand
 is a `BigInt` at any given level of evaluation.
 
-- `BigInt(n)` constructs a big integer from an integer `n` (default: 0).
+- `BigInt()` constructs zero, and `BigInt(n)` constructs a big integer from an integer `n`.
 - `BigInt(s)` constructs a big integer from a C string or an `std::string` `s`.
 - `operator=` is defined to copy from another big integer or to assign from a 64-bit integer
   primitive.

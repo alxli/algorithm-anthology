@@ -5,20 +5,23 @@ nonnegative. All return values and table entries are computed as 64-bit integers
 argument $m$ or $p$. Modular products use ordinary `int64_t` multiplication, so the square of the
 chosen modulus must fit in `int64_t`.
 
-- `factorial(n, m)` returns $n! \bmod m$.
-- `factorialp(n, p)` returns $n! \bmod p$, where $p$ is prime.
-- `binomial_table(n, m)` returns rows $[0, n]$ of Pascal's triangle as a two-dimensional vector $t$
-  such that $t[i][j] = \binom{i}{j} \bmod m$.
-- `permute(n, k, m)` returns $(n \mathbin{\text{permute}} k) \bmod m$.
-- `choose(n, k, p)` returns $\binom{n}{k} \bmod p$, where $p$ is prime.
-- `multichoose(n, k, p)` returns $(n \mathbin{\text{multichoose}} k) \bmod p$, where $p$ is prime.
-- `catalan(n, p)` returns the $n$-th Catalan number mod $p$, where $p$ is prime.
-- `partitions(n, m)` returns the number of partitions of $n$, mod $m$.
-- `partitions(n, k, m)` returns the number of partitions of $n$ into $k$ parts, mod $m$.
-- `stirling1(n, k, m)` returns the $(n, k)$ unsigned Stirling number of the 1st kind mod $m$.
-- `stirling2(n, k, m)` returns the $(n, k)$ Stirling number of the 2nd kind mod $m$.
-- `eulerian1(n, k, m)` returns the $(n, k)$ Eulerian number of the 1st kind mod $m$, where $n > k$.
-- `eulerian2(n, k, m)` returns the $(n, k)$ Eulerian number of the 2nd kind mod $m$, where $n > k$.
+- `factorial(n, m = MOD)` returns $n! \bmod m$.
+- `factorialp(n, p = MOD)` returns $n! \bmod p$, where $p$ is prime.
+- `binomial_table(n, m = MOD)` returns rows $[0, n]$ of Pascal's triangle as a two-dimensional
+  vector $t$ such that $t[i][j] = \binom{i}{j} \bmod m$.
+- `permute(n, k, m = MOD)` returns $(n \mathbin{\text{permute}} k) \bmod m$.
+- `choose(n, k, p = MOD)` returns $\binom{n}{k} \bmod p$, where $p$ is prime.
+- `multichoose(n, k, p = MOD)` returns $(n \mathbin{\text{multichoose}} k) \bmod p$, where $p$ is
+  prime.
+- `catalan(n, p = MOD)` returns the $n$-th Catalan number mod $p$, where $p$ is prime.
+- `partitions(n, m = MOD)` returns the number of partitions of $n$, mod $m$.
+- `partitions(n, k, m = MOD)` returns the number of partitions of $n$ into $k$ parts, mod $m$.
+- `stirling1(n, k, m = MOD)` returns the $(n, k)$ unsigned Stirling number of the 1st kind mod $m$.
+- `stirling2(n, k, m = MOD)` returns the $(n, k)$ Stirling number of the 2nd kind mod $m$.
+- `eulerian1(n, k, m = MOD)` returns the $(n, k)$ Eulerian number of the 1st kind mod $m$, where
+  $n > k$.
+- `eulerian2(n, k, m = MOD)` returns the $(n, k)$ Eulerian number of the 2nd kind mod $m$, where
+  $n > k$.
 
 Time Complexity:
 - O(n) for `factorial(n, m)`.
@@ -43,7 +46,9 @@ Space Complexity:
 #include <cstdint>
 #include <vector>
 
-int64_t factorial(int n, int m = 1000000007) {
+const int64_t MOD = 1000000007;
+
+int64_t factorial(int n, int m = MOD) {
   int64_t res = 1;
   for (int i = 2; i <= n; i++) {
     res = (res * i) % m;
@@ -51,7 +56,7 @@ int64_t factorial(int n, int m = 1000000007) {
   return res % m;
 }
 
-int64_t factorialp(int64_t n, int64_t p = 1000000007) {
+int64_t factorialp(int64_t n, int64_t p = MOD) {
   int64_t res = 1;
   while (n > 1) {
     if (n / p % 2 == 1) {
@@ -66,7 +71,7 @@ int64_t factorialp(int64_t n, int64_t p = 1000000007) {
   return res % p;
 }
 
-std::vector<std::vector<int64_t>> binomial_table(int n, int64_t m = 1000000007) {
+std::vector<std::vector<int64_t>> binomial_table(int n, int64_t m = MOD) {
   std::vector<std::vector<int64_t>> t(n + 1);
   for (int i = 0; i <= n; i++) {
     for (int j = 0; j <= i; j++) {
@@ -80,7 +85,7 @@ std::vector<std::vector<int64_t>> binomial_table(int n, int64_t m = 1000000007) 
   return t;
 }
 
-int64_t permute(int n, int k, int64_t m = 1000000007) {
+int64_t permute(int n, int k, int64_t m = MOD) {
   if (n < k) {
     return 0;
   }
@@ -102,7 +107,7 @@ int64_t powmod(int64_t x, int64_t n, int64_t m) {
   return a % m;
 }
 
-int64_t choose(int n, int k, int64_t p = 1000000007) {
+int64_t choose(int n, int k, int64_t p = MOD) {
   if (n < k) {
     return 0;
   }
@@ -119,15 +124,15 @@ int64_t choose(int n, int k, int64_t p = 1000000007) {
   return num * powmod(den, p - 2, p) % p;
 }
 
-int64_t multichoose(int n, int k, int64_t p = 1000000007) {
+int64_t multichoose(int n, int k, int64_t p = MOD) {
   return choose(n + k - 1, k, p);
 }
 
-int64_t catalan(int n, int64_t p = 1000000007) {
+int64_t catalan(int n, int64_t p = MOD) {
   return choose(2 * n, n, p) * powmod(n + 1, p - 2, p) % p;
 }
 
-int64_t partitions(int n, int64_t m = 1000000007) {
+int64_t partitions(int n, int64_t m = MOD) {
   std::vector<int64_t> t(n + 1, 0);
   t[0] = 1;
   for (int i = 1; i <= n; i++) {
@@ -138,7 +143,7 @@ int64_t partitions(int n, int64_t m = 1000000007) {
   return t[n] % m;
 }
 
-int64_t partitions(int n, int k, int64_t m = 1000000007) {
+int64_t partitions(int n, int k, int64_t m = MOD) {
   std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 0));
   t[0][1] = 1;
   for (int i = 1; i <= n; i++) {
@@ -149,7 +154,7 @@ int64_t partitions(int n, int k, int64_t m = 1000000007) {
   return t[n][k] % m;
 }
 
-int64_t stirling1(int n, int k, int64_t m = 1000000007) {
+int64_t stirling1(int n, int k, int64_t m = MOD) {
   std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 0));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
@@ -161,7 +166,7 @@ int64_t stirling1(int n, int k, int64_t m = 1000000007) {
   return t[n][k] % m;
 }
 
-int64_t stirling2(int n, int k, int64_t m = 1000000007) {
+int64_t stirling2(int n, int k, int64_t m = MOD) {
   std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 0));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
@@ -173,7 +178,7 @@ int64_t stirling2(int n, int k, int64_t m = 1000000007) {
   return t[n][k] % m;
 }
 
-int64_t eulerian1(int n, int k, int64_t m = 1000000007) {
+int64_t eulerian1(int n, int k, int64_t m = MOD) {
   if (k > n - 1 - k) {
     k = n - 1 - k;
   }
@@ -190,7 +195,7 @@ int64_t eulerian1(int n, int k, int64_t m = 1000000007) {
   return t[n][k] % m;
 }
 
-int64_t eulerian2(int n, int k, int64_t m = 1000000007) {
+int64_t eulerian2(int n, int k, int64_t m = MOD) {
   std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 1));
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= k; j++) {

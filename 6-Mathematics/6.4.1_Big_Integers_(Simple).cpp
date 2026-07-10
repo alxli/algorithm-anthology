@@ -9,7 +9,7 @@ for each digit of the right operand, adds that row once per digit value, then sh
 place. Division is long division: it scans the dividend from most significant digit to least,
 maintains a running remainder, and repeatedly subtracts the divisor to discover each quotient digit.
 
-- `BigInt(n)` constructs a big integer from an integer `n` (default: 0).
+- `BigInt(n = 0)` constructs a big integer from an integer `n`.
 - `BigInt(s)` constructs a big integer from a string `s`, which must strictly consist of a sequence
   of numeric digits, optionally preceded by a minus sign.
 - `to_string()` returns the string representation of the big integer.

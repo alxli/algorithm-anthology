@@ -10,8 +10,8 @@ $[0, `n`)$, where `n` is `adj.size()`.
 - `find_centers()` returns a vector of either one or two tree Jordan centers. The Jordan center of a
   tree is the set of all nodes with minimum eccentricity, that is, the set of all nodes where the
   maximum distance to all other nodes in the tree is minimal.
-- `find_centroid()` returns the node where all of its subtrees have a size less than or equal to
-  $n / 2$, where $n$ is the number of nodes in the tree.
+- `find_centroid(u = 0, p = -1)` returns the node where all of its subtrees have a size less than or
+  equal to $n / 2$, where $n$ is the number of nodes in the tree.
 - `diameter()` returns the maximum distance between any two nodes in the tree, using a well-known
   double depth-first search technique.
 

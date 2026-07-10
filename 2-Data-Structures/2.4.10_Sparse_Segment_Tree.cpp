@@ -23,7 +23,7 @@ increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, 
 
 - `SparseSegTree<T, N>(v = T())` constructs an array over indices $[0, `N`]$, with every value
   implicitly initialized to `v`. Nodes are allocated lazily as indices are touched.
-- `at(i)` returns the value at index `i`, where `i` is between $0$ and `N`.
+- `at(i)` returns the value at index `i`, where `i` must be in $[0, `N`]$.
 - `query(lo, hi)` returns the result of `combine()` applied to all indices in $[`lo`, `hi`]$. If
   `lo == hi`, then the single specified value is returned.
 - `update(i, d)` assigns the value `v` at index `i` to `apply_delta(v, d)`.
@@ -45,7 +45,7 @@ Time Complexity:
 - O(log N) per call to `at()`, `update()`, `query()`, `max_right()`, and `min_left()`.
 
 Space Complexity:
-- O(k log(N)) for storage after $k$ index updates.
+- O(k log N) for storage after $k$ index updates.
 - O(log N) auxiliary stack space for `update()`, `query()`, `max_right()`, and `min_left()`.
 
 */

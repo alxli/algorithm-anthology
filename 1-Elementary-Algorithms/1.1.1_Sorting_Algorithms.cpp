@@ -5,11 +5,11 @@ half-open range $[`lo`, `hi`)$ to be sorted. The range is sorted into ascending 
 function call. Optionally, a comparison function object specifying a strict weak ordering may be
 specified to replace the default `operator<`.
 
-- `quicksort(lo, hi)` sorts the range using quicksort.
-- `mergesort(lo, hi)` sorts the range using merge sort, which is stable.
-- `heapsort(lo, hi)` sorts the range using heapsort.
-- `insertion_sort(lo, hi)` sorts the range using insertion sort, which is stable.
-- `combsort(lo, hi)` sorts the range using comb sort.
+- `quicksort(lo, hi, comp = Compare())` sorts the range using quicksort.
+- `mergesort(lo, hi, comp = Compare())` sorts the range using merge sort, which is stable.
+- `heapsort(lo, hi, comp = Compare())` sorts the range using heapsort.
+- `insertion_sort(lo, hi, comp = Compare())` sorts the range using insertion sort, which is stable.
+- `combsort(lo, hi, comp = Compare())` sorts the range using comb sort.
 - `radix_sort(lo, hi)` sorts the range using least-significant-byte radix sort.
 
 `radix_sort()` is the exception to the shared interface above: it takes no comparator and requires

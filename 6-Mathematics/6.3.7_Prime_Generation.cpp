@@ -13,9 +13,9 @@ would require.
 
 - `sieve(n)` returns a vector of all the primes less than or equal to `n`.
 - `sieve(lo, hi)` returns a vector of all the primes in the range $[`lo`, `hi`]$.
-- `linear_sieve(n, least_out)` returns a vector of all primes less than or equal to `n` in linear
-  time. If `least_out` is not null, it is filled so that `(*least_out)[x]` is the least prime factor
-  of `x` for every `x` $\geq 2$.
+- `linear_sieve(n, least_out = nullptr)` returns a vector of all primes less than or equal to `n` in
+  linear time. If `least_out` is not null, it is filled so that `(*least_out)[x]` is the least prime
+  factor of `x` for every `x` $\geq 2$.
 
 Time Complexity:
 - O(n log log n) per call to `sieve(n)`.

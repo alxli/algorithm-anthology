@@ -14,8 +14,8 @@ search tree rather than an aggregate structure: for rectangle reporting use the 
 
 - `NearestKDTree<T>(lo, hi)` constructs a set from two random-access iterators to `std::pair` as a
   range $[`lo`, `hi`)$ of points.
-- `nearest(x, y, can_equal)` returns a point in the set that is closest to $(`x`, `y`)$ by Euclidean
-  distance. This may be equal to $(`x`, `y`)$ only if `can_equal` is `true`.
+- `nearest(x, y, can_equal = true)` returns a point in the set that is closest to $(`x`, `y`)$ by
+  Euclidean distance. This may be equal to $(`x`, `y`)$ only if `can_equal` is `true`.
 
 Time Complexity:
 - O(n log n) per call to the constructor, where $n$ is the number of points.

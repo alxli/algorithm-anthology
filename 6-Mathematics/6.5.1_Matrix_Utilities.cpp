@@ -22,10 +22,10 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
   $b$ such that `a[i][j]` = `b[j][i]` for every `i` $\in [0, m)$ and `j` $\in [0, n)$.
 - `transpose_in_place(a)` assigns the square matrix `a` to its transpose, returning a reference to
   the modified argument itself.
-- `rotate(a, d)` returns the matrix `a` rotated `d` degrees clockwise. A negative `d` specifies a
-  counter-clockwise rotation, and `d` must be a multiple of 90.
-- `rotate_in_place(a, d)` assigns the square matrix `a` to its rotation by `d` degrees clockwise,
-  returning a reference to the modified argument itself. A negative `d` specifies a
+- `rotate(a, d = 90)` returns the matrix `a` rotated `d` degrees clockwise. A negative `d` specifies
+  a counter-clockwise rotation, and `d` must be a multiple of 90.
+- `rotate_in_place(a, d = 90)` assigns the square matrix `a` to its rotation by `d` degrees
+  clockwise, returning a reference to the modified argument itself. A negative `d` specifies a
   counter-clockwise rotation, and `d` must be a multiple of 90.
 
 Exponentiation uses the usual iterative binary exponentiation pattern: keep an accumulated result,

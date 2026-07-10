@@ -19,7 +19,8 @@ algorithm-specific policy and are meant to be pasted near the top of a solution 
 - `RNG()` constructs a 64-bit Mersenne Twister seeded from the steady clock.
 - `RNG(seed)` constructs a reproducible 64-bit Mersenne Twister.
 - `rng.uniform_int(lo, hi)` returns a random integer in range $[`lo`, `hi`]$.
-- `rng.uniform_real(lo, hi)` returns a random real number in the half-open range $[`lo`, `hi`)$.
+- `rng.uniform_real(lo = 0.0, hi = 1.0)` returns a random real number in the half-open range
+  $[`lo`, `hi`)$.
 - `rng.shuffle(lo, hi)` randomly shuffles the range $[`lo`, `hi`)$.
 - `y_combinator(f)` wraps a recursive lambda so that the lambda can call itself as its first
   argument.

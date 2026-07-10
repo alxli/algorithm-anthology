@@ -12,7 +12,7 @@ taking $1$ or $2$ stones, and the player who takes the last stone wins. The eval
 for a win for the player to move at the root and $-1$ for a loss.
 
 - `minimax(stones, maximizing)` returns the exact game-tree value.
-- `alpha_beta(stones, maximizing, alpha, beta)` returns the same value, with pruning.
+- `alpha_beta(stones, maximizing, alpha = -2, beta = 2)` returns the same value, with pruning.
 - `best_take(stones)` returns an optimal first move, either $1$ or $2$.
 
 Time Complexity:

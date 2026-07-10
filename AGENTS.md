@@ -200,9 +200,31 @@ Before finishing meaningful edits, run checks scaled to the touched files:
   `awk 'length($0) > 100 { print FILENAME ":" FNR ":" length($0) ":" $0 }' path/to/file.cpp`
 - Check docstring wrapping when touching comments:
   `python3 scan_docstrings.py`
+- Run the bounded stabilization audit when asked to "scan" or before declaring the repo stable:
+  `python3 scan_docstrings.py`
 
 Warnings from the compiler should be investigated. If a warning is known and harmless, mention it
 in the final report rather than hiding it.
+
+## Stabilization Scans
+
+Use two different modes for quality work:
+
+- Stabilization scan: a bounded audit against existing policy. Run `python3 scan_docstrings.py`,
+  inspect only findings above the threshold below, patch them, and rerun. If the audit is clean, say
+  the repo is stable instead of searching for more cosmetic rewrites.
+- Exploratory scan: a deliberate search for new conventions or broad cleanup opportunities. Do this
+  only when the user asks for exploratory work or when a repeated issue clearly meets the threshold
+  below.
+
+During a stabilization scan, do not introduce a new style rule unless the issue is factual,
+conflicts with this file, appears in at least three files, or is likely to confuse a reader.
+Cosmetic wording below that bar should be left alone or mentioned as backlog, not patched
+immediately.
+
+When a new repeated convention is accepted, encode it in one of two places before relying on it in
+future scans: `AGENTS.md` for human/agent judgment, or `scan_docstrings.py` for deterministic
+grep-style drift checks. This is the path to a stable "scan" result.
 
 ## Editing Discipline
 

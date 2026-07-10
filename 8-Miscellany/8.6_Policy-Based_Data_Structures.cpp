@@ -19,7 +19,7 @@ but they are available on many GNU C++ contest judges.
 - `BinaryHeap<T>`, `BinomialHeap<T>`, and `RcBinomialHeap<T>` are alternative GNU priority queue
   tags with the same interface.
 
-The order-statistic operations use GNU PBDS conventions: `find_by_order(k)` is 0-indexed and
+The order-statistic operations use GNU PBDS conventions: `find_by_order(k)` is 0-based and
 `order_of_key(x)` returns the number of keys strictly less than `x`, even if `x` is absent. Raw
 PBDS ordered trees return iterators from `find_by_order(k)`; the multiset and multimap wrappers
 below unwrap that iterator into a value. The priority queue `join()` operation melds another heap
