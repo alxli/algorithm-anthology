@@ -7,11 +7,11 @@
 The following functions are equivalent to \inlinecode{std::sort()}, taking random-access iterators as a half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ to be sorted. The range is sorted into ascending order after the function call. Optionally, a comparison function object specifying a strict weak ordering may be specified to replace the default \inlinecode{operator\textless{}}.
 
 \begin{compactitem}
-  \item \inlinecode{quicksort(lo, hi)} sorts the range using quicksort.
-  \item \inlinecode{mergesort(lo, hi)} sorts the range using merge sort, which is stable.
-  \item \inlinecode{heapsort(lo, hi)} sorts the range using heapsort.
-  \item \inlinecode{insertion\_sort(lo, hi)} sorts the range using insertion sort, which is stable.
-  \item \inlinecode{combsort(lo, hi)} sorts the range using comb sort.
+  \item \inlinecode{quicksort(lo, hi, comp = std::less\textless{}\textgreater{})} sorts the range using quicksort.
+  \item \inlinecode{mergesort(lo, hi, comp = std::less\textless{}\textgreater{})} sorts the range using merge sort, which is stable.
+  \item \inlinecode{heapsort(lo, hi, comp = std::less\textless{}\textgreater{})} sorts the range using heapsort.
+  \item \inlinecode{insertion\_sort(lo, hi, comp = std::less\textless{}\textgreater{})} sorts the range using insertion sort, which is stable.
+  \item \inlinecode{combsort(lo, hi, comp = std::less\textless{}\textgreater{})} sorts the range using comb sort.
   \item \inlinecode{radix\_sort(lo, hi)} sorts the range using least-significant-byte radix sort.
 \end{compactitem}
 
@@ -61,7 +61,7 @@ void quicksort(It lo, It hi, Compare comp = Compare()) {
   }
 }
 \end{lstlisting}
-Merge sort first divides a list into n sublists of one element each, then recursively merges the sublists into sorted order until only a single sorted sublist remains. Merge sort is a stable sort, meaning that it preserves the relative order of elements which compare equal by \inlinecode{operator\textless{}} or the custom comparator given.
+Merge sort first divides a list into $n$ sublists of one element each, then recursively merges the sublists into sorted order until only a single sorted sublist remains. Merge sort is a stable sort, meaning that it preserves the relative order of elements which compare equal by \inlinecode{operator\textless{}} or the custom comparator given.
 
 An analogous function in the C++ standard library is \inlinecode{std::stable\_sort()}, except that the implementation here requires sufficient memory to be available. When $O(n)$ auxiliary memory is not available, \inlinecode{std::stable\_sort()} falls back to a time complexity of $O(n \log^{2} n)$ whereas the implementation here will simply fail.
 
@@ -173,7 +173,7 @@ void insertion_sort(It lo, It hi, Compare comp = Compare()) {
 \end{lstlisting}
 Comb sort is an improved bubble sort. While bubble sort increments the gap between swapped elements for every inner loop iteration, comb sort fixes the gap size in the inner loop, decreasing it by a particular shrink factor in every iteration of the outer loop. The shrink factor of 1.3 is empirically determined to be the most effective.
 
-Even though the worst case time complexity is $O(n^{2})$, a well chosen shrink factor ensures that the gap sizes are co-prime, in turn requiring astronomically large n to make the algorithm exceed $O(n \log n)$ steps. On random arrays, comb sort is only 2-3 times slower than merge sort. Its short code length relative to its good performance makes it a worthwhile algorithm to remember.
+Even though the worst case time complexity is $O(n^{2})$, a well chosen shrink factor ensures that the gap sizes are co-prime, in turn requiring astronomically large $n$ to make the algorithm exceed $O(n \log n)$ steps. On random arrays, comb sort is only 2-3 times slower than merge sort. Its short code length relative to its good performance makes it a worthwhile algorithm to remember.
 
 \textbf{Time Complexity (Worst)}: $O(n^{2})$.
 
@@ -513,10 +513,10 @@ rotate left:  1 2 2 3 4 5 7 7 10 0
 rotate right: 0 1 2 2 3 4 5 7 7 10
 \end{exampleoutput}
 \subsection{Counting Inversions}
-The number of inversions for a sequence \inlinecode{a} is the number of ordered pairs $(i, j)$ such that $i < j$ and $a[i] > a[j]$. This is roughly how ``close'' an array is to being sorted, but is \textit{not} the minimum number of swaps required to sort the array. If the array is sorted, then the inversion count is $0$. If the array is sorted in decreasing order, then the inversion count is maximal. The following two functions are each techniques to efficiently count inversions. In the merge sort approach, whenever the merge step emits an element from the right half, that element jumps ahead of every unmerged left-half element, and exactly that many inversions are added to the count.
+The number of inversions for a sequence $a$ is the number of ordered pairs $(i, j)$ such that $i < j$ and $a[i] > a[j]$. This is roughly how ``close'' an array is to being sorted, but is \textit{not} the minimum number of swaps required to sort the array. If the array is sorted, then the inversion count is $0$. If the array is sorted in decreasing order, then the inversion count is maximal. The following two functions are each techniques to efficiently count inversions. In the merge sort approach, whenever the merge step emits an element from the right half, that element jumps ahead of every unmerged left-half element, and exactly that many inversions are added to the count.
 
 \begin{compactitem}
-  \item \inlinecode{inversions(lo, hi)} uses merge sort to return the number of inversions given two random-access iterators as a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$. The input range will be sorted after the function call. Optionally, a comparison function object specifying a strict weak ordering may be specified to replace the default \inlinecode{operator\textless{}}.
+  \item \inlinecode{inversions(lo, hi, comp = std::less\textless{}\textgreater{})} uses merge sort to return the number of inversions given two random-access iterators as a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$. The input range will be sorted after the function call. Optionally, a comparison function object specifying a strict weak ordering may be specified to replace the default \inlinecode{operator\textless{}}.
   \item \inlinecode{inversions(a)} uses coordinate compression and a Fenwick tree to return the number of inversions in an integer vector without modifying it.
 \end{compactitem}
 
@@ -888,9 +888,9 @@ Precomputes prefix sums so range-sum queries can be answered in constant time. T
 
 \begin{compactitem}
   \item \inlinecode{prefix\_sums(a)} returns array \inlinecode{pref} with \inlinecode{pref[0] = 0} and \inlinecode{pref[i + 1] = a[0] + ... + a[i]}.
-  \item \inlinecode{range\_sum(pref, lo, hi)} returns the sum of the inclusive range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
+  \item \inlinecode{range\_sum(pref, lo, hi)} returns the sum of range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{prefix\_sums\_2d(a)} returns a two-dimensional prefix sum table for matrix \inlinecode{a}.
-  \item \inlinecode{rectangle\_sum(pref, r1, c1, r2, c2)} returns the sum of the rectangle with top left at $({\inlinecodemath{r1}}, {\inlinecodemath{c1}})$ and bottom right at $({\inlinecodemath{r2}}, {\inlinecodemath{c2}})$.
+  \item \inlinecode{rectangle\_sum(pref, r1, c1, r2, c2)} returns the sum of the rectangle with rows $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -968,14 +968,14 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Difference Array}
-Applies many range-add updates to an array in linear total time using a difference array. Instead of immediately adding \inlinecode{delta} to every element of an inclusive range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$, we can add \inlinecode{delta} at \inlinecode{diff[lo]} and subtract it at \inlinecode{diff[hi + 1]}; a final prefix sum reconstructs the updated values. This idea extends to two dimensions: a rectangle update touches just the four corner cells of a difference grid by inclusion-exclusion, and a final two-dimensional prefix sum reconstructs the grid.
+Applies many range-add updates to an array in linear total time using a difference array. Instead of immediately adding \inlinecode{delta} to every element of range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$, we can add \inlinecode{delta} at \inlinecode{diff[lo]} and subtract it at \inlinecode{diff[hi + 1]}; a final prefix sum reconstructs the updated values. This idea extends to two dimensions: a rectangle update touches just the four corner cells of a difference grid by inclusion-exclusion, and a final two-dimensional prefix sum reconstructs the grid.
 
 \begin{compactitem}
   \item \inlinecode{DifferenceArray(n)} constructs an initially zero array of size \inlinecode{n}.
-  \item \inlinecode{add(lo, hi, delta)} adds \inlinecode{delta} to every position in the inclusive range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
+  \item \inlinecode{add(lo, hi, delta)} adds \inlinecode{delta} to every position in range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{build()} returns the final array after all range updates.
   \item \inlinecode{DifferenceArray2D(rows, cols)} constructs an initially zero grid with \inlinecode{rows} rows and \inlinecode{cols} columns.
-  \item \inlinecode{add(r1, c1, r2, c2, delta)} adds \inlinecode{delta} to every cell of the rectangle with top left at $({\inlinecodemath{r1}}, {\inlinecodemath{c1}})$ and bottom right at $({\inlinecodemath{r2}}, {\inlinecodemath{c2}})$, inclusive.
+  \item \inlinecode{add(r1, c1, r2, c2, delta)} adds \inlinecode{delta} to every cell of the rectangle with rows $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
   \item \inlinecode{build()} returns the final grid after all rectangle updates.
 \end{compactitem}
 
@@ -1095,7 +1095,7 @@ The examples below cover sorted 2-sum/3-sum variants, finding the shortest subar
   \item \inlinecode{three\_sum(a, target)} returns three original indices whose values sum to \inlinecode{target}, or $(-1, -1, -1)$ if none exist.
   \item \inlinecode{min\_length\_at\_least(a, target)} returns $({\inlinecodemath{length}}, {\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, the minimum length and inclusive endpoints of a contiguous subarray with sum at least \inlinecode{target}, or length $-1$ if none exists. Values in \inlinecode{a} must be nonnegative. If \inlinecode{target} is nonpositive, it returns the empty subarray.
   \item \inlinecode{longest\_at\_most\_k\_distinct(a, k)} returns $({\inlinecodemath{length}}, {\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, the maximum length and inclusive endpoints of a contiguous subarray containing at most \inlinecode{k} distinct values.
-  \item \inlinecode{sliding\_window\_extrema(a, k, comp)} returns the extreme value in each window of length \inlinecode{k}. With the default \inlinecode{less\textless{}\textgreater{}} comparator it returns minimums; passing \inlinecode{greater\textless{}\textgreater{}} returns maximums.
+  \item \inlinecode{sliding\_window\_extrema(a, k, comp = std::less\textless{}\textgreater{})} returns the extreme value in each window of length \inlinecode{k}. With the default \inlinecode{less\textless{}\textgreater{}} comparator it returns minimums; passing \inlinecode{greater\textless{}\textgreater{}} returns maximums.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1817,7 +1817,7 @@ int main() {
 -5 1 9 10 11 13
 \end{exampleoutput}
 \subsection{Minimum Excluded Value}
-Computes the minimum excluded nonnegative (MEX) integer of a set of integers, that is, the smallest integer $x \geq 0$ that does not appear in the set. It appears frequently in array problems, game theory with Grundy numbers, and dynamic programming states. Since the MEX of $n$ values never exceeds $n$, the one-shot version only marks values in $[0, {\inlinecodemath{n}}]$. The dynamic version stores counts for present values and an ordered set of currently missing candidates.
+Computes the minimum excluded nonnegative (MEX) integer of a set of integers, that is, the smallest integer $x \geq 0$ that does not appear in the set. It appears frequently in array problems, game theory with Grundy numbers, and dynamic programming states. Since the MEX of $n$ values never exceeds $n$, the one-shot version only marks values in $[0, n]$. The dynamic version stores counts for present values and an ordered set of currently missing candidates.
 
 \begin{compactitem}
   \item \inlinecode{mex(lo, hi)} returns the MEX of the values in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
@@ -1938,8 +1938,8 @@ Floyd's cycle-finding algorithm, a.k.a. the ``tortoise and the hare algorithm'',
 For Floyd's algorithm, suppose the tail has length $m$ and the cycle has length $n$. At a meeting, the hare has traveled twice as far as the tortoise, so the tortoise's distance is a multiple of $n$. Consequently, the distance from the meeting point around the cycle to its entry is congruent to $m$ modulo $n$. Resetting one pointer to $x_0$ and advancing both one step at a time makes them meet at the cycle entry after $m$ steps. Brent first determines $n$, then advances one pointer $n$ steps; moving both together from that fixed separation likewise makes them meet at the entry.
 
 \begin{compactitem}
-  \item \inlinecode{find\_cycle\_floyd(f, x0)} returns the reached cycle as a pair $({\inlinecodemath{start}}, {\inlinecodemath{length}})$, where \inlinecode{start} is the smallest index $i$ such that $x_i$ is in the cycle, and \inlinecode{length} is the number of distinct values in the cycle.
-  \item \inlinecode{find\_cycle\_brent(f, x0)} does the same with fewer calls to $f$ in many cases.
+  \item \inlinecode{find\_cycle\_floyd(f, x0)} repeatedly applies \inlinecode{f} starting from \inlinecode{x0} and returns the reached cycle as a pair $({\inlinecodemath{start}}, {\inlinecodemath{length}})$, where \inlinecode{start} is the smallest index $i$ such that $x_i$ is in the cycle, and \inlinecode{length} is the number of distinct values in the cycle.
+  \item \inlinecode{find\_cycle\_brent(f, x0)} does the same with fewer calls to \inlinecode{f} in many cases.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(m + n)$ per call, where $m$ is the first index in the cycle and $n$ is the cycle length.
@@ -2390,7 +2390,7 @@ int main() {
 \subsection{Grid Dynamic Programming}
 Solves basic dynamic programming problems on a rectangular grid. In grid DP, each cell represents a state and transitions usually come from already-computed neighboring cells, most commonly the cell above and the cell to the left. Processing rows from top to bottom and columns from left to right therefore makes every predecessor available when a state is computed.
 
-For path-counting, \inlinecode{dp[r][c]} stores the number of ways to reach cell $({\inlinecodemath{r}}, {\inlinecodemath{c}})$. For minimum-cost paths, \inlinecode{dp[r][c]} stores the cheapest cost to reach that cell, and a predecessor direction reconstructs one optimal path. The helpers below assume movement only down or right.
+For path-counting, \inlinecode{dp[r][c]} stores the number of ways to reach cell $(r, c)$. For minimum-cost paths, \inlinecode{dp[r][c]} stores the cheapest cost to reach that cell, and a predecessor direction reconstructs one optimal path. The helpers below assume movement only down or right.
 
 \begin{compactitem}
   \item \inlinecode{count\_grid\_paths(blocked)} returns the number of paths from the upper-left cell to the lower-right cell, moving only down or right and avoiding blocked cells marked nonzero.
@@ -3468,7 +3468,7 @@ For assignment, \inlinecode{dp[mask]} is the minimum cost after assigning the fi
 
 \begin{compactitem}
   \item \inlinecode{assignment\_min\_cost(cost)} returns a pair \inlinecode{(sum, job)}, where \inlinecode{sum} is the minimum cost of assigning each worker to a distinct job, and \inlinecode{job[i]} is the job assigned to worker \inlinecode{i}.
-  \item \inlinecode{minimum\_set\_cover(sets, universe\_size)} returns a pair \inlinecode{(count, chosen)}, where \inlinecode{count} is the minimum number of sets needed to cover all elements from $0$ to \inlinecode{universe\_size - 1}, and \inlinecode{chosen} contains one optimal list of set indices. If no cover exists, \inlinecode{count} is $-1$ and \inlinecode{chosen} is empty. Each input set is represented as a bitmask.
+  \item \inlinecode{minimum\_set\_cover(sets, universe\_size)} returns a pair \inlinecode{(count, chosen)}, where \inlinecode{count} is the minimum number of sets needed to cover all elements in $[0, u)$, where $u$ is \inlinecode{universe\_size}, and \inlinecode{chosen} contains one optimal list of set indices. If no cover exists, \inlinecode{count} is $-1$ and \inlinecode{chosen} is empty. Each input set is represented as a bitmask.
   \item \inlinecode{partition\_min\_cost(group\_cost)} returns the minimum total cost to partition all elements into disjoint nonempty groups, where \inlinecode{group\_cost[mask]} is the cost of taking \inlinecode{mask} as one group.
   \item \inlinecode{count\_domino\_tilings(rows, cols)} returns the number of ways to tile a \inlinecode{rows} by \inlinecode{cols} rectangle with $1 \times 2$ and $2 \times 1$ dominoes.
 \end{compactitem}
@@ -3736,7 +3736,7 @@ The basis is kept in reduced form: the $i$-th basis is either $0$ or a value who
 \begin{compactitem}
   \item \inlinecode{insert(x)} adds \inlinecode{x} to the basis, returning \inlinecode{true} if \inlinecode{x} was linearly independent of the current basis (increasing its size), or \inlinecode{false} if \inlinecode{x} was already representable as a subset XOR.
   \item \inlinecode{contains(x)} returns whether \inlinecode{x} is representable as the XOR of some subset of the inserted values, i.e. whether it reduces to $0$ against the basis.
-  \item \inlinecode{max\_xor(base)} returns the maximum value of \inlinecode{base} XORed with some subset XOR of the basis. With the default \inlinecode{base} of 0, this is the maximum subset XOR.
+  \item \inlinecode{max\_xor(base = 0)} returns the maximum value of \inlinecode{base} XORed with some subset XOR of the basis. With the default \inlinecode{base} of 0, this is the maximum subset XOR.
   \item \inlinecode{size()} returns the number of elements in the basis (its rank).
 \end{compactitem}
 
@@ -3838,8 +3838,8 @@ Values must lie in $[0, 2^b)$ for bit width $b$; the template parameters select 
   \item \inlinecode{insert(x)} adds one occurrence of \inlinecode{x}.
   \item \inlinecode{erase(x)} removes one occurrence of \inlinecode{x}, returning whether one was present.
   \item \inlinecode{count(x)} returns the number of occurrences of \inlinecode{x}.
-  \item \inlinecode{max\_xor(x)} and \inlinecode{min\_xor(x)} return the maximum and minimum of \inlinecode{x XOR y} over all stored \inlinecode{y}. The trie must be non-empty.
-  \item \inlinecode{count\_xor\_less(x, k)} returns the number of stored \inlinecode{y} (with multiplicity) such that \inlinecode{x XOR y} is strictly less than \inlinecode{k}.
+  \item \inlinecode{max\_xor(x)} and \inlinecode{min\_xor(x)} return the maximum and minimum of \inlinecode{x \textasciicircum{} y} over all stored \inlinecode{y}. The trie must be non-empty.
+  \item \inlinecode{count\_xor\_less(x, k)} returns the number of stored \inlinecode{y} (with multiplicity) such that \inlinecode{x \textasciicircum{} y} is strictly less than \inlinecode{k}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}

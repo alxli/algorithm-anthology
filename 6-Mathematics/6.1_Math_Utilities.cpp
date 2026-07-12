@@ -140,7 +140,8 @@ Rounding Functions:
 - `round_half_down(x)` returns `x` rounded half down, towards negative infinity.
 - `round_half_to0(x)` returns `x` rounded half down, symmetrically towards zero.
 - `round_half_from0(x)` returns `x` rounded half up, symmetrically away from zero.
-- `round_half_even(x, eps = 1e-9)` returns `x` rounded half to even, using banker's rounding.
+- `round_half_even(x, eps = 1e-9)` returns `x` rounded half to even, using `eps` to detect ties for
+  banker's rounding.
 - `round_half_alternate(x)` returns `x` rounded, where ties are broken by alternating rounds towards
   positive and negative infinity.
 - `round_half_alternate0(x)` returns `x` rounded, where ties are broken by alternating symmetric

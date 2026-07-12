@@ -9,7 +9,7 @@ A graph consists of a set of objects (a.k.a. vertices, or nodes) and a set of co
 The following class implements a simple graph using adjacency lists, along with depth-first search and a few other applications. The constructor takes a flag which specifies whether the instance is a directed or undirected graph. The nodes of the graph are identified by integer indices numbered consecutively starting from $0$. The total number of nodes automatically increases based on the maximum node index passed to \inlinecode{add\_edge()} so far.
 
 \begin{compactitem}
-  \item \inlinecode{Graph(directed)} constructs an empty graph, directed if \inlinecode{directed} is true (the default) and undirected otherwise.
+  \item \inlinecode{Graph(directed = true)} constructs an empty graph, directed if \inlinecode{directed} is true and undirected otherwise.
   \item \inlinecode{nodes()} returns the current number of nodes.
   \item \inlinecode{operator[n]} returns a reference to the adjacency list (\inlinecode{std::vector\textless{}int\textgreater{}}) of node \inlinecode{n}.
   \item \inlinecode{add\_edge(u, v)} adds an edge from \inlinecode{u} to \inlinecode{v}, plus the reverse edge if the graph is undirected, growing the node count to accommodate the larger index if necessary.
@@ -597,11 +597,11 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Tree Centers and Diameter}
-An unweighted tree possesses a center, centroid, and diameter. The centers are found by repeatedly peeling away the leaves of the tree until one or two nodes remain. The diameter relies on the fact that the farthest node from any start is always one endpoint of a diameter, so a second traversal from that endpoint measures the full diameter. The following functions apply to a global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must form a valid tree with nodes numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}.
+An unweighted tree possesses a center, centroid, and diameter. The centers are found by repeatedly peeling away the leaves of the tree until one or two nodes remain. The diameter relies on the fact that the farthest node from any start is always one endpoint of a diameter, so a second traversal from that endpoint measures the full diameter. The following functions apply to a global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must form a valid tree with nodes numbered $[0, n)$, where $n$ is \inlinecode{adj.size()}.
 
 \begin{compactitem}
   \item \inlinecode{find\_centers()} returns a vector of either one or two tree Jordan centers. The Jordan center of a tree is the set of all nodes with minimum eccentricity, that is, the set of all nodes where the maximum distance to all other nodes in the tree is minimal.
-  \item \inlinecode{find\_centroid()} returns the node where all of its subtrees have a size less than or equal to $n / 2$, where $n$ is the number of nodes in the tree.
+  \item \inlinecode{find\_centroid(u = 0, p = -1)} returns the node where all of its subtrees have a size less than or equal to $n / 2$, where $n$ is the number of nodes in the tree.
   \item \inlinecode{diameter()} returns the maximum distance between any two nodes in the tree, using a well-known double depth-first search technique.
 \end{compactitem}
 
@@ -724,7 +724,7 @@ Given a tree DP that can answer one rooted query with a recursive \inlinecode{df
 \begin{compactitem}
   \item \inlinecode{RerootingTree(n)} constructs a tree with \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
   \item \inlinecode{add\_edge(u, v)} adds an undirected edge between nodes \inlinecode{u} and \inlinecode{v}.
-  \item \inlinecode{build\_rooted\_tree(root)} populates \inlinecode{parent}, \inlinecode{depth}, \inlinecode{subtree\_size}, \inlinecode{order}, \inlinecode{tin}, and \inlinecode{tout} for the tree rooted at \inlinecode{root} (default 0). This must be called only after the added edges define a connected tree of size \inlinecode{n}.
+  \item \inlinecode{build\_rooted\_tree(root = 0)} populates \inlinecode{parent}, \inlinecode{depth}, \inlinecode{subtree\_size}, \inlinecode{order}, \inlinecode{tin}, and \inlinecode{tout} for the tree rooted at \inlinecode{root}. This must be called only after the added edges define a connected tree of size \inlinecode{n}.
   \item \inlinecode{is\_ancestor(u, v)} returns whether \inlinecode{u} is an ancestor of \inlinecode{v} in the last rooted tree.
   \item \inlinecode{rerooting\_dp(identity, combine, finalize, lift)} returns the value that \inlinecode{dfs(root, p)} would produce for every possible \inlinecode{root} with sentinel parent $p = -1$. This must be called only after the added edges define a connected tree of size \inlinecode{n}.
 \end{compactitem}
@@ -1221,7 +1221,7 @@ Hierholzer's algorithm walks unused edges until stuck, then backtracks to splice
 
 \begin{compactitem}
   \item \inlinecode{known\_eulerian\_path\_directed(adj, start)} returns a vertex trail using every directed edge in \inlinecode{adj} exactly once, assuming such a trail exists and begins at \inlinecode{start}.
-  \item \inlinecode{eulerian\_path\_directed(adj, start)} returns a vertex trail using every directed edge in \inlinecode{adj} exactly once, or an empty vector if no such trail exists. If \inlinecode{start} $= -1$, a valid start is chosen automatically; otherwise the trail must begin at \inlinecode{start}.
+  \item \inlinecode{eulerian\_path\_directed(adj, start = -1)} returns a vertex trail using every directed edge in \inlinecode{adj} exactly once, or an empty vector if no such trail exists. If \inlinecode{start} $= -1$, a valid start is chosen automatically; otherwise the trail must begin at \inlinecode{start}.
 \end{compactitem}
 
 Parallel directed edges are supported by storing duplicate neighbors in \inlinecode{adj}. Since these functions return only vertices, use \inlinecode{EulerianGraph} below when edge IDs are needed.
@@ -1307,7 +1307,7 @@ The \inlinecode{EulerianGraph} class is the more general edge-ID variant. An und
 \begin{compactitem}
   \item \inlinecode{EulerianGraph(n, directed)} constructs a graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$. The graph is directed if \inlinecode{directed} is true, or undirected otherwise.
   \item \inlinecode{add\_edge(u, v)} adds an edge and returns its edge ID.
-  \item \inlinecode{eulerian\_path(start)} returns a trail using every edge exactly once, or a result with \inlinecode{start = -1} if no such trail exists. If \inlinecode{start = -1}, a valid start is chosen automatically.
+  \item \inlinecode{eulerian\_path(start = -1)} returns a trail using every edge exactly once, or a result with \inlinecode{start = -1} if no such trail exists. If \inlinecode{start = -1}, a valid start is chosen automatically.
   \item \inlinecode{EulerianTrail::is\_cycle()} returns whether the trail begins and ends on the same node.
 \end{compactitem}
 
@@ -1687,7 +1687,7 @@ Connected components:
 Given a directed graph, determine the strongly connected components (SCCs) using the Kosaraju-Sharir algorithm. A strongly connected component is a maximal set of vertices where every vertex can reach every other vertex. Condensing each SCC into one node produces a directed acyclic graph. The algorithm runs two passes of depth-first search: the first records the order in which nodes finish, and the second explores the transposed graph in reverse finish order, with each search collecting exactly one component.
 
 \begin{compactitem}
-  \item \inlinecode{KosarajuSCC(n)} constructs a directed graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
+  \item \inlinecode{KosarajuSCC(n = 0)} constructs a directed graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
   \item \inlinecode{add\_edge(u, v)} adds the directed edge from \inlinecode{u} to \inlinecode{v}.
   \item \inlinecode{build\_scc()} populates \inlinecode{scc} with the strongly connected components and \inlinecode{component[v]} with the component ID containing vertex \inlinecode{v}. Component IDs are in topological order: for every edge from component $a$ to a different component $b$, $a < b$.
 \end{compactitem}
@@ -1820,7 +1820,7 @@ Components:
 Given a directed graph, determine the strongly connected components (SCCs) using Tarjan's algorithm. A strongly connected component is a maximal set of vertices where every vertex can reach every other vertex. Condensing each SCC into one node produces a directed acyclic graph. A single depth-first search keeps visited nodes on a stack and tracks each node's low-link, the smallest entry time reachable from its subtree; a node whose low-link equals its own entry time roots a component, which is popped off the stack in one piece.
 
 \begin{compactitem}
-  \item \inlinecode{TarjanSCC(n)} constructs a directed graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
+  \item \inlinecode{TarjanSCC(n = 0)} constructs a directed graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
   \item \inlinecode{add\_edge(u, v)} adds the directed edge from \inlinecode{u} to \inlinecode{v}.
   \item \inlinecode{build\_scc()} populates \inlinecode{scc} with the strongly connected components and \inlinecode{component[v]} with the component ID containing vertex \inlinecode{v}. Component IDs are in reverse topological order: for every edge from component $a$ to a different component $b$, $a > b$.
 \end{compactitem}
@@ -2092,7 +2092,7 @@ Given an undirected graph, compute articulation points, vertex-biconnected compo
 The block-cut forest is a bipartite forest with one node for each BCC and one node for each articulation point, with an edge whenever an articulation point belongs to a BCC. Note that this differs from a bridge forest: the block-cut forest describes vertex connectivity, while a bridge forest describes edge connectivity after compressing 2-edge-connected components.
 
 \begin{compactitem}
-  \item \inlinecode{BiconnectedComponents(n)} constructs an undirected graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
+  \item \inlinecode{BiconnectedComponents(n = 0)} constructs an undirected graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
   \item \inlinecode{add\_edge(u, v)} adds the undirected edge \inlinecode{u}-\inlinecode{v}. Parallel edges are supported.
   \item \inlinecode{build\_bcc()} populates \inlinecode{articulation\_points} and \inlinecode{bccs}.
   \item \inlinecode{build\_block\_cut\_forest()} populates \inlinecode{block\_cut\_forest} and \inlinecode{block\_cut\_id} using the results of the previous \inlinecode{build\_bcc()} call. After the call, \inlinecode{block\_cut\_forest} nodes are numbered in the range $[0, {\inlinecodemath{bccs.size()}})$, and \inlinecode{block\_cut\_id[v]} stores the node ID of articulation point \inlinecode{v} in the block-cut forest, or $-1$ if \inlinecode{v} is not an articulation point.
@@ -2285,7 +2285,7 @@ Given an undirected graph, compute bridges, 2-edge-connected components, and the
 After each 2-edge-connected component is condensed into one node, the original bridges connect those nodes into a bridge tree, or a bridge forest when the original graph is disconnected. This differs from a block-cut forest: the bridge forest describes edge connectivity, while the block-cut forest describes vertex connectivity using articulation points and vertex-biconnected components.
 
 \begin{compactitem}
-  \item \inlinecode{BridgeDecomposition(n)} constructs an undirected graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
+  \item \inlinecode{BridgeDecomposition(n = 0)} constructs an undirected graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
   \item \inlinecode{add\_edge(u, v)} adds the undirected edge \inlinecode{u}-\inlinecode{v}. Parallel edges are supported.
   \item \inlinecode{build\_bridges()} populates \inlinecode{bridges}.
   \item \inlinecode{build\_bridge\_forest()} populates \inlinecode{component}, \inlinecode{two\_edge\_components}, and \inlinecode{bridge\_forest} using the results of the previous \inlinecode{build\_bridges()} call. After the call, \inlinecode{component[u]} stores the 2-edge-connected component ID containing vertex \inlinecode{u}.
@@ -2454,7 +2454,7 @@ Adjacency List for Bridge Forest:
 Maintain the number of bridges in an undirected graph while edges are inserted one at a time, along with the 2-edge-connected components and ordinary connected components. When an inserted edge joins two different connected components, it creates a new bridge. When it joins two nodes already in the same connected component, it creates a cycle and every bridge on the path between the two endpoints stops being a bridge.
 
 \begin{compactitem}
-  \item \inlinecode{OnlineBridges(n)} constructs a graph with \inlinecode{n} isolated nodes numbered $[0, {\inlinecodemath{n}})$.
+  \item \inlinecode{OnlineBridges(n = 0)} constructs a graph with \inlinecode{n} isolated nodes numbered $[0, {\inlinecodemath{n}})$.
   \item \inlinecode{add\_edge(u, v)} adds the undirected edge \inlinecode{u}-\inlinecode{v} and updates: \inlinecode{bridges} with the current number of bridges, and the disjoint-set parent arrays \inlinecode{dsu\_2ecc[]} and \inlinecode{dsu\_cc[]}, which partition the nodes into 2-edge-connected components and ordinary connected components respectively.
   \item \inlinecode{find\_2ecc(u)} returns node \inlinecode{u}'s representative in the 2-edge-connected components partition.
   \item \inlinecode{find\_cc(u)} returns node \inlinecode{u}'s representative in the ordinary connected components partition.
@@ -2607,10 +2607,10 @@ int main() {
 \subsection{2-SAT}
 Solve a Boolean formula in 2-CNF, where each clause contains at most two literals. A clause like $(a \lor b)$ is represented by the implications $\lnot a \rightarrow b$ and $\lnot b \rightarrow a$. The formula is satisfiable if and only if no variable and its negation belong to the same strongly connected component of the implication graph.
 
-Variables are numbered from $0$ to $n - 1$. A literal is represented by \inlinecode{literal(variable, value)}, where \inlinecode{value == true} means the variable itself and \inlinecode{value == false} means its negation.
+Variables are numbered $[0, n)$. A literal is represented by \inlinecode{literal(variable, value)}, where \inlinecode{value == true} means the variable itself and \inlinecode{value == false} means its negation.
 
 \begin{compactitem}
-  \item \inlinecode{TwoSAT(n)} constructs an empty formula over \inlinecode{n} variables.
+  \item \inlinecode{TwoSAT(n = 0)} constructs an empty formula over \inlinecode{n} variables.
   \item \inlinecode{literal(variable, value)} returns the integer ID for a variable or its negation.
   \item \inlinecode{add\_implication(a, b)} adds the implication $a \rightarrow b$.
   \item \inlinecode{add\_or(a, b)} adds the clause $({\inlinecodemath{a}} \lor {\inlinecodemath{b}})$.
@@ -4718,7 +4718,7 @@ Given a directed network where each edge must carry at least \inlinecode{lo} and
 For \inlinecode{s}-to-\inlinecode{t} flow, add an infinite edge from \inlinecode{t} back to \inlinecode{s} before checking feasibility. The flow on that artificial edge is one feasible value. After removing the auxiliary nodes, augmenting from \inlinecode{s} to \inlinecode{t} maximizes the value; augmenting from \inlinecode{t} to \inlinecode{s} cancels as much flow as possible and minimizes it.
 
 \begin{compactitem}
-  \item \inlinecode{BoundedFlow(n)} constructs a directed lower-bound flow network with nodes in $[0, n)$.
+  \item \inlinecode{BoundedFlow(n)} constructs a directed lower-bound flow network with nodes in $[0, {\inlinecodemath{n}})$.
   \item \inlinecode{add\_edge(u, v, lo, hi)} adds an edge with lower capacity \inlinecode{lo} and upper capacity \inlinecode{hi}.
   \item \inlinecode{feasible\_circulation()} returns whether all edge bounds can be satisfied with flow conserved at every node.
   \item \inlinecode{max\_flow(source, sink)} returns the maximum feasible \inlinecode{source}-to-\inlinecode{sink} flow, or $-1$ if no feasible flow exists.
@@ -6131,7 +6131,7 @@ Matched 3 pair(s):
 \subsection{Maximum Bipartite Matching (Hopcroft-Karp)}
 Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots, n_2 - 1\}$, as well as a set of edges $E$ mapping nodes from set $A$ to set $B$, find the largest possible subset of $E$ containing no edges that share the same node.
 
-Hopcroft-Karp augments along many shortest augmenting paths per phase. Each phase first runs a breadth-first search to layer the graph by distance, then a depth-first search to find a maximal set of vertex-disjoint shortest augmenting paths to flip at once, for $O(m \sqrt{n})$ running time overall.
+Hopcroft-Karp augments along many shortest augmenting paths per phase. Each phase first runs a breadth-first search to layer the graph by distance, then a depth-first search to find a maximal set of vertex-disjoint shortest augmenting paths to flip at once, for $O(m \cdot \sqrt{n_1 + n_2})$ running time overall.
 
 \begin{compactitem}
   \item \inlinecode{hopcroft\_karp(n2)} populates \inlinecode{match} and returns maximum matching size for a global, pre-populated adjacency list \inlinecode{adj} whose left-side nodes are numbered $[0, {\inlinecodemath{n}})$ and whose right-side neighbors are numbered $[0, {\inlinecodemath{n2}})$, where \inlinecode{n} is \inlinecode{adj.size()}.

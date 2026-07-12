@@ -20,7 +20,7 @@ By default, each sequence value is cast to `uint64_t` and mixed. For non-integer
 a custom value hasher that maps each element to a stable nonzero value in [`1`, `HASH_MOD`).
 
 - `RollingHash<T, ValueHasher = RollingValueHasher<T>>(hasher = ValueHasher())` constructs an empty
-  hash sequence.
+  hash sequence using `hasher` to map values before mixing.
 - `RollingHash<T, ValueHasher = RollingValueHasher<T>>(first, last, hasher = ValueHasher())`
   constructs prefix hashes for any iterator range of values accepted by the value hasher.
 - `RollingHash<T, ValueHasher = RollingValueHasher<T>>(v, hasher = ValueHasher())` constructs prefix

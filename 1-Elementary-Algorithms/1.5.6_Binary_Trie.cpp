@@ -24,9 +24,9 @@ the root and also serves as the null child.
 - `insert(x)` adds one occurrence of `x`.
 - `erase(x)` removes one occurrence of `x`, returning whether one was present.
 - `count(x)` returns the number of occurrences of `x`.
-- `max_xor(x)` and `min_xor(x)` return the maximum and minimum of `x XOR y` over all stored `y`. The
+- `max_xor(x)` and `min_xor(x)` return the maximum and minimum of `x ^ y` over all stored `y`. The
   trie must be non-empty.
-- `count_xor_less(x, k)` returns the number of stored `y` (with multiplicity) such that `x XOR y` is
+- `count_xor_less(x, k)` returns the number of stored `y` (with multiplicity) such that `x ^ y` is
   strictly less than `k`.
 
 Time Complexity:

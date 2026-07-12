@@ -17,8 +17,8 @@ Small contest-template helpers that are useful across many algorithms. These sni
   \item \inlinecode{min\_priority\_queue\textless{}T\textgreater{}} is a min-heap alias.
   \item \inlinecode{RNG()} constructs a 64-bit Mersenne Twister seeded from the steady clock.
   \item \inlinecode{RNG(seed)} constructs a reproducible 64-bit Mersenne Twister.
-  \item \inlinecode{rng.uniform\_int(lo, hi)} returns a random integer in the inclusive range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
-  \item \inlinecode{rng.uniform\_real(lo, hi)} returns a random real number in the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
+  \item \inlinecode{rng.uniform\_int(lo, hi)} returns a random integer in range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
+  \item \inlinecode{rng.uniform\_real(lo = 0.0, hi = 1.0)} returns a random real number in the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{rng.shuffle(lo, hi)} randomly shuffles the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{y\_combinator(f)} wraps a recursive lambda so that the lambda can call itself as its first argument.
 \end{compactitem}
@@ -195,9 +195,9 @@ int main() {
 Fast input and output wrappers based on \inlinecode{fread()} and \inlinecode{fwrite()}. For most problems, \inlinecode{ios::sync\_with\_stdio(false); cin.tie(nullptr);} is simpler and fast enough. Use these classes when input is huge or when \inlinecode{iostream} overhead is measurable.
 
 \begin{compactitem}
-  \item \inlinecode{FastInput in(file)} reads tokens from a \inlinecode{FILE*}, defaulting to \inlinecode{stdin}.
+  \item \inlinecode{FastInput in(file = stdin)} reads tokens from a \inlinecode{FILE*}.
   \item \inlinecode{in \textgreater{}\textgreater{} x} reads a non-whitespace token into \inlinecode{char}, \inlinecode{std::string}, integral types, or floating point types.
-  \item \inlinecode{FastOutput out(file)} writes to a \inlinecode{FILE*}, defaulting to \inlinecode{stdout}.
+  \item \inlinecode{FastOutput out(file = stdout)} writes to a \inlinecode{FILE*}.
   \item \inlinecode{out \textless{}\textless{} x} writes \inlinecode{char}, C strings, \inlinecode{std::string}, integral types, or floating point types.
   \item \inlinecode{out.flush()} writes any buffered output immediately.
   \item \inlinecode{set\_in(name)}, \inlinecode{set\_out(name)}, and \inlinecode{set\_io(iname, oname)} redirect standard input/output to files. For example, \inlinecode{set\_io("task.in", "task.out")} is convenient for USACO-style problems.
@@ -772,7 +772,7 @@ GNU policy-based data structures provide non-standard associative containers and
   \item \inlinecode{BinaryHeap\textless{}T\textgreater{}}, \inlinecode{BinomialHeap\textless{}T\textgreater{}}, and \inlinecode{RcBinomialHeap\textless{}T\textgreater{}} are alternative GNU priority queue tags with the same interface.
 \end{compactitem}
 
-The order-statistic operations use GNU PBDS conventions: \inlinecode{find\_by\_order(k)} is 0-indexed and \inlinecode{order\_of\_key(x)} returns the number of keys strictly less than \inlinecode{x}, even if \inlinecode{x} is absent. Raw PBDS ordered trees return iterators from \inlinecode{find\_by\_order(k)}; the multiset and multimap wrappers below unwrap that iterator into a value. The priority queue \inlinecode{join()} operation melds another heap into the current one. Since this depends on \inlinecode{\_\_gnu\_pbds}, keep a standard library fallback in mind when portability matters.
+The order-statistic operations use GNU PBDS conventions: \inlinecode{find\_by\_order(k)} is 0-based and \inlinecode{order\_of\_key(x)} returns the number of keys strictly less than \inlinecode{x}, even if \inlinecode{x} is absent. Raw PBDS ordered trees return iterators from \inlinecode{find\_by\_order(k)}; the multiset and multimap wrappers below unwrap that iterator into a value. The priority queue \inlinecode{join()} operation melds another heap into the current one. Since this depends on \inlinecode{\_\_gnu\_pbds}, keep a standard library fallback in mind when portability matters.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:

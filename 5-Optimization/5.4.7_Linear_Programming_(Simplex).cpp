@@ -17,8 +17,9 @@ tableau row or column currently represents, making solution recovery independent
 - `simplex_solve(a, b, c, &x, maximize = true, eps = 1e-10)` solves the linear programming problem
   for an $m$ by $n$ matrix `a` of real values, a length $m$ vector `b`, and a length $n$ vector `c`,
   returning $0$ if an optimum was found, $-1$ if there are no feasible solutions, or $1$ if the
-  objective is unbounded. If an optimum is found, then the vector pointed to by `x` is populated
-  with a dense solution vector.
+  objective is unbounded. Set `maximize = false` to minimize instead, and use `eps` as the pivot and
+  feasibility tolerance. If an optimum is found, then the vector pointed to by `x` is populated with
+  a dense solution vector.
 
 Time Complexity:
 - O(2^n) pivots per call in the worst case, where $n$ is the number of unknowns, although simplex

@@ -1,7 +1,7 @@
 /*
 
 Given a continuous function $f(x, y)$ returning a real number and a (possibly arbitrary) starting
-guess $(`x_0`, `y_0`)$, search for a global minimum using the hill-climbing heuristic.
+guess $(x_0, y_0)$, search for a global minimum using the hill-climbing heuristic.
 
 Hill-climbing is a heuristic which starts at the guess, then considers taking a single step in each
 of a fixed number of directions. The direction with the best (in this case, minimum) value is
@@ -13,7 +13,8 @@ result is not guaranteed to be the global minimum.
 - `find_min(f, x0, y0, &critical_x, &critical_y, step_min = 1e-9, step_max = 1e6, directions = 6)`
   returns a candidate global minimum value of function `f` reached by hill-climbing from the
   starting guess $(`x0`, `y0`)$. If the optional pointers `critical_x` and `critical_y` are
-  supplied, the point attaining the returned value is stored through them.
+  supplied, the point attaining the returned value is stored through them. The search starts with
+  step size `step_max`, stops below `step_min`, and samples `directions` evenly spaced directions.
 
 Time Complexity:
 - O(d log n) calls to `f()` will be made, where $d$ is the number of directions considered at each

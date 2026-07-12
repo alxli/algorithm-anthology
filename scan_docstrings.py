@@ -545,7 +545,8 @@ def scan_contextual_math_style(paths):
     bare_bound_re = re.compile(r"\$\[[0-9]+, ([a-z])[\]\)]\$")
     code_bound_re = re.compile(r"\$\[[0-9]+, `([a-z])`[\]\)]\$")
     prose_bound_re = re.compile(r"\$\[[^\]]*`[a-z]`[^\]]*[\]\)]\$")
-    prose_tuple_re = re.compile(r"\$\(`[a-z]`, `[a-z]`\)\$")
+    prose_math_name = r"(?:[a-z]|[A-Za-z][A-Za-z0-9]*_[A-Za-z0-9_]+)"
+    prose_tuple_re = re.compile(r"\$\(`" + prose_math_name + r"`, `" + prose_math_name + r"`\)\$")
     prose_code_expr_re = re.compile(r"\$`[A-Za-z][A-Za-z0-9_]*`\s*[-+]")
     for path in paths:
         lines = path.read_text().splitlines()

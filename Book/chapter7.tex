@@ -530,7 +530,7 @@ int main() {
 \subsection{Circle}
 A circle in two dimensions with epsilon-aware operations. The circle centered at $(h, k)$ is represented by the relation $(x - h)^2 + (y - k)^2 = r^2$, where the radius $r$ is normalized to a nonnegative number.
 
-This implementation stores and computes circle parameters in \inlinecode{double}. Point-accepting constructors and predicates are templated on the point type \inlinecode{Pt} and only read \inlinecode{.x}/\inlinecode{.y}, so they accept \inlinecode{Point}/\inlinecode{PointD}/\inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields.
+This implementation stores and computes circle parameters in \inlinecode{double}. Point-accepting constructors and predicates are templated on the point type \inlinecode{Pt} and only read \inlinecode{.x}/\inlinecode{.y}, so they accept \inlinecode{Point}, \inlinecode{PointD}, or \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields.
 
 \begin{compactitem}
   \item \inlinecode{Circle()} constructs the zero-radius circle centered at the origin.
@@ -744,7 +744,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Triangle}
-Common triangle calculations in two dimensions. The functions are templated on the point type \inlinecode{Pt}, which should work with \inlinecode{Point}/\inlinecode{PointD}/\inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. \inlinecode{triangle\_area()} returns \inlinecode{double} regardless of input type (the area is fractional via the \inlinecode{/2}). \inlinecode{same\_side()} and \inlinecode{point\_in\_triangle()} do all arithmetic in the point's own coordinate type and are exact for integer points: they reduce each cross product to a sign before combining, so no precision is lost and cross products are never multiplied together.
+Common triangle calculations in two dimensions. The functions are templated on the point type \inlinecode{Pt}, which should accept \inlinecode{Point}, \inlinecode{PointD}, or \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. \inlinecode{triangle\_area()} returns \inlinecode{double} regardless of input type (the area is fractional via the \inlinecode{/2}). \inlinecode{same\_side()} and \inlinecode{point\_in\_triangle()} do all arithmetic in the point's own coordinate type and are exact for integer points: they reduce each cross product to a sign before combining, so no precision is lost and cross products are never multiplied together.
 
 \begin{compactitem}
   \item \inlinecode{triangle\_area(a, b, c)} returns the area of the triangle with vertices \inlinecode{a}, \inlinecode{b}, and \inlinecode{c}.
@@ -863,7 +863,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Rectangle}
-Common axis-aligned rectangle calculations in two dimensions. The functions are templated on the point type \inlinecode{Pt}, which should work with \inlinecode{Point}/\inlinecode{PointD}/\inlinecode{PointI} from 7.1.1, or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields.
+Common axis-aligned rectangle calculations in two dimensions. The functions are templated on the point type \inlinecode{Pt}, which should accept \inlinecode{Point}, \inlinecode{PointD}, or \inlinecode{PointI} from 7.1.1, or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields.
 
 \begin{compactitem}
   \item \inlinecode{point\_in\_rectangle(p, v, w, h, edge\_is\_inside = true)} returns whether point \inlinecode{p} lies inside the axis-aligned rectangle with corner \inlinecode{v}, width \inlinecode{w}, and height \inlinecode{h}. Negative widths and heights are supported. The \inlinecode{edge\_is\_inside} flag controls whether boundary points count.
@@ -1009,7 +1009,7 @@ Angle calculations in two dimensions. All operations are inherently floating-poi
   \item \inlinecode{angle(a, o, b)} returns the smallest angle in radians formed by the points \inlinecode{a}, \inlinecode{o}, \inlinecode{b} with vertex at point \inlinecode{o}.
   \item \inlinecode{angle\_between(a, b)} returns the angle in radians of segment from point \inlinecode{a} to point \inlinecode{b}, relative counterclockwise to the positive $x$-axis.
   \item \inlinecode{angle\_between(a1, b1, a2, b2)} returns the smaller angle in radians between two lines $a_1 x + b_1 y + c_1 = 0$ and $a_2 x + b_2 y + c_2 = 0$, limited to $[0, \pi / 2]$.
-  \item \inlinecode{cross(a, b, o)} returns the magnitude (Euclidean norm) of the three-dimensional cross product between points \inlinecode{a} and \inlinecode{b} where the $z$-component is implicitly zero and the origin is implicitly shifted to point \inlinecode{o}. This operation is also equal to double the signed area of the triangle from these three points.
+  \item \inlinecode{cross(a, b, o = Pt(0, 0))} returns the magnitude (Euclidean norm) of the three-dimensional cross product between points \inlinecode{a} and \inlinecode{b} where the $z$-component is implicitly zero and the origin is implicitly shifted to point \inlinecode{o}. This operation is also equal to double the signed area of the triangle from these three points.
   \item \inlinecode{turn(a, o, b)} returns $1$ if the path \inlinecode{a} $\to$ \inlinecode{o} $\to$ \inlinecode{b} forms a left turn on the plane, $0$ if the path forms a straight line segment, or $-1$ if it forms a right turn.
 \end{compactitem}
 
@@ -1610,9 +1610,9 @@ int main() {
 Circle tangent and intersection calculations in two dimensions. Such calculations are floating-point by nature, so this section mostly computes in \inlinecode{double}. The input point \inlinecode{p} to \inlinecode{tangent()} can be any type with numeric \inlinecode{.x} and \inlinecode{.y} fields, and intersection point outputs are written through a caller-supplied point type.
 
 \begin{compactitem}
-  \item \inlinecode{tangent(c, p, \&l1, \&l2)} determines the line(s) tangent to circle \inlinecode{c} that pass through point \inlinecode{p}, returning $-1$ if there is no tangent line because \inlinecode{p} is strictly inside \inlinecode{c}, $0$ if there is exactly one tangent line because \inlinecode{p} is on the boundary of \inlinecode{c} (in which case the line will be stored into pointer \inlinecode{l1} if it's not \inlinecode{nullptr}), or $1$ if there are two tangent lines because \inlinecode{p} is strictly outside of \inlinecode{c} (in which case the lines will be stored into pointers \inlinecode{l1} and \inlinecode{l2} if they are not \inlinecode{nullptr}).
-  \item \inlinecode{intersection(c, l, \&p, \&q)} determines the intersection between the circle \inlinecode{c} and line \inlinecode{l}, returning $-1$ if there is no intersection, $0$ if the line has one intersection point because the line is tangent (in which case it will be stored into pointer \inlinecode{p} if it's not \inlinecode{nullptr}), or $1$ if there are two intersection points because the line crosses through the circle (in which case they will be stored into pointers \inlinecode{p} and \inlinecode{q} if they are not \inlinecode{nullptr}).
-  \item \inlinecode{intersection(c1, c2, \&p, \&q)} determines the intersection points between two circles \inlinecode{c1} and \inlinecode{c2}, returning $-2$ if circle \inlinecode{c2} completely encloses circle \inlinecode{c1}, $-1$ if circle \inlinecode{c1} completely encloses circle \inlinecode{c2}, $0$ if the circles are completely disjoint, $1$ if the circles are tangent with one intersection (stored in \inlinecode{p} if it's not \inlinecode{nullptr}), $2$ if the circles intersect at two points (stored in \inlinecode{p} and \inlinecode{q} if they are not \inlinecode{nullptr}), $3$ if the circles are equal and intersect at infinite points.
+  \item \inlinecode{tangent(c, p, l1 = nullptr, l2 = nullptr)} determines the line(s) tangent to circle \inlinecode{c} that pass through point \inlinecode{p}, returning $-1$ if there is no tangent line because \inlinecode{p} is strictly inside \inlinecode{c}, $0$ if there is exactly one tangent line because \inlinecode{p} is on the boundary of \inlinecode{c} (in which case the line will be stored into pointer \inlinecode{l1} if it's not \inlinecode{nullptr}), or $1$ if there are two tangent lines because \inlinecode{p} is strictly outside of \inlinecode{c} (in which case the lines will be stored into pointers \inlinecode{l1} and \inlinecode{l2} if they are not \inlinecode{nullptr}).
+  \item \inlinecode{intersection(c, l, p = nullptr, q = nullptr)} determines the intersection between the circle \inlinecode{c} and line \inlinecode{l}, returning $-1$ if there is no intersection, $0$ if the line has one intersection point because the line is tangent (in which case it will be stored into pointer \inlinecode{p} if it's not \inlinecode{nullptr}), or $1$ if there are two intersection points because the line crosses through the circle (in which case they will be stored into pointers \inlinecode{p} and \inlinecode{q} if they are not \inlinecode{nullptr}).
+  \item \inlinecode{intersection(c1, c2, p = nullptr, q = nullptr)} determines the intersection points between two circles \inlinecode{c1} and \inlinecode{c2}, returning $-2$ if circle \inlinecode{c2} completely encloses circle \inlinecode{c1}, $-1$ if circle \inlinecode{c1} completely encloses circle \inlinecode{c2}, $0$ if the circles are completely disjoint, $1$ if the circles are tangent with one intersection (stored in \inlinecode{p} if it's not \inlinecode{nullptr}), $2$ if the circles intersect at two points (stored in \inlinecode{p} and \inlinecode{q} if they are not \inlinecode{nullptr}), $3$ if the circles are equal and intersect at infinite points.
   \item \inlinecode{intersection\_area(c1, c2)} returns the intersection area of circles \inlinecode{c1} and \inlinecode{c2}.
 \end{compactitem}
 
@@ -1968,7 +1968,7 @@ int main() {
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Polygon Sorting and Area}
-Given a list of distinct points in two-dimensions, order them into a valid polygon and determine the area. The sorting comparators order two points by the sign of their cross product around a chosen center, that is, by angle. The area functions use the shoelace formula, summing the cross products of consecutive vertex pairs. The functions are templated on the point type. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}/\inlinecode{PointD}/\inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields and \inlinecode{\textless{}} / \inlinecode{==} operators.
+Given a list of distinct points in two-dimensions, order them into a valid polygon and determine the area. The sorting comparators order two points by the sign of their cross product around a chosen center, that is, by angle. The area functions use the shoelace formula, summing the cross products of consecutive vertex pairs. The functions are templated on the point type. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}, \inlinecode{PointD}, or \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields and \inlinecode{\textless{}} / \inlinecode{==} operators.
 
 \begin{compactitem}
   \item \inlinecode{cw\_comp(a, b, c)} returns whether point \inlinecode{a} compares clockwise before \inlinecode{b} about \inlinecode{c}.
@@ -2144,7 +2144,7 @@ Clockwise vertices: (1, 3) (1, 2) (2, 1) (0, 0) (-1, 3)
 Counterclockwise vertices: (-1, 3) (0, 0) (2, 1) (1, 2) (1, 3)
 \end{exampleoutput}
 \subsection{Point-in-Polygon}
-Given a point \inlinecode{p} and a polygon, determines whether \inlinecode{p} lies inside using ray casting. A ray cast from \inlinecode{p} must cross the polygon's boundary an odd number of times exactly when \inlinecode{p} is inside, so the function counts crossings between a horizontal ray and each polygon edge. The function is templated on the point type \inlinecode{Pt}. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}/\inlinecode{PointD}/\inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. All comparisons are exact (no epsilon): the ray-crossing parity needs a consistent comparison to be correct, and the result is exact for integer-coordinate points.
+Given a point \inlinecode{p} and a polygon, determines whether \inlinecode{p} lies inside using ray casting. A ray cast from \inlinecode{p} must cross the polygon's boundary an odd number of times exactly when \inlinecode{p} is inside, so the function counts crossings between a horizontal ray and each polygon edge. The function is templated on the point type \inlinecode{Pt}. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}, \inlinecode{PointD}, or \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. All comparisons are exact (no epsilon): the ray-crossing parity needs a consistent comparison to be correct, and the result is exact for integer-coordinate points.
 
 \begin{compactitem}
   \item \inlinecode{point\_in\_polygon(p, lo, hi, edge\_is\_inside = true)} returns whether \inlinecode{p} lies within the polygon with vertices specified by the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of points in either clockwise or counter-clockwise order. The \inlinecode{edge\_is\_inside} flag controls whether points exactly on an edge or vertex count as inside.
@@ -2736,13 +2736,13 @@ The returned distance preserves the coordinate arithmetic type. For integer-coor
 
 Overflow warning: squared distances grow like the square of the coordinate magnitude. For integer point types, use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) when coordinates may exceed a few tens of thousands.
 
-\textbf{Time Complexity}: $O(n \log^{2} n)$ per call, where n is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\textbf{Time Complexity}: $O(n \log^{2} n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ auxiliary heap space.
-  \item $O(\log n)$ recursion stack space.
+  \item $O(\log n)$ auxiliary stack space.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -2884,7 +2884,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Multiple Segment Intersection}
-Given a list of line segments in two dimensions, determine whether any pair of segments intersect using a sweep line algorithm. Endpoint events are processed from left to right while an ordered set maintains the segments currently crossing the sweep line, sorted by $y$; only segments that become adjacent in this set need to be tested, since any leftmost intersection must involve a pair that is adjacent just before it occurs. The input type \inlinecode{Segment\textless{}Pt\textgreater{}} is templated on the point type, so endpoints may be integer (\inlinecode{PointI}) or floating-point (\inlinecode{Point}/\inlinecode{PointD}), but must support \inlinecode{operator\textless{}} which orders points lexicographically. The cross-product sign tests in \inlinecode{seg\_intersection} are exact for integer endpoints, so intersection detection is exact.
+Given a list of line segments in two dimensions, determine whether any pair of segments intersect using a sweep line algorithm. Endpoint events are processed from left to right while an ordered set maintains the segments currently crossing the sweep line, sorted by $y$; only segments that become adjacent in this set need to be tested, since any leftmost intersection must involve a pair that is adjacent just before it occurs. The input type \inlinecode{Segment\textless{}Pt\textgreater{}} is templated on the point type, so endpoints may be integer (\inlinecode{PointI}) or floating-point (\inlinecode{Point} or \inlinecode{PointD}), but must support \inlinecode{operator\textless{}} which orders points lexicographically. The cross-product sign tests in \inlinecode{seg\_intersection} are exact for integer endpoints, so intersection detection is exact.
 
 \begin{compactitem}
   \item \inlinecode{find\_intersection(lo, hi, \&res1, \&res2, touch\_is\_intersect = true)} returns whether any pair of segments intersect given a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of segments, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators. If an intersection is found, then one such pair of segments will be stored into pointers \inlinecode{res1} and \inlinecode{res2}. The \inlinecode{touch\_is\_intersect} flag controls whether segments that meet only at an endpoint count as intersecting; set it to \inlinecode{false} to report proper crossings only, as when testing a polygon for self-intersection among edges that legitimately share endpoints.
@@ -4349,7 +4349,7 @@ int main() {
 Given points in the plane, produce a small set of candidate edges guaranteed to contain a minimum spanning tree under Manhattan distance $|x_1 - x_2| + |y_1 - y_2|$. The plane is swept in four rotations/reflections; in each sweep, dominance by $x + y$ identifies the only nearby candidates that can matter. Run Kruskal on the returned edges to obtain the MST.
 
 \begin{compactitem}
-  \item \inlinecode{manhattan\_mst\_edges(points)} returns $O(n)$ candidate edges $(w, u, v)$.
+  \item \inlinecode{manhattan\_mst\_edges(points)} returns $O(n)$ candidate edges $({\inlinecodemath{w}}, {\inlinecodemath{u}}, {\inlinecodemath{v}})$.
   \item \inlinecode{manhattan\_mst\_weight(points)} is a small Kruskal wrapper that returns the MST weight.
 \end{compactitem}
 

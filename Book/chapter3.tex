@@ -2,7 +2,7 @@
 
 \section{\texorpdfstring{String Utilities}{3.1 String Utilities}}
 \setcounter{section}{1}
-Common string functions, many of which already have standard STL equivalents. Most of the following implementations are presented for educational purposes, and are not heavy optimized. They often depend on certain \inlinecode{std::string} functions that have unspecified complexity.
+Common string functions, many of which already have standard STL equivalents. Most of the following implementations are presented for educational purposes, and are not heavily optimized. They often depend on certain \inlinecode{std::string} functions that have unspecified complexity.
 
 \textbf{Time Complexity}: $O(n)$ per call to most operations, where $n$ is the length of the input string or total length of all input strings. Exceptions are noted with the individual functions below.
 
@@ -28,7 +28,7 @@ Integer Conversion:
 \begin{compactitem}
   \item \inlinecode{to\_str(i)} returns the string representation of integer \inlinecode{i}, much like \inlinecode{std::to\_string()}.
   \item \inlinecode{to\_int(s)} returns the integer representation of string \inlinecode{s}, much like \inlinecode{std::atoi()}, except here we handle special cases of overflow by throwing an exception.
-  \item \inlinecode{itoa(value, \&str, base)} implements the non-standard C function which converts \inlinecode{value} into a C string, storing it into pointer \inlinecode{str} in the given \inlinecode{base}. For more generalized base conversion, see the math utilities section.
+  \item \inlinecode{itoa(value, \&str, base = 10)} implements the non-standard C function which converts \inlinecode{value} into a C string, storing it into pointer \inlinecode{str} in the given \inlinecode{base}. For more generalized base conversion, see the math utilities section.
   \item \inlinecode{is\_integer(s)} returns whether \inlinecode{s} is a valid base-10 integer literal with an optional sign.
   \item \inlinecode{is\_number(s)} returns whether \inlinecode{s} is a decimal number literal with optional sign, decimal point, and exponent.
 \end{compactitem}
@@ -160,14 +160,16 @@ string to_title(const string &s) {
 Stripping:
 
 \begin{compactitem}
-  \item \inlinecode{lstrip(s)} strips the left side of \inlinecode{s} in-place (that is, the input is modified) using the given delimiters and returns a reference to the stripped string.
-  \item \inlinecode{rstrip(s)} strips the right side of \inlinecode{s} in-place using the given delimiters and returns a reference to the stripped string.
-  \item \inlinecode{strip(s)} strips both sides of \inlinecode{s} in-place and returns a reference to the stripped string.
-  \item \inlinecode{ltrimmed(s)}, \inlinecode{rtrimmed(s)}, and \inlinecode{trimmed(s)} do not modify \inlinecode{s} and returns stripped copies.
+  \item \inlinecode{lstrip(s, delim = WHITESPACE)} strips the left side of \inlinecode{s} in-place (that is, the input is modified) using the given delimiters and returns a reference to the stripped string.
+  \item \inlinecode{rstrip(s, delim = WHITESPACE)} strips the right side of \inlinecode{s} in-place using the given delimiters and returns a reference to the stripped string.
+  \item \inlinecode{strip(s, delim = WHITESPACE)} strips both sides of \inlinecode{s} in-place and returns a reference to the stripped string.
+  \item \inlinecode{ltrimmed(s, delim = WHITESPACE)}, \inlinecode{rtrimmed(s, delim = WHITESPACE)}, and \inlinecode{trimmed(s, delim = WHITESPACE)} do not modify \inlinecode{s} and return stripped copies.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-string &lstrip(string &s, const string &delim = " \n\t\v\f\r") {
+const string WHITESPACE = " \n\t\v\f\r";
+
+string &lstrip(string &s, const string &delim = WHITESPACE) {
   std::size_t pos = s.find_first_not_of(delim);
   if (pos != string::npos) {
     s.erase(0, pos);
@@ -175,7 +177,7 @@ string &lstrip(string &s, const string &delim = " \n\t\v\f\r") {
   return s;
 }
 
-string &rstrip(string &s, const string &delim = " \n\t\v\f\r") {
+string &rstrip(string &s, const string &delim = WHITESPACE) {
   std::size_t pos = s.find_last_not_of(delim);
   if (pos != string::npos) {
     s.erase(pos + 1);
@@ -183,19 +185,19 @@ string &rstrip(string &s, const string &delim = " \n\t\v\f\r") {
   return s;
 }
 
-string &strip(string &s, const string &delim = " \n\t\v\f\r") {
+string &strip(string &s, const string &delim = WHITESPACE) {
   return lstrip(rstrip(s));
 }
 
-string ltrimmed(string s, const string &delim = " \n\t\v\f\r") {
+string ltrimmed(string s, const string &delim = WHITESPACE) {
   return lstrip(s, delim);
 }
 
-string rtrimmed(string s, const string &delim = " \n\t\v\f\r") {
+string rtrimmed(string s, const string &delim = WHITESPACE) {
   return rstrip(s, delim);
 }
 
-string trimmed(string s, const string &delim = " \n\t\v\f\r") {
+string trimmed(string s, const string &delim = WHITESPACE) {
   return strip(s, delim);
 }
 \end{lstlisting}
@@ -287,13 +289,13 @@ string regex_replace_all(const string &s, const string &pattern, const string &r
 Joining and Splitting:
 
 \begin{compactitem}
-  \item \inlinecode{join(v, delim)} returns the strings in vector \inlinecode{v} concatenated, separated by the given delimiter.
+  \item \inlinecode{join(v, delim = " ")} returns the strings in vector \inlinecode{v} concatenated, separated by the given delimiter.
   \item \inlinecode{repeat(s, n)} returns \inlinecode{s} concatenated with itself \inlinecode{n} times, like Python's \inlinecode{s * n}. For a single repeated character, prefer \inlinecode{std::string(n, ch)}.
-  \item \inlinecode{ljust(s, width, ch)} returns \inlinecode{s} left-justified (padded on the right with \inlinecode{ch}) to at least \inlinecode{width} characters, like Python's \inlinecode{str.ljust}.
-  \item \inlinecode{rjust(s, width, ch)} returns \inlinecode{s} right-justified (padded on the left with \inlinecode{ch}) to at least \inlinecode{width} characters, like Python's \inlinecode{str.rjust}.
-  \item \inlinecode{center(s, width, ch)} returns \inlinecode{s} centered in a field of at least \inlinecode{width} characters by padding both sides with \inlinecode{ch}, like Python's \inlinecode{str.center}. If the padding is uneven, the extra character goes on the right.
+  \item \inlinecode{ljust(s, width, ch = \textquotesingle{} \textquotesingle{})} returns \inlinecode{s} left-justified (padded on the right with \inlinecode{ch}) to at least \inlinecode{width} characters, like Python's \inlinecode{str.ljust}.
+  \item \inlinecode{rjust(s, width, ch = \textquotesingle{} \textquotesingle{})} returns \inlinecode{s} right-justified (padded on the left with \inlinecode{ch}) to at least \inlinecode{width} characters, like Python's \inlinecode{str.rjust}.
+  \item \inlinecode{center(s, width, ch = \textquotesingle{} \textquotesingle{})} returns \inlinecode{s} centered in a field of at least \inlinecode{width} characters by padding both sides with \inlinecode{ch}, like Python's \inlinecode{str.center}. If the padding is uneven, the extra character goes on the right.
   \item \inlinecode{split(s, char delim)} returns a vector of tokens of \inlinecode{s}, split on a single character delimiter. Empty tokens are skipped, so \inlinecode{split("a::b", \textquotesingle{}:\textquotesingle{})} returns \inlinecode{\{"a", "b"\}}, not \inlinecode{\{"a", "", "b"\}}.
-  \item \inlinecode{split(s, string delim)} returns a vector of tokens of \inlinecode{s}, split on a set of many possible single character delimiters. All characters of \inlinecode{delim} will be removed from \inlinecode{s}, and the remaining token(s) of \inlinecode{s} will be added sequentially to a vector and returned. As with the first version, empty tokens are skipped. For example, \inlinecode{split("a::b", ":")} returns \inlinecode{\{"a", "b"\}}, not \inlinecode{\{"a", "", "b"\}}.
+  \item \inlinecode{split(s, string delim = WHITESPACE)} returns a vector of tokens of \inlinecode{s}, split on a set of many possible single character delimiters. All characters of \inlinecode{delim} will be removed from \inlinecode{s}, and the remaining token(s) of \inlinecode{s} will be added sequentially to a vector and returned. As with the first version, empty tokens are skipped. For example, \inlinecode{split("a::b", ":")} returns \inlinecode{\{"a", "b"\}}, not \inlinecode{\{"a", "", "b"\}}.
   \item \inlinecode{explode(s, delim)} returns a vector of tokens of \inlinecode{s}, split on the entire delimiter string \inlinecode{delim}. Unlike the \inlinecode{split()} functions above, \inlinecode{delim} is treated as a contiguous boundary string, not merely a set of possible boundary characters. This will not skip empty tokens. For example, \inlinecode{explode("a::::b", "::")} yields \inlinecode{\{"a", "", "b"\}}, not \inlinecode{\{"a", "b"\}}.
   \item \inlinecode{explode(s, char delim)} is the single-character delimiter version that also preserves empty tokens.
 \end{compactitem}
@@ -351,7 +353,7 @@ std::vector<string> split(const string &s, char delim) {
   return res;
 }
 
-std::vector<string> split(const string &s, const string &delim = " \n\t\v\f\r") {
+std::vector<string> split(const string &s, const string &delim = WHITESPACE) {
   std::vector<string> res;
   string curr;
   for (char c : s) {
@@ -760,11 +762,12 @@ The implementation works modulo the Mersenne prime $2^{61} - 1$, using \inlineco
 By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For non-integer element types, pass a custom value hasher that maps each element to a stable nonzero value in [\inlinecode{1}, \inlinecode{HASH\_MOD}).
 
 \begin{compactitem}
-  \item \inlinecode{RollingHash\textless{}T, ValueHasher\textgreater{}(first, last)} constructs prefix hashes for any iterator range of values accepted by the value hasher.
-  \item \inlinecode{RollingHash\textless{}T, ValueHasher\textgreater{}(v)} constructs prefix hashes for vector \inlinecode{v}.
+  \item \inlinecode{RollingHash\textless{}T, ValueHasher = RollingValueHasher\textless{}T\textgreater{}\textgreater{}(hasher = ValueHasher())} constructs an empty hash sequence using \inlinecode{hasher} to map values before mixing.
+  \item \inlinecode{RollingHash\textless{}T, ValueHasher = RollingValueHasher\textless{}T\textgreater{}\textgreater{}(first, last, hasher = ValueHasher())} constructs prefix hashes for any iterator range of values accepted by the value hasher.
+  \item \inlinecode{RollingHash\textless{}T, ValueHasher = RollingValueHasher\textless{}T\textgreater{}\textgreater{}(v, hasher = ValueHasher())} constructs prefix hashes for vector \inlinecode{v}.
   \item \inlinecode{get(l, r)} returns the hash of the half-open subsequence $[{\inlinecodemath{l}}, {\inlinecodemath{r}})$.
-  \item \inlinecode{hash(first, last)} returns the hash of an iterator range.
-  \item \inlinecode{hash(v)} returns the hash of vector \inlinecode{v}.
+  \item \inlinecode{hash(first, last, hasher = ValueHasher())} returns the hash of an iterator range.
+  \item \inlinecode{hash(v, hasher = ValueHasher())} returns the hash of vector \inlinecode{v}.
   \item \inlinecode{concat(left, right, right\_len)} returns the hash of the concatenation of a sequence with hash \inlinecode{left} and a sequence with hash \inlinecode{right} and length \inlinecode{right\_len}.
 \end{compactitem}
 
@@ -963,7 +966,7 @@ Only \inlinecode{pop\_back()} needs a modular inverse of the base, which is prec
 The hasher's output must be nonnegative. As with any polynomial hash, comparing sequences of different lengths is only safe when digits are positive (for example, map an alphabet to $[1, B)$) so that a leading zero cannot make a shorter sequence collide with a longer one.
 
 \begin{compactitem}
-  \item \inlinecode{HashDeque\textless{}T, Hash\textgreater{}(hasher)} constructs an empty deque whose \inlinecode{hasher} maps each element to its nonnegative integer digit. For integer-like \inlinecode{T} the default hasher casts the element to \inlinecode{uint64\_t}, so \inlinecode{HashDeque\textless{}char\textgreater{}} and \inlinecode{HashDeque\textless{}int\textgreater{}} work with no hasher supplied.
+  \item \inlinecode{HashDeque\textless{}T = int, Hash = identity\_digit\textless{}T\textgreater{}\textgreater{}(hasher = Hash())} constructs an empty deque whose \inlinecode{hasher} maps each element to its nonnegative integer digit. For integer-like \inlinecode{T} the default hasher casts the element to \inlinecode{uint64\_t}, so \inlinecode{HashDeque\textless{}char\textgreater{}} and \inlinecode{HashDeque\textless{}int\textgreater{}} work with no hasher supplied.
   \item \inlinecode{size()} returns the number of elements, and \inlinecode{empty()} whether there are none.
   \item \inlinecode{push\_back(x)} and \inlinecode{push\_front(x)} append \inlinecode{x} at the back or front.
   \item \inlinecode{pop\_back()} and \inlinecode{pop\_front()} remove the back or front element; the deque must be nonempty.
@@ -1276,7 +1279,7 @@ Computes randomized XOR fingerprints for keys and sets of keys using Zobrist has
 This technique is useful for probabilistic equality checks on sets, distinct-prefix queries, board-game states, and other unordered collections. It is not cryptographic, and collisions are possible with probability roughly $q^2 / 2^{64}$ over $q$ compared fingerprints. For multisets, plain XOR only records element parity; use a summed hash or pair it with counts if multiplicity matters.
 
 \begin{compactitem}
-  \item \inlinecode{ZobristHash\textless{}T\textgreater{}(seed)} constructs a token generator with initial value \inlinecode{seed}.
+  \item \inlinecode{ZobristHash\textless{}T\textgreater{}(seed = 0)} constructs a token generator with initial value \inlinecode{seed}.
   \item \inlinecode{get(x)} returns the stable token assigned to key \inlinecode{x}, creating it if needed.
   \item \inlinecode{toggle(h, x)} returns the hash obtained by inserting \inlinecode{x} into set hash \inlinecode{h} if absent, or removing \inlinecode{x} from \inlinecode{h} if present.
   \item \inlinecode{distinct\_prefix\_hashes(lo, hi)} returns prefix hashes where each distinct key in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ contributes only on its first occurrence.
@@ -1831,8 +1834,8 @@ The same scan, applied to the string viewed as a cycle, yields the starting posi
 Both functions below operate on any random-access sequence whose elements support \inlinecode{operator\textless{}}.
 
 \begin{compactitem}
-  \item \inlinecode{lyndon\_factorization(s)} returns a vector of the starting indices of the Lyndon factors of \inlinecode{s}, in order. The factor at index \inlinecode{i} of the result spans the half-open range from \inlinecode{res[i]} to \inlinecode{res[i + 1]} (or to \inlinecode{s.size()} for the final factor).
-  \item \inlinecode{min\_rotation(s)} returns the 0-indexed position \inlinecode{p} such that the rotation beginning at \inlinecode{p}, that is, \inlinecode{s[p]}, \inlinecode{s[(p + 1) \% n]}, ..., \inlinecode{s[(p + n - 1) \% n]}, is lexicographically smallest. If several rotations tie, the smallest such \inlinecode{p} is returned.
+  \item \inlinecode{lyndon\_factorization(s)} returns a vector of the starting indices of the Lyndon factors of \inlinecode{s}, in order. The factor at index \inlinecode{i} of the result spans $[{\inlinecodemath{res[i]}}, {\inlinecodemath{res[i + 1]}})$, or $[{\inlinecodemath{res[i]}}, {\inlinecodemath{s.size()}})$ for the final factor.
+  \item \inlinecode{min\_rotation(s)} returns the 0-based position \inlinecode{p} such that the rotation beginning at \inlinecode{p}, that is, \inlinecode{s[p]}, \inlinecode{s[(p + 1) \% n]}, ..., \inlinecode{s[(p + n - 1) \% n]}, is lexicographically smallest. If several rotations tie, the smallest such \inlinecode{p} is returned.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ per call to \inlinecode{lyndon\_factorization(s)} and \inlinecode{min\_rotation(s)}, where $n$ is the length of \inlinecode{s}.
@@ -3901,7 +3904,7 @@ AGGGCT
 A_GGCA
 \end{exampleoutput}
 \subsection{Palindrome Dynamic Programming}
-Solves basic palindrome dynamic programming problems on a string. The core interval state considers substring $[{\inlinecodemath{l}}, {\inlinecodemath{r}}]$: if the two endpoints match, they can wrap an optimal answer for the inside substring; otherwise, at least one endpoint must be skipped or inserted around the other side. Since each state depends on shorter substrings, intervals are processed by increasing length.
+Solves basic palindrome dynamic programming problems on a string. The core interval state considers substring $[l, r]$: if the two endpoints match, they can wrap an optimal answer for the inside substring; otherwise, at least one endpoint must be skipped or inserted around the other side. Since each state depends on shorter substrings, intervals are processed by increasing length.
 
 The longest palindromic subsequence (LPS) is a maximum-length subsequence that reads the same forward and backward. The minimum number of insertions needed to make a string a palindrome is the number of characters outside an LPS, so it equals $n$ minus the LPS length.
 

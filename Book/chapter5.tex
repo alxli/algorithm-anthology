@@ -160,7 +160,7 @@ The discrete version operates on an integer domain, narrowing by thirds until at
 \begin{compactitem}
   \item \inlinecode{ternary\_search\_min(lo, hi, f, eps = 1e-12)} and \inlinecode{ternary\_search\_max(lo, hi, f, eps = 1e-12)} return a \inlinecode{double} \inlinecode{x} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ optimizing the continuous unimodal function \inlinecode{f}, to within the optional absolute error \inlinecode{eps}.
   \item \inlinecode{golden\_section\_min(lo, hi, f, eps = 1e-12)} and \inlinecode{golden\_section\_max(lo, hi, f, eps = 1e-12)} do the same with one function evaluation per iteration.
-  \item \inlinecode{discrete\_ternary\_min(lo, hi, f)} and \inlinecode{discrete\_ternary\_max(lo, hi, f)} return the integer index in the inclusive range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ optimizing the unimodal function \inlinecode{f}, breaking ties toward the smaller index.
+  \item \inlinecode{discrete\_ternary\_min(lo, hi, f)} and \inlinecode{discrete\_ternary\_max(lo, hi, f)} return the integer index in range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ optimizing the unimodal function \inlinecode{f}, breaking ties toward the smaller index.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -285,7 +285,7 @@ Given a continuous function $f(x, y)$ returning a real number and a (possibly ar
 Hill-climbing is a heuristic which starts at the guess, then considers taking a single step in each of a fixed number of directions. The direction with the best (in this case, minimum) value is chosen, and further steps are taken in it until the answer no longer improves. When this happens, the step size is reduced and the same process repeats until a desired absolute error is reached. The technique's success heavily depends on the behavior of $f$ and the initial guess. Therefore, the result is not guaranteed to be the global minimum.
 
 \begin{compactitem}
-  \item \inlinecode{find\_min(f, x0, y0, \&critical\_x, \&critical\_y, step\_min = 1e-9, step\_max = 1e6, directions = 6)} returns a candidate global minimum value of function \inlinecode{f} reached by hill-climbing from the starting guess $({\inlinecodemath{x0}}, {\inlinecodemath{y0}})$. If the optional pointers \inlinecode{critical\_x} and \inlinecode{critical\_y} are supplied, the point attaining the returned value is stored through them.
+  \item \inlinecode{find\_min(f, x0, y0, \&critical\_x, \&critical\_y, step\_min = 1e-9, step\_max = 1e6, directions = 6)} returns a candidate global minimum value of function \inlinecode{f} reached by hill-climbing from the starting guess $({\inlinecodemath{x0}}, {\inlinecodemath{y0}})$. If the optional pointers \inlinecode{critical\_x} and \inlinecode{critical\_y} are supplied, the point attaining the returned value is stored through them. The search starts with step size \inlinecode{step\_max}, stops below \inlinecode{step\_min}, and samples \inlinecode{directions} evenly spaced directions.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(d \log n)$ calls to \inlinecode{f()} will be made, where $d$ is the number of directions considered at each position and $n$ is the search space that is approximately proportional to the maximum possible step size divided by the minimum possible step size.
@@ -362,7 +362,7 @@ At each temperature, the algorithm proposes a random nearby point. Better moves 
 Simulated annealing is not a proof of optimality. Its quality depends heavily on the objective function, the starting point, the initial temperature, the cooling rate, and the number of independent restarts.
 
 \begin{compactitem}
-  \item \inlinecode{anneal\_min(f, x0, y0, \&best\_x, \&best\_y)} returns a small value found by the randomized search starting from $({\inlinecodemath{x0}}, {\inlinecodemath{y0}})$. If the optional pointers \inlinecode{best\_x} and \inlinecode{best\_y} are supplied, the point attaining the returned value is stored through them.
+  \item \inlinecode{anneal\_min(f, x0, y0, best\_x = nullptr, best\_y = nullptr)} returns a small value found by the randomized search starting from $({\inlinecodemath{x0}}, {\inlinecodemath{y0}})$. If the optional pointers \inlinecode{best\_x} and \inlinecode{best\_y} are supplied, the point attaining the returned value is stored through them.
   \item \inlinecode{TEMPERATURE\_START} controls the initial move scale and willingness to accept worse states.
   \item \inlinecode{TEMPERATURE\_END} controls when the search stops.
   \item \inlinecode{COOLING\_RATE} controls how quickly the temperature decreases.
@@ -790,7 +790,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Convex Hull Trick (Semi-Dynamic)}
-Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of $x$-coordinate queries each asking to find the minimum $y$-value when any of the given lines are evaluated at the specified $x$. This is useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])}. Only the lower envelope of the lines can ever answer a query, so each added line pops previously stored lines that it renders useless, and ascending queries advance a pointer along the envelope so every line is visited at most twice.
+Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, answer queries at specified $x$-coordinates, each asking for the minimum $y$-value over all given lines. This is useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])}. Only the lower envelope of the lines can ever answer a query, so each added line pops previously stored lines that it renders useless, and ascending queries advance a pointer along the envelope so every line is visited at most twice.
 
 The following implementation is a concise, semi-dynamic version of the convex hull optimization technique. It supports an interlaced sequence of \inlinecode{add\_line()} and \inlinecode{query()} calls, as long as the preconditions of descending \inlinecode{m} and ascending \inlinecode{x} are satisfied. As a result, it may be necessary to sort the lines and queries before calling the functions. In that case, the overall time complexity will be dominated by the sorting step.
 
@@ -878,12 +878,12 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Convex Hull Trick (Fully-Dynamic)}
-Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of $x$-coordinate queries each asking to find the minimum $y$-value when any of the given lines are evaluated at the specified $x$. To instead have the queries optimize for maximum $y$-value, call the constructor with \inlinecode{query\_max = true}. This is useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])} when line slopes and query coordinates are not monotone.
+Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, answer queries at specified $x$-coordinates, each asking for the minimum $y$-value over all given lines. To instead have the queries optimize for maximum $y$-value, call the constructor with \inlinecode{query\_max = true}. This is useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])} when line slopes and query coordinates are not monotone.
 
 The following implementation is a fully dynamic variant of the convex hull optimization technique, using a self-balancing binary search tree (\inlinecode{std::set}) to support the ability to call \inlinecode{add\_line()} and \inlinecode{query()} in any desired order. The tree stores the lower envelope of the lines sorted by slope: inserting a line removes any neighbors it dominates, and each line records the interval of queries for which it is the best, so a query is a single tree lookup.
 
 \begin{compactitem}
-  \item \inlinecode{HullOptimizer(query\_max)} constructs an empty hull. By default, \inlinecode{query(x)} minimizes; if \inlinecode{query\_max} is true, \inlinecode{query(x)} maximizes.
+  \item \inlinecode{HullOptimizer(query\_max = false)} constructs an empty hull. By default, \inlinecode{query(x)} minimizes; if \inlinecode{query\_max} is true, \inlinecode{query(x)} maximizes.
   \item \inlinecode{add\_line(m, b)} inserts line $y = mx + b$ (can be called in any order).
   \item \inlinecode{query(x)} returns the best $y$-value among all inserted lines at coordinate \inlinecode{x}. At least one line must have been inserted.
 \end{compactitem}
@@ -1008,7 +1008,7 @@ This implementation stores the lower envelope of lines over the inclusive domain
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n \log d)$ worst-case node storage for $n$ line inserted, usually much less.
+  \item $O(n \log d)$ worst-case node storage for $n$ lines inserted, usually much less.
   \item $O(\log d)$ auxiliary stack space per operation.
 \end{compactitem}
 
@@ -1755,7 +1755,7 @@ Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
 Computes the definite integral from $a$ to $b$ for a continuous function $f$ using the composite Simpson's rule: the interval is split into \inlinecode{n} equal subintervals and each consecutive pair is approximated by a parabola, giving the approximation $\int_{a}^{b} f(x) \,dx \approx$ $h/3 \cdot [f(x_0) + 4f(x_1) + 2f(x_2) + \ldots + 4f(x_{n-1}) + f(x_n)]$ with step $h = (b - a)/n$.
 
 \begin{compactitem}
-  \item \inlinecode{integrate(f, a, b, n)} returns the definite integral of a function \inlinecode{f} from \inlinecode{a} to \inlinecode{b} using \inlinecode{n} subintervals, where \inlinecode{n} must be even. Larger \inlinecode{n} trades runtime for accuracy; the leading error scales as \inlinecode{(b - a) * h\textasciicircum{}4}. For a smooth \inlinecode{f}, \inlinecode{n} near $10^6$ reaches near double precision.
+  \item \inlinecode{integrate(f, a, b, n = 1000000)} returns the definite integral of a function \inlinecode{f} from \inlinecode{a} to \inlinecode{b} using \inlinecode{n} subintervals, where \inlinecode{n} must be even. Larger \inlinecode{n} trades runtime for accuracy; the leading error scales as \inlinecode{(b - a) * h\textasciicircum{}4}. For a smooth \inlinecode{f}, \inlinecode{n} near $10^6$ reaches near double precision.
 \end{compactitem}
 
 Unlike adaptive quadrature, the step size here is uniform, so a feature narrower than \inlinecode{h} may be under-resolved. The benefit is a simple, non-recursive routine with predictable cost that is not fooled by the premature-termination heuristic that adaptive Simpson's rule can suffer on functions whose coarse sample points happen to fit a parabola.
@@ -1804,7 +1804,7 @@ The simplex algorithm walks between vertices of the feasible polytope, at each s
 The implementation uses a two-phase simplex tableau. Phase 1 introduces an artificial variable to find a feasible starting basis, which is essential when some constraint bounds are negative. Phase 2 then optimizes the original objective. The \inlinecode{basis} and \inlinecode{nonbasis} arrays track which variable each tableau row or column currently represents, making solution recovery independent of pivot order.
 
 \begin{compactitem}
-  \item \inlinecode{simplex\_solve(a, b, c, \&x, maximize = true, eps = 1e-10)} solves the linear programming problem for an $m$ by $n$ matrix \inlinecode{a} of real values, a length $m$ vector \inlinecode{b}, and a length $n$ vector \inlinecode{c}, returning $0$ if an optimum was found, $-1$ if there are no feasible solutions, or $1$ if the objective is unbounded. If an optimum is found, then the vector pointed to by \inlinecode{x} is populated with a dense solution vector.
+  \item \inlinecode{simplex\_solve(a, b, c, \&x, maximize = true, eps = 1e-10)} solves the linear programming problem for an $m$ by $n$ matrix \inlinecode{a} of real values, a length $m$ vector \inlinecode{b}, and a length $n$ vector \inlinecode{c}, returning $0$ if an optimum was found, $-1$ if there are no feasible solutions, or $1$ if the objective is unbounded. Set \inlinecode{maximize = false} to minimize instead, and use \inlinecode{eps} as the pivot and feasibility tolerance. If an optimum is found, then the vector pointed to by \inlinecode{x} is populated with a dense solution vector.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(2^{n})$ pivots per call in the worst case, where $n$ is the number of unknowns, although simplex typically runs much faster in practice.

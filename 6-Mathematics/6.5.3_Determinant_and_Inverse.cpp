@@ -17,7 +17,7 @@ divisions are always exact and the arithmetic stays in integers.
   matrix's element type, so an integer matrix yields an exact integer determinant; but at O(n!) it
   is only practical for tiny `n`, so prefer `det_bareiss` for exact integer determinants.
 - `det(a, eps = 1e-10)` returns the determinant of an $n$ by $n$ matrix `a` using Gaussian
-  elimination.
+  elimination, treating pivots within `eps` of zero as singular.
 - `det_bareiss(a)` returns the exact determinant of an integer matrix `a` using fraction-free
   elimination, with no rounding error. Intermediate values are bounded by the magnitudes of the
   matrix's minors, so the entries must stay within `int64_t`; substitute a big-integer type for

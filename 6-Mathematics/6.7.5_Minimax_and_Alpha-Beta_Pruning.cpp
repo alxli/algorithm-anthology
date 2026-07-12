@@ -11,8 +11,10 @@ The example game is "take $1$ or $2$ stones": starting with `stones` stones, pla
 taking $1$ or $2$ stones, and the player who takes the last stone wins. The evaluation returns $1$
 for a win for the player to move at the root and $-1$ for a loss.
 
-- `minimax(stones, maximizing)` returns the exact game-tree value.
-- `alpha_beta(stones, maximizing, alpha = -2, beta = 2)` returns the same value, with pruning.
+- `minimax(stones, maximizing)` returns the exact game-tree value, where `maximizing` indicates
+  whose turn it is.
+- `alpha_beta(stones, maximizing, alpha = -2, beta = 2)` returns the same value, with pruning using
+  the current lower bound `alpha` and upper bound `beta`.
 - `best_take(stones)` returns an optimal first move, either $1$ or $2$.
 
 Time Complexity:

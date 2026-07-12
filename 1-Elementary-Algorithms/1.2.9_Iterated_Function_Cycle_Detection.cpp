@@ -25,10 +25,10 @@ modulo $n$. Resetting one pointer to $x_0$ and advancing both one step at a time
 the cycle entry after $m$ steps. Brent first determines $n$, then advances one pointer $n$ steps;
 moving both together from that fixed separation likewise makes them meet at the entry.
 
-- `find_cycle_floyd(f, x0)` returns the reached cycle as a pair $(`start`, `length`)$, where `start`
-  is the smallest index $i$ such that $x_i$ is in the cycle, and `length` is the number of distinct
-  values in the cycle.
-- `find_cycle_brent(f, x0)` does the same with fewer calls to $f$ in many cases.
+- `find_cycle_floyd(f, x0)` repeatedly applies `f` starting from `x0` and returns the reached cycle
+  as a pair $(`start`, `length`)$, where `start` is the smallest index $i$ such that $x_i$ is in the
+  cycle, and `length` is the number of distinct values in the cycle.
+- `find_cycle_brent(f, x0)` does the same with fewer calls to `f` in many cases.
 
 Time Complexity:
 - O(m + n) per call, where $m$ is the first index in the cycle and $n$ is the cycle length.
