@@ -28,9 +28,11 @@ and predicates are templated on the point type `Pt` and only read `.x`/`.y`, so 
   square roots. For integer inputs, the sign test is exact provided the chosen intermediate type
   does not overflow.
 
-The floating-point constructors and predicates use an absolute tolerance `EPS`. The determinant in
-`in_circumcircle()` has degree four in the coordinate magnitude, so use a wider intermediate type
-for large integer coordinates.
+The floating-point constructors and predicates use an absolute tolerance `EPS`.
+
+Overflow warning: the determinant in `in_circumcircle()` grows like the fourth power of the
+coordinate magnitude. For large integer coordinates, use a point or intermediate type wide enough
+for that determinant.
 
 Time Complexity:
 - O(1) per call to the constructors and all other operations.
@@ -171,6 +173,7 @@ int in_circumcircle(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   W adx = (W)a.x - d.x, ady = (W)a.y - d.y;
   W bdx = (W)b.x - d.x, bdy = (W)b.y - d.y;
   W cdx = (W)c.x - d.x, cdy = (W)c.y - d.y;
+  // Overflow warning!
   W det = (adx * adx + ady * ady) * (bdx * cdy - cdx * bdy) +
           (bdx * bdx + bdy * bdy) * (cdx * ady - adx * cdy) +
           (cdx * cdx + cdy * cdy) * (adx * bdy - bdx * ady);

@@ -54,7 +54,7 @@ Space Complexity:
 #include <cassert>
 #include <cstdint>
 #include <map>
-#include <set>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -108,7 +108,7 @@ class SparseMatrix {
     if (i == j) {
       return;
     }
-    std::set<int> touched;
+    std::unordered_set<int> touched;
     for (const auto &[col, value] : rows[i]) {
       touched.insert(col);
     }

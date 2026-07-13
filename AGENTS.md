@@ -199,9 +199,9 @@ Before finishing meaningful edits, run checks scaled to the touched files:
 - Check line length for touched files:
   `awk 'length($0) > 100 { print FILENAME ":" FNR ":" length($0) ":" $0 }' path/to/file.cpp`
 - Check docstring wrapping when touching comments:
-  `python3 scan_docstrings.py`
+  `python3 scan_quality.py`
 - Run the bounded stabilization audit when asked to "scan" or before declaring the repo stable:
-  `python3 scan_docstrings.py`
+  `python3 scan_quality.py`
 
 Warnings from the compiler should be investigated. If a warning is known and harmless, mention it
 in the final report rather than hiding it.
@@ -210,7 +210,7 @@ in the final report rather than hiding it.
 
 Use two different modes for quality work:
 
-- Stabilization scan: a bounded audit against existing policy. Run `python3 scan_docstrings.py`,
+- Stabilization scan: a bounded audit against existing policy. Run `python3 scan_quality.py`,
   inspect only findings above the threshold below, patch them, and rerun. If the audit is clean, say
   the repo is stable instead of searching for more cosmetic rewrites.
 - Exploratory scan: a deliberate search for new conventions or broad cleanup opportunities. Do this
@@ -226,6 +226,22 @@ Treat each scanner rule as one repeated family of problems, such as "documented 
 show meaningful default arguments" or "long repeated literal defaults should be named constants."
 Pick one family, encode it, fix its findings, and rerun before moving to another.
 
+Code-quality stabilization follows the same rule. Prefer deterministic checks for factual or
+repo-wide consistency issues, and keep taste calls out of the default scan until the user accepts
+them as a convention. The current code-consistency pass in `scan_quality.py` checks for:
+
+- unused helper functions left in example blocks;
+- direct `std::random_device{}` seeding inside examples, where a fixed seed keeps examples
+  reproducible;
+- C `rand()`/`srand()` usage, which should be replaced by a C++ random engine and distribution.
+
+When scanning for code quality, first run `python3 scan_quality.py` and fix deterministic
+findings. Then do a bounded exploratory pass for one new family of smells, such as dead example
+helpers, hidden nondeterminism in examples, duplicated constants, ordered containers used only for
+membership in implementation code, or inconsistent helper APIs. If a new family is accepted, encode
+it in `scan_quality.py` or document the judgment rule here before continuing. Do not turn one-off
+preferences into hard rules.
+
 In prose, use math mode for mathematical variables and numeric constants (`$n$`, `$998244353$`) and
 backticks for code identifiers or parameters (`n`, `MOD`). If a bound is a purely mathematical
 quantity in explanatory prose, use a plain math interval such as `$[0, n)$`. In API bullets, keep
@@ -237,10 +253,11 @@ the entries are code-facing return-field names or parameters, but use plain math
 When a prose sentence is explicitly explaining code-index formulas, code-style intervals such as
 $[`l`, `r`)$ may be clearer than plain math intervals.
 When an API bullet is primarily describing a mathematical object and already uses the parameters as
-math variables throughout, prefer the local mathematical style, e.g. `$[0, k)$` for `de_bruijn(k, n)`.
+math variables throughout, prefer the local mathematical style, e.g. `$[0, k)$` for
+`de_bruijn(k, n)`.
 
 When a new repeated convention is accepted, encode it in one of two places before relying on it in
-future scans: `AGENTS.md` for human/agent judgment, or `scan_docstrings.py` for deterministic
+future scans: `AGENTS.md` for human/agent judgment, or `scan_quality.py` for deterministic
 grep-style drift checks. This is the path to a stable "scan" result.
 
 ## Editing Discipline

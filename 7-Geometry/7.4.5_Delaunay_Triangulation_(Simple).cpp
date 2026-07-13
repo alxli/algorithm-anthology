@@ -14,9 +14,10 @@ would properly cross already accepted triangles are rejected.
   fewer than three points, or all points collinear).
 
 All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation.
-The lifted-paraboloid test scales as $\sim 96 \cdot C^4$ where $C$ is the coordinate magnitude, so a
-64-bit integer coordinate type is safe up to $|C| \leq \sim 17600$. For floating-point coordinates
-the test is subject to the usual rounding error.
+
+Overflow warning: the lifted-paraboloid test grows like the fourth power of the coordinate
+magnitude. With 64-bit integer coordinates, it overflows once coordinates exceed roughly $17600$.
+For floating-point coordinates the test is subject to the usual rounding error.
 
 Time Complexity:
 - O(n^6) per call, where $n$ is the number of points. The empty-circumcircle test contributes O(n^4)

@@ -16,6 +16,9 @@ unmatched whenever staying unmatched is at least as good as any incident edge.
 All edge weights must be positive; an absent edge is treated as weight 0. The node count should be
 kept modest, as the algorithm uses dense storage.
 
+Overflow warning: labels and the returned matching weight are stored in `int64_t`; all doubled
+weights, label sums, and the total matching weight must fit.
+
 - `WeightedGeneralMatching(n)` creates a graph of `n` nodes numbered $[0, `n`)$.
 - `add_edge(u, v, w)` adds an undirected edge of positive weight `w` between `u` and `v`. If several
   edges join the same pair, the last weight set is used.
@@ -51,7 +54,9 @@ class WeightedGeneralMatching {
   std::queue<int> q;
   int aux_clock;
 
-  int64_t e_delta(const Edge &e) const { return lab[e.u] + lab[e.v] - 2 * e.w; }
+  int64_t e_delta(const Edge &e) const {
+    return lab[e.u] + lab[e.v] - 2 * e.w;  // Overflow warning!
+  }
 
   void update_slack(int u, int x) {
     if (slack[x] == 0 || e_delta(g[u][x]) < e_delta(g[slack[x]][x])) {

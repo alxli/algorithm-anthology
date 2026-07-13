@@ -16,13 +16,13 @@ with circumcircle tests deciding each connecting edge and deleting invalidated o
   fewer than three non-collinear unique points remain, the result is empty.
 
 The point type must provide exact lexicographic `operator<`; sorting and duplicate removal requires
-this strict ordering rather than epsilon equality.
+this strict ordering rather than epsilon equality. All arithmetic uses the point's own coordinate
+type, so integer inputs yield an exact triangulation.
 
-All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation.
-The in-circle test is a degree-4 polynomial in the coordinates and dominates the overflow budget: a
-64-bit integer coordinate type stays exact up to $|C| \approx 1.4 \times 10^4$, where $C$ is the
-coordinate magnitude. For floating-point coordinates the predicates are subject to the usual
-rounding error.
+Overflow warning: the in-circle test grows like the fourth power of the coordinate magnitude and
+dominates the overflow budget. With 64-bit integer coordinates, it overflows once coordinates exceed
+roughly $14000$. For floating-point coordinates, the predicates are subject to the usual rounding
+error.
 
 Time Complexity:
 - O(n log n) per call, where $n$ is the number of input points.

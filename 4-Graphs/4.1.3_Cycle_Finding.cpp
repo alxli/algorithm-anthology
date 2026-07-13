@@ -152,13 +152,13 @@ class CycleFinder {
 
   void dfs_cycles(
       int u, int parent_edge, int max_cycles, int max_total_size, std::vector<int> &state,
-      std::vector<int> &stack, std::vector<std::vector<int>> &cycles, int &total_size
+      std::vector<int> &edge_stack, std::vector<std::vector<int>> &cycles, int &total_size
   ) const {
     if (static_cast<int>(cycles.size()) >= max_cycles || total_size >= max_total_size) {
       return;
     }
     // -1 = unvisited, -2 = finished, otherwise the vertex's index in the current edge stack.
-    state[u] = static_cast<int>(stack.size());
+    state[u] = static_cast<int>(edge_stack.size());
     for (int id : adj[u]) {
       if (!directed && id == parent_edge) {
         continue;
@@ -167,8 +167,8 @@ class CycleFinder {
       int v = directed ? ev : eu ^ ev ^ u;
       if (state[v] >= 0) {
         std::vector<int> cycle{id};
-        for (int i = state[v]; i < static_cast<int>(stack.size()); i++) {
-          cycle.push_back(stack[i]);
+        for (int i = state[v]; i < static_cast<int>(edge_stack.size()); i++) {
+          cycle.push_back(edge_stack[i]);
         }
         cycles.push_back(cycle);
         total_size += static_cast<int>(cycle.size());
@@ -176,9 +176,9 @@ class CycleFinder {
           return;
         }
       } else if (state[v] == -1) {
-        stack.push_back(id);
-        dfs_cycles(v, id, max_cycles, max_total_size, state, stack, cycles, total_size);
-        stack.pop_back();
+        edge_stack.push_back(id);
+        dfs_cycles(v, id, max_cycles, max_total_size, state, edge_stack, cycles, total_size);
+        edge_stack.pop_back();
       }
     }
     state[u] = -2;
@@ -201,12 +201,12 @@ class CycleFinder {
       int max_cycles = 1 << 30, int max_total_size = 1 << 30
   ) const {
     int n = static_cast<int>(adj.size());
-    std::vector<int> state(n, -1), stack;
+    std::vector<int> state(n, -1), edge_stack;
     std::vector<std::vector<int>> cycles;
     int total_size = 0;
     for (int u = 0; u < n; u++) {
       if (state[u] == -1) {
-        dfs_cycles(u, -1, max_cycles, max_total_size, state, stack, cycles, total_size);
+        dfs_cycles(u, -1, max_cycles, max_total_size, state, edge_stack, cycles, total_size);
       }
     }
     return cycles;

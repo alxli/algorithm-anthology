@@ -74,18 +74,18 @@ class FunctionalGraph {
       indeg[f[i]]++;
     }
     std::vector<char> removed(n, false);
-    std::vector<int> stack;
+    std::vector<int> st;
     for (int i = 0; i < n; i++) {
       if (indeg[i] == 0) {
-        stack.push_back(i);
+        st.push_back(i);
       }
     }
-    while (!stack.empty()) {
-      int u = stack.back();
-      stack.pop_back();
+    while (!st.empty()) {
+      int u = st.back();
+      st.pop_back();
       removed[u] = true;
       if (--indeg[f[u]] == 0) {
-        stack.push_back(f[u]);
+        st.push_back(f[u]);
       }
     }
     on_cyc.assign(n, false);

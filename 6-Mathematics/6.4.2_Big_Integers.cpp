@@ -65,12 +65,12 @@ Space Complexity:
 #include <cmath>
 #include <complex>
 #include <cstdint>
-#include <cstdlib>
 #include <cstring>
 #include <iomanip>
 #include <istream>
 #include <iterator>
 #include <ostream>
+#include <random>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -619,9 +619,11 @@ class BigInt {
     if (n == 0) {
       return BigInt(0);
     }
-    std::string s(1, '1' + (::rand() % 9));
+    static std::mt19937 rng(1234567);
+    std::uniform_int_distribution<int> first_digit(1, 9), digit(0, 9);
+    std::string s(1, static_cast<char>('0' + first_digit(rng)));
     for (int i = 1; i < n; i++) {
-      s += '0' + (::rand() % 10);
+      s += static_cast<char>('0' + digit(rng));
     }
     return BigInt(s);
   }
@@ -670,12 +672,15 @@ int main() {
       }
     }
   }
+  std::mt19937 rng(1234567);
+  std::uniform_int_distribution<int> length_dist(1, 100);
   for (int i = 0; i < 20; i++) {
-    int n = rand() % 100 + 1;
+    int n = length_dist(rng);
     BigInt a(BigInt::rand(n)), s(a.sqrt()), xx(s * s), yy(s + 1);
     yy *= yy;
     assert(xx <= a && a < yy);
-    BigInt b(BigInt::rand(rand() % n + 1) + 1), q(a / b);
+    std::uniform_int_distribution<int> divisor_length_dist(1, n);
+    BigInt b(BigInt::rand(divisor_length_dist(rng)) + 1), q(a / b);
     xx = q * b;
     yy = b * (q + 1);
     assert(a >= xx && a < yy);

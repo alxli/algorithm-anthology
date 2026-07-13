@@ -294,8 +294,8 @@ void radix_sort(It lo, It hi) {
 
 /*** Example Usage and Output:
 
-mergesort() with default comparisons: 1.32 1.41 1.62 1.73 2.58 2.72 3.14 4.67 
-mergesort() with 'compare_as_ints()': 1.41 1.73 1.32 1.62 2.72 2.58 3.14 4.67 
+mergesort() with default comparisons: 1.32 1.41 1.62 1.73 2.58 2.72 3.14 4.67
+mergesort() with integer comparisons: 1.41 1.73 1.32 1.62 2.72 2.58 3.14 4.67
 ------
 Sorting five million integers...
 std::sort():  0.223s
@@ -332,10 +332,6 @@ bool sorted(It lo, It hi) {
     }
   }
   return true;
-}
-
-bool compare_as_ints(double i, double j) {
-  return static_cast<int>(i) < static_cast<int>(j);
 }
 
 int main() {
@@ -386,13 +382,15 @@ int main() {
   }
   {
     vector<double> v(a);
-    cout << "mergesort() with 'compare_as_ints()': ";
-    mergesort(v.begin(), v.end(), compare_as_ints);
+    cout << "mergesort() with integer comparisons: ";
+    mergesort(v.begin(), v.end(), [](double i, double j) {
+      return static_cast<int>(i) < static_cast<int>(j);
+    });
     print_range(v.begin(), v.end());
   }
   cout << "------" << endl;
 
-  std::mt19937 rng(std::random_device{}());
+  std::mt19937 rng(1234567);
   vector<int> data;
   for (int i = 0; i < 5000000; i++) {
     data.push_back(static_cast<int>(rng()));

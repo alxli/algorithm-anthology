@@ -289,10 +289,6 @@ class RadixTree {
 #include <iostream>
 using namespace std;
 
-void print_entry(const string &k, int v) {
-  cout << "(\"" << k << "\", " << v << ")" << endl;
-}
-
 int main() {
   vector<string> s{"", "a", "to", "tea", "ted", "ten", "i", "in", "inn"};
   RadixTree<int> t;

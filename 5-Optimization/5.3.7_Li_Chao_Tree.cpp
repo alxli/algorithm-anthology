@@ -16,6 +16,8 @@ time with respect to the domain size.
 - `query(x)` returns the minimum $y$-value among all inserted lines at coordinate `x`. At least one
   line must have been inserted.
 
+Overflow warning: each comparison and query evaluates `m * x + b`, which must fit in `int64_t`.
+
 Time Complexity:
 - O(log d) per call to `add_line(m, b)` and `query(x)`, where $d$ is the distance between `lo` and
   `hi`.
@@ -37,7 +39,7 @@ class LiChaoTree {
   struct Line {
     int64_t m, b;
     Line(int64_t m = 0, int64_t b = INF) : m(m), b(b) {}
-    int64_t eval(int64_t x) const { return m * x + b; }
+    int64_t eval(int64_t x) const { return m * x + b; }  // Overflow warning!
   };
 
   struct Node {

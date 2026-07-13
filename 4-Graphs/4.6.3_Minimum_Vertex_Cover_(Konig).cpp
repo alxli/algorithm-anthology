@@ -82,20 +82,20 @@ std::vector<int> min_vertex_cover(int n2) {
       reachable_left[u] = false;
     }
   }
-  std::vector<int> stack;
+  std::vector<int> st;
   for (int u = 0; u < n1; u++) {
     if (reachable_left[u]) {
-      stack.push_back(u);
+      st.push_back(u);
     }
   }
-  while (!stack.empty()) {
-    int u = stack.back();
-    stack.pop_back();
+  while (!st.empty()) {
+    int u = st.back();
+    st.pop_back();
     reachable_left[u] = true;
     for (int e : adj[u]) {
       if (!seen_right[e] && match_right[e] != -1) {
         seen_right[e] = true;
-        stack.push_back(match_right[e]);  // Cross the matched edge back to the left.
+        st.push_back(match_right[e]);  // Cross the matched edge back to the left.
       }
     }
   }

@@ -42,15 +42,15 @@ std::vector<int> encode_prufer(const std::vector<std::vector<int>> &adj) {
       leaves.insert(u);
     }
   }
-  std::vector<int> stack(1, root);
+  std::vector<int> st(1, root);
   parent[root] = -2;
-  while (!stack.empty()) {
-    int u = stack.back();
-    stack.pop_back();
+  while (!st.empty()) {
+    int u = st.back();
+    st.pop_back();
     for (int v : adj[u]) {
       if (parent[v] == -1) {
         parent[v] = u;
-        stack.push_back(v);
+        st.push_back(v);
       }
     }
   }

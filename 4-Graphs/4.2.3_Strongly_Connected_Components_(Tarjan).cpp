@@ -30,7 +30,7 @@ Space Complexity:
 struct TarjanSCC {
   static const int INF = INT_MAX / 2;
   std::vector<std::vector<int>> adj, scc;
-  std::vector<int> component, stack, lowlink;
+  std::vector<int> component, active, lowlink;
   std::vector<char> visited;
   int timer;
 
@@ -41,7 +41,7 @@ struct TarjanSCC {
   void dfs(int u) {
     lowlink[u] = timer++;
     visited[u] = true;
-    stack.push_back(u);
+    active.push_back(u);
     bool is_component_root = true;
     for (int v : adj[u]) {
       if (!visited[v]) {
@@ -59,9 +59,9 @@ struct TarjanSCC {
     int id = static_cast<int>(scc.size());
     int v;
     do {
-      v = stack.back();
-      stack.pop_back();
-      lowlink[v] = INF;  // marks v as removed from the stack
+      v = active.back();
+      active.pop_back();
+      lowlink[v] = INF;  // marks v as removed from the active stack
       component[v] = id;
       comp_nodes.push_back(v);
     } while (u != v);
@@ -72,7 +72,7 @@ struct TarjanSCC {
     int n = static_cast<int>(adj.size());
     scc.clear();
     component.assign(n, -1);
-    stack.clear();
+    active.clear();
     lowlink.assign(n, 0);
     visited.assign(n, false);
     timer = 0;

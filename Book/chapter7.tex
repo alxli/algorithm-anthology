@@ -8,7 +8,7 @@ A 2D point class templated on the coordinate type \inlinecode{T}. Integer types 
 
 Exact operations (return \inlinecode{TPoint\textless{}T\textgreater{}} or \inlinecode{T}, no precision lost for integers) include: element-wise arithmetic, \inlinecode{dot()}, \inlinecode{cross()}, \inlinecode{sqnorm()}, cardinal rotations, \inlinecode{reflect(point)}, equality, and lexicographic ordering. \inlinecode{operator==} and \inlinecode{operator\textless{}} are exact for every coordinate type, as required by standard algorithms and containers. \inlinecode{EQ(p, q)} compares floating-point point coordinates using \inlinecode{EPS} and remains exact for other coordinate types.
 
-Overflow warning: the exact products \inlinecode{dot()}, \inlinecode{cross()}, and \inlinecode{sqnorm()} grow like the squared coordinate magnitude. With \inlinecode{TPoint\textless{}int\textgreater{}} these overflow a 32-bit \inlinecode{int} once coordinates exceed $\sim 46000$, so use \inlinecode{PointL} (\inlinecode{TPoint\textless{}long long\textgreater{}}) for larger integer coordinates.
+Overflow warning: the exact products \inlinecode{dot()}, \inlinecode{cross()}, and \inlinecode{sqnorm()} grow like the squared coordinate magnitude. With \inlinecode{TPoint\textless{}int\textgreater{}} these overflow a 32-bit \inlinecode{int} once coordinates exceed roughly $46000$, so use \inlinecode{PointL} (\inlinecode{TPoint\textless{}long long\textgreater{}}) for larger integer coordinates.
 
 Metric operations (return \inlinecode{TPoint\textless{}fp\_t\textgreater{}} or \inlinecode{fp\_t}):
 
@@ -108,17 +108,17 @@ struct TPoint {
 
   // --- Exact operations: return T or TPoint<T>, work for any coordinate type ---
 
-  // Overflow warning: these products grow like the squared coordinate magnitude, so for integer T
-  // with large coordinates (beyond a few thousand for 32-bit int) use a wider type such as PointL.
-  T sqnorm() const { return x * x + y * y; }
-  T dot(const TPoint &p) const { return x * p.x + y * p.y; }
-  T cross(const TPoint &p) const { return x * p.y - y * p.x; }
+  T sqnorm() const { return x * x + y * y; }                    // Overflow warning!
+  T dot(const TPoint &p) const { return x * p.x + y * p.y; }    // Overflow warning!
+  T cross(const TPoint &p) const { return x * p.y - y * p.x; }  // Overflow warning!
 
   // --- Floating-point operations: return fp_t or TPoint<fp_t> ---
 
   fp_t norm() const { return hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)); }
   fp_t arg() const { return atan2(static_cast<fp_t>(y), static_cast<fp_t>(x)); }
-  fp_t proj(const TPoint &p) const { return static_cast<fp_t>(dot(p)) / p.norm(); }
+  fp_t proj(const TPoint &p) const {
+    return (static_cast<fp_t>(x) * p.x + static_cast<fp_t>(y) * p.y) / p.norm();
+  }
 
   TPoint<fp_t> normalize() const {
     fp_t n = norm();
@@ -156,13 +156,13 @@ struct TPoint {
 
   // Returns (x, y) rotated t radians clockwise about point p.
   TPoint<fp_t> rotateCW(const TPoint &p, fp_t t) const {
-    return TPoint<fp_t>{(fp_t)(x - p.x), (fp_t)(y - p.y)}.rotateCW(t) +
+    return TPoint<fp_t>{(fp_t)x - p.x, (fp_t)y - p.y}.rotateCW(t) +
            TPoint<fp_t>{(fp_t)p.x, (fp_t)p.y};
   }
 
   // Returns (x, y) rotated t radians counter-clockwise about point p.
   TPoint<fp_t> rotateCCW(const TPoint &p, fp_t t) const {
-    return TPoint<fp_t>{(fp_t)(x - p.x), (fp_t)(y - p.y)}.rotateCCW(t) +
+    return TPoint<fp_t>{(fp_t)x - p.x, (fp_t)y - p.y}.rotateCCW(t) +
            TPoint<fp_t>{(fp_t)p.x, (fp_t)p.y};
   }
 
@@ -178,7 +178,7 @@ struct TPoint {
     if (EQ(p, q)) {
       return TPoint<fp_t>{(fp_t)x, (fp_t)y}.reflect(fp);
     }
-    TPoint<fp_t> r{(fp_t)(x - p.x), (fp_t)(y - p.y)}, s{(fp_t)(q.x - p.x), (fp_t)(q.y - p.y)};
+    TPoint<fp_t> r{(fp_t)x - p.x, (fp_t)y - p.y}, s{(fp_t)q.x - p.x, (fp_t)q.y - p.y};
     fp_t ssq = s.sqnorm();
     r = TPoint<fp_t>{(r.x * s.x + r.y * s.y) / ssq, (r.x * s.y - r.y * s.x) / ssq};
     return TPoint<fp_t>{r.x * s.x - r.y * s.y + fp.x, r.x * s.y + r.y * s.x + fp.y};
@@ -299,7 +299,7 @@ Storage and the predicates \inlinecode{contains()}, \inlinecode{is\_parallel()},
 
 Operations include \inlinecode{horizontal()}, \inlinecode{vertical()}, \inlinecode{slope()}, evaluating $y$ at some $x$ with \inlinecode{y()} (and vice versa with \inlinecode{x()}), checking if a point falls on the line with \inlinecode{contains()}, checking if another line is parallel or perpendicular with \inlinecode{is\_parallel()} or \inlinecode{is\_perpendicular()}, and finding the \inlinecode{parallel()} or \inlinecode{perpendicular()} line through a point.
 
-Overflow warning: the exact predicates form products of coefficients (e.g. cross terms in \inlinecode{is\_parallel()}/\inlinecode{is\_perpendicular()} and \inlinecode{a*p.x + b*p.y} in \inlinecode{contains()}), which grow like the squared coordinate magnitude. For integral type \inlinecode{T}, use \inlinecode{LineL} (\inlinecode{TLine\textless{}int64\_t\textgreater{}}) once coordinates exceed $\sim 46000$, or the 32-bit products overflow.
+Overflow warning: the exact predicates form products of coefficients (e.g. cross terms in \inlinecode{is\_parallel()}/\inlinecode{is\_perpendicular()} and \inlinecode{a*p.x + b*p.y} in \inlinecode{contains()}), which grow like the squared coordinate magnitude. For integral type \inlinecode{T}, use \inlinecode{LineL} (\inlinecode{TLine\textless{}int64\_t\textgreater{}}) once coordinates exceed roughly $46000$, or the 32-bit products overflow.
 
 Type aliases:
 
@@ -398,6 +398,7 @@ struct TLine {
 
   // Line through two points. Coefficients are exact (type T) for integer points.
   template<typename Pt, typename = if_point<Pt>>
+  // Overflow warning!
   TLine(const Pt &p, const Pt &q) : a(q.y - p.y), b(p.x - q.x), c(-(a * p.x + b * p.y)) {
     if constexpr (CANONICALIZE) canonicalize();
   }
@@ -440,23 +441,23 @@ struct TLine {
   // Whether point p lies on the line. Exact for integer T and integer p.
   template<typename Pt>
   bool contains(const Pt &p) const {
-    return EQ(a * p.x + b * p.y + c, 0);
+    return EQ(a * p.x + b * p.y + c, 0);  // Overflow warning!
   }
 
-  // Parallel iff the normals are parallel (cross == 0); perpendicular iff normals are
-  // perpendicular (dot == 0). Both exact for integer T.
+  // Parallel iff the normals are parallel (cross == 0); perpendicular iff normals are perpendicular
+  // (dot == 0). Both exact for integer T. Overflow warning!
   bool is_parallel(const TLine &l) const { return EQ(a * l.b, l.a * b); }
   bool is_perpendicular(const TLine &l) const { return EQ(a * l.a, -(b * l.b)); }
 
   // Parallel/perpendicular line through point p. Exact for integer T and integer p.
   template<typename Pt, typename = if_point<Pt>>
   TLine parallel(const Pt &p) const {
-    return TLine(a, b, -(a * p.x + b * p.y));
+    return TLine(a, b, -(a * p.x + b * p.y));  // Overflow warning!
   }
 
   template<typename Pt, typename = if_point<Pt>>
   TLine perpendicular(const Pt &p) const {
-    return TLine(-b, a, b * p.x - a * p.y);
+    return TLine(-b, a, b * p.x - a * p.y);  // Overflow warning!
   }
 
   friend std::ostream &operator<<(std::ostream &out, const TLine &l) {
@@ -547,7 +548,9 @@ This implementation stores and computes circle parameters in \inlinecode{double}
   \item \inlinecode{in\_circumcircle(a, b, c, d)} returns $1$ if \inlinecode{d} lies strictly inside the circle through \inlinecode{a}, \inlinecode{b}, and \inlinecode{c}, $0$ if it lies on the circle, or $-1$ if it lies outside. This has exact reasoning for integral points by evaluating the determinant directly without constructing a \inlinecode{Circle} or taking square roots. For integer inputs, the sign test is exact provided the chosen intermediate type does not overflow.
 \end{compactitem}
 
-The floating-point constructors and predicates use an absolute tolerance \inlinecode{EPS}. The determinant in \inlinecode{in\_circumcircle()} has degree four in the coordinate magnitude, so use a wider intermediate type for large integer coordinates.
+The floating-point constructors and predicates use an absolute tolerance \inlinecode{EPS}.
+
+Overflow warning: the determinant in \inlinecode{in\_circumcircle()} grows like the fourth power of the coordinate magnitude. For large integer coordinates, use a point or intermediate type wide enough for that determinant.
 
 \textbf{Time Complexity}: $O(1)$ per call to the constructors and all other operations.
 
@@ -690,6 +693,7 @@ int in_circumcircle(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   W adx = (W)a.x - d.x, ady = (W)a.y - d.y;
   W bdx = (W)b.x - d.x, bdy = (W)b.y - d.y;
   W cdx = (W)c.x - d.x, cdy = (W)c.y - d.y;
+  // Overflow warning!
   W det = (adx * adx + ady * ady) * (bdx * cdy - cdx * bdy) +
           (bdx * bdx + bdy * bdy) * (cdx * ady - adx * cdy) +
           (cdx * cdx + cdy * cdy) * (adx * bdy - bdx * ady);
@@ -757,7 +761,7 @@ Common triangle calculations in two dimensions. The functions are templated on t
 
 Use an integral point type for integer coordinates, and a floating-point type for fractional coordinates.
 
-Overflow warning: each individual cross product is still on the order of the squared coordinate magnitude, so for integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) once coordinates exceed $\sim 46000$.
+Overflow warning: each individual cross product is still on the order of the squared coordinate magnitude, so for integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) once coordinates exceed roughly $46000$.
 
 \textbf{Time Complexity}: $O(1)$ for all operations.
 
@@ -1142,6 +1146,8 @@ Distance calculations in two dimensions for points, lines, and line segments. Th
   \item \inlinecode{closest\_point(a, b, p)} returns the point on segment \inlinecode{a}-\inlinecode{b} closest to point \inlinecode{p}.
 \end{compactitem}
 
+Overflow warning: \inlinecode{sqdist()} forms squared coordinate differences and returns the coordinate arithmetic type. For integer point types, use a 64-bit coordinate type when coordinates may exceed a few tens of thousands.
+
 \textbf{Time Complexity}: $O(1)$ for all operations.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
@@ -1173,7 +1179,7 @@ template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
 template<typename Pt>
 auto sqdist(const Pt &a, const Pt &b) {
   auto dx = b.x - a.x, dy = b.y - a.y;
-  return dx * dx + dy * dy;
+  return dx * dx + dy * dy;  // Overflow warning!
 }
 
 template<typename Pt>
@@ -1337,7 +1343,7 @@ Intersection calculations in two dimensions for straight lines and line segments
   \item \inlinecode{closest\_point(a, b, c, p)} returns the closest point on line $ax + by + c = 0$ to point \inlinecode{p}.
 \end{compactitem}
 
-Overflow warning: the exact integer paths multiply coordinate differences (cross products and squared lengths), which grow like the squared coordinate magnitude. With 32-bit \inlinecode{int} coordinates these overflow once coordinates exceed $\sim 46000$, so for larger integer inputs use a point type with 64-bit (\inlinecode{int64\_t}) coordinates.
+Overflow warning: the exact integer paths multiply coordinate differences (cross products and squared lengths), which grow like the squared coordinate magnitude. With 32-bit \inlinecode{int} coordinates these overflow once coordinates exceed roughly $46000$, so for larger integer inputs use a point type with 64-bit (\inlinecode{int64\_t}) coordinates.
 
 \textbf{Time Complexity}: $O(1)$ for all operations.
 
@@ -2150,7 +2156,7 @@ Given a point \inlinecode{p} and a polygon, determines whether \inlinecode{p} li
   \item \inlinecode{point\_in\_polygon(p, lo, hi, edge\_is\_inside = true)} returns whether \inlinecode{p} lies within the polygon with vertices specified by the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of points in either clockwise or counter-clockwise order. The \inlinecode{edge\_is\_inside} flag controls whether points exactly on an edge or vertex count as inside.
 \end{compactitem}
 
-Overflow warning: the edge orientation test forms a cross product that grows like the squared coordinate magnitude. For integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) once coordinates exceed $\sim 46000$.
+Overflow warning: the edge orientation test forms a cross product that grows like the squared coordinate magnitude. For integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) once coordinates exceed roughly $46000$.
 
 \textbf{Time Complexity}: $O(n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
@@ -3912,7 +3918,9 @@ This implementation produces one valid triangulation using a simple brute-force 
   \item \inlinecode{delaunay\_triangulation(p)} returns a Delaunay triangulation of the distinct points in \inlinecode{p} as a vector of clockwise-oriented vertex triples, or an empty vector if no triangulation exists (e.g. fewer than three points, or all points collinear).
 \end{compactitem}
 
-All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation. The lifted-paraboloid test scales as $\sim 96 \cdot C^4$ where $C$ is the coordinate magnitude, so a 64-bit integer coordinate type is safe up to $|C| \leq \sim 17600$. For floating-point coordinates the test is subject to the usual rounding error.
+All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation.
+
+Overflow warning: the lifted-paraboloid test grows like the fourth power of the coordinate magnitude. With 64-bit integer coordinates, it overflows once coordinates exceed roughly $17600$. For floating-point coordinates the test is subject to the usual rounding error.
 
 \textbf{Time Complexity}: $O(n^{6})$ per call, where $n$ is the number of points. The empty-circumcircle test contributes $O(n^{4})$ while $O(n^{2})$ comes from checking candidate triangles against previously accepted triangles.
 
@@ -4054,9 +4062,9 @@ This implementation produces one valid triangulation using the Guibas-Stolfi div
   \item \inlinecode{delaunay\_triangulation(pts)} sorts \inlinecode{pts} lexicographically and removes duplicate points in place (so the input vector is modified), then returns the triangles of one Delaunay triangulation as a vector of counterclockwise-oriented vertex triples (\inlinecode{std::tuple}) of the input point type. If fewer than three non-collinear unique points remain, the result is empty.
 \end{compactitem}
 
-The point type must provide exact lexicographic \inlinecode{operator\textless{}}; sorting and duplicate removal requires this strict ordering rather than epsilon equality.
+The point type must provide exact lexicographic \inlinecode{operator\textless{}}; sorting and duplicate removal requires this strict ordering rather than epsilon equality. All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation.
 
-All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation. The in-circle test is a degree-4 polynomial in the coordinates and dominates the overflow budget: a 64-bit integer coordinate type stays exact up to $|C| \approx 1.4 \times 10^4$, where $C$ is the coordinate magnitude. For floating-point coordinates the predicates are subject to the usual rounding error.
+Overflow warning: the in-circle test grows like the fourth power of the coordinate magnitude and dominates the overflow budget. With 64-bit integer coordinates, it overflows once coordinates exceed roughly $14000$. For floating-point coordinates, the predicates are subject to the usual rounding error.
 
 \textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the number of input points.
 
@@ -4353,6 +4361,8 @@ Given points in the plane, produce a small set of candidate edges guaranteed to 
   \item \inlinecode{manhattan\_mst\_weight(points)} is a small Kruskal wrapper that returns the MST weight.
 \end{compactitem}
 
+Overflow warning: the sweeps form coordinate sums, negations, and differences such as \inlinecode{x + y} and \inlinecode{dx + dy}. With \inlinecode{int64\_t} coordinates, those intermediate values must fit in \inlinecode{int64\_t}.
+
 \textbf{Time Complexity}: $O(n \log n)$, where $n$ is the number of points.
 
 \textbf{Space Complexity}: $O(n)$ auxiliary.
@@ -4379,6 +4389,7 @@ std::vector<std::tuple<int64_t, int, int>> manhattan_mst_edges(std::vector<Point
   std::iota(id.begin(), id.end(), 0);
   std::vector<std::tuple<int64_t, int, int>> edges;
   for (int rot = 0; rot < 4; rot++) {
+    // Overflow warning!
     std::sort(id.begin(), id.end(), [&](int i, int j) {
       return p[i].x + p[i].y < p[j].x + p[j].y;
     });
@@ -4463,6 +4474,8 @@ int main() {
 \subsection{3D Point}
 A 3D point class template supporting vector arithmetic, dot and cross products, distances, angles, unit vectors, normals, and rotation about an axis. Point equality and ordering are exact, while \inlinecode{EQ(p, q)} provides epsilon equality for floating-point coordinates. Integer coordinates are suitable for exact algebraic predicates $({\inlinecodemath{dot}}, {\inlinecodemath{cross}}, {\inlinecodemath{sqnorm}})$ as long as intermediate products do not overflow; metric operations preserve floating-point coordinates and otherwise convert them to \inlinecode{double}.
 
+Overflow warning: the exact products \inlinecode{dot()}, \inlinecode{cross()}, and \inlinecode{sqnorm()} grow like the squared coordinate magnitude. With \inlinecode{TPoint3\textless{}int\textgreater{}} these overflow a 32-bit \inlinecode{int} once coordinates exceed a few tens of thousands, so use \inlinecode{Point3L} (\inlinecode{TPoint3\textless{}int64\_t\textgreater{}}) for larger integer coordinates.
+
 Type aliases:
 
 \begin{compactitem}
@@ -4510,8 +4523,8 @@ struct TPoint3 {
   TPoint3 operator-(const TPoint3 &p) const { return {x - p.x, y - p.y, z - p.z}; }
   TPoint3 operator*(T k) const { return {x * k, y * k, z * k}; }
   TPoint3<fp_t> operator/(fp_t k) const { return {(fp_t)x / k, (fp_t)y / k, (fp_t)z / k}; }
-  T dot(const TPoint3 &p) const { return x * p.x + y * p.y + z * p.z; }
-  T sqnorm() const { return x * x + y * y + z * z; }
+  T dot(const TPoint3 &p) const { return x * p.x + y * p.y + z * p.z; }  // Overflow warning!
+  T sqnorm() const { return x * x + y * y + z * z; }                     // Overflow warning!
 
   fp_t norm() const {
     return hypot(hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)), static_cast<fp_t>(z));

@@ -21,8 +21,8 @@ will be dominated by the sorting step.
 
 Overflow warning: `add_line()` compares intersections by cross-multiplying slope and intercept
 differences, a product on the order of the squared coefficient magnitude. For large `m`/`b` (roughly
-beyond $10^9$ with `int64_t`), cast that comparison to `__int128`. `query()` only forms the
-single product `m * x`, which simply needs to fit in `int64_t`.
+beyond $10^9$ with `int64_t`), cast that comparison to `__int128`. `query()` evaluates `m * x + b`,
+which also needs to fit in `int64_t`.
 
 Time Complexity:
 - O(n) for any interlaced sequence of `add_line()` and `query()` calls, where $n$ is the number of
@@ -56,7 +56,7 @@ struct SemiDynamicCHT {
         ptr = len;
       }
     }
-    // Overflow risk: this cross-multiplication is ~O(coeff^2); cast to __int128 for large m/b.
+    // Overflow warning!
     while (len > 1 && (B[len - 2] - B[len - 1]) * (m - M[len - 1]) >=
                           (B[len - 1] - b) * (M[len - 1] - M[len - 2])) {
       len--;
@@ -71,6 +71,7 @@ struct SemiDynamicCHT {
     if (ptr >= static_cast<int>(M.size())) {
       ptr = static_cast<int>(M.size()) - 1;
     }
+    // Overflow warning!
     while (ptr + 1 < static_cast<int>(M.size()) &&
            M[ptr + 1] * x + B[ptr + 1] <= M[ptr] * x + B[ptr]) {
       ptr++;

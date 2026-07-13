@@ -7,6 +7,10 @@ suitable for exact algebraic predicates $(`dot`, `cross`, `sqnorm`)$ as long as 
 products do not overflow; metric operations preserve floating-point coordinates and otherwise
 convert them to `double`.
 
+Overflow warning: the exact products `dot()`, `cross()`, and `sqnorm()` grow like the squared
+coordinate magnitude. With `TPoint3<int>` these overflow a 32-bit `int` once coordinates exceed a
+few tens of thousands, so use `Point3L` (`TPoint3<int64_t>`) for larger integer coordinates.
+
 Type aliases:
 - `Point3I = TPoint3<int>`
 - `Point3L = TPoint3<int64_t>`
@@ -54,8 +58,8 @@ struct TPoint3 {
   TPoint3 operator-(const TPoint3 &p) const { return {x - p.x, y - p.y, z - p.z}; }
   TPoint3 operator*(T k) const { return {x * k, y * k, z * k}; }
   TPoint3<fp_t> operator/(fp_t k) const { return {(fp_t)x / k, (fp_t)y / k, (fp_t)z / k}; }
-  T dot(const TPoint3 &p) const { return x * p.x + y * p.y + z * p.z; }
-  T sqnorm() const { return x * x + y * y + z * z; }
+  T dot(const TPoint3 &p) const { return x * p.x + y * p.y + z * p.z; }  // Overflow warning!
+  T sqnorm() const { return x * x + y * y + z * z; }                     // Overflow warning!
 
   fp_t norm() const {
     return hypot(hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)), static_cast<fp_t>(z));

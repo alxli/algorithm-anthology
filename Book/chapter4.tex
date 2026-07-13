@@ -450,13 +450,13 @@ class CycleFinder {
 
   void dfs_cycles(
       int u, int parent_edge, int max_cycles, int max_total_size, std::vector<int> &state,
-      std::vector<int> &stack, std::vector<std::vector<int>> &cycles, int &total_size
+      std::vector<int> &edge_stack, std::vector<std::vector<int>> &cycles, int &total_size
   ) const {
     if (static_cast<int>(cycles.size()) >= max_cycles || total_size >= max_total_size) {
       return;
     }
     // -1 = unvisited, -2 = finished, otherwise the vertex's index in the current edge stack.
-    state[u] = static_cast<int>(stack.size());
+    state[u] = static_cast<int>(edge_stack.size());
     for (int id : adj[u]) {
       if (!directed && id == parent_edge) {
         continue;
@@ -465,8 +465,8 @@ class CycleFinder {
       int v = directed ? ev : eu ^ ev ^ u;
       if (state[v] >= 0) {
         std::vector<int> cycle{id};
-        for (int i = state[v]; i < static_cast<int>(stack.size()); i++) {
-          cycle.push_back(stack[i]);
+        for (int i = state[v]; i < static_cast<int>(edge_stack.size()); i++) {
+          cycle.push_back(edge_stack[i]);
         }
         cycles.push_back(cycle);
         total_size += static_cast<int>(cycle.size());
@@ -474,9 +474,9 @@ class CycleFinder {
           return;
         }
       } else if (state[v] == -1) {
-        stack.push_back(id);
-        dfs_cycles(v, id, max_cycles, max_total_size, state, stack, cycles, total_size);
-        stack.pop_back();
+        edge_stack.push_back(id);
+        dfs_cycles(v, id, max_cycles, max_total_size, state, edge_stack, cycles, total_size);
+        edge_stack.pop_back();
       }
     }
     state[u] = -2;
@@ -499,12 +499,12 @@ class CycleFinder {
       int max_cycles = 1 << 30, int max_total_size = 1 << 30
   ) const {
     int n = static_cast<int>(adj.size());
-    std::vector<int> state(n, -1), stack;
+    std::vector<int> state(n, -1), edge_stack;
     std::vector<std::vector<int>> cycles;
     int total_size = 0;
     for (int u = 0; u < n; u++) {
       if (state[u] == -1) {
-        dfs_cycles(u, -1, max_cycles, max_total_size, state, stack, cycles, total_size);
+        dfs_cycles(u, -1, max_cycles, max_total_size, state, edge_stack, cycles, total_size);
       }
     }
     return cycles;
@@ -1137,15 +1137,15 @@ std::vector<int> encode_prufer(const std::vector<std::vector<int>> &adj) {
       leaves.insert(u);
     }
   }
-  std::vector<int> stack(1, root);
+  std::vector<int> st(1, root);
   parent[root] = -2;
-  while (!stack.empty()) {
-    int u = stack.back();
-    stack.pop_back();
+  while (!st.empty()) {
+    int u = st.back();
+    st.pop_back();
     for (int v : adj[u]) {
       if (parent[v] == -1) {
         parent[v] = u;
-        stack.push_back(v);
+        st.push_back(v);
       }
     }
   }
@@ -1238,14 +1238,14 @@ Parallel directed edges are supported by storing duplicate neighbors in \inlinec
 
 std::vector<int> known_eulerian_path_directed(std::vector<std::vector<int>> adj, int start) {
   assert(0 <= start && start < static_cast<int>(adj.size()));
-  std::vector<int> stack{start}, path;
-  while (!stack.empty()) {
-    int u = stack.back();
+  std::vector<int> st{start}, path;
+  while (!st.empty()) {
+    int u = st.back();
     if (adj[u].empty()) {
       path.push_back(u);
-      stack.pop_back();
+      st.pop_back();
     } else {
-      stack.push_back(adj[u].back());
+      st.push_back(adj[u].back());
       adj[u].pop_back();
     }
   }
@@ -1842,7 +1842,7 @@ Given a directed graph, determine the strongly connected components (SCCs) using
 struct TarjanSCC {
   static const int INF = INT_MAX / 2;
   std::vector<std::vector<int>> adj, scc;
-  std::vector<int> component, stack, lowlink;
+  std::vector<int> component, active, lowlink;
   std::vector<char> visited;
   int timer;
 
@@ -1853,7 +1853,7 @@ struct TarjanSCC {
   void dfs(int u) {
     lowlink[u] = timer++;
     visited[u] = true;
-    stack.push_back(u);
+    active.push_back(u);
     bool is_component_root = true;
     for (int v : adj[u]) {
       if (!visited[v]) {
@@ -1871,9 +1871,9 @@ struct TarjanSCC {
     int id = static_cast<int>(scc.size());
     int v;
     do {
-      v = stack.back();
-      stack.pop_back();
-      lowlink[v] = INF;  // marks v as removed from the stack
+      v = active.back();
+      active.pop_back();
+      lowlink[v] = INF;  // marks v as removed from the active stack
       component[v] = id;
       comp_nodes.push_back(v);
     } while (u != v);
@@ -1884,7 +1884,7 @@ struct TarjanSCC {
     int n = static_cast<int>(adj.size());
     scc.clear();
     component.assign(n, -1);
-    stack.clear();
+    active.clear();
     lowlink.assign(n, 0);
     visited.assign(n, false);
     timer = 0;
@@ -2800,18 +2800,18 @@ class FunctionalGraph {
       indeg[f[i]]++;
     }
     std::vector<char> removed(n, false);
-    std::vector<int> stack;
+    std::vector<int> st;
     for (int i = 0; i < n; i++) {
       if (indeg[i] == 0) {
-        stack.push_back(i);
+        st.push_back(i);
       }
     }
-    while (!stack.empty()) {
-      int u = stack.back();
-      stack.pop_back();
+    while (!st.empty()) {
+      int u = st.back();
+      st.pop_back();
       removed[u] = true;
       if (--indeg[f[u]] == 0) {
-        stack.push_back(f[u]);
+        st.push_back(f[u]);
       }
     }
     on_cyc.assign(n, false);
@@ -5346,6 +5346,8 @@ Given a flow network with capacities and edge costs, find a minimum-cost flow fr
 
 This implementation uses shortest augmenting paths with SPFA, so it supports negative edge costs as long as the residual graph has no reachable negative-cost cycle. For dense or adversarial inputs, a potential-based Dijkstra version is usually faster when reduced costs are nonnegative. The capacity type \inlinecode{T} should be signed, since reverse residual edges store negative flow.
 
+Overflow warning: the returned cost accumulates products of sent flow and edge cost. Ensure each product and the total cost fit in the cost type \inlinecode{C}.
+
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
@@ -5441,7 +5443,7 @@ class MinCostMaxFlow {
         Edge &e = edges[id];
         e.flow += aug;
         edges[id ^ 1].flow -= aug;
-        cost += aug * e.cost;
+        cost += aug * e.cost;  // Overflow warning!
       }
       flow += aug;
     }
@@ -5507,6 +5509,8 @@ Given a flow network with capacities and edge costs, find a minimum-cost flow fr
 \end{compactitem}
 
 If all initial edge costs are nonnegative, the initial potentials can be zero and the first shortest path search is already Dijkstra-safe. If negative costs are present, this implementation first runs SPFA to compute valid initial potentials; it assumes there is no reachable negative-cost cycle. The capacity type \inlinecode{T} should be signed, since reverse residual edges store negative flow.
+
+Overflow warning: the returned cost accumulates products of sent flow and edge cost. Ensure each product and the total cost fit in the cost type \inlinecode{C}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -5649,7 +5653,7 @@ class MinCostMaxFlow {
         Edge &e = edges[id];
         e.flow += aug;
         edges[id ^ 1].flow -= aug;
-        cost += aug * e.cost;
+        cost += aug * e.cost;  // Overflow warning!
       }
       flow += aug;
     }
@@ -6320,20 +6324,20 @@ std::vector<int> min_vertex_cover(int n2) {
       reachable_left[u] = false;
     }
   }
-  std::vector<int> stack;
+  std::vector<int> st;
   for (int u = 0; u < n1; u++) {
     if (reachable_left[u]) {
-      stack.push_back(u);
+      st.push_back(u);
     }
   }
-  while (!stack.empty()) {
-    int u = stack.back();
-    stack.pop_back();
+  while (!st.empty()) {
+    int u = st.back();
+    st.pop_back();
     reachable_left[u] = true;
     for (int e : adj[u]) {
       if (!seen_right[e] && match_right[e] != -1) {
         seen_right[e] = true;
-        stack.push_back(match_right[e]);  // Cross the matched edge back to the left.
+        st.push_back(match_right[e]);  // Cross the matched edge back to the left.
       }
     }
   }
@@ -6566,6 +6570,8 @@ The algorithm runs a primal-dual method. Each node carries a dual label, and an 
 
 All edge weights must be positive; an absent edge is treated as weight 0. The node count should be kept modest, as the algorithm uses dense storage.
 
+Overflow warning: labels and the returned matching weight are stored in \inlinecode{int64\_t}; all doubled weights, label sums, and the total matching weight must fit.
+
 \begin{compactitem}
   \item \inlinecode{WeightedGeneralMatching(n)} creates a graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
   \item \inlinecode{add\_edge(u, v, w)} adds an undirected edge of positive weight \inlinecode{w} between \inlinecode{u} and \inlinecode{v}. If several edges join the same pair, the last weight set is used.
@@ -6598,7 +6604,9 @@ class WeightedGeneralMatching {
   std::queue<int> q;
   int aux_clock;
 
-  int64_t e_delta(const Edge &e) const { return lab[e.u] + lab[e.v] - 2 * e.w; }
+  int64_t e_delta(const Edge &e) const {
+    return lab[e.u] + lab[e.v] - 2 * e.w;  // Overflow warning!
+  }
 
   void update_slack(int u, int x) {
     if (slack[x] == 0 || e_delta(g[u][x]) < e_delta(g[slack[x]][x])) {

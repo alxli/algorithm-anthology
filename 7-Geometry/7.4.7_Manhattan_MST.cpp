@@ -8,6 +8,9 @@ that can matter. Run Kruskal on the returned edges to obtain the MST.
 - `manhattan_mst_edges(points)` returns O(n) candidate edges $(`w`, `u`, `v`)$.
 - `manhattan_mst_weight(points)` is a small Kruskal wrapper that returns the MST weight.
 
+Overflow warning: the sweeps form coordinate sums, negations, and differences such as `x + y` and
+`dx + dy`. With `int64_t` coordinates, those intermediate values must fit in `int64_t`.
+
 Time Complexity:
 - O(n log n), where $n$ is the number of points.
 
@@ -37,6 +40,7 @@ std::vector<std::tuple<int64_t, int, int>> manhattan_mst_edges(std::vector<Point
   std::iota(id.begin(), id.end(), 0);
   std::vector<std::tuple<int64_t, int, int>> edges;
   for (int rot = 0; rot < 4; rot++) {
+    // Overflow warning!
     std::sort(id.begin(), id.end(), [&](int i, int j) {
       return p[i].x + p[i].y < p[j].x + p[j].y;
     });

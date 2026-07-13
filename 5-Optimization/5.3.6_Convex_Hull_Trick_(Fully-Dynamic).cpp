@@ -18,6 +18,9 @@ for which it is the best, so a query is a single tree lookup.
 - `query(x)` returns the best $y$-value among all inserted lines at coordinate `x`. At least one
   line must have been inserted.
 
+Overflow warning: border updates subtract slopes/intercepts and `query()` evaluates `m * x + b`, so
+those intermediate values must fit in `int64_t`.
+
 Time Complexity:
 - O(log n) amortized per call to `add_line()` and O(log n) per call to `query()`, where $n$ is the
   number of lines added.
@@ -59,7 +62,7 @@ class HullOptimizer {
     if (x->m == y->m) {
       x->xhi = (x->b > y->b) ? INT64_MAX : INT64_MIN;
     } else {
-      x->xhi = div_floor(y->b - x->b, x->m - y->m);
+      x->xhi = div_floor(y->b - x->b, x->m - y->m);  // Overflow warning!
     }
     return x->xhi >= y->xhi;
   }
@@ -90,7 +93,7 @@ class HullOptimizer {
     assert(!hull.empty());
     Line q(0, 0, x, true);
     auto it = hull.lower_bound(q);
-    int64_t res = it->m * x + it->b;
+    int64_t res = it->m * x + it->b;  // Overflow warning!
     return query_max ? res : -res;
   }
 };

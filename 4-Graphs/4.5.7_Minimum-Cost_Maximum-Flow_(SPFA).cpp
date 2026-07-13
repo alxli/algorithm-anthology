@@ -20,6 +20,9 @@ long as the residual graph has no reachable negative-cost cycle. For dense or ad
 potential-based Dijkstra version is usually faster when reduced costs are nonnegative. The capacity
 type `T` should be signed, since reverse residual edges store negative flow.
 
+Overflow warning: the returned cost accumulates products of sent flow and edge cost. Ensure each
+product and the total cost fit in the cost type `C`.
+
 Time Complexity:
 - O(n) per call to the constructor, where $n$ is the number of nodes.
 - O(1) per call to `add_edge()`.
@@ -115,7 +118,7 @@ class MinCostMaxFlow {
         Edge &e = edges[id];
         e.flow += aug;
         edges[id ^ 1].flow -= aug;
-        cost += aug * e.cost;
+        cost += aug * e.cost;  // Overflow warning!
       }
       flow += aug;
     }

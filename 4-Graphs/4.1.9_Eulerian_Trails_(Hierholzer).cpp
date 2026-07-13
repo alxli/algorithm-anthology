@@ -36,14 +36,14 @@ Space Complexity:
 
 std::vector<int> known_eulerian_path_directed(std::vector<std::vector<int>> adj, int start) {
   assert(0 <= start && start < static_cast<int>(adj.size()));
-  std::vector<int> stack{start}, path;
-  while (!stack.empty()) {
-    int u = stack.back();
+  std::vector<int> st{start}, path;
+  while (!st.empty()) {
+    int u = st.back();
     if (adj[u].empty()) {
       path.push_back(u);
-      stack.pop_back();
+      st.pop_back();
     } else {
-      stack.push_back(adj[u].back());
+      st.push_back(adj[u].back());
       adj[u].pop_back();
     }
   }

@@ -79,7 +79,15 @@ class SkipList {
     }
   }
 
-  ~SkipList() { delete head; }
+  ~SkipList() {
+    Node *n = head;
+    while (n != nullptr) {
+      Node *next = n->next[0];
+      delete n;
+      n = next;
+    }
+  }
+
   SkipList(const SkipList &) = delete;
   SkipList &operator=(const SkipList &) = delete;
   int size() const { return num_nodes; }

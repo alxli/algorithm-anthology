@@ -22,6 +22,15 @@ EXAMPLE_OUTPUT_WITHOUT_DIRECT_PRINT = {
     Path("8-Miscellany/8.3_Debugging.cpp"),
 }
 
+EXAMPLE_HELPER_RE = re.compile(
+    r"(?m)^(?:template<[^>\n]+>\n)?"
+    r"(?:[A-Za-z_][\w:<>,&* ]+\s+)+"
+    r"([A-Za-z_][A-Za-z0-9_]*)\s*\([^;{}]*\)\s*\{"
+)
+C_RAND_RE = re.compile(
+    r"((?<![A-Za-z0-9_])::rand\s*\(|(?<!::)\brand\s*\(\s*\)\s*%|\bsrand\s*\()"
+)
+
 STYLE_PATTERNS = [
     (
         re.compile(
@@ -101,6 +110,10 @@ STYLE_PATTERNS = [
     (
         re.compile(r"\bprime ([0-9]{4,})\b"),
         "Wrap large mathematical literals in math mode.",
+    ),
+    (
+        re.compile(r"64-bit integer coordinate type (?:stays exact|is safe) up to"),
+        "Use the standard `Overflow warning:` prose for coordinate overflow limits.",
     ),
 ]
 
@@ -336,6 +349,56 @@ def scan_example_markers(paths):
                     marker,
                 )
             )
+    return issues
+
+
+def scan_code_consistency(paths):
+    issues = []
+    for path in paths:
+        text = path.read_text()
+        lines = text.splitlines()
+        for line_no, line in enumerate(lines, start=1):
+            if C_RAND_RE.search(line):
+                issues.append(
+                    Issue(
+                        path,
+                        line_no,
+                        "code-consistency",
+                        "Avoid C rand()/srand(); use a C++ random engine and distribution.",
+                        line,
+                    )
+                )
+
+        marker = text.find("/*** Example Usage")
+        if marker == -1:
+            continue
+        example = text[marker:]
+        example_start_line = text[:marker].count("\n") + 1
+        for offset, line in enumerate(example.splitlines(), start=0):
+            if "std::random_device{}" in line:
+                issues.append(
+                    Issue(
+                        path,
+                        example_start_line + offset,
+                        "code-consistency",
+                        "Use a fixed seed in examples so output and assertions are reproducible.",
+                        line,
+                    )
+                )
+        for match in EXAMPLE_HELPER_RE.finditer(example):
+            name = match.group(1)
+            if name == "main":
+                continue
+            if len(re.findall(r"\b" + re.escape(name) + r"\b", example)) == 1:
+                issues.append(
+                    Issue(
+                        path,
+                        example_start_line + example[: match.start()].count("\n"),
+                        "code-consistency",
+                        "Remove unused helper functions from example blocks.",
+                        match.group(0).splitlines()[-1],
+                    )
+                )
     return issues
 
 
@@ -681,6 +744,7 @@ def main():
     issues.extend(scan_docstrings(paths))
     issues.extend(scan_atomic_inline_wrapping(paths))
     issues.extend(scan_example_markers(paths))
+    issues.extend(scan_code_consistency(paths))
     issues.extend(scan_known_style_drift(paths))
     issues.extend(scan_default_argument_docs(paths))
     issues.extend(scan_repeated_literal_defaults(paths))
@@ -699,13 +763,13 @@ def main():
         )
 
     if issues:
-        print(f"scan_docstrings: {len(issues)} issue(s) found\n")
+        print(f"scan_quality: {len(issues)} issue(s) found\n")
         for issue in issues:
             print(issue.format())
             print()
         return 1
 
-    print("scan_docstrings: stable")
+    print("scan_quality: stable")
     return 0
 
 

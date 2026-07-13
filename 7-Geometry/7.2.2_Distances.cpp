@@ -18,6 +18,10 @@ floating-point `Pt` there for a meaningful (non-truncated) result.
   $0$ if the segments touch or intersect.
 - `closest_point(a, b, p)` returns the point on segment `a`-`b` closest to point `p`.
 
+Overflow warning: `sqdist()` forms squared coordinate differences and returns the coordinate
+arithmetic type. For integer point types, use a 64-bit coordinate type when coordinates may exceed a
+few tens of thousands.
+
 Time Complexity:
 - O(1) for all operations.
 
@@ -54,7 +58,7 @@ template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
 template<typename Pt>
 auto sqdist(const Pt &a, const Pt &b) {
   auto dx = b.x - a.x, dy = b.y - a.y;
-  return dx * dx + dy * dy;
+  return dx * dx + dy * dy;  // Overflow warning!
 }
 
 template<typename Pt>

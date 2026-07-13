@@ -12,7 +12,7 @@ coordinates using `EPS` and remains exact for other coordinate types.
 
 Overflow warning: the exact products `dot()`, `cross()`, and `sqnorm()` grow like the squared
 coordinate magnitude. With `TPoint<int>` these overflow a 32-bit `int` once coordinates exceed
-$\sim 46000$, so use `PointL` (`TPoint<long long>`) for larger integer coordinates.
+roughly $46000$, so use `PointL` (`TPoint<long long>`) for larger integer coordinates.
 
 Metric operations (return `TPoint<fp_t>` or `fp_t`):
 - `norm()`, `arg()`, `proj()`, `normalize()`, `rotateCW()`, `rotateCCW()`, `reflect(line)`.
@@ -111,17 +111,17 @@ struct TPoint {
 
   // --- Exact operations: return T or TPoint<T>, work for any coordinate type ---
 
-  // Overflow warning: these products grow like the squared coordinate magnitude, so for integer T
-  // with large coordinates (beyond a few thousand for 32-bit int) use a wider type such as PointL.
-  T sqnorm() const { return x * x + y * y; }
-  T dot(const TPoint &p) const { return x * p.x + y * p.y; }
-  T cross(const TPoint &p) const { return x * p.y - y * p.x; }
+  T sqnorm() const { return x * x + y * y; }                    // Overflow warning!
+  T dot(const TPoint &p) const { return x * p.x + y * p.y; }    // Overflow warning!
+  T cross(const TPoint &p) const { return x * p.y - y * p.x; }  // Overflow warning!
 
   // --- Floating-point operations: return fp_t or TPoint<fp_t> ---
 
   fp_t norm() const { return hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)); }
   fp_t arg() const { return atan2(static_cast<fp_t>(y), static_cast<fp_t>(x)); }
-  fp_t proj(const TPoint &p) const { return static_cast<fp_t>(dot(p)) / p.norm(); }
+  fp_t proj(const TPoint &p) const {
+    return (static_cast<fp_t>(x) * p.x + static_cast<fp_t>(y) * p.y) / p.norm();
+  }
 
   TPoint<fp_t> normalize() const {
     fp_t n = norm();
@@ -159,13 +159,13 @@ struct TPoint {
 
   // Returns (x, y) rotated t radians clockwise about point p.
   TPoint<fp_t> rotateCW(const TPoint &p, fp_t t) const {
-    return TPoint<fp_t>{(fp_t)(x - p.x), (fp_t)(y - p.y)}.rotateCW(t) +
+    return TPoint<fp_t>{(fp_t)x - p.x, (fp_t)y - p.y}.rotateCW(t) +
            TPoint<fp_t>{(fp_t)p.x, (fp_t)p.y};
   }
 
   // Returns (x, y) rotated t radians counter-clockwise about point p.
   TPoint<fp_t> rotateCCW(const TPoint &p, fp_t t) const {
-    return TPoint<fp_t>{(fp_t)(x - p.x), (fp_t)(y - p.y)}.rotateCCW(t) +
+    return TPoint<fp_t>{(fp_t)x - p.x, (fp_t)y - p.y}.rotateCCW(t) +
            TPoint<fp_t>{(fp_t)p.x, (fp_t)p.y};
   }
 
@@ -181,7 +181,7 @@ struct TPoint {
     if (EQ(p, q)) {
       return TPoint<fp_t>{(fp_t)x, (fp_t)y}.reflect(fp);
     }
-    TPoint<fp_t> r{(fp_t)(x - p.x), (fp_t)(y - p.y)}, s{(fp_t)(q.x - p.x), (fp_t)(q.y - p.y)};
+    TPoint<fp_t> r{(fp_t)x - p.x, (fp_t)y - p.y}, s{(fp_t)q.x - p.x, (fp_t)q.y - p.y};
     fp_t ssq = s.sqnorm();
     r = TPoint<fp_t>{(r.x * s.x + r.y * s.y) / ssq, (r.x * s.y - r.y * s.x) / ssq};
     return TPoint<fp_t>{r.x * s.x - r.y * s.y + fp.x, r.x * s.y + r.y * s.x + fp.y};

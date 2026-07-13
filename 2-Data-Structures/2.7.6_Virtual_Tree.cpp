@@ -120,16 +120,15 @@ class VirtualTree {
     }
     std::sort(nodes.begin(), nodes.end(), by_tin);
     nodes.erase(std::unique(nodes.begin(), nodes.end()), nodes.end());
-
-    std::vector<int> stack;
+    std::vector<int> ancestors;
     for (int v : nodes) {
-      while (!stack.empty() && !is_ancestor(stack.back(), v)) {
-        stack.pop_back();
+      while (!ancestors.empty() && !is_ancestor(ancestors.back(), v)) {
+        ancestors.pop_back();
       }
-      if (!stack.empty()) {
-        res.edges.emplace_back(stack.back(), v);
+      if (!ancestors.empty()) {
+        res.edges.emplace_back(ancestors.back(), v);
       }
-      stack.push_back(v);
+      ancestors.push_back(v);
     }
     res.root = nodes.front();
     res.vertices = std::move(nodes);
