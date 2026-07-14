@@ -52,8 +52,6 @@ class HullOptimizer {
 
   using hulliter = std::multiset<Line>::iterator;
 
-  static int64_t div_floor(int64_t a, int64_t b) { return a / b - ((a ^ b) < 0 && a % b); }
-
   bool update_border(hulliter x, hulliter y) {
     if (y == hull.end()) {
       x->xhi = INT64_MAX;
@@ -62,7 +60,8 @@ class HullOptimizer {
     if (x->m == y->m) {
       x->xhi = (x->b > y->b) ? INT64_MAX : INT64_MIN;
     } else {
-      x->xhi = div_floor(y->b - x->b, x->m - y->m);  // Overflow warning!
+      int64_t a = y->b - x->b, b = x->m - y->m;  // Overflow warning!
+      x->xhi = a / b - ((a ^ b) < 0 && a % b);
     }
     return x->xhi >= y->xhi;
   }

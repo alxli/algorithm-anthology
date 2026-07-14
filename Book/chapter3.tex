@@ -1953,7 +1953,6 @@ std::vector<int> de_bruijn(int k, int n) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cmath>
 #include <set>
 #include <vector>
 using namespace std;
@@ -1966,7 +1965,10 @@ int main() {
   for (int k = 2; k <= 4; k++) {
     for (int n = 1; n <= 4; n++) {
       vector<int> s = de_bruijn(k, n);
-      int len = static_cast<int>(std::lround(std::pow(k, n)));
+      int len = 1;
+      for (int i = 0; i < n; i++) {
+        len *= k;
+      }
       assert(static_cast<int>(s.size()) == len);
 
       // Collect every length-n window, wrapping cyclically, and confirm all k^n are distinct.
@@ -2162,7 +2164,6 @@ The original Manber-Myers doubling algorithm comparison-sorts the suffixes by th
 #include <cstddef>
 #include <numeric>
 #include <string>
-#include <utility>
 #include <vector>
 using std::string;
 
@@ -2294,7 +2295,6 @@ The DC3/skew algorithm recursively constructs the suffix array of the suffixes s
 #include <algorithm>
 #include <cstddef>
 #include <string>
-#include <utility>
 #include <vector>
 using std::string;
 
@@ -2499,7 +2499,6 @@ For a small, fixed alphabet, the \inlinecode{std::unordered\_map} children can b
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
-#include <cstddef>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -2722,7 +2721,6 @@ Maintain a map of strings to values using a compressed tree data structure. Each
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
-#include <cstddef>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -4103,7 +4101,6 @@ Operators may be non-empty strings of any length, but should not contain any par
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 using std::string;
 

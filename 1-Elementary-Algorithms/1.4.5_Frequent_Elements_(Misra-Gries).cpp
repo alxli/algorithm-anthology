@@ -12,8 +12,8 @@ The candidates are not automatically verified, since the algorithm intentionally
 memory and does not retain the stream. If exact frequencies are needed, make a second pass over the
 input and count only the returned candidates.
 
-- `misra_gries(lo, hi, k)` returns a hash table of candidate values to their residual counters. Use
-  `k = 2` for the Boyer-Moore majority-candidate special case.
+- `frequent_candidates(lo, hi, k)` returns a hash table of candidate values to their residual
+  counters. Use `k = 2` for the Boyer-Moore majority-candidate special case.
 
 Time Complexity:
 - O(n) amortized per call on average: each element either hits an existing counter, taking O(1), or
@@ -30,7 +30,7 @@ Space Complexity:
 #include <vector>
 
 template<typename T, typename It>
-std::unordered_map<T, int> misra_gries(It lo, It hi, int k) {
+std::unordered_map<T, int> frequent_candidates(It lo, It hi, int k) {
   std::unordered_map<T, int> count;
   for (It it = lo; it != hi; ++it) {
     if (auto found = count.find(*it); found != count.end()) {
@@ -59,7 +59,7 @@ using namespace std;
 
 int main() {
   vector<int> a{1, 2, 1, 3, 1, 2, 1, 4, 2, 2, 2};
-  unordered_map<int, int> candidates = misra_gries<int>(a.begin(), a.end(), 3);
+  unordered_map<int, int> candidates = frequent_candidates<int>(a.begin(), a.end(), 3);
   assert(candidates.count(1));
   assert(candidates.count(2));
   assert(!candidates.count(3));

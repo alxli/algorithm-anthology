@@ -55,7 +55,7 @@ bool dfs(int u) {
   return false;
 }
 
-int kuhn(int n2) {
+int bipartite_matching(int n2) {
   int n1 = static_cast<int>(adj.size());
   match_left.assign(n1, -1);
   match_right.assign(n2, -1);
@@ -73,7 +73,7 @@ int kuhn(int n2) {
 
 std::vector<int> min_vertex_cover(int n2) {
   int n1 = static_cast<int>(adj.size());
-  kuhn(n2);
+  bipartite_matching(n2);
   // reachable_left[u] becomes true for left nodes on an alternating path from an unmatched left
   // node; seen_right[e] for the right nodes on those paths.
   std::vector<char> reachable_left(n1, true), seen_right(n2, false);

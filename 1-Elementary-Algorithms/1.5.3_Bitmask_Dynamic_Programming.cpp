@@ -10,9 +10,9 @@ For assignment, `dp[mask]` is the minimum cost after assigning the first `popcou
 the selected jobs. The next worker tries every unused job. For set cover, `dp[mask]` is the minimum
 number of chosen sets needed to cover exactly the elements in `mask`; adding one set moves to the
 union mask. For set partitioning, iterating all submasks gives the recurrence
-`dp[mask] = min(dp[mask ^ sub] + cost[sub])` over all masks this has O(3^n) transitions. For
-domino tiling, the mask is a profile of the current row; this technique is often called DP on a
-broken profile or plug DP. A domino covers exactly two edge-adjacent cells, so each piece is either
+`dp[mask] = min(dp[mask ^ sub] + cost[sub])` over all masks this has O(3^n) transitions. For domino
+tiling, the mask is a profile of the current row; this technique is often called DP on a broken
+profile or plug DP. A domino covers exactly two edge-adjacent cells, so each piece is either
 horizontal ($1 \times 2$) or vertical ($2 \times 1$).
 
 - `assignment_min_cost(cost)` returns a pair `(sum, job)`, where `sum` is the minimum cost of
@@ -92,8 +92,8 @@ std::pair<int, std::vector<int>> minimum_set_cover(
   int n = static_cast<int>(sets.size());
   int states = 1 << universe_size;
   int full = states - 1;
-  for (int set : sets) {
-    assert((set & ~full) == 0);
+  for (int subset : sets) {
+    assert((subset & ~full) == 0);
   }
   int inf = n + 1;
   std::vector<int> dp(states, inf), parent(states, -1), prev(states, -1);

@@ -6,8 +6,8 @@ relative ordering of elements. That is, if $a$ is the array of original values a
 of compressed values, then every pair of indices $i, j$ in $[0, n)$ shall satisfy $a[i] < a[j]$ if
 and only if $b[i] < b[j]$.
 
-All implementations below take ranges as ForwardIterators and require `operator<` on the value
-type. The two `compress()` functions rewrite a range in place and then discard the mapping.
+All implementations below take ranges as ForwardIterators and require `operator<` on the value type.
+The two `compress()` functions rewrite a range in place and then discard the mapping.
 
 - `compress1(lo, hi)` performs the compression by sorting the array, removing duplicates, and binary
   searching for the position of each original value.

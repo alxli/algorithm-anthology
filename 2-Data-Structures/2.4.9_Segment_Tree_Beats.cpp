@@ -8,9 +8,9 @@ each node, the strict maximum, the second-largest distinct value, and a count of
 the maximum. A clamp then has three cases at each node: if `t` $\geq$ `max1`, the clamp changes
 nothing and the recursion stops (the prune case); if `max2` < `t` < `max1`, every entry equal to
 `max1` drops to `t` and all others are untouched, so the node updates in O(1), the sum falls by
-$(`max1` - `t`) * `count`$, and `max1` becomes `t` (the break, or tag, case); otherwise
-(`t` $\leq$ `max2`) the node is too coarse to update directly, so the clamp recurses into both
-children and re-pulls. The lazy tag pushes down to a child only when the child's maximum is larger.
+$(`max1` - `t`) * `count`$, and `max1` becomes `t` (the break, or tag, case); otherwise (`t` $\leq$
+`max2`) the node is too coarse to update directly, so the clamp recurses into both children and
+re-pulls. The lazy tag pushes down to a child only when the child's maximum is larger.
 
 The break condition is what makes this efficient: a potential-function argument on the number of
 distinct values along root-to-leaf paths shows the total work over any sequence of clamps is

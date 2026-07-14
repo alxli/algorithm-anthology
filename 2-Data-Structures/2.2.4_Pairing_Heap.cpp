@@ -4,8 +4,8 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
 and extraction of the minimum as well as efficient merging with other instances. This implementation
 requires an ordering on the set of possible elements defined by `operator<`. A pairing heap is a
 heap-ordered multi-way tree, using a two-pass merge to self-adjust during each deletion. Unlike the
-other heaps in this section, it also supports `decrease_key()` and `erase()` via handles returned
-by `push()`, the feature pairing heaps are best known for.
+other heaps in this section, it also supports `decrease_key()` and `erase()` via handles returned by
+`push()`, the feature pairing heaps are best known for.
 
 - `PairingHeap<T>()` constructs an empty priority queue.
 - `PairingHeap<T>(lo, hi)` constructs a priority queue from two ForwardIterators, consisting of
@@ -42,7 +42,6 @@ Space Complexity:
 */
 
 #include <cassert>
-#include <cstddef>
 
 template<typename T>
 class PairingHeap {

@@ -1,10 +1,10 @@
 /*
 
 A Eulerian trail is a path in a graph which contains every edge exactly once. A Eulerian cycle or
-circuit is an Eulerian trail which begins and ends on the same node. A directed graph has a
-Eulerian trail when all nonzero-degree nodes belong to one connected part of the underlying graph,
-and either every node has equal in-degree and out-degree or exactly one node has one extra outgoing
-edge and exactly one node has one extra incoming edge.
+circuit is an Eulerian trail which begins and ends on the same node. A directed graph has a Eulerian
+trail when all nonzero-degree nodes belong to one connected part of the underlying graph, and either
+every node has equal in-degree and out-degree or exactly one node has one extra outgoing edge and
+exactly one node has one extra incoming edge.
 
 Hierholzer's algorithm walks unused edges until stuck, then backtracks to splice each closed detour
 into the final trail. For a directed graph known to have a trail from `start`, the core algorithm

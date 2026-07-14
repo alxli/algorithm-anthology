@@ -36,8 +36,6 @@ Space Complexity:
 
 */
 
-#include <cstddef>
-
 struct ListNode {
   int value;
   ListNode *next;
@@ -135,9 +133,7 @@ int main() {
   }
   ListNode *merged = merge_sorted_lists(&a[0], &b[0]);
   vector<int> merged_values = values(merged);
-  for (int i = 0; i < 6; i++) {
-    assert(merged_values[i] == i + 1);
-  }
+  assert((merged_values == vector<int>{1, 2, 3, 4, 5, 6}));
 
   ListNode *second = nullptr;
   ListNode *first = split_half(merged, &second);

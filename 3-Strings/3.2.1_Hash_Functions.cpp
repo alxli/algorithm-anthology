@@ -5,8 +5,8 @@ keys. These functions are useful for fingerprinting values, combining keys, seed
 algorithms, and defining `std::unordered_map` keys for pairs, tuples, and vectors. They are not
 suitable for passwords, signatures, or adversarial security.
 
-The standalone functions below are deterministic. The `IntHasher` functor adds a per-run random
-seed before mixing, which is useful for making integer-keyed hash tables harder to hack in open-test
+The standalone functions below are deterministic. The `IntHasher` functor adds a per-run random seed
+before mixing, which is useful for making integer-keyed hash tables harder to hack in open-test
 contests.
 
 The composite hashers separate the mixing primitive (`mix64`/`hash_combine64`) from each type's

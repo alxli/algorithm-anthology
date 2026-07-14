@@ -6,9 +6,9 @@ while having both $u$ and $v$ as descendants. A node is considered to be a desce
 
 This implementation preprocesses binary ancestor jumps. During depth-first search, it records entry
 and exit times so ancestry can be tested in O(1), records each node's depth and root, and stores
-`up[u][i]`, the $2^i$-th ancestor of each node `u`. To answer `lca(u, v)`, it first handles the
-case where one node is already an ancestor of the other, then jumps `u` upward by decreasing powers
-of two until its parent is the lowest common ancestor.
+`up[u][i]`, the $2^i$-th ancestor of each node `u`. To answer `lca(u, v)`, it first handles the case
+where one node is already an ancestor of the other, then jumps `u` upward by decreasing powers of
+two until its parent is the lowest common ancestor.
 
 - `SparseTableLCA(adj)` builds the structure over a forest represented by a bidirectional adjacency
   list `adj` of nodes numbered $[0, `n`)$, where `n` is `adj.size()`.

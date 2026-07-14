@@ -1,7 +1,7 @@
 /*
 
-Intersection calculations in two dimensions for straight lines and line segments. The functions
-are templated on the point type `Pt`: pass any struct with numeric `.x` and `.y` fields (for example
+Intersection calculations in two dimensions for straight lines and line segments. The functions are
+templated on the point type `Pt`: pass any struct with numeric `.x` and `.y` fields (for example
 `PointD`/`PointI` from 7.1.1, or the local example struct) for which `operator<` orders points
 lexicographically using exact coordinate comparisons. Point outputs are written through a
 caller-supplied pointer whose type is deduced, so the output point type may differ from the input --
@@ -42,10 +42,8 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
-#include <cstddef>
 #include <cstdint>
 #include <type_traits>
-#include <utility>
 
 const double EPS = 1e-9;
 

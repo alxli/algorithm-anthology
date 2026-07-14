@@ -131,16 +131,16 @@ int main() {
   assert(dsu.size() == 7);
   assert(dsu.sets() == 3);
   auto s = dsu.get_all_sets();
-  for (auto &set : s) {
-    sort(set.begin(), set.end());
+  for (auto &group : s) {
+    sort(group.begin(), group.end());
   }
   sort(s.begin(), s.end());
   bool first_set = true;
-  for (const auto &set : s) {
+  for (const auto &group : s) {
     cout << (first_set ? "[" : ", [");
     first_set = false;
     bool first_value = true;
-    for (char value : set) {
+    for (char value : group) {
       cout << (first_value ? "" : ", ") << value;
       first_value = false;
     }

@@ -11,10 +11,10 @@ matching in general graphs, use the weighted blossom algorithm in the next secti
 
 The graph must be simple; parallel edges and self-loops are not supported.
 
-- `blossom()` returns a matching for a global, bidirectionally pre-populated adjacency list `adj`
-  which must consist of nodes numbered $[0, `n`)$, where `n` is `adj.size()`. The returned vector
-  `match` has `match[u] == v` and `match[v] == u` when `u` and `v` are matched, or `match[u]` is
-  $-1$ when `u` is unmatched.
+- `maximum_matching(adj)` returns a matching for a bidirectionally pre-populated adjacency list
+  `adj` which must consist of nodes numbered $[0, `n`)$, where `n` is `adj.size()`. The returned
+  vector `match` has `match[u] == v` and `match[v] == u` when `u` and `v` are matched, or `match[u]`
+  is $-1$ when `u` is unmatched.
 
 Time Complexity:
 - O(n^3) per call, where $n$ is the number of nodes.
@@ -32,7 +32,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-std::vector<int> blossom(const std::vector<std::vector<int>> &adj) {
+std::vector<int> maximum_matching(const std::vector<std::vector<int>> &adj) {
   int n = static_cast<int>(adj.size());
   std::vector<int> match(n, -1), label(n), parent(n), base(n), aux(n, -1);
   std::queue<int> q;
@@ -159,7 +159,7 @@ int main() {
     add_edge(1, 2);
     add_edge(2, 3);
     add_edge(3, 0);
-    vector<int> match = blossom(adj);
+    vector<int> match = maximum_matching(adj);
     cout << "Matched " << matching_size(match) << " pair(s):" << endl;
     for (int i = 0; i < nodes; i++) {
       if (match[i] != -1 && i < match[i]) {
@@ -178,7 +178,7 @@ int main() {
     add_edge(2, 0);
     add_edge(0, 3);
     add_edge(1, 4);
-    assert(matching_size(blossom(adj)) == 2);
+    assert(matching_size(maximum_matching(adj)) == 2);
   }
   return 0;
 }

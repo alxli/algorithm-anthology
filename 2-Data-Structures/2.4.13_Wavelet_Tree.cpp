@@ -1,10 +1,10 @@
 /*
 
-A wavelet tree is a static structure over an integer array with values in a known range
-[`min_val`, `max_val`]. The root splits the value range at its midpoint, recording for every
-prefix of the array how many of its elements belong to the lower value half, then stably partitions
-the array so that those elements form the left child and the rest form the right child. Recursing on
-each half builds a balanced tree of height O(log s), where $s$ is the size of the value range.
+A wavelet tree is a static structure over an integer array with values in a known range [`min_val`,
+`max_val`]. The root splits the value range at its midpoint, recording for every prefix of the array
+how many of its elements belong to the lower value half, then stably partitions the array so that
+those elements form the left child and the rest form the right child. Recursing on each half builds
+a balanced tree of height O(log s), where $s$ is the size of the value range.
 
 The recorded prefix counts let a query at any node translate a range of array positions into the
 corresponding range of positions in either child, so a single root-to-leaf descent answers order

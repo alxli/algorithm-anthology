@@ -1,7 +1,7 @@
 /*
 
-Given a rooted tree, compute a mutable summary for every subtree by merging child summaries into
-one kept summary. Small-to-large merging always keeps the largest child summary and absorbs smaller
+Given a rooted tree, compute a mutable summary for every subtree by merging child summaries into one
+kept summary. Small-to-large merging always keeps the largest child summary and absorbs smaller
 summaries into it. Each stored item can move only into summaries at least twice as large as before,
 so the total number of moved items is logarithmic per item.
 

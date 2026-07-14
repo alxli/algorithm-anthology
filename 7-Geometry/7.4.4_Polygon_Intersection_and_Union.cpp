@@ -3,9 +3,9 @@
 Given two simple (non-self-intersecting) polygons, determine the areas of their intersection and
 union using a sweep line algorithm and the inclusion-exclusion principle. Every vertex and every
 pairwise edge intersection contributes its $x$-coordinate as a sweep boundary, so within each
-vertical slab between consecutive boundaries the two borders cannot cross, and the slab's overlap
-is accumulated exactly from trapezoid areas. The union then follows by inclusion-exclusion as
-area(A) + area(B) minus the intersection.
+vertical slab between consecutive boundaries the two borders cannot cross, and the slab's overlap is
+accumulated exactly from trapezoid areas. The union then follows by inclusion-exclusion as area(A) +
+area(B) minus the intersection.
 
 - `intersection_area(lo1, hi1, lo2, hi2)` returns the intersection area of two polygons respectively
   specified by two ranges $[`lo1`, `hi1`)$ and $[`lo2`, `hi2`)$ of vertices in clockwise order,
@@ -34,7 +34,6 @@ Space Complexity:
 #include <cstdint>
 #include <set>
 #include <type_traits>
-#include <utility>
 #include <vector>
 
 const double EPS = 1e-9;

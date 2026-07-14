@@ -780,14 +780,13 @@ Quickselect repeatedly applies this partition and continues only into the group 
 
 \begin{compactitem}
   \item \inlinecode{partition\_three\_way(lo, hi, pivot)} rearranges $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ in-place and returns iterators $({\inlinecodemath{mid1}}, {\inlinecodemath{mid2}})$, where $[{\inlinecodemath{lo}}, {\inlinecodemath{mid1}})$ is less than \inlinecode{pivot}, $[{\inlinecodemath{mid1}}, {\inlinecodemath{mid2}})$ is equal to \inlinecode{pivot}, and $[{\inlinecodemath{mid2}}, {\inlinecodemath{hi}})$ is greater than \inlinecode{pivot}.
-  \item \inlinecode{sort\_012(lo, hi)} sorts a range consisting only of the values $0$, $1$, and $2$.
   \item \inlinecode{nth\_element2(lo, nth, hi)} rearranges the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ around the 0-based rank represented by iterator \inlinecode{nth}. This requires random-access iterators and \inlinecode{operator\textless{}} on the value type.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to \inlinecode{partition\_three\_way()} or \inlinecode{sort\_012()}, where $n$ is the range length.
+  \item $O(n)$ per call to \inlinecode{partition\_three\_way()}, where $n$ is the range length.
   \item $O(n)$ expected per call to \inlinecode{nth\_element2()}, and $O(n^{2})$ in the worst case.
 \end{compactitem}
 
@@ -812,11 +811,6 @@ std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot) {
     }
   }
   return {lt, gt};
-}
-
-template<typename It>
-void sort_012(It lo, It hi) {
-  partition_three_way(lo, hi, 1);
 }
 
 template<typename It>
@@ -845,10 +839,9 @@ using namespace std;
 
 int main() {
   vector<int> values{2, 0, 1, 2, 1, 0, 1};
-  sort_012(values.begin(), values.end());
-  for (int i = 0; i < 7; i++) {
-    assert(values[i] == (i < 2 ? 0 : i < 5 ? 1 : 2));
-  }
+  // On a range containing only 0, 1, and 2, partitioning around 1 sorts the range.
+  partition_three_way(values.begin(), values.end(), 1);
+  assert(std::is_sorted(values.begin(), values.end()));
 
   vector<int> b{4, 2, 5, 3, 3, 1};
   auto [mid1, mid2] = partition_three_way(b.begin(), b.end(), 3);
@@ -1639,7 +1632,6 @@ Given an array of numbers, determine the maximum possible sum of any contiguous 
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
-#include <cstddef>
 #include <iterator>
 #include <tuple>
 #include <vector>
@@ -2153,7 +2145,6 @@ All capacities must be nonnegative integers. Weights and coin denominations shou
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <utility>
@@ -3173,7 +3164,7 @@ Finds candidate frequent elements in a stream using the Misra-Gries algorithm. W
 The candidates are not automatically verified, since the algorithm intentionally uses sublinear memory and does not retain the stream. If exact frequencies are needed, make a second pass over the input and count only the returned candidates.
 
 \begin{compactitem}
-  \item \inlinecode{misra\_gries(lo, hi, k)} returns a hash table of candidate values to their residual counters. Use \inlinecode{k = 2} for the Boyer-Moore majority-candidate special case.
+  \item \inlinecode{frequent\_candidates(lo, hi, k)} returns a hash table of candidate values to their residual counters. Use \inlinecode{k = 2} for the Boyer-Moore majority-candidate special case.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ amortized per call on average: each element either hits an existing counter, taking $O(1)$, or triggers a full-table decrement, taking $O(k)$, but the table-full event can occur at most $n/(k-1)$ times total, so the amortized cost per element is $O(1 + k/(k-1))$ = $O(1)$. In the worst case, a single call is $O(n \cdot k)$, but that cannot be sustained across a long stream.
@@ -3185,7 +3176,7 @@ The candidates are not automatically verified, since the algorithm intentionally
 #include <vector>
 
 template<typename T, typename It>
-std::unordered_map<T, int> misra_gries(It lo, It hi, int k) {
+std::unordered_map<T, int> frequent_candidates(It lo, It hi, int k) {
   std::unordered_map<T, int> count;
   for (It it = lo; it != hi; ++it) {
     if (auto found = count.find(*it); found != count.end()) {
@@ -3215,7 +3206,7 @@ using namespace std;
 
 int main() {
   vector<int> a{1, 2, 1, 3, 1, 2, 1, 4, 2, 2, 2};
-  unordered_map<int, int> candidates = misra_gries<int>(a.begin(), a.end(), 3);
+  unordered_map<int, int> candidates = frequent_candidates<int>(a.begin(), a.end(), 3);
   assert(candidates.count(1));
   assert(candidates.count(2));
   assert(!candidates.count(3));
@@ -3540,8 +3531,8 @@ std::pair<int, std::vector<int>> minimum_set_cover(
   int n = static_cast<int>(sets.size());
   int states = 1 << universe_size;
   int full = states - 1;
-  for (int set : sets) {
-    assert((set & ~full) == 0);
+  for (int subset : sets) {
+    assert((subset & ~full) == 0);
   }
   int inf = n + 1;
   std::vector<int> dp(states, inf), parent(states, -1), prev(states, -1);

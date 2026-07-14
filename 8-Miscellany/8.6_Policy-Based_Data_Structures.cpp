@@ -20,11 +20,11 @@ but they are available on many GNU C++ contest judges.
   tags with the same interface.
 
 The order-statistic operations use GNU PBDS conventions: `find_by_order(k)` is 0-based and
-`order_of_key(x)` returns the number of keys strictly less than `x`, even if `x` is absent. Raw
-PBDS ordered trees return iterators from `find_by_order(k)`; the multiset and multimap wrappers
-below unwrap that iterator into a value. The priority queue `join()` operation melds another heap
-into the current one. Since this depends on `__gnu_pbds`, keep a standard library fallback in mind
-when portability matters.
+`order_of_key(x)` returns the number of keys strictly less than `x`, even if `x` is absent. Raw PBDS
+ordered trees return iterators from `find_by_order(k)`; the multiset and multimap wrappers below
+unwrap that iterator into a value. The priority queue `join()` operation melds another heap into the
+current one. Since this depends on `__gnu_pbds`, keep a standard library fallback in mind when
+portability matters.
 
 Time Complexity:
 - `HashMap`/`HashSet`: same expected bounds as `std::unordered_map`/`std::unordered_set` (expected

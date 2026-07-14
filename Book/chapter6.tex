@@ -2424,12 +2424,8 @@ int64_t primitive_root(int64_t m) {
     return m - 1;
   }
   std::vector<std::pair<int64_t, int>> factors = factorize(m);
-  bool has_root = false;
-  if (factors[0].first == 2) {
-    has_root = factors[0].second == 1 && factors.size() == 2;
-  } else {
-    has_root = factors.size() == 1;
-  }
+  bool has_root = factors.size() == 1 ||
+                  (factors[0].first == 2 && factors[0].second == 1 && factors.size() == 2);
   if (!has_root) {
     return -1;
   }
@@ -4810,7 +4806,6 @@ Exponentiation uses the usual iterative binary exponentiation pattern: keep an a
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <cstddef>
 #include <iomanip>
 #include <ostream>
 #include <utility>
@@ -5198,7 +5193,6 @@ Converts a matrix to reduced row echelon form using Gaussian elimination to solv
 \begin{lstlisting}[language=C++]
 #include <cassert>
 #include <cmath>
-#include <cstddef>
 #include <utility>
 #include <vector>
 
@@ -5551,7 +5545,6 @@ The LU decomposition of a matrix $a$ with row-partial pivoting is a factorizatio
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
-#include <cstddef>
 #include <limits>
 #include <numeric>
 #include <vector>

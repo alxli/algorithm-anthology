@@ -74,8 +74,6 @@ int main() {
   vector<int> order;
   inorder(t, t.root, &order);
   // Cartesian trees preserve the original array order under inorder traversal.
-  for (int i = 0; i < 5; i++) {
-    assert(order[i] == i);
-  }
+  assert((order == vector<int>{0, 1, 2, 3, 4}));
   return 0;
 }

@@ -47,7 +47,6 @@ Space Complexity:
 */
 
 #include <cassert>
-#include <cstddef>
 #include <utility>
 #include <vector>
 

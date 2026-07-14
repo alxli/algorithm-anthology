@@ -12,11 +12,11 @@ leftmost value cannot increase it, so no shorter feasible window is skipped. For
 most `k` distinct values, the left pointer advances only until the window becomes valid again. Since
 neither endpoint moves backward, each element enters and leaves the window at most once.
 
-For fixed-length windows, a monotonic deque of indices can report every minimum or maximum in
-linear total time. It stores only candidates that could still become the answer, ordered from the
-current extreme at the front to the least useful value at the back. A new element removes every
-older value that it dominates, while expired indices are removed from the front. Each index is
-again pushed and popped at most once.
+For fixed-length windows, a monotonic deque of indices can report every minimum or maximum in linear
+total time. It stores only candidates that could still become the answer, ordered from the current
+extreme at the front to the least useful value at the back. A new element removes every older value
+that it dominates, while expired indices are removed from the front. Each index is again pushed and
+popped at most once.
 
 The examples below cover sorted 2-sum/3-sum variants, finding the shortest subarray with sum at
 least a target when all values are nonnegative, and finding the longest subarray with at most `k`

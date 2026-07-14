@@ -18,8 +18,8 @@ endpoints may be integer (`PointI`) or floating-point (`Point` or `PointD`), but
 
 Overflow warning: `seg_intersection` forms the usual quadratic cross products, but the $y$-ordering
 cross-multiplication (`ay * bdx`) is cubic in the coordinate magnitude. With 32-bit `int` endpoints
-this overflows once coordinates reach the low thousands, so use a 64-bit (`int64_t`) coordinate
-type for any non-trivial integer inputs.
+this overflows once coordinates reach the low thousands, so use a 64-bit (`int64_t`) coordinate type
+for any non-trivial integer inputs.
 
 Time Complexity:
 - O(n log n) per call, where $n$ is the distance between `lo` and `hi`.

@@ -16,13 +16,12 @@ expected linear time, while the three-way split avoids unnecessary work on dupli
 - `partition_three_way(lo, hi, pivot)` rearranges $[`lo`, `hi`)$ in-place and returns iterators
   $(`mid1`, `mid2`)$, where $[`lo`, `mid1`)$ is less than `pivot`, $[`mid1`, `mid2`)$ is equal to
   `pivot`, and $[`mid2`, `hi`)$ is greater than `pivot`.
-- `sort_012(lo, hi)` sorts a range consisting only of the values $0$, $1$, and $2$.
 - `nth_element2(lo, nth, hi)` rearranges the range $[`lo`, `hi`)$ around the 0-based rank
   represented by iterator `nth`. This requires random-access iterators and `operator<` on the value
   type.
 
 Time Complexity:
-- O(n) per call to `partition_three_way()` or `sort_012()`, where $n$ is the range length.
+- O(n) per call to `partition_three_way()`, where $n$ is the range length.
 - O(n) expected per call to `nth_element2()`, and O(n^2) in the worst case.
 
 Space Complexity:
@@ -51,11 +50,6 @@ std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot) {
 }
 
 template<typename It>
-void sort_012(It lo, It hi) {
-  partition_three_way(lo, hi, 1);
-}
-
-template<typename It>
 void nth_element2(It lo, It nth, It hi) {
   static std::mt19937 rng(std::random_device{}());
   while (hi - lo > 1) {
@@ -80,10 +74,9 @@ using namespace std;
 
 int main() {
   vector<int> values{2, 0, 1, 2, 1, 0, 1};
-  sort_012(values.begin(), values.end());
-  for (int i = 0; i < 7; i++) {
-    assert(values[i] == (i < 2 ? 0 : i < 5 ? 1 : 2));
-  }
+  // On a range containing only 0, 1, and 2, partitioning around 1 sorts the range.
+  partition_three_way(values.begin(), values.end(), 1);
+  assert(std::is_sorted(values.begin(), values.end()));
 
   vector<int> b{4, 2, 5, 3, 3, 1};
   auto [mid1, mid2] = partition_three_way(b.begin(), b.end(), 3);

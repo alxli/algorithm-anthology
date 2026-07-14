@@ -32,8 +32,6 @@ For cycle detection, see the variant on iterated functions in chapter 1, which c
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
 \begin{lstlisting}[language=C++]
-#include <cstddef>
-
 struct ListNode {
   int value;
   ListNode *next;
@@ -132,9 +130,7 @@ int main() {
   }
   ListNode *merged = merge_sorted_lists(&a[0], &b[0]);
   vector<int> merged_values = values(merged);
-  for (int i = 0; i < 6; i++) {
-    assert(merged_values[i] == i + 1);
-  }
+  assert((merged_values == vector<int>{1, 2, 3, 4, 5, 6}));
 
   ListNode *second = nullptr;
   ListNode *first = split_half(merged, &second);
@@ -179,8 +175,6 @@ The data nodes passed to insertion functions must be detached, meaning their \in
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
 \begin{lstlisting}[language=C++]
-#include <cstddef>
-
 struct DListNode {
   int value;
   DListNode *prev, *next;
@@ -560,7 +554,6 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <cstddef>
 #include <utility>
 
 template<typename T>
@@ -712,7 +705,6 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <cstddef>
 #include <utility>
 
 template<typename T>
@@ -863,7 +855,6 @@ In practice, \inlinecode{decrease\_key()} runs in near-constant time, making the
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <cstddef>
 
 template<typename T>
 class PairingHeap {
@@ -1364,7 +1355,6 @@ The navigation routines \inlinecode{min()}, \inlinecode{max()}, \inlinecode{lowe
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
-#include <cstddef>
 #include <utility>
 #include <vector>
 
@@ -1601,7 +1591,6 @@ The navigation routines \inlinecode{min()}, \inlinecode{max()}, \inlinecode{lowe
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
-#include <cstddef>
 #include <utility>
 #include <vector>
 
@@ -1959,7 +1948,6 @@ The navigation routines \inlinecode{min()}, \inlinecode{max()}, \inlinecode{lowe
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <cstddef>
 #include <utility>
 #include <vector>
 
@@ -2186,7 +2174,6 @@ The order-statistic API matches GNU PBDS naming and 0-based rank conventions.
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <cstddef>
 #include <utility>
 #include <vector>
 
@@ -4956,7 +4943,6 @@ For the boundary-search functions, \inlinecode{pred} takes aggregate \inlinecode
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <cstddef>
 #include <cstdint>
 #include <optional>
 
@@ -5648,9 +5634,7 @@ int main() {
   vector<int> order;
   inorder(t, t.root, &order);
   // Cartesian trees preserve the original array order under inorder traversal.
-  for (int i = 0; i < 5; i++) {
-    assert(order[i] == i);
-  }
+  assert((order == vector<int>{0, 1, 2, 3, 4}));
   return 0;
 }
 \end{lstlisting}
@@ -5975,7 +5959,6 @@ Choose this over a sparse 2D segment tree when the grid is huge and touched cell
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <cstddef>
 #include <cstdint>
 
 template<typename T, int R = 1000000000, int C = 1000000000>
@@ -6184,7 +6167,6 @@ Choose this over a sparse 2D segment tree when rectangle updates or queries ofte
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <cstddef>
 #include <cstdint>
 
 template<typename T, int R = 1000000000, int C = 1000000000>
@@ -6432,7 +6414,6 @@ For dense additive rectangle sums, prefer the simple 2D Fenwick tree in 2.6.5. A
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <cstddef>
 #include <cstdint>
 #include <optional>
 
@@ -7696,7 +7677,6 @@ Choose this for huge sparse grids when the operation is additive: point or recta
 #include <cassert>
 #include <cstdint>
 #include <unordered_map>
-#include <utility>
 
 template<typename T, int R = 1000000001, int C = 1000000001>
 class SparseFenwick2D {
@@ -8169,16 +8149,16 @@ int main() {
   assert(dsu.size() == 7);
   assert(dsu.sets() == 3);
   auto s = dsu.get_all_sets();
-  for (auto &set : s) {
-    sort(set.begin(), set.end());
+  for (auto &group : s) {
+    sort(group.begin(), group.end());
   }
   sort(s.begin(), s.end());
   bool first_set = true;
-  for (const auto &set : s) {
+  for (const auto &group : s) {
     cout << (first_set ? "[" : ", [");
     first_set = false;
     bool first_value = true;
-    for (char value : set) {
+    for (char value : group) {
       cout << (first_value ? "" : ", ") << value;
       first_value = false;
     }
@@ -9006,7 +8986,6 @@ The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{c
 #include <algorithm>
 #include <cassert>
 #include <tuple>
-#include <utility>
 #include <vector>
 
 template<typename T, bool VALUES_ON_EDGES = true>
@@ -9597,7 +9576,6 @@ The forest is unrooted: a tree's root is whichever node was most recently establ
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <cstddef>
 #include <unordered_map>
 #include <utility>
 

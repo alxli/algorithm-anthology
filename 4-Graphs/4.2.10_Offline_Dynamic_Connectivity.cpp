@@ -10,8 +10,8 @@ set forest reflects exactly the edges alive at that moment.
 
 Undoing unions requires a disjoint set forest with rollback (see the disjoint sets section): it
 joins by size or rank without path compression, recording each change on a stack so it can be
-reversed. Path compression is incompatible with rollback, so finding a representative costs
-O(log n) rather than near-constant time.
+reversed. Path compression is incompatible with rollback, so finding a representative costs O(log n)
+rather than near-constant time.
 
 - `OfflineDynamicConnectivity(n)` creates a structure of `n` nodes numbered $[0, `n`)$, initially
   with no edges.

@@ -1,13 +1,13 @@
 /*
 
-Given points in 3D, compute the triangular faces of their convex hull with an incremental
-algorithm. Start with a tetrahedron, delete every visible face for each new point, and stitch the
-horizon edges to that point. Returned faces are oriented outward.
+Given points in 3D, compute the triangular faces of their convex hull with an incremental algorithm.
+Start with a tetrahedron, delete every visible face for each new point, and stitch the horizon edges
+to that point. Returned faces are oriented outward.
 
 - `convex_hull_3d(points)` returns a list of `Face{a, b, c}` index triples into `points`.
 
-Preconditions: at least four points, and no four points coplanar. For coplanar or highly
-degenerate inputs, perturbing points slightly or using a more robust library is recommended.
+Preconditions: at least four points, and no four points coplanar. For coplanar or highly degenerate
+inputs, perturbing points slightly or using a more robust library is recommended.
 
 Time Complexity:
 - O(n^2) per call, where $n$ is the number of points.
@@ -19,7 +19,6 @@ Space Complexity:
 
 #include <array>
 #include <cassert>
-#include <cmath>
 #include <utility>
 #include <vector>
 

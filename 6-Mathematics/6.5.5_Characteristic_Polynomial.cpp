@@ -2,8 +2,8 @@
 
 Computes the characteristic polynomial of a square matrix over a prime field: the coefficients of
 $\det(xI - A)$, a monic degree-$n$ polynomial whose roots are the eigenvalues of $A$. Its constant
-term recovers the determinant (up to sign), its second-highest coefficient is the negated trace,
-and evaluating it at a scalar gives $\det(xI - A)$ for that $x$. It is the standard tool behind
+term recovers the determinant (up to sign), its second-highest coefficient is the negated trace, and
+evaluating it at a scalar gives $\det(xI - A)$ for that $x$. It is the standard tool behind
 eigenvalue counting, matrix-power recurrences via Cayley-Hamilton, and problems that reduce to a
 determinant in an unknown.
 

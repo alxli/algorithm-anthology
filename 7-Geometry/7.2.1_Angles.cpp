@@ -3,8 +3,8 @@
 Angle calculations in two dimensions. All operations are inherently floating-point (`atan2`, `acos`,
 trigonometry), so these functions use the local double-coordinate `PointD` type. Convert integer
 points to `PointD` when asking for angles. The constants `DEG` and `RAD` may be used as multipliers
-to convert between degrees and radians. For example, if `t` is a value in degrees, then `t * DEG`
-is the equivalent angle in radians; if `t` is in radians, then `t * RAD` is the equivalent angle in
+to convert between degrees and radians. For example, if `t` is a value in degrees, then `t * DEG` is
+the equivalent angle in radians; if `t` is in radians, then `t * RAD` is the equivalent angle in
 degrees.
 
 - `reduce_deg(t)` takes an angle `t` degrees and returns an equivalent angle in the range $[0, 360)$

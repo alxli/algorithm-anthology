@@ -172,6 +172,16 @@ def first_wrapped_token(text):
                 return with_trailing_punctuation(i)
             i += 1
 
+    if text.startswith("O("):
+        depth = 0
+        for i, char in enumerate(text):
+            if char == "(":
+                depth += 1
+            elif char == ")":
+                depth -= 1
+                if depth == 0:
+                    return with_trailing_punctuation(i)
+
     return text.split()[0]
 
 
@@ -180,7 +190,25 @@ def is_docstring_continuation(line, next_line):
     next_stripped = next_line.strip()
     if not stripped or not next_stripped:
         return False
+    if line.startswith("  ") and not next_line.startswith("  "):
+        return False
+    if next_line.startswith("  ") and not (line.startswith("  ") or stripped.startswith("- ")):
+        return False
+    if line.startswith("  ") and stripped.startswith(("$", "`")):
+        return False
+    if next_line.startswith("  ") and next_stripped.startswith(("$", "`")):
+        return False
     if stripped in {"/*", "*/"} or next_stripped in {"/*", "*/"}:
+        return False
+    if re.match(
+        r"^(?:Time Complexity(?: \([^)]+\))?|Space Complexity|Stable\?):",
+        stripped,
+    ):
+        return False
+    if re.match(
+        r"^(?:Time Complexity(?: \([^)]+\))?|Space Complexity|Stable\?):",
+        next_stripped,
+    ):
         return False
     if stripped.endswith(":"):
         return False
@@ -266,7 +294,6 @@ def scan_docstrings(paths):
                 token = first_wrapped_token(next_line)
                 if (
                     is_docstring_continuation(line, next_line)
-                    and (next_line.startswith("  ") or token.startswith(("`", "$")))
                     and token
                     and len(line.rstrip() + " " + token) <= LIMIT
                 ):

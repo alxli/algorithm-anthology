@@ -3,12 +3,12 @@
 Integers are all fixed-size sets of bits, where the $i$-th bit (counting from the least significant
 bit where $i = 0$) is "present" when set to $1$. Treating an `int` as a bitmask makes set
 membership, insertion, deletion, and iteration into single machine instructions, which is why
-bitmasks are the backbone of subset dynamic programming and many low-level tricks. The helpers
-below operate on `uint32_t` masks; to use 64-bit masks, replace `uint32_t` with `uint64_t`, the
-literal `1u` with `1ull`, and the `1u << 31` inside `clz()` with `1ull << 63`. The loop
-implementations below exist for education only; production code should prefer the GCC built-ins
-named in the inline comments whenever available, or on C++20 systems the `<bit>` header, whose
-generic `constexpr` equivalents (also named in the comments) are additionally well-defined at $0$.
+bitmasks are the backbone of subset dynamic programming and many low-level tricks. The helpers below
+operate on `uint32_t` masks; to use 64-bit masks, replace `uint32_t` with `uint64_t`, the literal
+`1u` with `1ull`, and the `1u << 31` inside `clz()` with `1ull << 63`. The loop implementations
+below exist for education only; production code should prefer the GCC built-ins named in the inline
+comments whenever available, or on C++20 systems the `<bit>` header, whose generic `constexpr`
+equivalents (also named in the comments) are additionally well-defined at $0$.
 
 - `test_bit(x, i)` returns whether the `i`-th bit of `x` is set.
 - `set_bit(x, i)`, `clear_bit(x, i)`, and `toggle_bit(x, i)` return `x` with the `i`-th respectively

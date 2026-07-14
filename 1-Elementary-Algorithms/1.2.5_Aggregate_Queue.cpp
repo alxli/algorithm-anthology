@@ -5,9 +5,9 @@ an associative operation over all elements currently in the queue. This is the "
 aggregation" (SWAG) technique: by pushing new elements and popping old ones as a window advances, it
 reports an aggregate of every window in linear total time.
 
-Unlike the monotonic deque used for sliding-window extrema (see 1.2.3), the operation need only
-be associative, not order-based, so the same structure handles min, max, sum, gcd, matrix products,
-and other monoids. It is sometimes called a "monotonic queue," but that term usually denotes the
+Unlike the monotonic deque used for sliding-window extrema (see 1.2.3), the operation need only be
+associative, not order-based, so the same structure handles min, max, sum, gcd, matrix products, and
+other monoids. It is sometimes called a "monotonic queue," but that term usually denotes the
 monotonic deque of 1.2.3 (which handles only min/max); the two are different structures. The queue
 is built from two stacks: a back stack receives pushes while a front stack serves pops, and each
 stack stores running folds so the two halves combine in O(1). Whenever the front stack empties, the

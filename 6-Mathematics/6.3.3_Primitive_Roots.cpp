@@ -89,12 +89,8 @@ int64_t primitive_root(int64_t m) {
     return m - 1;
   }
   std::vector<std::pair<int64_t, int>> factors = factorize(m);
-  bool has_root = false;
-  if (factors[0].first == 2) {
-    has_root = factors[0].second == 1 && factors.size() == 2;
-  } else {
-    has_root = factors.size() == 1;
-  }
+  bool has_root = factors.size() == 1 ||
+                  (factors[0].first == 2 && factors[0].second == 1 && factors.size() == 2);
   if (!has_root) {
     return -1;
   }

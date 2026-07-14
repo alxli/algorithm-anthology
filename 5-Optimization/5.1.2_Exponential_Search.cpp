@@ -47,18 +47,12 @@ Int exponential_search_first_true(Int lo, Pred pred) {  // 000[1]11
 
 #include <cassert>
 
-bool at_least_1000(int x) {
-  return x >= 1000;
-}
-
-bool square_large_enough(int64_t x) {
-  return x * x >= 123456789LL;
-}
-
 int main() {
+  auto at_least_1000 = [](int x) { return x >= 1000; };
   assert(exponential_search_first_true(1000, at_least_1000) == 1000);
   assert(exponential_search_first_true(0, at_least_1000) == 1000);
   assert(exponential_search_first_true(5, at_least_1000) == 1000);
+  auto square_large_enough = [](int64_t x) { return x * x >= 123456789LL; };
   assert(exponential_search_first_true(0LL, square_large_enough) == 11112);
   return 0;
 }

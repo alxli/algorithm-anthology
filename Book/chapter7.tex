@@ -568,7 +568,6 @@ Overflow warning: the determinant in \inlinecode{in\_circumcircle()} grows like 
 #include <ostream>
 #include <stdexcept>
 #include <type_traits>
-#include <utility>
 
 const double EPS = 1e-9;
 
@@ -768,10 +767,8 @@ Overflow warning: each individual cross product is still on the order of the squ
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <cmath>
 #include <type_traits>
-#include <utility>
 
 const double EPS = 1e-9;
 
@@ -884,9 +881,7 @@ For integer-coordinate inputs, comparisons are exact as long as intermediate coo
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
-#include <cstddef>
 #include <type_traits>
-#include <utility>
 
 const double EPS = 1e-9;
 
@@ -1156,7 +1151,6 @@ Overflow warning: \inlinecode{sqdist()} forms squared coordinate differences and
 #include <algorithm>
 #include <cmath>
 #include <type_traits>
-#include <utility>
 
 const double EPS = 1e-9;
 
@@ -1352,10 +1346,8 @@ Overflow warning: the exact integer paths multiply coordinate differences (cross
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
-#include <cstddef>
 #include <cstdint>
 #include <type_traits>
-#include <utility>
 
 const double EPS = 1e-9;
 
@@ -1629,9 +1621,7 @@ Circle tangent and intersection calculations in two dimensions. Such calculation
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
-#include <cstddef>
 #include <type_traits>
-#include <utility>
 
 const double EPS = 1e-9, PI = acos(-1.0);
 
@@ -2593,7 +2583,6 @@ This implementation uses Welzl's randomized incremental algorithm. The points ar
 #include <random>
 #include <stdexcept>
 #include <type_traits>
-#include <utility>
 
 const double EPS = 1e-9;
 
@@ -3208,12 +3197,9 @@ The function is templated on the input point type. Side classification is done w
 \textbf{Space Complexity}: $O(n)$ auxiliary for the returned polygon.
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <cstddef>
 #include <type_traits>
-#include <utility>
 #include <vector>
 
 const double EPS = 1e-9;
@@ -3661,7 +3647,6 @@ Overflow warning: the segment-intersection tests form cross products in the inpu
 #include <cstdint>
 #include <set>
 #include <type_traits>
-#include <utility>
 #include <vector>
 
 const double EPS = 1e-9;
@@ -4586,7 +4571,6 @@ Preconditions: at least four points, and no four points coplanar. For coplanar o
 \begin{lstlisting}[language=C++]
 #include <array>
 #include <cassert>
-#include <cmath>
 #include <utility>
 #include <vector>
 

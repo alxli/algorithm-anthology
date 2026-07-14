@@ -64,6 +64,11 @@ Prefer code that a strong contestant can adapt quickly after skimming:
   avoid using `v` to mean a vertex value when it can be confused with endpoint `v`.
 - For line/geometry examples involving two objects, prefer `l1`, `l2`, `p1`, `p2` over ambiguous
   names like `l` and `m`.
+- Avoid bare eponym-only public API names when the operation is not universally recognized at a call
+  site. Prefer names that include the computed object or action, such as `frequent_candidates()`,
+  `maximum_matching()`, `global_min_cut()`, or `min_assignment_cost()`. Eponyms are fine when they
+  are standard search terms, when the function name also names the result, or when they distinguish
+  variants, e.g. `dijkstra()`, `smawk_row_minima()`, and `find_cycle_floyd()`.
 - For small two-item returns, prefer `std::pair` or structured bindings over a one-off struct when
   the meaning is obvious from the API bullet. Use `std::tuple` when returning three simple values.
 
@@ -135,6 +140,9 @@ sections elsewhere, include both `Time Complexity:` and `Space Complexity:`.
 - Do not split math mode, code spans, or backticked identifiers just to satisfy the 100-column
   limit. A long equation or unbreakable expression over 100 columns is better than malformed TeX or
   confusing generated output.
+- For ordinary prose, wrap greedily word-by-word up to the 100-column limit. Do not preserve
+  subjective phrase units across line breaks; only math mode, code spans, backticked identifiers,
+  and plain-text Big-O expressions are atomic.
 - Literal operators and function names stay in backticks: `<=`, `operator<`, `combine()`.
 - Prefer relative paths for cross-references to other sections.
 - Reflow edited prose to the 100-column limit by hand; clang-format does not reflow comments. Do

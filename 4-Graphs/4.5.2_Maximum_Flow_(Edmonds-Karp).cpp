@@ -15,8 +15,8 @@ independent of the capacity magnitudes.
 - `min_cut(source)` returns the source side of a minimum cut after `max_flow()` has been called.
 
 Repeated calls to `max_flow()` continue augmenting from the current flow. This is useful after
-adding new edges or increasing capacities; call `clear_flow()` first to recompute from zero.
-The capacity type `T` should be signed, since reverse residual edges store negative flow.
+adding new edges or increasing capacities; call `clear_flow()` first to recompute from zero. The
+capacity type `T` should be signed, since reverse residual edges store negative flow.
 
 Time Complexity:
 - O(min(n*m^2, m*f)) per call to `max_flow()`, where $n$ is the number of nodes, $m$ is the number

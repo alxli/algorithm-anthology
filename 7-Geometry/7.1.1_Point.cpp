@@ -7,8 +7,8 @@ coordinates of type `fp_t`, which is `T` when `T` is floating-point and `double`
 Exact operations (return `TPoint<T>` or `T`, no precision lost for integers) include: element-wise
 arithmetic, `dot()`, `cross()`, `sqnorm()`, cardinal rotations, `reflect(point)`, equality, and
 lexicographic ordering. `operator==` and `operator<` are exact for every coordinate type, as
-required by standard algorithms and containers. `EQ(p, q)` compares floating-point point
-coordinates using `EPS` and remains exact for other coordinate types.
+required by standard algorithms and containers. `EQ(p, q)` compares floating-point point coordinates
+using `EPS` and remains exact for other coordinate types.
 
 Overflow warning: the exact products `dot()`, `cross()`, and `sqnorm()` grow like the squared
 coordinate magnitude. With `TPoint<int>` these overflow a 32-bit `int` once coordinates exceed

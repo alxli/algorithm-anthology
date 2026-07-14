@@ -27,7 +27,6 @@ Space Complexity:
 */
 
 #include <cmath>
-#include <cstddef>
 
 template<typename Fn>
 double find_min(

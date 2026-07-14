@@ -52,7 +52,6 @@ Space Complexity:
 #include <algorithm>
 #include <cassert>
 #include <tuple>
-#include <utility>
 #include <vector>
 
 template<typename T, bool VALUES_ON_EDGES = true>

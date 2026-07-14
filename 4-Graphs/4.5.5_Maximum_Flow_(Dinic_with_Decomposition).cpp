@@ -6,9 +6,9 @@ conserved at every node other than the source and sink.
 
 Dinic's algorithm proceeds in phases. Each phase runs a breadth-first search to build a level graph
 of shortest residual distances from the source, then finds a blocking flow that saturates that level
-graph using depth-first search, before repeating on the new residual graph.
-This variant stores residual edges in a flat array so callers can inspect edge flows and decompose
-the final flow into source-to-sink paths.
+graph using depth-first search, before repeating on the new residual graph. This variant stores
+residual edges in a flat array so callers can inspect edge flows and decompose the final flow into
+source-to-sink paths.
 
 - `Dinic<T>(n)` constructs an empty flow network with nodes numbered $[0, `n`)$.
 - `add_edge(u, v, cap)` adds a directed residual-network edge from `u` to `v` and returns its edge
@@ -20,8 +20,8 @@ the final flow into source-to-sink paths.
 - `decompose(source, sink)` decomposes the current flow into paths from `source` to `sink`.
 
 Repeated calls to `max_flow()` continue augmenting from the current flow. This is useful after
-adding new edges or increasing capacities; call `clear_flow()` first to recompute from zero.
-The capacity type `T` should be signed, since reverse residual edges store negative flow.
+adding new edges or increasing capacities; call `clear_flow()` first to recompute from zero. The
+capacity type `T` should be signed, since reverse residual edges store negative flow.
 
 Time Complexity:
 - O(n^2*m) per call to `max_flow()`, where $n$ is the number of nodes and $m$ is the number of
@@ -234,7 +234,7 @@ int main() {
   int id35 = g.add_edge(3, 5, 2);
   int id45 = g.add_edge(4, 5, 3);
   int flow = g.max_flow(0, 5);
-  cout << "Max flow from 0 to 5: " << flow << '\n';
+  cout << "Max flow from 0 to 5: " << flow << endl;
   assert(flow == 5);
   assert(g.max_flow(0, 5) == 5);
   assert(g.edge_flow(id01) == 3);
@@ -257,7 +257,7 @@ int main() {
       }
       cout << path.vertices[i];
     }
-    cout << '\n';
+    cout << endl;
     assert(path.vertices.front() == 0 && path.vertices.back() == 5);
     assert(path.edges.size() + 1 == path.vertices.size());
     total += path.flow;

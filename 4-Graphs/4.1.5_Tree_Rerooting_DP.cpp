@@ -1,11 +1,11 @@
 /*
 
 Given a tree DP that can answer one rooted query with a recursive `dfs(u, p)`, compute that same
-answer for every possible root. Rerooting DP first stores parent pointers, depths, preorder,
-subtree sizes, and entry/exit times. A bottom-up pass computes the usual child-to-parent DFS values,
-then a top-down pass uses prefix/suffix aggregation to compute the missing parent-to-child values.
-The prefix/suffix aggregation requires `combine` to be associative for a running time of O(n), which
-is usually preferred, but a segment-tree/exclusive-combine variant can support a left-fold style
+answer for every possible root. Rerooting DP first stores parent pointers, depths, preorder, subtree
+sizes, and entry/exit times. A bottom-up pass computes the usual child-to-parent DFS values, then a
+top-down pass uses prefix/suffix aggregation to compute the missing parent-to-child values. The
+prefix/suffix aggregation requires `combine` to be associative for a running time of O(n), which is
+usually preferred, but a segment-tree/exclusive-combine variant can support a left-fold style
 interface in O(n log n).
 
 - `RerootingTree(n)` constructs a tree with `n` nodes numbered $[0, `n`)$.

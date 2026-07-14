@@ -38,7 +38,6 @@ double integrate(Fn f, double a, double b, int n = 1000000) {
 /*** Example Usage ***/
 
 #include <cmath>
-#include <cstdio>
 using namespace std;
 
 double f(double x) {

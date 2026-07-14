@@ -34,8 +34,6 @@ Space Complexity:
 
 */
 
-#include <cstddef>
-
 struct DListNode {
   int value;
   DListNode *prev, *next;

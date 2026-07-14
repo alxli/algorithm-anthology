@@ -52,7 +52,6 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
-#include <cstddef>
 #include <cstdint>
 
 template<typename T, int R = 1000000000, int C = 1000000000>

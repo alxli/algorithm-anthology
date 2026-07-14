@@ -35,7 +35,6 @@ Space Complexity:
 
 #include <cmath>
 #include <limits>
-#include <utility>
 #include <vector>
 
 double horner_eval(const std::vector<double> &p, double x) {

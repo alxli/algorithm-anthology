@@ -1,8 +1,8 @@
 /*
 
-Given a set of points with integer coordinates, compute the maximum number of points that lie on
-one line. For every anchor point, normalize the direction vector to every other point by dividing
-by `gcd(abs(dx), abs(dy))` and choosing a canonical sign; equal normalized directions from the same
+Given a set of points with integer coordinates, compute the maximum number of points that lie on one
+line. For every anchor point, normalize the direction vector to every other point by dividing by
+`gcd(abs(dx), abs(dy))` and choosing a canonical sign; equal normalized directions from the same
 anchor are collinear with it.
 
 - `max_collinear_points(points)` returns the largest number of collinear points. Duplicate points

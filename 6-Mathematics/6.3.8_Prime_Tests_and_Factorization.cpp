@@ -35,8 +35,8 @@ pairs. For $0$ and $1$, the prime factorization is empty.
   `divisors_from_factors()`.
 
 Modular multiplication inside Miller-Rabin and Pollard's rho uses `__uint128_t` when available for
-speed, with a slower portable double-and-add fallback to avoid overflow on compilers without
-128-bit integers.
+speed, with a slower portable double-and-add fallback to avoid overflow on compilers without 128-bit
+integers.
 
 Time Complexity:
 - O(sqrt(n)) per call to `is_prime_slow(n)`.

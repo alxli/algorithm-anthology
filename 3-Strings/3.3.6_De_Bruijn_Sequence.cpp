@@ -54,7 +54,6 @@ std::vector<int> de_bruijn(int k, int n) {
 
 /*** Example Usage ***/
 
-#include <cmath>
 #include <set>
 #include <vector>
 using namespace std;
@@ -67,7 +66,10 @@ int main() {
   for (int k = 2; k <= 4; k++) {
     for (int n = 1; n <= 4; n++) {
       vector<int> s = de_bruijn(k, n);
-      int len = static_cast<int>(std::lround(std::pow(k, n)));
+      int len = 1;
+      for (int i = 0; i < n; i++) {
+        len *= k;
+      }
       assert(static_cast<int>(s.size()) == len);
 
       // Collect every length-n window, wrapping cyclically, and confirm all k^n are distinct.

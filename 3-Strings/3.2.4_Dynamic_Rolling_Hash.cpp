@@ -17,9 +17,9 @@ residues fits in a 64-bit integer; hashing modulo both and comparing the resulti
 collision astronomically unlikely. `BASE1` and `BASE2` are the corresponding polynomial bases, which
 should exceed the largest element value and may be randomized per run to resist adversarial inputs.
 
-Element values must be nonnegative. As with any polynomial hash, comparing subsequences of
-different lengths is only safe when values are positive (for example, map an alphabet to $[1, B)$)
-so that trailing zeros cannot make a shorter sequence collide with a longer one.
+Element values must be nonnegative. As with any polynomial hash, comparing subsequences of different
+lengths is only safe when values are positive (for example, map an alphabet to $[1, B)$) so that
+trailing zeros cannot make a shorter sequence collide with a longer one.
 
 - `DynamicHash(a)` builds prefix hashes over the integer sequence `a`.
 - `size()` returns the length of the sequence.

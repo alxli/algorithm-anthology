@@ -1,9 +1,9 @@
 /*
 
 Given a directed graph and a start node, find the immediate dominator of every node reachable from
-the start. A node `u` dominates node `v` if every path from the start to `v` passes through `u`.
-The immediate dominator `idom[v]` is the closest strict dominator of `v`; these parent links form
-the dominator tree rooted at the start. Dominator trees are useful in control-flow graphs, program
+the start. A node `u` dominates node `v` if every path from the start to `v` passes through `u`. The
+immediate dominator `idom[v]` is the closest strict dominator of `v`; these parent links form the
+dominator tree rooted at the start. Dominator trees are useful in control-flow graphs, program
 analysis, and reachability problems with unavoidable checkpoints.
 
 Lengauer-Tarjan's algorithm numbers vertices by DFS order, computes each reachable node's

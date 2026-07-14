@@ -3,14 +3,14 @@
 Given a directed network where each edge must carry at least `lo` and at most `hi` units of flow,
 find whether the lower bounds can be satisfied, and optionally optimize an `s`-to-`t` flow value.
 Subtract each lower bound from its edge capacity, then record the forced imbalance: `lo` units must
-leave `u` and enter `v`. A super-source supplies every node with net demand, and every node with
-net surplus sends that surplus to a super-sink. The bounds are feasible exactly when all such
-auxiliary edges can be saturated.
+leave `u` and enter `v`. A super-source supplies every node with net demand, and every node with net
+surplus sends that surplus to a super-sink. The bounds are feasible exactly when all such auxiliary
+edges can be saturated.
 
-For `s`-to-`t` flow, add an infinite edge from `t` back to `s` before checking feasibility. The
-flow on that artificial edge is one feasible value. After removing the auxiliary nodes, augmenting
-from `s` to `t` maximizes the value; augmenting from `t` to `s` cancels as much flow as possible
-and minimizes it.
+For `s`-to-`t` flow, add an infinite edge from `t` back to `s` before checking feasibility. The flow
+on that artificial edge is one feasible value. After removing the auxiliary nodes, augmenting from
+`s` to `t` maximizes the value; augmenting from `t` to `s` cancels as much flow as possible and
+minimizes it.
 
 - `BoundedFlow(n)` constructs a directed lower-bound flow network with nodes in $[0, `n`)$.
 - `add_edge(u, v, lo, hi)` adds an edge with lower capacity `lo` and upper capacity `hi`.

@@ -1,7 +1,7 @@
 /*
 
-Maintain a static set of two-dimensional points while supporting rectangle reporting queries. A
-k-d tree recursively splits points by alternating coordinates and stores a bounding box for each
+Maintain a static set of two-dimensional points while supporting rectangle reporting queries. A k-d
+tree recursively splits points by alternating coordinates and stores a bounding box for each
 subtree, allowing whole subtrees to be accepted or pruned during a query.
 
 This implementation uses `std::pair` to represent points, requiring operators `<` and `==` to be

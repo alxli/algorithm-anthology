@@ -10,8 +10,8 @@ path remains. This algorithm should only be used on graphs with integer capaciti
 certain real-valued flow inputs for which the algorithm never terminates. The Edmonds-Karp algorithm
 is an improvement using breadth-first search, addressing this problem.
 
-- `ford_fulkerson()` uses global `source` and `sink`, modifies the global residual capacity matrix
-  `cap`, and returns maximum flow. Nodes are numbered $[0, `n`)$, where `n` is `cap.size()`.
+- `max_flow(source, sink)` modifies the global residual capacity matrix `cap` and returns maximum
+  flow. Nodes are numbered $[0, `n`)$, where `n` is `cap.size()`.
 
 Time Complexity:
 - O(n^2*f) per call, where $n$ is the number of nodes and $f$ is the maximum flow.
@@ -50,18 +50,18 @@ int dfs(int u, int f, int sink) {
   return 0;
 }
 
-int64_t ford_fulkerson(int source, int sink) {
+int64_t max_flow(int source, int sink) {
   int n = static_cast<int>(cap.size());
-  int64_t max_flow = 0;
+  int64_t total = 0;
   while (true) {
     visit.assign(n, false);
     int flow = dfs(source, INF, sink);
     if (flow == 0) {
       break;
     }
-    max_flow += flow;
+    total += flow;
   }
-  return max_flow;
+  return total;
 }
 
 /*** Example Usage ***/
@@ -89,6 +89,6 @@ int main() {
   cap[2][4] = 2;
   cap[3][5] = 2;
   cap[4][5] = 3;
-  assert(ford_fulkerson(0, 5) == 5);
+  assert(max_flow(0, 5) == 5);
   return 0;
 }

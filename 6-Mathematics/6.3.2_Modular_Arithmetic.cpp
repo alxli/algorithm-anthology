@@ -21,12 +21,12 @@ design.
 
 Two integer types are at play: the type of the modulus stores the representative, while
 construction, multiplication, and inverses widen through an intermediate type chosen automatically
-from the storage width - `int64_t` for 32-bit storage, or `__int128` (a GCC/Clang extension, in
-line with this book's use of `__builtin` functions) for 64-bit storage; on compilers without
-`__int128`, only 32-bit moduli are supported. The requirements are that $2p$ fits the storage type
-(for addition) and $(p - 1)^2$ fits the intermediate type (for the widening multiply), so any
-modulus up to half the storage type's range works out of the box; 64-bit moduli simply pay the cost
-of slower 128-bit multiplies. (Some contest templates instead estimate the multiply's quotient in
+from the storage width - `int64_t` for 32-bit storage, or `__int128` (a GCC/Clang extension, in line
+with this book's use of `__builtin` functions) for 64-bit storage; on compilers without `__int128`,
+only 32-bit moduli are supported. The requirements are that $2p$ fits the storage type (for
+addition) and $(p - 1)^2$ fits the intermediate type (for the widening multiply), so any modulus up
+to half the storage type's range works out of the box; 64-bit moduli simply pay the cost of slower
+128-bit multiplies. (Some contest templates instead estimate the multiply's quotient in
 `long double` to avoid `__int128`; beware that this requires x86's 80-bit `long double` and silently
 breaks for large moduli on ARM, where `long double` is only 64-bit.)
 

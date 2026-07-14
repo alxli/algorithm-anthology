@@ -1,12 +1,12 @@
 /*
 
 Given a point `p` and a polygon, determines whether `p` lies inside using ray casting. A ray cast
-from `p` must cross the polygon's boundary an odd number of times exactly when `p` is inside, so
-the function counts crossings between a horizontal ray and each polygon edge. The function is
-templated on the point type `Pt`. The local `Point` struct (`double` coordinates) is the default;
-replace it with `Point`, `PointD`, or `PointI` from 7.1.1 or any struct with numeric `.x` and `.y`
-fields. All comparisons are exact (no epsilon): the ray-crossing parity needs a consistent
-comparison to be correct, and the result is exact for integer-coordinate points.
+from `p` must cross the polygon's boundary an odd number of times exactly when `p` is inside, so the
+function counts crossings between a horizontal ray and each polygon edge. The function is templated
+on the point type `Pt`. The local `Point` struct (`double` coordinates) is the default; replace it
+with `Point`, `PointD`, or `PointI` from 7.1.1 or any struct with numeric `.x` and `.y` fields. All
+comparisons are exact (no epsilon): the ray-crossing parity needs a consistent comparison to be
+correct, and the result is exact for integer-coordinate points.
 
 - `point_in_polygon(p, lo, hi, edge_is_inside = true)` returns whether `p` lies within the polygon
   with vertices specified by the range $[`lo`, `hi`)$ of points in either clockwise or

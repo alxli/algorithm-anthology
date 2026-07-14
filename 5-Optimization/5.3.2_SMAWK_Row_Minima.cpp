@@ -4,8 +4,8 @@ Finds the position of the minimum in every row of a totally monotone matrix in t
 dimensions, without ever materializing the matrix. A matrix is totally monotone (for row minima)
 when the column index of each row's leftmost minimum never decreases as the row index increases, and
 this holds not just for the whole matrix but for every submatrix. Monge matrices, where
-$M_{i,j} + M_{i+1,j+1} \leq M_{i,j+1} + M_{i+1,j}$, are the most common source of such matrices
-and arise throughout dynamic programming on intervals and partitions.
+$M_{i,j} + M_{i+1,j+1} \leq M_{i,j+1} + M_{i+1,j}$, are the most common source of such matrices and
+arise throughout dynamic programming on intervals and partitions.
 
 The SMAWK algorithm interleaves two steps. REDUCE discards columns that cannot hold the minimum of
 any remaining row, leaving at most as many candidate columns as active rows. INTERPOLATE recurses on

@@ -118,9 +118,9 @@ The C++ standard library equivalent is calling `std::make_heap(lo, hi)`, followe
 `std::sort_heap(lo, hi)`.
 
 The loop below has two modes controlled by whether `i > lo`. While `i > lo`, it is heapifying
-(Floyd's O(n) bottom-up heap build: sift down each non-leaf from right to left). Once `i == lo`,
-the heap is built, and the loop switches to extraction: repeatedly swap the root to the back of
-the unsorted region (`*j`) and sift down the new root.
+(Floyd's O(n) bottom-up heap build: sift down each non-leaf from right to left). Once `i == lo`, the
+heap is built, and the loop switches to extraction: repeatedly swap the root to the back of the
+unsorted region (`*j`) and sift down the new root.
 
 Time Complexity (Average): O(n log n).
 Time Complexity (Worst): O(n log n).

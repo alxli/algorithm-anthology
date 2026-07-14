@@ -34,7 +34,6 @@ Space Complexity:
 */
 
 #include <cassert>
-#include <cstddef>
 #include <utility>
 
 template<typename T>

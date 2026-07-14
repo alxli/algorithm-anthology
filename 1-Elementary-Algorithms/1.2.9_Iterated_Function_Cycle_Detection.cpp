@@ -1,7 +1,7 @@
 /*
 
-Given a function $f$ mapping a finite set to itself and a starting value $x_0$, return the
-position and length of the cycle reached by repeatedly applying $f$. Formally, the sequence
+Given a function $f$ mapping a finite set to itself and a starting value $x_0$, return the position
+and length of the cycle reached by repeatedly applying $f$. Formally, the sequence
   $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$
 must eventually repeat some value. If $x_i = x_j$ for $i < j$, then the sequence from $x_i$ to
 $x_{j - 1}$ repeats forever. This is useful for detecting cycles in functional graphs, pseudo-random
@@ -14,9 +14,9 @@ Floyd's cycle-finding algorithm, a.k.a. the "tortoise and the hare algorithm", i
 default choice: it moves two pointers through the sequence at different speeds, finds a meeting
 point inside the cycle, then locates the cycle start. Brent's algorithm is a compact variant that
 usually calls $f$ fewer times by only resetting the tortoise at powers of two; prefer it when
-evaluating $f$ is expensive and constant factors matter. In the detection phase, Brent advances
-one pointer with one call to $f$ per step, while Floyd advances the tortoise once and the hare
-twice, using three calls to $f$ per step.
+evaluating $f$ is expensive and constant factors matter. In the detection phase, Brent advances one
+pointer with one call to $f$ per step, while Floyd advances the tortoise once and the hare twice,
+using three calls to $f$ per step.
 
 For Floyd's algorithm, suppose the tail has length $m$ and the cycle has length $n$. At a meeting,
 the hare has traveled twice as far as the tortoise, so the tortoise's distance is a multiple of $n$.

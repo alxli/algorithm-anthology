@@ -11,9 +11,9 @@ zero-slack edges, with the potentials adjusted along the way to expose new zero-
 the path reaches a free job. Note that while the input matrix is 0-based here, the internal
 calculations are 1-based.
 
-- `hungarian(cost, &assignment)` returns the minimum total assignment cost for a 0-based `cost`
-  matrix, while populating `assignment` with $n$ values where `assignment[i]` is the chosen job for
-  worker `i`, using 0-based job numbers.
+- `min_assignment_cost(cost, &assignment)` returns the minimum total assignment cost for a 0-based
+  `cost` matrix, while populating `assignment` with $n$ values where `assignment[i]` is the chosen
+  job for worker `i`, using 0-based job numbers.
 
 Time Complexity:
 - O(n^2*m) per call, where `cost` has $n$ rows and $m$ columns.
@@ -30,7 +30,7 @@ Space Complexity:
 #include <vector>
 
 template<typename T>
-T hungarian(const std::vector<std::vector<T>> &cost, std::vector<int> *assignment) {
+T min_assignment_cost(const std::vector<std::vector<T>> &cost, std::vector<int> *assignment) {
   static const T INF = std::numeric_limits<T>::max() / 4;
   int n = static_cast<int>(cost.size());
   int m = cost.empty() ? 0 : static_cast<int>(cost[0].size());
@@ -106,7 +106,7 @@ int main() {
       {5, 8, 1, 8},
   };
   vector<int> assignment;
-  int64_t total = hungarian(cost, &assignment);
+  int64_t total = min_assignment_cost(cost, &assignment);
   assert(total == 9);
   assert(assignment[0] == 1);
   assert(assignment[1] == 0);

@@ -7,8 +7,8 @@ classes of `AbstractEnumerator` implement `count(prefix)`, which returns how man
 sequences begin with that prefix.
 
 Let $A$ be the number of candidate values considered at each position (the base class `range`), $L$
-be the output sequence length (the base class `length`), and $T$ be `total_count()`, the number
-of valid sequences. The base class tries candidate values in $[0, A)$ at each of the $L$ positions,
+be the output sequence length (the base class `length`), and $T$ be `total_count()`, the number of
+valid sequences. The base class tries candidate values in $[0, A)$ at each of the $L$ positions,
 asking `count()` how many completions each prefix admits. The concrete classes may still use their
 own conventional constructor names, such as `n` and `k` for combinations.
 

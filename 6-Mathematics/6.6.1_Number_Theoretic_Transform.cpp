@@ -2,9 +2,9 @@
 
 The number theoretic transform (NTT) is the discrete Fourier transform carried out in modular
 arithmetic instead of over the complex numbers. It multiplies two polynomials (equivalently,
-computes the convolution of two sequences) modulo a prime in O(n log n) time, with no floating
-point error. The modulus must be of the form $c \cdot 2^k + 1$ so that the ring of integers modulo
-it contains a $2^k$-th root of unity, which limits transform sizes to powers of two up to $2^k$. The
+computes the convolution of two sequences) modulo a prime in O(n log n) time, with no floating point
+error. The modulus must be of the form $c \cdot 2^k + 1$ so that the ring of integers modulo it
+contains a $2^k$-th root of unity, which limits transform sizes to powers of two up to $2^k$. The
 code below uses the common prime $998244353 = 119 \cdot 2^{23} + 1$ with primitive root $3$,
 supporting transforms of any power-of-two length up to $2^{23}$.
 
