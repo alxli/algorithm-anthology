@@ -15,8 +15,8 @@ index to a new value. Another possible update operation is "increment", in which
 
 - `SegTree<T>(n, v = T())` constructs an array of size `n` with indices $[0, `n`)$, and all values
   initialized to `v`.
-- `SegTree<T>(lo, hi)` constructs an array from two random-access iterators as a range
-  $[`lo`, `hi`)$, initialized to the elements of the range in the same order.
+- `SegTree<T>(lo, hi)` constructs an array from the half-open random-access iterator range
+  $[`lo`, `hi`)$.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.
 - `query(lo, hi)` returns the result of `combine()` applied to all indices in $[`lo`, `hi`]$. If
@@ -99,16 +99,16 @@ class SegTree {
   }
 
   void update(int i, int lo, int hi, int target, const T &d) {
-    if (target < lo || target > hi) {
-      return;
-    }
     if (lo == hi) {
       value[i] = apply_delta(value[i], d);
       return;
     }
     int mid = lo + (hi - lo) / 2;
-    update(i * 2 + 1, lo, mid, target, d);
-    update(i * 2 + 2, mid + 1, hi, target, d);
+    if (target <= mid) {
+      update(i * 2 + 1, lo, mid, target, d);
+    } else {
+      update(i * 2 + 2, mid + 1, hi, target, d);
+    }
     value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
@@ -201,7 +201,7 @@ class SegTree {
 /*** Example Usage and Output:
 
 Values: 6 -2 4 8 10
-The minimum value in the range [$0$, 3] is -2.
+The minimum value in the range [0, 3] is -2.
 
 ***/
 
@@ -217,7 +217,7 @@ int main() {
     cout << " " << t.at(i);
   }
   cout << endl;
-  cout << "The minimum value in the range [$0$, 3] is " << t.query(0, 3) << "." << endl;
+  cout << "The minimum value in the range [0, 3] is " << t.query(0, 3) << "." << endl;
   assert(t.query(0, 3) == -2);
 
   // Boundary search by accumulated aggregate: stop before including the -2 at index 1.

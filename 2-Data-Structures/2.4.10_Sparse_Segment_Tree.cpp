@@ -45,7 +45,7 @@ Time Complexity:
 - O(log N) per call to `at()`, `update()`, `query()`, `max_right()`, and `min_left()`.
 
 Space Complexity:
-- O(k log N) for storage after $k$ index updates.
+- O(q log N) for storage after $q$ updates.
 - O(log N) auxiliary stack space for `update()`, `query()`, `max_right()`, and `min_left()`.
 
 */
@@ -53,11 +53,12 @@ Space Complexity:
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <limits>
 #include <optional>
 
 template<typename T, int N = 1000000000>
 class SparseSegTree {
-  static_assert(N >= 0);
+  static_assert(0 <= N && N < std::numeric_limits<int>::max());
 
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T repeat_value(const T &v, int64_t len) { return v; }

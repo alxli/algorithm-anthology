@@ -25,7 +25,8 @@ Time Complexity:
   array size and $q$ is the number of queries.
 
 Space Complexity:
-- O(q) auxiliary, excluding whatever window state the callbacks maintain.
+- O(q) auxiliary and O(q) for the returned answers, excluding whatever window state the callbacks
+  maintain.
 
 */
 
@@ -41,6 +42,7 @@ std::vector<decltype(std::declval<CurrentFn>()())> mos_algorithm(
     int n, const std::vector<std::pair<int, int>> &queries, AddFn add, RemoveFn remove,
     CurrentFn current
 ) {
+  assert(n >= 0);
   for (auto [lo, hi] : queries) {
     assert(0 <= lo && lo <= hi && hi < n);
   }

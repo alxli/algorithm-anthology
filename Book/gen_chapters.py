@@ -53,7 +53,7 @@ SECTION_NAMES = {
     (4, 7): 'Exponential Graph Problems',
     (5, 1): 'Monotone Predicate Search',
     (5, 2): 'Unimodal and Continuous Search',
-    (5, 3): 'Dynamic Programming Optimization',
+    (5, 3): 'Dynamic Programming Tricks',
     (5, 4): 'Numerical Methods',
     (6, 1): 'Math Utilities',
     (6, 2): 'Combinatorics',
@@ -105,7 +105,7 @@ def escape_latex_code(text):
 
 def format_math_expression(expression):
     functions = {'alpha': r'\alpha', 'exp': r'\exp', 'log': r'\log', 'max': r'\max',
-                 'min': r'\min'}
+                 'min': r'\min', 'lcm': r'\lcm'}
     constants = {'MOD': r'\text{MOD}'}
     result = []
 
@@ -329,9 +329,12 @@ def format_text(text):
         if delimiter == '`':
             parts.append(r'\inlinecode{' + escape_latex_code(contents) + '}')
         else:
-            # Inline code inside an author-written formula renders as the smaller grey
-            # \inlinecodemath box within the math. Braces keep it a valid `^`/`_` operand.
-            parts.append('$' + re.sub(r'`([^`]*)`', r'{\\inlinecodemath{\1}}', contents) + '$')
+            contents = re.sub(
+                r'`([^`]*)`',
+                lambda match: r'{\inlinecodemath{' + escape_latex_code(match.group(1)) + '}}',
+                contents,
+            )
+            parts.append('$' + contents + '$')
         pos = end + 1
     return ''.join(parts)
 

@@ -10,21 +10,24 @@ For assignment, `dp[mask]` is the minimum cost after assigning the first `popcou
 the selected jobs. The next worker tries every unused job. For set cover, `dp[mask]` is the minimum
 number of chosen sets needed to cover exactly the elements in `mask`; adding one set moves to the
 union mask. For set partitioning, iterating all submasks gives the recurrence
-`dp[mask] = min(dp[mask ^ sub] + cost[sub])` over all masks this has O(3^n) transitions. For domino
-tiling, the mask is a profile of the current row; this technique is often called DP on a broken
-profile or plug DP. A domino covers exactly two edge-adjacent cells, so each piece is either
+`dp[mask] = min(dp[mask ^ sub] + cost[sub])`. Over all masks, this has O(3^n) transitions. For
+domino tiling, the mask is a profile of the current row; this technique is often called DP on a
+broken profile or plug DP. A domino covers exactly two edge-adjacent cells, so each piece is either
 horizontal ($1 \times 2$) or vertical ($2 \times 1$).
 
-- `assignment_min_cost(cost)` returns a pair `(sum, job)`, where `sum` is the minimum cost of
-  assigning each worker to a distinct job, and `job[i]` is the job assigned to worker `i`.
-- `minimum_set_cover(sets, universe_size)` returns a pair `(count, chosen)`, where `count` is the
-  minimum number of sets needed to cover all elements in $[0, u)$, where $u$ is `universe_size`, and
-  `chosen` contains one optimal list of set indices. If no cover exists, `count` is $-1$ and
+- `assignment_min_cost(cost)` returns a pair $(`sum`, `job`)$, where `sum` is the minimum cost of
+  assigning each worker to a distinct job, and `job[i]` is the job assigned to worker `i`. The input
+  is a square matrix with one row per worker and one column per job.
+- `minimum_set_cover(sets, universe_size)` returns a pair $(`count`, `chosen`)$, where `count` is
+  the minimum number of sets needed to cover all elements in $[0, u)$, where $u$ is `universe_size`,
+  and `chosen` contains one optimal list of set indices. If no cover exists, `count` is $-1$ and
   `chosen` is empty. Each input set is represented as a bitmask.
 - `partition_min_cost(group_cost)` returns the minimum total cost to partition all elements into
   disjoint nonempty groups, where `group_cost[mask]` is the cost of taking `mask` as one group.
 - `count_domino_tilings(rows, cols)` returns the number of ways to tile a `rows` by `cols` rectangle
   with $1 \times 2$ and $2 \times 1$ dominoes.
+
+All accumulated costs and tiling counts must fit in `int64_t`.
 
 Time Complexity:
 - O(n^2*2^n) per call to `assignment_min_cost()`, where $n$ is the number of workers and jobs.
@@ -35,8 +38,8 @@ Time Complexity:
   columns, respectively.
 
 Space Complexity:
-- O(2^n + n) auxiliary for `assignment_min_cost()`.
-- O(2^u + s) auxiliary for `minimum_set_cover()`.
+- O(2^n) auxiliary and O(n) for the returned assignment from `assignment_min_cost()`.
+- O(2^u) auxiliary and O(s) for the returned indices from `minimum_set_cover()`.
 - O(2^n) auxiliary for `partition_min_cost()`.
 - O(2^c) auxiliary for `count_domino_tilings()`.
 
@@ -45,7 +48,6 @@ Space Complexity:
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
-#include <limits>
 #include <utility>
 #include <vector>
 
@@ -54,26 +56,22 @@ std::pair<int64_t, std::vector<int>> assignment_min_cost(
 ) {
   int n = static_cast<int>(cost.size());
   assert(n < 31);
-  for (const auto &row : cost) {
-    assert(static_cast<int>(row.size()) == n);
-  }
   int states = 1 << n;
-  int64_t inf = std::numeric_limits<int64_t>::max() / 4;
-  std::vector<int64_t> dp(states, inf);
+  std::vector<int64_t> dp(states);
   std::vector<int> parent(states, -1);
-  dp[0] = 0;
   for (int mask = 0; mask < states; mask++) {
-    if (dp[mask] == inf) {
-      continue;
-    }
     int worker = __builtin_popcount(static_cast<unsigned>(mask));
     if (worker == n) {
       continue;
     }
     for (int job = 0; job < n; job++) {
-      if ((mask & (1 << job)) == 0 && dp[mask | (1 << job)] > dp[mask] + cost[worker][job]) {
-        dp[mask | (1 << job)] = dp[mask] + cost[worker][job];
-        parent[mask | (1 << job)] = job;
+      if ((mask & (1 << job)) == 0) {
+        int next = mask | (1 << job);
+        int64_t candidate = dp[mask] + cost[worker][job];  // Overflow warning.
+        if (parent[next] == -1 || dp[next] > candidate) {
+          dp[next] = candidate;
+          parent[next] = job;
+        }
       }
     }
   }
@@ -126,12 +124,12 @@ std::pair<int, std::vector<int>> minimum_set_cover(
 int64_t partition_min_cost(const std::vector<int64_t> &group_cost) {
   int states = static_cast<int>(group_cost.size());
   assert(states > 0 && (states & (states - 1)) == 0);
-  int64_t inf = std::numeric_limits<int64_t>::max() / 4;
-  std::vector<int64_t> dp(states, inf);
-  dp[0] = 0;
+  std::vector<int64_t> dp(states);
   for (int mask = 1; mask < states; mask++) {
-    for (int sub = mask; sub > 0; sub = (sub - 1) & mask) {
-      dp[mask] = std::min(dp[mask], dp[mask ^ sub] + group_cost[sub]);
+    dp[mask] = group_cost[mask];
+    for (int sub = (mask - 1) & mask; sub > 0; sub = (sub - 1) & mask) {
+      int64_t candidate = dp[mask ^ sub] + group_cost[sub];  // Overflow warning.
+      dp[mask] = std::min(dp[mask], candidate);
     }
   }
   return dp[states - 1];
@@ -148,13 +146,13 @@ int64_t count_domino_tilings(int rows, int cols) {
   dp[0] = 1;
   for (int r = 0; r < rows; r++) {
     for (int c = 0; c < cols; c++) {
-      std::fill(next.begin(), next.end(), 0);
+      next.assign(states, 0);
       for (int mask = 0; mask < states; mask++) {
         if (dp[mask] == 0) {
           continue;
         }
         if (mask & (1 << c)) {
-          next[mask ^ (1 << c)] += dp[mask];
+          next[mask ^ (1 << c)] += dp[mask];  // Overflow warning.
         } else {
           if (c + 1 < cols && (mask & (1 << (c + 1))) == 0) {
             next[mask | (1 << (c + 1))] += dp[mask];

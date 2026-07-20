@@ -16,8 +16,8 @@ index to a new value. Another possible update operation is "increment", in which
 
 - `PersistentSegTree<T>(n, v = T())` constructs version $0$ of an array of size `n` with indices
   $[0, `n`)$, and all values initialized to `v`.
-- `PersistentSegTree<T>(lo, hi)` constructs version $0$ from two random-access iterators as a range
-  $[`lo`, `hi`)$, initialized to the elements of the range in the same order.
+- `PersistentSegTree<T>(lo, hi)` constructs version $0$ from the half-open random-access iterator
+  range $[`lo`, `hi`)$.
 - `size()` returns the size of every version of the array.
 - `versions()` returns the number of stored versions. Versions are numbered starting from $0$.
 - `at(version, i)` returns the value at index `i` in the specified version.

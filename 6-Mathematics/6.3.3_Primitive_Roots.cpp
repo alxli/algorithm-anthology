@@ -12,11 +12,11 @@ factoring $m$, then factors $\phi(m)$. A candidate $g$ is primitive exactly when
 $g^{\phi(m)} \equiv 1 \pmod m$ and $g^{\phi(m)/q} \not\equiv 1 \pmod m$ for every prime factor $q$
 of $\phi(m)$.
 
-- `primitive_root(m)` returns the smallest primitive root modulo `m`, or $-1$ if no primitive root
-  exists.
-
 For a prime modulus $p$, this reduces to the common contest test: factor $p - 1$, then scan for the
 first $g$ such that $g^{(p - 1)/q} \not\equiv 1 \pmod p$ for every prime factor $q$ of $p - 1$.
+
+- `primitive_root(m)` returns the smallest primitive root modulo `m`, or $-1$ if no primitive root
+  exists.
 
 Modular multiplication uses `__uint128_t` when available for speed, with a slower portable
 double-and-add fallback to avoid overflow on compilers without 128-bit integers.
@@ -89,8 +89,8 @@ int64_t primitive_root(int64_t m) {
     return m - 1;
   }
   std::vector<std::pair<int64_t, int>> factors = factorize(m);
-  bool has_root = factors.size() == 1 ||
-                  (factors[0].first == 2 && factors[0].second == 1 && factors.size() == 2);
+  bool has_root = (factors.size() == 1 && factors[0].first != 2) ||
+                  (factors.size() == 2 && factors[0].first == 2 && factors[0].second == 1);
   if (!has_root) {
     return -1;
   }

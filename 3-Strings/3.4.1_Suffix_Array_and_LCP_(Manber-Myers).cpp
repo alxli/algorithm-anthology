@@ -1,10 +1,10 @@
 /*
 
-Given a string $s$, a suffix array is the array of the smallest starting positions for the sorted
-suffixes of $s$. That is, the $i$-th position of the suffix array stores the starting position of
-the $i$-th lexicographically smallest suffix of $s$. For example, $s$ = `"cab"` has the suffixes
-`"cab"`, `"ab"`, and `"b"`. When sorted, the indices of the suffixes are `"ab"`, `"b"`, and `"cab"`,
-so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
+Given a string $s$, a suffix array stores the starting positions of the suffixes of $s$ in sorted
+order. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th
+lexicographically smallest suffix of $s$. For example, $s$ = `"cab"` has the suffixes `"cab"`,
+`"ab"`, and `"b"`. When sorted, the indices of the suffixes are `"ab"`, `"b"`, and `"cab"`, so the
+suffix array (assuming 0-based indices) is $[1, 2, 0]$.
 
 For a string $s$ of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the
 lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in
@@ -73,16 +73,19 @@ class SuffixArrayManberMyers {
   std::vector<int> get_lcp() const {
     int n = static_cast<int>(s.size());
     if (n == 0) {
-      return {};  // Avoid constructing a vector of size (size_t)(-1).
+      return {};
     }
-    std::vector<int> lcp(n - 1);
+    std::vector<int> rank(n), lcp(n - 1);
+    for (int i = 0; i < n; i++) {
+      rank[sa[i]] = i;
+    }
     for (int i = 0, k = 0; i < n; i++) {
-      if (rk[i] < n - 1) {
-        int j = sa[rk[i] + 1];
+      if (rank[i] < n - 1) {
+        int j = sa[rank[i] + 1];
         while (std::max(i, j) + k < n && s[i + k] == s[j + k]) {
           k++;
         }
-        lcp[rk[i]] = k;
+        lcp[rank[i]] = k;
         if (k > 0) {
           k--;
         }
@@ -91,7 +94,7 @@ class SuffixArrayManberMyers {
     return lcp;
   }
 
-  std::size_t find(const string &needle) {
+  std::size_t find(const string &needle) const {
     if (needle.empty()) {
       return 0;
     }
@@ -135,10 +138,10 @@ int main() {
   for (int pos : sarr) {
     cout << " " << pos;
   }
-  cout << "\nLCP array:";
+  cout << endl << "LCP array:";
   for (int len : lcp) {
     cout << " " << len;
   }
-  cout << "\n";
+  cout << endl;
   return 0;
 }

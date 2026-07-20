@@ -7,9 +7,9 @@ same connected component, it creates a cycle and every bridge on the path betwee
 stops being a bridge.
 
 - `OnlineBridges(n = 0)` constructs a graph with `n` isolated nodes numbered $[0, `n`)$.
-- `add_edge(u, v)` adds the undirected edge `u`-`v` and updates: `bridges` with the current number
-  of bridges, and the disjoint-set parent arrays `dsu_2ecc[]` and `dsu_cc[]`, which partition the
-  nodes into 2-edge-connected components and ordinary connected components respectively.
+- `add_edge(u, v)` adds the undirected edge `u`-`v` and updates the 2-edge-connected and ordinary
+  connected components.
+- `bridge_count()` returns the current number of bridges.
 - `find_2ecc(u)` returns node `u`'s representative in the 2-edge-connected components partition.
 - `find_cc(u)` returns node `u`'s representative in the ordinary connected components partition.
 
@@ -29,40 +29,9 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-struct OnlineBridges {
+class OnlineBridges {
   std::vector<int> dsu_2ecc, dsu_cc, dsu_cc_size, parent, last_visit;
-  int lca_iteration, bridges;
-
-  OnlineBridges(int n = 0) {
-    dsu_2ecc.resize(n);
-    dsu_cc.resize(n);
-    dsu_cc_size.assign(n, 1);
-    parent.assign(n, -1);
-    last_visit.assign(n, 0);
-    lca_iteration = 0;
-    bridges = 0;
-    for (int i = 0; i < n; i++) {
-      dsu_2ecc[i] = dsu_cc[i] = i;
-    }
-  }
-
-  int find_2ecc(int u) {
-    if (u == -1) {
-      return -1;
-    }
-    if (dsu_2ecc[u] == u) {
-      return u;
-    }
-    return dsu_2ecc[u] = find_2ecc(dsu_2ecc[u]);
-  }
-
-  int find_cc(int u) {
-    u = find_2ecc(u);
-    if (dsu_cc[u] == u) {
-      return u;
-    }
-    return dsu_cc[u] = find_cc(dsu_cc[u]);
-  }
+  int lca_iteration, num_bridges;
 
   void make_root(int u) {
     u = find_2ecc(u);
@@ -108,15 +77,47 @@ struct OnlineBridges {
       if (a == lca) {
         break;
       }
-      bridges--;
+      num_bridges--;
     }
     for (int b : path_b) {
       dsu_2ecc[b] = lca;
       if (b == lca) {
         break;
       }
-      bridges--;
+      num_bridges--;
     }
+  }
+
+ public:
+  OnlineBridges(int n = 0) {
+    dsu_2ecc.resize(n);
+    dsu_cc.resize(n);
+    dsu_cc_size.assign(n, 1);
+    parent.assign(n, -1);
+    last_visit.assign(n, 0);
+    lca_iteration = 0;
+    num_bridges = 0;
+    for (int i = 0; i < n; i++) {
+      dsu_2ecc[i] = dsu_cc[i] = i;
+    }
+  }
+
+  int find_2ecc(int u) {
+    if (u == -1) {
+      return -1;
+    }
+    if (dsu_2ecc[u] == u) {
+      return u;
+    }
+    return dsu_2ecc[u] = find_2ecc(dsu_2ecc[u]);
+  }
+
+  int find_cc(int u) {
+    u = find_2ecc(u);
+    if (dsu_cc[u] == u) {
+      return u;
+    }
+    return dsu_cc[u] = find_cc(dsu_cc[u]);
   }
 
   void add_edge(int u, int v) {
@@ -127,7 +128,7 @@ struct OnlineBridges {
     }
     int ca = find_cc(u), cb = find_cc(v);
     if (ca != cb) {
-      bridges++;
+      num_bridges++;
       if (dsu_cc_size[ca] > dsu_cc_size[cb]) {
         std::swap(u, v);
         std::swap(ca, cb);
@@ -140,6 +141,8 @@ struct OnlineBridges {
       merge_path(u, v);
     }
   }
+
+  int bridge_count() const { return num_bridges; }
 };
 
 /*** Example Usage ***/
@@ -152,12 +155,12 @@ int main() {
   //     2---3
   OnlineBridges g(4);
   g.add_edge(0, 1);
-  assert(g.bridges == 1);
+  assert(g.bridge_count() == 1);
   g.add_edge(1, 2);
-  assert(g.bridges == 2);
+  assert(g.bridge_count() == 2);
   g.add_edge(2, 0);
-  assert(g.bridges == 0);
+  assert(g.bridge_count() == 0);
   g.add_edge(2, 3);
-  assert(g.bridges == 1);
+  assert(g.bridge_count() == 1);
   return 0;
 }

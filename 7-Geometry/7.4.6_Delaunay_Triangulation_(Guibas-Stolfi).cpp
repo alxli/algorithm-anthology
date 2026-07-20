@@ -10,8 +10,8 @@ algorithm with a quad-edge data structure. The point set is split in half, each 
 recursively, and the halves are stitched together from the bottom up by a sequence of cross edges,
 with circumcircle tests deciding each connecting edge and deleting invalidated ones.
 
-- `delaunay_triangulation(pts)` sorts `pts` lexicographically and removes duplicate points in place
-  (so the input vector is modified), then returns the triangles of one Delaunay triangulation as a
+- `delaunay_triangulation(p)` sorts `p` lexicographically and removes duplicate points in place (so
+  the input vector is modified), then returns the triangles of one Delaunay triangulation as a
   vector of counterclockwise-oriented vertex triples (`std::tuple`) of the input point type. If
   fewer than three non-collinear unique points remain, the result is empty.
 
@@ -28,7 +28,8 @@ Time Complexity:
 - O(n log n) per call, where $n$ is the number of input points.
 
 Space Complexity:
-- O(n) for the quad-edge structure and returned triangulation.
+- O(n log n) for allocated quad-edges in the worst case because deleted edges remain in the pool.
+- O(n) for the returned triangulation.
 
 */
 
@@ -44,7 +45,9 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) {
+    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  }
   return C(a) == C(b);
 }
 

@@ -7,11 +7,12 @@ that are linearly independent yields a basis whose XOR-combinations (subset XORs
 same set of values as the original integers. From a basis of size $r$, exactly $2^r$ distinct values
 are reachable, and queries such as the maximum attainable XOR become a simple greedy scan.
 
-The basis is kept in reduced form: the $i$-th basis is either $0$ or a value whose highest set bit
-is bit $i$, and no two basis elements share the same highest bit. Reducing a value means XORing it
-against the basis elements from the highest bit down, eliminating each set bit that a basis element
-covers.
+The basis is kept in row-echelon form: the $i$-th basis element is either $0$ or a value whose
+highest set bit is bit $i$, and no two basis elements share the same highest bit. Reducing a value
+means XORing it against the basis elements from the highest bit down, eliminating each set bit that
+a basis element covers.
 
+- `XorBasis()` constructs an empty basis over `mask_t`, which is `uint64_t` by default.
 - `insert(x)` adds `x` to the basis, returning `true` if `x` was linearly independent of the current
   basis (increasing its size), or `false` if `x` was already representable as a subset XOR.
 - `contains(x)` returns whether `x` is representable as the XOR of some subset of the inserted
@@ -34,15 +35,18 @@ Space Complexity:
 #include <climits>
 #include <cstdint>
 
-class XorBasis {
-  static const int BITS = sizeof(uint64_t) * CHAR_BIT;
+using mask_t = uint64_t;
+const int MASK_BITS = sizeof(mask_t) * CHAR_BIT;
 
-  std::array<uint64_t, BITS> basis{};  // basis[i] != 0 has its highest set bit at bit i.
+class XorBasis {
+  std::array<mask_t, MASK_BITS> basis{};  // basis[i] != 0 has its highest set bit at bit i.
   int sz = 0;
 
  public:
-  bool insert(uint64_t x) {
-    for (int i = BITS - 1; i >= 0; i--) {
+  XorBasis() = default;
+
+  bool insert(mask_t x) {
+    for (int i = MASK_BITS - 1; i >= 0; i--) {
       if (!((x >> i) & 1)) {
         continue;
       }
@@ -56,8 +60,8 @@ class XorBasis {
     return false;
   }
 
-  bool contains(uint64_t x) const {
-    for (int i = BITS - 1; i >= 0; i--) {
+  bool contains(mask_t x) const {
+    for (int i = MASK_BITS - 1; i >= 0; i--) {
       if (((x >> i) & 1) && basis[i] != 0) {
         x ^= basis[i];
       }
@@ -65,8 +69,8 @@ class XorBasis {
     return x == 0;
   }
 
-  uint64_t max_xor(uint64_t base = 0) const {
-    for (int i = BITS - 1; i >= 0; i--) {
+  mask_t max_xor(mask_t base = 0) const {
+    for (int i = MASK_BITS - 1; i >= 0; i--) {
       if ((base ^ basis[i]) > base) {
         base ^= basis[i];
       }

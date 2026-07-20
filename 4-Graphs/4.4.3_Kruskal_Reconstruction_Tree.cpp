@@ -30,6 +30,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
 #include <numeric>
 #include <tuple>
 #include <vector>
@@ -123,11 +124,27 @@ class KruskalReconstructionTree {
 /*** Example Usage ***/
 
 int main() {
-  // MST edges are 0-1 (2), 1-2 (4), and 1-3 (5).
+  //            0
+  //    w=2   /  | w=8
+  //        /    |
+  //      1----- 2
+  //      | w=4 /
+  //  w=5 |   /
+  //      | / w=9
+  //      3
   std::vector<std::tuple<int64_t, int, int>> edges{
       {2, 0, 1}, {4, 1, 2}, {5, 1, 3}, {8, 0, 2}, {9, 2, 3}
   };
   KruskalReconstructionTree tree(4, edges);
+
+  // Reconstruction tree; internal nodes are labeled with their joining edge weight.
+  //              6 (5)
+  //             / |
+  //        5 (4)  3
+  //       / |
+  //  4 (2)  2
+  //  / |
+  // 0  1
   assert(tree.root() == 6);
   assert(tree.max_edge_on_path(0, 2) == 4);
   assert(tree.max_edge_on_path(0, 3) == 5);

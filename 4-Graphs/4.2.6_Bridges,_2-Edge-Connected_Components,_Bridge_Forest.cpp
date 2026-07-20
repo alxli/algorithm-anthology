@@ -2,10 +2,10 @@
 
 Given an undirected graph, compute bridges, 2-edge-connected components, and the bridge forest using
 Tarjan's algorithm. A bridge is an edge whose removal increases the number of connected components
-in the graph. A 2-edge-connected component is a maximal set of vertices connected without crossing
-any bridge. A single depth-first search tracks each node's low-link, the earliest entry time
-reachable from its subtree: a tree edge is a bridge exactly when the child's subtree cannot reach
-back to the parent's side by any other route.
+in the graph. A 2-edge-connected component is a maximal set of nodes connected without crossing a
+bridge. A single depth-first search tracks each node's low-link, the earliest entry time reachable
+from its subtree: a tree edge is a bridge exactly when the child's subtree cannot reach back to the
+parent's side by any other route.
 
 After each 2-edge-connected component is condensed into one node, the original bridges connect those
 nodes into a bridge tree, or a bridge forest when the original graph is disconnected. This differs
@@ -14,10 +14,11 @@ describes vertex connectivity using articulation points and vertex-biconnected c
 
 - `BridgeDecomposition(n = 0)` constructs an undirected graph of `n` nodes numbered $[0, `n`)$.
 - `add_edge(u, v)` adds the undirected edge `u`-`v`. Parallel edges are supported.
-- `build_bridges()` populates `bridges`.
-- `build_bridge_forest()` populates `component`, `two_edge_components`, and `bridge_forest` using
-  the results of the previous `build_bridges()` call. After the call, `component[u]` stores the
-  2-edge-connected component ID containing vertex `u`.
+- `build_bridges()` computes the bridges, returned by `bridges()`.
+- `build_bridge_forest()` computes the 2-edge-connected components and bridge forest using the
+  results of the previous `build_bridges()` call.
+- `components()` and `bridge_forest()` return those results.
+- `component_id(u)` returns the 2-edge-connected component ID containing node `u`.
 
 Time Complexity:
 - O(max(n, m)) per call to `build_bridges()` followed by `build_bridge_forest()`, where $n$ is the
@@ -33,21 +34,12 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-struct BridgeDecomposition {
-  std::vector<std::vector<int>> adj, two_edge_components, bridge_forest;
+class BridgeDecomposition {
+  std::vector<std::vector<int>> adj, two_edge_components, forest;
   std::vector<int> lowlink, tin, component;
   std::vector<char> visited, is_bridge_edge;
-  std::vector<std::pair<int, int>> edges, bridges;
+  std::vector<std::pair<int, int>> edges, bridge_edges;
   int timer;
-
-  BridgeDecomposition(int n = 0) : adj(n) {}
-
-  void add_edge(int u, int v) {
-    int id = static_cast<int>(edges.size());
-    adj[u].push_back(id);
-    adj[v].push_back(id);
-    edges.emplace_back(u, v);
-  }
 
   int other(int id, int u) const { return edges[id].first ^ edges[id].second ^ u; }
 
@@ -65,24 +57,9 @@ struct BridgeDecomposition {
         dfs_bridges(v, id);
         lowlink[u] = std::min(lowlink[u], lowlink[v]);
         if (lowlink[v] > tin[u]) {
-          bridges.emplace_back(u, v);
+          bridge_edges.emplace_back(u, v);
           is_bridge_edge[id] = true;
         }
-      }
-    }
-  }
-
-  void build_bridges() {
-    int n = static_cast<int>(adj.size());
-    bridges.clear();
-    lowlink.assign(n, 0);
-    tin.assign(n, 0);
-    visited.assign(n, false);
-    is_bridge_edge.assign(edges.size(), false);
-    timer = 0;
-    for (int i = 0; i < n; i++) {
-      if (!visited[i]) {
-        dfs_bridges(i, -1);
       }
     }
   }
@@ -98,6 +75,31 @@ struct BridgeDecomposition {
     }
   }
 
+ public:
+  BridgeDecomposition(int n = 0) : adj(n) {}
+
+  void add_edge(int u, int v) {
+    int id = static_cast<int>(edges.size());
+    adj[u].push_back(id);
+    adj[v].push_back(id);
+    edges.emplace_back(u, v);
+  }
+
+  void build_bridges() {
+    int n = static_cast<int>(adj.size());
+    bridge_edges.clear();
+    lowlink.assign(n, 0);
+    tin.assign(n, 0);
+    visited.assign(n, false);
+    is_bridge_edge.assign(edges.size(), false);
+    timer = 0;
+    for (int i = 0; i < n; i++) {
+      if (!visited[i]) {
+        dfs_bridges(i, -1);
+      }
+    }
+  }
+
   void build_bridge_forest() {
     int n = static_cast<int>(adj.size());
     component.assign(n, -1);
@@ -108,13 +110,18 @@ struct BridgeDecomposition {
         dfs_component(i, static_cast<int>(two_edge_components.size()) - 1);
       }
     }
-    bridge_forest.assign(two_edge_components.size(), {});
-    for (auto &[u, v] : bridges) {
+    forest.assign(two_edge_components.size(), {});
+    for (auto &[u, v] : bridge_edges) {
       int cu = component[u], cv = component[v];
-      bridge_forest[cu].push_back(cv);
-      bridge_forest[cv].push_back(cu);
+      forest[cu].push_back(cv);
+      forest[cv].push_back(cu);
     }
   }
+
+  const std::vector<std::pair<int, int>> &bridges() const { return bridge_edges; }
+  const std::vector<std::vector<int>> &components() const { return two_edge_components; }
+  const std::vector<std::vector<int>> &bridge_forest() const { return forest; }
+  int component_id(int u) const { return component[u]; }
 };
 
 /*** Example Usage and Output:
@@ -155,22 +162,23 @@ int main() {
   g.add_edge(3, 7);
   g.add_edge(4, 5);
   g.build_bridges();
-  g.build_bridge_forest();
   cout << "Bridges:" << endl;
-  for (auto &[u, v] : g.bridges) {
+  for (auto [u, v] : g.bridges()) {
     cout << u << " " << v << endl;
   }
   cout << "2-edge-connected components:" << endl;
-  for (auto &component : g.two_edge_components) {
+  for (const auto &component : g.components()) {
     for (int v : component) {
       cout << v << " ";
     }
     cout << endl;
   }
+  g.build_bridge_forest();
   cout << "Adjacency List for Bridge Forest:" << endl;
-  for (int i = 0, n = static_cast<int>(g.bridge_forest.size()); i < n; i++) {
+  const auto &forest = g.bridge_forest();
+  for (int i = 0, n = static_cast<int>(forest.size()); i < n; i++) {
     cout << i << " =>";
-    for (int v : g.bridge_forest[i]) {
+    for (int v : forest[i]) {
       cout << " " << v;
     }
     cout << endl;

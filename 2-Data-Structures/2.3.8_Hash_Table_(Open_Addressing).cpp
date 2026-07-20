@@ -8,7 +8,8 @@ requires `operator==` on the key type and a hash functor.
 Linear probing checks slots $i$, $i + 1$, $i + 2$, ... (modulo the table size) until the desired key
 or an empty slot is found. Other probe-step schemes include quadratic probing and double hashing,
 but these require additional table-sizing and coprimality conditions to guarantee correct coverage
-of the table. They are omitted to keep this implementation focused on core ideas of open addressing.
+of the table. The `next_bucket()` helper includes a commented quadratic-probing alternative for
+power-of-two table sizes.
 
 Compared with the chaining version (2.3.7), open addressing stores entries contiguously, so it is
 more cache-friendly and needs no per-entry allocation. The costs: deletions must leave tombstones,
@@ -16,7 +17,8 @@ the load factor must stay well below 1, and, unlike chaining or `std::unordered_
 `find()` or reference from `operator[]` is invalidated as soon as a later insertion rehashes and
 relocates the entries.
 
-- `ProbingHashMap<K, V, Hash>()` constructs an empty map.
+- `ProbingHashMap<K, V, Hash>(buckets = 128)` constructs an empty map with the positive number of
+  slots given by `buckets`.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if a new
@@ -41,18 +43,22 @@ This is an educational implementation; in practice prefer one of the standard op
   wrappers with a randomized integer hash.
 
 Time Complexity:
-- O(1) per call to the constructor, `size()`, and `empty()`.
-- O(1) amortized per call to `insert()`, `erase()`, `find()`, and `operator[]`.
-- O(n) per call to `entries()`, where $n$ is the number of entries in the map.
+- O(b) per call to the constructor, where $b$ is the initial number of slots.
+- O(1) per call to `size()` and `empty()`.
+- O(1) expected amortized per call to `insert()`, `erase()`, `find()`, and `operator[]`, and O(n) in
+  the collision-heavy worst case.
+- O(n + b) per call to `entries()`, where $n$ is the number of entries and $b$ is the number of
+  slots.
 
 Space Complexity:
-- O(n) for storage of the map elements.
-- O(1) auxiliary for `insert()` and `operator[]` amortized over a sequence of operations (excluding
-  occasional table rehashes).
+- O(n + b) for storage of the map elements and slots.
+- O(n + b) auxiliary during a rehash.
+- O(n) for the vector returned by `entries()`.
 - O(1) auxiliary for all other operations.
 
 */
 
+#include <cassert>
 #include <cstdint>
 #include <optional>
 #include <utility>
@@ -76,6 +82,13 @@ class ProbingHashMap {
     return static_cast<int>(Hash()(k) % static_cast<uint32_t>(table_size));
   }
 
+  int next_bucket(int i, int probes) const {
+    return (i + 1) % table_size;  // Linear probing.
+
+    // Quadratic probing for power-of-two table sizes (cumulative offsets 1, 3, 6, 10, ...):
+    // return (i + probes + 1) & (table_size - 1);
+  }
+
   void rehash(int new_size) {
     auto old_table = std::move(table);
     auto old_state = std::move(state);
@@ -94,22 +107,27 @@ class ProbingHashMap {
   void grow_if_needed() {
     // Keep total non-empty slots below 50%. Tombstones count because they lengthen probe chains.
     if (2 * (num_entries + num_tombstones) >= table_size) {
-      rehash(2 * table_size);
+      rehash(2 * num_entries >= table_size ? 2 * table_size : table_size);
     }
   }
 
  public:
-  explicit ProbingHashMap(int size = 128)
-      : table(size),
-        state(size, State::EMPTY),
-        table_size(size),
-        num_entries(0),
-        num_tombstones(0) {}
+  explicit ProbingHashMap(int buckets = 128)
+      : table_size(buckets), num_entries(0), num_tombstones(0) {
+    assert(buckets > 0);
+    // Also require this when using the quadratic alternative in next_bucket():
+    // assert((buckets & (buckets - 1)) == 0);
+    table.resize(buckets);
+    state.assign(buckets, State::EMPTY);
+  }
 
   int size() const { return num_entries; }
   bool empty() const { return num_entries == 0; }
 
   bool insert(const K &k, const V &v) {
+    if (2 * (num_entries + num_tombstones) >= table_size && find(k) != nullptr) {
+      return false;
+    }
     grow_if_needed();
     int first_deleted = table_size;
     int i = bucket(k);
@@ -132,7 +150,7 @@ class ProbingHashMap {
         num_entries++;
         return true;
       }
-      i = (i + 1) % table_size;
+      i = next_bucket(i, probes);
     }
     // Should be rare because grow_if_needed keeps slack, but safe.
     rehash(2 * table_size);
@@ -152,7 +170,7 @@ class ProbingHashMap {
         num_tombstones++;
         return true;
       }
-      i = (i + 1) % table_size;
+      i = next_bucket(i, probes);
     }
     return false;
   }
@@ -166,7 +184,7 @@ class ProbingHashMap {
       if (state[i] == State::OCCUPIED && table[i]->key == k) {
         return &table[i]->value;
       }
-      i = (i + 1) % table_size;
+      i = next_bucket(i, probes);
     }
     return nullptr;
   }
@@ -193,7 +211,7 @@ class ProbingHashMap {
         num_entries++;
         return table[dest]->value;
       }
-      i = (i + 1) % table_size;
+      i = next_bucket(i, probes);
     }
     rehash(2 * table_size);
     return (*this)[k];
@@ -282,5 +300,11 @@ int main() {
   assert(m.size() == 2);
   assert(m["foo"] == '\0');
   assert(m.size() == 3);
+
+  ProbingHashMap<string, char, Hasher> duplicate(1);
+  duplicate.insert("x", 'x');
+  char *ptr = duplicate.find("x");
+  assert(!duplicate.insert("x", 'z'));
+  assert(ptr == duplicate.find("x"));  // A rejected duplicate does not trigger a rehash.
   return 0;
 }

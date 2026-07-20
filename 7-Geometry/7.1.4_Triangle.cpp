@@ -28,7 +28,7 @@ coordinates.
 
 Overflow warning: each individual cross product is still on the order of the squared coordinate
 magnitude, so for integer point types use a 64-bit coordinate type (e.g. `PointL` from 7.1.1) once
-coordinates exceed roughly $46000$.
+coordinates reach a few tens of thousands.
 
 Time Complexity:
 - O(1) for all operations.
@@ -45,7 +45,9 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) {
+    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  }
   return C(a) == C(b);
 }
 

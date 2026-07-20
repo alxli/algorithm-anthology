@@ -7,8 +7,8 @@
 Binary search can be generally used to find the input value corresponding to any output value of a monotonic (strictly non-increasing or strictly non-decreasing) function in $O(\log n)$ time with respect to the domain size. This is a special case of finding the exact point at which any given monotonic Boolean function changes from true to false or vice versa. Each step evaluates the midpoint of the current interval and keeps the half that still contains the transition point, halving the search space until it closes on the answer. Unlike searching through an array, discrete binary search is not restricted by available memory, making it useful for handling infinitely large search spaces such as real number intervals.
 
 \begin{compactitem}
-  \item \inlinecode{binary\_search\_first\_true(lo, hi, pred)} takes signed integer boundaries for the search space $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ (i.e. including \inlinecode{lo}, but excluding \inlinecode{hi}) and returns the smallest integer \inlinecode{k} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ for which the predicate \inlinecode{pred(k)} tests true. If \inlinecode{pred(k)} tests false for the entire input range, then \inlinecode{hi} is returned. The caller must ensure \inlinecode{pred} is monotonic on the input range, i.e. returning all false for some (possibly empty) prefix, followed by all true in some (possibly empty) suffix. E.g., patterns \inlinecode{"01"}, \inlinecode{"00"}, and \inlinecode{"11"} are allowed, but \inlinecode{"10"} is disallowed.
-  \item \inlinecode{binary\_search\_last\_true(lo, hi, pred)} takes signed integer boundaries for the search space $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ (i.e. including \inlinecode{lo}, but excluding \inlinecode{hi}) and returns the largest integer \inlinecode{k} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ for which the predicate \inlinecode{pred(k)} tests true. If \inlinecode{pred(k)} tests false for the entire input range, then \inlinecode{hi} is returned. The caller must ensure \inlinecode{pred} is monotonic on the input range, i.e. returning all true for some (possibly empty) prefix, followed by all false in some (possibly empty) suffix. E.g., patterns \inlinecode{"10"}, \inlinecode{"00"}, and \inlinecode{"11"} are allowed, but \inlinecode{"01"} is disallowed.
+  \item \inlinecode{binary\_search\_first\_true(lo, hi, pred)} takes signed integer boundaries for the search space $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ (i.e. including \inlinecode{lo}, but excluding \inlinecode{hi}) and returns the smallest integer \inlinecode{k} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ for which the predicate \inlinecode{pred(k)} tests true. If \inlinecode{pred(k)} tests false for the entire input range, then \inlinecode{hi} is returned. The caller must ensure \inlinecode{pred} is monotonic on the input range, i.e. returning all false for some (possibly empty) prefix, followed by all true in some (possibly empty) suffix. E.g., patterns \inlinecode{01}, \inlinecode{00}, and \inlinecode{11} are allowed, but \inlinecode{10} is disallowed.
+  \item \inlinecode{binary\_search\_last\_true(lo, hi, pred)} takes signed integer boundaries for the search space $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ (i.e. including \inlinecode{lo}, but excluding \inlinecode{hi}) and returns the largest integer \inlinecode{k} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ for which the predicate \inlinecode{pred(k)} tests true. If \inlinecode{pred(k)} tests false for the entire input range, then the original \inlinecode{lo - 1} is returned, so \inlinecode{lo} must exceed the minimum representable value. The caller must ensure \inlinecode{pred} is monotonic on the input range, i.e. returning all true for some (possibly empty) prefix, followed by all false in some (possibly empty) suffix. E.g., patterns \inlinecode{10}, \inlinecode{00}, and \inlinecode{11} are allowed, but \inlinecode{01} is disallowed.
   \item \inlinecode{fbinary\_search(lo, hi, pred)} is the equivalent of \inlinecode{binary\_search\_first\_true()} on floating point predicates. Since any interval of real numbers is dense, the exact target cannot be found due to floating point error. Instead, a value that is very close to the border between false and true is returned. The precision of the answer depends on the number of repetitions the function performs. Since each repetition bisects the search space, the absolute error of the answer is $1/(2^n)$ times the distance between \inlinecode{lo} and \inlinecode{hi} after $n$ repetitions. Although the error can be controlled by looping until the distance shrinks to an arbitrary epsilon, it is simpler to let the loop run for a desired number of iterations until floating point arithmetic breaks down. $100$ iterations is usually sufficient, since the search space will be reduced to $2^{-100}$ (roughly $10^{-30}$) times its original size. This implementation can be modified to find the ``last true'' point by simply interchanging the assignments of \inlinecode{lo} and \inlinecode{hi} in the if-else statements.
 \end{compactitem}
 
@@ -37,7 +37,6 @@ Int binary_search_first_true(Int lo, Int hi, Pred pred) {  // 000[1]11
 
 template<typename Int, typename Pred>
 Int binary_search_last_true(Int lo, Int hi, Pred pred) {  // 11[1]000
-  Int begin = lo, end = hi;
   while (lo < hi) {
     Int mid = lo + (hi - lo) / 2;
     if (pred(mid)) {
@@ -46,7 +45,7 @@ Int binary_search_last_true(Int lo, Int hi, Pred pred) {  // 11[1]000
       hi = mid;
     }
   }
-  return lo == begin ? end : lo - 1;  // hi if all false
+  return lo - 1;
 }
 
 template<typename Pred>
@@ -77,8 +76,8 @@ int main() {
 
   assert(binary_search_last_true(0, 7, [](int x) { return x <= 5; }) == 5);
   assert(binary_search_last_true(0, 7, [](int x) { return true; }) == 6);
-  assert(binary_search_last_true(0, 7, [](int x) { return false; }) == 7);
-  assert(binary_search_last_true(4, 4, [](int x) { return x <= 4; }) == 4);
+  assert(binary_search_last_true(0, 7, [](int x) { return false; }) == -1);
+  assert(binary_search_last_true(4, 4, [](int x) { return x <= 4; }) == 3);
 
   double res = fbinary_search(-10.0, 10.0, [](double x) { return x >= 1.2345; });
   assert(fabs(res - 1.2345) < 1e-15);
@@ -135,6 +134,51 @@ int main() {
   assert(exponential_search_first_true(5, at_least_1000) == 1000);
   auto square_large_enough = [](int64_t x) { return x * x >= 123456789LL; };
   assert(exponential_search_first_true(0LL, square_large_enough) == 11112);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Local Minimum (Binary Search)}
+Finds a non-strict local minimum in an array, that is, an index $i$ whose value is no greater than the values at its existing neighbors. Unlike ternary search, this does not require the array to be unimodal, but the result is only a local minimum and need not be the global minimum.
+
+Compare the middle element with its right neighbor. If the sequence slopes downward, the right half contains a local minimum; otherwise, the middle element or the left half contains one. Each comparison therefore discards half of the remaining indices.
+
+\begin{compactitem}
+  \item \inlinecode{local\_min\_index(a)} returns the index of a non-strict local minimum in the nonempty array \inlinecode{a}. Either endpoint may be returned when it is no greater than its sole neighbor.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(\log n)$ comparisons, where $n$ is the size of \inlinecode{a}.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <vector>
+
+template<typename T>
+int local_min_index(const std::vector<T> &a) {
+  assert(!a.empty());
+  int lo = 0, hi = static_cast<int>(a.size()) - 1;
+  while (lo < hi) {
+    int mid = lo + (hi - lo) / 2;
+    if (a[mid] > a[mid + 1]) {
+      lo = mid + 1;
+    } else {
+      hi = mid;
+    }
+  }
+  return lo;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+int main() {
+  assert(local_min_index(std::vector<int>{9, 7, 3, 4, 8}) == 2);
+  assert(local_min_index(std::vector<int>{1, 2, 3, 4}) == 0);
+
+  std::vector<int> duplicates{4, 2, 2, 3};
+  int i = local_min_index(duplicates);
+  assert((i == 1 || i == 2) && duplicates[i] == 2);
   return 0;
 }
 \end{lstlisting}
@@ -273,54 +317,55 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Hill Climbing}
-Given a continuous function $f(x, y)$ returning a real number and a (possibly arbitrary) starting guess $(x_0, y_0)$, search for a global minimum using the hill-climbing heuristic.
+\subsection{2D Hill Climbing}
+Given a continuous geometric objective $f(x, y)$ and a (possibly arbitrary) starting guess $(x_0, y_0)$, search for a small value using two-dimensional hill climbing.
 
-Hill-climbing is a heuristic which starts at the guess, then considers taking a single step in each of a fixed number of directions. The direction with the best (in this case, minimum) value is chosen, and further steps are taken in it until the answer no longer improves. When this happens, the step size is reduced and the same process repeats until a desired absolute error is reached. The technique's success heavily depends on the behavior of $f$ and the initial guess. Therefore, the result is not guaranteed to be the global minimum.
+The heuristic starts at the guess and evaluates one step in each of eight evenly spaced directions. It moves to the best improving neighbor, checks all eight directions again, and reduces the step size when no neighbor improves the answer. This repeats until the step size falls below the chosen threshold. Success depends heavily on the behavior of $f$ and the initial guess, so the result is not guaranteed to be the global minimum.
 
 \begin{compactitem}
-  \item \inlinecode{find\_min(f, x0, y0, \&critical\_x, \&critical\_y, step\_min = 1e-9, step\_max = 1e6, directions = 6)} returns a candidate global minimum value of function \inlinecode{f} reached by hill-climbing from the starting guess $({\inlinecodemath{x0}}, {\inlinecodemath{y0}})$. If the optional pointers \inlinecode{critical\_x} and \inlinecode{critical\_y} are supplied, the point attaining the returned value is stored through them. The search starts with step size \inlinecode{step\_max}, stops below \inlinecode{step\_min}, and samples \inlinecode{directions} evenly spaced directions.
+  \item \inlinecode{hill\_climb\_min(f, x0, y0, \&best\_x, \&best\_y, step\_min = 1e-9, step\_max = 1e6)} returns an approximate minimum value of function \inlinecode{f} reached by hill climbing from the starting guess $({\inlinecodemath{x0}}, {\inlinecodemath{y0}})$. If either optional pointer \inlinecode{best\_x} or \inlinecode{best\_y} is supplied, the corresponding coordinate of the point attaining the returned value is stored through it. The search starts with step size \inlinecode{step\_max} and stops below \inlinecode{step\_min}.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(d \log n)$ calls to \inlinecode{f()} will be made, where $d$ is the number of directions considered at each position and $n$ is the search space that is approximately proportional to the maximum possible step size divided by the minimum possible step size.
+\textbf{Time Complexity}: $O(k + s)$ calls to \inlinecode{f()}, where $k$ is the number of times the step size is reduced and $s$ is the total number of improving moves accepted.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
-#include <cmath>
-
 template<typename Fn>
-double find_min(
-    Fn f, double x0, double y0, double *critical_x = nullptr, double *critical_y = nullptr,
-    const double step_min = 1e-9, const double step_max = 1e6, const int directions = 6
+double hill_climb_min(
+    Fn f, double x0, double y0, double *best_x = nullptr, double *best_y = nullptr,
+    const double step_min = 1e-9, const double step_max = 1e6
 ) {
-  static const double PI = acos(-1.0);
+  static const double inv_sqrt2 = 0.7071067811865476;
+  static const double dx[] = {1, inv_sqrt2, 0, -inv_sqrt2, -1, -inv_sqrt2, 0, inv_sqrt2};
+  static const double dy[] = {0, inv_sqrt2, 1, inv_sqrt2, 0, -inv_sqrt2, -1, -inv_sqrt2};
   double x = x0, y = y0, res = f(x0, y0);
   for (double step = step_max; step > step_min;) {
-    double best = res, best_x = x, best_y = y;
+    double next_value = res, next_x = x, next_y = y;
     bool found = false;
-    for (int i = 0; i < directions; i++) {
-      double a = 2.0 * PI * i / directions;
-      double x2 = x + step * cos(a), y2 = y + step * sin(a);
+    for (int i = 0; i < 8; i++) {
+      double x2 = x + step * dx[i], y2 = y + step * dy[i];
       double value = f(x2, y2);
-      if (best > value) {
-        best_x = x2;
-        best_y = y2;
-        best = value;
+      if (value < next_value) {
+        next_x = x2;
+        next_y = y2;
+        next_value = value;
         found = true;
       }
     }
     if (!found) {
       step /= 2.0;
     } else {
-      x = best_x;
-      y = best_y;
-      res = best;
+      x = next_x;
+      y = next_y;
+      res = next_value;
     }
   }
-  if (critical_x != nullptr && critical_y != nullptr) {
-    *critical_x = x;
-    *critical_y = y;
+  if (best_x != nullptr) {
+    *best_x = x;
+  }
+  if (best_y != nullptr) {
+    *best_y = y;
   }
   return res;
 }
@@ -342,111 +387,120 @@ double f(double x, double y) {
 
 int main() {
   double x, y;
-  assert(EQ(find_min(f, 0, 0, &x, &y), 0));
+  assert(EQ(hill_climb_min(f, 0, 0, &x, &y), 0));
   assert(EQ(x, 2) && EQ(y, 3));
   return 0;
 }
 \end{lstlisting}
 \subsection{Simulated Annealing}
-Given a function $f(x, y)$ to minimize over two real variables, return a good approximate minimum found by simulated annealing. This is a randomized heuristic for difficult search spaces where gradients, convexity, and unimodality are not available.
+Approximately minimizes an energy function $E(s)$ over an arbitrary state space using simulated annealing. This randomized heuristic is useful when the states may be discrete, the energy has many local minima, and gradients or stronger structural properties are unavailable.
 
-At each temperature, the algorithm proposes a random nearby point. Better moves are always accepted, while worse moves are accepted with probability \inlinecode{exp((current - candidate) / temperature)}. This lets the search sometimes escape local minima early on, then become greedier as the temperature decreases.
-
-Simulated annealing is not a proof of optimality. Its quality depends heavily on the objective function, the starting point, the initial temperature, the cooling rate, and the number of independent restarts.
+Starting from an initial state $s$, each iteration generates a random neighboring state $s'$. An improving move is always accepted, while a worsening move is accepted with probability $\exp(-(E(s') - E(s))/T)$ at temperature $T$. High temperatures encourage exploration across energy barriers; as the temperature decreases, the search increasingly favors improvements. The best state is tracked separately because the current state may later move to a worse one.
 
 \begin{compactitem}
-  \item \inlinecode{anneal\_min(f, x0, y0, best\_x = nullptr, best\_y = nullptr)} returns a small value found by the randomized search starting from $({\inlinecodemath{x0}}, {\inlinecodemath{y0}})$. If the optional pointers \inlinecode{best\_x} and \inlinecode{best\_y} are supplied, the point attaining the returned value is stored through them.
-  \item \inlinecode{TEMPERATURE\_START} controls the initial move scale and willingness to accept worse states.
-  \item \inlinecode{TEMPERATURE\_END} controls when the search stops.
-  \item \inlinecode{COOLING\_RATE} controls how quickly the temperature decreases.
+  \item \inlinecode{anneal\_min(initial, energy, rand\_neighbor, rng, ...)} returns \inlinecode{(best\_energy, best\_state)}. The callable \inlinecode{energy(state)} returns the state's energy, while \inlinecode{rand\_neighbor(state, temp, rng)} returns a randomly chosen nearby state. The optional temperature arguments default to \inlinecode{temp\_start = 1000}, \inlinecode{temp\_end = 1e-6}, and \inlinecode{cooling\_rate = 0.995}. \inlinecode{temp\_end} must be positive and less than \inlinecode{temp\_start}, while \inlinecode{cooling\_rate} must be strictly between 0 and 1.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(r \log n)$ calls to \inlinecode{f()}, where $r$ is the number of restarts and $n$ is roughly \inlinecode{TEMPERATURE\_START} / \inlinecode{TEMPERATURE\_END}.
+The geometric schedule repeatedly multiplies the temperature by \inlinecode{cooling\_rate}, performing $k = \lceil \log(T_{end}/T_{start}) / \log(r) \rceil$ iterations. Temperature has the same scale as energy: multiplying every energy by a constant requires multiplying both temperature bounds by the same constant to preserve acceptance probabilities. For continuous states, temperature can also control the neighbor step size. Slower cooling, independent restarts, and a time-based stopping condition often improve results, but simulated annealing never proves optimality.
 
-\textbf{Space Complexity}: $O(1)$ auxiliary.
+This generic interface copies each proposed state and recomputes its energy. For large permutation states, adapt the loop to mutate and revert moves in place and update the energy from the affected terms instead.
+
+\textbf{Time Complexity}: $O(k(C_E + C_N))$, where $k$ is the number of temperature levels and $C_E$ and $C_N$ are the costs of evaluating the energy and generating a neighboring state.
+
+\textbf{Space Complexity}: $O(S)$ for the current, next, and best states, where $S$ is the size of one state.
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <cmath>
 #include <random>
+#include <utility>
 
-const double TEMPERATURE_START = 10.0;
-const double TEMPERATURE_END = 1e-7;
-const double COOLING_RATE = 0.997;
-const int NUM_RESTARTS = 8;
-
-template<typename Fn>
-double anneal_min(Fn f, double x0, double y0, double *best_x = nullptr, double *best_y = nullptr) {
-  auto rand_unit = []() {
-    static std::mt19937 rng(1234567);  // Set your own seed, or use std::random_device{}()
-    return std::uniform_real_distribution<double>(0.0, 1.0)(rng);
-  };
-  double sol_x = x0, sol_y = y0, best = f(x0, y0);
-  for (int restart = 0; restart < NUM_RESTARTS; restart++) {
-    double x = x0, y = y0, cur = f(x, y);
-    double temperature = TEMPERATURE_START;
-    while (temperature > TEMPERATURE_END) {
-      double nx = x + (2.0 * rand_unit() - 1.0) * temperature;
-      double ny = y + (2.0 * rand_unit() - 1.0) * temperature;
-      double next = f(nx, ny);
-      double probability = exp((cur - next) / temperature);
-      if (next < cur || rand_unit() < probability) {
-        x = nx;
-        y = ny;
-        cur = next;
-        if (cur < best) {
-          best = cur;
-          sol_x = x;
-          sol_y = y;
-        }
+template<typename State, typename Energy, typename Neighbor>
+std::pair<double, State> anneal_min(
+    State initial, Energy energy, Neighbor rand_neighbor, std::mt19937 &rng,
+    const double temp_start = 1000, const double temp_end = 1e-6, const double cooling_rate = 0.995
+) {
+  assert(0 < temp_end && temp_end < temp_start);
+  assert(0 < cooling_rate && cooling_rate < 1);
+  std::uniform_real_distribution<double> unit(0.0, 1.0);
+  State current = initial, best = initial;
+  double current_energy = energy(current), best_energy = current_energy;
+  for (double temp = temp_start; temp > temp_end; temp *= cooling_rate) {
+    State next = rand_neighbor(current, temp, rng);
+    double next_energy = energy(next);
+    if (next_energy <= current_energy ||
+        unit(rng) < std::exp((current_energy - next_energy) / temp)) {
+      current = next;
+      current_energy = next_energy;
+      if (current_energy < best_energy) {
+        best = current;
+        best_energy = current_energy;
       }
-      temperature *= COOLING_RATE;
     }
   }
-
-  if (best_x != nullptr) {
-    *best_x = sol_x;
-  }
-  if (best_y != nullptr) {
-    *best_y = sol_y;
-  }
-  return best;
+  return {best_energy, best};
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
-
-bool EQ(double a, double b) {
-  return fabs(a - b) < 1e-2;
-}
-
-// Smooth bowl with global minimum at f(2, -3) = 0.
-double f(double x, double y) {
-  return (x - 2) * (x - 2) + (y + 3) * (y + 3);
-}
+#include <algorithm>
+#include <vector>
+using namespace std;
 
 int main() {
-  double x, y;
-  double value = anneal_min(f, 0, 0, &x, &y);
-  assert(value < 1e-4);
-  // value < 1e-4 already forces |x-2|, |y+3| < 1e-2 = sqrt(1e-4); these confirm the out-params.
-  assert(EQ(x, 2));
-  assert(EQ(y, -3));
+  mt19937 rng(1234567);  // Set your own seed, or use random_device{}().
+
+  // Escape the local minimum near x = 1 and find the lower minimum near x = -1.
+  auto energy_1d = [](double x) { return (x * x - 1) * (x * x - 1) + 0.2 * x; };
+  auto neighbor_1d = [](double x, double temp, mt19937 &gen) {
+    uniform_real_distribution<double> move(-1.0, 1.0);
+    return x + move(gen) * sqrt(temp);
+  };
+  auto [best_energy, best_x] = anneal_min(1.0, energy_1d, neighbor_1d, rng, 2.0, 1e-8);
+  assert(best_energy < -0.2 && best_x < -1);
+
+  // Approximate TSP with a permutation state and random 2-opt reversals.
+  vector<pair<double, double>> points{{0, 0}, {1, 0}, {2, 0}, {2, 1},
+                                      {2, 2}, {1, 2}, {0, 2}, {0, 1}};
+  auto tour_length = [&](const vector<int> &tour) {
+    double length = 0;
+    for (int i = 0; i < static_cast<int>(tour.size()); i++) {
+      auto [x1, y1] = points[tour[i]];
+      auto [x2, y2] = points[tour[(i + 1) % tour.size()]];
+      length += hypot(x1 - x2, y1 - y2);
+    }
+    return length;
+  };
+  auto reverse_segment = [](const vector<int> &tour, double, mt19937 &gen) {
+    vector<int> next = tour;
+    uniform_int_distribution<int> pick(0, static_cast<int>(tour.size()) - 1);
+    int lo = pick(gen), hi = pick(gen);
+    if (lo > hi) {
+      swap(lo, hi);
+    }
+    reverse(next.begin() + lo, next.begin() + hi + 1);
+    return next;
+  };
+  vector<int> initial_tour{0, 4, 2, 6, 1, 5, 3, 7};
+  auto [best_length, best_tour] =
+      anneal_min(initial_tour, tour_length, reverse_segment, rng, 5.0, 1e-6, 0.995);
+  assert(fabs(best_length - 8) < 1e-9);
+  assert(fabs(tour_length(best_tour) - best_length) < 1e-9);
   return 0;
 }
 \end{lstlisting}
 
-\section{\texorpdfstring{Dynamic Programming Optimization}{5.3 Dynamic Programming Optimization}}
+\section{\texorpdfstring{Dynamic Programming Tricks}{5.3 Dynamic Programming Tricks}}
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Divide-and-Conquer DP Optimization}
-Computes one layer of a dynamic programming recurrence whose optimal transition indices are monotone. This optimization applies to recurrences of the form \inlinecode{dp\_cur[i] = min(dp\_prev[k] + cost(k, i))}, where the minimizing index for $i$ never decreases as $i$ increases.
+Computes one layer of a dynamic program of the form \inlinecode{dp\_cur[i] = min(dp\_prev[k] + cost(k, i))}, where $0 \leq {\inlinecodemath{k}} \leq {\inlinecodemath{i}}$. Let \inlinecode{opt[i]} be the smallest index \inlinecode{k} attaining this minimum. Divide-and-conquer optimization applies when \inlinecode{opt[i]} $\leq$ \inlinecode{opt[i + 1]}, so the best transition index moves only to the right as \inlinecode{i} increases.
 
-The function below computes \inlinecode{dp\_cur[l..r]} by evaluating the midpoint first, then recursing on the left half with a restricted upper bound on the optimal \inlinecode{k}, and on the right half with a restricted lower bound. The caller is responsible for checking that the recurrence satisfies the required monotonicity condition.
+To compute \inlinecode{dp\_cur[l..r]}, evaluate its midpoint and record its best transition as \inlinecode{best\_k}. Monotonicity restricts every optimum in the left half to indices at most \inlinecode{best\_k}, and every optimum in the right half to indices at least \inlinecode{best\_k}. Recursively applying these bounds avoids checking every transition for every state. The caller must verify the required monotonicity property.
 
 \begin{compactitem}
-  \item \inlinecode{compute\_dc\_layer(dp\_prev, dp\_cur, l, r, opt\_l, opt\_r, cost)} fills \inlinecode{dp\_cur[l..r]} using candidate transition indices in [\inlinecode{opt\_l}, \inlinecode{opt\_r}]. The template parameter \inlinecode{cost} must be callable such that \inlinecode{cost(k, i)} returns the transition cost from previous state \inlinecode{k} to current state \inlinecode{i}.
+  \item \inlinecode{compute\_dp\_layer(dp\_prev, dp\_cur, l, r, opt\_l, opt\_r, cost)} fills \inlinecode{dp\_cur[l..r]} using candidate transition indices in [\inlinecode{opt\_l}, \inlinecode{opt\_r}]. The template parameter \inlinecode{cost} must be callable such that \inlinecode{cost(k, i)} returns the transition cost from previous state \inlinecode{k} to current state \inlinecode{i}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ calls to \inlinecode{cost(k, i)} per layer when each state has $O(n)$ possible transitions.
@@ -461,7 +515,7 @@ The function below computes \inlinecode{dp\_cur[l..r]} by evaluating the midpoin
 const int64_t INF = (1LL << 62);
 
 template<typename Cost>
-void compute_dc_layer(
+void compute_dp_layer(
     const std::vector<int64_t> &dp_prev, std::vector<int64_t> &dp_cur, int l, int r, int opt_l,
     int opt_r, Cost cost
 ) {
@@ -473,15 +527,15 @@ void compute_dc_layer(
   int best_k = opt_l;
   int upper = std::min(mid, opt_r);
   for (int k = opt_l; k <= upper; k++) {
-    int64_t candidate = dp_prev[k] + cost(k, mid);
+    int64_t candidate = dp_prev[k] + cost(k, mid);  // Overflow warning!
     if (candidate < best) {
       best = candidate;
       best_k = k;
     }
   }
   dp_cur[mid] = best;
-  compute_dc_layer(dp_prev, dp_cur, l, mid - 1, opt_l, best_k, cost);
-  compute_dc_layer(dp_prev, dp_cur, mid + 1, r, best_k, opt_r, cost);
+  compute_dp_layer(dp_prev, dp_cur, l, mid - 1, opt_l, best_k, cost);
+  compute_dp_layer(dp_prev, dp_cur, mid + 1, r, best_k, opt_r, cost);
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -500,6 +554,7 @@ struct SquareSegmentCost {
   }
 
   int64_t operator()(int k, int i) const {
+    // Cost of placing the half-open segment a[k..i) in one group.
     int64_t sum = prefix[i] - prefix[k];
     return sum * sum;
   }
@@ -510,14 +565,18 @@ int main() {
   int n = static_cast<int>(a.size());
   SquareSegmentCost cost(a);
 
+  // Base layer for zero groups: only the empty prefix is reachable.
   vector<int64_t> dp_prev(n + 1, INF), dp_cur(n + 1, INF);
   dp_prev[0] = 0;
-  compute_dc_layer(dp_prev, dp_cur, 1, n, 0, n - 1, cost);
+
+  // The first layer places each prefix a[0..j) into one group.
+  compute_dp_layer(dp_prev, dp_cur, 1, n, 0, n - 1, cost);
   assert(dp_cur[4] == 100);  // One group: (1 + 2 + 3 + 4)^2.
 
+  // The second layer chooses the best split between two groups.
   vector<int64_t> dp_two(n + 1, INF);
-  compute_dc_layer(dp_cur, dp_two, 1, n, 0, n - 1, cost);
-  assert(dp_two[4] == 52);  // Split as [1, 2] and [3, 4].
+  compute_dp_layer(dp_cur, dp_two, 1, n, 0, n - 1, cost);
+  assert(dp_two[4] == 52);  // (1 + 2 + 3)^2 + 4^2.
   return 0;
 }
 \end{lstlisting}
@@ -530,28 +589,30 @@ The SMAWK algorithm interleaves two steps. REDUCE discards columns that cannot h
   \item \inlinecode{smawk\_row\_minima(rows, cols, get)} returns a vector \inlinecode{arg} of length \inlinecode{rows}, where \inlinecode{arg[r]} is the column index minimizing \inlinecode{get(r, c)} over $0 \leq {\inlinecodemath{c}} < {\inlinecodemath{cols}}$ (on ties, the smallest qualifying column is chosen). The input matrix is supplied as a totally monotone function \inlinecode{get(r, c)} with bounds \inlinecode{rows} $\geq 0$ and \inlinecode{cols} $\geq 1$.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(r + c)$ evaluations of \inlinecode{get} per call, where $r$ is \inlinecode{rows} and $c$ is \inlinecode{cols}.
+\textbf{Time Complexity}: $O(R + C)$ evaluations of \inlinecode{get} per call, where $R$ is \inlinecode{rows} and $C$ is \inlinecode{cols}.
 
-\textbf{Space Complexity}: $O(r + c)$ auxiliary.
+\textbf{Space Complexity}: $O(R + C)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
+#include <numeric>
 #include <vector>
 
 template<typename Get>
 std::vector<int> smawk_rec(
     const Get &get, const std::vector<int> &active_rows, const std::vector<int> &candidate_cols
 ) {
-  int n = static_cast<int>(active_rows.size());
-  std::vector<int> arg(n, -1);
-  if (n == 0) {
+  int num_rows = static_cast<int>(active_rows.size());
+  std::vector<int> arg(num_rows, -1);
+  if (num_rows == 0) {
     return arg;
   }
   // Base case: a single row or column is cheap to scan directly.
-  if (n <= 2 || candidate_cols.size() <= 2) {
-    for (int i = 0; i < n; i++) {
+  if (num_rows <= 2 || candidate_cols.size() <= 2) {
+    for (int row_pos = 0; row_pos < num_rows; row_pos++) {
       for (int c : candidate_cols) {
-        if (arg[i] == -1 || get(active_rows[i], c) < get(active_rows[i], arg[i])) {
-          arg[i] = c;
+        if (arg[row_pos] == -1 ||
+            get(active_rows[row_pos], c) < get(active_rows[row_pos], arg[row_pos])) {
+          arg[row_pos] = c;
         }
       }
     }
@@ -559,7 +620,7 @@ std::vector<int> smawk_rec(
   }
   // REDUCE: keep only columns that can be the minimum of some row.
   std::vector<int> kept;
-  if (static_cast<int>(candidate_cols.size()) > n) {
+  if (static_cast<int>(candidate_cols.size()) > num_rows) {
     for (int c : candidate_cols) {
       while (!kept.empty()) {
         int r = active_rows[static_cast<int>(kept.size()) - 1];
@@ -568,7 +629,7 @@ std::vector<int> smawk_rec(
         }
         kept.pop_back();
       }
-      if (static_cast<int>(kept.size()) < n) {
+      if (static_cast<int>(kept.size()) < num_rows) {
         kept.push_back(c);
       }
     }
@@ -577,26 +638,26 @@ std::vector<int> smawk_rec(
   }
   // INTERPOLATE: solve the odd rows recursively, then fill the even rows between known bounds.
   std::vector<int> odd_rows;
-  for (int i = 1; i < n; i += 2) {
-    odd_rows.push_back(active_rows[i]);
+  for (int row_pos = 1; row_pos < num_rows; row_pos += 2) {
+    odd_rows.push_back(active_rows[row_pos]);
   }
   std::vector<int> odd_arg = smawk_rec(get, odd_rows, kept);
-  for (int i = 0; i < static_cast<int>(odd_arg.size()); i++) {
-    arg[2 * i + 1] = odd_arg[i];
+  for (int odd_pos = 0; odd_pos < static_cast<int>(odd_arg.size()); odd_pos++) {
+    arg[2 * odd_pos + 1] = odd_arg[odd_pos];
   }
-  int k = 0;
-  for (int i = 0; i < n; i += 2) {
-    int hi = (i + 1 < n) ? arg[i + 1] : kept.back();
-    int r = active_rows[i];
+  int col_pos = 0;
+  for (int row_pos = 0; row_pos < num_rows; row_pos += 2) {
+    int hi = (row_pos + 1 < num_rows) ? arg[row_pos + 1] : kept.back();
+    int r = active_rows[row_pos];
     while (true) {
-      int c = kept[k];
-      if (arg[i] == -1 || get(r, c) < get(r, arg[i])) {
-        arg[i] = c;
+      int c = kept[col_pos];
+      if (arg[row_pos] == -1 || get(r, c) < get(r, arg[row_pos])) {
+        arg[row_pos] = c;
       }
       if (c == hi) {
         break;  // Stop at the upper bound; the next even row starts scanning from here.
       }
-      k++;
+      col_pos++;
     }
   }
   return arg;
@@ -605,12 +666,8 @@ std::vector<int> smawk_rec(
 template<typename Get>
 std::vector<int> smawk_row_minima(int rows, int cols, const Get &get) {
   std::vector<int> row_ids(rows), col_ids(cols);
-  for (int i = 0; i < rows; i++) {
-    row_ids[i] = i;
-  }
-  for (int j = 0; j < cols; j++) {
-    col_ids[j] = j;
-  }
+  std::iota(row_ids.begin(), row_ids.end(), 0);
+  std::iota(col_ids.begin(), col_ids.end(), 0);
   return smawk_rec(get, row_ids, col_ids);
 }
 \end{lstlisting}
@@ -624,8 +681,11 @@ using namespace std;
 int main() {
   // An explicit totally monotone matrix; row minima sit at non-decreasing columns.
   vector<vector<int>> m{
-      {10, 17, 13, 28, 23}, {17, 22, 16, 29, 23}, {24, 28, 22, 34, 24},
-      {11, 13, 6, 17, 7},   {45, 44, 32, 37, 23},
+      {10, 17, 13, 28, 23},
+      {17, 22, 16, 29, 23},
+      {24, 28, 22, 34, 24},
+      {11, 13,  6, 17,  7},
+      {45, 44, 32, 37, 23},
   };
   auto get = [&](int r, int c) { return m[r][c]; };
   vector<int> arg = smawk_row_minima(5, 5, get);
@@ -644,9 +704,9 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Knuth DP Optimization}
-Computes interval dynamic programming recurrences whose optimal split points are monotone. Knuth optimization applies to recurrences of the form \inlinecode{dp[l][r] = min(dp[l][k] + dp[k][r]) + cost(l, r)}, where the optimal split \inlinecode{opt[l][r]} satisfies \inlinecode{opt[l][r - 1] \textless{}= opt[l][r] \textless{}= opt[l + 1][r]}.
+Computes minimum costs for every half-open interval $[{\inlinecodemath{l}}, {\inlinecodemath{r}})$ using the recurrence \inlinecode{dp[l][r] = min(dp[l][k] + dp[k][r]) + cost(l, r)}. Each state chooses a split \inlinecode{k} strictly inside the interval and pays \inlinecode{cost(l, r)} after solving the two resulting subintervals.
 
-Common applications include optimal binary search trees and some range merging problems. The caller is responsible for verifying the quadrangle inequality and monotonicity assumptions for the chosen \inlinecode{cost(l, r)}.
+A direct implementation checks every split and takes $O(n^{3})$. Knuth optimization applies when the smallest optimal splits satisfy \inlinecode{opt[l][r - 1]} $\leq$ \inlinecode{opt[l][r]} $\leq$ \inlinecode{opt[l + 1][r]}. The two neighboring states therefore bound the splits that must be checked for \inlinecode{dp[l][r]}, reducing the total number of candidate checks to $O(n^{2})$. Common applications include optimal binary search trees and some range merging problems. The caller must verify the required monotonicity property for the chosen \inlinecode{cost(l, r)}; the quadrangle inequality and interval monotonicity of the cost are common sufficient conditions.
 
 \begin{compactitem}
   \item \inlinecode{knuth\_interval\_dp(n, cost, \&opt)} computes minimum costs for all half-open intervals $[{\inlinecodemath{l}}, {\inlinecodemath{r}})$ over \inlinecode{n} items. The template parameter \inlinecode{cost} must be callable such that \inlinecode{cost(l, r)} returns the interval cost added after choosing the best split. If the optional pointer \inlinecode{opt} is supplied, it is filled with the chosen split points.
@@ -669,6 +729,7 @@ std::vector<std::vector<int64_t>> knuth_interval_dp(
 ) {
   std::vector<std::vector<int64_t>> dp(n + 1, std::vector<int64_t>(n + 1, 0));
   std::vector<std::vector<int>> opt(n + 1, std::vector<int>(n + 1, 0));
+  // Empty and one-item intervals have cost 0.
   for (int i = 0; i <= n; i++) {
     opt[i][i] = i;
     if (i < n) {
@@ -681,8 +742,9 @@ std::vector<std::vector<int64_t>> knuth_interval_dp(
       dp[l][r] = INF;
       int start = std::max(opt[l][r - 1], l + 1);
       int finish = std::min(opt[l + 1][r], r - 1);
+      int64_t interval_cost = cost(l, r);
       for (int k = start; k <= finish; k++) {
-        int64_t candidate = dp[l][k] + dp[k][r] + cost(l, r);
+        int64_t candidate = dp[l][k] + dp[k][r] + interval_cost;  // Overflow warning!
         if (candidate < dp[l][r]) {
           dp[l][r] = candidate;
           opt[l][r] = k;
@@ -711,13 +773,18 @@ struct MergeCost {
     }
   }
 
-  int64_t operator()(int l, int r) const { return prefix[r] - prefix[l]; }
+  int64_t operator()(int l, int r) const {
+    // Cost of merging the half-open interval a[l..r) into one group.
+    return prefix[r] - prefix[l];
+  }
 };
 
 int main() {
   vector<int> a{1, 2, 3, 4};
-  vector<vector<int64_t>> dp = knuth_interval_dp(a.size(), MergeCost(a));
-  assert(dp[0][4] == 19);
+  vector<vector<int>> opt;
+  vector<vector<int64_t>> dp = knuth_interval_dp(a.size(), MergeCost(a), &opt);
+  assert(dp[0][4] == 19);  // Merge 1 + 2, then 3 + 3, then 6 + 4.
+  assert(opt[0][4] == 3);  // The final merge splits [1, 2, 3] from [4].
   return 0;
 }
 \end{lstlisting}
@@ -727,10 +794,10 @@ Given an optimization problem with a constraint on the number of chosen objects,
 For maximization, solve the relaxed problem as \inlinecode{score - penalty*count}, breaking ties toward larger \inlinecode{count}. As \inlinecode{penalty} increases, the optimal count never increases. The largest penalty whose relaxed optimum still chooses at least \inlinecode{target\_count} objects gives the exact constrained score after adding back \inlinecode{penalty*target\_count}.
 
 \begin{compactitem}
-  \item \inlinecode{lagrangian\_maximize(target\_count, lo, hi, solve)} returns the maximum original score using exactly \inlinecode{target\_count} objects. The callable \inlinecode{solve(penalty)} must return \inlinecode{(relaxed\_score, count)} and must tie-break toward larger \inlinecode{count}.
+  \item \inlinecode{lagrangian\_maximize(target\_count, lo, hi, solve)} returns the maximum original score using exactly \inlinecode{target\_count} objects. The callable \inlinecode{solve(penalty)} must return \inlinecode{relaxed\_score} and \inlinecode{count} as a pair and must tie-break toward larger \inlinecode{count}. Penalties are searched over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$; \inlinecode{lo} must choose at least \inlinecode{target\_count} objects, while \inlinecode{hi} must be greater than the last penalty that does so.
 \end{compactitem}
 
-This technique is often called the Aliens trick. The bounds \inlinecode{lo} and \inlinecode{hi} must contain a valid integer penalty where the relaxed count crosses \inlinecode{target\_count}; widen them when in doubt.
+This technique is often called the Aliens trick. Widen the penalty range when in doubt.
 
 \textbf{Time Complexity}: $O(\log n)$ calls to \inlinecode{solve()} per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
@@ -744,17 +811,19 @@ This technique is often called the Aliens trick. The bounds \inlinecode{lo} and 
 
 template<typename Solve>
 int64_t lagrangian_maximize(int target_count, int64_t lo, int64_t hi, Solve solve) {
+  // The chosen count is nonincreasing, so find the last penalty that still chooses enough objects.
   while (lo < hi) {
-    int64_t mid = lo + (hi - lo + 1) / 2;
+    int64_t mid = lo + (hi - lo) / 2;
     if (solve(mid).second >= target_count) {
-      lo = mid;
+      lo = mid + 1;
     } else {
-      hi = mid - 1;
+      hi = mid;
     }
   }
-  auto [relaxed_score, count] = solve(lo);
+  int64_t penalty = lo - 1;
+  auto [relaxed_score, count] = solve(penalty);
   assert(count >= target_count);
-  return relaxed_score + lo * target_count;
+  return relaxed_score + penalty * target_count;  // Overflow warning!
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -767,7 +836,7 @@ int main() {
     int count = 0;
     for (int64_t x : value) {
       int64_t gain = x - penalty;
-      if (gain >= 0) {
+      if (gain >= 0) {  // Include zero gains to break ties toward larger counts.
         score += gain;
         count++;
       }
@@ -788,12 +857,12 @@ The following implementation is a concise, semi-dynamic version of the convex hu
 \begin{compactitem}
   \item \inlinecode{SemiDynamicCHT()} constructs an empty hull.
   \item \inlinecode{add\_line(m, b)} inserts the line $y = mx + b$. The caller must ensure that slope \inlinecode{m} is less than or equal to the slope of every line added so far.
-  \item \inlinecode{query(x)} returns the minimum $y$-value among all inserted lines at coordinate \inlinecode{x}. The caller must ensure that query coordinates are nondecreasing across calls.
+  \item \inlinecode{query(x)} returns the minimum $y$-value among all inserted lines at coordinate \inlinecode{x}. The caller must ensure that query coordinates are nondecreasing across calls. At least one line must have been inserted.
 \end{compactitem}
 
 Overflow warning: \inlinecode{add\_line()} compares intersections by cross-multiplying slope and intercept differences, a product on the order of the squared coefficient magnitude. For large \inlinecode{m}/\inlinecode{b} (roughly beyond $10^9$ with \inlinecode{int64\_t}), cast that comparison to \inlinecode{\_\_int128}. \inlinecode{query()} evaluates \inlinecode{m * x + b}, which also needs to fit in \inlinecode{int64\_t}.
 
-\textbf{Time Complexity}: $O(n)$ for any interlaced sequence of \inlinecode{add\_line()} and \inlinecode{query()} calls, where $n$ is the number of lines added. This is because the overall number of steps taken by \inlinecode{add\_line()} and \inlinecode{query()} are respectively bounded by the number of lines. Thus a single call to either \inlinecode{add\_line()} or \inlinecode{query()} will have an amortized $O(1)$ running time.
+\textbf{Time Complexity}: $O(n + q)$ for any interlaced sequence containing $n$ calls to \inlinecode{add\_line()} and $q$ calls to \inlinecode{query()}. Each line is removed or passed by the query pointer at most once, so both operations take amortized $O(1)$ time.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -803,47 +872,50 @@ Overflow warning: \inlinecode{add\_line()} compares intersections by cross-multi
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
-struct SemiDynamicCHT {
-  std::vector<int64_t> M, B;
+class SemiDynamicCHT {
+  std::vector<int64_t> slopes, intercepts;
   int ptr = 0;
 
+ public:
   void add_line(int64_t m, int64_t b) {
-    int len = static_cast<int>(M.size());
-    if (len > 0 && M.back() == m) {
-      if (B.back() <= b) {
+    int len = static_cast<int>(slopes.size());
+    if (len > 0 && slopes.back() == m) {
+      if (intercepts.back() <= b) {
         return;
       }
-      M.pop_back();
-      B.pop_back();
+      slopes.pop_back();
+      intercepts.pop_back();
       len--;
       if (ptr > len) {
         ptr = len;
       }
     }
     // Overflow warning!
-    while (len > 1 && (B[len - 2] - B[len - 1]) * (m - M[len - 1]) >=
-                          (B[len - 1] - b) * (M[len - 1] - M[len - 2])) {
+    while (len > 1 && (intercepts[len - 2] - intercepts[len - 1]) * (m - slopes[len - 1]) >=
+                          (intercepts[len - 1] - b) * (slopes[len - 1] - slopes[len - 2])) {
       len--;
     }
-    M.resize(len);
-    B.resize(len);
-    M.push_back(m);
-    B.push_back(b);
+    slopes.resize(len);
+    intercepts.resize(len);
+    slopes.push_back(m);
+    intercepts.push_back(b);
   }
 
   int64_t query(int64_t x) {
-    if (ptr >= static_cast<int>(M.size())) {
-      ptr = static_cast<int>(M.size()) - 1;
+    assert(!slopes.empty());
+    if (ptr >= static_cast<int>(slopes.size())) {
+      ptr = static_cast<int>(slopes.size()) - 1;
     }
     // Overflow warning!
-    while (ptr + 1 < static_cast<int>(M.size()) &&
-           M[ptr + 1] * x + B[ptr + 1] <= M[ptr] * x + B[ptr]) {
+    while (ptr + 1 < static_cast<int>(slopes.size()) &&
+           slopes[ptr + 1] * x + intercepts[ptr + 1] <= slopes[ptr] * x + intercepts[ptr]) {
       ptr++;
     }
-    return M[ptr] * x + B[ptr];
+    return slopes[ptr] * x + intercepts[ptr];
   }
 };
 \end{lstlisting}
@@ -870,17 +942,17 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Convex Hull Trick (Fully-Dynamic)}
-Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, answer queries at specified $x$-coordinates, each asking for the minimum $y$-value over all given lines. To instead have the queries optimize for maximum $y$-value, call the constructor with \inlinecode{query\_max = true}. This is useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])} when line slopes and query coordinates are not monotone.
+Maintains a dynamic set of lines $y = mx + b$ and answers minimum value queries at integer points. Lines and queries may arrive in arbitrary order, making this useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])} without monotone slopes or query coordinates. The same interface can answer maximum queries when constructed with \inlinecode{query\_max = true}.
 
-The following implementation is a fully dynamic variant of the convex hull optimization technique, using a self-balancing binary search tree (\inlinecode{std::set}) to support the ability to call \inlinecode{add\_line()} and \inlinecode{query()} in any desired order. The tree stores the lower envelope of the lines sorted by slope: inserting a line removes any neighbors it dominates, and each line records the interval of queries for which it is the best, so a query is a single tree lookup.
+This fully dynamic convex hull stores the envelope in a self-balancing binary search tree (\inlinecode{std::set}). Inserting a line removes any neighbors it dominates, and each remaining line records the last coordinate where it is optimal, so a query is one tree lookup. Unlike a Li Chao tree, this structure requires no fixed coordinate domain and its complexity depends on the number of lines rather than the domain width. Prefer it when the domain is unknown or very large, or when maximum queries are needed; a Li Chao tree is often simpler when a manageable domain is known.
 
 \begin{compactitem}
   \item \inlinecode{HullOptimizer(query\_max = false)} constructs an empty hull. By default, \inlinecode{query(x)} minimizes; if \inlinecode{query\_max} is true, \inlinecode{query(x)} maximizes.
-  \item \inlinecode{add\_line(m, b)} inserts line $y = mx + b$ (can be called in any order).
-  \item \inlinecode{query(x)} returns the best $y$-value among all inserted lines at coordinate \inlinecode{x}. At least one line must have been inserted.
+  \item \inlinecode{add\_line(m, b)} inserts line $y = mx + b$. Lines may be added in any order.
+  \item \inlinecode{query(x)} returns the best $y$-value among all inserted lines at coordinate \inlinecode{x}. At least one line must have been inserted, and query coordinates may be supplied in any order.
 \end{compactitem}
 
-Overflow warning: border updates subtract slopes/intercepts and \inlinecode{query()} evaluates \inlinecode{m * x + b}, so those intermediate values must fit in \inlinecode{int64\_t}.
+Overflow warning: minimization negates the coefficients, border updates subtract slopes/intercepts, and \inlinecode{query()} evaluates \inlinecode{m * x + b}, so those intermediate values must fit in \inlinecode{int64\_t}.
 
 \textbf{Time Complexity}: $O(\log n)$ amortized per call to \inlinecode{add\_line()} and $O(\log n)$ per call to \inlinecode{query()}, where $n$ is the number of lines added.
 
@@ -986,14 +1058,14 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Li Chao Tree}
-Maintains a dynamic set of lines and answers minimum value queries at points in a fixed integer domain. A Li Chao tree is useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])}, especially when line slopes and query points arrive in arbitrary order. Each node of a segment tree over the domain keeps the line that wins at its segment's midpoint; inserting a line keeps the midpoint winner and recurses only into the half where the losing line may still win, and a query takes the best line along one root-to-leaf path.
+Maintains a dynamic set of lines $y = mx + b$ and answers minimum value queries at integer points. Lines and queries may arrive in arbitrary order, making this useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])} without monotone slopes or query coordinates.
 
-This implementation stores the lower envelope of lines over the inclusive domain $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$. It supports adding arbitrary lines and querying arbitrary integer $x$-coordinates in logarithmic time with respect to the domain size.
+A Li Chao tree fixes an inclusive coordinate domain $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ and stores one line at each node of a dynamic segment tree. Inserting a line keeps the line that wins at the midpoint and recurses only into the half where the other line may still win; a query takes the best value along one root-to-leaf path. Prefer this structure when the domain is known and manageable. The fully dynamic convex hull in the previous section needs no fixed domain and also supports maximum queries, while a Li Chao tree has a simpler invariant and is easier to extend to lines active only on subintervals.
 
 \begin{compactitem}
   \item \inlinecode{LiChaoTree(lo, hi)} constructs an empty tree over integer domain $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
-  \item \inlinecode{add\_line(m, b)} inserts line $y = mx + b$ (can be called in any order).
-  \item \inlinecode{query(x)} returns the minimum $y$-value among all inserted lines at coordinate \inlinecode{x}. At least one line must have been inserted.
+  \item \inlinecode{add\_line(m, b)} inserts line $y = mx + b$. Lines may be added in any order.
+  \item \inlinecode{query(x)} returns the minimum $y$-value among all inserted lines at coordinate \inlinecode{x}. At least one line must have been inserted, and query coordinates may be supplied in any order.
 \end{compactitem}
 
 Overflow warning: each comparison and query evaluates \inlinecode{m * x + b}, which must fit in \inlinecode{int64\_t}.
@@ -1003,7 +1075,7 @@ Overflow warning: each comparison and query evaluates \inlinecode{m * x + b}, wh
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n \log d)$ worst-case node storage for $n$ lines inserted, usually much less.
+  \item $O(n)$ node storage for $n$ lines inserted, since each insertion creates at most one node.
   \item $O(\log d)$ auxiliary stack space per operation.
 \end{compactitem}
 
@@ -1085,6 +1157,7 @@ class LiChaoTree {
   void add_line(int64_t m, int64_t b) { add_line(root, lo, hi, Line(m, b)); }
 
   int64_t query(int64_t x) const {
+    assert(root != nullptr);
     assert(lo <= x && x <= hi);
     return query(root, lo, hi, x);
   }
@@ -1096,14 +1169,16 @@ class LiChaoTree {
 #include <cassert>
 
 int main() {
-  LiChaoTree cht(-10, 10);
-  cht.add_line(3, 0);
-  cht.add_line(1, 2);
-  cht.add_line(-1, 10);
-  assert(cht.query(-10) == -30);
-  assert(cht.query(0) == 0);
-  assert(cht.query(2) == 4);
-  assert(cht.query(10) == 0);
+  LiChaoTree h(-10, 10);
+  h.add_line(3, 0);
+  h.add_line(0, 6);
+  h.add_line(1, 2);
+  h.add_line(2, 1);
+  // Minimize among y = 3x, 6, x + 2, and 2x + 1.
+  assert(h.query(0) == 0);
+  assert(h.query(2) == 4);
+  assert(h.query(1) == 3);
+  assert(h.query(3) == 5);
   return 0;
 }
 \end{lstlisting}
@@ -1112,11 +1187,11 @@ int main() {
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Root Finding (Bracketing)}
-Finds an $x$ in an interval $[a, b]$ for a continuous function $f$ such that $f(x) = 0$. By the intermediate value theorem, a root must exist in $[a, b]$ if the signs of $f(a)$ and $f(b)$ differ. Each bisection step evaluates the midpoint of the interval and keeps the half whose endpoints still differ in sign, so a root always remains bracketed. The answer is found with an absolute error of roughly $1 / 2^n$, where $n$ is the number of iterations. Although it is possible to control the error by looping while $b - a$ is greater than an arbitrary epsilon, it is simpler to let the loop run for a desired number of iterations until floating point arithmetic breaks down. 100 iterations is usually sufficient, since the search space will be reduced to $2^{-100}$ (roughly $10^{-30}$) times its original size.
+Finds an $x$ in an interval $[a, b]$ for a continuous function $f$ such that $f(x) = 0$. By the intermediate value theorem, a root must exist in $[a, b]$ if either endpoint is a root or the signs of $f(a)$ and $f(b)$ differ. Each bisection step evaluates the midpoint of the interval and keeps the half whose endpoints still differ in sign, so a root always remains bracketed. After $n$ iterations, the interval width is $(b - a) / 2^n$. Although it is possible to control the error by looping while $b - a$ is greater than an arbitrary epsilon, it is simpler to let the loop run for a desired number of iterations until floating point arithmetic breaks down. 100 iterations is usually sufficient, since the search space will be reduced to $2^{-100}$ (roughly $10^{-30}$) times its original size.
 
 \begin{compactitem}
-  \item \inlinecode{bisection\_root(f, a, b, iterations = 100)} returns a root in an interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a continuous function $f$ where $\operatorname{sgn}(f(a)) \neq \operatorname{sgn}(f(b))$, using the bisection method.
-  \item \inlinecode{falsi\_illinois\_root(f, a, b, iterations = 100)} returns a root in an interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a continuous function $f$ where $\operatorname{sgn}(f(a)) \neq \operatorname{sgn}(f(b))$, using the Illinois algorithm variant of the false position (a.k.a. regula falsi) method.
+  \item \inlinecode{bisection\_root(f, a, b, iterations = 100)} returns a root in an interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a continuous function $f$ where either endpoint is a root or the endpoint values have opposite signs, using the bisection method.
+  \item \inlinecode{falsi\_illinois\_root(f, a, b, iterations = 100)} returns a root in an interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a continuous function $f$ under the same endpoint conditions, using the Illinois algorithm variant of the false position (a.k.a. regula falsi) method.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ calls will be made to \inlinecode{f()} in \inlinecode{bisection\_root()} and \inlinecode{falsi\_illinois\_root()}, where $n$ is the number of iterations performed.
@@ -1128,12 +1203,22 @@ Finds an $x$ in an interval $[a, b]$ for a continuous function $f$ such that $f(
 
 template<typename Fn>
 double bisection_root(Fn f, double a, double b, const int iterations = 100) {
-  assert(a <= b && f(a) * f(b) <= 0);
-  double m, fa = f(a);
+  double fa = f(a), fb = f(b);
+  assert(a <= b && ((fa <= 0 && fb >= 0) || (fa >= 0 && fb <= 0)));
+  if (fa == 0) {
+    return a;
+  }
+  if (fb == 0) {
+    return b;
+  }
+  double m = a;
   for (int i = 0; i < iterations; i++) {
     m = a + (b - a) / 2;
     double fm = f(m);
-    if (fa * fm >= 0) {
+    if (fm == 0) {
+      return m;
+    }
+    if ((fa < 0) == (fm < 0)) {
       a = m;
       fa = fm;
     } else {
@@ -1145,28 +1230,36 @@ double bisection_root(Fn f, double a, double b, const int iterations = 100) {
 
 template<typename Fn>
 double falsi_illinois_root(Fn f, double a, double b, const int iterations = 100) {
-  assert(a <= b && f(a) * f(b) <= 0);
-  double m, fm, fa = f(a), fb = f(b);
+  double fa = f(a), fb = f(b);
+  assert(a <= b && ((fa <= 0 && fb >= 0) || (fa >= 0 && fb <= 0)));
+  if (fa == 0) {
+    return a;
+  }
+  if (fb == 0) {
+    return b;
+  }
+  double m = a;
   int side = 0;
   for (int i = 0; i < iterations; i++) {
     m = (fa * b - fb * a) / (fa - fb);
-    fm = f(m);
-    if (fb * fm > 0) {
+    double fm = f(m);
+    if (fm == 0) {
+      break;
+    }
+    if ((fb < 0) == (fm < 0)) {
       b = m;
       fb = fm;
       if (side < 0) {
         fa /= 2;
       }
       side = -1;
-    } else if (fa * fm > 0) {
+    } else {
       a = m;
       fa = fm;
       if (side > 0) {
         fb /= 2;
       }
       side = 1;
-    } else {
-      break;
     }
   }
   return m;
@@ -1184,6 +1277,8 @@ double f(double x) {
 int main() {
   assert(fabs(f(bisection_root(f, 1, 3))) < 1e-10);
   assert(fabs(f(falsi_illinois_root(f, 1, 3))) < 1e-10);
+  assert(bisection_root(f, 0, 1) == 0);
+  assert(falsi_illinois_root(f, 0, 1) == 0);
   return 0;
 }
 \end{lstlisting}
@@ -1203,14 +1298,14 @@ Finds an $x$ for a continuous function $f$ such that $f(x) = 0$ using iterative 
 #include <cmath>
 #include <stdexcept>
 
-template<typename Fn>
+template<typename Fn, typename Deriv>
 double newton_root(
-    Fn f, Fn fprime, double x0, const double eps = 1e-15, const int iterations = 100
+    Fn f, Deriv fprime, double x0, const double eps = 1e-15, const int iterations = 100
 ) {
   double x = x0, error = eps + 1;
   for (int i = 0; error > eps && i < iterations; i++) {
     double xnew = x - f(x) / fprime(x);
-    error = fabs(xnew - x);
+    error = std::fabs(xnew - x);
     x = xnew;
   }
   if (error > eps) {
@@ -1229,7 +1324,7 @@ double secant_root(
     double xnew = x - fx * ((x - xold) / (fx - fxold));
     xold = x;
     fxold = fx;
-    error = fabs(xnew - x);
+    error = std::fabs(xnew - x);
     x = xnew;
   }
   if (error > eps) {
@@ -1254,17 +1349,20 @@ double fprime(double x) {
 int main() {
   assert(fabs(f(newton_root(f, fprime, 3))) < 1e-10);
   assert(fabs(f(secant_root(f, 3, 2))) < 1e-10);
+  auto g = [](double x) { return x * x - 2; };
+  auto gprime = [](double x) { return 2 * x; };
+  assert(fabs(g(newton_root(g, gprime, 1))) < 1e-10);
   return 0;
 }
 \end{lstlisting}
 \subsection{Polynomial Root Finding (Differentiation)}
-Finds every root $x$ for a polynomial $p$ such that $p(x) = 0$ by differentiation. Each adjacent pair of local extrema is searched using the bisection method, where local extrema are recursively found by finding the root of the derivative.
+Finds every real root $x$ of a polynomial $p$ satisfying $p(x) = 0$ by recursively finding the roots of its derivative. Each adjacent pair of local extrema is searched using the bisection method.
 
-The key observation is that derivative roots split the real line into intervals where the polynomial is monotone. A monotone interval contains at most one root, and if the endpoint values have opposite signs, bisection isolates that root. Recursively solving the derivative therefore provides all interval boundaries needed to find every real root in the requested range.
+The key observation is that derivative roots split the real line into intervals where the polynomial is monotone. A monotone interval contains at most one root, and if an endpoint is a root or the endpoint values have opposite signs, bisection isolates that root. Recursively solving the derivative therefore provides all interval boundaries needed to find every real root in the requested range, including roots of even multiplicity.
 
 \begin{compactitem}
   \item \inlinecode{horner\_eval(p, x)} evaluates the polynomial \inlinecode{p} of degree $d$ (represented as a vector of size $d + 1$ where \inlinecode{p[i]} stores the coefficient for the $x^i$ term) at \inlinecode{x}, using Horner's method.
-  \item \inlinecode{find\_one\_root(p, a, b, eps = 1e-15)} returns a root in the interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a polynomial \inlinecode{p} where $\operatorname{sgn}(f(a)) \neq \operatorname{sgn}(f(b))$, using the bisection method. If this precondition is not satisfied, then \inlinecode{NaN} is returned. The root is found to a tolerance of \inlinecode{eps} in absolute or relative error (whichever is reached first).
+  \item \inlinecode{find\_one\_root(p, a, b, eps = 1e-15)} returns a root in the interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a polynomial \inlinecode{p} where either endpoint is a root or the endpoint values have opposite signs, using the bisection method. If this precondition is not satisfied, then \inlinecode{NaN} is returned. The root is found to a tolerance of \inlinecode{eps} in absolute or relative error (whichever is reached first).
   \item \inlinecode{find\_all\_roots(p, a = -1e20, b = 1e20, eps = 1e-15)} returns a vector of all roots in the interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a polynomial \inlinecode{p} using the bisection method. The roots are found to a tolerance of \inlinecode{eps} in absolute or relative error (whichever is reached first).
 \end{compactitem}
 
@@ -1272,8 +1370,8 @@ The key observation is that derivative roots split the real line into intervals 
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{horner\_eval()}, where $n$ is the degree of the polynomial.
-  \item $O(n \log d)$ per call to \inlinecode{find\_one\_root()}, where $n$ is the degree of the polynomial and $d = -\log_{10}({\inlinecodemath{eps}})$ is the number of digits of absolute or relative precision that is desired.
-  \item $O(n^{3} \log d)$ per call to \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial and $d = -\log_{10}({\inlinecodemath{eps}})$ is the number of digits of absolute or relative precision that is desired.
+  \item $O(nt)$ per call to \inlinecode{find\_one\_root()}, where $n$ is the degree of the polynomial and $t$ is the number of bisection iterations required to reach the requested tolerance.
+  \item $O(n^{3} t)$ per call to \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial and $t$ is the number of bisection iterations required to reach the requested tolerance.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1298,6 +1396,12 @@ double horner_eval(const std::vector<double> &p, double x) {
 
 double find_one_root(const std::vector<double> &p, double a, double b, const double eps = 1e-15) {
   double pa = horner_eval(p, a), pb = horner_eval(p, b);
+  if (std::fabs(pa) <= eps) {
+    return a;
+  }
+  if (std::fabs(pb) <= eps) {
+    return b;
+  }
   bool paneg = pa < 0, pbneg = pb < 0;
   if (paneg == pbneg) {
     return std::numeric_limits<double>::quiet_NaN();
@@ -1354,6 +1458,11 @@ int main() {
     assert(fabs(horner_eval(p, roots[0])) < 1e-10);
     assert(fabs(horner_eval(p, roots[1])) < 1e-10);
   }
+  {  // (x - 1)^2
+    vector<double> p{1.0, -2.0, 1.0};
+    vector<double> roots = find_all_roots(p);
+    assert(roots.size() == 1 && fabs(roots[0] - 1) < 1e-10);
+  }
   return 0;
 }
 \end{lstlisting}
@@ -1370,8 +1479,8 @@ Finds every complex root $x$ for a polynomial $p$ with complex coefficients such
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{horner\_eval()}, where $n$ is the degree of the polynomial.
-  \item $O(n \log d)$ per call to \inlinecode{find\_one\_root()}, where $n$ is the degree of the polynomial and $d = -\log_{10}({\inlinecodemath{eps}})$ is the number of digits of absolute or relative precision that is desired.
-  \item $O(n^{2} \log d)$ per call to \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial and $d = -\log_{10}({\inlinecodemath{eps}})$ is the number of digits of absolute or relative precision that is desired.
+  \item $O(nt)$ per call to \inlinecode{find\_one\_root()}, where $n$ is the degree of the polynomial and $t$ is the number of iterations performed.
+  \item $O(n^{2} t)$ per call to \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial and $t$ is the number of iterations performed per root.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1382,6 +1491,7 @@ Finds every complex root $x$ for a polynomial $p$ with complex coefficients such
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <algorithm>
 #include <cmath>
 #include <complex>
 #include <random>
@@ -1443,6 +1553,9 @@ std::vector<cdouble> find_all_roots(
 ) {
   std::vector<cdouble> res;
   cpoly q = p;
+  if (q.size() <= 1) {
+    return res;
+  }
   static std::mt19937 rng(std::random_device{}());
   std::uniform_real_distribution<double> unit(0.0, 1.0);
   while (q.size() > 2) {
@@ -1458,9 +1571,7 @@ std::vector<cdouble> find_all_roots(
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <cstdio>
-#include <iostream>
 using namespace std;
 
 void print_roots(vector<cdouble> x) {
@@ -1554,8 +1665,7 @@ bool is_zero(const cdbl &z, const dbl eps = ZERO_EPS) {
 }
 
 bool is_finite(const cdbl &z) {
-  return std::isfinite(static_cast<double>(z.real())) &&
-         std::isfinite(static_cast<double>(z.imag()));
+  return std::isfinite(z.real()) && std::isfinite(z.imag());
 }
 
 std::pair<cdbl, cdbl> eval_with_derivative(const cpoly &p, const cdbl &x) {
@@ -1576,7 +1686,7 @@ dbl root_bound(const cpoly &p) {
       res = std::max(res, powl(ratio, 1.0L / (n - i)));
     }
   }
-  return 2 * std::max((dbl)1, res);
+  return 2 * std::max(static_cast<dbl>(1), res);
 }
 
 bool root_less(const cdbl &a, const cdbl &b) {
@@ -1638,6 +1748,7 @@ cpoly find_all_roots(cpoly p, const dbl eps = ROOT_EPS, const int iterations = 2
       }
       cdbl denom = dfx - fx * repulsion;
       if (is_zero(denom)) {
+        done = false;
         continue;
       }
       cdbl step = fx / denom;
@@ -1645,6 +1756,7 @@ cpoly find_all_roots(cpoly p, const dbl eps = ROOT_EPS, const int iterations = 2
         step = fx / dfx;
       }
       if (!is_finite(step)) {
+        done = false;
         continue;
       }
       dbl limit = 2 * max_radius;
@@ -1654,6 +1766,7 @@ cpoly find_all_roots(cpoly p, const dbl eps = ROOT_EPS, const int iterations = 2
       next[i] = z[i] - step;
       if (!is_finite(next[i])) {
         next[i] = z[i];
+        done = false;
         continue;
       }
       if (std::abs(next[i]) > max_radius) {
@@ -1746,13 +1859,13 @@ Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
 (0.00000, 1.00000)
 \end{exampleoutput}
 \subsection{Integration (Simpson)}
-Computes the definite integral from $a$ to $b$ for a continuous function $f$ using the composite Simpson's rule: the interval is split into \inlinecode{n} equal subintervals and each consecutive pair is approximated by a parabola, giving the approximation $\int_{a}^{b} f(x) \,dx \approx$ $h/3 \cdot [f(x_0) + 4f(x_1) + 2f(x_2) + \ldots + 4f(x_{n-1}) + f(x_n)]$ with step $h = (b - a)/n$.
-
-\begin{compactitem}
-  \item \inlinecode{integrate(f, a, b, n = 1000000)} returns the definite integral of a function \inlinecode{f} from \inlinecode{a} to \inlinecode{b} using \inlinecode{n} subintervals, where \inlinecode{n} must be even. Larger \inlinecode{n} trades runtime for accuracy; the leading error scales as \inlinecode{(b - a) * h\textasciicircum{}4}. For a smooth \inlinecode{f}, \inlinecode{n} near $10^6$ reaches near double precision.
-\end{compactitem}
+Computes the definite integral from $a$ to $b$ for a continuous function $f$ using the composite Simpson's rule: the interval is split into $n$ equal subintervals and each consecutive pair is approximated by a parabola, giving the approximation $\int_{a}^{b} f(x) \,dx \approx$ $h/3 \cdot [f(x_0) + 4f(x_1) + 2f(x_2) + \ldots + 4f(x_{n-1}) + f(x_n)]$ with step $h = (b - a)/n$.
 
 Unlike adaptive quadrature, the step size here is uniform, so a feature narrower than \inlinecode{h} may be under-resolved. The benefit is a simple, non-recursive routine with predictable cost that is not fooled by the premature-termination heuristic that adaptive Simpson's rule can suffer on functions whose coarse sample points happen to fit a parabola.
+
+\begin{compactitem}
+  \item \inlinecode{integrate(f, a, b, n = 1000000)} returns the definite integral of a function \inlinecode{f} from \inlinecode{a} to \inlinecode{b} using \inlinecode{n} subintervals, where \inlinecode{n} must be even. Larger \inlinecode{n} trades runtime for accuracy; the leading error scales with \inlinecode{(b - a) * h\textasciicircum{}4} and the maximum magnitude of the fourth derivative of $f$ over the interval.
+\end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ per call, requiring $n + 1$ evaluations of $f$.
 
@@ -1797,10 +1910,10 @@ The simplex algorithm walks between vertices of the feasible polytope, at each s
 The implementation uses a two-phase simplex tableau. Phase 1 introduces an artificial variable to find a feasible starting basis, which is essential when some constraint bounds are negative. Phase 2 then optimizes the original objective. The \inlinecode{basis} and \inlinecode{nonbasis} arrays track which variable each tableau row or column currently represents, making solution recovery independent of pivot order.
 
 \begin{compactitem}
-  \item \inlinecode{simplex\_solve(a, b, c, \&x, maximize = true, eps = 1e-10)} solves the linear programming problem for an $m$ by $n$ matrix \inlinecode{a} of real values, a length $m$ vector \inlinecode{b}, and a length $n$ vector \inlinecode{c}, returning $0$ if an optimum was found, $-1$ if there are no feasible solutions, or $1$ if the objective is unbounded. Set \inlinecode{maximize = false} to minimize instead, and use \inlinecode{eps} as the pivot and feasibility tolerance. If an optimum is found, then the vector pointed to by \inlinecode{x} is populated with a dense solution vector.
+  \item \inlinecode{simplex\_solve(a, b, c, \&x, maximize = true, eps = 1e-10)} solves the linear programming problem for an $m$ by $n$ matrix \inlinecode{a} of real values, a length $m$ vector \inlinecode{b}, and a length $n$ vector \inlinecode{c}, returning $0$ if an optimum was found, $-1$ if there are no feasible solutions, or $1$ if the objective is unbounded. Set \inlinecode{maximize = false} to minimize instead, and use \inlinecode{eps} as the pivot and feasibility tolerance. If an optimum is found, \inlinecode{x} is assigned a vector of length \inlinecode{n}, where \inlinecode{x[j]} is the value of the $j$-th variable.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(2^{n})$ pivots per call in the worst case, where $n$ is the number of unknowns, although simplex typically runs much faster in practice.
+\textbf{Time Complexity}: $O(pmn)$, where $p$ is the total number of pivots across both phases. Each pivot takes $O(mn)$, and $p$ can be exponential in the worst case, although it is usually much smaller in practice.
 
 \textbf{Space Complexity}: $O(m \cdot n)$ auxiliary.
 
@@ -1817,9 +1930,6 @@ int simplex_solve(
 ) {
   int m = static_cast<int>(a.size()), n = static_cast<int>(c.size());
   assert(x != nullptr && b.size() == a.size());
-  for (const auto &row : a) {
-    assert(row.size() == c.size());
-  }
   std::vector<int> basis(m), nonbasis(n + 1);
   std::vector<std::vector<double>> tab(m + 2, std::vector<double>(n + 2));
   for (int i = 0; i < m; i++) {

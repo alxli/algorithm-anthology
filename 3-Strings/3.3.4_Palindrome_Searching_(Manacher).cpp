@@ -19,7 +19,7 @@ $[`i` - `even[i]`, `i` + `even[i]`)$.
 
 Time Complexity:
 - O(n) per constructor call, where $n$ is the length of `s`.
-- O(1) per call to `is_palindrome(lo, r)`.
+- O(1) per call to `is_palindrome(lo, hi)`.
 - O(n) per call to `longest_palindrome()` and `count_palindromes()`.
 
 Space Complexity:
@@ -29,6 +29,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -66,6 +67,7 @@ class Manacher {
   }
 
   bool is_palindrome(int lo, int hi) const {
+    assert(0 <= lo && lo <= hi && hi <= static_cast<int>(s.size()));
     int len = hi - lo;
     if (len <= 0) {
       return true;
@@ -102,8 +104,6 @@ class Manacher {
 };
 
 /*** Example Usage ***/
-
-#include <cassert>
 
 int main() {
   Manacher m("abacaba");

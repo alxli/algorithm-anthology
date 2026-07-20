@@ -17,7 +17,7 @@ Time Complexity:
 - O(n log n) per call, where $n$ is the distance between `lo` and `hi`.
 
 Space Complexity:
-- O(n) auxiliary.
+- O(n) auxiliary and O(n) for the returned indices.
 
 */
 
@@ -26,16 +26,17 @@ Space Complexity:
 
 template<typename It>
 std::vector<int> longest_increasing_subsequence(It lo, It hi) {
-  int len = 0, n = static_cast<int>(hi - lo);
+  int n = static_cast<int>(hi - lo);
   if (n == 0) {
     return {};
   }
-  // tail[i] = index (into [lo, hi)) of the last element of the best known LIS of length i+1.
+  int len = 0;
   // prev[i] = index of the predecessor of element i in its LIS (or -1 if first).
+  // tail[i] = index (into [lo, hi)) of the last element of the best known LIS of length i+1.
   std::vector<int> prev(n), tail(n);
   for (int i = 0; i < n; i++) {
     // Find the tail to extend or improve. Comparing by value through the stored indices keeps
-    // `tail` index-based for reconstruction; swap `<` for `<=` to allow a non-decreasing result.
+    // tail index-based for reconstruction; swap < for <= to allow a non-decreasing result.
     int pos = static_cast<int>(
         std::lower_bound(
             tail.begin(), tail.begin() + len, i, [&](int t, int x) { return *(lo + t) < *(lo + x); }

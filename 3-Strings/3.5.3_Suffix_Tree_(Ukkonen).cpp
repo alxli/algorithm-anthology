@@ -35,6 +35,7 @@ Space Complexity:
 
 */
 
+#include <cstdint>
 #include <map>
 #include <string>
 #include <vector>
@@ -43,13 +44,13 @@ class SuffixTree {
   static const int OPEN = -1;  // Marks a leaf edge whose right end follows the growing string.
 
   struct Node {
-    int start, end;  // Edge into this node labels s[start..end]; end == OPEN means leaf_end.
+    int start, end;  // Edge into this node labels str[start..end]; end == OPEN means leaf_end.
     int link;
     std::map<char, int> next;
     Node(int start, int end) : start(start), end(end), link(0) {}
   };
 
-  std::string s;
+  std::string str;
   std::vector<Node> tree;
   int leaf_end;
   // Active point and bookkeeping for Ukkonen's algorithm.
@@ -82,7 +83,7 @@ class SuffixTree {
       if (active_length == 0) {
         active_edge = pos;
       }
-      char c = s[active_edge];
+      char c = str[active_edge];
       auto it = tree[active_node].next.find(c);
       if (it == tree[active_node].next.end()) {
         // Rule 2: no edge starts with c, so grow a new leaf from the active node.
@@ -96,7 +97,7 @@ class SuffixTree {
         if (walk_down(v)) {
           continue;  // Re-evaluate the same suffix from the deeper node.
         }
-        if (s[tree[v].start + active_length] == s[pos]) {
+        if (str[tree[v].start + active_length] == str[pos]) {
           // Rule 3: the character is already present; stop and lengthen the active point.
           if (last_new != -1) {
             tree[last_new].link = active_node;
@@ -107,9 +108,9 @@ class SuffixTree {
         // Rule 2 with a split: break edge v in two and attach a new leaf at the split point.
         int split = make_node(tree[v].start, tree[v].start + active_length - 1);
         tree[active_node].next[c] = split;
-        tree[split].next[s[pos]] = make_node(pos, OPEN);
+        tree[split].next[str[pos]] = make_node(pos, OPEN);
         tree[v].start += active_length;
-        tree[split].next[s[tree[v].start]] = v;
+        tree[split].next[str[tree[v].start]] = v;
         if (last_new != -1) {
           tree[last_new].link = split;
         }
@@ -140,16 +141,16 @@ class SuffixTree {
   }
 
  public:
-  explicit SuffixTree(const std::string &str) : s(str) {
-    s.push_back('\1');  // Unique terminal sentinel, smaller than every real character.
-    make_node(-1, -1);  // Root, at index 0; its incoming edge is never read.
+  explicit SuffixTree(const std::string &s) : str(s) {
+    str.push_back('\1');  // Unique terminal sentinel, smaller than every real character.
+    make_node(-1, -1);    // Root, at index 0; its incoming edge is never read.
     active_node = 0;
     active_edge = 0;
     active_length = 0;
     remaining = 0;
     leaf_end = -1;
     last_new = -1;
-    for (int i = 0; i < static_cast<int>(s.size()); i++) {
+    for (int i = 0; i < static_cast<int>(str.size()); i++) {
       extend(i);
     }
   }
@@ -164,7 +165,7 @@ class SuffixTree {
       v = it->second;
       int len = edge_len(v);
       for (int j = 0; j < len && i < m; j++, i++) {
-        if (s[tree[v].start + j] != t[i]) {
+        if (str[tree[v].start + j] != t[i]) {
           return false;
         }
       }
@@ -172,20 +173,20 @@ class SuffixTree {
     return true;
   }
 
-  int count_distinct_substrings() const {
-    int total = 0;
+  int64_t count_distinct_substrings() const {
+    int64_t total = 0;
     for (int v = 1; v < static_cast<int>(tree.size()); v++) {
       total += edge_len(v);
     }
-    // Every leaf edge ends in the sentinel; the s.size() suffixes of the sentineled string are the
-    // only substrings that contain it, so removing them leaves the count for the original string.
-    return total - static_cast<int>(s.size());
+    // Every leaf edge ends in the sentinel. The str.size() suffixes of the sentineled string are
+    // the only substrings containing it, so removing them leaves the original string's count.
+    return total - static_cast<int64_t>(str.size());
   }
 
   std::string longest_repeated_substring() const {
     int best_depth = 0, best_end = 0;
     deepest_internal(0, 0, best_depth, best_end);
-    return s.substr(best_end - best_depth, best_depth);
+    return str.substr(best_end - best_depth, best_depth);
   }
 };
 

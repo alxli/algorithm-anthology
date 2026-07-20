@@ -14,7 +14,7 @@ part. This lets the algorithms skip whole blocks of partitions sharing a common 
   lexicographically greatest partition (i.e. the single integer $n$).
 - `partition_by_rank(n, r)` returns the partition of $n$ that is lexicographically ranked $r$ if
   addends in each partition were sorted in non-increasing order, where $r$ is a 0-based rank in the
-  range $[0, \text{partitions}(n))$.
+  range $[0, p(n))$ where $p(n)$ is the number of partitions of $n$.
 - `rank_by_partition(p)` returns an integer representing the 0-based rank of the partition specified
   by vector `p`, which must consist of positive integers sorted in non-increasing order.
 - `generate_increasing_partitions(n, f)` calls the function `f(lo, hi)` on strictly increasing
@@ -129,6 +129,7 @@ Increasing partitions of 8:
 
 ***/
 
+#include <algorithm>
 #include <cassert>
 #include <iostream>
 using namespace std;

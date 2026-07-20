@@ -8,18 +8,19 @@ other heaps in this section, it also supports `decrease_key()` and `erase()` via
 `push()`, the feature pairing heaps are best known for.
 
 - `PairingHeap<T>()` constructs an empty priority queue.
-- `PairingHeap<T>(lo, hi)` constructs a priority queue from two ForwardIterators, consisting of
-  elements in the range $[`lo`, `hi`)$.
+- `PairingHeap<T>(lo, hi)` constructs a priority queue from the elements in the half-open iterator
+  range $[`lo`, `hi`)$.
 - `size()` returns the size of the priority queue.
 - `empty()` returns whether the priority queue is empty.
 - `push(v)` inserts the value `v` and returns a handle to the new element. The handle remains valid
   until that element is removed by `pop()` or `erase()`.
 - `pop()` removes the minimum element from the priority queue.
 - `top()` returns the minimum element in the priority queue.
-- `join(h)` inserts every value from `h` and sets `h` to the empty priority queue.
-- `decrease_key(h, v)` lowers the value of the element at handle `h` to `v`, which must not be
+- `absorb(h)` inserts every value from the distinct heap `h` and sets `h` to the empty priority
+  queue.
+- `decrease_key(n, v)` lowers the value of the element at handle `n` to `v`, which must not be
   greater than its current value.
-- `erase(h)` removes the element at handle `h` from the priority queue.
+- `erase(n)` removes the element at handle `n` from the priority queue.
 
 In practice, `decrease_key()` runs in near-constant time, making the pairing heap the usual
 practical substitute for a Fibonacci heap. When handles are not needed, the lazy-deletion idiom
@@ -28,7 +29,7 @@ often faster. On GNU C++ judges, `__gnu_pbds::priority_queue` with `pairing_heap
 shorter handled and meldable heap; see 8.6 for the contest wrapper.
 
 Time Complexity:
-- O(1) per call to the first constructor, `size()`, `empty()`, `top()`, `push()`, and `join()`.
+- O(1) per call to the first constructor, `size()`, `empty()`, `top()`, `push()`, and `absorb()`.
 - O(log n) amortized per call to `pop()` and `erase()`.
 - O(log n) amortized per call to `decrease_key()`, a safe bound to budget for. The true amortized
   cost is sub-logarithmic, though the long-conjectured O(1) bound is provably impossible.
@@ -36,7 +37,7 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the priority queue elements.
-- O(log n) amortized auxiliary stack space for `pop()`.
+- O(n) auxiliary stack space in the worst case for `pop()`, `erase()`, and destruction.
 - O(1) auxiliary for all other operations.
 
 */
@@ -51,7 +52,7 @@ class PairingHeap {
 
     explicit Node(const T &v) : value(v), left(nullptr), next(nullptr), prev(nullptr) {}
 
-    // `prev` points to the previous sibling, or to the parent when this is the first child, so any
+    // prev points to the previous sibling, or to the parent when this is the first child, so any
     // node can be cut from its child list in O(1).
     void add_child(Node *n) {
       n->prev = this;
@@ -82,7 +83,7 @@ class PairingHeap {
     return b;
   }
 
-  // Detaches non-root node `n` from its parent's child list.
+  // Detaches non-root node n from its parent's child list.
   static void cut(Node *n) {
     if (n->prev->left == n) {
       n->prev->left = n->next;
@@ -146,12 +147,13 @@ class PairingHeap {
     num_nodes--;
   }
 
-  T top() const {
+  const T &top() const {
     assert(!empty());
     return root->value;
   }
 
-  void join(PairingHeap &h) {
+  void absorb(PairingHeap &h) {
+    assert(this != &h);
     root = merge(root, h.root);
     num_nodes += h.num_nodes;
     h.root = nullptr;
@@ -201,7 +203,7 @@ int main() {
   h2.push(5);
   h2.push(-1);
   h2.push(0);
-  h.join(h2);
+  h.absorb(h2);
   assert(h.size() == 5);
   assert(h2.empty());
 

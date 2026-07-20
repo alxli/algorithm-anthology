@@ -20,16 +20,19 @@ butterfly-shaped implementation and the same O(n log n) runtime for arrays of le
 - `or_convolve(a, b)` returns the OR convolution of `a` and `b`.
 - `and_convolve(a, b)` returns the AND convolution of `a` and `b`.
 
-Input arrays are padded with zeros to the next power of two. For exact integer XOR convolution, the
-inverse divisions are exact; for modular arithmetic, replace the division by multiplication with the
-modular inverse of the transform length.
+The in-place transforms require a nonempty array whose length is a power of two. A convolution
+returns empty if either input is empty; otherwise, both inputs are padded with zeros to the smallest
+power of two at least their maximum length, which is also the output length. For exact integer XOR
+convolution, the inverse divisions are exact; for modular arithmetic, replace the division by
+multiplication with the modular inverse of the transform length. All intermediate sums, differences,
+and products must be representable in the value type.
 
 Time Complexity:
 - O(n log n) per transform or convolution, where $n$ is the padded power-of-two length.
 
 Space Complexity:
 - O(1) auxiliary for the in-place transforms.
-- O(n) auxiliary for each convolution.
+- O(n) auxiliary and O(n) for the returned array from each convolution.
 
 */
 
@@ -38,23 +41,15 @@ Space Complexity:
 #include <cstdint>
 #include <vector>
 
-int next_power_of_two(int n) {
-  int res = 1;
-  while (res < n) {
-    res <<= 1;
-  }
-  return res;
-}
-
 template<typename T>
 void xor_transform(std::vector<T> &f, bool invert) {
   int n = static_cast<int>(f.size());
-  assert((n & (n - 1)) == 0);
+  assert(n > 0 && (n & (n - 1)) == 0);
   for (int len = 1; len < n; len <<= 1) {
     for (int i = 0; i < n; i += len << 1) {
       for (int j = 0; j < len; j++) {
         T u = f[i + j], v = f[i + j + len];
-        f[i + j] = u + v;
+        f[i + j] = u + v;  // Overflow warning.
         f[i + j + len] = u - v;
       }
     }
@@ -69,12 +64,12 @@ void xor_transform(std::vector<T> &f, bool invert) {
 template<typename T>
 void or_transform(std::vector<T> &f, bool invert) {
   int n = static_cast<int>(f.size());
-  assert((n & (n - 1)) == 0);
+  assert(n > 0 && (n & (n - 1)) == 0);
   for (int bit = 1; bit < n; bit <<= 1) {
     for (int mask = 0; mask < n; mask++) {
       if (mask & bit) {
         if (invert) {
-          f[mask] -= f[mask ^ bit];
+          f[mask] -= f[mask ^ bit];  // Overflow warning.
         } else {
           f[mask] += f[mask ^ bit];
         }
@@ -86,12 +81,12 @@ void or_transform(std::vector<T> &f, bool invert) {
 template<typename T>
 void and_transform(std::vector<T> &f, bool invert) {
   int n = static_cast<int>(f.size());
-  assert((n & (n - 1)) == 0);
+  assert(n > 0 && (n & (n - 1)) == 0);
   for (int bit = 1; bit < n; bit <<= 1) {
     for (int mask = 0; mask < n; mask++) {
       if ((mask & bit) == 0) {
         if (invert) {
-          f[mask] -= f[mask ^ bit];
+          f[mask] -= f[mask ^ bit];  // Overflow warning.
         } else {
           f[mask] += f[mask ^ bit];
         }
@@ -105,13 +100,17 @@ std::vector<T> bitwise_convolve(std::vector<T> a, std::vector<T> b, Transform tr
   if (a.empty() || b.empty()) {
     return {};
   }
-  int n = next_power_of_two(static_cast<int>(std::max(a.size(), b.size())));
+  int needed = static_cast<int>(std::max(a.size(), b.size()));
+  int n = 1;
+  while (n < needed) {
+    n <<= 1;
+  }
   a.resize(n);
   b.resize(n);
   transform(a, false);
   transform(b, false);
   for (int i = 0; i < n; i++) {
-    a[i] *= b[i];
+    a[i] *= b[i];  // Overflow warning.
   }
   transform(a, true);
   return a;

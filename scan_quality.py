@@ -30,8 +30,16 @@ EXAMPLE_HELPER_RE = re.compile(
 C_RAND_RE = re.compile(
     r"((?<![A-Za-z0-9_])::rand\s*\(|(?<!::)\brand\s*\(\s*\)\s*%|\bsrand\s*\()"
 )
+CONTROL_BLOCK_RE = re.compile(r"^(?:if|for|while|switch|catch)\b")
 
 STYLE_PATTERNS = [
+    (
+        re.compile(
+            r"if constexpr \(std::is_floating_point_v<C>\) return "
+            r"std::fabs\(C\(a\) - C\(b\)\) <= static_cast<C>\(EPS\);"
+        ),
+        "Check exact equality before subtracting so same-signed infinities compare equal.",
+    ),
     (
         re.compile(
             r"from [`$]?[A-Za-z_][A-Za-z0-9_]*[`$]? "
@@ -429,6 +437,153 @@ def scan_code_consistency(paths):
     return issues
 
 
+def strip_cpp_comments_and_strings(line, in_block_comment):
+    result = []
+    i = 0
+    while i < len(line):
+        if in_block_comment:
+            end = line.find("*/", i)
+            if end == -1:
+                return "".join(result), True
+            in_block_comment = False
+            i = end + 2
+        elif line.startswith("//", i):
+            break
+        elif line.startswith("/*", i):
+            in_block_comment = True
+            i += 2
+        elif line[i] in "\"'":
+            quote = line[i]
+            result.append(" ")
+            i += 1
+            while i < len(line):
+                if line[i] == "\\":
+                    i += 2
+                elif line[i] == quote:
+                    i += 1
+                    break
+                else:
+                    i += 1
+        else:
+            result.append(line[i])
+            i += 1
+    return "".join(result), in_block_comment
+
+
+def function_name_from_header(header):
+    header = " ".join(header.split())
+    if ") :" in header:
+        header = header.rsplit(") :", 1)[0] + ")"
+    if not header or "[" in header or "(" not in header:
+        return ""
+    if re.match(r"^(?:class|struct|union|enum|namespace)\b", header) or CONTROL_BLOCK_RE.match(
+        header
+    ):
+        return ""
+    matches = []
+    for match in re.finditer(r"(?:operator\s*[^\s(]+|~?[A-Za-z_]\w*)\s*\(", header):
+        prefix = header[: match.end() - 1]
+        if prefix.count("(") == prefix.count(")"):
+            matches.append(match)
+    if not matches:
+        return ""
+    name = matches[-1].group(0).rsplit("(", 1)[0].strip()
+    if CONTROL_BLOCK_RE.match(name):
+        return ""
+    return name
+
+
+def scan_function_spacing(paths):
+    issues = []
+    for path in paths:
+        lines = path.read_text().splitlines()
+        cleaned = []
+        in_block_comment = False
+        for line in lines:
+            code, in_block_comment = strip_cpp_comments_and_strings(line, in_block_comment)
+            cleaned.append(code)
+
+        brace_stack = []
+        statement_start = None
+        statement_parts = []
+        functions = []
+        for line_index, code in enumerate(cleaned):
+            stripped_code = code.strip()
+            if stripped_code.startswith("#") or stripped_code in {
+                "public:",
+                "protected:",
+                "private:",
+            }:
+                statement_start = None
+                statement_parts = []
+                continue
+            for char_index, char in enumerate(code):
+                if statement_start is None and not char.isspace() and char not in "};":
+                    statement_start = line_index
+                if statement_start is not None:
+                    statement_parts.append(char)
+
+                if char == "{":
+                    header = "".join(statement_parts[:-1]).strip()
+                    starts_body = char_index == 0 or code[char_index - 1].isspace()
+                    inside_function = any(kind == "function" for kind, _, _, _ in brace_stack)
+                    if not inside_function and not starts_body:
+                        brace_stack.append(("initializer", None, "", line_index))
+                        continue
+                    name = "" if inside_function else function_name_from_header(header)
+                    brace_stack.append(
+                        ("function" if name else "scope", statement_start, name, line_index)
+                    )
+                    statement_start = None
+                    statement_parts = []
+                elif char == "}":
+                    if brace_stack:
+                        kind, start, name, open_line = brace_stack.pop()
+                        if kind == "initializer":
+                            continue
+                        if kind == "function" and start is not None:
+                            functions.append((start, open_line, line_index, name))
+                    statement_start = None
+                    statement_parts = []
+                elif char == ";":
+                    statement_start = None
+                    statement_parts = []
+
+        for start, open_line, end, name in functions:
+            if open_line == end:
+                continue
+            spacing_start = start
+            while spacing_start > 0 and lines[spacing_start - 1].lstrip().startswith("//"):
+                spacing_start -= 1
+            if spacing_start > 0:
+                previous = lines[spacing_start - 1].strip()
+                if previous and not previous.endswith(("{", "public:", "protected:", "private:")):
+                    issues.append(
+                        Issue(
+                            path,
+                            start + 1,
+                            "function-spacing",
+                            f"Add an empty line before multiline function `{name}()`.",
+                            lines[start],
+                        )
+                    )
+            if end + 1 < len(lines):
+                following = lines[end + 1].strip()
+                if following and not following.startswith("}") and not following.endswith(
+                    ("public:", "protected:", "private:")
+                ):
+                    issues.append(
+                        Issue(
+                            path,
+                            end + 1,
+                            "function-spacing",
+                            f"Add an empty line after multiline function `{name}()`.",
+                            lines[end],
+                        )
+                    )
+    return issues
+
+
 def scan_known_style_drift(paths):
     issues = []
     for path in paths:
@@ -436,6 +591,44 @@ def scan_known_style_drift(paths):
             for pattern, message in STYLE_PATTERNS:
                 if pattern.search(line):
                     issues.append(Issue(path, line_no, "style-drift", message, line))
+    return issues
+
+
+def scan_markup_outside_docstrings(paths):
+    issues = []
+    markup_re = re.compile(r"\$[^$\n]+\$|`[^`\n]+`")
+    for path in paths:
+        in_block_comment = False
+        for line_no, line in enumerate(path.read_text().splitlines(), start=1):
+            outside = []
+            pos = 0
+            while pos < len(line):
+                if in_block_comment:
+                    end = line.find("*/", pos)
+                    if end == -1:
+                        break
+                    in_block_comment = False
+                    pos = end + 2
+                    continue
+                start = line.find("/*", pos)
+                if start == -1:
+                    outside.append(line[pos:])
+                    break
+                outside.append(line[pos:start])
+                in_block_comment = True
+                pos = start + 2
+
+            outside_text = "".join(outside)
+            if markup_re.search(outside_text):
+                issues.append(
+                    Issue(
+                        path,
+                        line_no,
+                        "markup-outside-docstring",
+                        "Use math/code markup only in block docstrings; listings render it literally.",
+                        line,
+                    )
+                )
     return issues
 
 
@@ -481,6 +674,108 @@ def scan_default_argument_docs(paths):
                     "api-default",
                     f"`{name}()` has a default argument in code but not in the API bullet",
                     doc_line,
+                )
+            )
+    return issues
+
+
+def scan_api_parameter_names(paths):
+    issues = []
+    bullet_call_re = re.compile(r"-\s+`([^`]+)`")
+    code_decl_re = re.compile(
+        r"^\s*(?:static\s+)?[A-Za-z_][\w:<>,\s*&~]*\s+"
+        r"([A-Za-z_][A-Za-z0-9_]*)\s*\(([^{};]*)\)"
+        r"\s*(?:const\s*)?(?:\{|;)"
+    )
+
+    def parameter_names(params):
+        names = []
+        for param in split_parameters(params):
+            default = top_level_default_expression(param)
+            if default:
+                param = param[: len(param) - len(default) - 1].rstrip()
+            match = re.search(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*(?:\[[^]]*\])?$", param)
+            if not match or match.group(1) in {"void", "args"}:
+                return None
+            names.append(match.group(1))
+        return tuple(names)
+
+    for path in paths:
+        text = path.read_text()
+        pre_example = text.split("/*** Example Usage", 1)[0]
+        declarations = {}
+        for line in pre_example.splitlines():
+            if line.lstrip().startswith(("return ", "if ", "while ", "for ", "switch ")):
+                continue
+            match = code_decl_re.match(line)
+            if not match:
+                continue
+            names = parameter_names(match.group(2))
+            if names is not None:
+                declarations.setdefault(match.group(1), []).append(names)
+
+        for line_no, line in enumerate(pre_example.splitlines(), start=1):
+            match = bullet_call_re.search(line)
+            if not match:
+                continue
+            if line[match.end() :].lstrip().startswith(":"):
+                continue
+            signature = match.group(1)
+            name_match = re.search(r"\b([A-Za-z_][A-Za-z0-9_]*)(?:<[^`]*>)?\s*\(", signature)
+            if not name_match:
+                continue
+            name = name_match.group(1)
+            documented = parameter_names(call_parameters(signature))
+            if documented is None:
+                continue
+            same_arity = [
+                params for params in declarations.get(name, []) if len(params) == len(documented)
+            ]
+            if same_arity and documented not in same_arity:
+                expected = " or ".join("(" + ", ".join(params) + ")" for params in same_arity)
+                issues.append(
+                    Issue(
+                        path,
+                        line_no,
+                        "api-params",
+                        f"`{name}()` documents parameters {documented}, but code uses {expected}",
+                        line,
+                    )
+                )
+    return issues
+
+
+def scan_documented_api_names(paths):
+    issues = []
+    bullet_call_re = re.compile(r"-\s+`([^`]+)`")
+    for path in paths:
+        text = path.read_text()
+        pre_example = text.split("/*** Example Usage", 1)[0]
+        doc_end = pre_example.find("*/")
+        if doc_end == -1:
+            continue
+        code = pre_example[doc_end + 2 :]
+        for line_no, line in enumerate(pre_example[: doc_end + 2].splitlines(), start=1):
+            match = bullet_call_re.search(line)
+            if not match:
+                continue
+            name_match = re.search(r"\b([A-Za-z_][A-Za-z0-9_]*)(?:<[^`]*>)?\s*\(", match.group(1))
+            if not name_match:
+                continue
+            name = name_match.group(1)
+            if match.group(1)[: name_match.start()].strip():
+                continue
+            if re.search(r"\b" + re.escape(name) + r"\s*\(", code):
+                continue
+            if re.search(r"\b(?:class|struct)\s+" + re.escape(name) + r"\b", code):
+                continue
+            issues.append(
+                Issue(
+                    path,
+                    line_no,
+                    "api-missing",
+                    f"`{name}()` is documented but has no matching declaration",
+                    line,
                 )
             )
     return issues
@@ -772,8 +1067,12 @@ def main():
     issues.extend(scan_atomic_inline_wrapping(paths))
     issues.extend(scan_example_markers(paths))
     issues.extend(scan_code_consistency(paths))
+    issues.extend(scan_function_spacing(paths))
     issues.extend(scan_known_style_drift(paths))
+    issues.extend(scan_markup_outside_docstrings(paths))
     issues.extend(scan_default_argument_docs(paths))
+    issues.extend(scan_api_parameter_names(paths))
+    issues.extend(scan_documented_api_names(paths))
     issues.extend(scan_repeated_literal_defaults(paths))
     issues.extend(scan_contextual_math_style(paths))
 

@@ -30,12 +30,19 @@ class FenwickRUPQ {
   int len;
   std::vector<T> tree;
 
+  void add_helper(int i, const T &x) {
+    for (i++; i <= len + 1; i += i & -i) {
+      tree[i] += x;
+    }
+  }
+
  public:
   explicit FenwickRUPQ(int n) : len(n), tree(n + 2) {}
 
   int size() const { return len; }
 
   T at(int i) const {
+    assert(0 <= i && i < len);
     T res = 0;
     for (i++; i > 0; i -= i & -i) {
       res += tree[i];
@@ -44,16 +51,14 @@ class FenwickRUPQ {
   }
 
   void add(int i, const T &x) {
-    assert(0 <= i && i <= len);
-    for (i++; i <= len + 1; i += i & -i) {
-      tree[i] += x;
-    }
+    assert(0 <= i && i < len);
+    add_helper(i, x);
   }
 
   void add(int lo, int hi, const T &x) {
     assert(0 <= lo && lo <= hi && hi < len);
-    add(lo, x);
-    add(hi + 1, -x);
+    add_helper(lo, x);
+    add_helper(hi + 1, -x);
   }
 };
 

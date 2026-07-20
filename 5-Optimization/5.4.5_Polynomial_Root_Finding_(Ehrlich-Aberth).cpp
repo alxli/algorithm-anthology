@@ -49,8 +49,7 @@ bool is_zero(const cdbl &z, const dbl eps = ZERO_EPS) {
 }
 
 bool is_finite(const cdbl &z) {
-  return std::isfinite(static_cast<double>(z.real())) &&
-         std::isfinite(static_cast<double>(z.imag()));
+  return std::isfinite(z.real()) && std::isfinite(z.imag());
 }
 
 std::pair<cdbl, cdbl> eval_with_derivative(const cpoly &p, const cdbl &x) {
@@ -71,7 +70,7 @@ dbl root_bound(const cpoly &p) {
       res = std::max(res, powl(ratio, 1.0L / (n - i)));
     }
   }
-  return 2 * std::max((dbl)1, res);
+  return 2 * std::max(static_cast<dbl>(1), res);
 }
 
 bool root_less(const cdbl &a, const cdbl &b) {
@@ -133,6 +132,7 @@ cpoly find_all_roots(cpoly p, const dbl eps = ROOT_EPS, const int iterations = 2
       }
       cdbl denom = dfx - fx * repulsion;
       if (is_zero(denom)) {
+        done = false;
         continue;
       }
       cdbl step = fx / denom;
@@ -140,6 +140,7 @@ cpoly find_all_roots(cpoly p, const dbl eps = ROOT_EPS, const int iterations = 2
         step = fx / dfx;
       }
       if (!is_finite(step)) {
+        done = false;
         continue;
       }
       dbl limit = 2 * max_radius;
@@ -149,6 +150,7 @@ cpoly find_all_roots(cpoly p, const dbl eps = ROOT_EPS, const int iterations = 2
       next[i] = z[i] - step;
       if (!is_finite(next[i])) {
         next[i] = z[i];
+        done = false;
         continue;
       }
       if (std::abs(next[i]) > max_radius) {

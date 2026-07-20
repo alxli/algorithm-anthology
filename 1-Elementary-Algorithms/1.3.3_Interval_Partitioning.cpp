@@ -14,50 +14,57 @@ options as possible.
 Intervals are treated as half-open ranges $[`start`, `finish`)$, so one interval may reuse a room
 that another interval vacates at the same time.
 
-- `partition_intervals(intervals)` returns a vector `room`, where `room[id]` is the assigned room
-  for each input interval given as a vector of `PartitionInterval` with fields `start`, `finish`,
-  and `id`. The number of rooms used in the returned assignment is $1 + \max(`room[id]`)$, or $0$ if
-  there are no intervals.
+- `partition_intervals(intervals)` returns a pair $(`rooms`, `room`)$, where `rooms` is the minimum
+  number of rooms and `room[i]` is the assigned room for input interval `i`. Each
+  `PartitionInterval` has fields `start` and `finish`, which must satisfy `start < finish`.
 
 Time Complexity:
 - O(n log n) per call due to sorting and priority queue operations.
 
 Space Complexity:
-- O(n) auxiliary.
+- O(n) auxiliary and O(n) for the returned assignment.
 
 */
 
 #include <algorithm>
+#include <cassert>
 #include <functional>
+#include <numeric>
 #include <queue>
 #include <utility>
 #include <vector>
 
 struct PartitionInterval {
-  int start, finish, id;
+  int start, finish;
 };
 
-std::vector<int> partition_intervals(std::vector<PartitionInterval> intervals) {
-  std::sort(
-      intervals.begin(), intervals.end(),
-      [](const PartitionInterval &a, const PartitionInterval &b) {
-        return a.start != b.start ? a.start < b.start : a.finish < b.finish;
-      }
-  );
-  std::vector<int> room(intervals.size());
+std::pair<int, std::vector<int>> partition_intervals(
+    const std::vector<PartitionInterval> &intervals
+) {
+  int n = static_cast<int>(intervals.size());
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
+  for (const auto &iv : intervals) {
+    assert(iv.start < iv.finish);
+  }
+  std::sort(order.begin(), order.end(), [&](int i, int j) {
+    return intervals[i].start != intervals[j].start ? intervals[i].start < intervals[j].start
+                                                    : intervals[i].finish < intervals[j].finish;
+  });
+  std::vector<int> room(n);
   std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<>> pq;
   int rooms = 0;
-  for (const auto &[start, finish, id] : intervals) {
-    if (!pq.empty() && pq.top().first <= start) {
+  for (int i : order) {
+    if (!pq.empty() && pq.top().first <= intervals[i].start) {
       int r = pq.top().second;
       pq.pop();
-      room[id] = r;
+      room[i] = r;
     } else {
-      room[id] = rooms++;
+      room[i] = rooms++;
     }
-    pq.emplace(finish, room[id]);
+    pq.emplace(intervals[i].finish, room[i]);
   }
-  return room;
+  return {rooms, room};
 }
 
 /*** Example Usage ***/
@@ -67,16 +74,16 @@ std::vector<int> partition_intervals(std::vector<PartitionInterval> intervals) {
 using namespace std;
 
 int main() {
-  vector<PartitionInterval> intervals{{0, 30, 0}, {5, 10, 1}, {15, 20, 2}};
-  vector<int> room = partition_intervals(intervals);
+  vector<PartitionInterval> intervals{{0, 30}, {5, 10}, {15, 20}};
+  auto [rooms, room] = partition_intervals(intervals);
   // The long interval overlaps both short intervals, but the short intervals can share a room.
-  assert(1 + *max_element(room.begin(), room.end()) == 2);
+  assert(rooms == 2);
   assert(room[1] == room[2]);
   assert(room[0] != room[1]);
 
-  vector<PartitionInterval> touching{{0, 2, 0}, {2, 4, 1}, {4, 5, 2}};
-  vector<int> touching_room = partition_intervals(touching);
-  assert(*max_element(touching_room.begin(), touching_room.end()) == 0);
-  assert(partition_intervals({}).empty());
+  vector<PartitionInterval> touching{{0, 2}, {2, 4}, {4, 5}};
+  auto [touching_rooms, touching_room] = partition_intervals(touching);
+  assert(touching_rooms == 1 && *max_element(touching_room.begin(), touching_room.end()) == 0);
+  assert(partition_intervals({}).first == 0);
   return 0;
 }

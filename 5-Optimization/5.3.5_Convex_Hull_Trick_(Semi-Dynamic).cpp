@@ -17,7 +17,8 @@ will be dominated by the sorting step.
 - `add_line(m, b)` inserts the line $y = mx + b$. The caller must ensure that slope `m` is less than
   or equal to the slope of every line added so far.
 - `query(x)` returns the minimum $y$-value among all inserted lines at coordinate `x`. The caller
-  must ensure that query coordinates are nondecreasing across calls.
+  must ensure that query coordinates are nondecreasing across calls. At least one line must have
+  been inserted.
 
 Overflow warning: `add_line()` compares intersections by cross-multiplying slope and intercept
 differences, a product on the order of the squared coefficient magnitude. For large `m`/`b` (roughly
@@ -25,10 +26,9 @@ beyond $10^9$ with `int64_t`), cast that comparison to `__int128`. `query()` eva
 which also needs to fit in `int64_t`.
 
 Time Complexity:
-- O(n) for any interlaced sequence of `add_line()` and `query()` calls, where $n$ is the number of
-  lines added. This is because the overall number of steps taken by `add_line()` and `query()` are
-  respectively bounded by the number of lines. Thus a single call to either `add_line()` or
-  `query()` will have an amortized O(1) running time.
+- O(n + q) for any interlaced sequence containing $n$ calls to `add_line()` and $q$ calls to
+  `query()`. Each line is removed or passed by the query pointer at most once, so both operations
+  take amortized O(1) time.
 
 Space Complexity:
 - O(n) for storage of the lines.
@@ -36,47 +36,50 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
-struct SemiDynamicCHT {
-  std::vector<int64_t> M, B;
+class SemiDynamicCHT {
+  std::vector<int64_t> slopes, intercepts;
   int ptr = 0;
 
+ public:
   void add_line(int64_t m, int64_t b) {
-    int len = static_cast<int>(M.size());
-    if (len > 0 && M.back() == m) {
-      if (B.back() <= b) {
+    int len = static_cast<int>(slopes.size());
+    if (len > 0 && slopes.back() == m) {
+      if (intercepts.back() <= b) {
         return;
       }
-      M.pop_back();
-      B.pop_back();
+      slopes.pop_back();
+      intercepts.pop_back();
       len--;
       if (ptr > len) {
         ptr = len;
       }
     }
     // Overflow warning!
-    while (len > 1 && (B[len - 2] - B[len - 1]) * (m - M[len - 1]) >=
-                          (B[len - 1] - b) * (M[len - 1] - M[len - 2])) {
+    while (len > 1 && (intercepts[len - 2] - intercepts[len - 1]) * (m - slopes[len - 1]) >=
+                          (intercepts[len - 1] - b) * (slopes[len - 1] - slopes[len - 2])) {
       len--;
     }
-    M.resize(len);
-    B.resize(len);
-    M.push_back(m);
-    B.push_back(b);
+    slopes.resize(len);
+    intercepts.resize(len);
+    slopes.push_back(m);
+    intercepts.push_back(b);
   }
 
   int64_t query(int64_t x) {
-    if (ptr >= static_cast<int>(M.size())) {
-      ptr = static_cast<int>(M.size()) - 1;
+    assert(!slopes.empty());
+    if (ptr >= static_cast<int>(slopes.size())) {
+      ptr = static_cast<int>(slopes.size()) - 1;
     }
     // Overflow warning!
-    while (ptr + 1 < static_cast<int>(M.size()) &&
-           M[ptr + 1] * x + B[ptr + 1] <= M[ptr] * x + B[ptr]) {
+    while (ptr + 1 < static_cast<int>(slopes.size()) &&
+           slopes[ptr + 1] * x + intercepts[ptr + 1] <= slopes[ptr] * x + intercepts[ptr]) {
       ptr++;
     }
-    return M[ptr] * x + B[ptr];
+    return slopes[ptr] * x + intercepts[ptr];
   }
 };
 

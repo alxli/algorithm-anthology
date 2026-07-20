@@ -16,8 +16,8 @@ Variables are numbered $[0, n)$. A literal is represented by `literal(variable, 
 - `add_false(a)` forces literal `a` to be false.
 - `add(variable, value)` forces a variable to equal `value`.
 - `add(x, xval, y, yval)` adds the clause $(`x` = `xval` \lor `y` = `yval`)$.
-- `satisfiable()` returns whether all added clauses can be satisfied and stores one valid assignment
-  in `answer`.
+- `satisfiable()` returns whether all added clauses can be satisfied.
+- `assignment()` returns the valid assignment found by the last successful `satisfiable()` call.
 
 Time Complexity:
 - O(n) per call to the constructor, where $n$ is the number of variables.
@@ -34,30 +34,12 @@ Space Complexity:
 #include <algorithm>
 #include <vector>
 
-struct TwoSAT {
+class TwoSAT {
   int variables;
   std::vector<std::vector<int>> adj, rev;
-  std::vector<int> order, component, answer;
+  std::vector<int> order, component, solution;
 
-  TwoSAT(int n = 0) : variables(n), adj(2 * n), rev(2 * n), answer(n, false) {}
-
-  int literal(int variable, bool value) { return 2 * variable + (value ? 0 : 1); }
-  int neg(int x) { return x ^ 1; }
-
-  void add_implication(int a, int b) {
-    adj[a].push_back(b);
-    rev[b].push_back(a);
-  }
-
-  void add_or(int a, int b) {
-    add_implication(neg(a), b);
-    add_implication(neg(b), a);
-  }
-
-  void add_true(int a) { add_implication(neg(a), a); }
-  void add_false(int a) { add_implication(a, neg(a)); }
-  void add(int variable, bool value) { add_true(literal(variable, value)); }
-  void add(int x, bool xval, int y, bool yval) { add_or(literal(x, xval), literal(y, yval)); }
+  static int neg(int x) { return x ^ 1; }
 
   void dfs_order(int u, std::vector<char> &visited) {
     visited[u] = true;
@@ -77,6 +59,26 @@ struct TwoSAT {
       }
     }
   }
+
+ public:
+  TwoSAT(int n = 0) : variables(n), adj(2 * n), rev(2 * n), solution(n, false) {}
+
+  int literal(int variable, bool value) const { return 2 * variable + (value ? 0 : 1); }
+
+  void add_implication(int a, int b) {
+    adj[a].push_back(b);
+    rev[b].push_back(a);
+  }
+
+  void add_or(int a, int b) {
+    add_implication(neg(a), b);
+    add_implication(neg(b), a);
+  }
+
+  void add_true(int a) { add_implication(neg(a), a); }
+  void add_false(int a) { add_implication(a, neg(a)); }
+  void add(int variable, bool value) { add_true(literal(variable, value)); }
+  void add(int x, bool xval, int y, bool yval) { add_or(literal(x, xval), literal(y, yval)); }
 
   bool satisfiable() {
     order.clear();
@@ -98,10 +100,12 @@ struct TwoSAT {
       if (component[2 * i] == component[2 * i + 1]) {
         return false;
       }
-      answer[i] = component[2 * i] > component[2 * i + 1];
+      solution[i] = component[2 * i] > component[2 * i + 1];
     }
     return true;
   }
+
+  const std::vector<int> &assignment() const { return solution; }
 };
 
 /*** Example Usage and Output:
@@ -125,9 +129,9 @@ int main() {
   solver.add_true(x0);
   solver.add(1, true, 2, false);
   assert(solver.satisfiable());
-  assert(solver.answer[0]);
+  assert(solver.assignment()[0]);
   cout << "Assignment:";
-  for (bool value : solver.answer) {
+  for (bool value : solver.assignment()) {
     cout << " " << value;
   }
   cout << endl;

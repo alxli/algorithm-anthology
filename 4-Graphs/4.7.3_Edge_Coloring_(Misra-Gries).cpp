@@ -8,9 +8,9 @@ though bipartite graphs can always be edge-colored with exactly $D$ colors.
 
 The algorithm colors edges one at a time. To color an edge $(u, v)$ it grows a maximal "fan" of $u$:
 a sequence of neighbors starting at $v$ in which each successive edge's color is free at the
-previous fan vertex. It then picks a color $c$ free at $u$ and a color $d$ free at the fan's last
-vertex, and flips the colors along the maximal alternating $c$/$d$ path leaving $u$. This frees $d$
-at $u$, after which rotating the fan shifts colors over by one and assigns $d$ to the new edge. Each
+previous fan node. It then picks a color $c$ free at $u$ and a color $d$ free at the fan's last
+node, and flips the colors along the maximal alternating $c$/$d$ path leaving $u$. This frees $d$ at
+$u$, after which rotating the fan shifts colors over by one and assigns $d$ to the new edge. Each
 step keeps the partial coloring proper and never introduces a $(D + 2)$-th color.
 
 The graph must be simple: the implementation stores one color per ordered node pair in a dense
@@ -21,11 +21,12 @@ matrix, so self-loops and parallel edges between the same pair cannot be represe
   is an undirected edge `u`-`v`.
 
 Time Complexity:
-- O(n^2*m) per call in the worst case, where $n$ is the number of nodes and $m$ the number of edges;
+- O(n^3*m) per call in the worst case, where $n$ is the number of nodes and $m$ the number of edges;
   substantially faster in practice.
 
 Space Complexity:
 - O(n^2) to store the per-edge colors.
+- O(n) auxiliary heap and stack space.
 
 */
 
@@ -33,8 +34,8 @@ Space Complexity:
 #include <vector>
 
 class EdgeColoring {
-  int n, max_deg;
-  std::vector<std::vector<int>> color;  // color[u][v] is the color of edge (u, v), or $0$ if none.
+  int n;
+  std::vector<std::vector<int>> color;  // color[u][v] is the color of edge (u, v), or 0 if none.
 
   bool is_free(int x, int c) const {
     for (int w = 0; w < n; w++) {
@@ -72,11 +73,7 @@ class EdgeColoring {
 
  public:
   EdgeColoring(int n, const std::vector<std::pair<int, int>> &edges)
-      : n(n), max_deg(0), color(n, std::vector<int>(n, 0)) {
-    std::vector<int> deg(n, 0);
-    for (const auto &e : edges) {
-      max_deg = std::max(max_deg, std::max(++deg[e.first], ++deg[e.second]));
-    }
+      : n(n), color(n, std::vector<int>(n)) {
     for (const auto &e : edges) {
       add_edge(e.first, e.second);
     }
@@ -103,7 +100,7 @@ class EdgeColoring {
     }
     int c = free_color(u), d = free_color(fan.back());
     invert_path(u, d, c);
-    // Find the prefix of the fan to rotate: the first vertex on which d is now free.
+    // Find the prefix of the fan to rotate: the first node on which d is now free.
     int k = 0;
     while (k < static_cast<int>(fan.size()) && color[u][fan[k]] != d && !is_free(fan[k], d)) {
       k++;
@@ -130,7 +127,6 @@ std::vector<int> edge_coloring(int n, const std::vector<std::pair<int, int>> &ed
 
 /*** Example Usage ***/
 
-#include <algorithm>
 #include <cassert>
 #include <set>
 using namespace std;

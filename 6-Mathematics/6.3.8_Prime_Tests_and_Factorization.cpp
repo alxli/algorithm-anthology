@@ -39,21 +39,33 @@ speed, with a slower portable double-and-add fallback to avoid overflow on compi
 integers.
 
 Time Complexity:
-- O(sqrt(n)) per call to `is_prime_slow(n)`.
-- O(k log^3(n)) per call to `is_probable_prime(n, k)`.
-- O(log^3(n)) per call to `is_prime(n)`.
-- O(sqrt(n)) per call to `factorize_slow(n)`.
-- O(n) to rebuild the prime cache in `cached_sieve(n)`.
-- O(n^{1/4}) approximately per call to `rho_factor(n)` and `factorize(n)`.
+- O(sqrt(n)) per call to `is_prime_slow(n)` and `factorize_slow(n)`.
+- O(k*log(n)) modular multiplications for `is_probable_prime(n, k)` and O(log(n)) for `is_prime(n)`.
+  The portable multiplication fallback adds another O(log(n)) factor.
+- O(c) to rebuild the cache through `cached_sieve(c)`, or O(1) when the existing cache is large
+  enough.
+- O(sqrt(p)) expected modular multiplications per call to `rho_factor(n)`, where $p$ is the smallest
+  prime factor of `n`. For composite `n`, this is at most O(n^{1/4}).
+- O(n^{1/4}) expected for `factorize_rho(n)`. `factorize(n, L)` additionally performs O(L/log(L))
+  trial divisions and takes O(L) time if the prime cache must be rebuilt to `L`.
+- O(|a| + |b|) for `merge_factors(a, b)`.
+- O(d log(d)) for `divisors_from_factors(factors)`, where $d$ is the number of divisors generated,
+  due to sorting the result.
+- O(L/log(L) + n^{1/4} + d log(d)) expected for `get_divisors(n)`, plus O(L) if the prime cache must
+  be rebuilt.
 
 Space Complexity:
-- O(f) auxiliary for all operations, where $f$ is the number of factors returned.
 - O(c) cached space for the largest `cached_sieve(c)` call.
+- O(f + log(n)) auxiliary for recursive factorization, where $f$ is the number of compressed prime
+  factors returned.
+- O(d) output space and O(log(d)) auxiliary stack space for `divisors_from_factors()` and
+  `get_divisors()`.
+- O(1) auxiliary for the primality tests, `rho_factor()`, `factorize_slow()`, and `merge_factors()`,
+  excluding returned vectors.
 
 */
 
 #include <algorithm>
-#include <cmath>
 #include <cstdint>
 #include <numeric>
 #include <random>

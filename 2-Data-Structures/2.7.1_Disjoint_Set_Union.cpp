@@ -1,11 +1,11 @@
 /*
 
-Maintain a set of elements partitioned into non-overlapping subsets. Each partition is assigned a
-unique representative known as the parent, or root. Each subset is stored as a tree whose nodes
-point toward its root: finding a representative follows parent pointers, redirecting visited nodes
-straight to the root along the way (path compression), while unions attach the smaller tree beneath
-the root of the larger one (union-by-size). Together these keep the trees nearly flat. Union-by-size
-is interchangeable with the union-by-rank strategy used by Sparse Disjoint Set Union and yields the
+Maintain a set of elements partitioned into non-overlapping subsets. Each partition is identified by
+a unique representative called its root. Each subset is stored as a tree whose nodes point toward
+its root: finding a representative follows parent pointers, redirecting visited nodes straight to
+the root along the way (path compression), while unions attach the smaller tree beneath the root of
+the larger one (union-by-size). Together these keep the trees nearly flat. Union-by-size is
+interchangeable with the union-by-rank strategy used by Sparse Disjoint Set Union and yields the
 same complexity bounds, but union-by-size additionally supports `set_size()` queries.
 
 This version is simplified to work only on the fixed set of integer elements $[0, n)$, chosen at
@@ -28,7 +28,8 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the disjoint set forest elements.
-- O(1) auxiliary for all operations.
+- O(log n) auxiliary stack space for operations that call `find_root()`.
+- O(1) auxiliary for `sets()`.
 
 */
 

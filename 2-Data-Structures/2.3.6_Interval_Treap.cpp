@@ -6,8 +6,8 @@ process the entries, where keys are compared lexicographically as pairs. Each no
 augmented with the maximum upper endpoint among the intervals in its subtree, letting intersection
 queries skip any subtree whose maximum falls below the query interval's lower bound.
 
-This implementation uses `std::pair` to represent intervals, requiring operators `<` and `==` to be
-defined on the numeric key type `K`. 
+This implementation uses `std::pair` to represent intervals and requires `operator<` on the numeric
+key type `K`. Every interval must satisfy `!(hi < lo)`.
 
 - `IntervalTreap<K, V>()` constructs an empty map.
 - `size()` returns the size of the map.
@@ -28,8 +28,8 @@ defined on the numeric key type `K`.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `empty()`.
-- O(log n) on average per call to `insert()`, `erase()`, and `find_any()`, where $n$ is the number
-  of intervals currently in the set.
+- O(log n) on average per call to `insert()`, `erase()`, `find_key()`, and `find_value()`, where $n$
+  is the number of intervals currently in the set.
 - O(log n + m) on average per call to `find_all()`, where $m$ is the number of intersecting
   intervals that are reported.
 - O(n) per call to `entries()`.
@@ -37,10 +37,13 @@ Time Complexity:
 Space Complexity:
 - O(n) for storage of the map elements.
 - O(1) auxiliary for `size()` and `empty()`.
-- O(log n) auxiliary stack space on average for all other operations.
+- O(log n) auxiliary stack space on average for all other operations and destruction, and O(n) in
+  the worst case.
+- O(n) for the vector returned by `entries()`.
 
 */
 
+#include <cassert>
 #include <cstdint>
 #include <tuple>
 #include <utility>
@@ -70,10 +73,10 @@ class IntervalTreap {
 
     void update() {
       max = interval.second;
-      if (left != nullptr && left->max > max) {
+      if (left != nullptr && max < left->max) {
         max = left->max;
       }
-      if (right != nullptr && right->max > max) {
+      if (right != nullptr && max < right->max) {
         max = right->max;
       }
     }
@@ -110,7 +113,7 @@ class IntervalTreap {
       n->update();
       return true;
     }
-    if (i > n->interval && insert(n->right, i, v)) {
+    if (n->interval < i && insert(n->right, i, v)) {
       if (n->right->priority < n->priority) {
         rotate_left(n);
       }
@@ -125,10 +128,18 @@ class IntervalTreap {
       return false;
     }
     if (i < n->interval) {
-      return erase(n->left, i);
+      bool res = erase(n->left, i);
+      if (res) {
+        n->update();
+      }
+      return res;
     }
-    if (i > n->interval) {
-      return erase(n->right, i);
+    if (n->interval < i) {
+      bool res = erase(n->right, i);
+      if (res) {
+        n->update();
+      }
+      return res;
     }
     if (n->left != nullptr && n->right != nullptr) {
       bool res;
@@ -153,25 +164,25 @@ class IntervalTreap {
     if (n == nullptr) {
       return nullptr;
     }
-    if (n->interval.first <= i.second && i.first <= n->interval.second) {
+    if (!(i.second < n->interval.first) && !(n->interval.second < i.first)) {
       return n;
     }
-    if (n->left != nullptr && i.first <= n->left->max) {
+    if (n->left != nullptr && !(n->left->max < i.first)) {
       return find_any(n->left, i);
     }
     return find_any(n->right, i);
   }
 
   template<typename Fn>
-  static void find_all(Node *n, const Interval &i, Fn f) {
+  static void find_all(Node *n, const Interval &i, Fn &f) {
     if (n == nullptr || n->max < i.first) {
       return;
     }
     find_all(n->left, i, f);
-    if (n->interval.first <= i.second && i.first <= n->interval.second) {
+    if (!(i.second < n->interval.first) && !(n->interval.second < i.first)) {
       f(n->interval.first, n->interval.second, n->value);
     }
-    if (n->interval.first <= i.second) {
+    if (!(i.second < n->interval.first)) {
       find_all(n->right, i, f);
     }
   }
@@ -200,21 +211,32 @@ class IntervalTreap {
   IntervalTreap &operator=(const IntervalTreap &) = delete;
   int size() const { return num_nodes; }
   bool empty() const { return root == nullptr; }
-  bool insert(const K &lo, const K &hi, const V &v) { return insert(root, Interval{lo, hi}, v); }
-  bool erase(const K &lo, const K &hi) { return erase(root, Interval{lo, hi}); }
+
+  bool insert(const K &lo, const K &hi, const V &v) {
+    assert(!(hi < lo));
+    return insert(root, Interval{lo, hi}, v);
+  }
+
+  bool erase(const K &lo, const K &hi) {
+    assert(!(hi < lo));
+    return erase(root, Interval{lo, hi});
+  }
 
   const Interval *find_key(const K &lo, const K &hi) const {
+    assert(!(hi < lo));
     Node *n = find_any(root, Interval{lo, hi});
     return (n == nullptr) ? nullptr : &(n->interval);
   }
 
   const V *find_value(const K &lo, const K &hi) const {
+    assert(!(hi < lo));
     Node *n = find_any(root, Interval{lo, hi});
     return (n == nullptr) ? nullptr : &(n->value);
   }
 
   template<typename Fn>
   void find_all(const K &lo, const K &hi, Fn f) const {
+    assert(!(hi < lo));
     find_all(root, Interval{lo, hi}, f);
   }
 

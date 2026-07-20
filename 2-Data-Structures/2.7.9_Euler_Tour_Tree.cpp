@@ -6,23 +6,23 @@ two nodes, $(u \to v)$ and $(v \to u)$. Rerooting a represented tree is a cyclic
 sequence, while `link` concatenates two tours with the new edge occurrences and `cut` removes the
 two occurrences of an existing edge, splitting one tour into two.
 
-This version supports dynamic connectivity, `link`, `cut`, rerooting, and listing the vertices in a
-connected component. It does not store vertex aggregates. To add component aggregates, a common
-extension is to insert one self-loop occurrence per vertex and maintain aggregate data in the treap.
+This version supports dynamic connectivity, `link`, `cut`, rerooting, and listing the nodes in a
+connected component. It does not store node aggregates. To add component aggregates, a common
+extension is to insert one self-loop occurrence per node and maintain aggregate data in the treap.
 
-- `EulerTourTree(n)` constructs a forest on vertices numbered $[0, `n`)$.
+- `EulerTourTree(n)` constructs a forest on nodes numbered $[0, `n`)$.
 - `connected(u, v)` returns whether `u` and `v` are in the same tree.
 - `link(u, v)` adds an edge between different trees and returns false if the edge would create a
   cycle or already exists.
 - `cut(u, v)` removes an existing edge and returns false if it is not present.
 - `reroot(u)` rotates the Euler tour of `u`'s tree so an occurrence leaving `u` is first.
-- `component_vertices(u)` returns the distinct vertices in `u`'s tree.
+- `component_nodes(u)` returns the distinct nodes in `u`'s tree in unspecified order.
 
 Time Complexity:
 - O(log m) expected per call to `connected`, `link`, `cut`, and `reroot`, where $m$ is the number of
   edges currently in the forest.
-- O(k) expected per call to `component_vertices`, where $k$ is the number of directed edge
-  occurrences in the component.
+- O(k) expected per call to `component_nodes`, where $k$ is the number of directed edge occurrences
+  in the component.
 
 Space Complexity:
 - O(n + m) for the forest.
@@ -32,8 +32,8 @@ Space Complexity:
 
 #include <cassert>
 #include <random>
-#include <set>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -49,7 +49,7 @@ class EulerTourTree {
   int n;
   std::mt19937 rng;
   std::vector<std::unordered_map<int, Node *>> adj;
-  std::vector<Node *> allocated;
+  std::unordered_set<Node *> allocated;
 
   static int size(Node *t) { return t == nullptr ? 0 : t->size; }
 
@@ -143,18 +143,18 @@ class EulerTourTree {
 
   Node *new_node(int u, int v) {
     Node *node = new Node(u, v, std::uniform_int_distribution<int>()(rng));
-    allocated.push_back(node);
+    allocated.insert(node);
     return node;
   }
 
   Node *any_occurrence(int u) const { return adj[u].empty() ? nullptr : adj[u].begin()->second; }
 
-  static void collect(Node *t, std::vector<int> &out) {
+  static void collect(Node *t, std::unordered_set<int> &out) {
     if (t == nullptr) {
       return;
     }
     collect(t->left, out);
-    out.push_back(t->u);
+    out.insert(t->u);
     collect(t->right, out);
   }
 
@@ -166,6 +166,9 @@ class EulerTourTree {
       delete node;
     }
   }
+
+  EulerTourTree(const EulerTourTree &) = delete;
+  EulerTourTree &operator=(const EulerTourTree &) = delete;
 
   bool connected(int u, int v) const {
     assert(0 <= u && u < n && 0 <= v && v < n);
@@ -209,31 +212,35 @@ class EulerTourTree {
     if (it == adj[u].end()) {
       return false;
     }
-    Node *uv = it->second, *vu = adj[v][u];
+    Node *uv = it->second, *vu = adj[v].at(u);
     make_first(uv);
     auto [left, right] = split(root(uv), index(vu));
     remove_first(left);   // Remove uv.
     remove_first(right);  // Remove vu.
     adj[u].erase(v);
     adj[v].erase(u);
+    allocated.erase(uv);
+    allocated.erase(vu);
+    delete uv;
+    delete vu;
     return true;
   }
 
-  std::vector<int> component_vertices(int u) const {
+  std::vector<int> component_nodes(int u) const {
     assert(0 <= u && u < n);
     Node *a = any_occurrence(u);
     if (a == nullptr) {
       return {u};
     }
-    std::vector<int> occurrences, res;
-    collect(root(a), occurrences);
-    std::set<int> seen(occurrences.begin(), occurrences.end());
-    res.assign(seen.begin(), seen.end());
-    return res;
+    std::unordered_set<int> nodes;
+    collect(root(a), nodes);
+    return std::vector<int>(nodes.begin(), nodes.end());
   }
 };
 
 /*** Example Usage ***/
+
+#include <algorithm>
 
 int main() {
   EulerTourTree ett(6);
@@ -249,7 +256,8 @@ int main() {
   assert(!ett.connected(0, 4));
   assert(!ett.link(0, 2));  // Would create a cycle.
 
-  auto c = ett.component_vertices(1);
+  auto c = ett.component_nodes(1);
+  std::sort(c.begin(), c.end());
   assert((c == std::vector<int>{0, 1, 2}));
 
   ett.reroot(2);
@@ -258,7 +266,7 @@ int main() {
 
   // 0---1     2    3---4    5
   assert(!ett.connected(0, 2));
-  assert((ett.component_vertices(2) == std::vector<int>{2}));
+  assert((ett.component_nodes(2) == std::vector<int>{2}));
 
   assert(ett.link(2, 3));
 

@@ -1,20 +1,21 @@
 /*
 
-Maintains a dynamic set of lines and answers minimum value queries at points in a fixed integer
-domain. A Li Chao tree is useful for dynamic programming recurrences of the form
-`dp[i] = min(m[j] * x[i] + b[j])`, especially when line slopes and query points arrive in arbitrary
-order. Each node of a segment tree over the domain keeps the line that wins at its segment's
-midpoint; inserting a line keeps the midpoint winner and recurses only into the half where the
-losing line may still win, and a query takes the best line along one root-to-leaf path.
+Maintains a dynamic set of lines $y = mx + b$ and answers minimum value queries at integer points.
+Lines and queries may arrive in arbitrary order, making this useful for dynamic programming
+recurrences of the form `dp[i] = min(m[j] * x[i] + b[j])` without monotone slopes or query
+coordinates.
 
-This implementation stores the lower envelope of lines over the inclusive domain $[`lo`, `hi`]$. It
-supports adding arbitrary lines and querying arbitrary integer $x$-coordinates in logarithmic time
-with respect to the domain size.
+A Li Chao tree fixes an inclusive coordinate domain $[`lo`, `hi`]$ and stores one line at each node
+of a dynamic segment tree. Inserting a line keeps the line that wins at the midpoint and recurses
+only into the half where the other line may still win; a query takes the best value along one
+root-to-leaf path. Prefer this structure when the domain is known and manageable. The fully dynamic
+convex hull in the previous section needs no fixed domain and also supports maximum queries, while a
+Li Chao tree has a simpler invariant and is easier to extend to lines active only on subintervals.
 
 - `LiChaoTree(lo, hi)` constructs an empty tree over integer domain $[`lo`, `hi`]$.
-- `add_line(m, b)` inserts line $y = mx + b$ (can be called in any order).
+- `add_line(m, b)` inserts line $y = mx + b$. Lines may be added in any order.
 - `query(x)` returns the minimum $y$-value among all inserted lines at coordinate `x`. At least one
-  line must have been inserted.
+  line must have been inserted, and query coordinates may be supplied in any order.
 
 Overflow warning: each comparison and query evaluates `m * x + b`, which must fit in `int64_t`.
 
@@ -23,7 +24,7 @@ Time Complexity:
   `hi`.
 
 Space Complexity:
-- O(n log d) worst-case node storage for $n$ lines inserted, usually much less.
+- O(n) node storage for $n$ lines inserted, since each insertion creates at most one node.
 - O(log d) auxiliary stack space per operation.
 
 */
@@ -105,6 +106,7 @@ class LiChaoTree {
   void add_line(int64_t m, int64_t b) { add_line(root, lo, hi, Line(m, b)); }
 
   int64_t query(int64_t x) const {
+    assert(root != nullptr);
     assert(lo <= x && x <= hi);
     return query(root, lo, hi, x);
   }
@@ -115,13 +117,15 @@ class LiChaoTree {
 #include <cassert>
 
 int main() {
-  LiChaoTree cht(-10, 10);
-  cht.add_line(3, 0);
-  cht.add_line(1, 2);
-  cht.add_line(-1, 10);
-  assert(cht.query(-10) == -30);
-  assert(cht.query(0) == 0);
-  assert(cht.query(2) == 4);
-  assert(cht.query(10) == 0);
+  LiChaoTree h(-10, 10);
+  h.add_line(3, 0);
+  h.add_line(0, 6);
+  h.add_line(1, 2);
+  h.add_line(2, 1);
+  // Minimize among y = 3x, 6, x + 2, and 2x + 1.
+  assert(h.query(0) == 0);
+  assert(h.query(2) == 4);
+  assert(h.query(1) == 3);
+  assert(h.query(3) == 5);
   return 0;
 }

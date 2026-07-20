@@ -9,62 +9,62 @@ Prim's algorithm grows the tree from an arbitrary start node, repeatedly adding 
 edge that joins a new node to the current tree, with a priority queue supplying the cheapest such
 edge at each step.
 
-- `prim_mst()` populates `mst` with the edge IDs in the minimum spanning tree (returning the total
-  MST weight) for a global, bidirectionally pre-populated adjacency list `adj` which must consist of
-  nodes numbered $[0, `n`)$, where `n` is `adj.size()`. Edges are stored as (`neighbor`, `weight`,
-  `edge_id`).
+- `prim_mst()` populates `mst` with the edges in the minimum spanning forest and returns the total
+  MST weight for a global, bidirectionally pre-populated adjacency list `adj` which must consist of
+  nodes numbered $[0, `n`)$, where `n` is `adj.size()`. Adjacency entries are stored as (`neighbor`,
+  `weight`), while each MST edge is stored as (`from`, `to`, `weight`).
 
-The priority queue stores candidate edges as (`weight`, `from`, `to`, `edge_id`) and uses
-`std::greater` to make it a min-heap. To find a maximum spanning tree instead, use the default
-max-heap ordering. Multigraphs are supported; parallel edges are stored as separate adjacency
-entries and the algorithm automatically selects the minimum-weight one to each unvisited node.
+The priority queue stores candidate edges as (`weight`, `from`, `to`) and uses `std::greater` to
+make it a min-heap. To find a maximum spanning tree instead, use the default max-heap ordering.
+Multigraphs are supported; parallel edges are stored as separate adjacency entries and the algorithm
+automatically selects the minimum-weight one to each unvisited node.
 
 Time Complexity:
-- O(m log n) per call, where $m$ is the number of edges and $n$ is the number of nodes.
+- O(n + m log m) per call, where $n$ is the number of nodes and $m$ is the number of edges.
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
   edges.
-- O(m) auxiliary.
+- O(max(n, m)) auxiliary.
 
 */
 
+#include <cstdint>
 #include <functional>
 #include <queue>
 #include <tuple>
 #include <utility>
 #include <vector>
 
-std::vector<std::vector<std::tuple<int, int, int>>> adj;  // adj[u] = {(v, weight, edge_id), ...}
-std::vector<int> mst;
+std::vector<std::vector<std::pair<int, int>>> adj;  // adj[u] = {(v, weight), ...}
+std::vector<std::tuple<int, int, int>> mst;         // (u, v, weight)
 
-int prim_mst() {
+int64_t prim_mst() {
   int n = static_cast<int>(adj.size());
   mst.clear();
   std::vector<char> visit(n);
-  int total_dist = 0;
+  int64_t total_dist = 0;
   for (int i = 0; i < n; i++) {
     if (visit[i]) {
       continue;
     }
     visit[i] = true;
-    using qnode = std::tuple<int, int, int, int>;  // (weight, u, v, edge_id)
-    std::priority_queue<qnode, std::vector<qnode>, std::greater<>> pq;
-    for (auto &[v, w, id] : adj[i]) {
-      pq.emplace(w, i, v, id);
+    using QueueEntry = std::tuple<int, int, int>;  // (weight, u, v)
+    std::priority_queue<QueueEntry, std::vector<QueueEntry>, std::greater<>> pq;
+    for (auto [v, w] : adj[i]) {
+      pq.emplace(w, i, v);
     }
     while (!pq.empty()) {
-      auto [w, u, v, id] = pq.top();
+      auto [w, u, v] = pq.top();
       pq.pop();
-      if (visit[u] && !visit[v]) {
-        visit[v] = true;
-        if (v != i) {
-          mst.push_back(id);
-          total_dist += w;
-        }
-        for (auto &[nb, ew, eid] : adj[v]) {
-          pq.emplace(ew, v, nb, eid);
-        }
+      if (visit[v]) {
+        continue;
+      }
+      visit[v] = true;
+      mst.emplace_back(u, v, w);
+      total_dist += w;
+      for (auto [to, ew] : adj[v]) {
+        pq.emplace(ew, v, to);
       }
     }
   }
@@ -74,11 +74,11 @@ int prim_mst() {
 /*** Example Usage and Output:
 
 Total distance: 13
-0 <-> 2
-0 <-> 1
-3 <-> 4
-4 <-> 5
-5 <-> 6
+0 <-> 2 (3)
+0 <-> 1 (4)
+3 <-> 4 (1)
+4 <-> 5 (2)
+5 <-> 6 (3)
 
 ***/
 
@@ -86,13 +86,9 @@ Total distance: 13
 #include <iostream>
 using namespace std;
 
-vector<pair<int, int>> edge_endpoints;
-
 void add_edge(int u, int v, int w) {
-  int id = static_cast<int>(edge_endpoints.size());
-  edge_endpoints.emplace_back(u, v);
-  adj[u].emplace_back(v, w, id);
-  adj[v].emplace_back(u, w, id);
+  adj[u].emplace_back(v, w);
+  adj[v].emplace_back(u, w);
 }
 
 int main() {
@@ -104,7 +100,6 @@ int main() {
   //      \ /             / w=3 |
   //       2            5 ----- 6
   adj.assign(7, {});
-  edge_endpoints.clear();
   add_edge(0, 1, 4);
   add_edge(1, 2, 6);
   add_edge(2, 0, 3);
@@ -112,13 +107,12 @@ int main() {
   add_edge(4, 5, 2);
   add_edge(5, 6, 3);
   add_edge(6, 4, 4);
-  int total = prim_mst();
+  int64_t total = prim_mst();
   assert(total == 13);
   assert(mst.size() == 5);
   cout << "Total distance: " << total << endl;
-  for (int id : mst) {
-    auto &[u, v] = edge_endpoints[id];
-    cout << u << " <-> " << v << endl;
+  for (auto [u, v, w] : mst) {
+    cout << u << " <-> " << v << " (" << w << ")" << endl;
   }
   return 0;
 }

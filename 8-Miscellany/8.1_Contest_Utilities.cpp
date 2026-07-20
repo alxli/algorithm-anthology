@@ -111,6 +111,7 @@ class y_combinator_result {
  public:
   template<typename T>
   explicit y_combinator_result(T &&fun_) : fun(std::forward<T>(fun_)) {}
+
   template<class... Args>
   decltype(auto) operator()(Args &&...args) {
     return fun(std::ref(*this), std::forward<Args>(args)...);

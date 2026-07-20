@@ -7,13 +7,14 @@ instead of wall-clock time so elapsed durations are monotonic.
 - `timer.reset()` restarts the timer.
 - `timer.elapsed()` returns the elapsed time in milliseconds as a double.
 - `benchmark(name, iterations, f)` runs `f()` `iterations` times and returns the average elapsed
-  milliseconds per call with the given name.
+  milliseconds per call with the given name. `iterations` must be positive.
 
 Benchmarks should be treated as local measurements, not proofs of asymptotic performance. Warm-up,
 CPU frequency scaling, compiler optimization, and input choice can dominate tiny timings.
 
 */
 
+#include <cassert>
 #include <chrono>
 #include <string>
 #include <utility>
@@ -36,6 +37,7 @@ class Timer {
 
 template<typename Fun>
 std::pair<std::string, double> benchmark(const std::string &name, int iterations, Fun f) {
+  assert(iterations > 0);
   Timer timer;
   for (int i = 0; i < iterations; ++i) {
     f();

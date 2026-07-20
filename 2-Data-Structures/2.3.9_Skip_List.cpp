@@ -1,12 +1,12 @@
 /*
 
 Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible
-key appears at most once in the collection. This implementation requires operators `<` and `==` to
-be defined on the key type. A skip list maintains a linked hierarchy of sorted subsequences with
-each successive subsequence skipping over fewer elements than the previous one. Each new node joins
-a number of levels decided by repeated coin flips, and a search starts at the sparsest level, moving
-forward until the next key would overshoot and then dropping down a level, which makes operations
-take O(log n) with high probability.
+key appears at most once in the collection. This implementation requires `operator<` on the key
+type. A skip list maintains a linked hierarchy of sorted subsequences with each successive
+subsequence skipping over fewer elements than the previous one. Each new node joins a number of
+levels decided by repeated coin flips, and a search starts at the sparsest level, moving forward
+until the next key would overshoot and then dropping down a level, which makes operations take
+O(log n) with high probability.
 
 - `SkipList<K, V>()` constructs an empty map.
 - `size()` returns the size of the map.
@@ -23,6 +23,8 @@ take O(log n) with high probability.
   originally found.
 - `entries()` returns all key-value entries in ascending order of keys.
 
+The sentinel node requires `K` and `V` to be default constructible.
+
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `empty()`.
 - O(log n) on average per call to `insert()`, `erase()`, `find()`, and `operator[]`, where $n$ is
@@ -30,12 +32,13 @@ Time Complexity:
 - O(n) per call to `entries()`.
 
 Space Complexity:
-- O(n) on average for storage of the map elements.
-- O(n) auxiliary for `insert()` and `erase()`.
-- O(1) auxiliary for all other operations.
+- O(n) for storage of the map elements.
+- O(1) auxiliary for all operations because the maximum number of levels is fixed at $32$.
+- O(n) for the vector returned by `entries()`.
 
 */
 
+#include <algorithm>
 #include <random>
 #include <utility>
 #include <vector>
@@ -49,7 +52,7 @@ class SkipList {
     V value;
     std::vector<Node *> next;
 
-    Node(const K &k, const V &v, int levels) : key(k), value(v), next(levels, (Node *)nullptr) {}
+    Node(const K &k, const V &v, int levels) : key(k), value(v), next(levels, nullptr) {}
   } *head;
 
   int num_nodes;
@@ -69,7 +72,18 @@ class SkipList {
     while (i < static_cast<int>(v.size()) && v[i] != nullptr) {
       i++;
     }
-    return i + 1;
+    return std::max(1, i);
+  }
+
+  Node *find_node(const K &k) const {
+    Node *n = head;
+    for (int i = node_level(n->next); i-- > 0;) {
+      while (n->next[i] != nullptr && n->next[i]->key < k) {
+        n = n->next[i];
+      }
+    }
+    n = n->next[0];
+    return (n != nullptr && !(k < n->key) && !(n->key < k)) ? n : nullptr;
   }
 
  public:
@@ -104,7 +118,7 @@ class SkipList {
       update[i] = n;
     }
     n = n->next[0];
-    if (n != nullptr && n->key == k) {
+    if (n != nullptr && !(k < n->key) && !(n->key < k)) {
       return false;
     }
     int new_level = random_level();
@@ -132,11 +146,8 @@ class SkipList {
       update[i] = n;
     }
     n = n->next[0];
-    if (n != nullptr && n->key == k) {
-      for (int i = 0, levels = static_cast<int>(update.size()); i < levels; i++) {
-        if (update[i]->next[i] != n) {
-          break;
-        }
+    if (n != nullptr && !(k < n->key) && !(n->key < k)) {
+      for (int i = 0; i < static_cast<int>(n->next.size()); i++) {
         update[i]->next[i] = n->next[i];
       }
       delete n;
@@ -146,15 +157,14 @@ class SkipList {
     return false;
   }
 
-  V *find(const K &k) const {
-    Node *n = head;
-    for (int i = node_level(n->next); i-- > 0;) {
-      while (n->next[i] != nullptr && n->next[i]->key < k) {
-        n = n->next[i];
-      }
-    }
-    n = n->next[0];
-    return (n != nullptr && n->key == k) ? &(n->value) : nullptr;
+  V *find(const K &k) {
+    Node *n = find_node(k);
+    return n == nullptr ? nullptr : &(n->value);
+  }
+
+  const V *find(const K &k) const {
+    Node *n = find_node(k);
+    return n == nullptr ? nullptr : &(n->value);
   }
 
   V &operator[](const K &k) {

@@ -15,11 +15,12 @@ for a win for the player to move at the root and $-1$ for a loss.
   whose turn it is.
 - `alpha_beta(stones, maximizing, alpha = -2, beta = 2)` returns the same value, with pruning using
   the current lower bound `alpha` and upper bound `beta`.
-- `best_take(stones)` returns an optimal first move, either $1$ or $2$.
+- `best_take(stones)` returns an optimal first move using alpha-beta pruning, either $1$ or $2$, for
+  positive `stones`.
 
 Time Complexity:
 - O(b^d) in the worst case, where $b$ is branching factor and $d$ is search depth. Alpha-beta can
-  reduce this substantially with good move ordering.
+  achieve O(b^{d/2}) with optimal move ordering.
 
 Space Complexity:
 - O(d) auxiliary recursion stack space.

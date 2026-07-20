@@ -17,7 +17,7 @@ over the depth sequence. This version answers those queries with a segment tree.
   are in different trees.
 
 Time Complexity:
-- O(n log n) for construction, where $n$ is the number of nodes.
+- O(n) for construction, where $n$ is the number of nodes.
 - O(log n) per call to `lca()` and `dist()`.
 
 Space Complexity:
@@ -28,21 +28,21 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <vector>
 
 class SegTreeLCA {
-  std::vector<std::vector<int>> adj;
   std::vector<int> depth, order, first, root, minpos;
   int len;
 
-  void dfs(int u, int r, int d) {
+  void dfs(const std::vector<std::vector<int>> &adj, int u, int r, int d) {
     root[u] = r;
     depth[u] = d;
     first[u] = static_cast<int>(order.size());
     order.push_back(u);
     for (int v : adj[u]) {
       if (depth[v] == -1) {
-        dfs(v, r, d + 1);
+        dfs(adj, v, r, d + 1);
         order.push_back(u);
       }
     }
@@ -78,14 +78,14 @@ class SegTreeLCA {
   }
 
  public:
-  explicit SegTreeLCA(const std::vector<std::vector<int>> &adj) : adj(adj) {
+  explicit SegTreeLCA(const std::vector<std::vector<int>> &adj) {
     int n = static_cast<int>(adj.size());
     depth.assign(n, -1);
     first.assign(n, -1);
     root.assign(n, -1);
     for (int u = 0; u < n; u++) {
       if (depth[u] == -1) {
-        dfs(u, u, 0);
+        dfs(adj, u, u, 0);
       }
     }
     len = static_cast<int>(order.size());
@@ -96,6 +96,8 @@ class SegTreeLCA {
   }
 
   int lca(int u, int v) const {
+    assert(0 <= u && u < static_cast<int>(root.size()));
+    assert(0 <= v && v < static_cast<int>(root.size()));
     if (root[u] != root[v]) {
       return -1;
     }

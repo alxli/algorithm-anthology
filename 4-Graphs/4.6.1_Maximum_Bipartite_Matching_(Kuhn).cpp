@@ -13,10 +13,11 @@ right node. Flipping the edges along such a path enlarges the matching by one.
   $[0, `n`)$ and whose right-side neighbors are numbered $[0, `n2`)$, where `n` is `adj.size()`.
 
 Time Complexity:
-- O(m*(n_1 + n_2)) per call, where $m$ is the number of edges.
+- O(n_1*m) per call, where $m$ is the number of edges.
 
 Space Complexity:
-- O(n_1 + n_2) auxiliary stack space per call.
+- O(max(n_1 + n_2, m)) for storage of the graph, where $m$ is the number of edges.
+- O(n_1 + n_2) auxiliary heap space and O(n_1) auxiliary stack space per call.
 
 */
 
@@ -25,10 +26,10 @@ Space Complexity:
 std::vector<int> match_left, match_right;
 std::vector<int> visit;
 std::vector<std::vector<int>> adj;
-int visit_time;
+int timer;
 
 bool dfs(int u) {
-  visit[u] = visit_time;
+  visit[u] = timer;
   for (int nb : adj[u]) {
     if (match_right[nb] == -1) {
       match_left[u] = nb;
@@ -38,7 +39,7 @@ bool dfs(int u) {
   }
   for (int nb : adj[u]) {
     int v = match_right[nb];
-    if (visit[v] != visit_time && dfs(v)) {
+    if (visit[v] != timer && dfs(v)) {
       match_left[u] = nb;
       match_right[nb] = u;
       return true;
@@ -52,10 +53,10 @@ int bipartite_matching(int n2) {
   match_left.assign(n1, -1);
   match_right.assign(n2, -1);
   visit.assign(n1, 0);
-  visit_time = 0;
+  timer = 0;
   int matches = 0;
   for (int i = 0; i < n1; i++) {
-    visit_time++;
+    timer++;
     if (dfs(i)) {
       matches++;
     }
@@ -77,10 +78,10 @@ Matched 3 pair(s):
 using namespace std;
 
 int main() {
-  // Left vertices L0..L2, right vertices R0..R3:
-  //   L0 -- R1
-  //   L1 -- R0, R1, R2
-  //   L2 -- R2, R3
+  // Left nodes a0..a2, right nodes b0..b3:
+  //   a0 -- b1
+  //   a1 -- b0, b1, b2
+  //   a2 -- b2, b3
   int n1 = 3, n2 = 4;
   adj.assign(n1, {});
   adj[0].push_back(1);

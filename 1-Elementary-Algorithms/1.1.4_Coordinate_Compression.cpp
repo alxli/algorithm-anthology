@@ -18,8 +18,8 @@ The two `compress()` functions rewrite a range in place and then discard the map
 arbitrary values can be mapped to and from compressed ranks long after construction (e.g. for
 offline queries arriving separately from the array being compressed).
 
-- `CoordinateCompressor<T>(lo, hi)` constructs a compressor over the values of $[`lo`, `hi`)$, ready
-  for querying. Alternatively, use the default constructor and register values with `add(x)`, then
+- `CoordinateCompressor<T>(lo, hi)` constructs a compressor from the half-open iterator range
+  $[`lo`, `hi`)$. Alternatively, use the default constructor and register values with `add(x)`, then
   call `build()` once after all values are registered and before the first query.
 - `size()` returns the number of distinct registered values $k$.
 - `value(r)` returns the original value with rank `r`, inverting `rank()`.
@@ -28,7 +28,7 @@ offline queries arriving separately from the array being compressed).
 
 Time Complexity:
 - O(n log n) per call to `compress1(lo, hi)`, `compress2(lo, hi)`, and
- `CoordinateCompressor(lo, hi)`, where $n$ is the distance between `lo` and `hi`.
+  `CoordinateCompressor(lo, hi)`, where $n$ is the distance between `lo` and `hi`.
 - O(1) amortized per call to `add(x)`, and O(m log m) per call to `build()`, where $m$ is the total
   number of values registered.
 - O(log k) per call to `rank(x)` and `contains(x)`, where $k$ is the number of distinct values.

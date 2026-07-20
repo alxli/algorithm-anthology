@@ -1,7 +1,7 @@
 /*
 
-Given a directed acyclic graph, find one of possibly many orderings of the nodes such that for every
-edge from node $u$ to $v$, $u$ comes before $v$ in the ordering.
+Given a directed acyclic graph (DAG), find one of possibly many orderings of the nodes such that for
+every edge from node $u$ to $v$, $u$ comes before $v$ in the ordering.
 
 The DFS version uses the fact that every outgoing dependency of a node is finished before the node
 itself is appended, so reversing DFS post-order places each prerequisite before everything it can
@@ -100,14 +100,14 @@ The topological order: 2 1 0 4 3 7 6 5
 using namespace std;
 
 int main() {
-  //        1
-  //        |
-  //        v
-  // 0 ---> 3 ---> 5
-  // |      | /
-  // v      v  v
-  // 4 ---> 6  7 <--- 2
-  // ^________________|
+  //         1
+  //         |
+  //         v
+  // 0 ----> 3 ---> 5
+  // |     / |
+  // v    v  v
+  // 4 -> 6  7 <--- 2
+  // ^______________|
   adj.assign(8, {});
   adj[0].push_back(3);
   adj[0].push_back(4);

@@ -6,10 +6,10 @@ inserting and deleting keys into a binary tree while upholding the BST property:
 the BST, every node in its left subtree has a lesser key and every node in its right subtree has a
 greater key.
 
-A treap is a binary search tree where each node also holds a randomly assigned priority. The tree
-satisfies the BST property on keys and the min-heap property on priorities (lower priority value is
+A treap is a BST where each node also holds a randomly assigned priority, simultaneously maintaining
+both the BST property on keys and the min-heap property on priorities (lower priority value is
 closer to root). Since priorities are random, this keeps the tree balanced with high probability,
-making insertions and deletions run in O(log n).
+making insertions and deletions run in O(log n) on average.
 
 This implementation requires an ordering on the key type `K` defined by `operator<`.
 
@@ -37,7 +37,9 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the map elements.
-- O(log n) auxiliary stack space on average for `insert()`, `erase()`, and `entries()`.
+- O(log n) auxiliary stack space on average for `insert()`, `erase()`, `entries()`, and destruction,
+  and O(n) in the worst case.
+- O(n) for the vector returned by `entries()`.
 - O(1) auxiliary for all other operations.
 
 */

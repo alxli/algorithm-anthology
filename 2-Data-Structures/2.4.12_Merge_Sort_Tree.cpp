@@ -10,12 +10,14 @@ The structure is built once and not modified afterward. All index ranges are inc
 $[`lo`, `hi`]$ with 0-based indices, and values may be of any comparable type.
 
 - `MergeSortTree<T>(a)` builds the tree over the array `a`.
+- `size()` returns the size of the array.
 - `count_leq(lo, hi, x)` returns the number of indices `i` in $[`lo`, `hi`]$ with `a[i]` $\leq$ `x`.
 - `count_in(lo, hi, x, y)` returns the number of indices `i` $\in [`lo`, `hi`]$ such that `a[i]`
    $\in [`x`, `y`]$.
 
 Time Complexity:
 - O(n log n) per call to the constructor, where $n$ is the size of the array.
+- O(1) per call to `size()`.
 - O(log^2 n) per call to `count_leq()` and `count_in()`.
 
 Space Complexity:
@@ -49,7 +51,7 @@ class MergeSortTree {
   }
 
   template<typename Fn>
-  int query(int node, int lo, int hi, int tgt_lo, int tgt_hi, Fn count_node) const {
+  int query(int node, int lo, int hi, int tgt_lo, int tgt_hi, const Fn &count_node) const {
     if (tgt_hi < lo || hi < tgt_lo) {
       return 0;
     }
@@ -66,6 +68,8 @@ class MergeSortTree {
     assert(len > 0);
     build(1, 0, len - 1, a);
   }
+
+  int size() const { return len; }
 
   int count_leq(int lo, int hi, const T &x) const {
     assert(0 <= lo && lo <= hi && hi < len);
@@ -93,6 +97,7 @@ int main() {
   vector<int> a{5, 2, 8, 6, 1, 9, 3};
   MergeSortTree<int> t(a);
 
+  assert(t.size() == 7);
   assert(t.count_leq(0, 6, 5) == 4);    // 5, 2, 1, 3
   assert(t.count_leq(2, 4, 6) == 2);    // 6, 1
   assert(t.count_in(0, 6, 3, 8) == 4);  // 5, 8, 6, 3

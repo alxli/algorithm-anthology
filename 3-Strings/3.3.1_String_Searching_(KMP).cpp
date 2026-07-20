@@ -2,7 +2,7 @@
 
 Given a single string (needle) and subsequent queries of texts (haystacks) to be searched, determine
 the first positions in which the needle occurs within the given haystacks in linear time using the
-Knuth-Morris-Pratt algorithm. In comparison, `std::string::find` runs in O(n^2) in the worst case.
+Knuth-Morris-Pratt algorithm. Unlike `std::string::find`, KMP guarantees a linear worst-case bound.
 KMP precomputes, for every prefix of the needle, the length of its longest proper border (a prefix
 that is also a suffix). On a mismatch, the needle falls back to that border instead of restarting,
 so the position in the haystack never moves backward.
@@ -45,7 +45,7 @@ class KMP {
     }
   }
 
-  std::size_t find_in(const string &haystack) {
+  std::size_t find_in(const string &haystack) const {
     int m = static_cast<int>(needle.size());
     if (m == 0) {
       return 0;

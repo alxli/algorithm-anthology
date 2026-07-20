@@ -23,30 +23,32 @@ row minimum computed earlier in the same pass.
   bounds `rows` $\geq 0$ and `cols` $\geq 1$.
 
 Time Complexity:
-- O(r + c) evaluations of `get` per call, where $r$ is `rows` and $c$ is `cols`.
+- O(R + C) evaluations of `get` per call, where $R$ is `rows` and $C$ is `cols`.
 
 Space Complexity:
-- O(r + c) auxiliary.
+- O(R + C) auxiliary.
 
 */
 
+#include <numeric>
 #include <vector>
 
 template<typename Get>
 std::vector<int> smawk_rec(
     const Get &get, const std::vector<int> &active_rows, const std::vector<int> &candidate_cols
 ) {
-  int n = static_cast<int>(active_rows.size());
-  std::vector<int> arg(n, -1);
-  if (n == 0) {
+  int num_rows = static_cast<int>(active_rows.size());
+  std::vector<int> arg(num_rows, -1);
+  if (num_rows == 0) {
     return arg;
   }
   // Base case: a single row or column is cheap to scan directly.
-  if (n <= 2 || candidate_cols.size() <= 2) {
-    for (int i = 0; i < n; i++) {
+  if (num_rows <= 2 || candidate_cols.size() <= 2) {
+    for (int row_pos = 0; row_pos < num_rows; row_pos++) {
       for (int c : candidate_cols) {
-        if (arg[i] == -1 || get(active_rows[i], c) < get(active_rows[i], arg[i])) {
-          arg[i] = c;
+        if (arg[row_pos] == -1 ||
+            get(active_rows[row_pos], c) < get(active_rows[row_pos], arg[row_pos])) {
+          arg[row_pos] = c;
         }
       }
     }
@@ -54,7 +56,7 @@ std::vector<int> smawk_rec(
   }
   // REDUCE: keep only columns that can be the minimum of some row.
   std::vector<int> kept;
-  if (static_cast<int>(candidate_cols.size()) > n) {
+  if (static_cast<int>(candidate_cols.size()) > num_rows) {
     for (int c : candidate_cols) {
       while (!kept.empty()) {
         int r = active_rows[static_cast<int>(kept.size()) - 1];
@@ -63,7 +65,7 @@ std::vector<int> smawk_rec(
         }
         kept.pop_back();
       }
-      if (static_cast<int>(kept.size()) < n) {
+      if (static_cast<int>(kept.size()) < num_rows) {
         kept.push_back(c);
       }
     }
@@ -72,26 +74,26 @@ std::vector<int> smawk_rec(
   }
   // INTERPOLATE: solve the odd rows recursively, then fill the even rows between known bounds.
   std::vector<int> odd_rows;
-  for (int i = 1; i < n; i += 2) {
-    odd_rows.push_back(active_rows[i]);
+  for (int row_pos = 1; row_pos < num_rows; row_pos += 2) {
+    odd_rows.push_back(active_rows[row_pos]);
   }
   std::vector<int> odd_arg = smawk_rec(get, odd_rows, kept);
-  for (int i = 0; i < static_cast<int>(odd_arg.size()); i++) {
-    arg[2 * i + 1] = odd_arg[i];
+  for (int odd_pos = 0; odd_pos < static_cast<int>(odd_arg.size()); odd_pos++) {
+    arg[2 * odd_pos + 1] = odd_arg[odd_pos];
   }
-  int k = 0;
-  for (int i = 0; i < n; i += 2) {
-    int hi = (i + 1 < n) ? arg[i + 1] : kept.back();
-    int r = active_rows[i];
+  int col_pos = 0;
+  for (int row_pos = 0; row_pos < num_rows; row_pos += 2) {
+    int hi = (row_pos + 1 < num_rows) ? arg[row_pos + 1] : kept.back();
+    int r = active_rows[row_pos];
     while (true) {
-      int c = kept[k];
-      if (arg[i] == -1 || get(r, c) < get(r, arg[i])) {
-        arg[i] = c;
+      int c = kept[col_pos];
+      if (arg[row_pos] == -1 || get(r, c) < get(r, arg[row_pos])) {
+        arg[row_pos] = c;
       }
       if (c == hi) {
         break;  // Stop at the upper bound; the next even row starts scanning from here.
       }
-      k++;
+      col_pos++;
     }
   }
   return arg;
@@ -100,12 +102,8 @@ std::vector<int> smawk_rec(
 template<typename Get>
 std::vector<int> smawk_row_minima(int rows, int cols, const Get &get) {
   std::vector<int> row_ids(rows), col_ids(cols);
-  for (int i = 0; i < rows; i++) {
-    row_ids[i] = i;
-  }
-  for (int j = 0; j < cols; j++) {
-    col_ids[j] = j;
-  }
+  std::iota(row_ids.begin(), row_ids.end(), 0);
+  std::iota(col_ids.begin(), col_ids.end(), 0);
   return smawk_rec(get, row_ids, col_ids);
 }
 
@@ -117,10 +115,15 @@ using namespace std;
 
 int main() {
   // An explicit totally monotone matrix; row minima sit at non-decreasing columns.
+  // clang-format off
   vector<vector<int>> m{
-      {10, 17, 13, 28, 23}, {17, 22, 16, 29, 23}, {24, 28, 22, 34, 24},
-      {11, 13, 6, 17, 7},   {45, 44, 32, 37, 23},
+      {10, 17, 13, 28, 23},
+      {17, 22, 16, 29, 23},
+      {24, 28, 22, 34, 24},
+      {11, 13,  6, 17,  7},
+      {45, 44, 32, 37, 23},
   };
+  // clang-format on
   auto get = [&](int r, int c) { return m[r][c]; };
   vector<int> arg = smawk_row_minima(5, 5, get);
 

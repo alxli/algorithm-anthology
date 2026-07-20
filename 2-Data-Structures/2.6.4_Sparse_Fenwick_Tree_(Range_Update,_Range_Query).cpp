@@ -17,11 +17,10 @@ vectors.
   prefix sums are nondecreasing. It may return any boundary in $[0, N]$.
 
 Time Complexity:
-- O(log N) per call to all member functions.
+- O(log N) expected per call to all member functions.
 
 Space Complexity:
-- O(n log n) for storage of the array elements, where $n$ is the number of distinct indices that
-  have been accessed across all of the operations so far.
+- O(q log N) expected for storage after $q$ updates.
 - O(1) auxiliary for all operations.
 
 */
@@ -31,6 +30,8 @@ Space Complexity:
 
 template<typename T, int N = 1000000001>
 class SparseFenwick {
+  static_assert(0 < N && N < (1 << 30));
+
   std::unordered_map<int, T> tmul, tadd;
 
   T get(const std::unordered_map<int, T> &tree, int i) const {
@@ -50,16 +51,17 @@ class SparseFenwick {
 
  public:
   void add(int lo, int hi, const T &x) {
+    assert(0 <= lo && lo <= hi && hi < N);
     lo++;
     hi++;
-    add_helper(lo, x, x * (lo - 1));
+    add_helper(lo, x, x * (lo - 1));  // Overflow warning.
     add_helper(hi + 1, -x, -x * hi);
   }
 
   void add(int i, const T &x) { add(i, i, x); }
   void set(int i, const T &x) { add(i, x - at(i)); }
 
-  T sum(int hi) {
+  T sum(int hi) const {
     assert(-1 <= hi && hi < N);
     T mul = 0, add = 0;
     hi++;
@@ -70,10 +72,14 @@ class SparseFenwick {
     return mul * hi - add;
   }
 
-  T sum(int lo, int hi) { return sum(hi) - sum(lo - 1); }
-  T at(int i) { return sum(i, i); }
+  T sum(int lo, int hi) const {
+    assert(0 <= lo && lo <= hi && hi < N);
+    return sum(hi) - sum(lo - 1);
+  }
 
-  int max_prefix(T c) {
+  T at(int i) const { return sum(i, i); }
+
+  int max_prefix(T c) const {
     T mul = 0, add = 0;
     int pos = 0, pw = 1;
     while (pw * 2 <= N) {
@@ -82,9 +88,8 @@ class SparseFenwick {
     for (; pw > 0; pw >>= 1) {
       int next = pos + pw;
       if (next <= N) {
-        int key = next;
-        T nmul = mul + get(tmul, key), nadd = add + get(tadd, key);
-        if (key * nmul - nadd <= c) {
+        T nmul = mul + get(tmul, next), nadd = add + get(tadd, next);
+        if (next * nmul - nadd <= c) {
           mul = nmul;
           add = nadd;
           pos = next;
@@ -107,7 +112,7 @@ using namespace std;
 
 int main() {
   vector<int> a{10, 1, 2, 3, 4};
-  SparseFenwick<int> t;
+  SparseFenwick<long long> t;
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
     t.set(i, a[i]);
   }

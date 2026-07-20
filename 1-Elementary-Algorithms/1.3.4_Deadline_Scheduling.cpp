@@ -11,17 +11,21 @@ efficient: `find_root(t)` returns the latest still-free slot at or before `t`, a
 
 - `select_deadline_jobs(jobs)` returns a pair $(`profit`, `slot`)$ containing that maximum profit
   and `slot[i]`, the assigned time slot of input job `i`, or $-1$ if that job is not selected, for a
-  vector of `Job` with fields `deadline` and `profit`. Deadlines are positive integer time slots.
+  vector of `Job` with fields `deadline` and `profit`. Deadlines are positive integers, and assigned
+  slots are numbered starting from $1$. Jobs with nonpositive profit are not selected.
+
+The total profit must fit in `int64_t`.
 
 Time Complexity:
 - O(n log n) per call due to sorting, with near-constant disjoint-set operations.
 
 Space Complexity:
-- O(n) auxiliary.
+- O(n) auxiliary and O(n) for the returned slot assignment.
 
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <numeric>
 #include <utility>
@@ -52,6 +56,9 @@ std::pair<int64_t, std::vector<int>> select_deadline_jobs(const std::vector<Job>
   int n = static_cast<int>(jobs.size());
   std::vector<int> order(n);
   std::iota(order.begin(), order.end(), 0);
+  for (const auto &job : jobs) {
+    assert(job.deadline > 0);
+  }
   std::sort(order.begin(), order.end(), [&](int i, int j) {
     return jobs[i].profit != jobs[j].profit ? jobs[i].profit > jobs[j].profit
                                             : jobs[i].deadline < jobs[j].deadline;
@@ -70,7 +77,7 @@ std::pair<int64_t, std::vector<int>> select_deadline_jobs(const std::vector<Job>
     }
     int slot = slots.find_root(std::min(jobs[i].deadline, max_deadline));
     if (slot > 0) {
-      res += jobs[i].profit;
+      res += jobs[i].profit;  // Overflow warning.
       assigned[i] = slot;
       slots.occupy(slot);
     }

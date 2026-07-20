@@ -40,6 +40,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <limits>
 #include <utility>
 #include <vector>
@@ -105,10 +106,13 @@ class WeightedTree {
   }
 
   bool is_ancestor(int parent, int child) const {
+    assert(0 <= parent && parent < static_cast<int>(root.size()));
+    assert(0 <= child && child < static_cast<int>(root.size()));
     return root[parent] == root[child] && tin[parent] <= tin[child] && tout[child] <= tout[parent];
   }
 
   int kth_ancestor(int u, int k) const {
+    assert(0 <= u && u < static_cast<int>(root.size()) && k >= 0);
     k = std::min(k, depth[u]);
     for (int i = 0; i < len; i++) {
       if ((k & (1 << i)) != 0) {
@@ -119,6 +123,8 @@ class WeightedTree {
   }
 
   int lca(int u, int v) const {
+    assert(0 <= u && u < static_cast<int>(root.size()));
+    assert(0 <= v && v < static_cast<int>(root.size()));
     if (root[u] != root[v]) {
       return -1;
     }

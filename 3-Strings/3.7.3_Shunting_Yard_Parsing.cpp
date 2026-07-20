@@ -1,9 +1,14 @@
 /*
 
-Evaluate an expression with custom operand types, prefix unary operators, binary operators, and
-precedences. Evaluation is performed using the shunting yard algorithm, which maintains operator and
-value stacks while respecting precedence and parentheses. Multiplication by juxtaposition is not
-supported.
+Evaluates an infix expression with custom operand types, prefix unary operators, binary operators,
+and precedences. In infix notation, binary operators appear between operands; prefix and postfix
+notation place operators before and after their operands, respectively. Postfix notation is also
+called reverse Polish notation (RPN).
+
+The shunting yard algorithm commonly converts infix expressions to postfix notation. This
+implementation instead maintains operator and value stacks and evaluates each operator when it would
+be emitted to the postfix output, avoiding an intermediate token list. Multiplication by
+juxtaposition is not supported.
 
 An arbitrary operand type is supported by changing the `Operand` alias and the static `is_operand()`
 and `eval_operand()` helpers. For maximum reliability, the string representation of operands should
@@ -17,8 +22,8 @@ suffixes of one another, else the tokenization process may be ambiguous. For exa
 `+` are both operators, then `++` may be split into either [`"+"`, `"+"`] or [`"++"`] depending on
 the lexicographical ordering of conflicting operators.
 
-- `ShuntingYardParser(unary_op, binary_op)` initializes a parser with operators specified by hash
-  tables `unary_op` (of operator to unary function object) and `binary_op` (of operator to pair of
+- `ShuntingYardParser(unary_ops, binary_ops)` initializes a parser with operators specified by hash
+  tables `unary_ops` (of operator to unary function object) and `binary_ops` (of operator to pair of
   binary function object and operator precedence). Operator precedences should be numbered upwards
   starting at $0$ (lowest precedence, evaluated last).
 - `split(s)` returns a vector of tokens for the expression `s`, split on the given operators during
@@ -115,10 +120,10 @@ class ShuntingYardParser {
     }
   }
 
-  std::vector<string> split(const string &s) {
+  std::vector<string> split(const string &s) const {
     std::vector<string> res;
     for (int i = 0; i < static_cast<int>(s.size()); i++) {
-      if (s[i] == ' ') {
+      if (std::isspace(static_cast<unsigned char>(s[i]))) {
         continue;
       }
       int next_paren = static_cast<int>(s.size());
@@ -162,7 +167,10 @@ class ShuntingYardParser {
   }
 
   template<typename StrIt>
-  Operand eval(StrIt lo, StrIt hi) {
+  Operand eval(StrIt lo, StrIt hi) const {
+    if (lo == hi) {
+      throw std::runtime_error("Cannot evaluate an empty expression.");
+    }
     std::stack<Operand> vals;
     std::stack<std::pair<string, bool>> op_stack;
     op_stack.emplace("(", false);
@@ -217,7 +225,7 @@ class ShuntingYardParser {
     return vals.top();
   }
 
-  Operand eval(const string &s) {
+  Operand eval(const string &s) const {
     std::vector<string> tokens = split(s);
     return eval(tokens.begin(), tokens.end());
   }

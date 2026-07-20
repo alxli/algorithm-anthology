@@ -9,7 +9,7 @@ the divisor lattice, letting one recover a summand function from its divisor sum
 Inclusion-exclusion itself counts the size of a union by alternately adding and subtracting the
 sizes of intersections. A canonical number-theoretic instance is counting integers in $[1, n]$ that
 are coprime to a modulus $m$: subtract the multiples of each prime factor of $m$, add back those
-counted twice, and so on. The signed terms are precisely the values of `mu` over the squarefree
+counted twice, and so on. The signed terms are precisely the values of $\mu$ over the squarefree
 divisors of $m$, so `count_coprime(n, m)` equals $\sum_{d \mid m} \mu(d) \lfloor n / d \rfloor$.
 
 - `mobius(n)` returns $\mu(n)$ for a single `n` by trial division.

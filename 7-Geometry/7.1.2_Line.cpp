@@ -27,7 +27,7 @@ the `parallel()` or `perpendicular()` line through a point.
 Overflow warning: the exact predicates form products of coefficients (e.g. cross terms in
 `is_parallel()`/`is_perpendicular()` and `a*p.x + b*p.y` in `contains()`), which grow like the
 squared coordinate magnitude. For integral type `T`, use `LineL` (`TLine<int64_t>`) once coordinates
-exceed roughly $46000$, or the 32-bit products overflow.
+reach a few tens of thousands, or the 32-bit products may overflow.
 
 Type aliases:
 - `LineI = TLine<int>`: exact integer-coefficient lines (small values only; see overflow warning)
@@ -49,7 +49,6 @@ Space Complexity:
 
 #include <cmath>
 #include <cstdint>
-#include <iomanip>
 #include <limits>
 #include <ostream>
 #include <type_traits>
@@ -62,7 +61,9 @@ const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 // or Rational, which therefore compose for all of the predicates below.
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) {
+    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  }
   return C(a) == C(b);
 }
 

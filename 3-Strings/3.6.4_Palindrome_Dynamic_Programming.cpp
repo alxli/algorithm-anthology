@@ -90,7 +90,7 @@ int min_insertions_palindrome(const string &s) {
 int main() {
   assert(longest_palindromic_subsequence("bbbab") == "bbbb");
   assert(longest_palindromic_subsequence("character") == "carac");
-  assert(min_insertions_palindrome("leetcode") == 5);
+  assert(min_insertions_palindrome("abcda") == 2);
   assert(min_insertions_palindrome("race") == 3);
   assert(min_insertions_palindrome("") == 0);
   return 0;

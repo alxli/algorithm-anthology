@@ -20,8 +20,8 @@ Time Complexity:
   number of nodes and $m$ is the number of edges.
 
 Space Complexity:
-- O(n) auxiliary stack space for `find_centers()`, `find_centroid()`, and `diameter()`, where $n$ is
-  the number of nodes.
+- O(n) auxiliary heap space for `find_centers()`, where $n$ is the number of nodes.
+- O(n) auxiliary stack space for `find_centroid()` and `diameter()`.
 
 */
 
@@ -128,7 +128,7 @@ int main() {
   for (int u : centers) {
     cout << " " << u;
   }
-  cout << "\nCentroid: " << find_centroid() << "\n";
-  cout << "Diameter length: " << diameter() << "\n";
+  cout << endl << "Centroid: " << find_centroid() << endl;
+  cout << "Diameter length: " << diameter() << endl;
   return 0;
 }

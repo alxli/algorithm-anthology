@@ -3,9 +3,12 @@
 A 3D point class template supporting vector arithmetic, dot and cross products, distances, angles,
 unit vectors, normals, and rotation about an axis. Point equality and ordering are exact, while
 `EQ(p, q)` provides epsilon equality for floating-point coordinates. Integer coordinates are
-suitable for exact algebraic predicates $(`dot`, `cross`, `sqnorm`)$ as long as intermediate
-products do not overflow; metric operations preserve floating-point coordinates and otherwise
-convert them to `double`.
+suitable for the exact algebraic operations `dot()`, `cross()`, and `sqnorm()` as long as
+intermediate products do not overflow; metric operations preserve floating-point coordinates and
+otherwise convert them to `double`.
+
+`unit()` requires a nonzero point, `normal(p)` requires nonparallel vectors, and
+`rotate(angle, axis)` requires a nonzero axis.
 
 Overflow warning: the exact products `dot()`, `cross()`, and `sqnorm()` grow like the squared
 coordinate magnitude. With `TPoint3<int>` these overflow a 32-bit `int` once coordinates exceed a
@@ -35,7 +38,9 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) {
+    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  }
   return C(a) == C(b);
 }
 

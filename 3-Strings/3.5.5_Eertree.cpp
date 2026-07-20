@@ -41,37 +41,37 @@ class Eertree {
   };
 
   std::vector<Node> tree;
-  string s;
+  string str;
   int last;
 
   int get_suffix(int v, int pos, char c) const {
-    while (pos - 1 - tree[v].len < 0 || s[pos - 1 - tree[v].len] != c) {
+    while (pos - 1 - tree[v].len < 0 || str[pos - 1 - tree[v].len] != c) {
       v = tree[v].link;
     }
     return v;
   }
 
  public:
-  Eertree() : tree(), s(), last(1) {
+  Eertree() : tree(), str(), last(1) {
     tree.emplace_back(-1);
     tree.emplace_back(0);
     tree[0].link = 0;
     tree[1].link = 0;
   }
 
-  explicit Eertree(const string &text) : tree(), s(), last(1) {
+  explicit Eertree(const string &s) : tree(), str(), last(1) {
     tree.emplace_back(-1);
     tree.emplace_back(0);
     tree[0].link = 0;
     tree[1].link = 0;
-    for (char c : text) {
+    for (char c : s) {
       add(c);
     }
   }
 
   bool add(char c) {
-    s += c;
-    int pos = static_cast<int>(s.size()) - 1;
+    str += c;
+    int pos = static_cast<int>(str.size()) - 1;
     int cur = get_suffix(last, pos, c);
     auto it = tree[cur].next.find(c);
     if (it != tree[cur].next.end()) {

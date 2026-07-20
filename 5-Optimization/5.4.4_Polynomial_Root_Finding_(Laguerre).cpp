@@ -19,10 +19,10 @@ repeats on the lower-degree quotient until every root has been extracted.
 
 Time Complexity:
 - O(n) per call to `horner_eval()`, where $n$ is the degree of the polynomial.
-- O(n log d) per call to `find_one_root()`, where $n$ is the degree of the polynomial and
-  $d = -\log_{10}(`eps`)$ is the number of digits of absolute or relative precision that is desired.
-- O(n^2 log d) per call to `find_all_roots()`, where $n$ is the degree of the polynomial and
-  $d = -\log_{10}(`eps`)$ is the number of digits of absolute or relative precision that is desired.
+- O(nt) per call to `find_one_root()`, where $n$ is the degree of the polynomial and $t$ is the
+  number of iterations performed.
+- O(n^2 t) per call to `find_all_roots()`, where $n$ is the degree of the polynomial and $t$ is the
+  number of iterations performed per root.
 
 Space Complexity:
 - O(n) auxiliary for `horner_eval()` and `find_one_root()`, where $n$ is the degree of the
@@ -31,6 +31,7 @@ Space Complexity:
 
 */
 
+#include <algorithm>
 #include <cmath>
 #include <complex>
 #include <random>
@@ -92,6 +93,9 @@ std::vector<cdouble> find_all_roots(
 ) {
   std::vector<cdouble> res;
   cpoly q = p;
+  if (q.size() <= 1) {
+    return res;
+  }
   static std::mt19937 rng(std::random_device{}());
   std::uniform_real_distribution<double> unit(0.0, 1.0);
   while (q.size() > 2) {
@@ -118,9 +122,7 @@ Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
 
 ***/
 
-#include <algorithm>
 #include <cstdio>
-#include <iostream>
 using namespace std;
 
 void print_roots(vector<cdouble> x) {

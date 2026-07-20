@@ -44,7 +44,6 @@ Space Complexity:
 */
 #include <cmath>
 #include <cstdint>
-#include <iomanip>
 #include <ostream>
 #include <stdexcept>
 #include <type_traits>
@@ -53,7 +52,9 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) {
+    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  }
   return C(a) == C(b);
 }
 

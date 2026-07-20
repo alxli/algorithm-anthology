@@ -9,27 +9,29 @@ occupant with probability $1/i$ (or $k/i$ when keeping $k$ samples), which by in
 element seen so far equally likely to be in the sample.
 
 Each class maintains its reservoir incrementally; call `add(x)` once per stream element in any
-order, then `get()` to retrieve the result.
+order, then call `get()` to retrieve the result.
 
 - `ReservoirSampleOne<T>()` constructs a single-element sampler.
 - `ReservoirSampleK<T>(k)` constructs a `k`-element sampler.
 - `add(x)` incorporates one more stream element.
 - `get()` returns the current sample. For `ReservoirSampleOne`, `get()` requires at least one
-  `add()` call; for `ReservoirSampleK`, returns the full reservoir (may be fewer than `k` elements
-  if the stream was shorter).
+  `add()` call; for `ReservoirSampleK`, it returns the full reservoir, which may contain fewer than
+  `k` elements if the stream was shorter.
 - `count()` returns the number of stream elements seen so far.
 
 Time Complexity:
-- O(1) per call to `add(x)`.
+- O(1) per call to `ReservoirSampleOne::add()` and O(1) amortized per call to
+  `ReservoirSampleK::add()`.
 - O(n) to process a range of $n$ elements.
 
 Space Complexity:
-- O(1) auxiliary for `ReservoirSampleOne`.
-- O(k) auxiliary for `ReservoirSampleK`.
+- O(1) storage for `ReservoirSampleOne`.
+- O(k) storage for `ReservoirSampleK`.
 
 */
 
 #include <cassert>
+#include <optional>
 #include <random>
 #include <vector>
 
@@ -40,21 +42,22 @@ int rand_int(int lo, int hi) {
 
 template<typename T>
 class ReservoirSampleOne {
-  T sample{};
-  int seen;
+  std::optional<T> sample;
+  int seen = 0;
 
  public:
-  ReservoirSampleOne() : seen(0) {}
+  ReservoirSampleOne() = default;
 
   void add(const T &x) {
-    if (rand_int(0, seen++) == 0) {
+    seen++;
+    if (rand_int(1, seen) == 1) {
       sample = x;
     }
   }
 
   const T &get() const {
-    assert(seen > 0);
-    return sample;
+    assert(sample.has_value());
+    return *sample;
   }
 
   int count() const { return seen; }
@@ -62,14 +65,17 @@ class ReservoirSampleOne {
 
 template<typename T>
 class ReservoirSampleK {
-  int k, seen;
+  int k, seen = 0;
   std::vector<T> reservoir;
 
  public:
-  explicit ReservoirSampleK(int k) : k(k), seen(0) {}
+  explicit ReservoirSampleK(int k) : k(k) { assert(k >= 0); }
 
   void add(const T &x) {
     ++seen;
+    if (k == 0) {
+      return;
+    }
     if (static_cast<int>(reservoir.size()) < k) {
       reservoir.push_back(x);
     } else {

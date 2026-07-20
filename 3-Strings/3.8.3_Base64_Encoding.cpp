@@ -20,15 +20,17 @@ Space Complexity:
 
 */
 
+#include <cstdint>
 #include <string>
 #include <vector>
 using std::string;
 
-const string BASE64_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const char *BASE64_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 string base64_encode(const string &bytes) {
   string res;
-  int val = 0, bits = -6;
+  uint32_t val = 0;
+  int bits = -6;
   for (int i = 0; i < static_cast<int>(bytes.size()); i++) {
     val = (val << 8) + static_cast<unsigned char>(bytes[i]);
     bits += 8;
@@ -52,7 +54,8 @@ string base64_decode(const string &text) {
     table[static_cast<unsigned char>(BASE64_ALPHABET[i])] = i;
   }
   string res;
-  int val = 0, bits = -8;
+  uint32_t val = 0;
+  int bits = -8;
   for (int i = 0; i < static_cast<int>(text.size()); i++) {
     if (text[i] == '=') {
       break;

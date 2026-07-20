@@ -2,46 +2,47 @@
 
 Maintain a dynamic forest while supporting both path aggregates and rooted-subtree aggregates. Top
 trees represent each tree as a hierarchy of clusters. A path cluster summarizes a contiguous path,
-while non-path clusters are raked onto vertices so that changing the preferred path only requires a
+while non-path clusters are raked onto nodes so that changing the preferred path only requires a
 logarithmic number of local rotations and recomputations.
 
 This is an advanced alternative to link/cut trees. Link/cut trees are usually simpler for dynamic
 path queries; top trees are useful when the same dynamic forest also needs rooted-subtree queries.
 
 The aggregate operation is defined by an identity element `identity()` and an associative
-`combine(a, b)`. The default code below computes sums over vertex and edge values. For minimum
+`combine(a, b)`. The default code below computes sums over node and edge values. For minimum
 queries, use `std::numeric_limits<T>::max()` as the identity and `std::min(a, b)` as the combine
 function. For non-commutative aggregates, store enough information in `T` to support reversing a
 path, and update `flip_path()` accordingly.
 
-- `TopTree(n, value = T())` constructs a forest on vertices $[0, `n`)$ with every vertex value
+- `TopTree(n, value = T())` constructs a forest on nodes $[0, `n`)$ with every node value
   initialized to `value`.
-- `size()` returns the number of vertices in the forest.
+- `size()` returns the number of nodes in the forest.
 - `edges()` returns the number of edge nodes that have been created.
-- `connected(u, v)` returns whether vertices `u` and `v` are in the same tree.
+- `connected(u, v)` returns whether nodes `u` and `v` are in the same tree.
 - `link(u, v, value = T())` adds an edge with value `value` between different trees, returning its
   edge id or $-1$ if the edge would create a cycle.
 - `cut(e)` removes edge id `e`. The edge id must currently be present.
-- `set_vertex(u, value)` changes vertex `u`'s value to `value`.
+- `set_node(u, value)` changes node `u`'s value to `value`.
 - `set_edge(e, value)` changes edge `e`'s value to `value`. The edge id must currently be present.
-- `path_query(u, v)` returns the aggregate over all vertex and edge values on the path from `u` to
-  `v`. The vertices must be connected.
+- `path_query(u, v)` returns the aggregate over all node and edge values on the path from `u` to
+  `v`. The nodes must be connected.
 - `subtree_query(root, u)` reroots the represented tree at `root` and returns the aggregate over the
   rooted subtree of `u`.
-- `reroot(u)` makes vertex `u` the root of its represented tree.
+- `reroot(u)` makes node `u` the root of its represented tree.
 - `lca(u, v)` returns the lowest common ancestor of `u` and `v` relative to the current root. The
-  vertices must be connected.
+  nodes must be connected.
 - `maybe_lca(u, v)` returns the lowest common ancestor of `u` and `v`, or $-1$ if they are
   disconnected.
 
 Time Complexity:
-- O(1) per call to the constructor, `size()`, and `edges()`.
-- O(log n) amortized per call to all other operations, where $n$ is the number of vertices and edges
-  in the represented tree.
+- O(n) per call to the constructor, and O(1) per call to `size()` and `edges()`.
+- O(log n) amortized per call to all other operations, where $n$ is the number of nodes and edges in
+  the represented tree.
 
 Space Complexity:
-- O(n + m) for the vertex and edge nodes, where $m$ is the number of edges ever added.
-- O(1) auxiliary for all operations.
+- O(n + m) for the internal nodes representing graph nodes and edges, where $m$ is the number of
+  edges ever added.
+- O(log n) auxiliary stack space for all operations other than `size()` and `edges()`.
 
 */
 
@@ -59,21 +60,21 @@ class TopTree {
     Node *p;
     std::array<Node *, 3> c;
     T value, path_value, subtree_value;
-    int vertex_id, edge_id;
-    bool is_path, is_vert, lazy_flip_path, alive;
+    int graph_node_id, edge_id;
+    bool is_path, is_graph_node, lazy_flip_path, alive;
 
-    Node(const T &value, int vertex_id, int edge_id)
+    Node(const T &value, int graph_node_id, int edge_id)
         : p(nullptr),
           c{nullptr, nullptr, nullptr},
           value(value),
           path_value(value),
           subtree_value(value),
-          vertex_id(vertex_id),
+          graph_node_id(graph_node_id),
           edge_id(edge_id),
-          is_path(vertex_id != -1),
-          is_vert(vertex_id != -1),
+          is_path(graph_node_id != -1),
+          is_graph_node(graph_node_id != -1),
           lazy_flip_path(false),
-          alive(vertex_id != -1) {}
+          alive(graph_node_id != -1) {}
 
     static T path_value_of(Node *n) { return n == nullptr ? identity() : n->path_value; }
     static T subtree_value_of(Node *n) { return n == nullptr ? identity() : n->subtree_value; }
@@ -103,7 +104,7 @@ class TopTree {
     void push() {
       if (lazy_flip_path) {
         assert(is_path);
-        if (!is_vert) {
+        if (!is_graph_node) {
           c[0]->flip_path();
           c[1]->flip_path();
         }
@@ -129,7 +130,7 @@ class TopTree {
     }
 
     void pull() {
-      if (is_vert) {
+      if (is_graph_node) {
         path_value = value;
         subtree_value = combine(combine(value, subtree_value_of(c[0])), subtree_value_of(c[1]));
       } else if (is_path) {
@@ -145,7 +146,7 @@ class TopTree {
     }
 
     void rotate() {
-      assert(!is_vert);
+      assert(!is_graph_node);
       assert(!root_of_auxiliary_tree());
       Node *parent = p;
       int x = dir();
@@ -165,10 +166,10 @@ class TopTree {
     }
 
     void rotate_2(int child_dir) {
-      assert(!is_vert);
+      assert(!is_graph_node);
       assert(!root_of_auxiliary_tree());
       assert(c[child_dir] != nullptr);
-      assert(!c[child_dir]->is_vert);
+      assert(!c[child_dir]->is_graph_node);
       if (dir() == child_dir) {
         rotate();
         return;
@@ -201,8 +202,8 @@ class TopTree {
     }
 
     void splay_2(int child_dir) {
-      assert(!is_vert && is_path);
-      assert(c[child_dir] != nullptr && !c[child_dir]->is_vert);
+      assert(!is_graph_node && is_path);
+      assert(c[child_dir] != nullptr && !c[child_dir]->is_graph_node);
       while (!root_of_auxiliary_tree()) {
         if (!p->root_of_auxiliary_tree()) {
           if (p->dir() == dir()) {
@@ -216,13 +217,13 @@ class TopTree {
     }
 
     void splay_2() {
-      assert(!is_vert && is_path);
+      assert(!is_graph_node && is_path);
       assert(!root_of_auxiliary_tree());
       p->splay_2(dir());
     }
 
-    void splay_vertex() {
-      assert(is_vert);
+    void splay_graph_node() {
+      assert(is_graph_node);
       if (root_of_auxiliary_tree()) {
         return;
       }
@@ -242,7 +243,7 @@ class TopTree {
     }
 
     void splay() {
-      assert(!is_vert);
+      assert(!is_graph_node);
       while (!root_of_auxiliary_tree()) {
         if (!p->root_of_auxiliary_tree()) {
           if (p->dir() == dir()) {
@@ -256,8 +257,8 @@ class TopTree {
     }
 
     Node *cut_right() {
-      assert(is_vert && is_path);
-      splay_vertex();
+      assert(is_graph_node && is_path);
+      splay_graph_node();
       if (root_of_auxiliary_tree() || dir() == 1) {
         assert(root_of_auxiliary_tree() || (dir() == 1 && p->root_of_auxiliary_tree()));
         assert(c[0] == nullptr);
@@ -268,7 +269,7 @@ class TopTree {
           parent->root_of_auxiliary_tree() ||
           (parent->dir() == 1 && parent->p->root_of_auxiliary_tree())
       );
-      assert(!parent->is_vert);
+      assert(!parent->is_graph_node);
       assert(parent->is_path);
       assert(parent->c[0] == this);
       assert(parent->c[2] == nullptr);
@@ -297,14 +298,14 @@ class TopTree {
 
     Node *splice_non_path() {
       assert(!is_path);
-      assert(!is_vert);
+      assert(!is_graph_node);
       splay();
-      assert(p != nullptr && p->is_vert && p->is_path);
+      assert(p != nullptr && p->is_graph_node && p->is_path);
       p->cut_right();
       if (!p->is_path) {
         rotate();
       }
-      assert(p != nullptr && p->is_vert && p->is_path);
+      assert(p != nullptr && p->is_graph_node && p->is_path);
       assert(p->root_of_auxiliary_tree() || (p->dir() == 1 && p->p->root_of_auxiliary_tree()));
       assert(p->c[dir()] == this && p->c[!dir()] == nullptr);
       Node *parent = p;
@@ -342,7 +343,7 @@ class TopTree {
     }
 
     Node *expose() {
-      assert(is_vert);
+      assert(is_graph_node);
       push_all();
       Node *res = splice_all();
       cut_right();
@@ -351,11 +352,11 @@ class TopTree {
     }
 
     Node *expose_edge() {
-      assert(!is_vert);
+      assert(!is_graph_node);
       push_all();
       Node *v = is_path ? c[1] : c[2];
       v->push();
-      while (!v->is_vert) {
+      while (!v->is_graph_node) {
         v = v->c[0];
         v->push();
       }
@@ -372,13 +373,13 @@ class TopTree {
       Node *rt = this;
       while (true) {
         rt->push();
-        if (rt->is_vert) {
+        if (rt->is_graph_node) {
           break;
         }
         rt = rt->c[1];
       }
-      assert(rt->is_vert);
-      rt->splay_vertex();
+      assert(rt->is_graph_node);
+      rt->splay_graph_node();
       if (rt->c[0] != nullptr && rt->c[1] != nullptr) {
         Node *child = rt->c[1];
         while (true) {
@@ -416,7 +417,7 @@ class TopTree {
     }
   };
 
-  std::vector<Node *> verts, edge_nodes;
+  std::vector<Node *> graph_nodes, edge_nodes;
 
   static void link_nodes(Node *edge, Node *u, Node *v) {
     assert(edge != nullptr && u != nullptr && v != nullptr);
@@ -429,7 +430,7 @@ class TopTree {
     assert(u->p == nullptr);
     assert(v->p == nullptr);
     edge->is_path = true;
-    edge->is_vert = false;
+    edge->is_graph_node = false;
     edge->alive = true;
     edge->c[0] = u;
     u->p = edge;
@@ -439,7 +440,7 @@ class TopTree {
   }
 
   static std::pair<Node *, Node *> cut_node(Node *edge) {
-    assert(edge != nullptr && edge->alive && !edge->is_vert);
+    assert(edge != nullptr && edge->alive && !edge->is_graph_node);
     edge->expose_edge();
     assert(edge->p == nullptr);
     assert(edge->is_path);
@@ -455,7 +456,7 @@ class TopTree {
   }
 
   static Node *get_path(Node *u, Node *v) {
-    assert(u->is_vert && v->is_vert);
+    assert(u->is_graph_node && v->is_graph_node);
     u->make_root();
     v->expose();
     if (u == v) {
@@ -491,14 +492,15 @@ class TopTree {
 
  public:
   explicit TopTree(int n, const T &value = T()) {
-    verts.reserve(n);
+    assert(n >= 0);
+    graph_nodes.reserve(n);
     for (int i = 0; i < n; i++) {
-      verts.push_back(new Node(value, i, -1));
+      graph_nodes.push_back(new Node(value, i, -1));
     }
   }
 
   ~TopTree() {
-    for (Node *v : verts) {
+    for (Node *v : graph_nodes) {
       delete v;
     }
     for (Node *e : edge_nodes) {
@@ -508,13 +510,13 @@ class TopTree {
 
   TopTree(const TopTree &) = delete;
   TopTree &operator=(const TopTree &) = delete;
-  int size() const { return static_cast<int>(verts.size()); }
+  int size() const { return static_cast<int>(graph_nodes.size()); }
   int edges() const { return static_cast<int>(edge_nodes.size()); }
 
   bool connected(int u, int v) {
     assert(0 <= u && u < size());
     assert(0 <= v && v < size());
-    return u == v || maybe_lca_node(verts[u], verts[v]) != nullptr;
+    return u == v || maybe_lca_node(graph_nodes[u], graph_nodes[v]) != nullptr;
   }
 
   int link(int u, int v, const T &value = T()) {
@@ -525,7 +527,7 @@ class TopTree {
     }
     int id = edges();
     edge_nodes.push_back(new Node(value, -1, id));
-    link_nodes(edge_nodes.back(), verts[u], verts[v]);
+    link_nodes(edge_nodes.back(), graph_nodes[u], graph_nodes[v]);
     return id;
   }
 
@@ -534,11 +536,11 @@ class TopTree {
     cut_node(edge_nodes[e]);
   }
 
-  void set_vertex(int u, const T &value) {
+  void set_node(int u, const T &value) {
     assert(0 <= u && u < size());
-    verts[u]->expose();
-    verts[u]->value = value;
-    verts[u]->pull_all();
+    graph_nodes[u]->expose();
+    graph_nodes[u]->value = value;
+    graph_nodes[u]->pull_all();
   }
 
   void set_edge(int e, const T &value) {
@@ -551,29 +553,29 @@ class TopTree {
 
   T path_query(int u, int v) {
     assert(connected(u, v));
-    return get_path(verts[u], verts[v])->path_value;
+    return get_path(graph_nodes[u], graph_nodes[v])->path_value;
   }
 
   T subtree_query(int root, int u) {
     assert(connected(root, u));
-    return get_subtree(verts[root], verts[u])->subtree_value;
+    return get_subtree(graph_nodes[root], graph_nodes[u])->subtree_value;
   }
 
   void reroot(int u) {
     assert(0 <= u && u < size());
-    verts[u]->make_root();
+    graph_nodes[u]->make_root();
   }
 
   int lca(int u, int v) {
     assert(connected(u, v));
-    return lca_same_component(verts[u], verts[v])->vertex_id;
+    return lca_same_component(graph_nodes[u], graph_nodes[v])->graph_node_id;
   }
 
   int maybe_lca(int u, int v) {
     assert(0 <= u && u < size());
     assert(0 <= v && v < size());
-    Node *res = maybe_lca_node(verts[u], verts[v]);
-    return res == nullptr ? -1 : res->vertex_id;
+    Node *res = maybe_lca_node(graph_nodes[u], graph_nodes[v]);
+    return res == nullptr ? -1 : res->graph_node_id;
   }
 };
 
@@ -589,7 +591,7 @@ using namespace std;
 int main() {
   TopTree<int> tree(5);
   for (int i = 0; i < 5; i++) {
-    tree.set_vertex(i, i + 1);
+    tree.set_node(i, i + 1);
   }
   int e01 = tree.link(0, 1, 10);
   int e12 = tree.link(1, 2, 20);
@@ -634,9 +636,9 @@ int main() {
   assert(tree.path_query(0, 3) == 115);
 
   tree.set_edge(e34, 4);
-  tree.set_vertex(4, 50);
+  tree.set_node(4, 50);
 
-  // Change edge 3-4 to value 4 and vertex 4 to value 50:
+  // Change edge 3-4 to value 4 and node 4 to value 50:
   //
   //       0
   //  v=10 |

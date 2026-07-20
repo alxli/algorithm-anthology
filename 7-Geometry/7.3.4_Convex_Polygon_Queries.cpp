@@ -2,8 +2,8 @@
 
 Given a convex polygon in counter-clockwise order, answer containment and tangent/intersection
 queries. Point containment is logarithmic by splitting the polygon into triangles sharing `poly[0]`.
-The line and tangent helpers below are written as simple linear scans; this is often shorter and
-less assumption-heavy than the classic logarithmic versions, while still documenting the exact query
+The line and tangent helpers below are written as simple linear scans; this is shorter and less
+assumption-heavy than the classic logarithmic versions, while still documenting the exact query
 semantics in one place.
 
 - `point_in_convex_polygon(poly, p, edge_is_inside = true)` returns whether point `p` lies inside
@@ -20,7 +20,7 @@ semantics in one place.
 For integer-coordinate inputs, all tests are exact provided the cross products do not overflow.
 
 Time Complexity:
-- O(log n) per query, where $n$ is the number of polygon vertices.
+- O(log n) per call to `point_in_convex_polygon()`, where $n$ is the number of polygon vertices.
 - O(n) per call to `line_convex_polygon_intersection` and `convex_polygon_tangents`.
 
 Space Complexity:
@@ -29,7 +29,6 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <array>
 #include <cassert>
 #include <cstdint>
 #include <utility>
@@ -145,12 +144,11 @@ std::pair<int, int> convex_polygon_tangents(const std::vector<Pt> &poly, const P
   int n = static_cast<int>(poly.size());
   std::pair<int, int> res{-1, -1};
   for (int i = 0; i < n; i++) {
-    bool left = true, right = true;
-    for (int j = 0; j < n; j++) {
-      int s = sgn(cross(poly[i], poly[j], p));
-      left &= s >= 0;
-      right &= s <= 0;
-    }
+    int prev = (i + n - 1) % n, next = (i + 1) % n;
+    int s1 = sgn(cross(poly[i], poly[prev], p));
+    int s2 = sgn(cross(poly[i], poly[next], p));
+    bool left = s1 >= 0 && s2 >= 0;
+    bool right = s1 <= 0 && s2 <= 0;
     if (left) {
       res.first = i;
     }

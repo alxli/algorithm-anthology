@@ -32,8 +32,10 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the map elements.
-- O(log n) auxiliary stack space for `insert()`, `erase()`, and `entries()`.
-- O(1) auxiliary for all other operations.
+- O(n) auxiliary stack space in the worst case for `insert()`, `erase()`, `find()`, `entries()`, and
+  destruction.
+- O(n) for the vector returned by `entries()`.
+- O(1) auxiliary for `size()` and `empty()`.
 
 */
 
@@ -121,6 +123,7 @@ class SplayTree {
     } else {
       return false;
     }
+    num_nodes++;
     return true;
   }
 
@@ -207,7 +210,7 @@ int main() {
   t.insert(3, 'c');
   t.insert(5, 'e');
   assert(t.insert(4, 'd'));
-  assert(!t.empty());
+  assert(!t.empty() && t.size() == 5);
   assert(*t.find(4) == 'd');
   assert(!t.insert(4, 'd'));
   for (const auto &[k, v] : t.entries()) {
@@ -217,6 +220,7 @@ int main() {
   assert(t.erase(1));
   assert(!t.erase(1));
   assert(t.find(1) == nullptr);
+  assert(t.size() == 4);
   for (const auto &[k, v] : t.entries()) {
     cout << v;
   }

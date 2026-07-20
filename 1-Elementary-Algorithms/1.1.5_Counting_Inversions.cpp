@@ -37,11 +37,10 @@ int64_t inversions(It lo, It hi, Compare comp = Compare()) {
     return 0;
   }
   It mid = lo + (hi - lo - 1) / 2, a = lo, c = mid + 1;
-  int64_t res = 0;
-  res += inversions(lo, mid + 1, comp);
-  res += inversions(mid + 1, hi, comp);
+  int64_t res = inversions(lo, mid + 1, comp) + inversions(mid + 1, hi, comp);
   using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> merged;
+  merged.reserve(hi - lo);
   while (a <= mid && c < hi) {
     if (comp(*c, *a)) {
       merged.push_back(*(c++));
@@ -67,9 +66,9 @@ int64_t inversions(It lo, It hi, Compare comp = Compare()) {
 
 int64_t inversions(const std::vector<int> &a) {
   int n = static_cast<int>(a.size());
-  std::vector<int> values(a.begin(), a.end());
+  std::vector<int> values(a);
   std::sort(values.begin(), values.end());
-  values.erase(std::unique(values.begin(), values.end()), values.end());
+  values.resize(std::unique(values.begin(), values.end()) - values.begin());
   std::vector<int> bit(values.size() + 1, 0);
   int64_t res = 0;
   for (int i = n - 1; i >= 0; i--) {

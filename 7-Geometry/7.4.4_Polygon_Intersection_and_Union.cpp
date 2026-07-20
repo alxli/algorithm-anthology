@@ -4,8 +4,8 @@ Given two simple (non-self-intersecting) polygons, determine the areas of their 
 union using a sweep line algorithm and the inclusion-exclusion principle. Every vertex and every
 pairwise edge intersection contributes its $x$-coordinate as a sweep boundary, so within each
 vertical slab between consecutive boundaries the two borders cannot cross, and the slab's overlap is
-accumulated exactly from trapezoid areas. The union then follows by inclusion-exclusion as area(A) +
-area(B) minus the intersection.
+accumulated exactly from trapezoid areas. The union then follows by inclusion-exclusion as the sum
+of the individual areas minus the intersection.
 
 - `intersection_area(lo1, hi1, lo2, hi2)` returns the intersection area of two polygons respectively
   specified by two ranges $[`lo1`, `hi1`)$ and $[`lo2`, `hi2`)$ of vertices in clockwise order,
@@ -20,18 +20,17 @@ coordinates (e.g. `PointL` from 7.1.1) if necessary.
 
 Time Complexity:
 - O(n*m*(n + m)*log(n + m)) per call to `intersection_area(lo1, hi1, lo2, hi2)` and
-  `union_area(lo1, hi1, lo2, hi2)`, where $n$ the number of vertices in the first polygon, and $m$
-  is the number of points in the second polygon (or equivalently O(N^3 log N) for $N = n + m$).
+  `union_area(lo1, hi1, lo2, hi2)`, where $n$ is the number of vertices in the first polygon and $m$
+  is the number of vertices in the second polygon (or O(N^3 log N) for $N = n + m$).
 
 Space Complexity:
 - O(n*m) auxiliary for `intersection_area(lo1, hi1, lo2, hi2)` and `union_area(lo1, hi1, lo2, hi2)`,
-  where $n$ is the sum of distances between `lo1` and `hi1` and `lo2` and `hi2` respectively.
+  where $n$ and $m$ are the respective polygon sizes.
 
 */
 
 #include <algorithm>
 #include <cmath>
-#include <cstdint>
 #include <set>
 #include <type_traits>
 #include <vector>
@@ -40,7 +39,9 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) {
+    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  }
   return C(a) == C(b);
 }
 

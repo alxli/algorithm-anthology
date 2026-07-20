@@ -16,9 +16,8 @@ expected linear time, while the three-way split avoids unnecessary work on dupli
 - `partition_three_way(lo, hi, pivot)` rearranges $[`lo`, `hi`)$ in-place and returns iterators
   $(`mid1`, `mid2`)$, where $[`lo`, `mid1`)$ is less than `pivot`, $[`mid1`, `mid2`)$ is equal to
   `pivot`, and $[`mid2`, `hi`)$ is greater than `pivot`.
-- `nth_element2(lo, nth, hi)` rearranges the range $[`lo`, `hi`)$ around the 0-based rank
-  represented by iterator `nth`. This requires random-access iterators and `operator<` on the value
-  type.
+- `nth_element2(lo, nth, hi)` rearranges $[`lo`, `hi`)$ in-place around the 0-based rank represented
+  by iterator `nth`. This requires random-access iterators and `operator<` on the value type.
 
 Time Complexity:
 - O(n) per call to `partition_three_way()`, where $n$ is the range length.
@@ -30,7 +29,6 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <iterator>
 #include <random>
 #include <utility>
 

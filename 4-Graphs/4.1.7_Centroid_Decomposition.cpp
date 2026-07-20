@@ -72,12 +72,31 @@ class CentroidDecomposition {
 /*** Example Usage and Output:
 
 Centroid parents: 1 3 1 -1 3 3 5
+Nearest marked distance from 4: 3
 
 ***/
 
+#include <algorithm>
 #include <cassert>
+#include <climits>
 #include <iostream>
 using namespace std;
+
+// Example-only distance helper; use LCA preprocessing for O(1) distances in a full solution.
+int tree_dist(const vector<vector<int>> &adj, int u, int target, int p = -1) {
+  if (u == target) {
+    return 0;
+  }
+  for (int v : adj[u]) {
+    if (v != p) {
+      int d = tree_dist(adj, v, target, u);
+      if (d != -1) {
+        return d + 1;
+      }
+    }
+  }
+  return -1;
+}
 
 int main() {
   // 0---1---3---5---6
@@ -98,10 +117,32 @@ int main() {
   assert(tree.parent(3) == -1);
   assert(tree.parent(1) == 3);
   assert(tree.parent(5) == 3);
+
+  const int INF = INT_MAX / 2;
+  vector<int> best(7, INF);
+  auto mark = [&](int u) {
+    for (int c = u; c != -1; c = tree.parent(c)) {
+      best[c] = min(best[c], tree_dist(adj, u, c));
+    }
+  };
+  auto nearest_marked = [&](int u) {
+    int answer = INF;
+    for (int c = u; c != -1; c = tree.parent(c)) {
+      answer = min(answer, best[c] + tree_dist(adj, u, c));
+    }
+    return answer;
+  };
+  mark(0);
+  mark(6);
+  assert(nearest_marked(2) == 2);
+  assert(nearest_marked(4) == 3);
+  assert(nearest_marked(5) == 1);
+
   cout << "Centroid parents:";
   for (int u = 0; u < 7; u++) {
     cout << " " << tree.parent(u);
   }
-  cout << "\n";
+  cout << endl;
+  cout << "Nearest marked distance from 4: " << nearest_marked(4) << endl;
   return 0;
 }

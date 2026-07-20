@@ -19,12 +19,12 @@ divisions are always exact and the arithmetic stays in integers.
 - `det(a, eps = 1e-10)` returns the determinant of an $n$ by $n$ matrix `a` using Gaussian
   elimination, treating pivots within `eps` of zero as singular.
 - `det_bareiss(a)` returns the exact determinant of an integer matrix `a` using fraction-free
-  elimination, with no rounding error. Intermediate values are bounded by the magnitudes of the
-  matrix's minors, so the entries must stay within `int64_t`; substitute a big-integer type for
-  large matrices.
-- `invert(a)` assigns the $n$ by $n$ matrix `a` to its inverse (if it exists), returning a reference
-  to the modified argument itself. If `a` is not invertible, then its assigned values after the
-  function call will be undefined (`+/-Inf` or `+/-NaN`).
+  elimination, with no rounding error. Stored entries are minors of `a`, but the products in each
+  update can be larger. They use 128-bit intermediates when available; otherwise those products must
+  fit in `int64_t`.
+- `invert(a, eps = 1e-10)` returns $0$ after assigning the $n$ by $n$ matrix `a` to its inverse. It
+  must contain real values. The function leaves `a` unchanged and returns $-1$ if a pivot is within
+  `eps` of zero.
 
 Time Complexity:
 - O(n!) per call to `det_naive()`, where $n$ is the dimension of the matrix.
@@ -32,7 +32,7 @@ Time Complexity:
   matrix.
 
 Space Complexity:
-- O(n) auxiliary stack space and O(n!*n) auxiliary heap space for `det_naive()`, where $n$ is the
+- O(n) auxiliary stack space and O(n^3) auxiliary heap space for `det_naive()`, where $n$ is the
   dimension of the matrix.
 - O(n^2) auxiliary heap space for `det()`, `det_bareiss()`, and `invert()`.
 
@@ -110,6 +110,9 @@ double det(const SquareMatrix &a, double eps = 1e-10) {
 int64_t det_bareiss(std::vector<std::vector<int64_t>> a) {
   int n = static_cast<int>(a.size());
   int64_t prev = 1, sign = 1;
+#if defined(__SIZEOF_INT128__)
+  __extension__ typedef __int128 int128_t;
+#endif
   for (int k = 0; k < n; k++) {
     if (a[k][k] == 0) {  // Swap in a nonzero pivot; each swap flips the sign.
       int p = -1;
@@ -127,8 +130,14 @@ int64_t det_bareiss(std::vector<std::vector<int64_t>> a) {
     }
     for (int i = k + 1; i < n; i++) {
       for (int j = k + 1; j < n; j++) {
-        // The division by the previous pivot is always exact (Bareiss's theorem).
+#if defined(__SIZEOF_INT128__)
+        int128_t numerator =
+            static_cast<int128_t>(a[i][j]) * a[k][k] - static_cast<int128_t>(a[i][k]) * a[k][j];
+        a[i][j] = static_cast<int64_t>(numerator / prev);
+#else
+        // Overflow warning.
         a[i][j] = (a[i][j] * a[k][k] - a[i][k] * a[k][j]) / prev;
+#endif
       }
     }
     prev = a[k][k];
@@ -137,12 +146,13 @@ int64_t det_bareiss(std::vector<std::vector<int64_t>> a) {
 }
 
 template<typename SquareMatrix>
-SquareMatrix &invert(SquareMatrix &a) {
+int invert(SquareMatrix &a, double eps = 1e-10) {
   int n = static_cast<int>(a.size());
+  SquareMatrix b(a);
   for (int i = 0; i < n; i++) {
-    a[i].resize(2 * n);
+    b[i].resize(2 * n);
     for (int j = n; j < n * 2; j++) {
-      a[i][j] = (i == j - n ? 1 : 0);
+      b[i][j] = (i == j - n ? 1 : 0);
     }
   }
   for (int i = 0; i < n; i++) {
@@ -151,28 +161,32 @@ SquareMatrix &invert(SquareMatrix &a) {
     // improves numerical stability.
     int p = i;
     for (int r = i + 1; r < n; r++) {
-      if (fabs(a[r][i]) > fabs(a[p][i])) {
+      if (fabs(b[r][i]) > fabs(b[p][i])) {
         p = r;
       }
     }
-    std::swap(a[p], a[i]);
-    double z = a[i][i];
+    if (fabs(b[p][i]) < eps) {
+      return -1;
+    }
+    std::swap(b[p], b[i]);
+    double z = b[i][i];
     for (int j = i; j < n * 2; j++) {
-      a[i][j] /= z;
+      b[i][j] /= z;
     }
     for (int j = 0; j < n; j++) {
       if (i != j) {
-        double z = a[j][i];
+        double z = b[j][i];
         for (int k = 0; k < n * 2; k++) {
-          a[j][k] -= z * a[i][k];
+          b[j][k] -= z * b[i][k];
         }
       }
     }
   }
   for (int i = 0; i < n; i++) {
-    a[i].erase(a[i].begin(), a[i].begin() + n);
+    b[i].erase(b[i].begin(), b[i].begin() + n);
   }
-  return a;
+  a = std::move(b);
+  return 0;
 }
 
 /*** Example Usage ***/
@@ -194,7 +208,9 @@ int main() {
   assert(det_bareiss({{2, 0, 0}, {0, 3, 0}, {0, 0, 5}}) == 30);
   assert(det_bareiss({{1, 2}, {2, 4}}) == 0);  // Singular.
   vector<vector<double>> inv = a;
-  invert(inv);
+  assert(invert(inv) == 0);
+  vector<vector<double>> singular{{1, 2}, {2, 4}}, unchanged = singular;
+  assert(invert(singular) == -1 && singular == unchanged);
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < n; j++) {
       for (int k = 0; k < n; k++) {

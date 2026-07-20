@@ -19,7 +19,6 @@ Space Complexity:
 
 */
 
-#include <algorithm>
 #include <vector>
 
 std::vector<std::vector<int>> adj;
@@ -77,13 +76,13 @@ int main() {
   assert(comp_id[0] == comp_id[2]);
   assert(comp_id[0] != comp_id[3]);
   assert(comp_id[5] == 2);
-  cout << "Connected components:\n";
+  cout << "Connected components:" << endl;
   for (int i = 0; i < static_cast<int>(components.size()); i++) {
     cout << i << ":";
     for (int u : components[i]) {
       cout << " " << u;
     }
-    cout << "\n";
+    cout << endl;
   }
   return 0;
 }

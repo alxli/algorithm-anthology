@@ -1,18 +1,18 @@
 /*
 
 Given a directed or undirected graph, find simple cycles encountered by a depth-first search. The
-free functions return one cycle of a simple graph as a list of vertices. For undirected graphs, an
-edge to a visited non-parent vertex closes a cycle. For directed graphs, only an edge to a vertex
-still on the recursion stack closes a cycle; edges to already-finished vertices do not.
+free functions return one cycle of a simple graph as a list of nodes. For undirected graphs, an edge
+to a visited non-parent node closes a cycle. For directed graphs, only an edge to a node still on
+the recursion stack closes a cycle; edges to already-finished nodes do not.
 
-Both functions remember the DFS parent of each vertex. When a closing edge `u` $\to$ `cycle_start`
-is found, the answer is reconstructed by walking parents backward from `u` to `cycle_start`. In
-`find_cycle_directed()`, `state[v]` is $0$ for unvisited vertices, $1$ for vertices currently on the
-recursion stack, and $2$ for finished vertices.
+Both functions remember the DFS parent of each node. When a closing edge `u` $\to$ `cycle_start` is
+found, the answer is reconstructed by walking parents backward from `u` to `cycle_start`. In the
+directed version, `state[v]` is $0$ for unvisited nodes, $1$ for nodes currently on the recursion
+stack, and $2$ for finished nodes.
 
-- `find_cycle_undirected(adj)` returns one vertex cycle in a simple undirected graph, or an empty
+- `find_cycle_undirected(adj)` returns one node cycle in a simple undirected graph, or an empty
   vector if no cycle exists.
-- `find_cycle_directed(adj)` returns one vertex cycle in a simple directed graph, or an empty vector
+- `find_cycle_directed(adj)` returns one node cycle in a simple directed graph, or an empty vector
   if no cycle exists.
 
 Time Complexity:
@@ -116,32 +116,31 @@ std::vector<int> find_cycle_directed(const std::vector<std::vector<int>> &adj) {
 /*
 
 The `CycleFinder` class is the more general multigraph variant. Its cycles are returned as edge IDs
-rather than vertex lists, which makes the representation robust for parallel edges. In an undirected
+rather than node lists, which makes the representation robust for parallel edges. In an undirected
 graph, the cycles found this way form a DFS cycle basis: one cycle for each non-tree edge. In a
-directed graph, this finds cycles created by back edges to vertices still on the recursion stack.
-Here `state[v]` is $-1$ before discovery, $-2$ after finishing, and otherwise the index where the
-vertex first appeared in the current edge stack; that index marks which stack suffix forms a cycle.
+directed graph, this finds cycles created by back edges to nodes still on the recursion stack. Here
+`state[v]` is $-1$ before discovery, $-2$ after finishing, and otherwise the index where the node
+first appeared in the current edge stack; that index marks which stack suffix forms a cycle.
 
 - `CycleFinder(n, directed)` constructs a graph of `n` nodes numbered $[0, `n`)$. The graph is
   directed if `directed` is true, or undirected otherwise.
 - `add_edge(u, v)` adds an edge and returns its edge ID.
 - `find_cycles(max_cycles, max_total_size)` returns simple cycles as vectors of edge IDs, stopping
   once either optional limit is reached.
-- `cycle_vertices(edge_cycle)` converts one edge-ID cycle into a corresponding cyclic list of
-  vertices.
+- `cycle_nodes(edge_cycle)` converts one edge-ID cycle into a corresponding cyclic list of nodes.
 
 Time Complexity:
 - O(n) per call to the constructor, where $n$ is the number of nodes.
 - O(1) per call to `add_edge()`.
 - O(max(n, m + s)) per call to `find_cycles()`, where $n$ is the number of nodes, $m$ is the number
   of edges, and $s$ is the total size of the returned cycles.
-- O(k) per call to `cycle_vertices()`, where $k$ is the number of edges in the cycle.
+- O(k) per call to `cycle_nodes()`, where $k$ is the number of edges in the cycle.
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph.
 - O(n) auxiliary stack space plus O(s) auxiliary heap space for `find_cycles()`, where $s$ is the
   total size of the returned cycles.
-- O(k) auxiliary heap space for `cycle_vertices()`, where $k$ is the number of edges in the cycle.
+- O(k) auxiliary heap space for `cycle_nodes()`, where $k$ is the number of edges in the cycle.
 
 */
 
@@ -157,7 +156,7 @@ class CycleFinder {
     if (static_cast<int>(cycles.size()) >= max_cycles || total_size >= max_total_size) {
       return;
     }
-    // -1 = unvisited, -2 = finished, otherwise the vertex's index in the current edge stack.
+    // -1 = unvisited, -2 = finished, otherwise the node's index in the current edge stack.
     state[u] = static_cast<int>(edge_stack.size());
     for (int id : adj[u]) {
       if (!directed && id == parent_edge) {
@@ -212,25 +211,25 @@ class CycleFinder {
     return cycles;
   }
 
-  std::vector<int> cycle_vertices(const std::vector<int> &edge_cycle) const {
+  std::vector<int> cycle_nodes(const std::vector<int> &edge_cycle) const {
     int size = static_cast<int>(edge_cycle.size());
-    std::vector<int> vertices;
+    std::vector<int> nodes;
     if (size == 0) {
-      return vertices;
+      return nodes;
     }
     if (size <= 2) {
-      vertices.push_back(edges[edge_cycle[0]].first);
+      nodes.push_back(edges[edge_cycle[0]].first);
       if (size == 2) {
-        vertices.push_back(edges[edge_cycle[0]].second);
+        nodes.push_back(edges[edge_cycle[0]].second);
       }
-      return vertices;
+      return nodes;
     }
     for (int i = 0; i < size; i++) {
       const auto &[au, av] = edges[edge_cycle[i]];
       const auto &[bu, bv] = edges[edge_cycle[(i + 1) % size]];
-      vertices.push_back((bu == au || bv == au) ? av : au);
+      nodes.push_back((bu == au || bv == au) ? av : au);
     }
-    return vertices;
+    return nodes;
   }
 };
 
@@ -242,6 +241,10 @@ using namespace std;
 
 int main() {
   {
+    // 0---1    3---4
+    // |  /
+    // | /
+    // 2
     vector<vector<int>> adj(5);
     auto add_edge = [&](int u, int v) {
       adj[u].push_back(v);
@@ -255,6 +258,9 @@ int main() {
     assert((find_cycle_undirected(adj) == vector<int>{0, 1, 2}));
   }
   {
+    // 0 --> 1 --> 2    3 --> 4 --> 5
+    //                  ^           |
+    //                  |___________|
     vector<vector<int>> adj(6);
     adj[0].push_back(1);
     adj[1].push_back(2);
@@ -265,6 +271,11 @@ int main() {
     assert(find_cycle_directed({{1}, {2}, {}}).empty());
   }
   {
+    // 0---a---1
+    // |     /
+    // c   b
+    // | /
+    // 2-------3
     CycleFinder g(4, false);
     int a = g.add_edge(0, 1);
     int b = g.add_edge(1, 2);
@@ -274,10 +285,12 @@ int main() {
     assert(cycles.size() == 1);
     sort(cycles[0].begin(), cycles[0].end());
     assert((cycles[0] == vector<int>{a, b, c}));
-    vector<int> vertices = g.cycle_vertices(cycles[0]);
-    assert(vertices.size() == 3);
+    vector<int> nodes = g.cycle_nodes(cycles[0]);
+    assert(nodes.size() == 3);
   }
   {
+    // 0---a---1
+    // 0---b---1
     CycleFinder g(2, false);
     int a = g.add_edge(0, 1);
     int b = g.add_edge(0, 1);
@@ -288,6 +301,10 @@ int main() {
     assert((cycles[0] == vector<int>{a, b}));
   }
   {
+    // 0 ---> 1
+    // ^     /
+    // |    /
+    // 2 <-+
     CycleFinder g(3, true);
     g.add_edge(0, 1);
     g.add_edge(1, 2);

@@ -1,6 +1,6 @@
 /*
 
-A De Bruijn sequence $B(k, n)$ is a cyclic string over the alphabet $[0, k)$ of length $k^n$ in
+A de Bruijn sequence $B(k, n)$ is a cyclic string over the alphabet $[0, k)$ of length $k^n$ in
 which every one of the $k^n$ possible length-$n$ strings appears exactly once as a (cyclic)
 substring. Reading a window of $n$ symbols and advancing one position at a time therefore cycles
 through all length-$n$ strings without repetition, which makes the sequence a compact way to probe
@@ -9,7 +9,7 @@ perfect-hash table that maps an isolated set bit to its index.
 
 The construction here is the Fredricksen-Kessler-Maiorana (FKM) algorithm. It concatenates, in
 lexicographic order, the Lyndon words (see the Lyndon factorization section) whose length divides
-$n$. The result is the lexicographically smallest De Bruijn sequence. The recursion enumerates these
+$n$. The result is the lexicographically smallest de Bruijn sequence. The recursion enumerates these
 necklace representatives directly, appending the first $p$ symbols of each candidate whenever its
 period $p$ divides $n$.
 
@@ -28,7 +28,9 @@ Space Complexity:
 #include <cassert>
 #include <vector>
 
-void de_bruijn_gen(int t, int p, int k, int n, std::vector<int> &word, std::vector<int> &seq) {
+static void de_bruijn_gen(
+    int t, int p, int k, int n, std::vector<int> &word, std::vector<int> &seq
+) {
   if (t > n) {
     if (n % p == 0) {
       for (int i = 1; i <= p; i++) {

@@ -12,6 +12,9 @@ usual textbook convention.
   list `adj` which must form a valid tree with nodes numbered $[0, `n`)$, where `n` is `adj.size()`.
 - `decode_prufer()` takes a Prufer code and returns the corresponding tree edges.
 
+The encoded tree must contain at least two nodes, since the empty code represents the unique tree on
+two nodes.
+
 Time Complexity:
 - O(n log n) per call to `encode_prufer()` or `decode_prufer()`, where $n$ is the number of nodes in
   the tree.

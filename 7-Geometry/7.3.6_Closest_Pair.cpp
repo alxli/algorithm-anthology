@@ -7,9 +7,10 @@ line, where each point in this strip is compared to a constant number of $y$-ord
 
 - `closest_pair(lo, hi, &res)` returns the minimum squared distance between any two points in the
   range $[`lo`, `hi`)$, where `lo` and `hi` must be random-access iterators. The input range is
-  reordered during the computation and is sorted by $y$-coordinate on return. If `res` is non-null,
-  one closest pair is stored there in lexicographic order. The function is templated on the point
-  type and works with any type exposing numeric `.x` and `.y` members.
+  reordered during the computation. If `res` is non-null, one closest pair is stored there in
+  lexicographic order. With fewer than two points, the maximum value of the squared-distance type is
+  returned and `res` is unchanged. The function is templated on the point type and works with any
+  type exposing numeric `.x` and `.y` members.
 
 The returned distance preserves the coordinate arithmetic type. For integer-coordinate inputs, the
 result is therefore an exact squared distance provided intermediate products do not overflow. The
@@ -126,7 +127,6 @@ auto closest_pair(
 /*** Example Usage ***/
 
 #include <cassert>
-#include <type_traits>
 #include <vector>
 using namespace std;
 

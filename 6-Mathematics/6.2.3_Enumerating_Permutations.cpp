@@ -12,15 +12,13 @@ orbit until it returns to its start.
 - `next_permutation_(lo, hi)` is analogous to `std::next_permutation(lo, hi)`, taking two
   BidirectionalIterators as a range $[`lo`, `hi`)$ for which the function tries to rearrange to the
   next lexicographically greater permutation. The function returns true if such a permutation
-  exists, or false if the range is already in descending order (in which case the values are
-  unchanged). This implementation requires an ordering on the set of possible elements defined by
-  the `<` operator on the iterator's value type.
-- `next_permutation(a)` is analogous to `next_permutation()`, except that it takes a vector instead
+  exists, or false if the range is already in descending order, in which case it is rearranged into
+  ascending order. This implementation requires an ordering on the set of possible elements defined
+  by the `<` operator on the iterator's value type.
+- `next_permutation(a)` is analogous to `next_permutation_()`, except that it takes a vector instead
   of a range.
-- `next_permutation(x)` returns the next lexicographically greater permutation of the binary digits
-  of the integer `x`, that is, the lowest integer greater than `x` with the same number of 1-bits.
-  This can be used to generate combinations of a set of $n$ items by treating each 1 bit as whether
-  to "take" the item at the corresponding position.
+- `next_permutation_mask(x)` returns the next integer having the same number of 1-bits. Treating
+  each 1-bit as whether to take its corresponding item generates combinations of a set of $n$ items.
 - `permutation_by_rank(n, r)` returns the permutation of the integers in the range $[0, `n`)$ which
   is lexicographically ranked $r$, where $r$ is a 0-based rank in the range $[0, n!)$.
 - `rank_by_permutation(a)` returns an integer representing the 0-based rank of permutation `a`,
@@ -35,7 +33,7 @@ Time Complexity:
 - O(n^2) per call to `next_permutation_(lo, hi)`, where $n$ is the distance between `lo` and `hi`.
 - O(n^2) per call to `next_permutation(a)`, `permutation_by_rank(n, r)`, and
   `rank_by_permutation(a)`.
-- O(1) per call to `next_permutation(x)`.
+- O(1) per call to `next_permutation_mask(x)`.
 - O(n) per call to `permutation_cycles()`.
 
 Space Complexity:
@@ -94,15 +92,16 @@ bool next_permutation(std::vector<T> &a) {
       }
     }
   }
+  std::reverse(a.begin(), a.end());
   return false;
 }
 
-int64_t next_permutation(int64_t x) {
+int64_t next_permutation_mask(int64_t x) {
   int64_t s = x & -x, r = x + s;
   return r | (((x ^ r) >> 2) / s);
 }
 
-std::vector<int> permutation_by_rank(int n, int64_t x) {
+std::vector<int> permutation_by_rank(int n, int64_t r) {
   std::vector<int64_t> factorial(n);
   std::vector<int> values(n), res(n);
   factorial[0] = 1;
@@ -111,10 +110,10 @@ std::vector<int> permutation_by_rank(int n, int64_t x) {
   }
   std::iota(values.begin(), values.end(), 0);
   for (int i = 0; i < n; i++) {
-    int pos = x / factorial[n - 1 - i];
+    int pos = r / factorial[n - 1 - i];
     res[i] = values[pos];
     std::copy(values.begin() + pos + 1, values.end(), values.begin() + pos);
-    x %= factorial[n - 1 - i];
+    r %= factorial[n - 1 - i];
   }
   return res;
 }
@@ -162,7 +161,7 @@ cycles permutation_cycles(const std::vector<int> &a) {
 
 /*** Example Usage and Output:
 
-Permutations of [$0$, 4):
+Permutations of [0, 4):
 {0,1,2,3} {0,1,3,2} {0,2,1,3} {0,2,3,1} {0,3,1,2} {0,3,2,1} {1,0,2,3} {1,0,3,2}
 {1,2,0,3} {1,2,3,0} {1,3,0,2} {1,3,2,0} {2,0,1,3} {2,0,3,1} {2,1,0,3} {2,1,3,0}
 {2,3,0,1} {2,3,1,0} {3,0,1,2} {3,0,2,1} {3,1,0,2} {3,1,2,0} {3,2,0,1} {3,2,1,0}
@@ -193,7 +192,7 @@ int main() {
   {
     const int n = 4;
     vector<int> a{0, 1, 2, 3}, b = a, c = a;
-    cout << "Permutations of [$0$, " << n << "):" << endl;
+    cout << "Permutations of [0, " << n << "):" << endl;
     int count = 0;
     do {
       print_range(a.begin(), a.end());
@@ -210,6 +209,7 @@ int main() {
       next_permutation(c);
     } while (next_permutation(a));
     assert(count == 24);
+    assert((a == vector<int>{0, 1, 2, 3}));
     cout << endl;
   }
   {  // Permutations of binary digits.
@@ -221,7 +221,7 @@ int main() {
     do {
       cout << bitset<n>(lo).to_string() << " ";
       count++;
-    } while ((lo = next_permutation(lo)) != hi);
+    } while ((lo = next_permutation_mask(lo)) != hi);
     assert(count == 10);
     cout << endl;
   }

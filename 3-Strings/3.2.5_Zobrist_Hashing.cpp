@@ -14,8 +14,8 @@ matters.
 - `get(x)` returns the stable token assigned to key `x`, creating it if needed.
 - `toggle(h, x)` returns the hash obtained by inserting `x` into set hash `h` if absent, or removing
   `x` from `h` if present.
-- `distinct_prefix_hashes(lo, hi)` returns prefix hashes where each distinct key in the range
-  $[`lo`, `hi`)$ contributes only on its first occurrence.
+- `distinct_prefix_hashes(lo, hi)` returns `n + 1` hashes. Element `i` hashes the first `i` values
+  in $[`lo`, `hi`)$ with each distinct key contributing only on its first occurrence.
 
 Time Complexity:
 - O(1) expected per call to `get(x)` and `toggle(h, x)`.

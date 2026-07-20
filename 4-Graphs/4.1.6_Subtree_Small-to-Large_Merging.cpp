@@ -10,18 +10,20 @@ structure used by Kruskal's algorithm. It is useful for subtree queries whose an
 maintained by inserting all items from child summaries into one mutable summary, such as distinct
 colors, frequency modes, or other multiset-style statistics.
 
-- `subtree_small_to_large_merge(adj, root, init, merge, answer)` visits the tree rooted at `root`.
-  The callback `init(u)` returns the initial summary for node `u`; `merge(big, small)` absorbs one
-  child summary into another; and `answer(u, summary)` records the final subtree summary for `u`.
+- `subtree_small_to_large_merge(adj, root, init, merge, answer)` visits the tree rooted at `root`,
+  given by the bidirectional adjacency list `adj`, which must form a valid tree. The callback
+  `init(u)` returns the initial summary for node `u`; `merge(big, small)` absorbs one child summary
+  into another; and `answer(u, summary)` records the final subtree summary for `u`.
 
-The input must be a tree. Summary objects must support `.size()`, and `merge(big, small)` should
-iterate over `small` and insert into `big`.
+Summary objects must support `.size()`, and `merge(big, small)` should iterate over `small` and
+insert into `big`.
 
 Time Complexity:
 - O(n log n) expected moved items per call, where $n$ is the number of nodes.
 
 Space Complexity:
-- O(n) auxiliary stack space and O(n) auxiliary heap space.
+- O(n) auxiliary stack space and O(n log n) auxiliary heap space in the worst case, since absorbed
+  summaries remain stored.
 
 */
 

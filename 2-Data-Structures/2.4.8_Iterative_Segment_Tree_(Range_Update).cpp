@@ -1,12 +1,12 @@
 /*
 
 Maintain a fixed-size array while supporting range updates and range aggregate queries using a
-bottom-up lazy segment tree. Like the point-update iterative tree, leaves are stored starting at a
-power-of-two offset in a flat array. Each internal node stores an aggregate value, plus an optional
-pending lazy delta that is pushed down only along paths that need to inspect children. Compared with
-the recursive lazy tree, this version keeps ordinary range updates and queries in flat loops, which
-can reduce constant factors. The recursive version is usually easier to adapt when the lazy
-operation or search logic becomes unusual.
+iterative segment tree with lazy propagation. The leaves begin at a power-of-two offset in a flat
+array, and each internal node stores an aggregate value plus a pending update. Range updates and
+queries push pending updates only along paths that inspect children, then scan a decomposition of
+the requested range. Compared with the recursive lazy segment tree, these flat loops avoid recursive
+stack usage and can reduce constant factors, though the recursive version is usually easier to adapt
+when the update or search logic becomes unusual.
 
 The query operation is defined by an associative aggregate function `combine(a, b)`. The default
 code below assumes a numerical array type, defining queries for the "min" of the target range.
@@ -23,8 +23,8 @@ increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, 
 
 - `IterativeLazySegTree<T>(n, v = T())` constructs an array of size `n` with indices $[0, `n`)$, and
   all values initialized to `v`.
-- `IterativeLazySegTree<T>(lo, hi)` constructs an array from two random-access iterators as a range
-  $[`lo`, `hi`)$, initialized to the elements of the range in the same order.
+- `IterativeLazySegTree<T>(lo, hi)` constructs an array from the half-open random-access iterator
+  range $[`lo`, `hi`)$.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.
 - `query(lo, hi)` returns the result of `combine()` applied to all indices in $[`lo`, `hi`]$. If

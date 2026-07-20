@@ -12,8 +12,8 @@ than memory. Compared with a range k-d tree, it uses more space but gives O(log^
 regardless of point distribution; the k-d tree is lighter and often faster on typical inputs, but
 its pruning is more distribution-dependent.
 
-- `RangeTree<T>(lo, hi)` constructs a set from two random-access iterators to `std::pair` as a range
-  $[`lo`, `hi`)$ of points.
+- `RangeTree<T>(lo, hi)` constructs a set of `std::pair` points from the half-open forward-iterator
+  range $[`lo`, `hi`)$.
 - `query(x1, y1, x2, y2, f)` calls the function `f(i, p)` on each point in the set that falls into
   the rectangular region consisting of rows $[`x1`, `x2`]$ and columns $[`y1`, `y2`]$. The first
   argument to `f` is the 0-based index of the point in the original range given to the constructor.
@@ -26,7 +26,7 @@ Time Complexity:
 
 Space Complexity:
 - O(n log n) for storage of the points.
-- O(log^2 n) auxiliary stack space for `query()`.
+- O(log n) auxiliary stack space for `query()`.
 
 */
 
@@ -38,19 +38,18 @@ Space Complexity:
 
 template<typename T>
 class RangeTree {
-  using point = std::pair<T, T>;
-  using colindex = std::pair<int, T>;
+  struct IndexedPoint {
+    std::pair<T, T> value;
+    int original_index;
+  };
 
-  std::vector<point> points;
-  std::vector<std::vector<colindex>> columns;
-
-  static inline bool comp1(const colindex &a, const colindex &b) { return a.second < b.second; }
-  static inline bool comp2(const colindex &a, const T &v) { return a.second < v; }
+  std::vector<IndexedPoint> points;
+  std::vector<std::vector<std::pair<int, T>>> columns;
 
   void build(int n, int lo, int hi) {
-    if (points[lo].first == points[hi].first) {
+    if (points[lo].value.first == points[hi].value.first) {
       for (int i = lo; i <= hi; i++) {
-        columns[n].emplace_back(i, points[i].second);
+        columns[n].emplace_back(i, points[i].value.second);
       }
       return;
     }
@@ -60,7 +59,7 @@ class RangeTree {
     columns[n].resize(columns[l].size() + columns[r].size());
     std::merge(
         columns[l].begin(), columns[l].end(), columns[r].begin(), columns[r].end(),
-        columns[n].begin(), comp1
+        columns[n].begin(), [](const auto &a, const auto &b) { return a.second < b.second; }
     );
   }
 
@@ -68,15 +67,19 @@ class RangeTree {
   T x1, y1, x2, y2;
 
   template<typename Fn>
-  void query(int n, int lo, int hi, Fn f) {
-    if (points[hi].first < x1 || x2 < points[lo].first) {
+  void query(int n, int lo, int hi, Fn &f) {
+    if (points[hi].value.first < x1 || x2 < points[lo].value.first) {
       return;
     }
-    if (!(points[lo].first < x1 || x2 < points[hi].first)) {
+    if (!(points[lo].value.first < x1 || x2 < points[hi].value.first)) {
       if (!columns[n].empty() && !(y2 < y1)) {
-        auto it = std::lower_bound(columns[n].begin(), columns[n].end(), y1, comp2);
+        auto it = std::lower_bound(
+            columns[n].begin(), columns[n].end(), y1,
+            [](const auto &a, const T &value) { return a.second < value; }
+        );
         for (; it != columns[n].end() && it->second <= y2; ++it) {
-          f(it->first, points[it->first]);
+          const IndexedPoint &p = points[it->first];
+          f(p.original_index, p.value);
         }
       }
     } else if (lo != hi) {
@@ -88,11 +91,18 @@ class RangeTree {
 
  public:
   template<typename It>
-  RangeTree(It lo, It hi) : points(lo, hi) {
+  RangeTree(It lo, It hi) {
     int n = std::distance(lo, hi);
     assert(n > 0);
+    points.reserve(n);
+    int index = 0;
+    for (It it = lo; it != hi; ++it) {
+      points.push_back({*it, index++});
+    }
     columns.resize(4 * n + 1);
-    std::sort(points.begin(), points.end());
+    std::sort(points.begin(), points.end(), [](const IndexedPoint &a, const IndexedPoint &b) {
+      return a.value < b.value;
+    });
     build(0, 0, n - 1);
   }
 
@@ -103,7 +113,7 @@ class RangeTree {
     this->y1 = y1;
     this->x2 = x2;
     this->y2 = y2;
-    query(0, 0, points.size() - 1, f);
+    query(0, 0, static_cast<int>(points.size()) - 1, f);
   }
 };
 
@@ -119,7 +129,7 @@ class RangeTree {
 #include <iostream>
 using namespace std;
 
-void print(int i, const pair<int, int> &p) {
+void print(int, const pair<int, int> &p) {
   cout << "(" << p.first << ", " << p.second << ") ";
 }
 
@@ -128,11 +138,18 @@ int main() {
                            {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
   RangeTree<int> t(v.begin(), v.end());
   vector<pair<int, int>> got;
-  auto collect = [&](int, const pair<int, int> &p) { got.push_back(p); };
+  vector<int> indices;
+  auto collect = [&](int i, const pair<int, int> &p) {
+    indices.push_back(i);
+    got.push_back(p);
+  };
   t.query(-1, -1, 2, 5, collect);
   sort(got.begin(), got.end());
   assert((got == vector<pair<int, int>>{{-1, -1}, {1, 4}, {2, -1}, {2, 2}}));
+  sort(indices.begin(), indices.end());
+  assert((indices == vector<int>{0, 2, 8, 9}));
   got.clear();
+  indices.clear();
   t.query(1, 1, 4, 8, collect);
   sort(got.begin(), got.end());
   assert((got == vector<pair<int, int>>{{1, 4}, {2, 2}, {3, 1}}));

@@ -18,7 +18,8 @@ nodes, or when manual pointer manipulation is the point of the exercise.
 
 The splicing helpers use the same "after" convention as `std::forward_list::splice_after()`. They
 work naturally with a dummy head node, which makes insertions and removals at the beginning of a
-list match all other positions. For doubly linked list splicing, use the next section.
+list match all other positions. For `splice_range_after()`, `pos` must not lie inside the moved
+range. For doubly linked list splicing, use the next section.
 
 For cycle detection, see the variant on iterated functions in chapter 1, which can be easily adapted
 for linked lists.

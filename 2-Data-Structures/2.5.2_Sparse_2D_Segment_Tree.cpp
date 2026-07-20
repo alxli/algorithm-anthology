@@ -16,20 +16,18 @@ updated cell. The default code below defines updates that "set" the chosen cell 
 Another possible update operation is "increment", in which case `apply_delta(v, d)` should return
 `v + d`.
 
-Compared with the quadtrees in the previous sections, this structure splits rows and columns
-independently, so every rectangle query decomposes into O(log(R)*log(C)) canonical rectangles. That
-makes it preferable when queries may be thin, off-center, or adversarially placed: a quadtree can
-degrade to visiting O(R + C) boundary nodes for such rectangles. The trade-off is a larger tree and
-less benefit from queries that happen to align with big square quadrants.
+Rows and columns are split independently, so every rectangle query decomposes into O(log(R)*log(C))
+canonical rectangles regardless of whether it is thin, off-center, or otherwise adversarially
+placed.
 
-For dense additive rectangle sums, prefer the simple 2D Fenwick tree in 2.6.5. A dense vector-backed
-2D segment tree can be simpler and faster on modest grids with custom aggregates such as min/max,
-but it needs O(R*C) storage with large constants, so this sparse version is usually the safer
-codebook default.
+Use the dense 2D segment tree in the previous section when the grid is modest enough for O(R*C)
+storage; it is simpler and faster. Use this sparse version when the coordinate range is huge but
+only a small fraction of cells are updated. For dense additive rectangle sums, prefer the 2D Fenwick
+tree in 2.6.5.
 
-- `SegTree2D<T, R, C>(v = T())` constructs a two-dimensional array with rows $[0, R]$ and columns
-  $[0, C]$. All array values are implicitly initialized to `v`. Nodes are allocated lazily as
-  indices are touched.
+- `SparseSegTree2D<T, R, C>(v = T())` constructs a two-dimensional array with rows $[0, R]$ and
+  columns $[0, C]$. All array values are implicitly initialized to `v`. Nodes are allocated lazily
+  as indices are touched.
 - `at(r, c)` returns the value at row `r`, column `c`.
 - `query(r1, c1, r2, c2)` returns the result of `combine()` applied to every value in the
   rectangular region consisting of rows $[`r1`, `r2`]$ and columns $[`c1`, `c2`]$.
@@ -51,7 +49,7 @@ Space Complexity:
 #include <optional>
 
 template<typename T, int R = 1000000000, int C = 1000000000>
-class SegTree2D {
+class SparseSegTree2D {
   static_assert(R >= 0 && C >= 0);
 
   static T combine(const T &a, const T &b) { return std::min(a, b); }
@@ -239,12 +237,12 @@ class SegTree2D {
   }
 
  public:
-  explicit SegTree2D(const T &v = T())
+  explicit SparseSegTree2D(const T &v = T())
       : root(new OuterNode(0, R, repeat_value(v, length(0, R) * length(0, C)))), init(v) {}
 
-  ~SegTree2D() { clean_up(root); }
-  SegTree2D(const SegTree2D &) = delete;
-  SegTree2D &operator=(const SegTree2D &) = delete;
+  ~SparseSegTree2D() { clean_up(root); }
+  SparseSegTree2D(const SparseSegTree2D &) = delete;
+  SparseSegTree2D &operator=(const SparseSegTree2D &) = delete;
 
   T at(int r, int c) {
     assert(0 <= r && r <= R && 0 <= c && c <= C);
@@ -281,7 +279,7 @@ Values:
 using namespace std;
 
 int main() {
-  SegTree2D<int> t(0);
+  SparseSegTree2D<int> t(0);
   t.update(0, 0, 7);
   t.update(0, 1, 6);
   t.update(1, 0, 5);
@@ -301,5 +299,10 @@ int main() {
   assert(t.query(0, 0, 1000000000, 1000000000) == 0);
   t.update(500000000, 500000000, -100);
   assert(t.query(0, 0, 1000000000, 1000000000) == -100);
+
+  SparseSegTree2D<int, 0, 1> rectangular(0);
+  rectangular.update(0, 0, 5);
+  rectangular.update(0, 1, 6);
+  assert(rectangular.query(0, 0, 0, 1) == 5);
   return 0;
 }

@@ -16,7 +16,8 @@ processed the matrix holds the all-pairs shortest distances.
 For path reconstruction, `next_node[i][j]` stores the next node to visit after `i` on a current
 shortest path from `i` to `j`. It is initialized to `j` for every pair and, when a shorter route `i`
 $\to$ `k` $\to$ `j` is found, becomes `next_node[i][k]`. Repeatedly setting `i` to `next_node[i][j]`
-therefore walks the path from source to destination.
+therefore walks the path from source to destination. This value is meaningful only when
+`dist[i][j] != INF`.
 
 Time Complexity:
 - O(n^2) per call to `init_floyd()`, where $n$ is the number of nodes.
@@ -24,7 +25,7 @@ Time Complexity:
 
 Space Complexity:
 - O(n^2) for storage of the graph, where $n$ is the number of nodes.
-- O(n^2) auxiliary for `init_floyd()` and `floyd_warshall()`.
+- O(1) auxiliary per call to `floyd_warshall()`.
 
 */
 
@@ -104,7 +105,7 @@ int main() {
   assert(dist[start][dest] == 3);
   assert(next_node[start][dest] == 1);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[start][dest]
-       << ".\n";
+       << "." << endl;
   print_path(start, dest);
   return 0;
 }

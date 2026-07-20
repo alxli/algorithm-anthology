@@ -12,17 +12,22 @@ if the next interval's `start` is at least the previous interval's `finish`.
 - `select_weighted_intervals(intervals)` returns a pair $(`weight`, `selected`)$ containing that
   maximum weight and the selected intervals as original input indices in execution order, from an
   input vector of `WeightedInterval` with fields `start`, `finish`, and `weight`. `dp[i]` stores the
-  best answer using the first `i` intervals after sorting by finish time.
+  best answer using the first `i` intervals after sorting by finish time. Every interval must
+  satisfy `start` $\leq$ `finish`. The empty subset is allowed, so nonpositive weights need not be
+  selected.
+
+Accumulated weights must fit in `int64_t`.
 
 Time Complexity:
 - O(n log n) per call due to sorting and binary searching compatible intervals.
 
 Space Complexity:
-- O(n) auxiliary.
+- O(n) auxiliary and O(n) for the returned indices.
 
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <numeric>
 #include <utility>
@@ -39,6 +44,9 @@ std::pair<int64_t, std::vector<int>> select_weighted_intervals(
   int n = static_cast<int>(intervals.size());
   std::vector<int> order(n), finish(n), prev(n);
   std::iota(order.begin(), order.end(), 0);
+  for (const auto &iv : intervals) {
+    assert(iv.start < iv.finish);
+  }
   std::sort(order.begin(), order.end(), [&](int i, int j) {
     return intervals[i].finish != intervals[j].finish ? intervals[i].finish < intervals[j].finish
                                                       : intervals[i].start < intervals[j].start;
@@ -53,7 +61,7 @@ std::pair<int64_t, std::vector<int>> select_weighted_intervals(
         std::upper_bound(finish.begin(), finish.begin() + i - 1, intervals[order[i - 1]].start) -
         finish.begin();
     prev[i - 1] = j;
-    int64_t candidate = dp[j] + intervals[order[i - 1]].weight;
+    int64_t candidate = dp[j] + intervals[order[i - 1]].weight;  // Overflow warning.
     if (dp[i - 1] < candidate) {
       dp[i] = candidate;
       take[i] = true;

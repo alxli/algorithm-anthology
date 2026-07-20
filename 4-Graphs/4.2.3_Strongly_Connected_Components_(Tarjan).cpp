@@ -1,17 +1,18 @@
 /*
 
 Given a directed graph, determine the strongly connected components (SCCs) using Tarjan's algorithm.
-A strongly connected component is a maximal set of vertices where every vertex can reach every other
-vertex. Condensing each SCC into one node produces a directed acyclic graph. A single depth-first
+A strongly connected component is a maximal set of nodes where every node can reach every other
+node. Condensing each SCC into one node produces a directed acyclic graph. A single depth-first
 search keeps visited nodes on a stack and tracks each node's low-link, the smallest entry time
 reachable from its subtree; a node whose low-link equals its own entry time roots a component, which
 is popped off the stack in one piece.
 
 - `TarjanSCC(n = 0)` constructs a directed graph of `n` nodes numbered $[0, `n`)$.
 - `add_edge(u, v)` adds the directed edge from `u` to `v`.
-- `build_scc()` populates `scc` with the strongly connected components and `component[v]` with the
-  component ID containing vertex `v`. Component IDs are in reverse topological order: for every edge
-  from component $a$ to a different component $b$, $a > b$.
+- `build_scc()` computes the strongly connected components.
+- `components()` returns the strongly connected components from the last `build_scc()` call.
+- `component_id(v)` returns the component ID containing node `v`. Component IDs are in reverse
+  topological order: for every edge from component $a$ to a different component $b$, $a > b$.
 
 Time Complexity:
 - O(max(n, m)) per call to `build_scc()`, where $n$ is the number of nodes and $m$ is the number of
@@ -23,20 +24,15 @@ Space Complexity:
 
 */
 
-#include <algorithm>
 #include <climits>
 #include <vector>
 
-struct TarjanSCC {
+class TarjanSCC {
   static const int INF = INT_MAX / 2;
   std::vector<std::vector<int>> adj, scc;
   std::vector<int> component, active, lowlink;
   std::vector<char> visited;
   int timer;
-
-  TarjanSCC(int n = 0) : adj(n) {}
-
-  void add_edge(int u, int v) { adj[u].push_back(v); }
 
   void dfs(int u) {
     lowlink[u] = timer++;
@@ -68,6 +64,11 @@ struct TarjanSCC {
     scc.push_back(comp_nodes);
   }
 
+ public:
+  TarjanSCC(int n = 0) : adj(n) {}
+
+  void add_edge(int u, int v) { adj[u].push_back(v); }
+
   void build_scc() {
     int n = static_cast<int>(adj.size());
     scc.clear();
@@ -82,6 +83,9 @@ struct TarjanSCC {
       }
     }
   }
+
+  const std::vector<std::vector<int>> &components() const { return scc; }
+  int component_id(int v) const { return component[v]; }
 };
 
 /*** Example Usage and Output:
@@ -123,13 +127,13 @@ int main() {
   // SCC condensation DAG:
   // {0,1,4} -> {2,3,7} -> {5,6}
   //     \-------------------^
-  assert(g.scc.size() == 3);
-  assert(g.component[0] == g.component[1] && g.component[1] == g.component[4]);
-  assert(g.component[2] == g.component[3] && g.component[3] == g.component[7]);
-  assert(g.component[5] == g.component[6]);
-  assert(g.component[0] != g.component[2] && g.component[2] != g.component[5]);
+  assert(g.components().size() == 3);
+  assert(g.component_id(0) == g.component_id(1) && g.component_id(1) == g.component_id(4));
+  assert(g.component_id(2) == g.component_id(3) && g.component_id(3) == g.component_id(7));
+  assert(g.component_id(5) == g.component_id(6));
+  assert(g.component_id(0) != g.component_id(2) && g.component_id(2) != g.component_id(5));
   cout << "Components:" << endl;
-  for (auto &component : g.scc) {
+  for (const auto &component : g.components()) {
     for (int v : component) {
       cout << v << " ";
     }

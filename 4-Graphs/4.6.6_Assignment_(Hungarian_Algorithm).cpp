@@ -1,8 +1,8 @@
 /*
 
-Solves the minimum-cost assignment problem for a rectangular cost matrix. Given $n$ workers and $m$
-jobs (with $n \leq m$) where assigning worker `i` to complete job `j` would cost `cost[i][j]`,
-choose a distinct job for each worker so that the total assignment cost is minimized.
+Solves the minimum-cost or maximum-value assignment problem for a rectangular matrix. Given $n$
+workers and $m$ jobs (with $n \leq m$), choose a distinct job for each worker so that the total cost
+is minimized or the total value is maximized.
 
 The classical Hungarian algorithm using potentials transforms a cost matrix using the principle that
 adding or subtracting constants from rows or columns does not change the optimal assignment. Workers
@@ -11,15 +11,22 @@ zero-slack edges, with the potentials adjusted along the way to expose new zero-
 the path reaches a free job. Note that while the input matrix is 0-based here, the internal
 calculations are 1-based.
 
-- `min_assignment_cost(cost, &assignment)` returns the minimum total assignment cost for a 0-based
-  `cost` matrix, while populating `assignment` with $n$ values where `assignment[i]` is the chosen
-  job for worker `i`, using 0-based job numbers.
+Maximum-value assignment reduces to minimum-cost assignment by replacing each value $x$ with
+$M - x$, where $M$ is the largest matrix entry. Every assignment contains exactly $n$ entries, so
+minimizing the transformed total $nM - \sum x$ maximizes the original total.
+
+- `min_assignment(cost)` returns a pair (`min_cost`, `assignment`) for a 0-based `cost` matrix,
+  where `assignment` contains $n$ values and `assignment[i]` is the chosen job for worker `i`, using
+  0-based job numbers.
+- `max_assignment(value)` returns the analogous pair (`max_value`, `assignment`) maximizing a
+  0-based `value` matrix.
 
 Time Complexity:
-- O(n^2*m) per call, where `cost` has $n$ rows and $m$ columns.
+- O(n^2*m) per call, where the input matrix has $n$ rows and $m$ columns.
 
 Space Complexity:
 - O(n + m) auxiliary, not counting the input matrix and returned assignment.
+- O(n*m) auxiliary per call to `max_assignment()` for the transformed matrix.
 
 */
 
@@ -27,23 +34,21 @@ Space Complexity:
 #include <cassert>
 #include <cstdint>
 #include <limits>
+#include <utility>
 #include <vector>
 
 template<typename T>
-T min_assignment_cost(const std::vector<std::vector<T>> &cost, std::vector<int> *assignment) {
+std::pair<T, std::vector<int>> min_assignment(const std::vector<std::vector<T>> &cost) {
   static const T INF = std::numeric_limits<T>::max() / 4;
   int n = static_cast<int>(cost.size());
   int m = cost.empty() ? 0 : static_cast<int>(cost[0].size());
-  assert(assignment != nullptr && n <= m);
-  for (const auto &row : cost) {
-    assert(static_cast<int>(row.size()) == m);
-  }
+  assert(n <= m);
   std::vector<T> u(n + 1), v(m + 1), minv(m + 1);
   std::vector<int> p(m + 1), way(m + 1);
   std::vector<char> used(m + 1);
   for (int i = 1; i <= n; i++) {
-    std::fill(minv.begin(), minv.end(), INF);
-    std::fill(used.begin(), used.end(), false);
+    minv.assign(m + 1, INF);
+    used.assign(m + 1, false);
     p[0] = i;
     int j0 = 0;
     do {
@@ -54,7 +59,7 @@ T min_assignment_cost(const std::vector<std::vector<T>> &cost, std::vector<int> 
         if (used[j]) {
           continue;
         }
-        T cur = cost[i0 - 1][j - 1] - u[i0] - v[j];
+        T cur = cost[i0 - 1][j - 1] - u[i0] - v[j];  // Overflow warning!
         if (cur < minv[j]) {
           minv[j] = cur;
           way[j] = j0;
@@ -80,19 +85,38 @@ T min_assignment_cost(const std::vector<std::vector<T>> &cost, std::vector<int> 
       j0 = j1;
     } while (j0 != 0);
   }
-  assignment->assign(n, -1);
+  std::vector<int> assignment(n, -1);
   for (int j = 1; j <= m; j++) {
     if (p[j] != 0) {
-      (*assignment)[p[j] - 1] = j - 1;
+      assignment[p[j] - 1] = j - 1;
     }
   }
-  return -v[0];
+  return {-v[0], assignment};  // Overflow warning!
+}
+
+template<typename T>
+std::pair<T, std::vector<int>> max_assignment(std::vector<std::vector<T>> value) {
+  if (value.empty()) {
+    return {0, {}};
+  }
+  T max_value = value[0][0];
+  for (const auto &row : value) {
+    max_value = std::max(max_value, *std::max_element(row.begin(), row.end()));
+  }
+  for (auto &row : value) {
+    for (T &x : row) {
+      x = max_value - x;
+    }
+  }
+  auto [min_cost, assignment] = min_assignment(value);
+  return {max_value * static_cast<T>(value.size()) - min_cost, assignment};  // Overflow warning!
 }
 
 /*** Example Usage and Output:
 
 Minimum assignment cost: 9
 Assignments: (0->1) (1->0) (2->2)
+Maximum assignment value: 24
 
 ***/
 
@@ -105,17 +129,21 @@ int main() {
       {6, 4, 3, 7},
       {5, 8, 1, 8},
   };
-  vector<int> assignment;
-  int64_t total = min_assignment_cost(cost, &assignment);
-  assert(total == 9);
+  auto [min_cost, assignment] = min_assignment(cost);
+  assert(min_cost == 9);
   assert(assignment[0] == 1);
   assert(assignment[1] == 0);
   assert(assignment[2] == 2);
-  cout << "Minimum assignment cost: " << total << "\n";
+  cout << "Minimum assignment cost: " << min_cost << endl;
   cout << "Assignments:";
   for (int worker = 0; worker < static_cast<int>(assignment.size()); worker++) {
     cout << " (" << worker << "->" << assignment[worker] << ")";
   }
-  cout << "\n";
+  cout << endl;
+
+  auto [max_value, max_jobs] = max_assignment(cost);
+  assert(max_value == 24);
+  assert((max_jobs == vector<int>{0, 3, 1}));
+  cout << "Maximum assignment value: " << max_value << endl;
   return 0;
 }

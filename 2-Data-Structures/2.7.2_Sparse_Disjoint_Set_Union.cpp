@@ -1,11 +1,11 @@
 /*
 
 Maintain a set of elements partitioned into non-overlapping subsets using a collection of trees.
-Each partition is assigned a unique representative known as the parent, or root. Each subset is
-stored as a tree whose nodes point toward its root: finding a representative follows parent
-pointers, redirecting visited nodes straight to the root along the way (path compression), while
-unions attach the shallower tree beneath the root of the deeper one (union-by-rank). Union-by-rank
-is interchangeable with union-by-size as used by the plain Disjoint Set Union, yielding the same
+Each partition is identified by a unique representative called its root. Each subset is stored as a
+tree whose nodes point toward its root: finding a representative follows parent pointers,
+redirecting visited nodes straight to the root along the way (path compression), while unions attach
+the shallower tree beneath the root of the deeper one (union-by-rank). Union-by-rank is
+interchangeable with union-by-size as used by the plain Disjoint Set Union, yielding the same
 complexity bounds; rank stores only the tree-depth estimate, so it cannot answer set-size queries.
 
 This version uses an `std::unordered_map` for storage and coordinate compression (thus, element
@@ -13,8 +13,7 @@ types must meet the requirements of key types for `std::unordered_map`). The ord
 by `get_all_sets()` is unspecified.
 
 - `SparseDSU<T>()` constructs an empty set.
-- `make_set(u)` creates a new partition consisting of the single element `u`, which must not have
-  been previously added to the data structure.
+- `make_set(u)` adds `u` as a singleton partition, or does nothing if `u` is already present.
 - `size()` returns the number of elements that have been added.
 - `sets()` returns the current number of disjoint sets.
 - `is_united(u, v)` returns whether elements `u` and `v` belong to the same partition.
@@ -29,8 +28,7 @@ their arguments.
 Time Complexity:
 - O(1) per call to the constructor.
 - O(1) per call to `size()` and `sets()`.
-- O(1) on average per call to `make_set()`, where $n$ is the number of elements that have been added
-  via `make_set()` so far.
+- O(1) on average per call to `make_set()`.
 - O(alpha(n)) on average per call to `is_united()` and `unite()`, where $n$ is the number of
   elements that have been added via `make_set()` so far, and $\alpha(n)$ is the extremely slow
   growing inverse of the Ackermann function (effectively a very small constant for all practical
@@ -40,10 +38,12 @@ Time Complexity:
 Space Complexity:
 - O(n) for storage of the disjoint set forest elements.
 - O(n) auxiliary for `get_all_sets()`.
+- O(log n) auxiliary stack space for `is_united()` and `unite()`.
 - O(1) auxiliary for all other operations.
 
 */
 
+#include <cassert>
 #include <unordered_map>
 #include <vector>
 
@@ -58,6 +58,12 @@ class SparseDSU {
       root[u] = find_root(root[u]);
     }
     return root[u];
+  }
+
+  int get_id(const T &u) const {
+    auto it = id.find(u);
+    assert(it != id.end());
+    return it->second;
   }
 
  public:
@@ -75,10 +81,10 @@ class SparseDSU {
 
   int size() const { return num_elements; }
   int sets() const { return num_sets; }
-  bool is_united(const T &u, const T &v) { return find_root(id[u]) == find_root(id[v]); }
+  bool is_united(const T &u, const T &v) { return find_root(get_id(u)) == find_root(get_id(v)); }
 
   bool unite(const T &u, const T &v) {
-    int ru = find_root(id[u]), rv = find_root(id[v]);
+    int ru = find_root(get_id(u)), rv = find_root(get_id(v));
     if (ru == rv) {
       return false;
     }

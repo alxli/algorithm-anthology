@@ -1,7 +1,7 @@
 /*
 
-Given an undirected, unweighted graph, determine a maximum matching: a maximum subset of its edges
-such that no node is shared between different edges in the resulting subset.
+Given an undirected, unweighted simple graph, determine a maximum matching: a maximum subset of its
+edges such that no node is shared between different edges in the resulting subset.
 
 Edmonds' blossom algorithm extends augmenting-path search to general (non-bipartite) graphs, where
 odd-length cycles called blossoms can conceal augmenting paths. Each blossom is contracted into a
@@ -9,7 +9,7 @@ single node so the search can proceed, and is expanded afterward to recover the 
 maximum-weight matching in bipartite graphs, use Hungarian or min-cost max-flow; for maximum-weight
 matching in general graphs, use the weighted blossom algorithm in the next section.
 
-The graph must be simple; parallel edges and self-loops are not supported.
+The graph must be simple: self-loops and parallel edges are not supported.
 
 - `maximum_matching(adj)` returns a matching for a bidirectionally pre-populated adjacency list
   `adj` which must consist of nodes numbered $[0, `n`)$, where `n` is `adj.size()`. The returned
@@ -73,8 +73,8 @@ std::vector<int> maximum_matching(const std::vector<std::vector<int>> &adj) {
     }
   };
   auto find_path = [&](int root) {
-    std::fill(label.begin(), label.end(), -1);
-    std::fill(parent.begin(), parent.end(), -1);
+    label.assign(n, -1);
+    parent.assign(n, -1);
     std::iota(base.begin(), base.end(), 0);
     while (!q.empty()) {
       q.pop();
@@ -142,17 +142,17 @@ vector<vector<int>> adj;
 void add_edge(int u, int v) {
   adj[u].push_back(v);
   adj[v].push_back(u);
-};
+}
 
 int matching_size(const vector<int> &match) {
   return std::count_if(match.begin(), match.end(), [](int v) { return v != -1; }) / 2;
-};
+}
 
 int main() {
   {
     // 0---1---2
     //  \      |
-    //   \____ 3
+    //   +-----3
     int nodes = 4;
     adj.assign(nodes, {});
     add_edge(0, 1);
@@ -160,6 +160,7 @@ int main() {
     add_edge(2, 3);
     add_edge(3, 0);
     vector<int> match = maximum_matching(adj);
+    assert(matching_size(match) == 2);
     cout << "Matched " << matching_size(match) << " pair(s):" << endl;
     for (int i = 0; i < nodes; i++) {
       if (match[i] != -1 && i < match[i]) {

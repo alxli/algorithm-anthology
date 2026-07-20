@@ -120,7 +120,7 @@ vector<int> values(DListNode *sentinel) {
 }
 
 int main() {
-  // `dummy` is the sentinel; a, b, c, d start detached. push_back/push_front link at back/front.
+  // dummy is the sentinel; a, b, c, d start detached. push_back/push_front link at back/front.
   DListNode dummy, a(1), b(2), c(3), d(4);
   init_list(&dummy);
   assert(empty(&dummy));

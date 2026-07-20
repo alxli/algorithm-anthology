@@ -13,15 +13,16 @@ which makes a new edge tight or lets a blossom expand, and the search resumes. B
 is over the implicit complete graph with absent edges weighted 0, a node may be left effectively
 unmatched whenever staying unmatched is at least as good as any incident edge.
 
-All edge weights must be positive; an absent edge is treated as weight 0. The node count should be
-kept modest, as the algorithm uses dense storage.
+All edge weights must be positive; an absent edge is treated as weight 0. Self-loops are not
+supported. Parallel edges are supported by retaining only the maximum weight added between each pair
+of nodes. The node count should be kept modest, as the algorithm uses dense storage.
 
 Overflow warning: labels and the returned matching weight are stored in `int64_t`; all doubled
 weights, label sums, and the total matching weight must fit.
 
 - `WeightedGeneralMatching(n)` creates a graph of `n` nodes numbered $[0, `n`)$.
 - `add_edge(u, v, w)` adds an undirected edge of positive weight `w` between `u` and `v`. If several
-  edges join the same pair, the last weight set is used.
+  edges join the same pair, only the maximum weight is retained.
 - `solve()` computes a maximum-weight matching and returns its total weight.
 - `partner(u)` returns the node matched with `u`, or $-1$ if `u` is unmatched. Valid after
   `solve()`.
@@ -339,7 +340,10 @@ class WeightedGeneralMatching {
     }
   }
 
-  void add_edge(int u, int v, int64_t w) { g[u + 1][v + 1].w = g[v + 1][u + 1].w = w; }
+  void add_edge(int u, int v, int64_t w) {
+    w = std::max(w, g[u + 1][v + 1].w);
+    g[u + 1][v + 1].w = g[v + 1][u + 1].w = w;
+  }
 
   int64_t solve() {
     nx = n;
@@ -363,7 +367,7 @@ class WeightedGeneralMatching {
     int64_t weight = 0;
     for (int u = 1; u <= n; u++) {
       if (match_[u] != 0 && match_[u] < u) {
-        weight += g[u][match_[u]].w;
+        weight += g[u][match_[u]].w;  // Overflow warning!
       }
     }
     return weight;
@@ -395,26 +399,26 @@ int main() {
   // 0-----1-----2-----3-----4
   //  \_____________________/
   //            w=5
-  WeightedGeneralMatching m(5);
-  m.add_edge(0, 1, 5);
-  m.add_edge(1, 2, 6);
-  m.add_edge(2, 3, 5);
-  m.add_edge(3, 4, 6);
-  m.add_edge(4, 0, 5);
-  int64_t weight = m.solve();
+  WeightedGeneralMatching g(5);
+  g.add_edge(0, 1, 5);
+  g.add_edge(1, 2, 6);
+  g.add_edge(2, 3, 5);
+  g.add_edge(3, 4, 6);
+  g.add_edge(4, 0, 5);
+  int64_t weight = g.solve();
   assert(weight == 12);  // Edges 1-2 and 3-4 with weights 6 + 6.
-  assert(m.partner(1) == 2 && m.partner(2) == 1);
-  assert(m.partner(3) == 4 && m.partner(4) == 3);
-  assert(m.partner(0) == -1);  // Node 0 is left unmatched.
-  cout << "Maximum matching weight: " << weight << "\n";
+  assert(g.partner(1) == 2 && g.partner(2) == 1);
+  assert(g.partner(3) == 4 && g.partner(4) == 3);
+  assert(g.partner(0) == -1);  // Node 0 is left unmatched.
+  cout << "Maximum matching weight: " << weight << endl;
   cout << "Matched pairs:";
   for (int u = 0; u < 5; u++) {
-    int v = m.partner(u);
+    int v = g.partner(u);
     if (u < v) {
       cout << " (" << u << "," << v << ")";
     }
   }
-  cout << "\n";
+  cout << endl;
 
   //   w=3   w=3   w=5
   // 0-----1-----2-----3
@@ -425,6 +429,7 @@ int main() {
   t.add_edge(1, 2, 3);
   t.add_edge(0, 2, 3);
   t.add_edge(2, 3, 5);
+  t.add_edge(2, 3, 1);     // A lighter parallel edge does not replace the heavier one.
   assert(t.solve() == 8);  // Edges 0-1 and 2-3 with weights 3 + 5.
   return 0;
 }

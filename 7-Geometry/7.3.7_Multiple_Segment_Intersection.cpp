@@ -31,7 +31,6 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
-#include <cstdint>
 #include <set>
 #include <type_traits>
 #include <utility>
@@ -43,7 +42,7 @@ bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
          p.x <= std::max(a.x, b.x) && std::min(a.y, b.y) <= p.y && p.y <= std::max(a.y, b.y);
 }
 
-// Simplified detection-only version of `seg_intersection()` from 7.2.3 (exact for integral Pt).
+// Simplified detection-only version of seg_intersection() from 7.2.3 (exact for integral Pt).
 template<typename Pt>
 int seg_intersection(
     const Pt &a, const Pt &b, const Pt &c, const Pt &d, const bool touch_is_intersect = true

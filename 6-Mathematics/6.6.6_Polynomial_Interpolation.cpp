@@ -9,8 +9,8 @@ Coefficient recovery uses Newton's divided differences. It first replaces the sa
 successive divided differences in place, then expands the Newton basis $1$, $(x - x_0)$,
 $(x - x_0)(x - x_1)$, $\ldots$ into ordinary coefficients by multiplying through one factor at a
 time. Point evaluation instead applies the Lagrange formula directly, summing each sample weighted
-by the product of $(t - x_j) / (x_k - x_j)$ over the other nodes. Both run in O(n^2) modular
-operations.
+by the product of $(t - x_j) / (x_k - x_j)$ over the other nodes. Coefficient recovery performs
+O(n^2) modular inverses, while point evaluation performs $n$.
 
 - `interpolate(x, y)` returns the coefficients $a_0, ..., a_{n-1}$ (constant term first) of the
   polynomial $P$ with $P(`x[i]`) = `y[i]`$, modulo `MOD`. The entries of `x` must be distinct modulo
@@ -19,7 +19,8 @@ operations.
   its coefficients.
 
 Time Complexity:
-- O(n^2) per call to `interpolate()` and `interpolate_at()`, where $n$ is the number of points.
+- O(n^2 log p) for `interpolate()` and O(n^2 + n log p) for `interpolate_at()`, where $n$ is the
+  number of points and $p$ is `MOD`.
 
 Space Complexity:
 - O(n) auxiliary.

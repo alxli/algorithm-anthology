@@ -13,11 +13,10 @@ mixed expressions like `2 + Mint(3)` convert the integer operand through the imp
 conversions - which is why some contest templates carry per-operator `Modular op U` and
 `U op Modular` overloads instead.)
 
-The modulus is supplied directly as the `auto` template argument, so `Modular<1000000007>` and
-`Modular<998244353>` are all that is needed. Its literal type determines the storage type, so a
-64-bit modulus (e.g. `Modular<(1LL << 61) - 1>`) is stored in 64 bits without any extra annotation.
-The modulus must be a compile-time constant; a runtime-chosen modulus is not supported by this
-design.
+The modulus is a positive signed `auto` template argument. For example, `Modular<1000000007>` and
+`Modular<998244353>` need no other annotation. Its literal type determines the storage type, so a
+64-bit modulus (e.g. `Modular<(1LL << 61) - 1>`) is stored in 64 bits. The modulus must be a
+compile-time constant; a runtime-chosen modulus is not supported by this design.
 
 Two integer types are at play: the type of the modulus stores the representative, while
 construction, multiplication, and inverses widen through an intermediate type chosen automatically
@@ -64,6 +63,7 @@ Space Complexity:
 #include <cassert>
 #include <cstdint>
 #include <iostream>
+#include <limits>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -87,6 +87,9 @@ T inverse(T a, T m) {
 template<auto MOD>
 class Modular {
   using value_t = decltype(MOD);
+
+  static_assert(std::is_integral_v<value_t> && std::is_signed_v<value_t>);
+  static_assert(MOD > 0 && MOD <= std::numeric_limits<value_t>::max() / 2);
 
   // Widen through int64_t for 32-bit storage, or __int128 for 64-bit storage where it exists
   // (__extension__ silences -pedantic). Without __int128, only 32-bit moduli are supported.
@@ -230,7 +233,7 @@ class ModCombinatorics {
     return fact[n] * inv_fact[n - k];
   }
 
-  Mint multichoose(int n, int k) { return choose(n + k - 1, k); }
+  Mint multichoose(int n, int k) { return n == 0 ? Mint(k == 0) : choose(n + k - 1, k); }
 };
 
 using Mint = Modular<1000000007>;
@@ -268,6 +271,7 @@ int main() {
   assert(comb.choose(5, 2) == 10);
   assert(comb.permute(5, 2) == 20);
   assert(comb.multichoose(3, 2) == 6);
+  assert(comb.multichoose(0, 0) == 1);
 
   // Each distinct modulus is just another instantiation.
   using Mint2 = Modular<998244353>;

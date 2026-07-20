@@ -5,6 +5,12 @@ queries and updates of contiguous subarrays via the lazy propagation technique. 
 balanced binary tree structure by preserving the heap property on the randomly generated priority
 values of nodes, thereby making insertions and deletions run in O(log n) with high probability.
 
+Array indices are implicit rather than stored as keys: subtree sizes determine each node's current
+position, so inserting or erasing a value does not require renumbering later elements. The internal
+`split(t, left, right, i)` operation separates the first `i` values from the rest, and `merge()`
+concatenates two such sequences. Range operations isolate their target with two splits, modify or
+inspect its root, and merge the three pieces back together.
+
 The query operation is defined by an associative aggregate function `combine(a, b)`. The default
 code below assumes a numerical array type, defining queries for the "min" of the target range.
 Another possible query operation is "sum", in which case `combine(a, b)` should return `a + b`.
@@ -18,16 +24,20 @@ performing their updates sequentially. The default code below defines range assi
 increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, len)` should return
 `v + d` for range-min/range-max queries, and `v + d * len` for range-sum queries.
 
+Range reversal is also propagated lazily. Since `combine()` may be order-sensitive, each node stores
+the aggregate of its subtree in both forward and reverse order. Reversing a subtree then swaps its
+children and these two aggregates before marking its descendants for later reversal.
+
 - `ImplicitTreap<T>(n = 0, v = T())` constructs an array of size `n` with indices $[0, `n`)$, with
   all values initialized to `v`.
-- `ImplicitTreap<T>(lo, hi)` constructs an array from two iterators as a range $[`lo`, `hi`)$,
-  initialized to the elements of the range in the same order.
+- `ImplicitTreap<T>(lo, hi)` constructs an array from the half-open iterator range $[`lo`, `hi`)$.
 - `size()` returns the size of the array.
 - `empty()` returns whether the array is empty.
 - `at(i)` returns the value at index `i`.
 - `query(lo, hi)` returns the result of `combine()` applied to all indices in $[`lo`, `hi`]$.
 - `update(lo, hi, d)` applies the delta `d` to every index in $[`lo`, `hi`]$.
 - `update(i, d)` applies the delta `d` to the single index `i`.
+- `reverse(lo, hi)` reverses the order of the values in $[`lo`, `hi`]$.
 - `insert(i, v)` inserts a new value `v` before index `i`, shifting later elements one position
   right.
 - `erase(i)` removes the element at index `i`, shifting later elements one position left.
@@ -39,7 +49,7 @@ section; `insert()`, `erase()`, `push_back()`, and `pop_back()` are additionally
 of `std::vector` (here, `insert()` and `erase()` take an index instead of an iterator).
 
 Time Complexity:
-- O(n) per call to both constructors, where $n$ is the size of the array.
+- O(n log n) on average per call to both constructors, where $n$ is the size of the array.
 - O(1) per call to `size()` and `empty()`.
 - O(log n) on average per call to all other operations.
 
@@ -52,6 +62,7 @@ Space Complexity:
 
 #include <cassert>
 #include <cstdint>
+#include <utility>
 
 template<typename T>
 class ImplicitTreap {
@@ -68,8 +79,8 @@ class ImplicitTreap {
       return x;
     }
 
-    T value, subtree_value, delta;
-    bool pending;
+    T value, subtree_value, reverse_value, delta;
+    bool pending, reversed;
     int size;
     uint32_t priority;
     Node *left, *right;
@@ -77,7 +88,9 @@ class ImplicitTreap {
     explicit Node(const T &v)
         : value(v),
           subtree_value(v),
+          reverse_value(v),
           pending(false),
+          reversed(false),
           size(1),
           priority(rand32()),
           left(nullptr),
@@ -90,12 +103,13 @@ class ImplicitTreap {
     if (n == nullptr) {
       return;
     }
-    n->subtree_value = n->value;
-    if (n->left != nullptr) {
-      n->subtree_value = combine(n->subtree_value, n->left->subtree_value);
-    }
+    n->subtree_value = n->left != nullptr ? combine(n->left->subtree_value, n->value) : n->value;
     if (n->right != nullptr) {
       n->subtree_value = combine(n->subtree_value, n->right->subtree_value);
+    }
+    n->reverse_value = n->right != nullptr ? combine(n->right->reverse_value, n->value) : n->value;
+    if (n->left != nullptr) {
+      n->reverse_value = combine(n->reverse_value, n->left->reverse_value);
     }
     n->size = 1 + size(n->left) + size(n->right);
   }
@@ -104,25 +118,39 @@ class ImplicitTreap {
     if (n != nullptr) {
       n->value = apply_delta(n->value, d, 1);
       n->subtree_value = apply_delta(n->subtree_value, d, n->size);
+      n->reverse_value = apply_delta(n->reverse_value, d, n->size);
       n->delta = n->pending ? compose_deltas(n->delta, d) : d;
       n->pending = true;
     }
   }
 
-  static void push_delta(Node *n) {
-    if (n == nullptr || !n->pending) {
+  static void reverse_subtree(Node *n) {
+    if (n != nullptr) {
+      std::swap(n->left, n->right);
+      std::swap(n->subtree_value, n->reverse_value);
+      n->reversed = !n->reversed;
+    }
+  }
+
+  static void push(Node *n) {
+    if (n == nullptr) {
       return;
     }
-    if (n->size > 1) {
+    if (n->pending) {
       update_delta(n->left, n->delta);
       update_delta(n->right, n->delta);
+      n->pending = false;
     }
-    n->pending = false;
+    if (n->reversed) {
+      reverse_subtree(n->left);
+      reverse_subtree(n->right);
+      n->reversed = false;
+    }
   }
 
   static void merge(Node *&n, Node *left, Node *right) {
-    push_delta(left);
-    push_delta(right);
+    push(left);
+    push(right);
     if (left == nullptr) {
       n = right;
     } else if (right == nullptr) {
@@ -138,7 +166,7 @@ class ImplicitTreap {
   }
 
   static void split(Node *n, Node *&left, Node *&right, int i) {
-    push_delta(n);
+    push(n);
     if (n == nullptr) {
       left = right = nullptr;
     } else if (i <= size(n->left)) {
@@ -152,7 +180,7 @@ class ImplicitTreap {
   }
 
   static void insert(Node *&n, Node *new_node, int i) {
-    push_delta(n);
+    push(n);
     if (n == nullptr) {
       n = new_node;
     } else if (new_node->priority < n->priority) {
@@ -168,7 +196,7 @@ class ImplicitTreap {
 
   static void erase(Node *&n, int i) {
     assert(n != nullptr);
-    push_delta(n);
+    push(n);
     if (i == size(n->left)) {
       Node *left = n->left, *right = n->right;
       delete n;
@@ -183,7 +211,7 @@ class ImplicitTreap {
 
   static Node *select(Node *n, int i) {
     assert(n != nullptr);
-    push_delta(n);
+    push(n);
     if (i < size(n->left)) {
       return select(n->left, i);
     }
@@ -203,6 +231,7 @@ class ImplicitTreap {
 
  public:
   explicit ImplicitTreap(int n = 0, const T &v = T()) : root(nullptr) {
+    assert(n >= 0);
     for (int i = 0; i < n; i++) {
       push_back(v);
     }
@@ -220,13 +249,31 @@ class ImplicitTreap {
   ImplicitTreap &operator=(const ImplicitTreap &) = delete;
   int size() const { return size(root); }
   bool empty() const { return root == nullptr; }
-  void insert(int i, const T &v) { insert(root, new Node(v), i); }
-  void erase(int i) { erase(root, i); }
+
+  void insert(int i, const T &v) {
+    assert(0 <= i && i <= size());
+    insert(root, new Node(v), i);
+  }
+
+  void erase(int i) {
+    assert(0 <= i && i < size());
+    erase(root, i);
+  }
+
   void push_back(const T &v) { insert(size(), v); }
-  void pop_back() { erase(size() - 1); }
-  T at(int i) const { return select(root, i)->value; }
+
+  void pop_back() {
+    assert(!empty());
+    erase(size() - 1);
+  }
+
+  T at(int i) const {
+    assert(0 <= i && i < size());
+    return select(root, i)->value;
+  }
 
   T query(int lo, int hi) {
+    assert(0 <= lo && lo <= hi && hi < size());
     Node *l1, *r1, *l2, *r2, *t;
     split(root, l1, r1, hi + 1);
     split(l1, l2, r2, lo);
@@ -237,6 +284,7 @@ class ImplicitTreap {
   }
 
   void update(int lo, int hi, const T &d) {
+    assert(0 <= lo && lo <= hi && hi < size());
     Node *l1, *r1, *l2, *r2, *t;
     split(root, l1, r1, hi + 1);
     split(l1, l2, r2, lo);
@@ -246,6 +294,16 @@ class ImplicitTreap {
   }
 
   void update(int i, const T &d) { update(i, i, d); }
+
+  void reverse(int lo, int hi) {
+    assert(0 <= lo && lo <= hi && hi < size());
+    Node *l1, *r1, *l2, *r2, *t;
+    split(root, l1, r1, hi + 1);
+    split(l1, l2, r2, lo);
+    reverse_subtree(r2);
+    merge(t, l2, r2);
+    merge(root, t, r1);
+  }
 };
 
 /*** Example Usage and Output:
@@ -253,6 +311,7 @@ class ImplicitTreap {
 Values: 99 -2 1 8 10 11 (min: -2)
 Values: 90 -2 1 8 10 11 (min: -2)
 Values: 2 2 1 8 10 11 (min: 1)
+Values: 2 10 8 1 2 11 (min: 1)
 
 ***/
 
@@ -272,6 +331,8 @@ void print(ImplicitTreap<int> &t) {
 int main() {
   vector<int> a{99, -2, 1, 8, 10};
   ImplicitTreap<int> t(a.begin(), a.end());
+
+  // Append 11, then append and remove 12.
   t.push_back(11);
   t.push_back(12);
   t.pop_back();
@@ -279,14 +340,27 @@ int main() {
   assert(t.at(5) == 11);
   assert(t.query(0, t.size() - 1) == -2);
   print(t);
+
+  // Replace the first value by inserting 90 before it and erasing the old 99.
   t.insert(0, 90);
   t.erase(1);
   assert(t.at(0) == 90);
   assert(t.at(1) == -2);
   print(t);
+
+  // Assign 2 to the first two values.
   t.update(0, 1, 2);
   assert(t.at(0) == 2);
   assert(t.at(1) == 2);
+  assert(t.query(0, t.size() - 1) == 1);
+  print(t);
+
+  // Reverse the middle range: {2, 2, 1, 8, 10, 11} becomes {2, 10, 8, 1, 2, 11}.
+  t.reverse(1, 4);
+  assert(t.at(0) == 2);
+  assert(t.at(1) == 10);
+  assert(t.at(4) == 2);
+  assert(t.at(5) == 11);
   assert(t.query(0, t.size() - 1) == 1);
   print(t);
   return 0;

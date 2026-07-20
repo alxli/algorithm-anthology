@@ -17,8 +17,9 @@ systems of linear equations, LU decomposition with row partial pivoting should b
   solution, then the output pointer `x` is populated with the solution vector of length $n$.
 
 Time Complexity:
-- O(m^2*n) per call to `row_reduce(a)`, `matrix_rank(a)`, and `solve_system(a)`, where $m$ and $n$
-  are the number of rows and columns of `a`, respectively.
+- O(m*n*min(m, n)) for `row_reduce(a)` and `matrix_rank(a)`, where $m$ and $n$ are the numbers of
+  rows and columns of `a`, respectively.
+- O(m*n^2) for `solve_system(a, b)`, which returns immediately when $m < n$.
 
 Space Complexity:
 - O(1) auxiliary for `row_reduce(a)`.
@@ -39,9 +40,6 @@ Matrix &row_reduce(Matrix &a) {
     return a;
   }
   int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
-  for (const auto &row : a) {
-    assert(static_cast<int>(row.size()) == cols);
-  }
   for (int r = 0, lead = 0; r < rows && lead < cols; lead++) {
     int pivot = r;
     for (int i = r + 1; i < rows; i++) {
@@ -121,7 +119,7 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
     }
   }
   // A unique solution requires a pivot in every column; fewer means free variables remain. This
-  // also catches trailing free columns, which a per-row `lead > i` test alone would miss.
+  // also catches trailing free columns, which a per-row "lead > i" test alone would miss.
   if (rank < cols) {
     return -2;
   }

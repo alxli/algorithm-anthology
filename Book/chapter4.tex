@@ -4,14 +4,14 @@
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Graph Class and DFS}
-A graph consists of a set of objects (a.k.a. vertices, or nodes) and a set of connections (a.k.a. edges) between pairs of said objects. A graph may be stored as an adjacency list, which is a space efficient representation that is also time-efficient for traversals.
+A graph consists of a set of nodes and a set of connections (edges) between pairs of nodes. A graph may be stored as an adjacency list, which is a space-efficient representation that is also efficient for traversals.
 
 The following class implements a simple graph using adjacency lists, along with depth-first search and a few other applications. The constructor takes a flag which specifies whether the instance is a directed or undirected graph. The nodes of the graph are identified by integer indices numbered consecutively starting from $0$. The total number of nodes automatically increases based on the maximum node index passed to \inlinecode{add\_edge()} so far.
 
 \begin{compactitem}
   \item \inlinecode{Graph(directed = true)} constructs an empty graph, directed if \inlinecode{directed} is true and undirected otherwise.
-  \item \inlinecode{nodes()} returns the current number of nodes.
-  \item \inlinecode{operator[n]} returns a reference to the adjacency list (\inlinecode{std::vector\textless{}int\textgreater{}}) of node \inlinecode{n}.
+  \item \inlinecode{size()} returns the current number of nodes.
+  \item \inlinecode{operator[n]} returns a mutable or const reference to the adjacency list (\inlinecode{std::vector\textless{}int\textgreater{}}) of node \inlinecode{n}.
   \item \inlinecode{add\_edge(u, v)} adds an edge from \inlinecode{u} to \inlinecode{v}, plus the reverse edge if the graph is undirected, growing the node count to accommodate the larger index if necessary.
   \item \inlinecode{dfs(start, f)} runs a depth-first search from node \inlinecode{start}, calling \inlinecode{f(n)} on each node \inlinecode{n} in the order it is first visited.
   \item \inlinecode{has\_cycle()} returns whether the graph contains a cycle.
@@ -78,8 +78,9 @@ class Graph {
  public:
   Graph(bool directed = true) : directed(directed) {}
 
-  int nodes() const { return static_cast<int>(adj.size()); }
+  int size() const { return static_cast<int>(adj.size()); }
   std::vector<int> &operator[](int n) { return adj[n]; }
+  const std::vector<int> &operator[](int n) const { return adj[n]; }
 
   void add_edge(int u, int v) {
     int n = static_cast<int>(adj.size());
@@ -148,7 +149,7 @@ int main() {
     cout << "DFS order: ";
     g.dfs(0, [](int n) { cout << n << " "; });
     cout << endl;
-    assert(g[0].size() == 3);
+    assert(g.size() == 12 && g[0].size() == 3);
     assert(g.is_dag());
     assert(!g.has_cycle());
   }
@@ -175,7 +176,7 @@ int main() {
 DFS order: 0 1 2 3 4 5 6 7 8 9 10 11
 \end{exampleoutput}
 \subsection{Topological Sort}
-Given a directed acyclic graph, find one of possibly many orderings of the nodes such that for every edge from node $u$ to $v$, $u$ comes before $v$ in the ordering.
+Given a directed acyclic graph (DAG), find one of possibly many orderings of the nodes such that for every edge from node $u$ to $v$, $u$ comes before $v$ in the ordering.
 
 The DFS version uses the fact that every outgoing dependency of a node is finished before the node itself is appended, so reversing DFS post-order places each prerequisite before everything it can reach. Kahn's algorithm instead repeatedly removes nodes with indegree zero: these are exactly the nodes whose remaining prerequisites have all already been placed. If at some point not every node can be removed, the leftover nodes must lie on a directed cycle.
 
@@ -266,14 +267,14 @@ std::vector<int> toposort_kahn() {
 using namespace std;
 
 int main() {
-  //        1
-  //        |
-  //        v
-  // 0 ---> 3 ---> 5
-  // |      | /
-  // v      v  v
-  // 4 ---> 6  7 <--- 2
-  // ^________________|
+  //         1
+  //         |
+  //         v
+  // 0 ----> 3 ---> 5
+  // |     / |
+  // v    v  v
+  // 4 -> 6  7 <--- 2
+  // ^______________|
   adj.assign(8, {});
   adj[0].push_back(3);
   adj[0].push_back(4);
@@ -309,13 +310,13 @@ int main() {
 The topological order: 2 1 0 4 3 7 6 5
 \end{exampleoutput}
 \subsection{Cycle Finding}
-Given a directed or undirected graph, find simple cycles encountered by a depth-first search. The free functions return one cycle of a simple graph as a list of vertices. For undirected graphs, an edge to a visited non-parent vertex closes a cycle. For directed graphs, only an edge to a vertex still on the recursion stack closes a cycle; edges to already-finished vertices do not.
+Given a directed or undirected graph, find simple cycles encountered by a depth-first search. The free functions return one cycle of a simple graph as a list of nodes. For undirected graphs, an edge to a visited non-parent node closes a cycle. For directed graphs, only an edge to a node still on the recursion stack closes a cycle; edges to already-finished nodes do not.
 
-Both functions remember the DFS parent of each vertex. When a closing edge \inlinecode{u} $\to$ \inlinecode{cycle\_start} is found, the answer is reconstructed by walking parents backward from \inlinecode{u} to \inlinecode{cycle\_start}. In \inlinecode{find\_cycle\_directed()}, \inlinecode{state[v]} is $0$ for unvisited vertices, $1$ for vertices currently on the recursion stack, and $2$ for finished vertices.
+Both functions remember the DFS parent of each node. When a closing edge \inlinecode{u} $\to$ \inlinecode{cycle\_start} is found, the answer is reconstructed by walking parents backward from \inlinecode{u} to \inlinecode{cycle\_start}. In the directed version, \inlinecode{state[v]} is $0$ for unvisited nodes, $1$ for nodes currently on the recursion stack, and $2$ for finished nodes.
 
 \begin{compactitem}
-  \item \inlinecode{find\_cycle\_undirected(adj)} returns one vertex cycle in a simple undirected graph, or an empty vector if no cycle exists.
-  \item \inlinecode{find\_cycle\_directed(adj)} returns one vertex cycle in a simple directed graph, or an empty vector if no cycle exists.
+  \item \inlinecode{find\_cycle\_undirected(adj)} returns one node cycle in a simple undirected graph, or an empty vector if no cycle exists.
+  \item \inlinecode{find\_cycle\_directed(adj)} returns one node cycle in a simple directed graph, or an empty vector if no cycle exists.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{find\_cycle\_undirected()} and \inlinecode{find\_cycle\_directed()}, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -416,13 +417,13 @@ std::vector<int> find_cycle_directed(const std::vector<std::vector<int>> &adj) {
   return cycle;
 }
 \end{lstlisting}
-The \inlinecode{CycleFinder} class is the more general multigraph variant. Its cycles are returned as edge IDs rather than vertex lists, which makes the representation robust for parallel edges. In an undirected graph, the cycles found this way form a DFS cycle basis: one cycle for each non-tree edge. In a directed graph, this finds cycles created by back edges to vertices still on the recursion stack. Here \inlinecode{state[v]} is $-1$ before discovery, $-2$ after finishing, and otherwise the index where the vertex first appeared in the current edge stack; that index marks which stack suffix forms a cycle.
+The \inlinecode{CycleFinder} class is the more general multigraph variant. Its cycles are returned as edge IDs rather than node lists, which makes the representation robust for parallel edges. In an undirected graph, the cycles found this way form a DFS cycle basis: one cycle for each non-tree edge. In a directed graph, this finds cycles created by back edges to nodes still on the recursion stack. Here \inlinecode{state[v]} is $-1$ before discovery, $-2$ after finishing, and otherwise the index where the node first appeared in the current edge stack; that index marks which stack suffix forms a cycle.
 
 \begin{compactitem}
   \item \inlinecode{CycleFinder(n, directed)} constructs a graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$. The graph is directed if \inlinecode{directed} is true, or undirected otherwise.
   \item \inlinecode{add\_edge(u, v)} adds an edge and returns its edge ID.
   \item \inlinecode{find\_cycles(max\_cycles, max\_total\_size)} returns simple cycles as vectors of edge IDs, stopping once either optional limit is reached.
-  \item \inlinecode{cycle\_vertices(edge\_cycle)} converts one edge-ID cycle into a corresponding cyclic list of vertices.
+  \item \inlinecode{cycle\_nodes(edge\_cycle)} converts one edge-ID cycle into a corresponding cyclic list of nodes.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -431,7 +432,7 @@ The \inlinecode{CycleFinder} class is the more general multigraph variant. Its c
   \item $O(n)$ per call to the constructor, where $n$ is the number of nodes.
   \item $O(1)$ per call to \inlinecode{add\_edge()}.
   \item $O(\max\left(n, m + s\right))$ per call to \inlinecode{find\_cycles()}, where $n$ is the number of nodes, $m$ is the number of edges, and $s$ is the total size of the returned cycles.
-  \item $O(k)$ per call to \inlinecode{cycle\_vertices()}, where $k$ is the number of edges in the cycle.
+  \item $O(k)$ per call to \inlinecode{cycle\_nodes()}, where $k$ is the number of edges in the cycle.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -439,7 +440,7 @@ The \inlinecode{CycleFinder} class is the more general multigraph variant. Its c
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph.
   \item $O(n)$ auxiliary stack space plus $O(s)$ auxiliary heap space for \inlinecode{find\_cycles()}, where $s$ is the total size of the returned cycles.
-  \item $O(k)$ auxiliary heap space for \inlinecode{cycle\_vertices()}, where $k$ is the number of edges in the cycle.
+  \item $O(k)$ auxiliary heap space for \inlinecode{cycle\_nodes()}, where $k$ is the number of edges in the cycle.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -455,7 +456,7 @@ class CycleFinder {
     if (static_cast<int>(cycles.size()) >= max_cycles || total_size >= max_total_size) {
       return;
     }
-    // -1 = unvisited, -2 = finished, otherwise the vertex's index in the current edge stack.
+    // -1 = unvisited, -2 = finished, otherwise the node's index in the current edge stack.
     state[u] = static_cast<int>(edge_stack.size());
     for (int id : adj[u]) {
       if (!directed && id == parent_edge) {
@@ -510,25 +511,25 @@ class CycleFinder {
     return cycles;
   }
 
-  std::vector<int> cycle_vertices(const std::vector<int> &edge_cycle) const {
+  std::vector<int> cycle_nodes(const std::vector<int> &edge_cycle) const {
     int size = static_cast<int>(edge_cycle.size());
-    std::vector<int> vertices;
+    std::vector<int> nodes;
     if (size == 0) {
-      return vertices;
+      return nodes;
     }
     if (size <= 2) {
-      vertices.push_back(edges[edge_cycle[0]].first);
+      nodes.push_back(edges[edge_cycle[0]].first);
       if (size == 2) {
-        vertices.push_back(edges[edge_cycle[0]].second);
+        nodes.push_back(edges[edge_cycle[0]].second);
       }
-      return vertices;
+      return nodes;
     }
     for (int i = 0; i < size; i++) {
       const auto &[au, av] = edges[edge_cycle[i]];
       const auto &[bu, bv] = edges[edge_cycle[(i + 1) % size]];
-      vertices.push_back((bu == au || bv == au) ? av : au);
+      nodes.push_back((bu == au || bv == au) ? av : au);
     }
-    return vertices;
+    return nodes;
   }
 };
 \end{lstlisting}
@@ -541,6 +542,10 @@ using namespace std;
 
 int main() {
   {
+    // 0---1    3---4
+    // |  /
+    // | /
+    // 2
     vector<vector<int>> adj(5);
     auto add_edge = [&](int u, int v) {
       adj[u].push_back(v);
@@ -554,6 +559,9 @@ int main() {
     assert((find_cycle_undirected(adj) == vector<int>{0, 1, 2}));
   }
   {
+    // 0 --> 1 --> 2    3 --> 4 --> 5
+    //                  ^           |
+    //                  |___________|
     vector<vector<int>> adj(6);
     adj[0].push_back(1);
     adj[1].push_back(2);
@@ -564,6 +572,11 @@ int main() {
     assert(find_cycle_directed({{1}, {2}, {}}).empty());
   }
   {
+    // 0---a---1
+    // |     /
+    // c   b
+    // | /
+    // 2-------3
     CycleFinder g(4, false);
     int a = g.add_edge(0, 1);
     int b = g.add_edge(1, 2);
@@ -573,10 +586,12 @@ int main() {
     assert(cycles.size() == 1);
     sort(cycles[0].begin(), cycles[0].end());
     assert((cycles[0] == vector<int>{a, b, c}));
-    vector<int> vertices = g.cycle_vertices(cycles[0]);
-    assert(vertices.size() == 3);
+    vector<int> nodes = g.cycle_nodes(cycles[0]);
+    assert(nodes.size() == 3);
   }
   {
+    // 0---a---1
+    // 0---b---1
     CycleFinder g(2, false);
     int a = g.add_edge(0, 1);
     int b = g.add_edge(0, 1);
@@ -587,6 +602,10 @@ int main() {
     assert((cycles[0] == vector<int>{a, b}));
   }
   {
+    // 0 ---> 1
+    // ^     /
+    // |    /
+    // 2 <-+
     CycleFinder g(3, true);
     g.add_edge(0, 1);
     g.add_edge(1, 2);
@@ -607,7 +626,12 @@ An unweighted tree possesses a center, centroid, and diameter. The centers are f
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{find\_centers()}, \inlinecode{find\_centroid()}, and \inlinecode{diameter()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary stack space for \inlinecode{find\_centers()}, \inlinecode{find\_centroid()}, and \inlinecode{diameter()}, where $n$ is the number of nodes.
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary heap space for \inlinecode{find\_centers()}, where $n$ is the number of nodes.
+  \item $O(n)$ auxiliary stack space for \inlinecode{find\_centroid()} and \inlinecode{diameter()}.
+\end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -708,8 +732,8 @@ int main() {
   for (int u : centers) {
     cout << " " << u;
   }
-  cout << "\nCentroid: " << find_centroid() << "\n";
-  cout << "Diameter length: " << diameter() << "\n";
+  cout << endl << "Centroid: " << find_centroid() << endl;
+  cout << "Diameter length: " << diameter() << endl;
   return 0;
 }
 \end{lstlisting}
@@ -823,22 +847,25 @@ class RerootingTree {
       down[u] = finalize(acc, u);
     }
     for (int u : order) {
-      std::vector<int> children;
       std::vector<Data> vals;
       for (int v : adj[u]) {
         if (parent[v] == u) {
-          children.push_back(v);
           vals.push_back(lift(down[v], v, u));
+        } else {
+          vals.push_back(outside[u]);
         }
       }
       std::vector<Data> suffix(vals.size() + 1, identity);
       for (int i = static_cast<int>(vals.size()) - 1; i >= 0; i--) {
         suffix[i] = combine(vals[i], suffix[i + 1]);
       }
-      Data prefix = outside[u];
-      for (int i = 0; i < static_cast<int>(children.size()); i++) {
-        Data without_child = finalize(combine(prefix, suffix[i + 1]), u);
-        outside[children[i]] = lift(without_child, u, children[i]);
+      Data prefix = identity;
+      for (int i = 0; i < static_cast<int>(adj[u].size()); i++) {
+        int v = adj[u][i];
+        if (parent[v] == u) {
+          Data without_child = finalize(combine(prefix, suffix[i + 1]), u);
+          outside[v] = lift(without_child, u, v);
+        }
         prefix = combine(prefix, vals[i]);
       }
       answer[u] = finalize(prefix, u);
@@ -852,6 +879,7 @@ class RerootingTree {
 \begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
+#include <string>
 using namespace std;
 
 vector<int64_t> sum_distances_all_roots(RerootingTree &tree) {
@@ -895,11 +923,22 @@ int main() {
   assert(!tree.is_ancestor(3, 2));
   vector<int64_t> distances = sum_distances_all_roots(tree);
   assert((distances == vector<int64_t>{8, 5, 8, 6, 9}));
+
+  // Associative contributions retain adjacency-list order even when combine is not commutative.
+  RerootingTree ordered(3);
+  ordered.add_edge(1, 2);
+  ordered.add_edge(0, 1);  // adj[1] is [2, 0], while 0 is its parent in the initial rooting.
+  auto combine = [](string a, const string &b) { return a + b; };
+  auto finalize = [](string a, int u) { return a + to_string(u); };
+  auto lift = [](const string &a, int, int) { return a; };
+  vector<string> traversal = ordered.rerooting_dp(string{}, combine, finalize, lift);
+  assert(traversal[1] == "201");
+
   cout << "Sum of distances from each root:";
   for (int64_t d : distances) {
     cout << " " << d;
   }
-  cout << "\n";
+  cout << endl;
   return 0;
 }
 \end{lstlisting}
@@ -912,14 +951,14 @@ Given a rooted tree, compute a mutable summary for every subtree by merging chil
 This pattern is often called DSU on tree, although it is unrelated to the disjoint-set union data structure used by Kruskal's algorithm. It is useful for subtree queries whose answer can be maintained by inserting all items from child summaries into one mutable summary, such as distinct colors, frequency modes, or other multiset-style statistics.
 
 \begin{compactitem}
-  \item \inlinecode{subtree\_small\_to\_large\_merge(adj, root, init, merge, answer)} visits the tree rooted at \inlinecode{root}. The callback \inlinecode{init(u)} returns the initial summary for node \inlinecode{u}; \inlinecode{merge(big, small)} absorbs one child summary into another; and \inlinecode{answer(u, summary)} records the final subtree summary for \inlinecode{u}.
+  \item \inlinecode{subtree\_small\_to\_large\_merge(adj, root, init, merge, answer)} visits the tree rooted at \inlinecode{root}, given by the bidirectional adjacency list \inlinecode{adj}, which must form a valid tree. The callback \inlinecode{init(u)} returns the initial summary for node \inlinecode{u}; \inlinecode{merge(big, small)} absorbs one child summary into another; and \inlinecode{answer(u, summary)} records the final subtree summary for \inlinecode{u}.
 \end{compactitem}
 
-The input must be a tree. Summary objects must support \inlinecode{.size()}, and \inlinecode{merge(big, small)} should iterate over \inlinecode{small} and insert into \inlinecode{big}.
+Summary objects must support \inlinecode{.size()}, and \inlinecode{merge(big, small)} should iterate over \inlinecode{small} and insert into \inlinecode{big}.
 
 \textbf{Time Complexity}: $O(n \log n)$ expected moved items per call, where $n$ is the number of nodes.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary stack space and $O(n)$ auxiliary heap space.
+\textbf{Space Complexity}: $O(n)$ auxiliary stack space and $O(n \log n)$ auxiliary heap space in the worst case, since absorbed summaries remain stored.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -1069,9 +1108,27 @@ class CentroidDecomposition {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <algorithm>
 #include <cassert>
+#include <climits>
 #include <iostream>
 using namespace std;
+
+// Example-only distance helper; use LCA preprocessing for O(1) distances in a full solution.
+int tree_dist(const vector<vector<int>> &adj, int u, int target, int p = -1) {
+  if (u == target) {
+    return 0;
+  }
+  for (int v : adj[u]) {
+    if (v != p) {
+      int d = tree_dist(adj, v, target, u);
+      if (d != -1) {
+        return d + 1;
+      }
+    }
+  }
+  return -1;
+}
 
 int main() {
   // 0---1---3---5---6
@@ -1092,16 +1149,39 @@ int main() {
   assert(tree.parent(3) == -1);
   assert(tree.parent(1) == 3);
   assert(tree.parent(5) == 3);
+
+  const int INF = INT_MAX / 2;
+  vector<int> best(7, INF);
+  auto mark = [&](int u) {
+    for (int c = u; c != -1; c = tree.parent(c)) {
+      best[c] = min(best[c], tree_dist(adj, u, c));
+    }
+  };
+  auto nearest_marked = [&](int u) {
+    int answer = INF;
+    for (int c = u; c != -1; c = tree.parent(c)) {
+      answer = min(answer, best[c] + tree_dist(adj, u, c));
+    }
+    return answer;
+  };
+  mark(0);
+  mark(6);
+  assert(nearest_marked(2) == 2);
+  assert(nearest_marked(4) == 3);
+  assert(nearest_marked(5) == 1);
+
   cout << "Centroid parents:";
   for (int u = 0; u < 7; u++) {
     cout << " " << tree.parent(u);
   }
-  cout << "\n";
+  cout << endl;
+  cout << "Nearest marked distance from 4: " << nearest_marked(4) << endl;
   return 0;
 }
 \end{lstlisting}
 \begin{exampleoutput}
 Centroid parents: 1 3 1 -1 3 3 5
+Nearest marked distance from 4: 3
 \end{exampleoutput}
 \subsection{Prufer Code}
 Encode and decode labeled trees using Prufer codes. A Prufer code is a sequence of length $n - 2$ that uniquely represents a labeled tree on nodes $0, 1, \ldots, n - 1$. It is useful for counting labeled trees, generating test cases, and converting between trees and compact sequences. Encoding repeatedly removes a leaf and records its neighbor until two nodes remain; decoding reverses this, deducing each removed leaf from the node degrees implied by the code. Both functions choose the smallest available leaf at each step. This makes the implementation deterministic and matches the usual textbook convention.
@@ -1110,6 +1190,8 @@ Encode and decode labeled trees using Prufer codes. A Prufer code is a sequence 
   \item \inlinecode{encode\_prufer()} returns the prufer code for the global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must form a valid tree with nodes numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}.
   \item \inlinecode{decode\_prufer()} takes a Prufer code and returns the corresponding tree edges.
 \end{compactitem}
+
+The encoded tree must contain at least two nodes, since the empty code represents the unique tree on two nodes.
 
 \textbf{Time Complexity}: $O(n \log n)$ per call to \inlinecode{encode\_prufer()} or \inlinecode{decode\_prufer()}, where $n$ is the number of nodes in the tree.
 
@@ -1220,11 +1302,11 @@ A Eulerian trail is a path in a graph which contains every edge exactly once. A 
 Hierholzer's algorithm walks unused edges until stuck, then backtracks to splice each closed detour into the final trail. For a directed graph known to have a trail from \inlinecode{start}, the core algorithm can simply consume outgoing edges by popping them from a local copy of the adjacency list.
 
 \begin{compactitem}
-  \item \inlinecode{known\_eulerian\_path\_directed(adj, start)} returns a vertex trail using every directed edge in \inlinecode{adj} exactly once, assuming such a trail exists and begins at \inlinecode{start}.
-  \item \inlinecode{eulerian\_path\_directed(adj, start = -1)} returns a vertex trail using every directed edge in \inlinecode{adj} exactly once, or an empty vector if no such trail exists. If \inlinecode{start} $= -1$, a valid start is chosen automatically; otherwise the trail must begin at \inlinecode{start}.
+  \item \inlinecode{known\_eulerian\_path\_directed(adj, start)} returns a node trail using every directed edge in \inlinecode{adj} exactly once, assuming such a trail exists and begins at \inlinecode{start}.
+  \item \inlinecode{eulerian\_path\_directed(adj, start = -1)} returns a node trail using every directed edge in \inlinecode{adj} exactly once, or an empty vector if no such trail exists. If \inlinecode{start} $= -1$, a valid start is chosen automatically; otherwise the trail must begin at \inlinecode{start}.
 \end{compactitem}
 
-Parallel directed edges are supported by storing duplicate neighbors in \inlinecode{adj}. Since these functions return only vertices, use \inlinecode{EulerianGraph} below when edge IDs are needed.
+Parallel directed edges are supported by storing duplicate neighbors in \inlinecode{adj}. Since these functions return only nodes, use \inlinecode{EulerianGraph} below when edge IDs are needed.
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{known\_eulerian\_path\_directed()} and \inlinecode{eulerian\_path\_directed()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
@@ -1412,25 +1494,25 @@ class EulerianGraph {
     return 0;
   }
 
-  std::vector<int> build_vertices(int start, const std::vector<int> &trail_edges) const {
-    std::vector<int> vertices{start};
+  std::vector<int> build_nodes(int start, const std::vector<int> &trail_edges) const {
+    std::vector<int> nodes{start};
     int u = start;
     for (int id : trail_edges) {
       const auto &[eu, ev] = edges[id];
       u = directed ? ev : eu ^ ev ^ u;
-      vertices.push_back(u);
+      nodes.push_back(u);
     }
-    return vertices;
+    return nodes;
   }
 
  public:
   struct EulerianTrail {
     int start = -1;
     std::vector<int> edges;
-    std::vector<int> vertices;
+    std::vector<int> nodes;
 
     bool is_cycle() const {
-      return start != -1 && vertices.size() > 1 && vertices.front() == vertices.back();
+      return start != -1 && nodes.size() > 1 && nodes.front() == nodes.back();
     }
   };
 
@@ -1449,6 +1531,9 @@ class EulerianGraph {
   EulerianTrail eulerian_path(int start = -1) const {
     int n = static_cast<int>(adj.size());
     int m = static_cast<int>(edges.size());
+    if (n == 0) {
+      return EulerianTrail{};
+    }
     if (m == 0) {
       int s = (start == -1 ? 0 : start);
       return EulerianTrail{s, {}, {s}};
@@ -1460,9 +1545,9 @@ class EulerianGraph {
       start = choose_start();
     }
     std::vector<char> used(m, false);
-    std::vector<int> ptr(n), vertex_stack{start}, edge_stack{-1}, trail_edges;
-    while (!vertex_stack.empty()) {
-      int u = vertex_stack.back();
+    std::vector<int> ptr(n), node_stack{start}, edge_stack{-1}, trail_edges;
+    while (!node_stack.empty()) {
+      int u = node_stack.back();
       while (ptr[u] < static_cast<int>(adj[u].size()) && used[adj[u][ptr[u]]]) {
         ptr[u]++;
       }
@@ -1470,14 +1555,14 @@ class EulerianGraph {
         if (edge_stack.back() != -1) {
           trail_edges.push_back(edge_stack.back());
         }
-        vertex_stack.pop_back();
+        node_stack.pop_back();
         edge_stack.pop_back();
       } else {
         int id = adj[u][ptr[u]++];
         used[id] = true;
         const auto &[eu, ev] = edges[id];
         int v = directed ? ev : eu ^ ev ^ u;
-        vertex_stack.push_back(v);
+        node_stack.push_back(v);
         edge_stack.push_back(id);
       }
     }
@@ -1485,7 +1570,7 @@ class EulerianGraph {
       return EulerianTrail{};
     }
     std::reverse(trail_edges.begin(), trail_edges.end());
-    return EulerianTrail{start, trail_edges, build_vertices(start, trail_edges)};
+    return EulerianTrail{start, trail_edges, build_nodes(start, trail_edges)};
   }
 };
 \end{lstlisting}
@@ -1496,13 +1581,13 @@ class EulerianGraph {
 #include <iostream>
 using namespace std;
 
-void print_vertices(const string &label, const vector<int> &vertices) {
+void print_nodes(const string &label, const vector<int> &nodes) {
   cout << label << ": ";
-  for (int i = 0; i < static_cast<int>(vertices.size()); i++) {
+  for (int i = 0; i < static_cast<int>(nodes.size()); i++) {
     if (i > 0) {
       cout << "->";
     }
-    cout << vertices[i];
+    cout << nodes[i];
   }
   cout << endl;
 }
@@ -1522,13 +1607,13 @@ int main() {
     vector<int> path = eulerian_path_directed(adj);
     assert((path == vector<int>{0, 1, 2, 0, 3}));
     assert(eulerian_path_directed(adj, 1).empty());
-    print_vertices("Simple directed path", path);
+    print_nodes("Simple directed path", path);
   }
   {
     // 0 <--- 2
-    // |    ^ ^
-    // |   /  |
-    // v /    |
+    // |     ^
+    // |   /
+    // v /
     // 1 ---> 3 ---> 4
     // ^_____________|
     EulerianGraph g(5, true);
@@ -1540,15 +1625,15 @@ int main() {
     g.add_edge(4, 1);
     auto trail = g.eulerian_path(0);
     assert(trail.edges.size() == 6);
-    assert(trail.vertices.front() == 0 && trail.vertices.back() == 0);
+    assert(trail.nodes.front() == 0 && trail.nodes.back() == 0);
     assert(trail.is_cycle());
-    print_vertices("Directed Eulerian cycle", trail.vertices);
+    print_nodes("Directed Eulerian cycle", trail.nodes);
   }
   {
     // 0 ---- 2
-    // |     /|
-    // |   /  |
-    // | /    |
+    // |     /
+    // |   /
+    // | /
     // 1 ---- 3 ---- 4
     // |_____________|
     EulerianGraph g(5, false);
@@ -1560,9 +1645,9 @@ int main() {
     g.add_edge(4, 1);
     auto trail = g.eulerian_path();
     assert(trail.edges.size() == 6);
-    assert(trail.vertices.front() == trail.vertices.back());
+    assert(trail.nodes.front() == trail.nodes.back());
     assert(trail.is_cycle());
-    print_vertices("Undirected Eulerian cycle", trail.vertices);
+    print_nodes("Undirected Eulerian cycle", trail.nodes);
   }
   {
     EulerianGraph g(2, false);
@@ -1571,7 +1656,11 @@ int main() {
     auto trail = g.eulerian_path(0);
     assert(trail.is_cycle());
     assert((trail.edges == vector<int>{a, b} || trail.edges == vector<int>{b, a}));
-    print_vertices("Parallel-edge cycle", trail.vertices);
+    print_nodes("Parallel-edge cycle", trail.nodes);
+  }
+  {
+    EulerianGraph g(0, false);
+    assert(g.eulerian_path().start == -1);
   }
   {
     EulerianGraph g(3, true);
@@ -1579,9 +1668,9 @@ int main() {
     g.add_edge(1, 2);
     auto trail = g.eulerian_path();
     assert(trail.start == 0);
-    assert((trail.vertices == vector<int>{0, 1, 2}));
+    assert((trail.nodes == vector<int>{0, 1, 2}));
     assert(!trail.is_cycle());
-    print_vertices("Directed Eulerian path", trail.vertices);
+    print_nodes("Directed Eulerian path", trail.nodes);
   }
   return 0;
 }
@@ -1614,7 +1703,6 @@ Given an undirected graph, label every node with its connected component and col
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <vector>
 
 std::vector<std::vector<int>> adj;
@@ -1666,13 +1754,13 @@ int main() {
   assert(comp_id[0] == comp_id[2]);
   assert(comp_id[0] != comp_id[3]);
   assert(comp_id[5] == 2);
-  cout << "Connected components:\n";
+  cout << "Connected components:" << endl;
   for (int i = 0; i < static_cast<int>(components.size()); i++) {
     cout << i << ":";
     for (int u : components[i]) {
       cout << " " << u;
     }
-    cout << "\n";
+    cout << endl;
   }
   return 0;
 }
@@ -1684,12 +1772,14 @@ Connected components:
 2: 5
 \end{exampleoutput}
 \subsection{Strongly Connected Components (Kosaraju)}
-Given a directed graph, determine the strongly connected components (SCCs) using the Kosaraju-Sharir algorithm. A strongly connected component is a maximal set of vertices where every vertex can reach every other vertex. Condensing each SCC into one node produces a directed acyclic graph. The algorithm runs two passes of depth-first search: the first records the order in which nodes finish, and the second explores the transposed graph in reverse finish order, with each search collecting exactly one component.
+Given a directed graph, determine the strongly connected components (SCCs) using the Kosaraju-Sharir algorithm. A strongly connected component is a maximal set of nodes where every node can reach every other node. Condensing each SCC into one node produces a directed acyclic graph. The algorithm runs two passes of depth-first search: the first records the order in which nodes finish, and the second explores the transposed graph in reverse finish order, with each search collecting exactly one component.
 
 \begin{compactitem}
   \item \inlinecode{KosarajuSCC(n = 0)} constructs a directed graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
   \item \inlinecode{add\_edge(u, v)} adds the directed edge from \inlinecode{u} to \inlinecode{v}.
-  \item \inlinecode{build\_scc()} populates \inlinecode{scc} with the strongly connected components and \inlinecode{component[v]} with the component ID containing vertex \inlinecode{v}. Component IDs are in topological order: for every edge from component $a$ to a different component $b$, $a < b$.
+  \item \inlinecode{build\_scc()} computes the strongly connected components.
+  \item \inlinecode{components()} returns the strongly connected components from the last \inlinecode{build\_scc()} call.
+  \item \inlinecode{component\_id(v)} returns the component ID containing node \inlinecode{v}. Component IDs are in topological order: for every edge from component $a$ to a different component $b$, $a < b$.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{build\_scc()}, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -1705,17 +1795,10 @@ Given a directed graph, determine the strongly connected components (SCCs) using
 #include <algorithm>
 #include <vector>
 
-struct KosarajuSCC {
+class KosarajuSCC {
   std::vector<std::vector<int>> adj, rev, scc;
   std::vector<int> component;
   std::vector<char> visited;
-
-  KosarajuSCC(int n = 0) : adj(n), rev(n) {}
-
-  void add_edge(int u, int v) {
-    adj[u].push_back(v);
-    rev[v].push_back(u);
-  }
 
   void dfs(const std::vector<std::vector<int>> &g, std::vector<int> &res, int u) {
     visited[u] = true;
@@ -1738,6 +1821,14 @@ struct KosarajuSCC {
     }
   }
 
+ public:
+  KosarajuSCC(int n = 0) : adj(n), rev(n) {}
+
+  void add_edge(int u, int v) {
+    adj[u].push_back(v);
+    rev[v].push_back(u);
+  }
+
   void build_scc() {
     int n = static_cast<int>(adj.size());
     visited.assign(n, false);
@@ -1755,11 +1846,14 @@ struct KosarajuSCC {
       if (visited[u]) {
         continue;
       }
-      std::vector<int> component_vertices;
-      dfs_component(u, static_cast<int>(scc.size()), component_vertices);
-      scc.push_back(component_vertices);
+      std::vector<int> component_nodes;
+      dfs_component(u, static_cast<int>(scc.size()), component_nodes);
+      scc.push_back(component_nodes);
     }
   }
+
+  const std::vector<std::vector<int>> &components() const { return scc; }
+  int component_id(int v) const { return component[v]; }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -1795,13 +1889,13 @@ int main() {
   // SCC condensation DAG:
   // {0,1,4} -> {2,3,7} -> {5,6}
   //     \-------------------^
-  assert(g.scc.size() == 3);
-  assert(g.component[0] == g.component[1] && g.component[1] == g.component[4]);
-  assert(g.component[2] == g.component[3] && g.component[3] == g.component[7]);
-  assert(g.component[5] == g.component[6]);
-  assert(g.component[0] != g.component[2] && g.component[2] != g.component[5]);
+  assert(g.components().size() == 3);
+  assert(g.component_id(0) == g.component_id(1) && g.component_id(1) == g.component_id(4));
+  assert(g.component_id(2) == g.component_id(3) && g.component_id(3) == g.component_id(7));
+  assert(g.component_id(5) == g.component_id(6));
+  assert(g.component_id(0) != g.component_id(2) && g.component_id(2) != g.component_id(5));
   cout << "Components:" << endl;
-  for (auto &component : g.scc) {
+  for (const auto &component : g.components()) {
     for (int v : component) {
       cout << v << " ";
     }
@@ -1817,12 +1911,14 @@ Components:
 5 6
 \end{exampleoutput}
 \subsection{Strongly Connected Components (Tarjan)}
-Given a directed graph, determine the strongly connected components (SCCs) using Tarjan's algorithm. A strongly connected component is a maximal set of vertices where every vertex can reach every other vertex. Condensing each SCC into one node produces a directed acyclic graph. A single depth-first search keeps visited nodes on a stack and tracks each node's low-link, the smallest entry time reachable from its subtree; a node whose low-link equals its own entry time roots a component, which is popped off the stack in one piece.
+Given a directed graph, determine the strongly connected components (SCCs) using Tarjan's algorithm. A strongly connected component is a maximal set of nodes where every node can reach every other node. Condensing each SCC into one node produces a directed acyclic graph. A single depth-first search keeps visited nodes on a stack and tracks each node's low-link, the smallest entry time reachable from its subtree; a node whose low-link equals its own entry time roots a component, which is popped off the stack in one piece.
 
 \begin{compactitem}
   \item \inlinecode{TarjanSCC(n = 0)} constructs a directed graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
   \item \inlinecode{add\_edge(u, v)} adds the directed edge from \inlinecode{u} to \inlinecode{v}.
-  \item \inlinecode{build\_scc()} populates \inlinecode{scc} with the strongly connected components and \inlinecode{component[v]} with the component ID containing vertex \inlinecode{v}. Component IDs are in reverse topological order: for every edge from component $a$ to a different component $b$, $a > b$.
+  \item \inlinecode{build\_scc()} computes the strongly connected components.
+  \item \inlinecode{components()} returns the strongly connected components from the last \inlinecode{build\_scc()} call.
+  \item \inlinecode{component\_id(v)} returns the component ID containing node \inlinecode{v}. Component IDs are in reverse topological order: for every edge from component $a$ to a different component $b$, $a > b$.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{build\_scc()}, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -1835,20 +1931,15 @@ Given a directed graph, determine the strongly connected components (SCCs) using
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <climits>
 #include <vector>
 
-struct TarjanSCC {
+class TarjanSCC {
   static const int INF = INT_MAX / 2;
   std::vector<std::vector<int>> adj, scc;
   std::vector<int> component, active, lowlink;
   std::vector<char> visited;
   int timer;
-
-  TarjanSCC(int n = 0) : adj(n) {}
-
-  void add_edge(int u, int v) { adj[u].push_back(v); }
 
   void dfs(int u) {
     lowlink[u] = timer++;
@@ -1880,6 +1971,11 @@ struct TarjanSCC {
     scc.push_back(comp_nodes);
   }
 
+ public:
+  TarjanSCC(int n = 0) : adj(n) {}
+
+  void add_edge(int u, int v) { adj[u].push_back(v); }
+
   void build_scc() {
     int n = static_cast<int>(adj.size());
     scc.clear();
@@ -1894,6 +1990,9 @@ struct TarjanSCC {
       }
     }
   }
+
+  const std::vector<std::vector<int>> &components() const { return scc; }
+  int component_id(int v) const { return component[v]; }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -1929,13 +2028,13 @@ int main() {
   // SCC condensation DAG:
   // {0,1,4} -> {2,3,7} -> {5,6}
   //     \-------------------^
-  assert(g.scc.size() == 3);
-  assert(g.component[0] == g.component[1] && g.component[1] == g.component[4]);
-  assert(g.component[2] == g.component[3] && g.component[3] == g.component[7]);
-  assert(g.component[5] == g.component[6]);
-  assert(g.component[0] != g.component[2] && g.component[2] != g.component[5]);
+  assert(g.components().size() == 3);
+  assert(g.component_id(0) == g.component_id(1) && g.component_id(1) == g.component_id(4));
+  assert(g.component_id(2) == g.component_id(3) && g.component_id(3) == g.component_id(7));
+  assert(g.component_id(5) == g.component_id(6));
+  assert(g.component_id(0) != g.component_id(2) && g.component_id(2) != g.component_id(5));
   cout << "Components:" << endl;
-  for (auto &component : g.scc) {
+  for (const auto &component : g.components()) {
     for (int v : component) {
       cout << v << " ";
     }
@@ -1953,7 +2052,7 @@ Components:
 \subsection{Dominator Tree (Lengauer-Tarjan)}
 Given a directed graph and a start node, find the immediate dominator of every node reachable from the start. A node \inlinecode{u} dominates node \inlinecode{v} if every path from the start to \inlinecode{v} passes through \inlinecode{u}. The immediate dominator \inlinecode{idom[v]} is the closest strict dominator of \inlinecode{v}; these parent links form the dominator tree rooted at the start. Dominator trees are useful in control-flow graphs, program analysis, and reachability problems with unavoidable checkpoints.
 
-Lengauer-Tarjan's algorithm numbers vertices by DFS order, computes each reachable node's semidominator using a disjoint-set structure with path compression, and then resolves immediate dominators from semidominator buckets.
+Lengauer-Tarjan's algorithm numbers nodes by DFS order, computes each reachable node's semidominator using a disjoint-set structure with path compression, and then resolves immediate dominators from semidominator buckets.
 
 \begin{compactitem}
   \item \inlinecode{Dominators(n)} constructs a directed graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
@@ -1976,12 +2075,12 @@ Lengauer-Tarjan's algorithm numbers vertices by DFS order, computes each reachab
 
 class Dominators {
   std::vector<std::vector<int>> adj, pred, bucket;
-  std::vector<int> time, vertex, parent, sdom, idom_index, dsu, best;
+  std::vector<int> time, node_at_time, parent, sdom, idom_index, dsu, best;
   int timer;
 
   void dfs(int u) {
     time[u] = ++timer;
-    vertex[timer] = u;
+    node_at_time[timer] = u;
     sdom[timer] = dsu[timer] = best[timer] = timer;
     for (int v : adj[u]) {
       if (time[v] == 0) {
@@ -2016,7 +2115,7 @@ class Dominators {
     int n = static_cast<int>(adj.size());
     timer = 0;
     time.assign(n, 0);
-    vertex.assign(n + 1, 0);
+    node_at_time.assign(n + 1, 0);
     parent.assign(n + 1, 0);
     sdom.assign(n + 1, 0);
     idom_index.assign(n + 1, 0);
@@ -2046,7 +2145,7 @@ class Dominators {
       if (idom_index[i] != sdom[i]) {
         idom_index[i] = idom_index[idom_index[i]];
       }
-      idom[vertex[i]] = vertex[idom_index[i]];
+      idom[node_at_time[i]] = node_at_time[idom_index[i]];
     }
     return idom;
   }
@@ -2087,15 +2186,18 @@ int main() {
 Immediate dominators: 0 0 0 0 3 3 3
 \end{exampleoutput}
 \subsection{Articulation Points, Biconnected Components, Block-Cut Forest}
-Given an undirected graph, compute articulation points, vertex-biconnected components (BCCs), and the block-cut forest using Tarjan's algorithm. An articulation point (a.k.a. cut vertex) is a vertex whose removal increases the number of connected components in the graph. A vertex-biconnected component is a maximal subgraph that cannot be disconnected by removing one vertex, with single-edge and isolated-vertex components handled as degenerate cases. A single depth-first search tracks each node's low-link, the earliest entry time reachable from its subtree: a node is an articulation point exactly when some child's subtree cannot reach above it, and the edges of each BCC are collected on a stack popped at that moment.
+Given an undirected graph, compute articulation points, vertex-biconnected components (BCCs), and the block-cut forest using Tarjan's algorithm. An articulation point (a.k.a. cut vertex) is a node whose removal increases the number of connected components in the graph. A vertex-biconnected component is a maximal subgraph that cannot be disconnected by removing one node, with single-edge and isolated-node components handled as degenerate cases. A single depth-first search tracks each node's low-link, the earliest entry time reachable from its subtree: a node is an articulation point exactly when some child's subtree cannot reach above it, and the edges of each BCC are collected on a stack popped at that moment.
 
 The block-cut forest is a bipartite forest with one node for each BCC and one node for each articulation point, with an edge whenever an articulation point belongs to a BCC. Note that this differs from a bridge forest: the block-cut forest describes vertex connectivity, while a bridge forest describes edge connectivity after compressing 2-edge-connected components.
 
 \begin{compactitem}
   \item \inlinecode{BiconnectedComponents(n = 0)} constructs an undirected graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
   \item \inlinecode{add\_edge(u, v)} adds the undirected edge \inlinecode{u}-\inlinecode{v}. Parallel edges are supported.
-  \item \inlinecode{build\_bcc()} populates \inlinecode{articulation\_points} and \inlinecode{bccs}.
-  \item \inlinecode{build\_block\_cut\_forest()} populates \inlinecode{block\_cut\_forest} and \inlinecode{block\_cut\_id} using the results of the previous \inlinecode{build\_bcc()} call. After the call, \inlinecode{block\_cut\_forest} nodes are numbered in the range $[0, {\inlinecodemath{bccs.size()}})$, and \inlinecode{block\_cut\_id[v]} stores the node ID of articulation point \inlinecode{v} in the block-cut forest, or $-1$ if \inlinecode{v} is not an articulation point.
+  \item \inlinecode{build\_bcc()} computes the articulation points and vertex-biconnected components.
+  \item \inlinecode{articulation\_points()} and \inlinecode{components()} return those results.
+  \item \inlinecode{build\_block\_cut\_forest()} computes the block-cut forest using the results of the previous \inlinecode{build\_bcc()} call.
+  \item \inlinecode{block\_cut\_forest()} returns that forest. Its component nodes are numbered in the range $[0, {\inlinecodemath{components().size()}})$.
+  \item \inlinecode{block\_cut\_id(v)} returns the block-cut forest node representing articulation point \inlinecode{v}, or $-1$ if \inlinecode{v} is not an articulation point.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{build\_bcc()} and \inlinecode{build\_block\_cut\_forest()}, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -2112,22 +2214,13 @@ The block-cut forest is a bipartite forest with one node for each BCC and one no
 #include <utility>
 #include <vector>
 
-struct BiconnectedComponents {
-  std::vector<std::vector<int>> adj, bccs, block_cut_forest;
-  std::vector<int> lowlink, tin, block_cut_id, articulation_points;
+class BiconnectedComponents {
+  std::vector<std::vector<int>> adj, bccs, forest;
+  std::vector<int> lowlink, tin, forest_id, articulation;
   std::vector<char> visited, is_articulation;
   std::vector<std::pair<int, int>> edges;
   std::vector<int> edge_stack;
   int timer;
-
-  BiconnectedComponents(int n = 0) : adj(n) {}
-
-  void add_edge(int u, int v) {
-    int id = static_cast<int>(edges.size());
-    adj[u].push_back(id);
-    adj[v].push_back(id);
-    edges.emplace_back(u, v);
-  }
 
   int other(int id, int u) const { return edges[id].first ^ edges[id].second ^ u; }
 
@@ -2179,9 +2272,19 @@ struct BiconnectedComponents {
     }
   }
 
+ public:
+  BiconnectedComponents(int n = 0) : adj(n) {}
+
+  void add_edge(int u, int v) {
+    int id = static_cast<int>(edges.size());
+    adj[u].push_back(id);
+    adj[v].push_back(id);
+    edges.emplace_back(u, v);
+  }
+
   void build_bcc() {
     int n = static_cast<int>(adj.size());
-    articulation_points.clear();
+    articulation.clear();
     bccs.clear();
     edge_stack.clear();
     lowlink.assign(n, 0);
@@ -2196,7 +2299,7 @@ struct BiconnectedComponents {
     }
     for (int i = 0; i < n; i++) {
       if (is_articulation[i]) {
-        articulation_points.push_back(i);
+        articulation.push_back(i);
       }
     }
   }
@@ -2204,21 +2307,26 @@ struct BiconnectedComponents {
   void build_block_cut_forest() {
     int n = static_cast<int>(adj.size());
     int blocks = static_cast<int>(bccs.size());
-    block_cut_id.assign(n, -1);
+    forest_id.assign(n, -1);
     int total = blocks;
-    for (int v : articulation_points) {
-      block_cut_id[v] = total++;
+    for (int v : articulation) {
+      forest_id[v] = total++;
     }
-    block_cut_forest.assign(total, {});
+    forest.assign(total, {});
     for (int b = 0; b < blocks; b++) {
       for (int v : bccs[b]) {
-        if (block_cut_id[v] != -1) {
-          block_cut_forest[b].push_back(block_cut_id[v]);
-          block_cut_forest[block_cut_id[v]].push_back(b);
+        if (forest_id[v] != -1) {
+          forest[b].push_back(forest_id[v]);
+          forest[forest_id[v]].push_back(b);
         }
       }
     }
   }
+
+  const std::vector<int> &articulation_points() const { return articulation; }
+  const std::vector<std::vector<int>> &components() const { return bccs; }
+  const std::vector<std::vector<int>> &block_cut_forest() const { return forest; }
+  int block_cut_id(int v) const { return forest_id[v]; }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -2240,11 +2348,11 @@ int main() {
   g.add_edge(4, 5);
   g.build_bcc();
   cout << "Articulation points:";
-  for (int v : g.articulation_points) {
+  for (int v : g.articulation_points()) {
     cout << " " << v;
   }
   cout << endl << "Biconnected components:" << endl;
-  for (auto &component : g.bccs) {
+  for (const auto &component : g.components()) {
     for (int v : component) {
       cout << v << " ";
     }
@@ -2252,9 +2360,10 @@ int main() {
   }
   g.build_block_cut_forest();
   cout << "Adjacency List for Block-Cut Forest:" << endl;
-  for (int i = 0, n = static_cast<int>(g.block_cut_forest.size()); i < n; i++) {
+  const auto &forest = g.block_cut_forest();
+  for (int i = 0, n = static_cast<int>(forest.size()); i < n; i++) {
     cout << i << " =>";
-    for (int v : g.block_cut_forest[i]) {
+    for (int v : forest[i]) {
       cout << " " << v;
     }
     cout << endl;
@@ -2280,15 +2389,17 @@ Adjacency List for Block-Cut Forest:
 6 => 1 2
 \end{exampleoutput}
 \subsection{Bridges, 2-Edge-Connected Components, Bridge Forest}
-Given an undirected graph, compute bridges, 2-edge-connected components, and the bridge forest using Tarjan's algorithm. A bridge is an edge whose removal increases the number of connected components in the graph. A 2-edge-connected component is a maximal set of vertices connected without crossing any bridge. A single depth-first search tracks each node's low-link, the earliest entry time reachable from its subtree: a tree edge is a bridge exactly when the child's subtree cannot reach back to the parent's side by any other route.
+Given an undirected graph, compute bridges, 2-edge-connected components, and the bridge forest using Tarjan's algorithm. A bridge is an edge whose removal increases the number of connected components in the graph. A 2-edge-connected component is a maximal set of nodes connected without crossing a bridge. A single depth-first search tracks each node's low-link, the earliest entry time reachable from its subtree: a tree edge is a bridge exactly when the child's subtree cannot reach back to the parent's side by any other route.
 
 After each 2-edge-connected component is condensed into one node, the original bridges connect those nodes into a bridge tree, or a bridge forest when the original graph is disconnected. This differs from a block-cut forest: the bridge forest describes edge connectivity, while the block-cut forest describes vertex connectivity using articulation points and vertex-biconnected components.
 
 \begin{compactitem}
   \item \inlinecode{BridgeDecomposition(n = 0)} constructs an undirected graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
   \item \inlinecode{add\_edge(u, v)} adds the undirected edge \inlinecode{u}-\inlinecode{v}. Parallel edges are supported.
-  \item \inlinecode{build\_bridges()} populates \inlinecode{bridges}.
-  \item \inlinecode{build\_bridge\_forest()} populates \inlinecode{component}, \inlinecode{two\_edge\_components}, and \inlinecode{bridge\_forest} using the results of the previous \inlinecode{build\_bridges()} call. After the call, \inlinecode{component[u]} stores the 2-edge-connected component ID containing vertex \inlinecode{u}.
+  \item \inlinecode{build\_bridges()} computes the bridges, returned by \inlinecode{bridges()}.
+  \item \inlinecode{build\_bridge\_forest()} computes the 2-edge-connected components and bridge forest using the results of the previous \inlinecode{build\_bridges()} call.
+  \item \inlinecode{components()} and \inlinecode{bridge\_forest()} return those results.
+  \item \inlinecode{component\_id(u)} returns the 2-edge-connected component ID containing node \inlinecode{u}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{build\_bridges()} followed by \inlinecode{build\_bridge\_forest()}, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -2305,21 +2416,12 @@ After each 2-edge-connected component is condensed into one node, the original b
 #include <utility>
 #include <vector>
 
-struct BridgeDecomposition {
-  std::vector<std::vector<int>> adj, two_edge_components, bridge_forest;
+class BridgeDecomposition {
+  std::vector<std::vector<int>> adj, two_edge_components, forest;
   std::vector<int> lowlink, tin, component;
   std::vector<char> visited, is_bridge_edge;
-  std::vector<std::pair<int, int>> edges, bridges;
+  std::vector<std::pair<int, int>> edges, bridge_edges;
   int timer;
-
-  BridgeDecomposition(int n = 0) : adj(n) {}
-
-  void add_edge(int u, int v) {
-    int id = static_cast<int>(edges.size());
-    adj[u].push_back(id);
-    adj[v].push_back(id);
-    edges.emplace_back(u, v);
-  }
 
   int other(int id, int u) const { return edges[id].first ^ edges[id].second ^ u; }
 
@@ -2337,24 +2439,9 @@ struct BridgeDecomposition {
         dfs_bridges(v, id);
         lowlink[u] = std::min(lowlink[u], lowlink[v]);
         if (lowlink[v] > tin[u]) {
-          bridges.emplace_back(u, v);
+          bridge_edges.emplace_back(u, v);
           is_bridge_edge[id] = true;
         }
-      }
-    }
-  }
-
-  void build_bridges() {
-    int n = static_cast<int>(adj.size());
-    bridges.clear();
-    lowlink.assign(n, 0);
-    tin.assign(n, 0);
-    visited.assign(n, false);
-    is_bridge_edge.assign(edges.size(), false);
-    timer = 0;
-    for (int i = 0; i < n; i++) {
-      if (!visited[i]) {
-        dfs_bridges(i, -1);
       }
     }
   }
@@ -2370,6 +2457,31 @@ struct BridgeDecomposition {
     }
   }
 
+ public:
+  BridgeDecomposition(int n = 0) : adj(n) {}
+
+  void add_edge(int u, int v) {
+    int id = static_cast<int>(edges.size());
+    adj[u].push_back(id);
+    adj[v].push_back(id);
+    edges.emplace_back(u, v);
+  }
+
+  void build_bridges() {
+    int n = static_cast<int>(adj.size());
+    bridge_edges.clear();
+    lowlink.assign(n, 0);
+    tin.assign(n, 0);
+    visited.assign(n, false);
+    is_bridge_edge.assign(edges.size(), false);
+    timer = 0;
+    for (int i = 0; i < n; i++) {
+      if (!visited[i]) {
+        dfs_bridges(i, -1);
+      }
+    }
+  }
+
   void build_bridge_forest() {
     int n = static_cast<int>(adj.size());
     component.assign(n, -1);
@@ -2380,13 +2492,18 @@ struct BridgeDecomposition {
         dfs_component(i, static_cast<int>(two_edge_components.size()) - 1);
       }
     }
-    bridge_forest.assign(two_edge_components.size(), {});
-    for (auto &[u, v] : bridges) {
+    forest.assign(two_edge_components.size(), {});
+    for (auto &[u, v] : bridge_edges) {
       int cu = component[u], cv = component[v];
-      bridge_forest[cu].push_back(cv);
-      bridge_forest[cv].push_back(cu);
+      forest[cu].push_back(cv);
+      forest[cv].push_back(cu);
     }
   }
+
+  const std::vector<std::pair<int, int>> &bridges() const { return bridge_edges; }
+  const std::vector<std::vector<int>> &components() const { return two_edge_components; }
+  const std::vector<std::vector<int>> &bridge_forest() const { return forest; }
+  int component_id(int u) const { return component[u]; }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -2407,22 +2524,23 @@ int main() {
   g.add_edge(3, 7);
   g.add_edge(4, 5);
   g.build_bridges();
-  g.build_bridge_forest();
   cout << "Bridges:" << endl;
-  for (auto &[u, v] : g.bridges) {
+  for (auto [u, v] : g.bridges()) {
     cout << u << " " << v << endl;
   }
   cout << "2-edge-connected components:" << endl;
-  for (auto &component : g.two_edge_components) {
+  for (const auto &component : g.components()) {
     for (int v : component) {
       cout << v << " ";
     }
     cout << endl;
   }
+  g.build_bridge_forest();
   cout << "Adjacency List for Bridge Forest:" << endl;
-  for (int i = 0, n = static_cast<int>(g.bridge_forest.size()); i < n; i++) {
+  const auto &forest = g.bridge_forest();
+  for (int i = 0, n = static_cast<int>(forest.size()); i < n; i++) {
     cout << i << " =>";
-    for (int v : g.bridge_forest[i]) {
+    for (int v : forest[i]) {
       cout << " " << v;
     }
     cout << endl;
@@ -2455,7 +2573,8 @@ Maintain the number of bridges in an undirected graph while edges are inserted o
 
 \begin{compactitem}
   \item \inlinecode{OnlineBridges(n = 0)} constructs a graph with \inlinecode{n} isolated nodes numbered $[0, {\inlinecodemath{n}})$.
-  \item \inlinecode{add\_edge(u, v)} adds the undirected edge \inlinecode{u}-\inlinecode{v} and updates: \inlinecode{bridges} with the current number of bridges, and the disjoint-set parent arrays \inlinecode{dsu\_2ecc[]} and \inlinecode{dsu\_cc[]}, which partition the nodes into 2-edge-connected components and ordinary connected components respectively.
+  \item \inlinecode{add\_edge(u, v)} adds the undirected edge \inlinecode{u}-\inlinecode{v} and updates the 2-edge-connected and ordinary connected components.
+  \item \inlinecode{bridge\_count()} returns the current number of bridges.
   \item \inlinecode{find\_2ecc(u)} returns node \inlinecode{u}'s representative in the 2-edge-connected components partition.
   \item \inlinecode{find\_cc(u)} returns node \inlinecode{u}'s representative in the ordinary connected components partition.
 \end{compactitem}
@@ -2470,40 +2589,9 @@ Parallel edges are supported. Adding a second edge between two nodes that are al
 #include <utility>
 #include <vector>
 
-struct OnlineBridges {
+class OnlineBridges {
   std::vector<int> dsu_2ecc, dsu_cc, dsu_cc_size, parent, last_visit;
-  int lca_iteration, bridges;
-
-  OnlineBridges(int n = 0) {
-    dsu_2ecc.resize(n);
-    dsu_cc.resize(n);
-    dsu_cc_size.assign(n, 1);
-    parent.assign(n, -1);
-    last_visit.assign(n, 0);
-    lca_iteration = 0;
-    bridges = 0;
-    for (int i = 0; i < n; i++) {
-      dsu_2ecc[i] = dsu_cc[i] = i;
-    }
-  }
-
-  int find_2ecc(int u) {
-    if (u == -1) {
-      return -1;
-    }
-    if (dsu_2ecc[u] == u) {
-      return u;
-    }
-    return dsu_2ecc[u] = find_2ecc(dsu_2ecc[u]);
-  }
-
-  int find_cc(int u) {
-    u = find_2ecc(u);
-    if (dsu_cc[u] == u) {
-      return u;
-    }
-    return dsu_cc[u] = find_cc(dsu_cc[u]);
-  }
+  int lca_iteration, num_bridges;
 
   void make_root(int u) {
     u = find_2ecc(u);
@@ -2549,15 +2637,47 @@ struct OnlineBridges {
       if (a == lca) {
         break;
       }
-      bridges--;
+      num_bridges--;
     }
     for (int b : path_b) {
       dsu_2ecc[b] = lca;
       if (b == lca) {
         break;
       }
-      bridges--;
+      num_bridges--;
     }
+  }
+
+ public:
+  OnlineBridges(int n = 0) {
+    dsu_2ecc.resize(n);
+    dsu_cc.resize(n);
+    dsu_cc_size.assign(n, 1);
+    parent.assign(n, -1);
+    last_visit.assign(n, 0);
+    lca_iteration = 0;
+    num_bridges = 0;
+    for (int i = 0; i < n; i++) {
+      dsu_2ecc[i] = dsu_cc[i] = i;
+    }
+  }
+
+  int find_2ecc(int u) {
+    if (u == -1) {
+      return -1;
+    }
+    if (dsu_2ecc[u] == u) {
+      return u;
+    }
+    return dsu_2ecc[u] = find_2ecc(dsu_2ecc[u]);
+  }
+
+  int find_cc(int u) {
+    u = find_2ecc(u);
+    if (dsu_cc[u] == u) {
+      return u;
+    }
+    return dsu_cc[u] = find_cc(dsu_cc[u]);
   }
 
   void add_edge(int u, int v) {
@@ -2568,7 +2688,7 @@ struct OnlineBridges {
     }
     int ca = find_cc(u), cb = find_cc(v);
     if (ca != cb) {
-      bridges++;
+      num_bridges++;
       if (dsu_cc_size[ca] > dsu_cc_size[cb]) {
         std::swap(u, v);
         std::swap(ca, cb);
@@ -2581,6 +2701,8 @@ struct OnlineBridges {
       merge_path(u, v);
     }
   }
+
+  int bridge_count() const { return num_bridges; }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -2594,13 +2716,13 @@ int main() {
   //     2---3
   OnlineBridges g(4);
   g.add_edge(0, 1);
-  assert(g.bridges == 1);
+  assert(g.bridge_count() == 1);
   g.add_edge(1, 2);
-  assert(g.bridges == 2);
+  assert(g.bridge_count() == 2);
   g.add_edge(2, 0);
-  assert(g.bridges == 0);
+  assert(g.bridge_count() == 0);
   g.add_edge(2, 3);
-  assert(g.bridges == 1);
+  assert(g.bridge_count() == 1);
   return 0;
 }
 \end{lstlisting}
@@ -2618,7 +2740,8 @@ Variables are numbered $[0, n)$. A literal is represented by \inlinecode{literal
   \item \inlinecode{add\_false(a)} forces literal \inlinecode{a} to be false.
   \item \inlinecode{add(variable, value)} forces a variable to equal \inlinecode{value}.
   \item \inlinecode{add(x, xval, y, yval)} adds the clause $({\inlinecodemath{x}} = {\inlinecodemath{xval}} \lor {\inlinecodemath{y}} = {\inlinecodemath{yval}})$.
-  \item \inlinecode{satisfiable()} returns whether all added clauses can be satisfied and stores one valid assignment in \inlinecode{answer}.
+  \item \inlinecode{satisfiable()} returns whether all added clauses can be satisfied.
+  \item \inlinecode{assignment()} returns the valid assignment found by the last successful \inlinecode{satisfiable()} call.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -2635,30 +2758,12 @@ Variables are numbered $[0, n)$. A literal is represented by \inlinecode{literal
 #include <algorithm>
 #include <vector>
 
-struct TwoSAT {
+class TwoSAT {
   int variables;
   std::vector<std::vector<int>> adj, rev;
-  std::vector<int> order, component, answer;
+  std::vector<int> order, component, solution;
 
-  TwoSAT(int n = 0) : variables(n), adj(2 * n), rev(2 * n), answer(n, false) {}
-
-  int literal(int variable, bool value) { return 2 * variable + (value ? 0 : 1); }
-  int neg(int x) { return x ^ 1; }
-
-  void add_implication(int a, int b) {
-    adj[a].push_back(b);
-    rev[b].push_back(a);
-  }
-
-  void add_or(int a, int b) {
-    add_implication(neg(a), b);
-    add_implication(neg(b), a);
-  }
-
-  void add_true(int a) { add_implication(neg(a), a); }
-  void add_false(int a) { add_implication(a, neg(a)); }
-  void add(int variable, bool value) { add_true(literal(variable, value)); }
-  void add(int x, bool xval, int y, bool yval) { add_or(literal(x, xval), literal(y, yval)); }
+  static int neg(int x) { return x ^ 1; }
 
   void dfs_order(int u, std::vector<char> &visited) {
     visited[u] = true;
@@ -2678,6 +2783,26 @@ struct TwoSAT {
       }
     }
   }
+
+ public:
+  TwoSAT(int n = 0) : variables(n), adj(2 * n), rev(2 * n), solution(n, false) {}
+
+  int literal(int variable, bool value) const { return 2 * variable + (value ? 0 : 1); }
+
+  void add_implication(int a, int b) {
+    adj[a].push_back(b);
+    rev[b].push_back(a);
+  }
+
+  void add_or(int a, int b) {
+    add_implication(neg(a), b);
+    add_implication(neg(b), a);
+  }
+
+  void add_true(int a) { add_implication(neg(a), a); }
+  void add_false(int a) { add_implication(a, neg(a)); }
+  void add(int variable, bool value) { add_true(literal(variable, value)); }
+  void add(int x, bool xval, int y, bool yval) { add_or(literal(x, xval), literal(y, yval)); }
 
   bool satisfiable() {
     order.clear();
@@ -2699,10 +2824,12 @@ struct TwoSAT {
       if (component[2 * i] == component[2 * i + 1]) {
         return false;
       }
-      answer[i] = component[2 * i] > component[2 * i + 1];
+      solution[i] = component[2 * i] > component[2 * i + 1];
     }
     return true;
   }
+
+  const std::vector<int> &assignment() const { return solution; }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -2723,9 +2850,9 @@ int main() {
   solver.add_true(x0);
   solver.add(1, true, 2, false);
   assert(solver.satisfiable());
-  assert(solver.answer[0]);
+  assert(solver.assignment()[0]);
   cout << "Assignment:";
-  for (bool value : solver.answer) {
+  for (bool value : solver.assignment()) {
     cout << " " << value;
   }
   cout << endl;
@@ -2736,9 +2863,9 @@ int main() {
 Assignment: 1 1 1
 \end{exampleoutput}
 \subsection{Functional Graph}
-A functional graph is a directed graph in which every node has exactly one outgoing edge, given by a successor function \inlinecode{f}, where \inlinecode{f[i]} is the node reached in one step from node \inlinecode{i}. Following the edges from any node eventually enters a cycle, so each weakly connected component consists of one directed cycle with trees of nodes feeding into it. This structure underlies problems about iterating a function: where a sequence \inlinecode{i}, \inlinecode{f[i]}, \inlinecode{f[f[i]]}, ... ends up, and how far it is from repeating.
+A functional graph is a directed graph in which every node has exactly one outgoing edge, given by a successor function $f$, where $f(i)$ is the node reached in one step from node $i$. Following the edges from any node eventually enters a cycle, so each weakly connected component consists of one directed cycle with trees of nodes feeding into it. This structure underlies problems about iterating a function: where a sequence $i, f(i), f(f(i)), \ldots$ ends up, and how far it is from repeating.
 
-Building the structure peels away nodes of in-degree zero to expose the cycles (the survivors), then labels each cycle and walks the remaining tail nodes to record their distance to the cycle. A binary lifting table stores \inlinecode{f} applied $2^k$ times, so any number of steps can be taken in logarithmic time. Together these answer, for any node, which cycle it eventually reaches, how many steps until it gets there, and exactly where it lands after a huge number of steps.
+Building the structure peels away nodes of in-degree zero to expose the cycles (the survivors), then labels each cycle and walks the remaining tail nodes to record their distance to the cycle. A binary lifting table stores the function applied $2^k$ times, so any number of steps can be taken in logarithmic time. Together these answer, for any node, which cycle it eventually reaches, how many steps until it gets there, and exactly where it lands after a huge number of steps.
 
 \begin{compactitem}
   \item \inlinecode{FunctionalGraph(f)} builds the structure for the successor function \inlinecode{f} over nodes numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{f.size()}.
@@ -2765,7 +2892,6 @@ Building the structure peels away nodes of in-degree zero to expose the cycles (
 #include <vector>
 
 class FunctionalGraph {
-  int n, LOG;
   std::vector<std::vector<int>> up;  // up[k][i] = f applied 2^k times to i.
   std::vector<char> on_cyc;
   std::vector<int> to_cyc;  // Steps from i to the first cycle node.
@@ -2782,14 +2908,14 @@ class FunctionalGraph {
   }
 
  public:
-  FunctionalGraph(const std::vector<int> &f) : n(f.size()) {
-    LOG = 1;
-    while ((1 << LOG) < n) {
-      LOG++;
+  FunctionalGraph(const std::vector<int> &f) {
+    int n = static_cast<int>(f.size()), levels = 1;
+    while ((1LL << levels) < n) {
+      levels++;
     }
-    up.assign(LOG + 1, std::vector<int>(n));
+    up.assign(levels + 1, std::vector<int>(n));
     up[0] = f;
-    for (int k = 1; k <= LOG; k++) {
+    for (int k = 1; k <= levels; k++) {
       for (int i = 0; i < n; i++) {
         up[k][i] = up[k - 1][up[k - 1][i]];
       }
@@ -2907,6 +3033,8 @@ successor(5, 4) = 2
 \subsection{Offline Dynamic Connectivity}
 Maintains the number of connected components of an undirected graph as edges are added and removed over time, answering queries offline once the entire sequence of operations is known. Each edge is alive over a contiguous interval of time, from when it is added until it is removed. These intervals are placed into a segment tree over the time axis, so that for $T$ operations, each edge appears in $O(\log T)$ nodes whose ranges it spans. A depth-first traversal of this segment tree unites the edges stored at each node on the way down and undoes them on the way back up, so at each leaf the disjoint set forest reflects exactly the edges alive at that moment.
 
+This offline method supports arbitrary undirected graphs. When updates must be processed online and the graph remains a forest, see the Euler Tour Tree in Section 2.7.9.
+
 Undoing unions requires a disjoint set forest with rollback (see the disjoint sets section): it joins by size or rank without path compression, recording each change on a stack so it can be reversed. Path compression is incompatible with rollback, so finding a representative costs $O(\log n)$ rather than near-constant time.
 
 \begin{compactitem}
@@ -2919,7 +3047,7 @@ Undoing unions requires a disjoint set forest with rollback (see the disjoint se
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O((T + m \log T) \log n)$ for \inlinecode{solve()}, where $T$ is the total number of operations (\inlinecode{add\_edge}, \inlinecode{remove\_edge}, and \inlinecode{count\_components} combined), $m$ is the number of \inlinecode{add\_edge} operations, and $n$ is the number of vertices.
+  \item $O((T + m \log T) \log n)$ for \inlinecode{solve()}, where $T$ is the total number of operations (\inlinecode{add\_edge}, \inlinecode{remove\_edge}, and \inlinecode{count\_components} combined), $m$ is the number of \inlinecode{add\_edge} operations, and $n$ is the number of nodes.
   \item $O(1)$ amortized per call to \inlinecode{add\_edge()}, \inlinecode{remove\_edge()}, and \inlinecode{count\_components()}.
 \end{compactitem}
 
@@ -3065,7 +3193,7 @@ using namespace std;
 int main() {
   OfflineDynamicConnectivity dc(4);
   // 0   1   2   3
-  dc.count_components();  // 4 isolated vertices.
+  dc.count_components();  // 4 isolated nodes.
   dc.add_edge(0, 1);
   dc.add_edge(2, 3);
   // 0---1   2---3
@@ -3103,7 +3231,6 @@ For path reconstruction, \inlinecode{pred[v]} stores the node immediately before
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <climits>
 #include <queue>
 #include <vector>
@@ -3198,7 +3325,6 @@ For path reconstruction, \inlinecode{pred[v]} stores the node immediately before
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <climits>
 #include <deque>
 #include <utility>
@@ -3270,7 +3396,8 @@ int main() {
   bfs_zero_one(start);
   assert(dist[dest] == 1);
   assert(pred[dest] == 2);
-  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
+  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
+       << endl;
   print_path(dest);
   return 0;
 }
@@ -3285,40 +3412,40 @@ Given a starting node in a weighted, directed graph with nonnegative weights onl
 Dijkstra's algorithm repeatedly selects the unvisited node of smallest tentative distance using a priority queue and relaxes its outgoing edges. Dijkstra's algorithm requires nonnegative edge weights. Use Bellman-Ford or SPFA instead when negative edges are present. Because the weights are nonnegative, a node's distance is final the first time it is removed from the queue.
 
 \begin{compactitem}
-  \item \inlinecode{dijkstra(adj, start)} returns a pair of vectors \inlinecode{dist} and \inlinecode{pred} for an adjacency list \inlinecode{adj} which must consist of nodes numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}. Each edge is stored as $({\inlinecodemath{neighbor}}, {\inlinecodemath{weight}})$, where \inlinecode{weight} is nonnegative.
+  \item \inlinecode{dijkstra(start)} populates \inlinecode{dist} and \inlinecode{pred} for a global, pre-populated adjacency list \inlinecode{adj} whose nodes are numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}. Each edge is stored as $({\inlinecodemath{neighbor}}, {\inlinecodemath{weight}})$, where \inlinecode{weight} is nonnegative.
 \end{compactitem}
 
 For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
 
-\textbf{Time Complexity}: $O(m \log n)$ per call, where $m$ is the number of edges and $n$ is the number of nodes.
+\textbf{Time Complexity}: $O(n + m \log n)$ per call, where $n$ is the number of nodes and $m$ is the number of edges.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(m)$ auxiliary.
+  \item $O(\max\left(n, m\right))$ auxiliary.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
 #include <cstdint>
 #include <functional>
-#include <limits>
 #include <queue>
 #include <utility>
 #include <vector>
 
-template<typename T>
-std::pair<std::vector<T>, std::vector<int>> dijkstra(
-    const std::vector<std::vector<std::pair<int, T>>> &adj, int start
-) {
-  static const T INF = std::numeric_limits<T>::max() / 4;
+const int64_t INF = INT64_MAX / 4;
+std::vector<std::vector<std::pair<int, int>>> adj;
+std::vector<int64_t> dist;
+std::vector<int> pred;
+
+void dijkstra(int start) {
   int n = static_cast<int>(adj.size());
-  assert(0 <= start && start < n);
-  std::vector<T> dist(n, INF);
-  std::vector<int> pred(n, -1);
+  dist.assign(n, INF);
+  pred.assign(n, -1);
   dist[start] = 0;
-  std::priority_queue<std::pair<T, int>, std::vector<std::pair<T, int>>, std::greater<>> pq;
+  std::priority_queue<std::pair<int64_t, int>, std::vector<std::pair<int64_t, int>>, std::greater<>>
+      pq;
   pq.emplace(0, start);
   while (!pq.empty()) {
     auto [du, u] = pq.top();
@@ -3334,7 +3461,6 @@ std::pair<std::vector<T>, std::vector<int>> dijkstra(
       }
     }
   }
-  return {dist, pred};
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -3344,7 +3470,7 @@ std::pair<std::vector<T>, std::vector<int>> dijkstra(
 #include <iostream>
 using namespace std;
 
-void print_path(const vector<int> &pred, int dest) {
+void print_path(int dest) {
   vector<int> path;
   for (int j = dest; pred[j] != -1; j = pred[j]) {
     path.push_back(pred[j]);
@@ -3364,18 +3490,19 @@ int main() {
   // w=8\  w=4|     /w=1
   //     \    v    /
   //      --> 3 <--
-  vector<vector<pair<int, int64_t>>> adj(4);
+  adj.assign(4, {});
   adj[0].emplace_back(1, 2);
   adj[0].emplace_back(3, 8);
   adj[1].emplace_back(2, 2);
   adj[1].emplace_back(3, 4);
   adj[2].emplace_back(3, 1);
   int start = 0, dest = 3;
-  auto [dist, pred] = dijkstra(adj, start);
+  dijkstra(start);
   assert(dist[dest] == 5);
   assert(pred[dest] == 2 && pred[2] == 1 && pred[1] == 0);
-  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
-  print_path(pred, dest);
+  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
+       << endl;
+  print_path(dest);
   return 0;
 }
 \end{lstlisting}
@@ -3386,7 +3513,7 @@ Take the path: 0->1->2->3.
 \subsection{Shortest Path (Bellman-Ford)}
 Given a starting node in a weighted, directed graph with possibly negative weights, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred}.
 
-Bellman-Ford relaxes every edge in the graph $n - 1$ times. Since any shortest path uses at most $n - 1$ edges, all distances are correct after these passes unless a negative-weight cycle keeps reducing them, which a further pass detects. Bellman-Ford will also detect whether the graph contains a negative-weight cycle reachable from the start node, in which case the affected shortest paths are undefined and an error will be thrown. (To detect a negative cycle anywhere in the graph, add a virtual source with zero-weight edges to every node and start from it.)
+Bellman-Ford relaxes every edge in the graph up to $n - 1$ times, stopping early if a pass makes no changes. Since any shortest path uses at most $n - 1$ edges, all distances are correct after these passes unless a negative-weight cycle keeps reducing them, which a further pass detects. Bellman-Ford will also detect whether the graph contains a negative-weight cycle reachable from the start node, in which case the affected shortest paths are undefined and an error will be thrown. (To detect a negative cycle anywhere in the graph, add a virtual source with zero-weight edges to every node and start from it.)
 
 \begin{compactitem}
   \item \inlinecode{bellman\_ford(n, start)} populates \inlinecode{dist} and \inlinecode{pred} for a global, pre-populated edge list \inlinecode{edges} whose endpoints must be numbered $[0, {\inlinecodemath{n}})$.
@@ -3419,14 +3546,17 @@ void bellman_ford(int n, int start) {
   pred.assign(n, -1);
   dist[start] = 0;
   for (int i = 0; i < n - 1; i++) {
+    bool changed = false;
     for (auto &[u, v, w] : edges) {
       // The dist[u] != INF guard avoids relaxing out of unreachable nodes: a negative edge from an
       // unreachable u would otherwise give v a bogus finite distance (INF + w < INF).
       if (dist[u] != INF && dist[v] > dist[u] + w) {
         dist[v] = dist[u] + w;
         pred[v] = u;
+        changed = true;
       }
     }
+    if (!changed) break;
   }
   // Optional: report a negative-weight cycle reachable from the start node.
   for (auto &[u, v, w] : edges) {
@@ -3469,7 +3599,8 @@ int main() {
   bellman_ford(3, start);
   assert(dist[dest] == 3);
   assert(pred[dest] == 1);
-  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
+  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
+       << endl;
   print_path(dest);
   return 0;
 }
@@ -3497,7 +3628,6 @@ For path reconstruction, \inlinecode{pred[v]} stores the node immediately before
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <cstdint>
 #include <queue>
 #include <utility>
@@ -3512,7 +3642,7 @@ bool spfa(int start) {
   int n = static_cast<int>(adj.size());
   dist.assign(n, INF);
   pred.assign(n, -1);
-  std::vector<int> relax_count(n, 0);
+  std::vector<int> path_edges(n, 0);
   std::vector<char> in_queue(n, false);
   std::queue<int> q;
   dist[start] = 0;
@@ -3523,15 +3653,16 @@ bool spfa(int start) {
     q.pop();
     in_queue[u] = false;
     for (auto &[v, w] : adj[u]) {
-      if (dist[u] != INF && dist[v] > dist[u] + w) {
+      if (dist[v] > dist[u] + w) {
         dist[v] = dist[u] + w;
         pred[v] = u;
+        path_edges[v] = path_edges[u] + 1;
+        if (path_edges[v] >= n) {
+          return false;
+        }
         if (!in_queue[v]) {
           q.push(v);
           in_queue[v] = true;
-          if (++relax_count[v] >= n) {
-            return false;
-          }
         }
       }
     }
@@ -3576,8 +3707,12 @@ int main() {
   spfa(start);
   assert(dist[dest] == 5);
   assert(pred[dest] == 2 && pred[2] == 1);
-  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
+  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
+       << endl;
   print_path(dest);
+
+  adj[3].emplace_back(1, -2);  // The cycle 1 -> 2 -> 3 -> 1 now has total weight -1.
+  assert(!spfa(start));
   return 0;
 }
 \end{lstlisting}
@@ -3688,7 +3823,8 @@ int main() {
   dag_shortest_path(start);
   assert(dist[dest] == 2);
   assert(pred[dest] == 3 && pred[3] == 1);
-  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
+  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
+       << endl;
   print_path(dest);
   return 0;
 }
@@ -3707,7 +3843,7 @@ Floyd-Warshall's algorithm is a dynamic program over intermediate nodes: for eac
   \item \inlinecode{floyd\_warshall()} updates the global adjacency matrix \inlinecode{dist} so \inlinecode{dist[u][v]} stores the shortest path from $u$ to $v$, and updates \inlinecode{next\_node} for path reconstruction. If the graph contains negative-weighted cycles, there is no shortest path and an error will be thrown.
 \end{compactitem}
 
-For path reconstruction, \inlinecode{next\_node[i][j]} stores the next node to visit after \inlinecode{i} on a current shortest path from \inlinecode{i} to \inlinecode{j}. It is initialized to \inlinecode{j} for every pair and, when a shorter route \inlinecode{i} $\to$ \inlinecode{k} $\to$ \inlinecode{j} is found, becomes \inlinecode{next\_node[i][k]}. Repeatedly setting \inlinecode{i} to \inlinecode{next\_node[i][j]} therefore walks the path from source to destination.
+For path reconstruction, \inlinecode{next\_node[i][j]} stores the next node to visit after \inlinecode{i} on a current shortest path from \inlinecode{i} to \inlinecode{j}. It is initialized to \inlinecode{j} for every pair and, when a shorter route \inlinecode{i} $\to$ \inlinecode{k} $\to$ \inlinecode{j} is found, becomes \inlinecode{next\_node[i][k]}. Repeatedly setting \inlinecode{i} to \inlinecode{next\_node[i][j]} therefore walks the path from source to destination. This value is meaningful only when \inlinecode{dist[i][j] != INF}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -3720,7 +3856,7 @@ For path reconstruction, \inlinecode{next\_node[i][j]} stores the next node to v
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n^{2})$ for storage of the graph, where $n$ is the number of nodes.
-  \item $O(n^{2})$ auxiliary for \inlinecode{init\_floyd()} and \inlinecode{floyd\_warshall()}.
+  \item $O(1)$ auxiliary per call to \inlinecode{floyd\_warshall()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3796,7 +3932,7 @@ int main() {
   assert(dist[start][dest] == 3);
   assert(next_node[start][dest] == 1);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[start][dest]
-       << ".\n";
+       << "." << endl;
   print_path(start, dest);
   return 0;
 }
@@ -3815,57 +3951,57 @@ Given a connected, undirected, weighted graph with possibly negative weights, it
 Prim's algorithm grows the tree from an arbitrary start node, repeatedly adding the minimum-weight edge that joins a new node to the current tree, with a priority queue supplying the cheapest such edge at each step.
 
 \begin{compactitem}
-  \item \inlinecode{prim\_mst()} populates \inlinecode{mst} with the edge IDs in the minimum spanning tree (returning the total MST weight) for a global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}. Edges are stored as (\inlinecode{neighbor}, \inlinecode{weight}, \inlinecode{edge\_id}).
+  \item \inlinecode{prim\_mst()} populates \inlinecode{mst} with the edges in the minimum spanning forest and returns the total MST weight for a global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}. Adjacency entries are stored as (\inlinecode{neighbor}, \inlinecode{weight}), while each MST edge is stored as (\inlinecode{from}, \inlinecode{to}, \inlinecode{weight}).
 \end{compactitem}
 
-The priority queue stores candidate edges as (\inlinecode{weight}, \inlinecode{from}, \inlinecode{to}, \inlinecode{edge\_id}) and uses \inlinecode{std::greater} to make it a min-heap. To find a maximum spanning tree instead, use the default max-heap ordering. Multigraphs are supported; parallel edges are stored as separate adjacency entries and the algorithm automatically selects the minimum-weight one to each unvisited node.
+The priority queue stores candidate edges as (\inlinecode{weight}, \inlinecode{from}, \inlinecode{to}) and uses \inlinecode{std::greater} to make it a min-heap. To find a maximum spanning tree instead, use the default max-heap ordering. Multigraphs are supported; parallel edges are stored as separate adjacency entries and the algorithm automatically selects the minimum-weight one to each unvisited node.
 
-\textbf{Time Complexity}: $O(m \log n)$ per call, where $m$ is the number of edges and $n$ is the number of nodes.
+\textbf{Time Complexity}: $O(n + m \log m)$ per call, where $n$ is the number of nodes and $m$ is the number of edges.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(m)$ auxiliary.
+  \item $O(\max\left(n, m\right))$ auxiliary.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cstdint>
 #include <functional>
 #include <queue>
 #include <tuple>
 #include <utility>
 #include <vector>
 
-std::vector<std::vector<std::tuple<int, int, int>>> adj;  // adj[u] = {(v, weight, edge_id), ...}
-std::vector<int> mst;
+std::vector<std::vector<std::pair<int, int>>> adj;  // adj[u] = {(v, weight), ...}
+std::vector<std::tuple<int, int, int>> mst;         // (u, v, weight)
 
-int prim_mst() {
+int64_t prim_mst() {
   int n = static_cast<int>(adj.size());
   mst.clear();
   std::vector<char> visit(n);
-  int total_dist = 0;
+  int64_t total_dist = 0;
   for (int i = 0; i < n; i++) {
     if (visit[i]) {
       continue;
     }
     visit[i] = true;
-    using qnode = std::tuple<int, int, int, int>;  // (weight, u, v, edge_id)
-    std::priority_queue<qnode, std::vector<qnode>, std::greater<>> pq;
-    for (auto &[v, w, id] : adj[i]) {
-      pq.emplace(w, i, v, id);
+    using QueueEntry = std::tuple<int, int, int>;  // (weight, u, v)
+    std::priority_queue<QueueEntry, std::vector<QueueEntry>, std::greater<>> pq;
+    for (auto [v, w] : adj[i]) {
+      pq.emplace(w, i, v);
     }
     while (!pq.empty()) {
-      auto [w, u, v, id] = pq.top();
+      auto [w, u, v] = pq.top();
       pq.pop();
-      if (visit[u] && !visit[v]) {
-        visit[v] = true;
-        if (v != i) {
-          mst.push_back(id);
-          total_dist += w;
-        }
-        for (auto &[nb, ew, eid] : adj[v]) {
-          pq.emplace(ew, v, nb, eid);
-        }
+      if (visit[v]) {
+        continue;
+      }
+      visit[v] = true;
+      mst.emplace_back(u, v, w);
+      total_dist += w;
+      for (auto [to, ew] : adj[v]) {
+        pq.emplace(ew, v, to);
       }
     }
   }
@@ -3879,13 +4015,9 @@ int prim_mst() {
 #include <iostream>
 using namespace std;
 
-vector<pair<int, int>> edge_endpoints;
-
 void add_edge(int u, int v, int w) {
-  int id = static_cast<int>(edge_endpoints.size());
-  edge_endpoints.emplace_back(u, v);
-  adj[u].emplace_back(v, w, id);
-  adj[v].emplace_back(u, w, id);
+  adj[u].emplace_back(v, w);
+  adj[v].emplace_back(u, w);
 }
 
 int main() {
@@ -3897,7 +4029,6 @@ int main() {
   //      \ /             / w=3 |
   //       2            5 ----- 6
   adj.assign(7, {});
-  edge_endpoints.clear();
   add_edge(0, 1, 4);
   add_edge(1, 2, 6);
   add_edge(2, 0, 3);
@@ -3905,24 +4036,23 @@ int main() {
   add_edge(4, 5, 2);
   add_edge(5, 6, 3);
   add_edge(6, 4, 4);
-  int total = prim_mst();
+  int64_t total = prim_mst();
   assert(total == 13);
   assert(mst.size() == 5);
   cout << "Total distance: " << total << endl;
-  for (int id : mst) {
-    auto &[u, v] = edge_endpoints[id];
-    cout << u << " <-> " << v << endl;
+  for (auto [u, v, w] : mst) {
+    cout << u << " <-> " << v << " (" << w << ")" << endl;
   }
   return 0;
 }
 \end{lstlisting}
 \begin{exampleoutput}
 Total distance: 13
-0 <-> 2
-0 <-> 1
-3 <-> 4
-4 <-> 5
-5 <-> 6
+0 <-> 2 (3)
+0 <-> 1 (4)
+3 <-> 4 (1)
+4 <-> 5 (2)
+5 <-> 6 (3)
 \end{exampleoutput}
 \subsection{Minimum Spanning Tree (Kruskal)}
 Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning tree (MST) is a subgraph which is a tree that connects all nodes with a subset of its edges such that their total weight is minimized. If the input graph is not connected, then this implementation will find the minimum spanning forest.
@@ -3930,22 +4060,23 @@ Given a connected, undirected, weighted graph with possibly negative weights, it
 Kruskal's algorithm scans the edges in nondecreasing weight order, adding each edge whose endpoints lie in different components (tracked with a disjoint-set structure) and skipping any edge that would form a cycle.
 
 \begin{compactitem}
-  \item \inlinecode{kruskal\_mst(n)} populates \inlinecode{mst} with the edge IDs in the minimum spanning tree (returning the total MST weight) for a global, pre-populated edge list \inlinecode{edges} whose endpoints must be numbered $[0, {\inlinecodemath{n}})$. Each edge is stored as $({\inlinecodemath{weight}}, {\inlinecodemath{u}}, {\inlinecodemath{v}})$.
+  \item \inlinecode{kruskal\_mst(n)} populates \inlinecode{mst} with the edge IDs in the minimum spanning forest and returns the total MST weight for a global, pre-populated edge list \inlinecode{edges} whose endpoints must be numbered $[0, {\inlinecodemath{n}})$. Each edge is stored as $({\inlinecodemath{weight}}, {\inlinecodemath{u}}, {\inlinecodemath{v}})$.
 \end{compactitem}
 
 Multigraphs are supported; parallel edges appear as separate entries in \inlinecode{edges} and any redundant ones are skipped once the cheaper edge has already connected the two components.
 
-\textbf{Time Complexity}: $O(m \log n)$ per call, where $m$ is the number of edges and $n$ is the number of nodes. The internal DSU uses path compression and union by size, making each DSU operation $O(\alpha\left(n\right))$ amortized.
+\textbf{Time Complexity}: $O(n + m \log m)$ per call, where $n$ is the number of nodes and $m$ is the number of edges. The internal DSU uses path compression and union by size, making each DSU operation $O(\alpha\left(n\right))$ amortized.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges
-  \item $O(n)$ auxiliary stack space per call.
+  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
+  \item $O(\max\left(n, m\right))$ auxiliary heap space and $O(\log n)$ auxiliary stack space per call.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cstdint>
 #include <numeric>
 #include <tuple>
 #include <utility>
@@ -3961,14 +4092,14 @@ int find_root(int u) {
   return dsu_root[u];
 }
 
-int kruskal_mst(int n) {
+int64_t kruskal_mst(int n) {
   mst.clear();
   std::vector<int> order(edges.size());
   std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [](int a, int b) {
     return std::get<0>(edges[a]) < std::get<0>(edges[b]);
   });
-  int total_dist = 0;
+  int64_t total_dist = 0;
   dsu_root.assign(n, 0);
   dsu_size.assign(n, 1);
   std::iota(dsu_root.begin(), dsu_root.end(), 0);
@@ -4010,7 +4141,7 @@ int main() {
   edges.emplace_back(2, 4, 5);
   edges.emplace_back(3, 5, 6);
   edges.emplace_back(4, 6, 4);
-  int total = kruskal_mst(7);
+  int64_t total = kruskal_mst(7);
   assert(total == 13);
   assert(mst.size() == 5);
   cout << "Total distance: " << total << endl;
@@ -4054,6 +4185,7 @@ The input graph must be connected. Parallel edges are supported and are handled 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
 #include <numeric>
 #include <tuple>
 #include <vector>
@@ -4148,11 +4280,27 @@ class KruskalReconstructionTree {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 int main() {
-  // MST edges are 0-1 (2), 1-2 (4), and 1-3 (5).
+  //            0
+  //    w=2   /  | w=8
+  //        /    |
+  //      1----- 2
+  //      | w=4 /
+  //  w=5 |   /
+  //      | / w=9
+  //      3
   std::vector<std::tuple<int64_t, int, int>> edges{
       {2, 0, 1}, {4, 1, 2}, {5, 1, 3}, {8, 0, 2}, {9, 2, 3}
   };
   KruskalReconstructionTree tree(4, edges);
+
+  // Reconstruction tree; internal nodes are labeled with their joining edge weight.
+  //              6 (5)
+  //             / |
+  //        5 (4)  3
+  //       / |
+  //  4 (2)  2
+  //  / |
+  // 0  1
   assert(tree.root() == 6);
   assert(tree.max_edge_on_path(0, 2) == 4);
   assert(tree.max_edge_on_path(0, 3) == 5);
@@ -4161,12 +4309,12 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Minimum Spanning Arborescence (Edmonds)}
-A spanning arborescence rooted at a node \inlinecode{root} of a weighted, directed graph is a set of edges forming a tree in which every other node is reachable from the root along directed edges, that is, every node except the root has exactly one incoming edge. The minimum spanning arborescence minimizes the total edge weight, and is the directed analog of the minimum spanning tree.
+Given a weighted, directed graph and a root node, a spanning arborescence is a set of edges forming a tree in which every other node is reachable from the root along directed edges. Equivalently, every node except the root has exactly one incoming edge. The minimum spanning arborescence minimizes the total edge weight and is the directed analog of the minimum spanning tree.
 
 Edmonds' (a.k.a. the Chu-Liu/Edmonds) algorithm computes the arborescence by first selecting, for each non-root node, its cheapest incoming edge. If these choices form no cycle, they already constitute the answer. Otherwise each cycle is contracted into a single supernode, and every edge entering the cycle has its weight reduced by the cost of the edge it would replace inside the cycle. Solving the problem on the contracted graph and expanding the cycles back yields the optimum. The implementation below repeats this contraction in rounds, accumulating the selected weights, until no cycle remains.
 
 \begin{compactitem}
-  \item \inlinecode{directed\_mst(n, root, edges)} returns the total weight of the minimum spanning arborescence rooted at \inlinecode{root} over \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$, or $-1$ if some node is unreachable from the root (no arborescence exists). Edges are given as (\inlinecode{from}, \inlinecode{to}, \inlinecode{weight}) triples; parallel edges and self-loops are allowed, with self-loops simply ignored.
+  \item \inlinecode{directed\_mst(n, edges, root)} returns the total weight of the minimum spanning arborescence rooted at \inlinecode{root} over \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$, or \inlinecode{std::nullopt} if no arborescence exists. Edges are given as (\inlinecode{from}, \inlinecode{to}, \inlinecode{weight}) triples; parallel edges and self-loops are allowed, with self-loops simply ignored.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \cdot m)$ per call, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -4175,12 +4323,13 @@ Edmonds' (a.k.a. the Chu-Liu/Edmonds) algorithm computes the arborescence by fir
 
 \begin{lstlisting}[language=C++]
 #include <cstdint>
+#include <optional>
 #include <tuple>
 #include <vector>
 
 using Edge = std::tuple<int, int, int64_t>;  // (u, v, weight)
 
-int64_t directed_mst(int n, int root, std::vector<Edge> edges) {
+std::optional<int64_t> directed_mst(int n, std::vector<Edge> edges, int root) {
   const int64_t INF = INT64_MAX / 4;
   int64_t total_dist = 0;
   while (true) {
@@ -4194,10 +4343,10 @@ int64_t directed_mst(int n, int root, std::vector<Edge> edges) {
     }
     for (int v = 0; v < n; v++) {
       if (v != root && min_in[v] == INF) {
-        return -1;  // Node v has no incoming edge, so it is unreachable.
+        return std::nullopt;
       }
     }
-    // Identify cycles formed by the chosen incoming edges, labeling each with an ID in `comp`.
+    // Identify cycles formed by the chosen incoming edges, labeling each with an ID in comp.
     int cycles = 0;
     std::vector<int> comp(n, -1), seen(n, -1);
     min_in[root] = 0;
@@ -4257,22 +4406,25 @@ int main() {
   vector<Edge> edges{
       {0, 1, 1}, {0, 2, 5}, {1, 2, 2}, {2, 3, 3}, {3, 1, 4},
   };
-  int64_t weight = directed_mst(4, 0, edges);
+  auto weight = directed_mst(4, edges, 0);
   assert(weight == 6);  // Cheapest edges 0->1->2->3 form a tree of weight 6.
-  cout << "Minimum arborescence weight: " << weight << endl;
+  cout << "Minimum arborescence weight: " << *weight << endl;
 
   //        w=1    w=2
   // root=0 ---> 1 ---> 2       3
   vector<Edge> disconnected{{0, 1, 1}, {1, 2, 1}};
-  int64_t disconnected_weight = directed_mst(4, 0, disconnected);
-  assert(disconnected_weight == -1);  // Node 3 is unreachable from root 0.
-  cout << "Disconnected arborescence weight: " << disconnected_weight << endl;
+  auto disconnected_weight = directed_mst(4, disconnected, 0);
+  assert(!disconnected_weight);  // Node 3 is unreachable from root 0.
+  cout << "Disconnected arborescence weight: none" << endl;
+
+  vector<Edge> negative{{0, 1, -1}};
+  assert(directed_mst(2, negative, 0) == -1);  // A weight of -1 is a valid result.
   return 0;
 }
 \end{lstlisting}
 \begin{exampleoutput}
 Minimum arborescence weight: 6
-Disconnected arborescence weight: -1
+Disconnected arborescence weight: none
 \end{exampleoutput}
 
 \section{\texorpdfstring{Flows and Cuts}{4.5 Flows and Cuts}}
@@ -4284,7 +4436,7 @@ Given a flow network with integer capacities, find the maximum flow from a given
 The Ford-Fulkerson method repeatedly finds any augmenting path from source to sink in the residual graph (here by depth-first search) and pushes as much flow as the path allows, until no augmenting path remains. This algorithm should only be used on graphs with integer capacities, as there exists certain real-valued flow inputs for which the algorithm never terminates. The Edmonds-Karp algorithm is an improvement using breadth-first search, addressing this problem.
 
 \begin{compactitem}
-  \item \inlinecode{max\_flow(source, sink)} modifies the global residual capacity matrix \inlinecode{cap} and returns maximum flow. Nodes are numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{cap.size()}.
+  \item \inlinecode{max\_flow(source, sink)} modifies the global residual capacity matrix \inlinecode{cap} and returns maximum flow. Nodes are numbered $[0, n)$, where $n$ is \inlinecode{cap.size()}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n^{2} \cdot f)$ per call, where $n$ is the number of nodes and $f$ is the maximum flow.
@@ -4298,15 +4450,15 @@ The Ford-Fulkerson method repeatedly finds any augmenting path from source to si
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
-#include <climits>
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
-const int INF = INT_MAX / 2;
-std::vector<std::vector<int>> cap;
+const int64_t INF = INT64_MAX / 4;
+std::vector<std::vector<int64_t>> cap;
 std::vector<char> visit;
 
-int dfs(int u, int f, int sink) {
+int64_t dfs(int u, int64_t f, int sink) {
   int n = static_cast<int>(cap.size());
   if (u == sink) {
     return f;
@@ -4314,7 +4466,7 @@ int dfs(int u, int f, int sink) {
   visit[u] = true;
   for (int v = 0; v < n; v++) {
     if (!visit[v] && cap[u][v] > 0) {
-      int flow = dfs(v, std::min(f, cap[u][v]), sink);
+      int64_t flow = dfs(v, std::min(f, cap[u][v]), sink);
       if (flow > 0) {
         cap[u][v] -= flow;
         cap[v][u] += flow;
@@ -4327,10 +4479,11 @@ int dfs(int u, int f, int sink) {
 
 int64_t max_flow(int source, int sink) {
   int n = static_cast<int>(cap.size());
+  assert(source != sink);
   int64_t total = 0;
   while (true) {
     visit.assign(n, false);
-    int flow = dfs(source, INF, sink);
+    int64_t flow = dfs(source, INF, sink);
     if (flow == 0) {
       break;
     }
@@ -4357,7 +4510,7 @@ int main() {
   //      v /
   //       2
   int nodes = 6;
-  cap.assign(nodes, std::vector<int>(nodes));
+  cap.assign(nodes, std::vector<int64_t>(nodes));
   cap[0][1] = 4;
   cap[0][2] = 3;
   cap[1][3] = 2;
@@ -4387,7 +4540,7 @@ Repeated calls to \inlinecode{max\_flow()} continue augmenting from the current 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(\min\left(n \cdot m^{2}, m \cdot f\right))$ per call to \inlinecode{max\_flow()}, where $n$ is the number of nodes, $m$ is the number of edges, and $f$ is the maximum flow.
+  \item $O(n \cdot m^{2})$ per call to \inlinecode{max\_flow()}, where $n$ is the number of nodes and $m$ is the number of edges. For integer capacities, this is also $O(m \cdot f)$, where $f$ is the maximum flow.
   \item $O(n + m)$ per call to \inlinecode{min\_cut()}.
 \end{compactitem}
 
@@ -4395,6 +4548,7 @@ Repeated calls to \inlinecode{max\_flow()} continue augmenting from the current 
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <limits>
 #include <queue>
 #include <vector>
@@ -4431,6 +4585,7 @@ class EdmondsKarp {
   }
 
   T max_flow(int source, int sink) {
+    assert(source != sink);
     while (true) {
       std::vector<Edge *> pred(nodes, nullptr);
       std::queue<int> q;
@@ -4448,15 +4603,15 @@ class EdmondsKarp {
       if (pred[sink] == nullptr) {
         break;
       }
-      T flow = std::numeric_limits<T>::max();
+      T aug = std::numeric_limits<T>::max();
       for (int u = sink; u != source; u = pred[u]->u) {
-        flow = std::min(flow, pred[u]->cap - pred[u]->flow);
+        aug = std::min(aug, pred[u]->cap - pred[u]->flow);
       }
       for (int u = sink; u != source; u = pred[u]->u) {
-        pred[u]->flow += flow;
-        adj[pred[u]->v][pred[u]->rev].flow -= flow;
+        pred[u]->flow += aug;
+        adj[pred[u]->v][pred[u]->rev].flow -= aug;
       }
-      this->flow += flow;
+      flow += aug;
     }
     return flow;
   }
@@ -4483,8 +4638,8 @@ class EdmondsKarp {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 #include <iostream>
+using namespace std;
 
 int main() {
   // Example graph after max flow, with each edge labeled flow/capacity:
@@ -4509,16 +4664,16 @@ int main() {
   int flow = g.max_flow(0, 5);
   assert(flow == 5);
   assert(g.max_flow(0, 5) == 5);
-  std::vector<char> cut = g.min_cut(0);
+  vector<char> cut = g.min_cut(0);
   assert(cut[0] && !cut[5]);
-  std::cout << "Maximum flow: " << flow << "\n";
-  std::cout << "Min-cut source side:";
+  cout << "Maximum flow: " << flow << endl;
+  cout << "Min-cut source side:";
   for (int u = 0; u < static_cast<int>(cut.size()); u++) {
     if (cut[u]) {
-      std::cout << " " << u;
+      cout << " " << u;
     }
   }
-  std::cout << "\n";
+  cout << endl;
   g.clear_flow();
   assert(g.max_flow(0, 5) == 5);
   return 0;
@@ -4528,17 +4683,19 @@ int main() {
 Maximum flow: 5
 Min-cut source side: 0 1 2
 \end{exampleoutput}
-\subsection{Maximum Flow (Dinic)}
+\subsection{Maximum Flow and Decomposition (Dinic)}
 Given a flow network with integer or floating-point capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink.
 
-Dinic's algorithm proceeds in phases. Each phase runs a breadth-first search to build a level graph of shortest residual distances from the source, then finds a blocking flow that saturates that level graph using depth-first search, before repeating on the new residual graph.
+Dinic's algorithm proceeds in phases. Each phase runs a breadth-first search to build a level graph of shortest residual distances from the source, then finds a blocking flow that saturates that level graph using depth-first search before repeating on the new residual graph. Residual edges are stored in a flat array so callers can inspect edge flows and decompose the final flow into source-to-sink paths.
 
 \begin{compactitem}
   \item \inlinecode{Dinic\textless{}T\textgreater{}(n)} constructs an empty flow network with nodes numbered $[0, {\inlinecodemath{n}})$.
-  \item \inlinecode{add\_edge(u, v, cap)} adds a directed residual-network edge from \inlinecode{u} to \inlinecode{v}.
+  \item \inlinecode{add\_edge(u, v, cap)} adds a directed residual-network edge from \inlinecode{u} to \inlinecode{v} and returns its edge ID.
+  \item \inlinecode{edge\_flow(id)} returns the flow through a previously added edge.
   \item \inlinecode{max\_flow(source, sink)} modifies the residual network and returns maximum flow.
   \item \inlinecode{clear\_flow()} resets all edge flows to zero, allowing a fresh recomputation on the same graph.
   \item \inlinecode{min\_cut(source)} returns the source side of a minimum cut after \inlinecode{max\_flow()} has been called.
+  \item \inlinecode{decompose(source, sink)} decomposes the current flow into paths from \inlinecode{source} to \inlinecode{sink}.
 \end{compactitem}
 
 Repeated calls to \inlinecode{max\_flow()} continue augmenting from the current flow. This is useful after adding new edges or increasing capacities; call \inlinecode{clear\_flow()} first to recompute from zero. The capacity type \inlinecode{T} should be signed, since reverse residual edges store negative flow.
@@ -4548,6 +4705,7 @@ Repeated calls to \inlinecode{max\_flow()} continue augmenting from the current 
 \begin{compactitem}
   \item $O(n^{2} \cdot m)$ per call to \inlinecode{max\_flow()}, where $n$ is the number of nodes and $m$ is the number of edges.
   \item $O(n + m)$ per call to \inlinecode{min\_cut()}.
+  \item $O(p \cdot m)$ per call to \inlinecode{decompose()}, where $p$ is the number of paths returned.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -4555,10 +4713,13 @@ Repeated calls to \inlinecode{max\_flow()} continue augmenting from the current 
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the flow network.
   \item $O(n)$ auxiliary stack space and $O(n)$ auxiliary heap space for \inlinecode{max\_flow()}.
+  \item $O(n + m)$ auxiliary heap space for \inlinecode{decompose()}, not counting the returned paths.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
+#include <functional>
 #include <limits>
 #include <queue>
 #include <vector>
@@ -4566,7 +4727,7 @@ Repeated calls to \inlinecode{max\_flow()} continue augmenting from the current 
 template<typename T>
 class Dinic {
   struct Edge {
-    int v, rev;
+    int u, v;
     T cap, flow;
   };
 
@@ -4575,7 +4736,8 @@ class Dinic {
 
   int nodes;
   T flow;
-  std::vector<std::vector<Edge>> adj;
+  std::vector<Edge> edges;
+  std::vector<std::vector<int>> adj;
   std::vector<int> dist, ptr;
 
   bool bfs(int source, int sink) {
@@ -4586,7 +4748,8 @@ class Dinic {
     while (!q.empty()) {
       int u = q.front();
       q.pop();
-      for (const Edge &e : adj[u]) {
+      for (int id : adj[u]) {
+        const Edge &e = edges[id];
         if (dist[e.v] < 0 && residual(e)) {
           dist[e.v] = dist[u] + 1;
           q.push(e.v);
@@ -4601,13 +4764,14 @@ class Dinic {
       return pushed;
     }
     for (; ptr[u] < static_cast<int>(adj[u].size()); ptr[u]++) {
-      Edge &e = adj[u][ptr[u]];
+      int id = adj[u][ptr[u]];
+      Edge &e = edges[id];
       if (dist[e.v] == dist[u] + 1 && residual(e)) {
-        T pushed_next = dfs(e.v, std::min(pushed, e.cap - e.flow), sink);
-        if (pushed_next > EPS) {
-          e.flow += pushed_next;
-          adj[e.v][e.rev].flow -= pushed_next;
-          return pushed_next;
+        T next = dfs(e.v, std::min(pushed, e.cap - e.flow), sink);
+        if (next > EPS) {
+          e.flow += next;
+          edges[id ^ 1].flow -= next;
+          return next;
         }
       }
     }
@@ -4615,23 +4779,33 @@ class Dinic {
   }
 
  public:
+  struct FlowPath {
+    T flow;
+    std::vector<int> nodes, edges;
+  };
+
   explicit Dinic(int n) : nodes(n), flow(0), adj(n), dist(n), ptr(n) {}
 
-  void add_edge(int u, int v, T cap) {
-    adj[u].push_back(Edge{v, static_cast<int>(adj[v].size()), cap, 0});
-    adj[v].push_back(Edge{u, static_cast<int>(adj[u].size()) - 1, 0, 0});
+  int add_edge(int u, int v, T cap) {
+    int id = static_cast<int>(edges.size());
+    adj[u].push_back(id);
+    edges.push_back(Edge{u, v, cap, 0});
+    adj[v].push_back(id + 1);
+    edges.push_back(Edge{v, u, 0, 0});
+    return id;
   }
 
+  T edge_flow(int id) const { return edges[id].flow; }
+
   void clear_flow() {
-    for (auto &edges : adj) {
-      for (Edge &e : edges) {
-        e.flow = 0;
-      }
+    for (Edge &e : edges) {
+      e.flow = 0;
     }
     flow = 0;
   }
 
   T max_flow(int source, int sink) {
+    assert(source != sink);
     while (bfs(source, sink)) {
       ptr.assign(nodes, 0);
       while (true) {
@@ -4653,7 +4827,8 @@ class Dinic {
     while (!q.empty()) {
       int u = q.front();
       q.pop();
-      for (const Edge &e : adj[u]) {
+      for (int id : adj[u]) {
+        const Edge &e = edges[id];
         if (!reachable[e.v] && residual(e)) {
           reachable[e.v] = true;
           q.push(e.v);
@@ -4662,6 +4837,48 @@ class Dinic {
     }
     return reachable;
   }
+
+  std::vector<FlowPath> decompose(int source, int sink) const {
+    std::vector<T> rem(edges.size());
+    for (int id = 0; id < static_cast<int>(edges.size()); id++) {
+      rem[id] = edges[id].flow;
+    }
+    std::vector<FlowPath> res;
+    while (true) {
+      FlowPath path{std::numeric_limits<T>::max(), {source}, {}};
+      std::vector<char> seen(nodes);
+      std::function<bool(int)> find_path = [&](int u) {
+        if (u == sink) {
+          return true;
+        }
+        seen[u] = true;
+        for (int id : adj[u]) {
+          const Edge &e = edges[id];
+          if (rem[id] > EPS && !seen[e.v]) {
+            path.edges.push_back(id);
+            path.nodes.push_back(e.v);
+            if (find_path(e.v)) {
+              return true;
+            }
+            path.nodes.pop_back();
+            path.edges.pop_back();
+          }
+        }
+        return false;
+      };
+      if (!find_path(source)) {
+        break;
+      }
+      for (int id : path.edges) {
+        path.flow = std::min(path.flow, rem[id]);
+      }
+      for (int id : path.edges) {
+        rem[id] -= path.flow;
+      }
+      res.push_back(path);
+    }
+    return res;
+  }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -4669,6 +4886,7 @@ class Dinic {
 \begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
+using namespace std;
 
 int main() {
   // Example graph after max flow, with each edge labeled flow/capacity:
@@ -4683,52 +4901,225 @@ int main() {
   //      v /
   //       2
   Dinic<int> g(6);
-  g.add_edge(0, 1, 4);
-  g.add_edge(0, 2, 3);
-  g.add_edge(1, 3, 2);
-  g.add_edge(1, 4, 1);
-  g.add_edge(2, 4, 2);
-  g.add_edge(3, 5, 2);
-  g.add_edge(4, 5, 3);
+  int id01 = g.add_edge(0, 1, 4);
+  int id02 = g.add_edge(0, 2, 3);
+  int id13 = g.add_edge(1, 3, 2);
+  int id14 = g.add_edge(1, 4, 1);
+  int id24 = g.add_edge(2, 4, 2);
+  int id35 = g.add_edge(3, 5, 2);
+  int id45 = g.add_edge(4, 5, 3);
   int flow = g.max_flow(0, 5);
+  cout << "Max flow from 0 to 5: " << flow << endl;
   assert(flow == 5);
   assert(g.max_flow(0, 5) == 5);
-  std::vector<char> cut = g.min_cut(0);
+  assert(g.edge_flow(id01) == 3);
+  assert(g.edge_flow(id02) == 2);
+  assert(g.edge_flow(id13) == 2);
+  assert(g.edge_flow(id14) == 1);
+  assert(g.edge_flow(id24) == 2);
+  assert(g.edge_flow(id35) == 2);
+  assert(g.edge_flow(id45) == 3);
+  vector<char> cut = g.min_cut(0);
   assert(cut[0] && !cut[5]);
-  std::cout << "Maximum flow: " << flow << "\n";
-  std::cout << "Min-cut source side:";
-  for (int u = 0; u < static_cast<int>(cut.size()); u++) {
-    if (cut[u]) {
-      std::cout << " " << u;
+  auto paths = g.decompose(0, 5);
+  cout << "Flow decomposition:" << endl;
+  int total = 0;
+  for (const auto &path : paths) {
+    cout << path.flow << ": ";
+    for (int i = 0; i < static_cast<int>(path.nodes.size()); i++) {
+      if (i > 0) {
+        cout << " -> ";
+      }
+      cout << path.nodes[i];
     }
+    cout << endl;
+    assert(path.nodes.front() == 0 && path.nodes.back() == 5);
+    assert(path.edges.size() + 1 == path.nodes.size());
+    total += path.flow;
   }
-  std::cout << "\n";
+  assert(total == 5);
   g.clear_flow();
   assert(g.max_flow(0, 5) == 5);
   return 0;
 }
 \end{lstlisting}
 \begin{exampleoutput}
-Maximum flow: 5
-Min-cut source side: 0 1 2
+Max flow from 0 to 5: 5
+Flow decomposition:
+2: 0 -> 1 -> 3 -> 5
+1: 0 -> 1 -> 4 -> 5
+2: 0 -> 2 -> 4 -> 5
 \end{exampleoutput}
-\subsection{Flow with Lower Bounds}
-Given a directed network where each edge must carry at least \inlinecode{lo} and at most \inlinecode{hi} units of flow, find whether the lower bounds can be satisfied, and optionally optimize an \inlinecode{s}-to-\inlinecode{t} flow value. Subtract each lower bound from its edge capacity, then record the forced imbalance: \inlinecode{lo} units must leave \inlinecode{u} and enter \inlinecode{v}. A super-source supplies every node with net demand, and every node with net surplus sends that surplus to a super-sink. The bounds are feasible exactly when all such auxiliary edges can be saturated.
+\subsection{Maximum Flow (Push-Relabel)}
+Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink.
 
-For \inlinecode{s}-to-\inlinecode{t} flow, add an infinite edge from \inlinecode{t} back to \inlinecode{s} before checking feasibility. The flow on that artificial edge is one feasible value. After removing the auxiliary nodes, augmenting from \inlinecode{s} to \inlinecode{t} maximizes the value; augmenting from \inlinecode{t} to \inlinecode{s} cancels as much flow as possible and minimizes it.
+Rather than augmenting along whole paths, the push-relabel algorithm maintains a preflow and a height label on each node, repeatedly pushing excess flow to lower-labeled neighbors and relabeling (raising) a node whose excess cannot yet be pushed, until no node other than the source and sink holds excess.
+
+\begin{compactitem}
+  \item \inlinecode{push\_relabel(source, sink)} returns maximum flow for a global capacity matrix \inlinecode{cap} whose nodes are numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{cap.size()}.
+  \item \inlinecode{min\_cut(source)} returns the source side of a minimum cut after \inlinecode{push\_relabel()} has been called.
+\end{compactitem}
+
+Although the push-relabel algorithm is considered one of the most efficient maximum flow algorithms, it cannot take advantage of the magnitude of the maximum flow being less than $n^3$ (in which case the Ford-Fulkerson or Edmonds-Karp algorithms may be more efficient).
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n^{3})$ per call to \inlinecode{push\_relabel()}, where $n$ is the number of nodes.
+  \item $O(n^{2})$ per call to \inlinecode{min\_cut()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n^{2})$ for storage of the flow network, where $n$ is the number of nodes.
+  \item $O(n)$ auxiliary for \inlinecode{push\_relabel()}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <climits>
+#include <cstdint>
+#include <queue>
+#include <vector>
+
+std::vector<std::vector<int64_t>> cap;
+std::vector<std::vector<int64_t>> f;
+
+int64_t push_relabel(int source, int sink) {
+  int n = static_cast<int>(cap.size());
+  assert(source != sink);
+  f.assign(n, std::vector<int64_t>(n, 0));
+  std::vector<int64_t> excess(n, 0);
+  std::vector<int> height(n, 0), max_height(n, 0);
+  height[source] = n - 1;
+  for (int i = 0; i < n; i++) {
+    f[source][i] = cap[source][i];
+    f[i][source] = -f[source][i];
+    excess[i] = cap[source][i];
+  }
+  int size = 0;
+  while (true) {
+    if (size == 0) {
+      for (int i = 0; i < n; i++) {
+        if (i != source && i != sink && excess[i] > 0) {
+          if (size != 0 && height[i] > height[max_height[0]]) {
+            size = 0;
+          }
+          max_height[size++] = i;
+        }
+      }
+    }
+    if (size == 0) {
+      break;
+    }
+    while (size != 0) {
+      int i = max_height[size - 1];
+      bool pushed = false;
+      for (int j = 0; j < n && excess[i] != 0; j++) {
+        if (height[i] == height[j] + 1 && cap[i][j] - f[i][j] > 0) {
+          int64_t df = std::min(cap[i][j] - f[i][j], excess[i]);
+          f[i][j] += df;
+          f[j][i] -= df;
+          excess[i] -= df;
+          excess[j] += df;
+          if (excess[i] == 0) {
+            size--;
+          }
+          pushed = true;
+        }
+      }
+      if (pushed) {
+        continue;
+      }
+      height[i] = INT_MAX / 2;
+      for (int j = 0; j < n; j++) {
+        if (height[i] > height[j] + 1 && cap[i][j] - f[i][j] > 0) {
+          height[i] = height[j] + 1;
+        }
+      }
+      if (height[i] > height[max_height[0]]) {
+        size = 0;
+        break;
+      }
+    }
+  }
+  int64_t max_flow = 0;
+  for (int i = 0; i < n; i++) {
+    max_flow += f[source][i];
+  }
+  return max_flow;
+}
+
+std::vector<char> min_cut(int source) {
+  int n = static_cast<int>(cap.size());
+  std::vector<char> reachable(n);
+  std::queue<int> q;
+  reachable[source] = true;
+  q.push(source);
+  while (!q.empty()) {
+    int u = q.front();
+    q.pop();
+    for (int v = 0; v < n; v++) {
+      if (!reachable[v] && cap[u][v] - f[u][v] > 0) {
+        reachable[v] = true;
+        q.push(v);
+      }
+    }
+  }
+  return reachable;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  // Example graph after max flow, with each edge labeled flow/capacity:
+  //            2/2
+  //       1 --------> 3
+  //      / \          |
+  // 3/4 /   \ 1/1     | 2/2
+  //    /     v        v
+  //   0       4 ----> 5
+  //    \     ^   3/3
+  // 2/3 \   / 2/2
+  //      v /
+  //       2
+  int nodes = 6;
+  cap.assign(nodes, std::vector<int64_t>(nodes));
+  cap[0][1] = 4;
+  cap[0][2] = 3;
+  cap[1][3] = 2;
+  cap[1][4] = 1;
+  cap[2][4] = 2;
+  cap[3][5] = 2;
+  cap[4][5] = 3;
+  assert(push_relabel(0, 5) == 5);
+  std::vector<char> cut = min_cut(0);
+  assert(cut[0] && !cut[5]);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Flow with Lower Bounds}
+Given a directed network where each edge has lower and upper capacity bounds, find whether the lower bounds can be satisfied, and optionally optimize an $s$-$t$ flow value. Reserve each edge's lower bound, leaving the difference between its bounds as residual capacity, then record the forced imbalance: for an edge from $u$ to $v$, its lower-bound flow must leave $u$ and enter $v$. A super-source supplies every node with net demand, and every node with net surplus sends that surplus to a super-sink. The bounds are feasible exactly when all such auxiliary edges can be saturated.
+
+For $s$-$t$ flow, add an infinite edge from $t$ back to $s$ before checking feasibility. The flow on that artificial edge is one feasible value. After the feasibility check, augmenting from $s$ to $t$ maximizes the value; augmenting from $t$ to $s$ cancels as much flow as possible and minimizes it.
 
 \begin{compactitem}
   \item \inlinecode{BoundedFlow(n)} constructs a directed lower-bound flow network with nodes in $[0, {\inlinecodemath{n}})$.
   \item \inlinecode{add\_edge(u, v, lo, hi)} adds an edge with lower capacity \inlinecode{lo} and upper capacity \inlinecode{hi}.
   \item \inlinecode{feasible\_circulation()} returns whether all edge bounds can be satisfied with flow conserved at every node.
-  \item \inlinecode{max\_flow(source, sink)} returns the maximum feasible \inlinecode{source}-to-\inlinecode{sink} flow, or $-1$ if no feasible flow exists.
-  \item \inlinecode{min\_flow(source, sink)} returns the minimum feasible \inlinecode{source}-to-\inlinecode{sink} flow, or $-1$ if no feasible flow exists.
+  \item \inlinecode{max\_flow(source, sink)} returns the maximum feasible flow from \inlinecode{source} to \inlinecode{sink}, or \inlinecode{std::nullopt} if no feasible flow exists.
+  \item \inlinecode{min\_flow(source, sink)} returns the minimum feasible flow from \inlinecode{source} to \inlinecode{sink}, or \inlinecode{std::nullopt} if no feasible flow exists.
   \item \inlinecode{edge\_flows()} returns one feasible flow value for each original edge after a successful call.
 \end{compactitem}
 
-All capacities should be nonnegative integers and \inlinecode{lo} $\leq$ \inlinecode{hi}. Choose \inlinecode{INF} larger than any possible finite flow value.
+All capacities should be nonnegative integers and \inlinecode{lo} $\leq$ \inlinecode{hi}. Choose \inlinecode{INF} larger than any possible finite flow value. Each feasibility or optimization call starts from the original network, so different variants may be solved successively on the same instance.
 
-\textbf{Time Complexity}: $O(n^{2} \cdot m)$ per feasibility check or optimized flow call, where $n$ is the number of nodes and $m$ is the number of edges.
+\textbf{Time Complexity}: $O(n^{2} \cdot (n + m))$ per feasibility check or optimized flow call, where $n$ is the number of nodes and $m$ is the number of edges.
 
 \textbf{Space Complexity}: $O(\max\left(n, m\right))$ for network storage and auxiliary arrays.
 
@@ -4736,7 +5127,7 @@ All capacities should be nonnegative integers and \inlinecode{lo} $\leq$ \inline
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
-#include <limits>
+#include <optional>
 #include <queue>
 #include <vector>
 
@@ -4747,7 +5138,7 @@ class BoundedFlow {
   };
 
   struct OriginalEdge {
-    int u, index;
+    int u, v, index;
     int64_t lo, hi;
   };
 
@@ -4818,7 +5209,7 @@ class BoundedFlow {
     std::vector<int64_t> balance(nodes);
     for (const OriginalEdge &e : original) {
       balance[e.u] -= e.lo;
-      balance[adj[e.u][e.index].v] += e.lo;
+      balance[e.v] += e.lo;
     }
     if (source != -1) {
       artificial_index = static_cast<int>(adj[sink].size());
@@ -4838,16 +5229,26 @@ class BoundedFlow {
     return ok;
   }
 
-  int64_t optimize_flow(int source, int sink, bool maximize) {
+  std::optional<int64_t> optimize_flow(int source, int sink, bool maximize) {
     int artificial_index = -1;
     int64_t value = 0;
     if (!satisfy_demands(source, sink, artificial_index, value)) {
-      return -1;
+      return std::nullopt;
     }
     Edge &artificial = adj[sink][artificial_index];
     Edge &reverse = adj[source][artificial.rev];
     artificial.cap = reverse.cap = 0;
     return maximize ? value + dinic(source, sink) : value - dinic(sink, source);
+  }
+
+  void reset() {
+    adj.assign(nodes, {});
+    level.assign(nodes, 0);
+    ptr.assign(nodes, 0);
+    for (OriginalEdge &e : original) {
+      e.index = static_cast<int>(adj[e.u].size());
+      add_residual_edge(e.u, e.v, e.hi - e.lo);
+    }
   }
 
  public:
@@ -4856,23 +5257,26 @@ class BoundedFlow {
   void add_edge(int u, int v, int64_t lo, int64_t hi) {
     assert(0 <= u && u < nodes && 0 <= v && v < nodes);
     assert(0 <= lo && lo <= hi);
-    original.push_back(OriginalEdge{u, static_cast<int>(adj[u].size()), lo, hi});
+    original.push_back(OriginalEdge{u, v, static_cast<int>(adj[u].size()), lo, hi});
     add_residual_edge(u, v, hi - lo);
   }
 
   bool feasible_circulation() {
+    reset();
     int artificial_index = -1;
     int64_t value = 0;
     return satisfy_demands(-1, -1, artificial_index, value);
   }
 
-  int64_t max_flow(int source, int sink) {
-    assert(0 <= source && source < nodes && 0 <= sink && sink < nodes);
+  std::optional<int64_t> max_flow(int source, int sink) {
+    assert(0 <= source && source < nodes && 0 <= sink && sink < nodes && source != sink);
+    reset();
     return optimize_flow(source, sink, true);
   }
 
-  int64_t min_flow(int source, int sink) {
-    assert(0 <= source && source < nodes && 0 <= sink && sink < nodes);
+  std::optional<int64_t> min_flow(int source, int sink) {
+    assert(0 <= source && source < nodes && 0 <= sink && sink < nodes && source != sink);
+    reset();
     return optimize_flow(source, sink, false);
   }
 
@@ -4891,445 +5295,35 @@ class BoundedFlow {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 int main() {
-  BoundedFlow max_network(4);
-  max_network.add_edge(0, 1, 1, 4);
-  max_network.add_edge(0, 2, 0, 2);
-  max_network.add_edge(1, 3, 1, 3);
-  max_network.add_edge(2, 3, 0, 2);
-  assert(max_network.max_flow(0, 3) == 5);
-  std::vector<int64_t> max_flow = max_network.edge_flows();
+  //           [1,4]       [1,3]
+  //       0 --------> 1 --------> 3
+  //       |                       ^
+  // [0,2] |                       | [0,2]
+  //       v                       |
+  //       2 ----------------------+
+  BoundedFlow network(4);
+  network.add_edge(0, 1, 1, 4);
+  network.add_edge(0, 2, 0, 2);
+  network.add_edge(1, 3, 1, 3);
+  network.add_edge(2, 3, 0, 2);
+  assert(network.max_flow(0, 3) == 5);
+  std::vector<int64_t> max_flow = network.edge_flows();
   assert(max_flow[0] + max_flow[1] == 5);
 
-  BoundedFlow min_network(4);
-  min_network.add_edge(0, 1, 1, 4);
-  min_network.add_edge(0, 2, 0, 2);
-  min_network.add_edge(1, 3, 1, 3);
-  min_network.add_edge(2, 3, 0, 2);
-  assert(min_network.min_flow(0, 3) == 1);
+  assert(network.min_flow(0, 3) == 1);
 
+  //            [2,3]
+  //       0 ----------> 1
+  //       ^             |
+  // [2,3] |             | [2,3]
+  //       |             |
+  //       2 <-----------+
   BoundedFlow circulation(3);
   circulation.add_edge(0, 1, 2, 3);
   circulation.add_edge(1, 2, 2, 3);
   circulation.add_edge(2, 0, 2, 3);
   assert(circulation.feasible_circulation());
   assert((circulation.edge_flows() == std::vector<int64_t>{2, 2, 2}));
-  return 0;
-}
-\end{lstlisting}
-\subsection{Maximum Flow (Dinic with Decomposition)}
-Given a flow network with integer or floating-point capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink.
-
-Dinic's algorithm proceeds in phases. Each phase runs a breadth-first search to build a level graph of shortest residual distances from the source, then finds a blocking flow that saturates that level graph using depth-first search, before repeating on the new residual graph. This variant stores residual edges in a flat array so callers can inspect edge flows and decompose the final flow into source-to-sink paths.
-
-\begin{compactitem}
-  \item \inlinecode{Dinic\textless{}T\textgreater{}(n)} constructs an empty flow network with nodes numbered $[0, {\inlinecodemath{n}})$.
-  \item \inlinecode{add\_edge(u, v, cap)} adds a directed residual-network edge from \inlinecode{u} to \inlinecode{v} and returns its edge ID.
-  \item \inlinecode{edge\_flow(id)} returns the flow through a previously added edge.
-  \item \inlinecode{max\_flow(source, sink)} modifies the residual network and returns maximum flow.
-  \item \inlinecode{clear\_flow()} resets all edge flows to zero, allowing a fresh recomputation on the same graph.
-  \item \inlinecode{min\_cut(source)} returns the source side of a minimum cut after \inlinecode{max\_flow()} has been called.
-  \item \inlinecode{decompose(source, sink)} decomposes the current flow into paths from \inlinecode{source} to \inlinecode{sink}.
-\end{compactitem}
-
-Repeated calls to \inlinecode{max\_flow()} continue augmenting from the current flow. This is useful after adding new edges or increasing capacities; call \inlinecode{clear\_flow()} first to recompute from zero. The capacity type \inlinecode{T} should be signed, since reverse residual edges store negative flow.
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(n^{2} \cdot m)$ per call to \inlinecode{max\_flow()}, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(n + m)$ per call to \inlinecode{min\_cut()}.
-  \item $O(p \cdot m)$ per call to \inlinecode{decompose()}, where $p$ is the number of paths returned.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the flow network.
-  \item $O(n)$ auxiliary stack space and $O(n)$ auxiliary heap space for \inlinecode{max\_flow()}.
-  \item $O(n + m)$ auxiliary heap space for \inlinecode{decompose()}, not counting the returned paths.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <functional>
-#include <limits>
-#include <queue>
-#include <vector>
-
-template<typename T>
-class Dinic {
-  struct Edge {
-    int u, v;
-    T cap, flow;
-  };
-
-  static constexpr T EPS = static_cast<T>(1e-9);
-  static bool residual(const Edge &e) { return e.cap - e.flow > EPS; }
-
-  int nodes;
-  T flow;
-  std::vector<Edge> edges;
-  std::vector<std::vector<int>> adj;
-  std::vector<int> dist, ptr;
-
-  bool bfs(int source, int sink) {
-    dist.assign(nodes, -1);
-    dist[source] = 0;
-    std::queue<int> q;
-    q.push(source);
-    while (!q.empty()) {
-      int u = q.front();
-      q.pop();
-      for (int id : adj[u]) {
-        const Edge &e = edges[id];
-        if (dist[e.v] < 0 && residual(e)) {
-          dist[e.v] = dist[u] + 1;
-          q.push(e.v);
-        }
-      }
-    }
-    return dist[sink] >= 0;
-  }
-
-  T dfs(int u, T pushed, int sink) {
-    if (u == sink || pushed <= EPS) {
-      return pushed;
-    }
-    for (; ptr[u] < static_cast<int>(adj[u].size()); ptr[u]++) {
-      int id = adj[u][ptr[u]];
-      Edge &e = edges[id];
-      if (dist[e.v] == dist[u] + 1 && residual(e)) {
-        T flow = dfs(e.v, std::min(pushed, e.cap - e.flow), sink);
-        if (flow > EPS) {
-          e.flow += flow;
-          edges[id ^ 1].flow -= flow;
-          return flow;
-        }
-      }
-    }
-    return 0;
-  }
-
- public:
-  struct FlowPath {
-    T flow;
-    std::vector<int> vertices;
-    std::vector<int> edges;
-  };
-
-  explicit Dinic(int n) : nodes(n), flow(0), adj(n), dist(n), ptr(n) {}
-
-  int add_edge(int u, int v, T cap) {
-    int id = static_cast<int>(edges.size());
-    adj[u].push_back(id);
-    edges.push_back(Edge{u, v, cap, 0});
-    adj[v].push_back(id + 1);
-    edges.push_back(Edge{v, u, 0, 0});
-    return id;
-  }
-
-  T edge_flow(int id) const { return edges[id].flow; }
-
-  void clear_flow() {
-    for (Edge &e : edges) {
-      e.flow = 0;
-    }
-    flow = 0;
-  }
-
-  T max_flow(int source, int sink) {
-    while (bfs(source, sink)) {
-      ptr.assign(nodes, 0);
-      while (true) {
-        T flow = dfs(source, std::numeric_limits<T>::max(), sink);
-        if (flow <= EPS) {
-          break;
-        }
-        this->flow += flow;
-      }
-    }
-    return flow;
-  }
-
-  std::vector<char> min_cut(int source) const {
-    std::vector<char> reachable(nodes);
-    std::queue<int> q;
-    reachable[source] = true;
-    q.push(source);
-    while (!q.empty()) {
-      int u = q.front();
-      q.pop();
-      for (int id : adj[u]) {
-        const Edge &e = edges[id];
-        if (!reachable[e.v] && residual(e)) {
-          reachable[e.v] = true;
-          q.push(e.v);
-        }
-      }
-    }
-    return reachable;
-  }
-
-  std::vector<FlowPath> decompose(int source, int sink) const {
-    std::vector<T> rem(edges.size());
-    for (int id = 0; id < static_cast<int>(edges.size()); id++) {
-      rem[id] = edges[id].flow;
-    }
-    std::vector<FlowPath> res;
-    while (true) {
-      FlowPath path{std::numeric_limits<T>::max(), {source}, {}};
-      std::vector<char> seen(nodes);
-      std::function<bool(int)> find_path = [&](int u) {
-        if (u == sink) {
-          return true;
-        }
-        seen[u] = true;
-        for (int id : adj[u]) {
-          const Edge &e = edges[id];
-          if (rem[id] > EPS && !seen[e.v]) {
-            path.edges.push_back(id);
-            path.vertices.push_back(e.v);
-            if (find_path(e.v)) {
-              return true;
-            }
-            path.vertices.pop_back();
-            path.edges.pop_back();
-          }
-        }
-        return false;
-      };
-      if (!find_path(source)) {
-        break;
-      }
-      for (int id : path.edges) {
-        path.flow = std::min(path.flow, rem[id]);
-      }
-      for (int id : path.edges) {
-        rem[id] -= path.flow;
-      }
-      res.push_back(path);
-    }
-    return res;
-  }
-};
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-#include <iostream>
-using namespace std;
-
-int main() {
-  // Example graph after max flow, with each edge labeled flow/capacity:
-  //            2/2
-  //       1 --------> 3
-  //      / \          |
-  // 3/4 /   \ 1/1     | 2/2
-  //    /     v        v
-  //   0       4 ----> 5
-  //    \     ^   3/3
-  // 2/3 \   / 2/2
-  //      v /
-  //       2
-  Dinic<int> g(6);
-  int id01 = g.add_edge(0, 1, 4);
-  int id02 = g.add_edge(0, 2, 3);
-  int id13 = g.add_edge(1, 3, 2);
-  int id14 = g.add_edge(1, 4, 1);
-  int id24 = g.add_edge(2, 4, 2);
-  int id35 = g.add_edge(3, 5, 2);
-  int id45 = g.add_edge(4, 5, 3);
-  int flow = g.max_flow(0, 5);
-  cout << "Max flow from 0 to 5: " << flow << endl;
-  assert(flow == 5);
-  assert(g.max_flow(0, 5) == 5);
-  assert(g.edge_flow(id01) == 3);
-  assert(g.edge_flow(id02) == 2);
-  assert(g.edge_flow(id13) == 2);
-  assert(g.edge_flow(id14) == 1);
-  assert(g.edge_flow(id24) == 2);
-  assert(g.edge_flow(id35) == 2);
-  assert(g.edge_flow(id45) == 3);
-  vector<char> cut = g.min_cut(0);
-  assert(cut[0] && !cut[5]);
-  vector<Dinic<int>::FlowPath> paths = g.decompose(0, 5);
-  cout << "Flow decomposition:\n";
-  int total = 0;
-  for (const auto &path : paths) {
-    cout << path.flow << ": ";
-    for (int i = 0; i < static_cast<int>(path.vertices.size()); i++) {
-      if (i > 0) {
-        cout << " -> ";
-      }
-      cout << path.vertices[i];
-    }
-    cout << endl;
-    assert(path.vertices.front() == 0 && path.vertices.back() == 5);
-    assert(path.edges.size() + 1 == path.vertices.size());
-    total += path.flow;
-  }
-  assert(total == 5);
-  g.clear_flow();
-  assert(g.max_flow(0, 5) == 5);
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
-Max flow from 0 to 5: 5
-Flow decomposition:
-2: 0 -> 1 -> 3 -> 5
-1: 0 -> 1 -> 4 -> 5
-2: 0 -> 2 -> 4 -> 5
-\end{exampleoutput}
-\subsection{Maximum Flow (Push-Relabel)}
-Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink.
-
-Rather than augmenting along whole paths, the push-relabel algorithm maintains a preflow and a height label on each node, repeatedly pushing excess flow to lower-labeled neighbors and relabeling (raising) a node whose excess cannot yet be pushed, until no node other than the source and sink holds excess.
-
-\begin{compactitem}
-  \item \inlinecode{push\_relabel(source, sink)} returns maximum flow for a global capacity matrix \inlinecode{cap} whose nodes are numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{cap.size()}.
-  \item \inlinecode{min\_cut(source)} returns the source side of a minimum cut after \inlinecode{push\_relabel()} has been called.
-\end{compactitem}
-
-Although the push-relabel algorithm is considered one of the most efficient maximum flow algorithms, it cannot take advantage of the magnitude of the maximum flow being less than $n^3$ (in which case the Ford-Fulkerson or Edmonds-Karp algorithms may be more efficient).
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(n^{3})$ per call to \inlinecode{push\_relabel()}, where $n$ is the number of nodes.
-  \item $O(n^{2})$ per call to \inlinecode{min\_cut()}.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n^{2})$ for storage of the flow network, where $n$ is the number of nodes.
-  \item $O(n)$ auxiliary for \inlinecode{push\_relabel()}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <climits>
-#include <cstdint>
-#include <queue>
-#include <vector>
-
-const int INF = INT_MAX / 2;
-std::vector<std::vector<int>> cap;
-std::vector<std::vector<int>> f;
-
-int64_t push_relabel(int source, int sink) {
-  int n = static_cast<int>(cap.size());
-  f.assign(n, std::vector<int>(n, 0));
-  std::vector<int> e(n, 0), h(n, 0), maxh(n, 0);
-  h[source] = n - 1;
-  for (int i = 0; i < n; i++) {
-    f[source][i] = cap[source][i];
-    f[i][source] = -f[source][i];
-    e[i] = cap[source][i];
-  }
-  int size = 0;
-  while (true) {
-    if (size == 0) {
-      for (int i = 0; i < n; i++) {
-        if (i != source && i != sink && e[i] > 0) {
-          if (size != 0 && h[i] > h[maxh[0]]) {
-            size = 0;
-          }
-          maxh[size++] = i;
-        }
-      }
-    }
-    if (size == 0) {
-      break;
-    }
-    while (size != 0) {
-      int i = maxh[size - 1];
-      bool pushed = false;
-      for (int j = 0; j < n && e[i] != 0; j++) {
-        if (h[i] == h[j] + 1 && cap[i][j] - f[i][j] > 0) {
-          int df = std::min(cap[i][j] - f[i][j], e[i]);
-          f[i][j] += df;
-          f[j][i] -= df;
-          e[i] -= df;
-          e[j] += df;
-          if (e[i] == 0) {
-            size--;
-          }
-          pushed = true;
-        }
-      }
-      if (pushed) {
-        continue;
-      }
-      h[i] = INF;
-      for (int j = 0; j < n; j++) {
-        if (h[i] > h[j] + 1 && cap[i][j] - f[i][j] > 0) {
-          h[i] = h[j] + 1;
-        }
-      }
-      if (h[i] > h[maxh[0]]) {
-        size = 0;
-        break;
-      }
-    }
-  }
-  int64_t max_flow = 0;
-  for (int i = 0; i < n; i++) {
-    max_flow += f[source][i];
-  }
-  return max_flow;
-}
-
-std::vector<char> min_cut(int source) {
-  int n = static_cast<int>(cap.size());
-  std::vector<char> reachable(n);
-  std::queue<int> q;
-  reachable[source] = true;
-  q.push(source);
-  while (!q.empty()) {
-    int u = q.front();
-    q.pop();
-    for (int v = 0; v < n; v++) {
-      if (!reachable[v] && cap[u][v] - f[u][v] > 0) {
-        reachable[v] = true;
-        q.push(v);
-      }
-    }
-  }
-  return reachable;
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-
-int main() {
-  // Example graph after max flow, with each edge labeled flow/capacity:
-  //            2/2
-  //       1 --------> 3
-  //      / \          |
-  // 3/4 /   \ 1/1     | 2/2
-  //    /     v        v
-  //   0       4 ----> 5
-  //    \     ^   3/3
-  // 2/3 \   / 2/2
-  //      v /
-  //       2
-  int nodes = 6;
-  cap.assign(nodes, std::vector<int>(nodes));
-  cap[0][1] = 4;
-  cap[0][2] = 3;
-  cap[1][3] = 2;
-  cap[1][4] = 1;
-  cap[2][4] = 2;
-  cap[3][5] = 2;
-  cap[4][5] = 3;
-  assert(push_relabel(0, 5) == 5);
-  std::vector<char> cut = min_cut(0);
-  assert(cut[0] && !cut[5]);
   return 0;
 }
 \end{lstlisting}
@@ -5353,13 +5347,14 @@ Overflow warning: the returned cost accumulates products of sent flow and edge c
 \begin{compactitem}
   \item $O(n)$ per call to the constructor, where $n$ is the number of nodes.
   \item $O(1)$ per call to \inlinecode{add\_edge()}.
-  \item $O(f \cdot n \cdot m)$ per call to \inlinecode{min\_cost\_flow()}, where $f$ is the amount of flow sent, $n$ is the number of nodes, and $m$ is the number of edges.
+  \item $O(a \cdot n \cdot m)$ per call to \inlinecode{min\_cost\_flow()}, where $a$ is the number of augmenting paths, $n$ is the number of nodes, and $m$ is the number of edges. For integer capacities, $a$ is at most the flow sent.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(\max\left(n, m\right))$ for storage of the residual network and auxiliary arrays.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <limits>
 #include <queue>
@@ -5401,6 +5396,7 @@ class MinCostMaxFlow {
   }
 
   std::pair<T, C> min_cost_flow(int source, int sink, T target_flow) {
+    assert(source != sink);
     static const C INF_COST = std::numeric_limits<C>::max() / 4;
     T flow = 0;
     C cost = 0;
@@ -5408,8 +5404,8 @@ class MinCostMaxFlow {
     std::vector<int> parent_edge(nodes);
     std::vector<char> in_queue(nodes);
     while (flow < target_flow) {
-      std::fill(dist.begin(), dist.end(), INF_COST);
-      std::fill(in_queue.begin(), in_queue.end(), false);
+      dist.assign(nodes, INF_COST);
+      in_queue.assign(nodes, false);
       std::queue<int> q;
       dist[source] = 0;
       q.push(source);
@@ -5482,9 +5478,9 @@ int main() {
   assert(flow == 5);
   assert(cost == 16);
   assert(g.edge_flow(id01) == 3);
-  cout << "Flow sent: " << flow << "\n";
-  cout << "Minimum cost: " << cost << "\n";
-  cout << "Flow on edge 0->1: " << g.edge_flow(id01) << "\n";
+  cout << "Flow sent: " << flow << endl;
+  cout << "Minimum cost: " << cost << endl;
+  cout << "Flow on edge 0->1: " << g.edge_flow(id01) << endl;
   g.clear_flow();
   auto [flow2, cost2] = g.min_cost_flow(0, 5, 5);
   assert(flow2 == 5);
@@ -5518,13 +5514,14 @@ Overflow warning: the returned cost accumulates products of sent flow and edge c
   \item $O(n)$ per call to the constructor, where $n$ is the number of nodes.
   \item $O(1)$ per call to \inlinecode{add\_edge()}.
   \item $O(m)$ to check whether initial potentials are needed, plus $O(n \cdot m)$ to compute them when negative residual costs are reachable.
-  \item $O(f \cdot m \cdot \log n)$ for the augmenting paths, where $f$ is the amount of flow sent, $n$ is the number of nodes, and $m$ is the number of edges.
+  \item $O(a \cdot m \cdot \log n)$ for the augmenting paths, where $a$ is the number of augmenting paths, $n$ is the number of nodes, and $m$ is the number of edges. For integer capacities, $a$ is at most the flow sent.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(\max\left(n, m\right))$ for storage of the residual network and auxiliary arrays.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <functional>
 #include <limits>
@@ -5550,7 +5547,7 @@ class MinCostMaxFlow {
 
   void init_potentials(int source) {
     static const C INF_COST = std::numeric_limits<C>::max() / 4;
-    std::fill(potential.begin(), potential.end(), 0);
+    potential.assign(nodes, 0);
     bool has_negative_cost = false;
     for (const Edge &e : edges) {
       has_negative_cost |= residual(e) && e.cost < 0;
@@ -5558,7 +5555,7 @@ class MinCostMaxFlow {
     if (!has_negative_cost) {
       return;
     }
-    std::fill(potential.begin(), potential.end(), INF_COST);
+    potential.assign(nodes, INF_COST);
     std::vector<char> in_queue(nodes);
     std::queue<int> q;
     potential[source] = 0;
@@ -5604,10 +5601,11 @@ class MinCostMaxFlow {
     for (Edge &e : edges) {
       e.flow = 0;
     }
-    std::fill(potential.begin(), potential.end(), 0);
+    potential.assign(nodes, 0);
   }
 
   std::pair<T, C> min_cost_flow(int source, int sink, T target_flow) {
+    assert(source != sink);
     static const C INF_COST = std::numeric_limits<C>::max() / 4;
     init_potentials(source);
     T flow = 0;
@@ -5615,7 +5613,7 @@ class MinCostMaxFlow {
     std::vector<C> dist(nodes);
     std::vector<int> parent_edge(nodes);
     while (flow < target_flow) {
-      std::fill(dist.begin(), dist.end(), INF_COST);
+      dist.assign(nodes, INF_COST);
       std::priority_queue<std::pair<C, int>, std::vector<std::pair<C, int>>, std::greater<>> pq;
       dist[source] = 0;
       pq.push({0, source});
@@ -5692,9 +5690,9 @@ int main() {
   assert(flow == 5);
   assert(cost == 16);
   assert(g.edge_flow(id01) == 3);
-  cout << "Flow sent: " << flow << "\n";
-  cout << "Minimum cost: " << cost << "\n";
-  cout << "Flow on edge 0->1: " << g.edge_flow(id01) << "\n";
+  cout << "Flow sent: " << flow << endl;
+  cout << "Minimum cost: " << cost << endl;
+  cout << "Flow on edge 0->1: " << g.edge_flow(id01) << endl;
   g.clear_flow();
   auto [flow2, cost2] = g.min_cost_flow(0, 5, 5);
   assert(flow2 == 5);
@@ -5708,19 +5706,19 @@ Minimum cost: 16
 Flow on edge 0->1: 3
 \end{exampleoutput}
 \subsection{Gomory-Hu Tree}
-Given an undirected graph with nonnegative edge weights, build a Gomory-Hu tree: a weighted tree on the same vertices that represents every pairwise minimum $s$-$t$ cut value. For any two vertices $u$ and $v$, the minimum cut value between them in the original graph is the minimum edge weight on the path from $u$ to $v$ in the Gomory-Hu tree.
+Given an undirected graph with nonnegative edge weights, build a Gomory-Hu tree: a weighted tree on the same nodes that represents every pairwise minimum $s$-$t$ cut value. For any two nodes $u$ and $v$, the minimum cut value between them in the original graph is the minimum edge weight on the path from $u$ to $v$ in the Gomory-Hu tree.
 
-The algorithm starts with every vertex attached to vertex 0, then performs $n - 1$ max-flow/min-cut computations. After computing the minimum cut between vertex $s$ and its current parent, vertices on the $s$ side of that cut are reparented under $s$, gradually refining the cut-equivalent tree.
+The algorithm starts with every node attached to node $0$, then performs $n - 1$ max-flow/min-cut computations. After computing the minimum cut between node $s$ and its current parent, nodes on the $s$ side of that cut are reparented under $s$, gradually refining the cut-equivalent tree.
 
 \begin{compactitem}
-  \item \inlinecode{gomory\_hu(n, edges)} returns the ${\inlinecodemath{n}} - 1$ edges of a Gomory-Hu tree as $({\inlinecodemath{u}}, {\inlinecodemath{v}}, {\inlinecodemath{weight}})$ triplets for an undirected, weighted graph with \inlinecode{n} nodes and \inlinecode{edges} of the same shape.
-  \item \inlinecode{min\_cut\_value(n, tree, source, sink)} returns the minimum cut value between two vertices using a Gomory-Hu tree. Note that for many pairwise cut queries on the same tree, it's more efficient to prebuild the tree adjacency once and answer minimum edge-on-path queries with LCA/binary lifting instead of calling \inlinecode{min\_cut\_value()} each time.
+  \item \inlinecode{gomory\_hu(n, edges)} returns the \inlinecode{n - 1} edges of a Gomory-Hu tree as $({\inlinecodemath{u}}, {\inlinecodemath{v}}, {\inlinecodemath{weight}})$ triplets for an undirected, weighted graph with \inlinecode{n} nodes and \inlinecode{edges} of the same shape.
+  \item \inlinecode{min\_cut\_value(n, tree, source, sink)} returns the minimum cut value between two nodes using a Gomory-Hu tree. Note that for many pairwise cut queries on the same tree, it's more efficient to prebuild the tree adjacency once and answer minimum edge-on-path queries with LCA/binary lifting instead of calling \inlinecode{min\_cut\_value()} each time.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ calls to maximum flow. With the included Dinic implementation, this is $O(n^{3} \cdot m)$ in the worst case, where $n$ is the number of vertices and $m$ is the number of undirected edges.
+  \item $O(n)$ calls to maximum flow. With the included Dinic implementation, this is $O(n^{3} \cdot m)$ in the worst case, where $n$ is the number of nodes and $m$ is the number of undirected edges.
   \item $O(n)$ per call to \inlinecode{min\_cut\_value()}.
 \end{compactitem}
 
@@ -5729,6 +5727,7 @@ The algorithm starts with every vertex attached to vertex 0, then performs $n - 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
+#include <functional>
 #include <limits>
 #include <queue>
 #include <tuple>
@@ -5858,26 +5857,6 @@ std::vector<Edge<T>> gomory_hu(int n, const std::vector<Edge<T>> &edges) {
 }
 
 template<typename T>
-T min_cut_value_dfs(
-    const std::vector<std::vector<std::pair<int, T>>> &adj, std::vector<char> &seen, int u,
-    int sink, T best
-) {
-  if (u == sink) {
-    return best;
-  }
-  seen[u] = true;
-  for (auto [v, w] : adj[u]) {
-    if (!seen[v]) {
-      T res = min_cut_value_dfs(adj, seen, v, sink, std::min(best, w));
-      if (res != -1) {
-        return res;
-      }
-    }
-  }
-  return -1;
-}
-
-template<typename T>
 T min_cut_value(int n, const std::vector<Edge<T>> &tree, int source, int sink) {
   assert(0 <= source && source < n && 0 <= sink && sink < n && source != sink);
   // For many queries, prebuild this adjacency and add LCA/binary lifting for min edge on path.
@@ -5887,7 +5866,22 @@ T min_cut_value(int n, const std::vector<Edge<T>> &tree, int source, int sink) {
     adj[v].emplace_back(u, w);
   }
   std::vector<char> seen(n);
-  return min_cut_value_dfs(adj, seen, source, sink, std::numeric_limits<T>::max());
+  std::function<T(int, T)> dfs = [&](int u, T best) {
+    if (u == sink) {
+      return best;
+    }
+    seen[u] = true;
+    for (auto [v, w] : adj[u]) {
+      if (!seen[v]) {
+        T res = dfs(v, std::min(best, w));
+        if (res != -1) {
+          return res;
+        }
+      }
+    }
+    return static_cast<T>(-1);
+  };
+  return dfs(source, std::numeric_limits<T>::max());
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -5928,35 +5922,33 @@ Gomory-Hu tree:
 mincut(2, 3) = 6
 \end{exampleoutput}
 \subsection{Global Minimum Cut (Stoer-Wagner)}
-Given a connected, undirected graph with nonnegative edge weights, the global minimum cut is the partition of the vertices into two nonempty sets that minimizes the total weight of edges crossing between them. Unlike a minimum $s$-$t$ cut, no source or sink is fixed; the goal is the cheapest way to split the graph in two. The Stoer-Wagner algorithm finds it without any maximum flow computation by repeatedly running a ``minimum cut phase''.
+Given an undirected graph with nonnegative edge weights, the global minimum cut is the partition of the nodes into two nonempty sets that minimizes the total weight of edges crossing between them. Unlike a minimum $s$-$t$ cut, no source or sink is fixed; the goal is the cheapest way to split the graph in two. The Stoer-Wagner algorithm finds it without any maximum flow computation by repeatedly running a ``minimum cut phase''.
 
-A phase grows a set, starting from an arbitrary vertex, by repeatedly adding the most tightly connected outside vertex (the one with the greatest total weight to the set so far), exactly as in Prim's algorithm. The last vertex added, together with its connection weight, yields one candidate cut, the ``cut of the phase''. The last two vertices added are then merged into a single supernode and the next phase begins on the smaller graph. After $n - 1$ phases every candidate has been considered, and the smallest is the global minimum cut.
+A phase grows a set, starting from an arbitrary node, by repeatedly adding the most tightly connected outside node (the one with the greatest total weight to the set so far), exactly as in Prim's algorithm. The last node added, together with its connection weight, yields one candidate cut, the ``cut of the phase''. The last two nodes added are then merged into a single supernode and the next phase begins on the smaller graph. After $n - 1$ phases every candidate has been considered, and the smallest is the global minimum cut.
 
 \begin{compactitem}
-  \item \inlinecode{global\_min\_cut(adj)} returns a pair $({\inlinecodemath{weight}}, {\inlinecodemath{side}})$ for a graph as a symmetric adjacency matrix \inlinecode{adj} (with $0$ for the diagonal and absent edges), where \inlinecode{weight} is the total weight of the global minimum cut and \inlinecode{side} lists the vertices on one side of that cut. The graph must have at least two vertices.
+  \item \inlinecode{global\_min\_cut(cap)} returns a pair $({\inlinecodemath{weight}}, {\inlinecodemath{side}})$ for a graph as a symmetric capacity matrix \inlinecode{cap} (with $0$ for the diagonal and absent edges), where \inlinecode{weight} is the total weight of the global minimum cut and \inlinecode{side} lists the nodes on one side of that cut. The graph must have at least two nodes.
 \end{compactitem}
 
-Parallel edges should be pre-summed into the adjacency matrix before calling: \inlinecode{adj[u][v]} holds a single combined weight, so the sum of all parallel edge weights between \inlinecode{u} and \inlinecode{v} should be stored there.
+Parallel edges should be pre-summed into the capacity matrix before calling: \inlinecode{cap[u][v]} holds a single combined weight, so the sum of all parallel edge weights between \inlinecode{u} and \inlinecode{v} should be stored there.
 
-\textbf{Time Complexity}: $O(n^{3})$ per call, where $n$ is the number of vertices.
+\textbf{Time Complexity}: $O(n^{3})$ per call, where $n$ is the number of nodes.
 
 \textbf{Space Complexity}: $O(n^{2})$ auxiliary.
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <cassert>
 #include <cstdint>
-#include <limits>
 #include <utility>
 #include <vector>
 
-std::pair<int64_t, std::vector<int>> global_min_cut(std::vector<std::vector<int64_t>> adj) {
-  int n = static_cast<int>(adj.size());
+std::pair<int64_t, std::vector<int>> global_min_cut(std::vector<std::vector<int64_t>> cap) {
+  int n = static_cast<int>(cap.size());
   assert(n >= 2);
   for (int i = 0; i < n; i++) {
-    assert(static_cast<int>(adj[i].size()) == n);
     for (int j = i + 1; j < n; j++) {
-      assert(adj[i][j] == adj[j][i]);
+      assert(cap[i][j] >= 0);
+      assert(cap[i][j] == cap[j][i]);
     }
   }
   std::pair<int64_t, std::vector<int>> best = {INT64_MAX, {}};
@@ -5967,8 +5959,8 @@ std::pair<int64_t, std::vector<int>> global_min_cut(std::vector<std::vector<int6
     groups[i] = {i};
   }
   for (int phase = 1; phase < n; phase++) {
-    std::fill(weight.begin(), weight.end(), 0);
-    std::fill(added.begin(), added.end(), false);
+    weight.assign(n, 0);
+    added.assign(n, false);
     int s = -1;
     for (int it = 0; it <= n - phase; it++) {
       int sel = -1;
@@ -5983,15 +5975,15 @@ std::pair<int64_t, std::vector<int>> global_min_cut(std::vector<std::vector<int6
         }
         groups[s].insert(groups[s].end(), groups[sel].begin(), groups[sel].end());
         for (int i = 0; i < n; i++) {
-          adj[s][i] += adj[sel][i];
-          adj[i][s] = adj[s][i];
+          cap[s][i] += cap[sel][i];  // Overflow warning!
+          cap[i][s] = cap[s][i];
         }
         exists[sel] = false;
         break;
       }
       added[sel] = true;
       for (int i = 0; i < n; i++) {
-        weight[i] += adj[sel][i];
+        weight[i] += cap[sel][i];
       }
       s = sel;
     }
@@ -6012,21 +6004,24 @@ int main() {
   //    \     /
   // w=1 \   / w=3
   //       2
-  vector<vector<int64_t>> adj{
+  vector<vector<int64_t>> cap{
       {0, 2, 1},
       {2, 0, 3},
       {1, 3, 0},
   };
   // Cuts: {0}|{1,2} = 3, {1}|{0,2} = 5, {2}|{0,1} = 4. Minimum is 3.
-  auto [weight, side] = global_min_cut(adj);
+  auto [weight, side] = global_min_cut(cap);
   assert(weight == 3);
-  assert((side == vector<int>{1, 2}));  // The shore {1, 2}, opposite the single vertex 0.
-  cout << "Global min cut weight: " << weight << "\n";
+  assert((side == vector<int>{1, 2}));  // The shore {1, 2}, opposite the single node 0.
+  cout << "Global min cut weight: " << weight << endl;
   cout << "One side:";
   for (int u : side) {
     cout << " " << u;
   }
-  cout << "\n";
+  cout << endl;
+
+  vector<vector<int64_t>> disconnected{{0, 0}, {0, 0}};
+  assert(global_min_cut(disconnected).first == 0);
   return 0;
 }
 \end{lstlisting}
@@ -6047,9 +6042,14 @@ Kuhn's algorithm builds the matching one left node at a time. For each, a depth-
   \item \inlinecode{bipartite\_matching(n2)} populates \inlinecode{match\_left} and \inlinecode{match\_right}, then returns maximum matching size for a global, pre-populated adjacency list \inlinecode{adj} whose left-side nodes are numbered $[0, {\inlinecodemath{n}})$ and whose right-side neighbors are numbered $[0, {\inlinecodemath{n2}})$, where \inlinecode{n} is \inlinecode{adj.size()}.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(m \cdot (n_1 + n_2))$ per call, where $m$ is the number of edges.
+\textbf{Time Complexity}: $O(n_1 \cdot m)$ per call, where $m$ is the number of edges.
 
-\textbf{Space Complexity}: $O(n_1 + n_2)$ auxiliary stack space per call.
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(\max\left(n_1 + n_2, m\right))$ for storage of the graph, where $m$ is the number of edges.
+  \item $O(n_1 + n_2)$ auxiliary heap space and $O(n_1)$ auxiliary stack space per call.
+\end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <vector>
@@ -6057,10 +6057,10 @@ Kuhn's algorithm builds the matching one left node at a time. For each, a depth-
 std::vector<int> match_left, match_right;
 std::vector<int> visit;
 std::vector<std::vector<int>> adj;
-int visit_time;
+int timer;
 
 bool dfs(int u) {
-  visit[u] = visit_time;
+  visit[u] = timer;
   for (int nb : adj[u]) {
     if (match_right[nb] == -1) {
       match_left[u] = nb;
@@ -6070,7 +6070,7 @@ bool dfs(int u) {
   }
   for (int nb : adj[u]) {
     int v = match_right[nb];
-    if (visit[v] != visit_time && dfs(v)) {
+    if (visit[v] != timer && dfs(v)) {
       match_left[u] = nb;
       match_right[nb] = u;
       return true;
@@ -6084,10 +6084,10 @@ int bipartite_matching(int n2) {
   match_left.assign(n1, -1);
   match_right.assign(n2, -1);
   visit.assign(n1, 0);
-  visit_time = 0;
+  timer = 0;
   int matches = 0;
   for (int i = 0; i < n1; i++) {
-    visit_time++;
+    timer++;
     if (dfs(i)) {
       matches++;
     }
@@ -6103,10 +6103,10 @@ int bipartite_matching(int n2) {
 using namespace std;
 
 int main() {
-  // Left vertices L0..L2, right vertices R0..R3:
-  //   L0 -- R1
-  //   L1 -- R0, R1, R2
-  //   L2 -- R2, R3
+  // Left nodes a0..a2, right nodes b0..b3:
+  //   a0 -- b1
+  //   a1 -- b0, b1, b2
+  //   a2 -- b2, b3
   int n1 = 3, n2 = 4;
   adj.assign(n1, {});
   adj[0].push_back(1);
@@ -6135,10 +6135,10 @@ Matched 3 pair(s):
 \subsection{Maximum Bipartite Matching (Hopcroft-Karp)}
 Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots, n_2 - 1\}$, as well as a set of edges $E$ mapping nodes from set $A$ to set $B$, find the largest possible subset of $E$ containing no edges that share the same node.
 
-Hopcroft-Karp augments along many shortest augmenting paths per phase. Each phase first runs a breadth-first search to layer the graph by distance, then a depth-first search to find a maximal set of vertex-disjoint shortest augmenting paths to flip at once, for $O(m \cdot \sqrt{n_1 + n_2})$ running time overall.
+Hopcroft-Karp augments along many shortest augmenting paths per phase. Each phase first runs a breadth-first search to layer the graph by distance, then a depth-first search to find a maximal set of node-disjoint shortest augmenting paths to flip at once, for $O(m \cdot \sqrt{n_1 + n_2})$ running time overall.
 
 \begin{compactitem}
-  \item \inlinecode{bipartite\_matching\_hk(n2)} populates \inlinecode{match} and returns maximum matching size for a global, pre-populated adjacency list \inlinecode{adj} whose left-side nodes are numbered $[0, {\inlinecodemath{n}})$ and whose right-side neighbors are numbered $[0, {\inlinecodemath{n2}})$, where \inlinecode{n} is \inlinecode{adj.size()}.
+  \item \inlinecode{bipartite\_matching\_hk(n2)} populates \inlinecode{match\_left} and \inlinecode{match\_right}, then returns maximum matching size for a global, pre-populated adjacency list \inlinecode{adj} whose left-side nodes are numbered $[0, {\inlinecodemath{n}})$ and whose right-side neighbors are numbered $[0, {\inlinecodemath{n2}})$, where \inlinecode{n} is \inlinecode{adj.size()}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(m \cdot \sqrt{n_1 + n_2})$ per call, where $m$ is the number of edges.
@@ -6151,13 +6151,12 @@ Hopcroft-Karp augments along many shortest augmenting paths per phase. Each phas
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <queue>
 #include <vector>
 
 std::vector<std::vector<int>> adj;
 std::vector<char> used, visit;
-std::vector<int> match, dist;
+std::vector<int> match_left, match_right, dist;
 
 void bfs() {
   int n1 = static_cast<int>(adj.size());
@@ -6173,7 +6172,7 @@ void bfs() {
     int u = q.front();
     q.pop();
     for (int nb : adj[u]) {
-      int v = match[nb];
+      int v = match_right[nb];
       if (v >= 0 && dist[v] < 0) {
         dist[v] = dist[u] + 1;
         q.push(v);
@@ -6185,9 +6184,10 @@ void bfs() {
 bool dfs(int u) {
   visit[u] = true;
   for (int nb : adj[u]) {
-    int v = match[nb];
+    int v = match_right[nb];
     if (v < 0 || (!visit[v] && dist[v] == dist[u] + 1 && dfs(v))) {
-      match[nb] = u;
+      match_left[u] = nb;
+      match_right[nb] = u;
       used[u] = true;
       return true;
     }
@@ -6197,7 +6197,8 @@ bool dfs(int u) {
 
 int bipartite_matching_hk(int n2) {
   int n1 = static_cast<int>(adj.size());
-  match.assign(n2, -1);
+  match_left.assign(n1, -1);
+  match_right.assign(n2, -1);
   used.assign(n1, false);
   int res = 0;
   while (true) {
@@ -6225,10 +6226,10 @@ int bipartite_matching_hk(int n2) {
 using namespace std;
 
 int main() {
-  // Left vertices L0..L2, right vertices R0..R3:
-  //   L0 -- R1
-  //   L1 -- R0, R1, R2
-  //   L2 -- R2, R3
+  // Left nodes a0..a2, right nodes b0..b3:
+  //   a0 -- b1
+  //   a1 -- b0, b1, b2
+  //   a2 -- b2, b3
   int n1 = 3, n2 = 4;
   adj.assign(n1, {});
   adj[0].push_back(1);
@@ -6241,8 +6242,8 @@ int main() {
   assert(pairs == 3);
   cout << "Matched " << pairs << " pair(s):" << endl;
   for (int i = 0; i < n2; i++) {
-    if (match[i] != -1) {
-      cout << match[i] << " " << i << endl;
+    if (match_right[i] != -1) {
+      cout << match_right[i] << " " << i << endl;
     }
   }
   return 0;
@@ -6255,9 +6256,9 @@ Matched 3 pair(s):
 2 2
 \end{exampleoutput}
 \subsection{Minimum Vertex Cover (Konig)}
-Given a bipartite graph with left nodes $A = \{0, \ldots, n_1 - 1\}$ and right nodes $B = \{0, \ldots, n_2 - 1\}$, find a minimum vertex cover: a smallest set of nodes such that every edge has at least one endpoint in the set. By Koenig's theorem, in a bipartite graph the size of a minimum vertex cover equals the size of a maximum matching, and the nodes left uncovered form a maximum independent set.
+Given a bipartite graph with left nodes $A = \{0, \ldots, n_1 - 1\}$ and right nodes $B = \{0, \ldots, n_2 - 1\}$, find a minimum vertex cover: a smallest set of nodes such that every edge has at least one endpoint in the set. By Konig's theorem, in a bipartite graph the size of a minimum vertex cover equals the size of a maximum matching, and the nodes left uncovered form a maximum independent set.
 
-The construction first computes a maximum matching with Kuhn's algorithm. It then marks every left node reachable from an unmatched left node by an alternating path (following unmatched edges from left to right and matched edges from right to left). Koenig's theorem says the minimum vertex cover is exactly the left nodes that are not reachable together with the right nodes that are reachable; each matched edge contributes exactly one endpoint, so the cover size equals the matching size.
+The construction first computes a maximum matching with Kuhn's algorithm. It then marks every left node reachable from an unmatched left node by an alternating path (following unmatched edges from left to right and matched edges from right to left). Konig's theorem says the minimum vertex cover is exactly the left nodes that are not reachable together with the right nodes that are reachable; each matched edge contributes exactly one endpoint, so the cover size equals the matching size.
 
 \begin{compactitem}
   \item \inlinecode{min\_vertex\_cover(n2)} returns the nodes of a minimum vertex cover for the global adjacency list \inlinecode{adj} (left nodes $[0, {\inlinecodemath{n1}})$, right neighbors $[0, {\inlinecodemath{n2}})$), where \inlinecode{n1} is \inlinecode{adj.size()}. Each returned value is a left node \inlinecode{i} in $[0, {\inlinecodemath{n1}})$, or a right node \inlinecode{j} encoded as \inlinecode{n1 + j}.
@@ -6265,20 +6266,25 @@ The construction first computes a maximum matching with Kuhn's algorithm. It the
 
 The adjacency list \inlinecode{adj} is shared with the matching routine: \inlinecode{adj[u]} lists the right-side neighbors of left node \inlinecode{u}. Cover nodes are reported with right node \inlinecode{j} encoded as \inlinecode{n1 + j} so the two sides share one index space.
 
-\textbf{Time Complexity}: $O(m \cdot (n_1 + n_2))$ per call, dominated by the matching, where $m$ is the number of edges.
+\textbf{Time Complexity}: $O(n_1 \cdot m)$ per call, dominated by the matching, where $m$ is the number of edges.
 
-\textbf{Space Complexity}: $O(n_1 + n_2)$ auxiliary.
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(\max\left(n_1 + n_2, m\right))$ for storage of the graph.
+  \item $O(n_1 + n_2)$ auxiliary.
+\end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <vector>
 
+std::vector<std::vector<int>> adj;
 std::vector<int> match_left, match_right;
 std::vector<int> visit;
-std::vector<std::vector<int>> adj;
-int visit_time;
+int timer;
 
 bool dfs(int u) {
-  visit[u] = visit_time;
+  visit[u] = timer;
   for (int nb : adj[u]) {
     if (match_right[nb] == -1) {
       match_left[u] = nb;
@@ -6288,7 +6294,7 @@ bool dfs(int u) {
   }
   for (int nb : adj[u]) {
     int v = match_right[nb];
-    if (visit[v] != visit_time && dfs(v)) {
+    if (visit[v] != timer && dfs(v)) {
       match_left[u] = nb;
       match_right[nb] = u;
       return true;
@@ -6302,10 +6308,10 @@ int bipartite_matching(int n2) {
   match_left.assign(n1, -1);
   match_right.assign(n2, -1);
   visit.assign(n1, 0);
-  visit_time = 0;
+  timer = 0;
   int matches = 0;
   for (int i = 0; i < n1; i++) {
-    visit_time++;
+    timer++;
     if (dfs(i)) {
       matches++;
     }
@@ -6316,28 +6322,25 @@ int bipartite_matching(int n2) {
 std::vector<int> min_vertex_cover(int n2) {
   int n1 = static_cast<int>(adj.size());
   bipartite_matching(n2);
-  // reachable_left[u] becomes true for left nodes on an alternating path from an unmatched left
-  // node; seen_right[e] for the right nodes on those paths.
-  std::vector<char> reachable_left(n1, true), seen_right(n2, false);
-  for (int u = 0; u < n1; u++) {
-    if (match_left[u] != -1) {
-      reachable_left[u] = false;
-    }
-  }
+  std::vector<char> reachable_left(n1), reachable_right(n2);
   std::vector<int> st;
   for (int u = 0; u < n1; u++) {
-    if (reachable_left[u]) {
+    if (match_left[u] == -1) {
+      reachable_left[u] = true;
       st.push_back(u);
     }
   }
   while (!st.empty()) {
     int u = st.back();
     st.pop_back();
-    reachable_left[u] = true;
-    for (int e : adj[u]) {
-      if (!seen_right[e] && match_right[e] != -1) {
-        seen_right[e] = true;
-        st.push_back(match_right[e]);  // Cross the matched edge back to the left.
+    for (int v : adj[u]) {
+      if (v != match_left[u] && !reachable_right[v]) {
+        reachable_right[v] = true;
+        int next = match_right[v];
+        if (next != -1 && !reachable_left[next]) {
+          reachable_left[next] = true;
+          st.push_back(next);
+        }
       }
     }
   }
@@ -6347,9 +6350,9 @@ std::vector<int> min_vertex_cover(int n2) {
       cover.push_back(u);
     }
   }
-  for (int e = 0; e < n2; e++) {
-    if (seen_right[e]) {
-      cover.push_back(n1 + e);
+  for (int v = 0; v < n2; v++) {
+    if (reachable_right[v]) {
+      cover.push_back(n1 + v);
     }
   }
   return cover;
@@ -6363,7 +6366,10 @@ std::vector<int> min_vertex_cover(int n2) {
 using namespace std;
 
 int main() {
-  // Left {0,1,2} and right {0,1,2,3}; a maximum matching has size 3.
+  // Left nodes a0..a2, right nodes b0..b3:
+  //   a0 -- b1
+  //   a1 -- b0, b1, b2
+  //   a2 -- b2, b3
   int n1 = 3, n2 = 4;
   adj.assign(n1, {});
   adj[0].push_back(1);
@@ -6373,7 +6379,7 @@ int main() {
   adj[2].push_back(2);
   adj[2].push_back(3);
   vector<int> cover = min_vertex_cover(n2);
-  assert(cover.size() == 3);  // Equals the maximum matching size, by Koenig's theorem.
+  assert(cover.size() == 3);  // Equals the maximum matching size, by Konig's theorem.
   // The cover is valid: every edge has at least one endpoint in it.
   for (int u = 0; u < n1; u++) {
     for (int v : adj[u]) {
@@ -6386,11 +6392,11 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Maximum Graph Matching (Blossom)}
-Given an undirected, unweighted graph, determine a maximum matching: a maximum subset of its edges such that no node is shared between different edges in the resulting subset.
+Given an undirected, unweighted simple graph, determine a maximum matching: a maximum subset of its edges such that no node is shared between different edges in the resulting subset.
 
 Edmonds' blossom algorithm extends augmenting-path search to general (non-bipartite) graphs, where odd-length cycles called blossoms can conceal augmenting paths. Each blossom is contracted into a single node so the search can proceed, and is expanded afterward to recover the matching. For maximum-weight matching in bipartite graphs, use Hungarian or min-cost max-flow; for maximum-weight matching in general graphs, use the weighted blossom algorithm in the next section.
 
-The graph must be simple; parallel edges and self-loops are not supported.
+The graph must be simple: self-loops and parallel edges are not supported.
 
 \begin{compactitem}
   \item \inlinecode{maximum\_matching(adj)} returns a matching for a bidirectionally pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}. The returned vector \inlinecode{match} has \inlinecode{match[u] == v} and \inlinecode{match[v] == u} when \inlinecode{u} and \inlinecode{v} are matched, or \inlinecode{match[u]} is $-1$ when \inlinecode{u} is unmatched.
@@ -6453,8 +6459,8 @@ std::vector<int> maximum_matching(const std::vector<std::vector<int>> &adj) {
     }
   };
   auto find_path = [&](int root) {
-    std::fill(label.begin(), label.end(), -1);
-    std::fill(parent.begin(), parent.end(), -1);
+    label.assign(n, -1);
+    parent.assign(n, -1);
     std::iota(base.begin(), base.end(), 0);
     while (!q.empty()) {
       q.pop();
@@ -6517,17 +6523,17 @@ vector<vector<int>> adj;
 void add_edge(int u, int v) {
   adj[u].push_back(v);
   adj[v].push_back(u);
-};
+}
 
 int matching_size(const vector<int> &match) {
   return std::count_if(match.begin(), match.end(), [](int v) { return v != -1; }) / 2;
-};
+}
 
 int main() {
   {
     // 0---1---2
     //  \      |
-    //   \____ 3
+    //   +-----3
     int nodes = 4;
     adj.assign(nodes, {});
     add_edge(0, 1);
@@ -6535,6 +6541,7 @@ int main() {
     add_edge(2, 3);
     add_edge(3, 0);
     vector<int> match = maximum_matching(adj);
+    assert(matching_size(match) == 2);
     cout << "Matched " << matching_size(match) << " pair(s):" << endl;
     for (int i = 0; i < nodes; i++) {
       if (match[i] != -1 && i < match[i]) {
@@ -6568,13 +6575,13 @@ Given an undirected graph with positive edge weights, determine a maximum-weight
 
 The algorithm runs a primal-dual method. Each node carries a dual label, and an edge is ``tight'' when its label sum equals twice its weight; the search uses only tight edges, exactly as unweighted blossom matching does, contracting odd cycles into blossoms. When no tight augmenting structure remains, the labels are adjusted by the largest step that keeps every dual constraint satisfied, which makes a new edge tight or lets a blossom expand, and the search resumes. Because the matching is over the implicit complete graph with absent edges weighted 0, a node may be left effectively unmatched whenever staying unmatched is at least as good as any incident edge.
 
-All edge weights must be positive; an absent edge is treated as weight 0. The node count should be kept modest, as the algorithm uses dense storage.
+All edge weights must be positive; an absent edge is treated as weight 0. Self-loops are not supported. Parallel edges are supported by retaining only the maximum weight added between each pair of nodes. The node count should be kept modest, as the algorithm uses dense storage.
 
 Overflow warning: labels and the returned matching weight are stored in \inlinecode{int64\_t}; all doubled weights, label sums, and the total matching weight must fit.
 
 \begin{compactitem}
   \item \inlinecode{WeightedGeneralMatching(n)} creates a graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
-  \item \inlinecode{add\_edge(u, v, w)} adds an undirected edge of positive weight \inlinecode{w} between \inlinecode{u} and \inlinecode{v}. If several edges join the same pair, the last weight set is used.
+  \item \inlinecode{add\_edge(u, v, w)} adds an undirected edge of positive weight \inlinecode{w} between \inlinecode{u} and \inlinecode{v}. If several edges join the same pair, only the maximum weight is retained.
   \item \inlinecode{solve()} computes a maximum-weight matching and returns its total weight.
   \item \inlinecode{partner(u)} returns the node matched with \inlinecode{u}, or $-1$ if \inlinecode{u} is unmatched. Valid after \inlinecode{solve()}.
 \end{compactitem}
@@ -6889,7 +6896,10 @@ class WeightedGeneralMatching {
     }
   }
 
-  void add_edge(int u, int v, int64_t w) { g[u + 1][v + 1].w = g[v + 1][u + 1].w = w; }
+  void add_edge(int u, int v, int64_t w) {
+    w = std::max(w, g[u + 1][v + 1].w);
+    g[u + 1][v + 1].w = g[v + 1][u + 1].w = w;
+  }
 
   int64_t solve() {
     nx = n;
@@ -6913,7 +6923,7 @@ class WeightedGeneralMatching {
     int64_t weight = 0;
     for (int u = 1; u <= n; u++) {
       if (match_[u] != 0 && match_[u] < u) {
-        weight += g[u][match_[u]].w;
+        weight += g[u][match_[u]].w;  // Overflow warning!
       }
     }
     return weight;
@@ -6941,26 +6951,26 @@ int main() {
   // 0-----1-----2-----3-----4
   //  \_____________________/
   //            w=5
-  WeightedGeneralMatching m(5);
-  m.add_edge(0, 1, 5);
-  m.add_edge(1, 2, 6);
-  m.add_edge(2, 3, 5);
-  m.add_edge(3, 4, 6);
-  m.add_edge(4, 0, 5);
-  int64_t weight = m.solve();
+  WeightedGeneralMatching g(5);
+  g.add_edge(0, 1, 5);
+  g.add_edge(1, 2, 6);
+  g.add_edge(2, 3, 5);
+  g.add_edge(3, 4, 6);
+  g.add_edge(4, 0, 5);
+  int64_t weight = g.solve();
   assert(weight == 12);  // Edges 1-2 and 3-4 with weights 6 + 6.
-  assert(m.partner(1) == 2 && m.partner(2) == 1);
-  assert(m.partner(3) == 4 && m.partner(4) == 3);
-  assert(m.partner(0) == -1);  // Node 0 is left unmatched.
-  cout << "Maximum matching weight: " << weight << "\n";
+  assert(g.partner(1) == 2 && g.partner(2) == 1);
+  assert(g.partner(3) == 4 && g.partner(4) == 3);
+  assert(g.partner(0) == -1);  // Node 0 is left unmatched.
+  cout << "Maximum matching weight: " << weight << endl;
   cout << "Matched pairs:";
   for (int u = 0; u < 5; u++) {
-    int v = m.partner(u);
+    int v = g.partner(u);
     if (u < v) {
       cout << " (" << u << "," << v << ")";
     }
   }
-  cout << "\n";
+  cout << endl;
 
   //   w=3   w=3   w=5
   // 0-----1-----2-----3
@@ -6971,6 +6981,7 @@ int main() {
   t.add_edge(1, 2, 3);
   t.add_edge(0, 2, 3);
   t.add_edge(2, 3, 5);
+  t.add_edge(2, 3, 1);     // A lighter parallel edge does not replace the heavier one.
   assert(t.solve() == 8);  // Edges 0-1 and 2-3 with weights 3 + 5.
   return 0;
 }
@@ -6980,40 +6991,46 @@ Maximum matching weight: 12
 Matched pairs: (1,2) (3,4)
 \end{exampleoutput}
 \subsection{Assignment (Hungarian Algorithm)}
-Solves the minimum-cost assignment problem for a rectangular cost matrix. Given $n$ workers and $m$ jobs (with $n \leq m$) where assigning worker \inlinecode{i} to complete job \inlinecode{j} would cost \inlinecode{cost[i][j]}, choose a distinct job for each worker so that the total assignment cost is minimized.
+Solves the minimum-cost or maximum-value assignment problem for a rectangular matrix. Given $n$ workers and $m$ jobs (with $n \leq m$), choose a distinct job for each worker so that the total cost is minimized or the total value is maximized.
 
 The classical Hungarian algorithm using potentials transforms a cost matrix using the principle that adding or subtracting constants from rows or columns does not change the optimal assignment. Workers are assigned one row at a time: each new row triggers a search for a least-cost augmenting path over zero-slack edges, with the potentials adjusted along the way to expose new zero-slack edges until the path reaches a free job. Note that while the input matrix is 0-based here, the internal calculations are 1-based.
 
+Maximum-value assignment reduces to minimum-cost assignment by replacing each value $x$ with $M - x$, where $M$ is the largest matrix entry. Every assignment contains exactly $n$ entries, so minimizing the transformed total $nM - \sum x$ maximizes the original total.
+
 \begin{compactitem}
-  \item \inlinecode{min\_assignment\_cost(cost, \&assignment)} returns the minimum total assignment cost for a 0-based \inlinecode{cost} matrix, while populating \inlinecode{assignment} with $n$ values where \inlinecode{assignment[i]} is the chosen job for worker \inlinecode{i}, using 0-based job numbers.
+  \item \inlinecode{min\_assignment(cost)} returns a pair (\inlinecode{min\_cost}, \inlinecode{assignment}) for a 0-based \inlinecode{cost} matrix, where \inlinecode{assignment} contains $n$ values and \inlinecode{assignment[i]} is the chosen job for worker \inlinecode{i}, using 0-based job numbers.
+  \item \inlinecode{max\_assignment(value)} returns the analogous pair (\inlinecode{max\_value}, \inlinecode{assignment}) maximizing a 0-based \inlinecode{value} matrix.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n^{2} \cdot m)$ per call, where \inlinecode{cost} has $n$ rows and $m$ columns.
+\textbf{Time Complexity}: $O(n^{2} \cdot m)$ per call, where the input matrix has $n$ rows and $m$ columns.
 
-\textbf{Space Complexity}: $O(n + m)$ auxiliary, not counting the input matrix and returned assignment.
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n + m)$ auxiliary, not counting the input matrix and returned assignment.
+  \item $O(n \cdot m)$ auxiliary per call to \inlinecode{max\_assignment()} for the transformed matrix.
+\end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <limits>
+#include <utility>
 #include <vector>
 
 template<typename T>
-T min_assignment_cost(const std::vector<std::vector<T>> &cost, std::vector<int> *assignment) {
+std::pair<T, std::vector<int>> min_assignment(const std::vector<std::vector<T>> &cost) {
   static const T INF = std::numeric_limits<T>::max() / 4;
   int n = static_cast<int>(cost.size());
   int m = cost.empty() ? 0 : static_cast<int>(cost[0].size());
-  assert(assignment != nullptr && n <= m);
-  for (const auto &row : cost) {
-    assert(static_cast<int>(row.size()) == m);
-  }
+  assert(n <= m);
   std::vector<T> u(n + 1), v(m + 1), minv(m + 1);
   std::vector<int> p(m + 1), way(m + 1);
   std::vector<char> used(m + 1);
   for (int i = 1; i <= n; i++) {
-    std::fill(minv.begin(), minv.end(), INF);
-    std::fill(used.begin(), used.end(), false);
+    minv.assign(m + 1, INF);
+    used.assign(m + 1, false);
     p[0] = i;
     int j0 = 0;
     do {
@@ -7024,7 +7041,7 @@ T min_assignment_cost(const std::vector<std::vector<T>> &cost, std::vector<int> 
         if (used[j]) {
           continue;
         }
-        T cur = cost[i0 - 1][j - 1] - u[i0] - v[j];
+        T cur = cost[i0 - 1][j - 1] - u[i0] - v[j];  // Overflow warning!
         if (cur < minv[j]) {
           minv[j] = cur;
           way[j] = j0;
@@ -7050,13 +7067,31 @@ T min_assignment_cost(const std::vector<std::vector<T>> &cost, std::vector<int> 
       j0 = j1;
     } while (j0 != 0);
   }
-  assignment->assign(n, -1);
+  std::vector<int> assignment(n, -1);
   for (int j = 1; j <= m; j++) {
     if (p[j] != 0) {
-      (*assignment)[p[j] - 1] = j - 1;
+      assignment[p[j] - 1] = j - 1;
     }
   }
-  return -v[0];
+  return {-v[0], assignment};  // Overflow warning!
+}
+
+template<typename T>
+std::pair<T, std::vector<int>> max_assignment(std::vector<std::vector<T>> value) {
+  if (value.empty()) {
+    return {0, {}};
+  }
+  T max_value = value[0][0];
+  for (const auto &row : value) {
+    max_value = std::max(max_value, *std::max_element(row.begin(), row.end()));
+  }
+  for (auto &row : value) {
+    for (T &x : row) {
+      x = max_value - x;
+    }
+  }
+  auto [min_cost, assignment] = min_assignment(value);
+  return {max_value * static_cast<T>(value.size()) - min_cost, assignment};  // Overflow warning!
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -7071,27 +7106,32 @@ int main() {
       {6, 4, 3, 7},
       {5, 8, 1, 8},
   };
-  vector<int> assignment;
-  int64_t total = min_assignment_cost(cost, &assignment);
-  assert(total == 9);
+  auto [min_cost, assignment] = min_assignment(cost);
+  assert(min_cost == 9);
   assert(assignment[0] == 1);
   assert(assignment[1] == 0);
   assert(assignment[2] == 2);
-  cout << "Minimum assignment cost: " << total << "\n";
+  cout << "Minimum assignment cost: " << min_cost << endl;
   cout << "Assignments:";
   for (int worker = 0; worker < static_cast<int>(assignment.size()); worker++) {
     cout << " (" << worker << "->" << assignment[worker] << ")";
   }
-  cout << "\n";
+  cout << endl;
+
+  auto [max_value, max_jobs] = max_assignment(cost);
+  assert(max_value == 24);
+  assert((max_jobs == vector<int>{0, 3, 1}));
+  cout << "Maximum assignment value: " << max_value << endl;
   return 0;
 }
 \end{lstlisting}
 \begin{exampleoutput}
 Minimum assignment cost: 9
 Assignments: (0->1) (1->0) (2->2)
+Maximum assignment value: 24
 \end{exampleoutput}
 \subsection{Stable Marriage (Gale-Shapley)}
-The stable marriage problem pairs $n$ men with $n$ women, given that every person ranks all members of the opposite group in strict order of preference. A perfect matching is stable if no man and woman both prefer each other to their assigned partners; such a pair would otherwise abandon their matches. Unlike maximum matching, the goal is not the size of the matching (it is always perfect) but its stability with respect to the preference lists.
+The stable marriage problem takes $n$ men and $n$ women, with every person ranking all members of the opposite group in strict order of preference, and seeks a bijection between the two groups. An unmatched pair $(m, w)$ is a blocking pair if man $m$ prefers woman $w$ to his assigned partner and woman $w$ prefers man $m$ to hers. A matching is stable if it has no blocking pair. Unlike maximum matching, the goal is therefore not to maximize the number of pairs, but to find a complete pairing that satisfies this stability condition.
 
 The Gale-Shapley algorithm produces a stable matching, and a stable matching always exists. Each free man proposes to the most preferred woman who has not yet rejected him. A woman provisionally accepts her best proposal so far and rejects the rest, possibly breaking a previous engagement when a man she prefers proposes later. Because every man descends his list at most once and each proposal is constant work after precomputing the women's rankings, the algorithm runs in quadratic time. The result is man-optimal: every man receives the best partner he could have in any stable matching.
 
@@ -7171,7 +7211,7 @@ The Bron-Kerbosch algorithm recursively extends a growing clique, tracking the s
   \item \inlinecode{max\_clique\_weighted()} additionally uses global \inlinecode{w} and returns the maximum clique weight.
 \end{compactitem}
 
-These implementations use bitmasks of unsigned 64-bit integers, so the number of nodes must be less than 64.
+These implementations use \inlinecode{mask\_t}, which is \inlinecode{uint64\_t} by default, so the number of nodes must be less than \inlinecode{MASK\_BITS}. Node weights must be nonnegative.
 
 \textbf{Time Complexity}: $O(3^{n/3})$ per call to \inlinecode{max\_clique()} and \inlinecode{max\_clique\_weighted()}, where $n$ is the number of nodes.
 
@@ -7185,41 +7225,42 @@ These implementations use bitmasks of unsigned 64-bit integers, so the number of
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
+#include <climits>
 #include <cstdint>
 #include <vector>
 
-std::vector<std::vector<char>> adj;
-std::vector<int> w;
+using mask_t = uint64_t;
+const int MASK_BITS = sizeof(mask_t) * CHAR_BIT;
 
-std::vector<uint64_t> build_mask_graph() {
+std::vector<std::vector<char>> adj;
+std::vector<int64_t> w;
+
+std::vector<mask_t> build_mask_graph() {
   int n = static_cast<int>(adj.size());
-  assert(n < 64);
-  for (const auto &row : adj) {
-    assert(static_cast<int>(row.size()) == n);
-  }
-  std::vector<uint64_t> g(n);
+  assert(n < MASK_BITS);
+  std::vector<mask_t> g(n);
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < n; j++) {
       if (adj[i][j]) {
-        g[i] |= 1ULL << j;
+        g[i] |= mask_t{1} << j;
       }
     }
   }
   return g;
 }
 
-int max_clique_rec(const std::vector<uint64_t> &g, uint64_t curr, uint64_t pool, uint64_t excl) {
+int max_clique_rec(const std::vector<mask_t> &g, mask_t curr, mask_t pool, mask_t excl) {
   if (pool == 0) {
     return __builtin_popcountll(curr);
   }
   int res = 0;
   int pivot = __builtin_ctzll(pool | excl);
-  uint64_t candidates = pool & ~g[pivot];
+  mask_t candidates = pool & ~g[pivot];
   while (candidates != 0) {
     int u = __builtin_ctzll(candidates);
-    res = std::max(res, max_clique_rec(g, curr | (1ULL << u), pool & g[u], excl & g[u]));
-    pool ^= 1ULL << u;
-    excl |= 1ULL << u;
+    res = std::max(res, max_clique_rec(g, curr | (mask_t{1} << u), pool & g[u], excl & g[u]));
+    pool ^= mask_t{1} << u;
+    excl |= mask_t{1} << u;
     candidates &= candidates - 1;
   }
   return res;
@@ -7227,38 +7268,35 @@ int max_clique_rec(const std::vector<uint64_t> &g, uint64_t curr, uint64_t pool,
 
 int max_clique() {
   int n = static_cast<int>(adj.size());
-  std::vector<uint64_t> g = build_mask_graph();
-  return max_clique_rec(g, 0, (1ULL << n) - 1, 0);
+  std::vector<mask_t> g = build_mask_graph();
+  return max_clique_rec(g, 0, (mask_t{1} << n) - 1, 0);
 }
 
-int max_clique_weighted_rec(
-    const std::vector<uint64_t> &g, uint64_t curr, uint64_t pool, uint64_t excl
+int64_t max_clique_weighted_rec(
+    const std::vector<mask_t> &g, int64_t curr, mask_t pool, mask_t excl
 ) {
   if (pool == 0) {
-    int res = 0;
-    while (curr != 0) {
-      int u = __builtin_ctzll(curr);
-      res += w[u];
-      curr &= curr - 1;
-    }
-    return res;
+    return curr;
   }
-  int res = -1, pivot = __builtin_ctzll(pool | excl);
-  uint64_t z = pool & ~g[pivot];
+  int64_t res = -1;
+  int pivot = __builtin_ctzll(pool | excl);
+  mask_t z = pool & ~g[pivot];
   while (z != 0) {
     int u = __builtin_ctzll(z);
-    res = std::max(res, max_clique_weighted_rec(g, curr | (1ULL << u), pool & g[u], excl & g[u]));
-    pool ^= 1ULL << u;
-    excl |= 1ULL << u;
+    int64_t next_weight = curr + w[u];  // Overflow warning!
+    int64_t next = max_clique_weighted_rec(g, next_weight, pool & g[u], excl & g[u]);
+    res = std::max(res, next);
+    pool ^= mask_t{1} << u;
+    excl |= mask_t{1} << u;
     z &= z - 1;
   }
   return res;
 }
 
-int max_clique_weighted() {
+int64_t max_clique_weighted() {
   int n = static_cast<int>(adj.size());
-  std::vector<uint64_t> g = build_mask_graph();
-  return max_clique_weighted_rec(g, 0, (1ULL << n) - 1, 0);
+  std::vector<mask_t> g = build_mask_graph();
+  return max_clique_weighted_rec(g, 0, (mask_t{1} << n) - 1, 0);
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -7320,38 +7358,41 @@ This implementation finds the chromatic number by backtracking: nodes (ordered b
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
-#include <utility>
+#include <numeric>
 #include <vector>
 
 std::vector<std::vector<char>> adj;
 int min_colors;
-std::vector<int> color, curr, id, degree;
+std::vector<int> color, curr, order;
 
-void rec(int lo, int hi, int n, int used_colors) {
+void color_rec(int pos, int used_colors) {
   if (used_colors >= min_colors) {
     return;
   }
-  if (n == hi) {
-    for (int i = lo; i < hi; i++) {
-      color[id[i]] = curr[i];
-    }
+  if (pos == static_cast<int>(order.size())) {
+    color = curr;
     min_colors = used_colors;
     return;
   }
-  std::vector<char> used(used_colors + 1);
-  for (int i = 0; i < n; i++) {
-    if (adj[id[n]][id[i]]) {
-      used[curr[i]] = true;
+  int u = order[pos];
+  for (int c = 0; c < used_colors; c++) {
+    bool valid = true;
+    for (int i = 0; i < pos; i++) {
+      int v = order[i];
+      if (adj[u][v] && curr[v] == c) {
+        valid = false;
+        break;
+      }
+    }
+    if (valid) {
+      curr[u] = c;
+      color_rec(pos + 1, used_colors);
+      curr[u] = -1;
     }
   }
-  for (int i = 0; i <= used_colors; i++) {
-    if (!used[i]) {
-      int tmp = curr[n];
-      curr[n] = i;
-      rec(lo, hi, n + 1, std::max(used_colors, i + 1));
-      curr[n] = tmp;
-    }
-  }
+  curr[u] = used_colors;
+  color_rec(pos + 1, used_colors + 1);
+  curr[u] = -1;
 }
 
 int color_graph() {
@@ -7360,35 +7401,33 @@ int color_graph() {
     color.clear();
     return 0;
   }
-  color.assign(n, 0);
-  curr.assign(n, 0);
-  id.assign(n + 1, 0);
-  degree.assign(n + 1, 0);
-  for (int i = 0; i <= n; i++) {
-    id[i] = i;
-    degree[i] = 0;
-  }
-  int res = 1, lo = 0;
-  for (int hi = 1; hi <= n; hi++) {
-    int best = hi;
-    for (int i = hi; i < n; i++) {
-      if (adj[id[hi - 1]][id[i]]) {
-        degree[id[i]]++;
-      }
-      if (degree[id[best]] < degree[id[i]]) {
-        best = i;
-      }
-    }
-    std::swap(id[hi], id[best]);
-    if (degree[id[hi]] == 0) {
-      min_colors = n + 1;
-      curr.assign(n, 0);
-      rec(lo, hi, lo, 0);
-      lo = hi;
-      res = std::max(res, min_colors);
+  std::vector<int> degree(n);
+  for (int u = 0; u < n; u++) {
+    for (int v = 0; v < n; v++) {
+      degree[u] += adj[u][v];
     }
   }
-  return res;
+  order.resize(n);
+  std::iota(order.begin(), order.end(), 0);
+  std::sort(order.begin(), order.end(), [&](int u, int v) {
+    if (degree[u] != degree[v]) {
+      return degree[u] > degree[v];
+    }
+    return u < v;
+  });
+  min_colors = n + 1;
+  color.assign(n, -1);
+  curr.assign(n, -1);
+  color_rec(0, 0);
+  std::vector<int> remap(min_colors, -1);
+  int colors = 0;
+  for (int &c : color) {
+    if (remap[c] == -1) {
+      remap[c] = colors++;
+    }
+    c = remap[c];
+  }
+  return min_colors;
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -7449,7 +7488,7 @@ Color 3: 4
 \subsection{Edge Coloring (Misra-Gries)}
 Given a simple undirected graph with maximum degree $D$, assign a color to every edge so that no two edges sharing an endpoint receive the same color. Vizing's theorem guarantees that $D + 1$ colors always suffice for a simple graph (while $D$ colors are clearly necessary), and the Misra-Gries algorithm constructs such a coloring. Deciding between $D$ and $D + 1$ colors is NP-hard in general, though bipartite graphs can always be edge-colored with exactly $D$ colors.
 
-The algorithm colors edges one at a time. To color an edge $(u, v)$ it grows a maximal ``fan'' of $u$: a sequence of neighbors starting at $v$ in which each successive edge's color is free at the previous fan vertex. It then picks a color $c$ free at $u$ and a color $d$ free at the fan's last vertex, and flips the colors along the maximal alternating $c$/$d$ path leaving $u$. This frees $d$ at $u$, after which rotating the fan shifts colors over by one and assigns $d$ to the new edge. Each step keeps the partial coloring proper and never introduces a $(D + 2)$-th color.
+The algorithm colors edges one at a time. To color an edge $(u, v)$ it grows a maximal ``fan'' of $u$: a sequence of neighbors starting at $v$ in which each successive edge's color is free at the previous fan node. It then picks a color $c$ free at $u$ and a color $d$ free at the fan's last node, and flips the colors along the maximal alternating $c$/$d$ path leaving $u$. This frees $d$ at $u$, after which rotating the fan shifts colors over by one and assigns $d$ to the new edge. Each step keeps the partial coloring proper and never introduces a $(D + 2)$-th color.
 
 The graph must be simple: the implementation stores one color per ordered node pair in a dense matrix, so self-loops and parallel edges between the same pair cannot be represented.
 
@@ -7457,17 +7496,22 @@ The graph must be simple: the implementation stores one color per ordered node p
   \item \inlinecode{edge\_coloring(n, edges)} returns a vector of colors, one per entry of \inlinecode{edges}, using colors in the range $[0, D]$ where $D$ is the maximum degree. Nodes are numbered $[0, {\inlinecodemath{n}})$, and \inlinecode{edges[i]} is an undirected edge \inlinecode{u}-\inlinecode{v}.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n^{2} \cdot m)$ per call in the worst case, where $n$ is the number of nodes and $m$ the number of edges; substantially faster in practice.
+\textbf{Time Complexity}: $O(n^{3} \cdot m)$ per call in the worst case, where $n$ is the number of nodes and $m$ the number of edges; substantially faster in practice.
 
-\textbf{Space Complexity}: $O(n^{2})$ to store the per-edge colors.
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n^{2})$ to store the per-edge colors.
+  \item $O(n)$ auxiliary heap and stack space.
+\end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <utility>
 #include <vector>
 
 class EdgeColoring {
-  int n, max_deg;
-  std::vector<std::vector<int>> color;  // color[u][v] is the color of edge (u, v), or $0$ if none.
+  int n;
+  std::vector<std::vector<int>> color;  // color[u][v] is the color of edge (u, v), or 0 if none.
 
   bool is_free(int x, int c) const {
     for (int w = 0; w < n; w++) {
@@ -7505,11 +7549,7 @@ class EdgeColoring {
 
  public:
   EdgeColoring(int n, const std::vector<std::pair<int, int>> &edges)
-      : n(n), max_deg(0), color(n, std::vector<int>(n, 0)) {
-    std::vector<int> deg(n, 0);
-    for (const auto &e : edges) {
-      max_deg = std::max(max_deg, std::max(++deg[e.first], ++deg[e.second]));
-    }
+      : n(n), color(n, std::vector<int>(n)) {
     for (const auto &e : edges) {
       add_edge(e.first, e.second);
     }
@@ -7536,7 +7576,7 @@ class EdgeColoring {
     }
     int c = free_color(u), d = free_color(fan.back());
     invert_path(u, d, c);
-    // Find the prefix of the fan to rotate: the first vertex on which d is now free.
+    // Find the prefix of the fan to rotate: the first node on which d is now free.
     int k = 0;
     while (k < static_cast<int>(fan.size()) && color[u][fan[k]] != d && !is_free(fan[k], d)) {
       k++;
@@ -7564,7 +7604,6 @@ std::vector<int> edge_coloring(int n, const std::vector<std::pair<int, int>> &ed
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <cassert>
 #include <set>
 using namespace std;
@@ -7624,17 +7663,14 @@ Since this implementation uses bitmasks with signed 32-bit integers, the maximum
 #include <vector>
 
 const int64_t INF = INT64_MAX / 4;
-std::vector<std::vector<int64_t>> adj, dp;
+std::vector<std::vector<int64_t>> adj;
 std::vector<int> path;
 
 int64_t shortest_hamiltonian_path() {
   int n = static_cast<int>(adj.size());
   assert(1 <= n && n < 31);
-  for (const auto &row : adj) {
-    assert(static_cast<int>(row.size()) == n);
-  }
   int max_mask = (1 << n) - 1;
-  dp.assign(max_mask + 1, std::vector<int64_t>(n, INF));
+  std::vector<std::vector<int64_t>> dp(max_mask + 1, std::vector<int64_t>(n, INF));
   path.assign(n, 0);
   for (int i = 0; i < n; i++) {
     dp[1 << i][i] = 0;
@@ -7644,7 +7680,8 @@ int64_t shortest_hamiltonian_path() {
       if ((mask & (1 << i)) != 0) {
         for (int j = 0; j < n; j++) {
           if ((mask & (1 << j)) != 0 && dp[mask ^ (1 << i)][j] != INF) {
-            dp[mask][i] = std::min(dp[mask][i], dp[mask ^ (1 << i)][j] + adj[j][i]);
+            int64_t candidate = dp[mask ^ (1 << i)][j] + adj[j][i];  // Overflow warning!
+            dp[mask][i] = std::min(dp[mask][i], candidate);
           }
         }
       }
@@ -7674,13 +7711,12 @@ int64_t shortest_hamiltonian_path() {
 int64_t shortest_hamiltonian_cycle() {
   int n = static_cast<int>(adj.size());
   assert(1 <= n && n < 31);
-  for (const auto &row : adj) assert(static_cast<int>(row.size()) == n);
   if (n == 1) {
     path = {0};
     return 0;
   }
   int max_mask = (1 << n) - 1;
-  dp.assign(max_mask + 1, std::vector<int64_t>(n, INF));
+  std::vector<std::vector<int64_t>> dp(max_mask + 1, std::vector<int64_t>(n, INF));
   path.assign(n, 0);
   dp[1][0] = 0;
   for (int mask = 1; mask <= max_mask; mask += 2) {
@@ -7688,7 +7724,8 @@ int64_t shortest_hamiltonian_cycle() {
       if ((mask & (1 << i)) != 0) {
         for (int j = 0; j < n; j++) {
           if ((mask & (1 << j)) != 0 && dp[mask ^ (1 << i)][j] != INF) {
-            dp[mask][i] = std::min(dp[mask][i], dp[mask ^ (1 << i)][j] + adj[j][i]);
+            int64_t candidate = dp[mask ^ (1 << i)][j] + adj[j][i];  // Overflow warning!
+            dp[mask][i] = std::min(dp[mask][i], candidate);
           }
         }
       }
@@ -7751,7 +7788,7 @@ int main() {
   for (int i = 1; i < nodes; i++) {
     cout << "->" << path[i];
   }
-  cout << "\n\n";
+  cout << endl << endl;
   int64_t cycle_len = shortest_hamiltonian_cycle();
   assert(cycle_len == 6);
   assert((path == vector<int>{0, 1, 2}));

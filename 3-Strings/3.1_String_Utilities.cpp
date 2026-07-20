@@ -49,7 +49,7 @@ string to_str(Int i) {
 int to_int(const string &s) {
   std::istringstream iss(s);
   int res;
-  if (!(iss >> res)) {
+  if (!(iss >> res) || !(iss >> std::ws).eof()) {
     throw std::runtime_error("to_int failed");
   }
   return res;
@@ -80,6 +80,7 @@ char *itoa(int value, char *str, int base = 10) {
 }
 
 bool is_integer(const string &s) {
+  // return std::regex_match(s, std::regex(R"([+-]?\d+)"));
   int i = (s.empty() || (s[0] != '-' && s[0] != '+')) ? 0 : 1;
   if (i == static_cast<int>(s.size())) {
     return false;
@@ -93,6 +94,7 @@ bool is_integer(const string &s) {
 }
 
 bool is_number(const string &s) {
+  // return std::regex_match(s, std::regex(R"([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)"));
   int i = (s.empty() || (s[0] != '-' && s[0] != '+')) ? 0 : 1;
   bool seen_digit = false, seen_dot = false;
   for (; i < static_cast<int>(s.size()); i++) {
@@ -138,16 +140,18 @@ Case Conversion:
 
 string to_upper(const string &s) {
   string res;
+  res.reserve(s.size());
   for (char c : s) {
-    res.push_back(static_cast<char>(toupper(c)));
+    res.push_back(static_cast<char>(toupper(static_cast<unsigned char>(c))));
   }
   return res;
 }
 
 string to_lower(const string &s) {
   string res;
+  res.reserve(s.size());
   for (char c : s) {
-    res.push_back(static_cast<char>(tolower(c)));
+    res.push_back(static_cast<char>(tolower(static_cast<unsigned char>(c))));
   }
   return res;
 }
@@ -185,6 +189,8 @@ string &lstrip(string &s, const string &delim = WHITESPACE) {
   std::size_t pos = s.find_first_not_of(delim);
   if (pos != string::npos) {
     s.erase(0, pos);
+  } else {
+    s.clear();
   }
   return s;
 }
@@ -193,12 +199,14 @@ string &rstrip(string &s, const string &delim = WHITESPACE) {
   std::size_t pos = s.find_last_not_of(delim);
   if (pos != string::npos) {
     s.erase(pos + 1);
+  } else {
+    s.clear();
   }
   return s;
 }
 
 string &strip(string &s, const string &delim = WHITESPACE) {
-  return lstrip(rstrip(s));
+  return lstrip(rstrip(s, delim), delim);
 }
 
 string ltrimmed(string s, const string &delim = WHITESPACE) {
@@ -220,8 +228,9 @@ Find and Replace:
 - `starts_with(s, prefix)` returns whether `s` begins with `prefix`.
 - `ends_with(s, suffix)` returns whether `s` ends with `suffix`.
 - `contains(s, needle)` returns whether `needle` occurs in `s`.
-- `find_all(haystack, needle)` returns a vector of all positions where the string `needle` appears
-  in the string `haystack`. Matches may overlap; e.g. `find_all("aaa", "aa")` returns `{0, 1}`.
+- `find_all(haystack, needle)` returns a vector of all positions where the nonempty string `needle`
+  appears in the string `haystack`. Matches may overlap; e.g. `find_all("aaa", "aa")` returns
+  `{0, 1}`. An empty `needle` produces no matches.
 - `count(haystack, needle)` returns the number of non-overlapping occurrences of `needle` in
   `haystack`, like Python's `str.count`. This differs from `find_all().size()`, which counts
   overlapping matches; e.g. `count("aaa", "aa")` returns $1$, but `find_all("aaa", "aa")` finds $2$.
@@ -250,9 +259,12 @@ bool contains(const string &s, const string &needle) {
 
 std::vector<int> find_all(const string &haystack, const string &needle) {
   std::vector<int> res;
+  if (needle.empty()) {
+    return res;
+  }
   std::size_t pos = haystack.find(needle, 0);
   while (pos != string::npos) {
-    res.push_back(pos);
+    res.push_back(static_cast<int>(pos));
     pos = haystack.find(needle, pos + 1);
   }
   return res;
@@ -311,8 +323,8 @@ Joining and Splitting:
 
 - `join(v, delim = " ")` returns the strings in vector `v` concatenated, separated by the given
   delimiter.
-- `repeat(s, n)` returns `s` concatenated with itself `n` times, like Python's `s * n`. For a single
-  repeated character, prefer `std::string(n, ch)`.
+- `repeat(s, n)` returns `s` concatenated with itself `n` times, like Python's `s * n`, or an empty
+  string if `n` is nonpositive. For a single repeated character, prefer `std::string(n, ch)`.
 - `ljust(s, width, ch = ' ')` returns `s` left-justified (padded on the right with `ch`) to at least
   `width` characters, like Python's `str.ljust`.
 - `rjust(s, width, ch = ' ')` returns `s` right-justified (padded on the left with `ch`) to at least
@@ -330,7 +342,8 @@ Joining and Splitting:
 - `explode(s, delim)` returns a vector of tokens of `s`, split on the entire delimiter string
   `delim`. Unlike the `split()` functions above, `delim` is treated as a contiguous boundary string,
   not merely a set of possible boundary characters. This will not skip empty tokens. For example,
-  `explode("a::::b", "::")` yields `{"a", "", "b"}`, not `{"a", "b"}`.
+  `explode("a::::b", "::")` yields `{"a", "", "b"}`, not `{"a", "b"}`. An empty delimiter returns
+  `{s}`.
 - `explode(s, char delim)` is the single-character delimiter version that also preserves empty
   tokens.
 
@@ -341,7 +354,11 @@ string join(const std::vector<string> &v, const string &delim = " ") {
     return "";
   }
   string res;
-  res.reserve(v.size() + delim.size() * (v.size() - 1));
+  std::size_t total = delim.size() * (v.size() - 1);
+  for (const string &s : v) {
+    total += s.size();
+  }
+  res.reserve(total);
   for (int i = 0; i < static_cast<int>(v.size()); i++) {
     res += (i > 0 ? delim : "") + v[i];
   }
@@ -349,6 +366,9 @@ string join(const std::vector<string> &v, const string &delim = " ") {
 }
 
 string repeat(const string &s, int n) {
+  if (n <= 0) {
+    return "";
+  }
   string res;
   res.reserve(s.size() * n);
   for (int i = 0; i < n; i++) {
@@ -406,11 +426,14 @@ std::vector<string> split(const string &s, const string &delim = WHITESPACE) {
 }
 
 std::vector<string> explode(const string &s, const string &delim) {
+  if (delim.empty()) {
+    return {s};
+  }
   std::vector<string> res;
   std::size_t last = 0, next = 0;
   while ((next = s.find(delim, last)) != string::npos) {
     res.push_back(s.substr(last, next - last));
-    last = next + static_cast<int>(delim.size());
+    last = next + delim.size();
   }
   res.push_back(s.substr(last));
   return res;
@@ -435,6 +458,13 @@ using namespace std;
 int main() {
   assert(to_str(123) + "4" == "1234");
   assert(to_int("1234") == 1234);
+  bool threw = false;
+  try {
+    to_int("123x");
+  } catch (const runtime_error &) {
+    threw = true;
+  }
+  assert(threw);
   vector<char> buffer(50);
   assert(string(itoa(1750, buffer.data(), 10)) == "1750");
   assert(string(itoa(1750, buffer.data(), 16)) == "6d6");
@@ -451,6 +481,7 @@ int main() {
   assert(lstrip(s) == "abc \n");
   assert(rstrip(s) == strip(t));
   assert(trimmed(" \t abc \n") == "abc");
+  assert(trimmed("xxx", "x").empty());
 
   vector<int> pos;
   pos.push_back(0);
@@ -461,12 +492,14 @@ int main() {
   assert(find_all("abracadabra", "ab") == pos);
   assert(count("abracadabra", "ab") == 2);
   assert(count("aaa", "aa") == 1 && find_all("aaa", "aa").size() == 2);
+  assert(find_all("abc", "").empty());
   assert(replace("abcdabba", "ab", "00") == "00cd00ba");
   assert(join(regex_find_all("a12b345", "[0-9]+"), "|") == "12|345");
   assert(join(regex_groups("abc-123", "([a-z]+)-([0-9]+)"), "|") == "abc|123");
   assert(regex_replace_all("a12b345", "[0-9]+", "#") == "a#b#");
 
   assert(repeat("ab", 3) == "ababab");
+  assert(repeat("ab", -1).empty());
   assert(rjust("42", 5, '0') == "00042");
   assert(ljust("hi", 4, '.') == "hi..");
   assert(center("ab", 5, '*') == "*ab**");
@@ -474,6 +507,7 @@ int main() {
   assert(join(split("a::b", ':'), "|") == "a|b");                 // split v1 skips empty tokens
   assert(join(split("a::b,cde:,f", ":,"), "|") == "a|b|cde|f");   // split v2
   assert(join(explode("a..b.cde....f", ".."), "|") == "a|b.cde||f");
+  assert((explode("abc", "") == vector<string>{"abc"}));
   assert(join(explode("a::b:", ':'), "|") == "a||b|");
   return 0;
 }

@@ -9,7 +9,7 @@ the right pointer retreat. Each step therefore discards an entire row or column 
 A sliding window applies the same idea when extending and shrinking a range changes its state
 monotonically. With nonnegative values, extending a window cannot decrease its sum and removing its
 leftmost value cannot increase it, so no shorter feasible window is skipped. For a bound such as at
-most `k` distinct values, the left pointer advances only until the window becomes valid again. Since
+most $k$ distinct values, the left pointer advances only until the window becomes valid again. Since
 neither endpoint moves backward, each element enters and leaves the window at most once.
 
 For fixed-length windows, a monotonic deque of indices can report every minimum or maximum in linear
@@ -19,7 +19,7 @@ that it dominates, while expired indices are removed from the front. Each index 
 popped at most once.
 
 The examples below cover sorted 2-sum/3-sum variants, finding the shortest subarray with sum at
-least a target when all values are nonnegative, and finding the longest subarray with at most `k`
+least a target when all values are nonnegative, and finding the longest subarray with at most $k$
 distinct values. They also cover the minimum or maximum of every fixed-length window and an online
 dynamic programming recurrence.
 
@@ -32,7 +32,8 @@ dynamic programming recurrence.
   exists. Values in `a` must be nonnegative. If `target` is nonpositive, it returns the empty
   subarray.
 - `longest_at_most_k_distinct(a, k)` returns $(`length`, `lo`, `hi`)$, the maximum length and
-  inclusive endpoints of a contiguous subarray containing at most `k` distinct values.
+  inclusive endpoints of a contiguous subarray containing at most `k` distinct values. If `k` is
+  nonpositive, it returns the empty subarray.
 - `sliding_window_extrema(a, k, comp = std::less<>)` returns the extreme value in each window of
   length `k`. With the default `less<>` comparator it returns minimums; passing `greater<>` returns
   maximums.
@@ -48,7 +49,7 @@ Space Complexity:
 - O(n) auxiliary for `three_sum(a, target)`.
 - O(1) auxiliary for `min_length_at_least(a, target)`.
 - O(k) auxiliary for `longest_at_most_k_distinct(a, k)`.
-- O(n) auxiliary for the result of `sliding_window_extrema()`, plus O(k) for the deque.
+- O(k) auxiliary and O(n) for the result of `sliding_window_extrema()`.
 
 */
 
@@ -108,7 +109,7 @@ std::tuple<int, int, int> min_length_at_least(const std::vector<int> &a, int64_t
   int best = static_cast<int>(a.size()) + 1, best_lo = 0, best_hi = -1;
   int64_t sum = 0;
   for (int l = 0, r = 0; r < static_cast<int>(a.size()); r++) {
-    sum += a[r];
+    sum += a[r];  // Overflow warning.
     while (sum >= target) {
       if (r - l + 1 < best) {
         best = r - l + 1;
@@ -192,7 +193,7 @@ Time Complexity:
 - O(1) worst-case per call to `top()` and `empty()`.
 
 Space Complexity:
-- O(w) auxiliary for a sliding window of width $w$.
+- O(w) for storage of a sliding window of width $w$.
 
 */
 

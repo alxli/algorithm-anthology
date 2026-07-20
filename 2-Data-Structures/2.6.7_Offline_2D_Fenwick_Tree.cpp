@@ -10,10 +10,11 @@ The outer dimension is an ordinary Fenwick tree over the sorted distinct update 
 node owns an inner Fenwick tree over only those columns that reach it along an update path, again
 stored in a sorted vector. A prefix query maps its row argument to the number of update rows at or
 below it, walks the outer tree, and within each visited node maps its column argument to a rank by
-binary search. Compared with the hashed sparse 2D Fenwick tree, this is deterministic and has
-markedly better constants, at the cost of requiring all update locations up front. Prefer the dense
-2D Fenwick tree when the coordinates are small enough to allocate directly, and the sparse 2D
-Fenwick tree when update locations are not known ahead of time or rectangle updates are needed.
+binary search. Compared with the online sparse 2D Fenwick tree backed by hash tables, this is
+deterministic and has markedly better constants, at the cost of requiring all update locations up
+front. Prefer the dense 2D Fenwick tree when the coordinates are small enough to allocate directly,
+and the sparse 2D Fenwick tree when update locations are not known ahead of time or rectangle
+updates are needed.
 
 Usage is two-phase. First declare every cell that will be updated with `reserve()`; then call
 `build()` once; then issue `add()` updates and `sum()` / `at()` queries freely. Updates may only
@@ -30,7 +31,7 @@ target reserved cells, but queries may use any coordinates.
 - `at(r, c)` returns the value at index $(`r`, `c`)$.
 
 Time Complexity:
-- O(n log n) per call to `build()`, where $n$ is the number of reserved cells.
+- O(n log^2 n) per call to `build()`, where $n$ is the number of reserved cells.
 - O(log^2 n) per call to `add()`, `set()`, `sum()`, and `at()`.
 
 Space Complexity:
@@ -117,6 +118,7 @@ class OfflineFenwick2D {
   }
 
   T sum(int r, int c) const {
+    assert(built);
     T res = T();
     for (int i = row_rank(r); i > 0; i -= i & -i) {
       for (int j = col_rank(i, c); j > 0; j -= j & -j) {
@@ -127,6 +129,7 @@ class OfflineFenwick2D {
   }
 
   T sum(int r1, int c1, int r2, int c2) const {
+    assert(r1 <= r2 && c1 <= c2);
     return sum(r2, c2) - sum(r1 - 1, c2) - sum(r2, c1 - 1) + sum(r1 - 1, c1 - 1);
   }
 

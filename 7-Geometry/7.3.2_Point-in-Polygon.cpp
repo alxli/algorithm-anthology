@@ -25,8 +25,6 @@ Space Complexity:
 
 */
 
-#include <cstdint>
-
 template<typename Pt>
 auto cross(const Pt &a, const Pt &b, const Pt &o) {
   // Overflow risk for integer Pt: these products are ~O(max_coord^2); use int64_t if necessary.

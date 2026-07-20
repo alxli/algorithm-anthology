@@ -11,23 +11,20 @@ two rotated subarrays.
 All three versions below achieve the same result using in-place algorithms.
 
 - `rotate1(lo, mid, hi)` uses a straightforward swapping algorithm requiring ForwardIterators.
-- `rotate2(lo, mid, hi)` requires BidirectionalIterators, employing a well-known trick with three
-  simple reversals.
+- `rotate2(lo, mid, hi)` requires BidirectionalIterators, applying a trick with three reversals.
+  Writing the input subranges as `A B`, two initial reversals yield `reverse(A) reverse(B)`; then
+  the whole range is reversed to yield `B A`, restoring the order within each subrange.
 - `rotate3(lo, mid, hi)` requires random-access iterators, applying a juggling algorithm which first
   divides the range into `gcd(hi - lo, mid - lo)` sets and then rotates the corresponding elements
-  in each set.
-
-Writing the original range as `A B`, the reversal method first produces `reverse(A) reverse(B)`;
-reversing that whole range yields `B A` while restoring the order within both parts. The juggling
-method follows the permutation that sends each position to its rotated destination. Those moves form
-`gcd(n, shift)` disjoint cycles, so walking each cycle once moves every element to its final
-position.
+  in each set. The method follows the permutation that sends each position to its rotated
+  destination. These form that many disjoint cycles, so walking each cycle once moves every element
+  to its final position.
 
 Time Complexity:
 - O(n) per call to all versions, where $n$ is the distance between `lo` and `hi`.
 
 Space Complexity:
-- O(1) auxiliary for all versions
+- O(1) auxiliary for all versions.
 
 */
 

@@ -9,18 +9,18 @@ height logarithmic, and every successful union records enough information to res
 state.
 
 - `RollbackDSU(n)` constructs `n` singleton sets over elements $[0, `n`)$.
-- `count_sets()` returns the current number of disjoint sets.
+- `sets()` returns the current number of disjoint sets.
 - `find_root(u)` returns the representative of the set containing `u`.
 - `is_united(u, v)` returns whether `u` and `v` are in the same set.
 - `unite(u, v)` merges two sets and returns whether a merge occurred.
 - `snapshot()` returns a token representing the current history size.
-- `rollback(s)` undoes all changes made after snapshot `s`.
+- `rollback(snapshot)` undoes all changes made after `snapshot`.
 
 Time Complexity:
 - O(n) per call to `RollbackDSU(n)`.
-- O(1) per call to `count_sets()`.
+- O(1) per call to `sets()`.
 - O(log n) worst-case per call to `find_root(u)`, `is_united(u, v)`, and `unite(u, v)`.
-- O(1) per undone union during `rollback(s)`.
+- O(1) per undone union during `rollback(snapshot)`.
 
 Space Complexity:
 - O(n + q) for $q$ successful unions stored in the rollback history.
@@ -29,6 +29,7 @@ Space Complexity:
 
 #include <cassert>
 #include <numeric>
+#include <utility>
 #include <vector>
 
 class RollbackDSU {
@@ -41,25 +42,22 @@ class RollbackDSU {
 
   std::vector<int> root, size;
   std::vector<Change> history;
-  int sets;
+  int num_sets;
+
+ public:
+  explicit RollbackDSU(int n) : root(n), size(n, 1), num_sets(n) {
+    std::iota(root.begin(), root.end(), 0);
+  }
 
   int find_root(int u) const {
+    assert(0 <= u && u < static_cast<int>(root.size()));
     while (root[u] != u) {
       u = root[u];
     }
     return u;
   }
 
- public:
-  explicit RollbackDSU(int n) {
-    root.resize(n);
-    size.assign(n, 1);
-    history.clear();
-    sets = n;
-    std::iota(root.begin(), root.end(), 0);
-  }
-
-  int count_sets() const { return sets; }
+  int sets() const { return num_sets; }
   bool is_united(int u, int v) const { return find_root(u) == find_root(v); }
 
   bool unite(int u, int v) {
@@ -69,14 +67,12 @@ class RollbackDSU {
       return false;
     }
     if (size[u] > size[v]) {
-      int tmp = u;
-      u = v;
-      v = tmp;
+      std::swap(u, v);
     }
     history.emplace_back(u, v, size[v]);
     root[u] = v;
     size[v] += size[u];
-    sets--;
+    num_sets--;
     return true;
   }
 
@@ -89,7 +85,7 @@ class RollbackDSU {
       history.pop_back();
       root[c.child] = c.child;
       size[c.parent] = c.parent_size;
-      sets++;
+      num_sets++;
     }
   }
 };
@@ -103,11 +99,11 @@ int main() {
   dsu.unite(1, 2);
   dsu.unite(3, 4);
   assert(dsu.is_united(0, 2));
-  assert(dsu.count_sets() == 2);
+  assert(dsu.sets() == 2);
   dsu.rollback(s);
   assert(dsu.is_united(0, 1));
   assert(!dsu.is_united(0, 2));
   assert(!dsu.is_united(3, 4));
-  assert(dsu.count_sets() == 4);
+  assert(dsu.sets() == 4);
   return 0;
 }

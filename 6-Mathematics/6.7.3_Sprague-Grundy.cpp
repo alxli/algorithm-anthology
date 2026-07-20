@@ -2,22 +2,23 @@
 
 Computes Grundy numbers for finite impartial games. The Grundy number of a game position is the
 minimum excluded nonnegative integer (MEX) of the Grundy numbers reachable in one move. A position
-is losing exactly when its Grundy number is 0.
+is losing exactly when its Grundy number is $0$.
 
 For a sum of independent impartial games, the combined Grundy number is the XOR of the component
 Grundy numbers. This is the Sprague-Grundy theorem.
 
-- `mex(values)` returns the minimum excluded nonnegative integer.
 - `subtraction_game_grundy(max_stones, moves)` computes Grundy numbers for a game where a move
-  subtracts one value in `moves` from the pile.
+  subtracts one positive value in `moves` from the pile. Nonpositive values are ignored.
 - `sum_grundy(grundies)` returns the XOR of component Grundy numbers.
 
 Time Complexity:
+- O(k) for `sum_grundy(grundies)`, where $k$ is the input length.
 - O(n*m) for `subtraction_game_grundy(max_stones, moves)`, where $n$ is `max_stones` and $m$ is the
   number of allowed moves.
 
 Space Complexity:
-- O(n + m) auxiliary.
+- O(1) auxiliary for `sum_grundy(grundies)`.
+- O(n) output and O(m) auxiliary for `subtraction_game_grundy(max_stones, moves)`.
 
 */
 
@@ -43,7 +44,7 @@ std::vector<int> subtraction_game_grundy(int max_stones, const std::vector<int> 
   for (int stones = 1; stones <= max_stones; stones++) {
     std::vector<int> reachable;
     for (int m : moves) {
-      if (m <= stones) {
+      if (0 < m && m <= stones) {
         reachable.push_back(grundy[stones - m]);
       }
     }

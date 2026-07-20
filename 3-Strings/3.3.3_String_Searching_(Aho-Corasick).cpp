@@ -18,14 +18,13 @@ ending at the same position are reported in deterministic needle order.
   increasing order of their ending positions within the `haystack`.
 
 Time Complexity:
-- O(m*l + z log m) expected per call to the constructor, where $m$ is the number of needles, $l$ is
-  the maximum length of any needle, and $z$ is the total number of inherited output entries.
+- O(L + z log m) expected per call to the constructor, where $L$ is the total length of the $m$
+  needles and $z$ is the total number of inherited output entries.
 - O(n + z) expected per call to `find_all_in(haystack, report_match)`, where $n$ is the length of
   `haystack` and $z$ is the number of matches.
 
 Space Complexity:
-- O(m*l) for storage of the automaton, where $m$ is the number of needles and $l$ is the maximum
-  length for any needle.
+- O(L + z) for storage of the automaton and inherited output entries.
 - O(1) auxiliary for `find_all_in(haystack, report_match)`.
 
 */
@@ -43,7 +42,7 @@ class AhoCorasick {
   std::vector<std::unordered_map<char, int>> adj;
   std::vector<std::set<int>> out;
 
-  int next_state(int curr, char c) {
+  int next_state(int curr, char c) const {
     int next = curr;
     while (next != 0 && adj[next].find(c) == adj[next].end()) {
       next = fail[next];
@@ -105,7 +104,7 @@ class AhoCorasick {
   }
 
   template<typename Fn>
-  void find_all_in(const string &haystack, Fn report_match) {
+  void find_all_in(const string &haystack, Fn report_match) const {
     int state = 0;
     for (int i = 0; i < static_cast<int>(haystack.size()); i++) {
       state = next_state(state, haystack[i]);

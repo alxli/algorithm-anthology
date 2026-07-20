@@ -8,7 +8,8 @@ leaf must pass through the same number of black nodes, which together bound the 
 O(log n). Insertions and deletions repair these invariants by recoloring nodes and performing
 rotations.
 
-This implementation requires an ordering on the key type `K` defined by `operator<`.
+This implementation requires an ordering on the key type `K` defined by `operator<`. The sentinel
+node also requires `K` and `V` to be default constructible.
 
 - `RedBlackTree<K, V>()` constructs an empty map.
 - `size()` returns the size of the map.
@@ -33,7 +34,8 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the map elements.
-- O(log n) auxiliary stack space for `entries()`.
+- O(log n) auxiliary stack space for `entries()` and destruction.
+- O(n) for the vector returned by `entries()`.
 - O(1) auxiliary for all other operations.
 
 */
@@ -216,7 +218,10 @@ class RedBlackTree {
   }
 
  public:
-  RedBlackTree() : num_nodes(0) { root = LEAF_NIL = new Node(K(), V(), BLACK); }
+  RedBlackTree() : num_nodes(0) {
+    root = LEAF_NIL = new Node(K(), V(), BLACK);
+    LEAF_NIL->left = LEAF_NIL->right = LEAF_NIL;
+  }
 
   ~RedBlackTree() {
     clean_up(root);
@@ -300,6 +305,7 @@ class RedBlackTree {
     if (color == BLACK) {
       erase_fix(replacement);
     }
+    num_nodes--;
     return true;
   }
 
@@ -355,9 +361,14 @@ int main() {
   assert(t.erase(1));
   assert(!t.erase(1));
   assert(t.find(1) == nullptr);
+  assert(t.size() == 4);
   for (const auto &[k, v] : t.entries()) {
     cout << v;
   }
   cout << endl;
+  for (int key : {2, 3, 4, 5}) {
+    assert(t.erase(key));
+  }
+  assert(t.empty() && t.size() == 0);
   return 0;
 }

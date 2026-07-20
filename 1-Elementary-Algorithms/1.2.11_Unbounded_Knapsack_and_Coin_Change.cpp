@@ -1,10 +1,9 @@
 /*
 
-Solves two common unbounded knapsack variants, where each item may be used any number of times. In
-the maximum-value version, each item has a weight and value, and the goal is to maximize total value
-subject to a capacity limit. In coin change variants, each coin denomination may be used any number
-of times, and the goal is either to count unordered ways to form a target sum or to minimize the
-number of coins used.
+Solves unbounded knapsack and two related coin change problems, where each item or coin may be used
+any number of times. In the maximum-value version, each item has a weight and value, and the goal is
+to maximize total value subject to a capacity limit. In coin change variants, the goal is either to
+count unordered ways to form a target sum or to minimize the number of coins used.
 
 For unbounded maximum-value knapsack, capacities are processed in increasing order. Thus, when
 computing `dp[w]`, every smaller-capacity state `dp[w - weight[i]]` is already final and may itself
@@ -22,8 +21,9 @@ multiset.
   number of coins needed to make sum `target`, and `used[i]` is the number of copies of `coins[i]`
   in one optimal multiset. If `target` cannot be formed, `count` is $-1$ and `used` is empty.
 
-All capacities must be nonnegative integers. Weights and coin denominations should be positive to
-avoid infinitely many uses of a zero-weight item.
+`capacity` and `target` must be nonnegative integers. Weights and coin denominations must be
+positive. Coin denominations must also be distinct when counting ways; duplicate denominations are
+treated as different coin types and overcount identical multisets.
 
 Time Complexity:
 - O(n*W) for `unbounded_knapsack()`, where $n$ is the number of items and $W$ is `capacity`.
@@ -32,9 +32,9 @@ Time Complexity:
 - O(c*t) for `min_coin_change(coins, target)`.
 
 Space Complexity:
-- O(W) auxiliary for `unbounded_knapsack()`.
+- O(W) auxiliary and O(n) for the returned `count` from `unbounded_knapsack()`.
 - O(t) auxiliary for `count_coin_change(coins, target)`.
-- O(t + c) auxiliary for `min_coin_change(coins, target)`.
+- O(t) auxiliary and O(c) for the returned `used` from `min_coin_change(coins, target)`.
 
 */
 
@@ -55,9 +55,12 @@ std::pair<int64_t, std::vector<int>> unbounded_knapsack(
   std::vector<int> choice(capacity + 1, -1);
   for (int w = 1; w <= capacity; w++) {
     for (int i = 0; i < n; i++) {
-      if (weight[i] <= w && dp[w] < dp[w - weight[i]] + value[i]) {
-        dp[w] = dp[w - weight[i]] + value[i];
-        choice[w] = i;
+      if (weight[i] <= w) {
+        int64_t candidate = dp[w - weight[i]] + value[i];  // Overflow warning.
+        if (dp[w] < candidate) {
+          dp[w] = candidate;
+          choice[w] = i;
+        }
       }
     }
   }
@@ -69,12 +72,13 @@ std::pair<int64_t, std::vector<int>> unbounded_knapsack(
 }
 
 int64_t count_coin_change(const std::vector<int> &coins, int target) {
+  assert(target >= 0);
   std::vector<int64_t> dp(target + 1, 0);
   dp[0] = 1;
   for (int coin : coins) {
     assert(coin > 0);
     for (int sum = coin; sum <= target; sum++) {
-      dp[sum] += dp[sum - coin];
+      dp[sum] += dp[sum - coin];  // Overflow warning.
     }
   }
   return dp[target];
@@ -82,13 +86,14 @@ int64_t count_coin_change(const std::vector<int> &coins, int target) {
 
 std::pair<int, std::vector<int>> min_coin_change(const std::vector<int> &coins, int target) {
   assert(target >= 0);
-  int n = static_cast<int>(coins.size());
+  for (int coin : coins) {
+    assert(coin > 0);
+  }
   int inf = target + 1;
   std::vector<int> dp(target + 1, inf), choice(target + 1, -1);
   dp[0] = 0;
   for (int sum = 1; sum <= target; sum++) {
-    for (int i = 0; i < n; i++) {
-      assert(coins[i] > 0);
+    for (int i = 0; i < static_cast<int>(coins.size()); i++) {
       if (coins[i] <= sum && dp[sum] > dp[sum - coins[i]] + 1) {
         dp[sum] = dp[sum - coins[i]] + 1;
         choice[sum] = i;
@@ -98,7 +103,7 @@ std::pair<int, std::vector<int>> min_coin_change(const std::vector<int> &coins, 
   if (dp[target] == inf) {
     return {-1, {}};
   }
-  std::vector<int> used(n, 0);
+  std::vector<int> used(coins.size(), 0);
   for (int sum = target; sum > 0; sum -= coins[choice[sum]]) {
     used[choice[sum]]++;
   }

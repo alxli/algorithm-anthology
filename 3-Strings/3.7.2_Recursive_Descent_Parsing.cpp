@@ -17,9 +17,9 @@ suffixes of one another, else the tokenization process may be ambiguous. For exa
 `+` are both operators, then `++` may be split into either [`"+"`, `"+"`] or [`"++"`] depending on
 the lexicographical ordering of conflicting operators.
 
-- `RecursiveDescentParser(unary_op, binary_op)` initializes a parser with operators specified by
-  hash tables `unary_op` (of operator to unary function object) and `binary_op` (of operator to pair
-  of binary function object and operator precedence). Operator precedences should be numbered
+- `RecursiveDescentParser(unary_ops, binary_ops)` initializes a parser with operators specified by
+  hash tables `unary_ops` (of operator to unary function object) and `binary_ops` (of operator to
+  pair of binary function object and operator precedence). Operator precedences should be numbered
   upwards starting at $0$ (lowest precedence, evaluated last).
 - `split(s)` returns a vector of tokens for the expression `s`, split on the given operators during
   construction. Each parenthesis, operator, and operand satisfying `is_operand()` will be split into
@@ -68,10 +68,10 @@ struct BinaryRule {
 };
 
 class RecursiveDescentParser {
-  using unary_op_map = std::unordered_map<string, UnaryOp>;
-  using binary_op_map = std::unordered_map<string, BinaryRule>;
-  unary_op_map unary_ops;
-  binary_op_map binary_ops;
+  using UnaryOpMap = std::unordered_map<string, UnaryOp>;
+  using BinaryOpMap = std::unordered_map<string, BinaryRule>;
+  UnaryOpMap unary_ops;
+  BinaryOpMap binary_ops;
   std::set<string> op_tokens;
   int max_precedence;
 
@@ -97,7 +97,10 @@ class RecursiveDescentParser {
   }
 
   template<typename StrIt>
-  Operand eval_unary(StrIt &lo, StrIt hi) {
+  Operand eval_unary(StrIt &lo, StrIt hi) const {
+    if (lo == hi) {
+      throw std::runtime_error("Unexpected end of expression.");
+    }
     if (is_operand(*lo)) {
       return eval_operand(*(lo++));
     }
@@ -108,7 +111,7 @@ class RecursiveDescentParser {
       throw std::runtime_error("Expected \"(\" during eval.");
     }
     Operand res = eval_binary(++lo, hi, 0);
-    if (*lo != ")") {
+    if (lo == hi || *lo != ")") {
       throw std::runtime_error("Expected \")\" during eval.");
     }
     ++lo;
@@ -116,7 +119,7 @@ class RecursiveDescentParser {
   }
 
   template<typename StrIt>
-  Operand eval_binary(StrIt &lo, StrIt hi, int precedence) {
+  Operand eval_binary(StrIt &lo, StrIt hi, int precedence) const {
     if (precedence > max_precedence) {
       return eval_unary(lo, hi);
     }
@@ -139,7 +142,7 @@ class RecursiveDescentParser {
   }
 
  public:
-  RecursiveDescentParser(const unary_op_map &unary_ops, const binary_op_map &binary_ops)
+  RecursiveDescentParser(const UnaryOpMap &unary_ops, const BinaryOpMap &binary_ops)
       : unary_ops(unary_ops), binary_ops(binary_ops) {
     for (const auto &[op, _] : unary_ops) {
       op_tokens.insert(op);
@@ -151,10 +154,10 @@ class RecursiveDescentParser {
     }
   }
 
-  std::vector<string> split(const string &s) {
+  std::vector<string> split(const string &s) const {
     std::vector<string> res;
     for (int i = 0; i < static_cast<int>(s.size()); i++) {
-      if (s[i] == ' ') {
+      if (std::isspace(static_cast<unsigned char>(s[i]))) {
         continue;
       }
       int next_paren = static_cast<int>(s.size());
@@ -198,7 +201,7 @@ class RecursiveDescentParser {
   }
 
   template<typename StrIt>
-  Operand eval(StrIt lo, StrIt hi) {
+  Operand eval(StrIt lo, StrIt hi) const {
     Operand res = eval_binary(lo, hi, 0);
     if (lo != hi) {
       throw std::runtime_error("Eval failed at token " + *lo + ".");
@@ -206,7 +209,7 @@ class RecursiveDescentParser {
     return res;
   }
 
-  Operand eval(const string &s) {
+  Operand eval(const string &s) const {
     std::vector<string> tokens = split(s);
     return eval(tokens.begin(), tokens.end());
   }

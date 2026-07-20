@@ -7,9 +7,6 @@ lexicographically using exact coordinate comparisons. Point outputs are written 
 caller-supplied pointer whose type is deduced, so the output point type may differ from the input --
 e.g. integer endpoints with a floating-point output point.
 
-`seg_intersection()` has a detection-only overload (called without the output pointers) whose
-calculations are exact when `Pt` has integer coordinates.
-
 - `line_intersection(a1, b1, c1, a2, b2, c2, &p)` intersects lines $a_1 x + b_1 y + c_1 = 0$ and
   $a_2 x + b_2 y + c_2 = 0$, returning $-1$ (parallel), $0$ (one point, stored into `p`), or $1$
   (identical).
@@ -27,6 +24,9 @@ calculations are exact when `Pt` has integer coordinates.
   of the above. Both versions are exact for detection if the input point type is integral.
 - `closest_point(a, b, c, p)` returns the closest point on line $ax + by + c = 0$ to point `p`.
 
+Coefficient triples must represent valid lines, and each point pair used to define an infinite line
+must contain two distinct points.
+
 Overflow warning: the exact integer paths multiply coordinate differences (cross products and
 squared lengths), which grow like the squared coordinate magnitude. With 32-bit `int` coordinates
 these overflow once coordinates exceed roughly $46000$, so for larger integer inputs use a point
@@ -42,14 +42,15 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
-#include <cstdint>
 #include <type_traits>
 
 const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) {
+    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  }
   return C(a) == C(b);
 }
 

@@ -19,7 +19,8 @@ theoretic transform; use the FFT for real-valued convolution or big-integer mult
 - `convolve(a, b)` returns the convolution of two integer sequences `a` and `b`, that is, the
   coefficients of the product of the two polynomials whose coefficients are the inputs. The result
   has length $`a.size()` + `b.size()` - 1$, or is empty if either input is empty, with each entry
-  rounded to the nearest integer. Small inputs use direct multiplication to avoid FFT overhead.
+  rounded to the nearest integer. Small inputs use direct multiplication to avoid FFT overhead. The
+  exact coefficients and the direct branch's intermediate products and sums must fit in `int64_t`.
 
 Time Complexity:
 - O(n log n) per call to `fft()`, where $n$ is the length of the vector.
@@ -86,7 +87,7 @@ std::vector<int64_t> convolve(const std::vector<int64_t> &a, const std::vector<i
     std::vector<int64_t> res(result_size);
     for (int i = 0; i < static_cast<int>(a.size()); i++) {
       for (int j = 0; j < static_cast<int>(b.size()); j++) {
-        res[i + j] += a[i] * b[j];
+        res[i + j] += a[i] * b[j];  // Overflow warning.
       }
     }
     return res;

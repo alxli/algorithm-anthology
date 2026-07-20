@@ -1,12 +1,16 @@
 /*
 
-Computes interval dynamic programming recurrences whose optimal split points are monotone. Knuth
-optimization applies to recurrences of the form `dp[l][r] = min(dp[l][k] + dp[k][r]) + cost(l, r)`,
-where the optimal split `opt[l][r]` satisfies `opt[l][r - 1] <= opt[l][r] <= opt[l + 1][r]`.
+Computes minimum costs for every half-open interval $[`l`, `r`)$ using the recurrence
+`dp[l][r] = min(dp[l][k] + dp[k][r]) + cost(l, r)`. Each state chooses a split `k` strictly inside
+the interval and pays `cost(l, r)` after solving the two resulting subintervals.
 
-Common applications include optimal binary search trees and some range merging problems. The caller
-is responsible for verifying the quadrangle inequality and monotonicity assumptions for the chosen
-`cost(l, r)`.
+A direct implementation checks every split and takes O(n^3). Knuth optimization applies when the
+smallest optimal splits satisfy `opt[l][r - 1]` $\leq$ `opt[l][r]` $\leq$ `opt[l + 1][r]`. The two
+neighboring states therefore bound the splits that must be checked for `dp[l][r]`, reducing the
+total number of candidate checks to O(n^2). Common applications include optimal binary search trees
+and some range merging problems. The caller must verify the required monotonicity property for the
+chosen `cost(l, r)`; the quadrangle inequality and interval monotonicity of the cost are common
+sufficient conditions.
 
 - `knuth_interval_dp(n, cost, &opt)` computes minimum costs for all half-open intervals $[`l`, `r`)$
   over `n` items. The template parameter `cost` must be callable such that `cost(l, r)` returns the
@@ -33,6 +37,7 @@ std::vector<std::vector<int64_t>> knuth_interval_dp(
 ) {
   std::vector<std::vector<int64_t>> dp(n + 1, std::vector<int64_t>(n + 1, 0));
   std::vector<std::vector<int>> opt(n + 1, std::vector<int>(n + 1, 0));
+  // Empty and one-item intervals have cost 0.
   for (int i = 0; i <= n; i++) {
     opt[i][i] = i;
     if (i < n) {
@@ -45,8 +50,9 @@ std::vector<std::vector<int64_t>> knuth_interval_dp(
       dp[l][r] = INF;
       int start = std::max(opt[l][r - 1], l + 1);
       int finish = std::min(opt[l + 1][r], r - 1);
+      int64_t interval_cost = cost(l, r);
       for (int k = start; k <= finish; k++) {
-        int64_t candidate = dp[l][k] + dp[k][r] + cost(l, r);
+        int64_t candidate = dp[l][k] + dp[k][r] + interval_cost;  // Overflow warning!
         if (candidate < dp[l][r]) {
           dp[l][r] = candidate;
           opt[l][r] = k;
@@ -74,12 +80,17 @@ struct MergeCost {
     }
   }
 
-  int64_t operator()(int l, int r) const { return prefix[r] - prefix[l]; }
+  int64_t operator()(int l, int r) const {
+    // Cost of merging the half-open interval a[l..r) into one group.
+    return prefix[r] - prefix[l];
+  }
 };
 
 int main() {
   vector<int> a{1, 2, 3, 4};
-  vector<vector<int64_t>> dp = knuth_interval_dp(a.size(), MergeCost(a));
-  assert(dp[0][4] == 19);
+  vector<vector<int>> opt;
+  vector<vector<int64_t>> dp = knuth_interval_dp(a.size(), MergeCost(a), &opt);
+  assert(dp[0][4] == 19);  // Merge 1 + 2, then 3 + 3, then 6 + 4.
+  assert(opt[0][4] == 3);  // The final merge splits [1, 2, 3] from [4].
   return 0;
 }

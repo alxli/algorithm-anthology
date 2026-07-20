@@ -10,14 +10,14 @@ Hierholzer's algorithm walks unused edges until stuck, then backtracks to splice
 into the final trail. For a directed graph known to have a trail from `start`, the core algorithm
 can simply consume outgoing edges by popping them from a local copy of the adjacency list.
 
-- `known_eulerian_path_directed(adj, start)` returns a vertex trail using every directed edge in
+- `known_eulerian_path_directed(adj, start)` returns a node trail using every directed edge in
   `adj` exactly once, assuming such a trail exists and begins at `start`.
-- `eulerian_path_directed(adj, start = -1)` returns a vertex trail using every directed edge in
+- `eulerian_path_directed(adj, start = -1)` returns a node trail using every directed edge in
   `adj` exactly once, or an empty vector if no such trail exists. If `start` $= -1$, a valid start
   is chosen automatically; otherwise the trail must begin at `start`.
 
 Parallel directed edges are supported by storing duplicate neighbors in `adj`. Since these functions
-return only vertices, use `EulerianGraph` below when edge IDs are needed.
+return only nodes, use `EulerianGraph` below when edge IDs are needed.
 
 Time Complexity:
 - O(max(n, m)) per call to `known_eulerian_path_directed()` and `eulerian_path_directed()`, where
@@ -219,25 +219,25 @@ class EulerianGraph {
     return 0;
   }
 
-  std::vector<int> build_vertices(int start, const std::vector<int> &trail_edges) const {
-    std::vector<int> vertices{start};
+  std::vector<int> build_nodes(int start, const std::vector<int> &trail_edges) const {
+    std::vector<int> nodes{start};
     int u = start;
     for (int id : trail_edges) {
       const auto &[eu, ev] = edges[id];
       u = directed ? ev : eu ^ ev ^ u;
-      vertices.push_back(u);
+      nodes.push_back(u);
     }
-    return vertices;
+    return nodes;
   }
 
  public:
   struct EulerianTrail {
     int start = -1;
     std::vector<int> edges;
-    std::vector<int> vertices;
+    std::vector<int> nodes;
 
     bool is_cycle() const {
-      return start != -1 && vertices.size() > 1 && vertices.front() == vertices.back();
+      return start != -1 && nodes.size() > 1 && nodes.front() == nodes.back();
     }
   };
 
@@ -256,6 +256,9 @@ class EulerianGraph {
   EulerianTrail eulerian_path(int start = -1) const {
     int n = static_cast<int>(adj.size());
     int m = static_cast<int>(edges.size());
+    if (n == 0) {
+      return EulerianTrail{};
+    }
     if (m == 0) {
       int s = (start == -1 ? 0 : start);
       return EulerianTrail{s, {}, {s}};
@@ -267,9 +270,9 @@ class EulerianGraph {
       start = choose_start();
     }
     std::vector<char> used(m, false);
-    std::vector<int> ptr(n), vertex_stack{start}, edge_stack{-1}, trail_edges;
-    while (!vertex_stack.empty()) {
-      int u = vertex_stack.back();
+    std::vector<int> ptr(n), node_stack{start}, edge_stack{-1}, trail_edges;
+    while (!node_stack.empty()) {
+      int u = node_stack.back();
       while (ptr[u] < static_cast<int>(adj[u].size()) && used[adj[u][ptr[u]]]) {
         ptr[u]++;
       }
@@ -277,14 +280,14 @@ class EulerianGraph {
         if (edge_stack.back() != -1) {
           trail_edges.push_back(edge_stack.back());
         }
-        vertex_stack.pop_back();
+        node_stack.pop_back();
         edge_stack.pop_back();
       } else {
         int id = adj[u][ptr[u]++];
         used[id] = true;
         const auto &[eu, ev] = edges[id];
         int v = directed ? ev : eu ^ ev ^ u;
-        vertex_stack.push_back(v);
+        node_stack.push_back(v);
         edge_stack.push_back(id);
       }
     }
@@ -292,7 +295,7 @@ class EulerianGraph {
       return EulerianTrail{};
     }
     std::reverse(trail_edges.begin(), trail_edges.end());
-    return EulerianTrail{start, trail_edges, build_vertices(start, trail_edges)};
+    return EulerianTrail{start, trail_edges, build_nodes(start, trail_edges)};
   }
 };
 
@@ -310,13 +313,13 @@ Directed Eulerian path: 0->1->2
 #include <iostream>
 using namespace std;
 
-void print_vertices(const string &label, const vector<int> &vertices) {
+void print_nodes(const string &label, const vector<int> &nodes) {
   cout << label << ": ";
-  for (int i = 0; i < static_cast<int>(vertices.size()); i++) {
+  for (int i = 0; i < static_cast<int>(nodes.size()); i++) {
     if (i > 0) {
       cout << "->";
     }
-    cout << vertices[i];
+    cout << nodes[i];
   }
   cout << endl;
 }
@@ -336,13 +339,13 @@ int main() {
     vector<int> path = eulerian_path_directed(adj);
     assert((path == vector<int>{0, 1, 2, 0, 3}));
     assert(eulerian_path_directed(adj, 1).empty());
-    print_vertices("Simple directed path", path);
+    print_nodes("Simple directed path", path);
   }
   {
     // 0 <--- 2
-    // |    ^ ^
-    // |   /  |
-    // v /    |
+    // |     ^
+    // |   /
+    // v /
     // 1 ---> 3 ---> 4
     // ^_____________|
     EulerianGraph g(5, true);
@@ -354,15 +357,15 @@ int main() {
     g.add_edge(4, 1);
     auto trail = g.eulerian_path(0);
     assert(trail.edges.size() == 6);
-    assert(trail.vertices.front() == 0 && trail.vertices.back() == 0);
+    assert(trail.nodes.front() == 0 && trail.nodes.back() == 0);
     assert(trail.is_cycle());
-    print_vertices("Directed Eulerian cycle", trail.vertices);
+    print_nodes("Directed Eulerian cycle", trail.nodes);
   }
   {
     // 0 ---- 2
-    // |     /|
-    // |   /  |
-    // | /    |
+    // |     /
+    // |   /
+    // | /
     // 1 ---- 3 ---- 4
     // |_____________|
     EulerianGraph g(5, false);
@@ -374,9 +377,9 @@ int main() {
     g.add_edge(4, 1);
     auto trail = g.eulerian_path();
     assert(trail.edges.size() == 6);
-    assert(trail.vertices.front() == trail.vertices.back());
+    assert(trail.nodes.front() == trail.nodes.back());
     assert(trail.is_cycle());
-    print_vertices("Undirected Eulerian cycle", trail.vertices);
+    print_nodes("Undirected Eulerian cycle", trail.nodes);
   }
   {
     EulerianGraph g(2, false);
@@ -385,7 +388,11 @@ int main() {
     auto trail = g.eulerian_path(0);
     assert(trail.is_cycle());
     assert((trail.edges == vector<int>{a, b} || trail.edges == vector<int>{b, a}));
-    print_vertices("Parallel-edge cycle", trail.vertices);
+    print_nodes("Parallel-edge cycle", trail.nodes);
+  }
+  {
+    EulerianGraph g(0, false);
+    assert(g.eulerian_path().start == -1);
   }
   {
     EulerianGraph g(3, true);
@@ -393,9 +400,9 @@ int main() {
     g.add_edge(1, 2);
     auto trail = g.eulerian_path();
     assert(trail.start == 0);
-    assert((trail.vertices == vector<int>{0, 1, 2}));
+    assert((trail.nodes == vector<int>{0, 1, 2}));
     assert(!trail.is_cycle());
-    print_vertices("Directed Eulerian path", trail.vertices);
+    print_nodes("Directed Eulerian path", trail.nodes);
   }
   return 0;
 }

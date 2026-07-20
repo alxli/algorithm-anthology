@@ -1,8 +1,8 @@
 /*
 
-Maintain a fixed-size array while supporting range updates and range aggregate queries. A lazy
-segment tree stores one aggregate value for each recursively split interval, plus pending updates
-that are pushed to children only when needed.
+Maintain a fixed-size array while supporting range updates and range aggregate queries. Lazy
+propagation lets a segment tree defer work below intervals covered by an update: each node stores an
+aggregate value and a pending update that is pushed to its children only when needed.
 
 The query operation is defined by an associative aggregate function `combine(a, b)`. The default
 code below assumes a numerical array type, defining queries for the "min" of the target range.
@@ -19,13 +19,13 @@ increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, 
 
 - `LazySegTree<T>(n, v = T())` constructs an array of size `n` with indices $[0, `n`)$, and all
   values initialized to `v`.
-- `LazySegTree<T>(lo, hi)` constructs an array from two random-access iterators as a range
-  $[`lo`, `hi`)$, initialized to the elements of the range in the same order.
+- `LazySegTree<T>(lo, hi)` constructs an array from the half-open random-access iterator range
+  $[`lo`, `hi`)$.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.
 - `query(lo, hi)` returns the result of `combine()` applied to all indices in $[`lo`, `hi`]$. If
   `lo == hi`, then the single specified value is returned.
-- `update(i, d)` assigns the value `v` at index `i` to `apply_delta(v, d)`.
+- `update(i, d)` modifies the value at index `i` by applying the delta `d`.
 - `update(lo, hi, d)` modifies the value at each array index in $[`lo`, `hi`]$ by applying the delta
   `d` to each value.
 - `max_right(lo, pred)` returns the largest boundary `hi` such that the aggregate over the half-open

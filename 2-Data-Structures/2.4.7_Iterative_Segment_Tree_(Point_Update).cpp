@@ -1,11 +1,10 @@
 /*
 
 Maintain a fixed-size array while supporting point updates and range aggregate queries using an
-iterative segment tree. The leaves are stored starting at a power-of-two offset in a flat array and
-every internal node stores the aggregate of its two children, so point updates rebuild ancestors by
-walking upward instead of recursing. Unlike the recursive segment tree, this layout avoids recursive
-stack usage for ordinary queries and updates. It is especially convenient for fast point-update
-segment trees; lazy propagation is usually clearer in the recursive version.
+iterative segment tree. The leaves begin at a power-of-two offset in a flat array, and each internal
+node stores the aggregate of its two children. Point updates rebuild ancestors by walking upward,
+while queries scan a decomposition of the requested range. Compared with the recursive segment tree,
+these flat loops avoid recursive stack usage and can reduce constant factors.
 
 The query operation is defined by an associative aggregate function `combine(a, b)`. The default
 code below assumes a numerical array type, defining queries for the "min" of the target range.
@@ -18,8 +17,8 @@ index to a new value. Another possible update operation is "increment", in which
 
 - `IterativeSegTree<T>(n, v = T())` constructs an array of size `n` with indices $[0, `n`)$, and all
   values initialized to `v`.
-- `IterativeSegTree<T>(lo, hi)` constructs an array from two random-access iterators as a range
-  $[`lo`, `hi`)$, initialized to the elements of the range in the same order.
+- `IterativeSegTree<T>(lo, hi)` constructs an array from the half-open random-access iterator range
+  $[`lo`, `hi`)$.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.
 - `query(lo, hi)` returns the result of `combine()` applied to all indices in $[`lo`, `hi`]$. If
@@ -184,7 +183,7 @@ class IterativeSegTree {
 /*** Example Usage and Output:
 
 Values: 6 -2 4 8 10
-The minimum value in the range [$0$, 3] is -2.
+The minimum value in the range [0, 3] is -2.
 
 ***/
 
@@ -200,7 +199,7 @@ int main() {
     cout << " " << t.at(i);
   }
   cout << endl;
-  cout << "The minimum value in the range [$0$, 3] is " << t.query(0, 3) << "." << endl;
+  cout << "The minimum value in the range [0, 3] is " << t.query(0, 3) << "." << endl;
   assert(t.query(0, 3) == -2);
 
   assert(t.max_right(0, [](int mn) { return mn > -2; }) == 1);

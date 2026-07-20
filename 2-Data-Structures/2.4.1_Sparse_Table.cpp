@@ -18,7 +18,7 @@ The query operation is defined by an associative and idempotent function `combin
 default code below returns the "min" of the range; for "gcd", `combine(a, b)` should return
 `gcd(a, b)`.
 
-- `SparseTable<T>(lo, hi)` builds the table from two random-access iterators.
+- `SparseTable<T>(lo, hi)` builds the table over the half-open iterator range $[`lo`, `hi`)$.
 - `size()` returns the size of the array.
 - `query(lo, hi)` returns `combine()` applied to all indices in $[`lo`, `hi`]$.
 

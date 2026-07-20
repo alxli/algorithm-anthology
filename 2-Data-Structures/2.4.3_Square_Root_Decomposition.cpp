@@ -18,8 +18,8 @@ index to a new value. Another possible update operation is "increment", in which
 
 - `SqrtDecomposition<T>(n, v = T())` constructs an array of size `n` with indices $[0, `n`)$, and
   all values initialized to `v`.
-- `SqrtDecomposition<T>(lo, hi)` constructs an array from two random-access iterators, initialized
-  to the elements of the range in the same order.
+- `SqrtDecomposition<T>(lo, hi)` constructs an array from the half-open random-access iterator range
+  $[`lo`, `hi`)$.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.
 - `query(lo, hi)` returns the result of `combine()` applied to all indices in $[`lo`, `hi`]$.
@@ -29,8 +29,8 @@ The supported operations are identical to those of the point-update segment tree
 
 Time Complexity:
 - O(n) per call to both constructors, where $n$ is the size of the array.
-- O(1) per call to `size()`.
-- O(sqrt(n)) per call to `at()`, `update()`, and `query()`.
+- O(1) per call to `size()` and `at()`.
+- O(sqrt(n)) per call to `update()` and `query()`.
 
 Space Complexity:
 - O(n) for storage of the array elements.
@@ -39,6 +39,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <vector>
 
@@ -51,7 +52,7 @@ class SqrtDecomposition {
   std::vector<T> value, block;
 
   void init() {
-    blocklen = std::max(1, static_cast<int>(sqrt(len)));
+    blocklen = std::max(1, static_cast<int>(std::sqrt(len)));
     int nblocks = (len + blocklen - 1) / blocklen;
     for (int i = 0; i < nblocks; i++) {
       T blockval = value[i * blocklen];
@@ -72,10 +73,15 @@ class SqrtDecomposition {
   }
 
   int size() const { return len; }
-  T at(int i) const { return query(i, i); }
+
+  T at(int i) const {
+    assert(0 <= i && i < len);
+    return value[i];
+  }
 
   T query(int lo, int hi) const {
-    int blocklo = ceil(static_cast<double>(lo) / blocklen), blockhi = (hi + 1) / blocklen - 1;
+    assert(0 <= lo && lo <= hi && hi < len);
+    int blocklo = (lo + blocklen - 1) / blocklen, blockhi = (hi + 1) / blocklen - 1;
     if (blocklo > blockhi) {
       T res = value[lo];
       for (int i = lo + 1; i <= hi; i++) {
@@ -97,12 +103,13 @@ class SqrtDecomposition {
   }
 
   void update(int i, const T &d) {
+    assert(0 <= i && i < len);
     value[i] = apply_delta(value[i], d);
     int b = i / blocklen;
     int blockhi = std::min(len, (b + 1) * blocklen);
     block[b] = value[b * blocklen];
-    for (int i = b * blocklen + 1; i < blockhi; i++) {
-      block[b] = combine(block[b], value[i]);
+    for (int j = b * blocklen + 1; j < blockhi; j++) {
+      block[b] = combine(block[b], value[j]);
     }
   }
 };

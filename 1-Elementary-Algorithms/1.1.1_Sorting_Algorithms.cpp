@@ -131,8 +131,11 @@ Stable?: No.
 
 template<typename It, typename Compare = std::less<>>
 void heapsort(It lo, It hi, Compare comp = Compare()) {
+  if (hi - lo < 2) {
+    return;
+  }
   using T = typename std::iterator_traits<It>::value_type;
-  T tmp;
+  T tmp = *lo;
   It i = lo + (hi - lo) / 2, j = hi, parent, child;
   while (true) {
     if (i <= lo) {
@@ -200,15 +203,10 @@ void insertion_sort(It lo, It hi, Compare comp = Compare()) {
 
 /*
 
-Comb sort is an improved bubble sort. While bubble sort increments the gap between swapped elements
-for every inner loop iteration, comb sort fixes the gap size in the inner loop, decreasing it by a
-particular shrink factor in every iteration of the outer loop. The shrink factor of 1.3 is
-empirically determined to be the most effective.
-
-Even though the worst case time complexity is O(n^2), a well chosen shrink factor ensures that the
-gap sizes are co-prime, in turn requiring astronomically large $n$ to make the algorithm exceed
-O(n log n) steps. On random arrays, comb sort is only 2-3 times slower than merge sort. Its short
-code length relative to its good performance makes it a worthwhile algorithm to remember.
+Comb sort is an improved bubble sort. While bubble sort compares only adjacent elements, comb sort
+compares elements separated by a fixed gap, decreasing that gap after every pass. Large gaps move
+small values near the end toward the front quickly, avoiding the slow movement of such values in
+bubble sort. The shrink factor $1.3$ is a common empirical choice.
 
 Time Complexity (Worst): O(n^2).
 Space Complexity: O(1) auxiliary.
@@ -246,11 +244,8 @@ stable. After one pass, the values are sorted by the processed digit; stability 
 pass preserves the ordering already established by all less-significant digits. Inductively, after
 the final pass the values are sorted by the entire key.
 
-In this implementation, a power of two is chosen to be the base for the sort so that bitwise
-operations can be easily used to extract digits. This avoids the need to use modulo/exponentiation,
-which are much more expensive operations. In practice, it's been demonstrated that $2^8$ is the best
-choice for sorting 32-bit integers (approximately 5 times faster than `std::sort()`, and typically
-2-4 times faster than radix sort using any other power of two chosen as the base).
+This implementation uses one byte per digit, so digits can be extracted with shifts and masks and
+the counting table has $2^8 = 256$ entries.
 
 Time Complexity: O(n*w) for $n$ integers of $w$ bits each.
 Space Complexity: O(n + 2^b) auxiliary for a radix of $b$ bits, i.e. O(n) for constant $b$.
@@ -266,6 +261,7 @@ void radix_sort(It lo, It hi) {
   const int radix_base = 1 << radix_bits;  // e.g. 2^8 = 256
   const int radix_mask = radix_base - 1;   // e.g. 2^8 - 1 = 0xFF
   using T = typename std::iterator_traits<It>::value_type;
+  static_assert(std::is_integral<T>::value && !std::is_same<T, bool>::value);
   using U = typename std::make_unsigned<T>::type;
   int num_bits = 8 * sizeof(T);  // 8 bits per byte
   // Sort on an unsigned key. For signed types, flipping the sign bit sends the most negative value
@@ -324,50 +320,45 @@ void print_range(It lo, It hi) {
   cout << endl;
 }
 
-template<typename It>
-bool sorted(It lo, It hi) {
-  while (++lo != hi) {
-    if (*lo < *(lo - 1)) {
-      return false;
-    }
-  }
-  return true;
-}
-
 int main() {
   {  // Can be used to sort arrays like std::sort().
-    vector<int> a{32, 71, 12, 45, 26, 80, 53, 33};
-    quicksort(a.begin(), a.end());
-    assert(sorted(a.begin(), a.end()));
+    int a[]{32, 71, 12, 45, 26, 80, 53, 33};
+    quicksort(begin(a), end(a));
+    assert(is_sorted(begin(a), end(a)));
   }
   {  // STL containers work too.
     vector<int> a{32, 71, 12, 45, 26, 80, 53, 33};
     quicksort(a.begin(), a.end());
-    assert(sorted(a.begin(), a.end()));
+    assert(is_sorted(a.begin(), a.end()));
   }
   {  // Reverse iterators work as expected.
     vector<int> a{32, 71, 12, 45, 26, 80, 53, 33};
     heapsort(a.rbegin(), a.rend());
-    assert(sorted(a.rbegin(), a.rend()));
+    assert(is_sorted(a.rbegin(), a.rend()));
   }
   {  // We can sort doubles just as well.
     vector<double> a{1.1, -5.0, 6.23, 4.123, 155.2};
     combsort(a.begin(), a.end());
-    assert(sorted(a.begin(), a.end()));
+    assert(is_sorted(a.begin(), a.end()));
   }
   {  // Insertion sort is adaptive: an already-sorted range is left untouched in O(n).
     vector<int> a{12, 26, 32, 33, 45, 53, 71, 80};
     insertion_sort(a.begin(), a.end());
-    assert(sorted(a.begin(), a.end()));
+    assert(is_sorted(a.begin(), a.end()));
   }
   {  // radix_sort() handles signed integers (including negatives), unlike a plain counting sort.
     vector<int> a{32, -71, 12, -45, 26, -80, 53, 33};
     radix_sort(a.begin(), a.end());
-    assert(sorted(a.begin(), a.end()));
+    assert(is_sorted(a.begin(), a.end()));
   }
   {  // Empty and singleton ranges are valid no-ops.
     vector<int> empty, single{42};
     quicksort(empty.begin(), empty.end());
+    mergesort(empty.begin(), empty.end());
+    heapsort(empty.begin(), empty.end());
+    insertion_sort(empty.begin(), empty.end());
+    combsort(empty.begin(), empty.end());
+    radix_sort(empty.begin(), empty.end());
     mergesort(single.begin(), single.end());
     assert(empty.empty() && single[0] == 42);
   }
@@ -406,7 +397,7 @@ int main() {
     sort(v.begin(), v.end());
     double t = static_cast<double>(clock() - start) / CLOCKS_PER_SEC;
     cout << setw(14) << left << name + "(): " << fixed << t << "s" << endl;
-    assert(sorted(v.begin(), v.end()));
+    assert(is_sorted(v.begin(), v.end()));
   };
   benchmark("std::sort", [](auto lo, auto hi) { std::sort(lo, hi); });
   benchmark("quicksort", [](auto lo, auto hi) { quicksort(lo, hi); });

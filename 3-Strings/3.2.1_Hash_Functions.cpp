@@ -30,20 +30,14 @@ offers no protection against adversarial inputs.
 - `hash_float(x)` and `hash_double(x)` hash floating-point bit patterns, normalizing `-0.0` to
   `0.0`. Different NaN representations may still hash differently.
 - `hash_string_fnv1a32(s)` and `hash_string_fnv1a64(s)` compute FNV-1a hashes of string `s`.
-- `hash_range32(first, last)` and `hash_range64(first, last)` hash a sequence of integer-like
-  values.
+- `hash_range32(lo, hi)` and `hash_range64(lo, hi)` hash a sequence of integer-like values in the
+  half-open iterator range $[`lo`, `hi`)$.
 - `PairIntHasher` is a self-contained hasher for `std::pair<int, int>` keys, written without any
   dependency on the templates below so that it can be copy-pasted on its own.
 - `IntHasher<Int>`, `PairHasher<A, B>`, `TupleHasher<Ts...>`, and `VectorHasher<T>` are hash
   functors passed as the third template argument of `std::unordered_map` or `std::unordered_set`.
 - `GenericHasher<T>` recursively handles integer, pair, tuple, and vector keys, and falls back to
   `std::hash<T>` for other hashable types.
-
-Specializations of `std::hash` for `std::pair` and `std::tuple` are also provided, letting those
-keys be used in `std::unordered_map`/`std::unordered_set` without an explicit hasher argument.
-Specializing `std::hash` for purely standard types is technically nonstandard, so the functor forms
-above are the portable alternative. Vector keys are left to the functors to avoid clashing with the
-standard `std::hash<std::vector<char>>`.
 
 Time Complexity:
 - O(1) per call to the integer, combiner, and floating-point hash functions.
@@ -140,18 +134,18 @@ uint64_t hash_string_fnv1a64(const std::string &s) {
 }
 
 template<typename It>
-uint32_t hash_range32(It first, It last) {
+uint32_t hash_range32(It lo, It hi) {
   uint32_t h = 0;
-  for (It it = first; it != last; ++it) {
+  for (It it = lo; it != hi; ++it) {
     h = hash_combine32(h, hash32(*it));
   }
   return h;
 }
 
 template<typename It>
-uint64_t hash_range64(It first, It last) {
+uint64_t hash_range64(It lo, It hi) {
   uint64_t h = 0;
-  for (It it = first; it != last; ++it) {
+  for (It it = lo; it != hi; ++it) {
     h = hash_combine64(h, hash64(*it));
   }
   return h;
@@ -181,7 +175,7 @@ struct ScalarHasher {
 
 // A self-contained hasher for std::pair<int, int> keys: copy just this struct when you do not need
 // the rest of this file. The two 32-bit halves pack losslessly into one 64-bit word, which the
-// SplitMix64 mixer (the same one used by mix64 above) then scrambles. Add a random seed to `key`
+// SplitMix64 mixer (the same one used by mix64 above) then scrambles. Add a random seed to key
 // before mixing, as IntHasher does, if you need anti-hacking protection.
 struct PairIntHasher {
   std::size_t operator()(const std::pair<int, int> &p) const {
@@ -242,26 +236,6 @@ struct GenericHasher<std::tuple<Ts...>> : TupleHasher<Ts...> {};
 template<typename T>
 struct GenericHasher<std::vector<T>> : VectorHasher<T> {};
 
-// Specializing std::hash lets pair and tuple keys be used directly in std::unordered_map and
-// std::unordered_set, with no explicit hasher template argument. The C++ standard only sanctions
-// specializing std::hash when a user-defined type is involved, so the functors above remain the
-// portable choice; these specializations are a widely supported contest convenience. Vector keys
-// are intentionally left out here to avoid clashing with the standard library's own
-// std::hash<std::vector<char>>; pass VectorHasher or GenericHasher explicitly for those.
-namespace std {
-
-template<typename A, typename B>
-struct hash<pair<A, B>> {
-  std::size_t operator()(const pair<A, B> &p) const { return ::GenericHasher<pair<A, B>>()(p); }
-};
-
-template<class... Ts>
-struct hash<tuple<Ts...>> {
-  std::size_t operator()(const tuple<Ts...> &t) const { return ::GenericHasher<tuple<Ts...>>()(t); }
-};
-
-}  // namespace std
-
 /*** Example Usage ***/
 
 #include <cassert>
@@ -313,13 +287,5 @@ int main() {
   grid[Triple(1, 'a', 3.14)] = 6;
   assert(grid[Triple(1, 'a', 3.14)] == 6);
 
-  // With the std::hash specializations, pair and tuple keys need no hasher argument.
-  unordered_map<Point, int> dist_default;
-  dist_default[Point(3, 4)] = 5;
-  assert(dist_default[Point(3, 4)] == 5);
-
-  unordered_map<Triple, int> grid_default;
-  grid_default[Triple(1, 'a', 3.14)] = 6;
-  assert(grid_default[Triple(1, 'a', 3.14)] == 6);
   return 0;
 }

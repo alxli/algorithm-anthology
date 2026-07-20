@@ -12,13 +12,14 @@ so compressed data normally stores enough metadata to reconstruct the same tree.
 
 - `HuffmanTree(text)` constructs a Huffman tree from the character frequencies in `text`.
 - `codes()` returns a table mapping each byte value to its bit string.
-- `encode(text)` returns the encoded bit string.
-- `decode(bits)` returns the decoded text.
+- `encode(text)` returns the encoded bit string. Every character in `text` must occur in the string
+  used to construct the tree.
+- `decode(bits)` returns the decoded text for a bit string produced by this tree.
 
 Time Complexity:
 - O(n + m log m) to construct the tree, where $n$ is the input length and $m$ is the number of
   distinct characters.
-- O(n) to encode or decode, plus the number of produced or consumed bits.
+- O(n + b) to encode $n$ characters into $b$ bits, and O(b) to decode $b$ bits.
 
 Space Complexity:
 - O(m) for the tree and code table, where $m$ is the number of distinct characters.
@@ -26,8 +27,10 @@ Space Complexity:
 
 */
 
+#include <functional>
 #include <queue>
 #include <string>
+#include <utility>
 #include <vector>
 using std::string;
 
@@ -41,14 +44,8 @@ class HuffmanTree {
         : freq(freq), ch(ch), left(left), right(right) {}
   };
 
-  struct ByFrequency {
-    const std::vector<Node> *nodes;
-    explicit ByFrequency(const std::vector<Node> *nodes = nullptr) : nodes(nodes) {}
-    bool operator()(int a, int b) const { return (*nodes)[a].freq > (*nodes)[b].freq; }
-  };
-
-  std::vector<Node> nodes;
   int root;
+  std::vector<Node> nodes;
   std::vector<string> code;
 
   void build_codes(int u, const string &path) {
@@ -66,26 +63,25 @@ class HuffmanTree {
     for (int i = 0; i < static_cast<int>(text.size()); i++) {
       freq[static_cast<unsigned char>(text[i])]++;
     }
-    ByFrequency cmp(&nodes);
-    std::priority_queue<int, std::vector<int>, ByFrequency> pq(cmp);
+    std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<>> pq;
     for (int c = 0; c < 256; c++) {
       if (freq[c] > 0) {
         nodes.emplace_back(freq[c], static_cast<unsigned char>(c));
-        pq.push(static_cast<int>(nodes.size()) - 1);
+        pq.emplace(freq[c], static_cast<int>(nodes.size()) - 1);
       }
     }
     if (pq.empty()) {
       return;
     }
     while (static_cast<int>(pq.size()) > 1) {
-      int a = pq.top();
+      int a = pq.top().second;
       pq.pop();
-      int b = pq.top();
+      int b = pq.top().second;
       pq.pop();
       nodes.emplace_back(nodes[a].freq + nodes[b].freq, 0, a, b);
-      pq.push(static_cast<int>(nodes.size()) - 1);
+      pq.emplace(nodes.back().freq, static_cast<int>(nodes.size()) - 1);
     }
-    root = pq.top();
+    root = pq.top().second;
     build_codes(root, "");
   }
 

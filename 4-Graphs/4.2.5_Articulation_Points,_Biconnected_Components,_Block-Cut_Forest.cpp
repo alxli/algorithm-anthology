@@ -1,10 +1,10 @@
 /*
 
 Given an undirected graph, compute articulation points, vertex-biconnected components (BCCs), and
-the block-cut forest using Tarjan's algorithm. An articulation point (a.k.a. cut vertex) is a vertex
+the block-cut forest using Tarjan's algorithm. An articulation point (a.k.a. cut vertex) is a node
 whose removal increases the number of connected components in the graph. A vertex-biconnected
-component is a maximal subgraph that cannot be disconnected by removing one vertex, with single-edge
-and isolated-vertex components handled as degenerate cases. A single depth-first search tracks each
+component is a maximal subgraph that cannot be disconnected by removing one node, with single-edge
+and isolated-node components handled as degenerate cases. A single depth-first search tracks each
 node's low-link, the earliest entry time reachable from its subtree: a node is an articulation point
 exactly when some child's subtree cannot reach above it, and the edges of each BCC are collected on
 a stack popped at that moment.
@@ -16,11 +16,14 @@ forest describes edge connectivity after compressing 2-edge-connected components
 
 - `BiconnectedComponents(n = 0)` constructs an undirected graph of `n` nodes numbered $[0, `n`)$.
 - `add_edge(u, v)` adds the undirected edge `u`-`v`. Parallel edges are supported.
-- `build_bcc()` populates `articulation_points` and `bccs`.
-- `build_block_cut_forest()` populates `block_cut_forest` and `block_cut_id` using the results of
-  the previous `build_bcc()` call. After the call, `block_cut_forest` nodes are numbered in the
-  range $[0, `bccs.size()`)$, and `block_cut_id[v]` stores the node ID of articulation point `v` in
-  the block-cut forest, or $-1$ if `v` is not an articulation point.
+- `build_bcc()` computes the articulation points and vertex-biconnected components.
+- `articulation_points()` and `components()` return those results.
+- `build_block_cut_forest()` computes the block-cut forest using the results of the previous
+  `build_bcc()` call.
+- `block_cut_forest()` returns that forest. Its component nodes are numbered in the range
+  $[0, `components().size()`)$.
+- `block_cut_id(v)` returns the block-cut forest node representing articulation point `v`, or $-1$
+  if `v` is not an articulation point.
 
 Time Complexity:
 - O(max(n, m)) per call to `build_bcc()` and `build_block_cut_forest()`, where $n$ is the number of
@@ -36,22 +39,13 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-struct BiconnectedComponents {
-  std::vector<std::vector<int>> adj, bccs, block_cut_forest;
-  std::vector<int> lowlink, tin, block_cut_id, articulation_points;
+class BiconnectedComponents {
+  std::vector<std::vector<int>> adj, bccs, forest;
+  std::vector<int> lowlink, tin, forest_id, articulation;
   std::vector<char> visited, is_articulation;
   std::vector<std::pair<int, int>> edges;
   std::vector<int> edge_stack;
   int timer;
-
-  BiconnectedComponents(int n = 0) : adj(n) {}
-
-  void add_edge(int u, int v) {
-    int id = static_cast<int>(edges.size());
-    adj[u].push_back(id);
-    adj[v].push_back(id);
-    edges.emplace_back(u, v);
-  }
 
   int other(int id, int u) const { return edges[id].first ^ edges[id].second ^ u; }
 
@@ -103,9 +97,19 @@ struct BiconnectedComponents {
     }
   }
 
+ public:
+  BiconnectedComponents(int n = 0) : adj(n) {}
+
+  void add_edge(int u, int v) {
+    int id = static_cast<int>(edges.size());
+    adj[u].push_back(id);
+    adj[v].push_back(id);
+    edges.emplace_back(u, v);
+  }
+
   void build_bcc() {
     int n = static_cast<int>(adj.size());
-    articulation_points.clear();
+    articulation.clear();
     bccs.clear();
     edge_stack.clear();
     lowlink.assign(n, 0);
@@ -120,7 +124,7 @@ struct BiconnectedComponents {
     }
     for (int i = 0; i < n; i++) {
       if (is_articulation[i]) {
-        articulation_points.push_back(i);
+        articulation.push_back(i);
       }
     }
   }
@@ -128,21 +132,26 @@ struct BiconnectedComponents {
   void build_block_cut_forest() {
     int n = static_cast<int>(adj.size());
     int blocks = static_cast<int>(bccs.size());
-    block_cut_id.assign(n, -1);
+    forest_id.assign(n, -1);
     int total = blocks;
-    for (int v : articulation_points) {
-      block_cut_id[v] = total++;
+    for (int v : articulation) {
+      forest_id[v] = total++;
     }
-    block_cut_forest.assign(total, {});
+    forest.assign(total, {});
     for (int b = 0; b < blocks; b++) {
       for (int v : bccs[b]) {
-        if (block_cut_id[v] != -1) {
-          block_cut_forest[b].push_back(block_cut_id[v]);
-          block_cut_forest[block_cut_id[v]].push_back(b);
+        if (forest_id[v] != -1) {
+          forest[b].push_back(forest_id[v]);
+          forest[forest_id[v]].push_back(b);
         }
       }
     }
   }
+
+  const std::vector<int> &articulation_points() const { return articulation; }
+  const std::vector<std::vector<int>> &components() const { return bccs; }
+  const std::vector<std::vector<int>> &block_cut_forest() const { return forest; }
+  int block_cut_id(int v) const { return forest_id[v]; }
 };
 
 /*** Example Usage and Output:
@@ -181,11 +190,11 @@ int main() {
   g.add_edge(4, 5);
   g.build_bcc();
   cout << "Articulation points:";
-  for (int v : g.articulation_points) {
+  for (int v : g.articulation_points()) {
     cout << " " << v;
   }
   cout << endl << "Biconnected components:" << endl;
-  for (auto &component : g.bccs) {
+  for (const auto &component : g.components()) {
     for (int v : component) {
       cout << v << " ";
     }
@@ -193,9 +202,10 @@ int main() {
   }
   g.build_block_cut_forest();
   cout << "Adjacency List for Block-Cut Forest:" << endl;
-  for (int i = 0, n = static_cast<int>(g.block_cut_forest.size()); i < n; i++) {
+  const auto &forest = g.block_cut_forest();
+  for (int i = 0, n = static_cast<int>(forest.size()); i < n; i++) {
     cout << i << " =>";
-    for (int v : g.block_cut_forest[i]) {
+    for (int v : forest[i]) {
       cout << " " << v;
     }
     cout << endl;

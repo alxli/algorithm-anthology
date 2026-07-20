@@ -26,7 +26,6 @@ Space Complexity:
 
 */
 
-#include <algorithm>
 #include <climits>
 #include <deque>
 #include <utility>
@@ -102,7 +101,8 @@ int main() {
   bfs_zero_one(start);
   assert(dist[dest] == 1);
   assert(pred[dest] == 2);
-  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
+  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
+       << endl;
   print_path(dest);
   return 0;
 }

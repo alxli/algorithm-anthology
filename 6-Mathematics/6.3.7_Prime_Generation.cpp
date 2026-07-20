@@ -19,12 +19,13 @@ would require.
 
 Time Complexity:
 - O(n log log n) per call to `sieve(n)`.
-- O(sqrt(h)*log(log(w))) per call to `sieve(lo, hi)`, where $w = `hi` - `lo` + 1$ and $h = `hi`$.
+- O(sqrt(`hi`)*log(log(`hi`)) + w*log(log(`hi`))) per call to `sieve(lo, hi)`, where
+  $w = `hi` - `lo` + 1$.
 - O(n) per call to `linear_sieve(n, least_out)`.
 
 Space Complexity:
 - O(n) auxiliary per call to `sieve(n)`.
-- O(w + sqrt(h)) auxiliary per call to `sieve(lo, hi)`.
+- O(w + sqrt(`hi`)) auxiliary per call to `sieve(lo, hi)`.
 - O(n) auxiliary per call to `linear_sieve(n, least_out)`.
 
 */

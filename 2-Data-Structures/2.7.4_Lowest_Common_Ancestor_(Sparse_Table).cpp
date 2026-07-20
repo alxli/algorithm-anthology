@@ -33,14 +33,15 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <vector>
 
 class SparseTableLCA {
-  std::vector<std::vector<int>> adj, up;
+  std::vector<std::vector<int>> up;
   std::vector<int> tin, tout, depth, root;
   int len, timer;
 
-  void dfs(int u, int p, int r, int d) {
+  void dfs(const std::vector<std::vector<int>> &adj, int u, int p, int r, int d) {
     tin[u] = timer++;
     depth[u] = d;
     root[u] = r;
@@ -50,14 +51,14 @@ class SparseTableLCA {
     }
     for (int v : adj[u]) {
       if (v != p) {
-        dfs(v, u, r, d + 1);
+        dfs(adj, v, u, r, d + 1);
       }
     }
     tout[u] = timer++;
   }
 
  public:
-  explicit SparseTableLCA(const std::vector<std::vector<int>> &adj) : adj(adj), timer(0) {
+  explicit SparseTableLCA(const std::vector<std::vector<int>> &adj) : timer(0) {
     int n = static_cast<int>(adj.size());
     len = 1;
     while ((1 << len) <= std::max(1, n)) {
@@ -70,16 +71,19 @@ class SparseTableLCA {
     root.assign(n, -1);
     for (int u = 0; u < n; u++) {
       if (root[u] == -1) {
-        dfs(u, u, u, 0);
+        dfs(adj, u, u, u, 0);
       }
     }
   }
 
   bool is_ancestor(int parent, int child) const {
+    assert(0 <= parent && parent < static_cast<int>(root.size()));
+    assert(0 <= child && child < static_cast<int>(root.size()));
     return root[parent] == root[child] && tin[parent] <= tin[child] && tout[child] <= tout[parent];
   }
 
   int go_up(int u, int k) const {
+    assert(0 <= u && u < static_cast<int>(root.size()) && k >= 0);
     k = std::min(k, depth[u]);
     for (int i = 0; i < len; i++) {
       if ((k & (1 << i)) != 0) {
@@ -90,6 +94,8 @@ class SparseTableLCA {
   }
 
   int lca(int u, int v) const {
+    assert(0 <= u && u < static_cast<int>(root.size()));
+    assert(0 <= v && v < static_cast<int>(root.size()));
     if (root[u] != root[v]) {
       return -1;
     }

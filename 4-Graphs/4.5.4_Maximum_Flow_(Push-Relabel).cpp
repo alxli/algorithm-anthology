@@ -28,34 +28,36 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <climits>
 #include <cstdint>
 #include <queue>
 #include <vector>
 
-const int INF = INT_MAX / 2;
-std::vector<std::vector<int>> cap;
-std::vector<std::vector<int>> f;
+std::vector<std::vector<int64_t>> cap;
+std::vector<std::vector<int64_t>> f;
 
 int64_t push_relabel(int source, int sink) {
   int n = static_cast<int>(cap.size());
-  f.assign(n, std::vector<int>(n, 0));
-  std::vector<int> e(n, 0), h(n, 0), maxh(n, 0);
-  h[source] = n - 1;
+  assert(source != sink);
+  f.assign(n, std::vector<int64_t>(n, 0));
+  std::vector<int64_t> excess(n, 0);
+  std::vector<int> height(n, 0), max_height(n, 0);
+  height[source] = n - 1;
   for (int i = 0; i < n; i++) {
     f[source][i] = cap[source][i];
     f[i][source] = -f[source][i];
-    e[i] = cap[source][i];
+    excess[i] = cap[source][i];
   }
   int size = 0;
   while (true) {
     if (size == 0) {
       for (int i = 0; i < n; i++) {
-        if (i != source && i != sink && e[i] > 0) {
-          if (size != 0 && h[i] > h[maxh[0]]) {
+        if (i != source && i != sink && excess[i] > 0) {
+          if (size != 0 && height[i] > height[max_height[0]]) {
             size = 0;
           }
-          maxh[size++] = i;
+          max_height[size++] = i;
         }
       }
     }
@@ -63,16 +65,16 @@ int64_t push_relabel(int source, int sink) {
       break;
     }
     while (size != 0) {
-      int i = maxh[size - 1];
+      int i = max_height[size - 1];
       bool pushed = false;
-      for (int j = 0; j < n && e[i] != 0; j++) {
-        if (h[i] == h[j] + 1 && cap[i][j] - f[i][j] > 0) {
-          int df = std::min(cap[i][j] - f[i][j], e[i]);
+      for (int j = 0; j < n && excess[i] != 0; j++) {
+        if (height[i] == height[j] + 1 && cap[i][j] - f[i][j] > 0) {
+          int64_t df = std::min(cap[i][j] - f[i][j], excess[i]);
           f[i][j] += df;
           f[j][i] -= df;
-          e[i] -= df;
-          e[j] += df;
-          if (e[i] == 0) {
+          excess[i] -= df;
+          excess[j] += df;
+          if (excess[i] == 0) {
             size--;
           }
           pushed = true;
@@ -81,13 +83,13 @@ int64_t push_relabel(int source, int sink) {
       if (pushed) {
         continue;
       }
-      h[i] = INF;
+      height[i] = INT_MAX / 2;
       for (int j = 0; j < n; j++) {
-        if (h[i] > h[j] + 1 && cap[i][j] - f[i][j] > 0) {
-          h[i] = h[j] + 1;
+        if (height[i] > height[j] + 1 && cap[i][j] - f[i][j] > 0) {
+          height[i] = height[j] + 1;
         }
       }
-      if (h[i] > h[maxh[0]]) {
+      if (height[i] > height[max_height[0]]) {
         size = 0;
         break;
       }
@@ -136,7 +138,7 @@ int main() {
   //      v /
   //       2
   int nodes = 6;
-  cap.assign(nodes, std::vector<int>(nodes));
+  cap.assign(nodes, std::vector<int64_t>(nodes));
   cap[0][1] = 4;
   cap[0][2] = 3;
   cap[1][3] = 2;

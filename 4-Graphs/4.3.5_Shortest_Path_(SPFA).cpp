@@ -28,7 +28,6 @@ Space Complexity:
 
 */
 
-#include <algorithm>
 #include <cstdint>
 #include <queue>
 #include <utility>
@@ -43,7 +42,7 @@ bool spfa(int start) {
   int n = static_cast<int>(adj.size());
   dist.assign(n, INF);
   pred.assign(n, -1);
-  std::vector<int> relax_count(n, 0);
+  std::vector<int> path_edges(n, 0);
   std::vector<char> in_queue(n, false);
   std::queue<int> q;
   dist[start] = 0;
@@ -54,15 +53,16 @@ bool spfa(int start) {
     q.pop();
     in_queue[u] = false;
     for (auto &[v, w] : adj[u]) {
-      if (dist[u] != INF && dist[v] > dist[u] + w) {
+      if (dist[v] > dist[u] + w) {
         dist[v] = dist[u] + w;
         pred[v] = u;
+        path_edges[v] = path_edges[u] + 1;
+        if (path_edges[v] >= n) {
+          return false;
+        }
         if (!in_queue[v]) {
           q.push(v);
           in_queue[v] = true;
-          if (++relax_count[v] >= n) {
-            return false;
-          }
         }
       }
     }
@@ -111,7 +111,11 @@ int main() {
   spfa(start);
   assert(dist[dest] == 5);
   assert(pred[dest] == 2 && pred[2] == 1);
-  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
+  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
+       << endl;
   print_path(dest);
+
+  adj[3].emplace_back(1, -2);  // The cycle 1 -> 2 -> 3 -> 1 now has total weight -1.
+  assert(!spfa(start));
   return 0;
 }

@@ -6,12 +6,12 @@ containing no edges that share the same node.
 
 Hopcroft-Karp augments along many shortest augmenting paths per phase. Each phase first runs a
 breadth-first search to layer the graph by distance, then a depth-first search to find a maximal set
-of vertex-disjoint shortest augmenting paths to flip at once, for O(m*sqrt(n_1 + n_2)) running time
+of node-disjoint shortest augmenting paths to flip at once, for O(m*sqrt(n_1 + n_2)) running time
 overall.
 
-- `bipartite_matching_hk(n2)` populates `match` and returns maximum matching size for a global,
-  pre-populated adjacency list `adj` whose left-side nodes are numbered $[0, `n`)$ and whose
-  right-side neighbors are numbered $[0, `n2`)$, where `n` is `adj.size()`.
+- `bipartite_matching_hk(n2)` populates `match_left` and `match_right`, then returns maximum
+  matching size for a global, pre-populated adjacency list `adj` whose left-side nodes are numbered
+  $[0, `n`)$ and whose right-side neighbors are numbered $[0, `n2`)$, where `n` is `adj.size()`.
 
 Time Complexity:
 - O(m*sqrt(n_1 + n_2)) per call, where $m$ is the number of edges.
@@ -23,13 +23,12 @@ Space Complexity:
 
 */
 
-#include <algorithm>
 #include <queue>
 #include <vector>
 
 std::vector<std::vector<int>> adj;
 std::vector<char> used, visit;
-std::vector<int> match, dist;
+std::vector<int> match_left, match_right, dist;
 
 void bfs() {
   int n1 = static_cast<int>(adj.size());
@@ -45,7 +44,7 @@ void bfs() {
     int u = q.front();
     q.pop();
     for (int nb : adj[u]) {
-      int v = match[nb];
+      int v = match_right[nb];
       if (v >= 0 && dist[v] < 0) {
         dist[v] = dist[u] + 1;
         q.push(v);
@@ -57,9 +56,10 @@ void bfs() {
 bool dfs(int u) {
   visit[u] = true;
   for (int nb : adj[u]) {
-    int v = match[nb];
+    int v = match_right[nb];
     if (v < 0 || (!visit[v] && dist[v] == dist[u] + 1 && dfs(v))) {
-      match[nb] = u;
+      match_left[u] = nb;
+      match_right[nb] = u;
       used[u] = true;
       return true;
     }
@@ -69,7 +69,8 @@ bool dfs(int u) {
 
 int bipartite_matching_hk(int n2) {
   int n1 = static_cast<int>(adj.size());
-  match.assign(n2, -1);
+  match_left.assign(n1, -1);
+  match_right.assign(n2, -1);
   used.assign(n1, false);
   int res = 0;
   while (true) {
@@ -103,10 +104,10 @@ Matched 3 pair(s):
 using namespace std;
 
 int main() {
-  // Left vertices L0..L2, right vertices R0..R3:
-  //   L0 -- R1
-  //   L1 -- R0, R1, R2
-  //   L2 -- R2, R3
+  // Left nodes a0..a2, right nodes b0..b3:
+  //   a0 -- b1
+  //   a1 -- b0, b1, b2
+  //   a2 -- b2, b3
   int n1 = 3, n2 = 4;
   adj.assign(n1, {});
   adj[0].push_back(1);
@@ -119,8 +120,8 @@ int main() {
   assert(pairs == 3);
   cout << "Matched " << pairs << " pair(s):" << endl;
   for (int i = 0; i < n2; i++) {
-    if (match[i] != -1) {
-      cout << match[i] << " " << i << endl;
+    if (match_right[i] != -1) {
+      cout << match_right[i] << " " << i << endl;
     }
   }
   return 0;

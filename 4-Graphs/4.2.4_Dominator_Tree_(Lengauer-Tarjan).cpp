@@ -6,9 +6,9 @@ immediate dominator `idom[v]` is the closest strict dominator of `v`; these pare
 dominator tree rooted at the start. Dominator trees are useful in control-flow graphs, program
 analysis, and reachability problems with unavoidable checkpoints.
 
-Lengauer-Tarjan's algorithm numbers vertices by DFS order, computes each reachable node's
-semidominator using a disjoint-set structure with path compression, and then resolves immediate
-dominators from semidominator buckets.
+Lengauer-Tarjan's algorithm numbers nodes by DFS order, computes each reachable node's semidominator
+using a disjoint-set structure with path compression, and then resolves immediate dominators from
+semidominator buckets.
 
 - `Dominators(n)` constructs a directed graph of `n` nodes numbered $[0, `n`)$.
 - `add_edge(u, v)` adds a directed edge from `u` to `v`.
@@ -30,12 +30,12 @@ Space Complexity:
 
 class Dominators {
   std::vector<std::vector<int>> adj, pred, bucket;
-  std::vector<int> time, vertex, parent, sdom, idom_index, dsu, best;
+  std::vector<int> time, node_at_time, parent, sdom, idom_index, dsu, best;
   int timer;
 
   void dfs(int u) {
     time[u] = ++timer;
-    vertex[timer] = u;
+    node_at_time[timer] = u;
     sdom[timer] = dsu[timer] = best[timer] = timer;
     for (int v : adj[u]) {
       if (time[v] == 0) {
@@ -70,7 +70,7 @@ class Dominators {
     int n = static_cast<int>(adj.size());
     timer = 0;
     time.assign(n, 0);
-    vertex.assign(n + 1, 0);
+    node_at_time.assign(n + 1, 0);
     parent.assign(n + 1, 0);
     sdom.assign(n + 1, 0);
     idom_index.assign(n + 1, 0);
@@ -100,7 +100,7 @@ class Dominators {
       if (idom_index[i] != sdom[i]) {
         idom_index[i] = idom_index[idom_index[i]];
       }
-      idom[vertex[i]] = vertex[idom_index[i]];
+      idom[node_at_time[i]] = node_at_time[idom_index[i]];
     }
     return idom;
   }

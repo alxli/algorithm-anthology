@@ -11,11 +11,12 @@ relaxed optimum still chooses at least `target_count` objects gives the exact co
 after adding back `penalty*target_count`.
 
 - `lagrangian_maximize(target_count, lo, hi, solve)` returns the maximum original score using
-  exactly `target_count` objects. The callable `solve(penalty)` must return `(relaxed_score, count)`
-  and must tie-break toward larger `count`.
+  exactly `target_count` objects. The callable `solve(penalty)` must return `relaxed_score` and
+  `count` as a pair and must tie-break toward larger `count`. Penalties are searched over
+  the half-open range $[`lo`, `hi`)$; `lo` must choose at least `target_count` objects, while `hi`
+  must be greater than the last penalty that does so.
 
-This technique is often called the Aliens trick. The bounds `lo` and `hi` must contain a valid
-integer penalty where the relaxed count crosses `target_count`; widen them when in doubt.
+This technique is often called the Aliens trick. Widen the penalty range when in doubt.
 
 Time Complexity:
 - O(log n) calls to `solve()` per call, where $n$ is the distance between `lo` and `hi`.
@@ -32,17 +33,19 @@ Space Complexity:
 
 template<typename Solve>
 int64_t lagrangian_maximize(int target_count, int64_t lo, int64_t hi, Solve solve) {
+  // The chosen count is nonincreasing, so find the last penalty that still chooses enough objects.
   while (lo < hi) {
-    int64_t mid = lo + (hi - lo + 1) / 2;
+    int64_t mid = lo + (hi - lo) / 2;
     if (solve(mid).second >= target_count) {
-      lo = mid;
+      lo = mid + 1;
     } else {
-      hi = mid - 1;
+      hi = mid;
     }
   }
-  auto [relaxed_score, count] = solve(lo);
+  int64_t penalty = lo - 1;
+  auto [relaxed_score, count] = solve(penalty);
   assert(count >= target_count);
-  return relaxed_score + lo * target_count;
+  return relaxed_score + penalty * target_count;  // Overflow warning!
 }
 
 /*** Example Usage ***/
@@ -54,7 +57,7 @@ int main() {
     int count = 0;
     for (int64_t x : value) {
       int64_t gain = x - penalty;
-      if (gain >= 0) {
+      if (gain >= 0) {  // Include zero gains to break ties toward larger counts.
         score += gain;
         count++;
       }

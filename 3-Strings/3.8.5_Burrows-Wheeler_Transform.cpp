@@ -102,13 +102,17 @@ using namespace std;
 string escaped(const string &s) {
   string res;
   for (char c : s) {
-    if (c == '\0') {
-      res += "\\0";
-    } else {
-      res += c;
-    }
+    res += (c == '\0') ? "\\0" : string(1, c);
   }
   return res;
+}
+
+int count_runs(const string &s) {
+  int runs = 0;
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
+    runs += i == 0 || s[i] != s[i - 1];
+  }
+  return runs;
 }
 
 int main() {
@@ -116,13 +120,15 @@ int main() {
   assert(code.size() == 7);  // "banana" plus the sentinel.
   assert(escaped(code) == "annb\\0aa");
   assert(inverse_bwt(code) == "banana");
-  cout << "BWT(banana): " << escaped(code) << "\n";
-  cout << "inverse: " << inverse_bwt(code) << "\n";
+  cout << "BWT(banana): " << escaped(code) << endl;
+  cout << "inverse: " << inverse_bwt(code) << endl;
 
-  // The transform clusters equal characters: "mississippi" yields long runs.
-  string text = "mississippi";
-  string t = bwt(text);
-  assert(inverse_bwt(t) == text);
+  // BWT does not compress by itself, but can cluster characters for a subsequent run-length coder.
+  string text = "abracadabra abracadabra";
+  string transformed = bwt(text);
+  assert(inverse_bwt(transformed) == text);
+  assert(count_runs(text) == 23);
+  assert(count_runs(transformed) == 9);
 
   // Round-trips on assorted strings, including repeats and a single character.
   for (const string &s :

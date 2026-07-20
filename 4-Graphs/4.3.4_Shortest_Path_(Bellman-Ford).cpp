@@ -4,12 +4,13 @@ Given a starting node in a weighted, directed graph with possibly negative weigh
 connected node and determine the minimum distance to each such node. Optionally, output the shortest
 path to a specific destination node using the shortest-path tree from the predecessor array `pred`.
 
-Bellman-Ford relaxes every edge in the graph $n - 1$ times. Since any shortest path uses at most
-$n - 1$ edges, all distances are correct after these passes unless a negative-weight cycle keeps
-reducing them, which a further pass detects. Bellman-Ford will also detect whether the graph
-contains a negative-weight cycle reachable from the start node, in which case the affected shortest
-paths are undefined and an error will be thrown. (To detect a negative cycle anywhere in the graph,
-add a virtual source with zero-weight edges to every node and start from it.)
+Bellman-Ford relaxes every edge in the graph up to $n - 1$ times, stopping early if a pass makes no
+changes. Since any shortest path uses at most $n - 1$ edges, all distances are correct after these
+passes unless a negative-weight cycle keeps reducing them, which a further pass detects.
+Bellman-Ford will also detect whether the graph contains a negative-weight cycle reachable from the
+start node, in which case the affected shortest paths are undefined and an error will be thrown. (To
+detect a negative cycle anywhere in the graph, add a virtual source with zero-weight edges to every
+node and start from it.)
 
 - `bellman_ford(n, start)` populates `dist` and `pred` for a global, pre-populated edge list `edges`
   whose endpoints must be numbered $[0, `n`)$.
@@ -43,14 +44,17 @@ void bellman_ford(int n, int start) {
   pred.assign(n, -1);
   dist[start] = 0;
   for (int i = 0; i < n - 1; i++) {
+    bool changed = false;
     for (auto &[u, v, w] : edges) {
       // The dist[u] != INF guard avoids relaxing out of unreachable nodes: a negative edge from an
       // unreachable u would otherwise give v a bogus finite distance (INF + w < INF).
       if (dist[u] != INF && dist[v] > dist[u] + w) {
         dist[v] = dist[u] + w;
         pred[v] = u;
+        changed = true;
       }
     }
+    if (!changed) break;
   }
   // Optional: report a negative-weight cycle reachable from the start node.
   for (auto &[u, v, w] : edges) {
@@ -97,7 +101,8 @@ int main() {
   bellman_ford(3, start);
   assert(dist[dest] == 3);
   assert(pred[dest] == 1);
-  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
+  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
+       << endl;
   print_path(dest);
   return 0;
 }

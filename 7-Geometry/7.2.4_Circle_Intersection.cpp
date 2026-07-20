@@ -5,6 +5,9 @@ by nature, so this section mostly computes in `double`. The input point `p` to `
 any type with numeric `.x` and `.y` fields, and intersection point outputs are written through a
 caller-supplied point type.
 
+Circle radii are normalized to be nonnegative. `tangent()` requires a positive radius, and lines
+passed to `intersection()` must be valid.
+
 - `tangent(c, p, l1 = nullptr, l2 = nullptr)` determines the line(s) tangent to circle `c` that pass
   through point `p`, returning $-1$ if there is no tangent line because `p` is strictly inside `c`,
   $0$ if there is exactly one tangent line because `p` is on the boundary of `c` (in which case the
@@ -15,13 +18,13 @@ caller-supplied point type.
   and line `l`, returning $-1$ if there is no intersection, $0$ if the line has one intersection
   point because the line is tangent (in which case it will be stored into pointer `p` if it's not
   `nullptr`), or $1$ if there are two intersection points because the line crosses through the
-  circle (in which case they will be stored into pointers `p` and `q` if they are not `nullptr`).
+  circle (stored independently into `p` and `q` when those pointers are non-null).
 - `intersection(c1, c2, p = nullptr, q = nullptr)` determines the intersection points between two
   circles `c1` and `c2`, returning $-2$ if circle `c2` completely encloses circle `c1`, $-1$ if
   circle `c1` completely encloses circle `c2`, $0$ if the circles are completely disjoint, $1$ if
   the circles are tangent with one intersection (stored in `p` if it's not `nullptr`), $2$ if the
-  circles intersect at two points (stored in `p` and `q` if they are not `nullptr`), $3$ if the
-  circles are equal and intersect at infinite points.
+  circles intersect at two points (stored independently in `p` and `q` when those pointers are
+  non-null), or $3$ if the circles are equal and intersect at infinite points.
 - `intersection_area(c1, c2)` returns the intersection area of circles `c1` and `c2`.
 
 Time Complexity:
@@ -40,7 +43,9 @@ const double EPS = 1e-9, PI = acos(-1.0);
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) {
+    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  }
   return C(a) == C(b);
 }
 
@@ -58,11 +63,7 @@ bool LE(T a, U b) {
 struct Circle {
   double h, k, r;
 
-  Circle(double h, double k, double r) {
-    this->h = h;
-    this->k = k;
-    this->r = r;
-  }
+  Circle(double h, double k, double r) : h(h), k(k), r(fabs(r)) {}
 };
 
 struct Line {
@@ -157,9 +158,11 @@ int intersection(const Circle &c, const Line &l, OutPt *p = nullptr, OutPt *q = 
     return 0;
   }
   double k = sqrt(std::max(0.0, disc / -aabb));
-  if (p != nullptr && q != nullptr) {
+  if (p != nullptr) {
     p->x = x0 + k * l.b + c.h;
     p->y = y0 - k * l.a + c.k;
+  }
+  if (q != nullptr) {
     q->x = x0 - k * l.b + c.h;
     q->y = y0 + k * l.a + c.k;
   }
@@ -181,7 +184,8 @@ int intersection(const Circle &c1, const Circle &c2, OutPt *p = nullptr, OutPt *
   }
   double a = (c1.r * c1.r - c2.r * c2.r + d * d) / (2 * d);
   double x0 = c1.h + (d12x * a / d), y0 = c1.k + (d12y * a / d);
-  double s = sqrt(c1.r * c1.r - a * a), rx = -d12y * s / d, ry = d12x * s / d;
+  double s = sqrt(std::max(0.0, c1.r * c1.r - a * a));
+  double rx = -d12y * s / d, ry = d12x * s / d;
   if (EQ(rx, 0) && EQ(ry, 0)) {
     if (p != nullptr) {
       p->x = x0;
@@ -189,9 +193,11 @@ int intersection(const Circle &c1, const Circle &c2, OutPt *p = nullptr, OutPt *
     }
     return 1;
   }
-  if (p != nullptr && q != nullptr) {
+  if (p != nullptr) {
     p->x = x0 - rx;
     p->y = y0 - ry;
+  }
+  if (q != nullptr) {
     q->x = x0 + rx;
     q->y = y0 + ry;
   }
@@ -240,6 +246,8 @@ int main() {
   assert(1 == intersection(Circle(1, 1, 3), Line(0, 1, -1), &p, &q));
   assert(EQ(p, Point(4, 1)));
   assert(EQ(q, Point(-2, 1)));
+  assert(1 == intersection(Circle(1, 1, 3), Line(0, 1, -1), &p));
+  assert(EQ(p, Point(4, 1)));
 
   assert(-2 == intersection(Circle(1, 1, 1), Circle(0, 0, 3), &p, &q));
   assert(-1 == intersection(Circle(0, 0, 3), Circle(1, 1, 1), &p, &q));
@@ -248,6 +256,10 @@ int main() {
   assert(EQ(p, Point(0, 0)));
   assert(2 == intersection(Circle(-0.5, 0, 1), Circle(0.5, 0, 1), &p, &q));
   assert(EQ(p, Point(0, -sqrt(3) / 2)));
+  assert(EQ(q, Point(0, sqrt(3) / 2)));
+  assert(
+      2 == intersection(Circle(-0.5, 0, 1), Circle(0.5, 0, 1), static_cast<Point *>(nullptr), &q)
+  );
   assert(EQ(q, Point(0, sqrt(3) / 2)));
 
   // Each circle passes through the other's center.

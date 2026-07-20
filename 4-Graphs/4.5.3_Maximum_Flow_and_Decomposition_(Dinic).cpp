@@ -6,9 +6,9 @@ conserved at every node other than the source and sink.
 
 Dinic's algorithm proceeds in phases. Each phase runs a breadth-first search to build a level graph
 of shortest residual distances from the source, then finds a blocking flow that saturates that level
-graph using depth-first search, before repeating on the new residual graph. This variant stores
-residual edges in a flat array so callers can inspect edge flows and decompose the final flow into
-source-to-sink paths.
+graph using depth-first search before repeating on the new residual graph. Residual edges are stored
+in a flat array so callers can inspect edge flows and decompose the final flow into source-to-sink
+paths.
 
 - `Dinic<T>(n)` constructs an empty flow network with nodes numbered $[0, `n`)$.
 - `add_edge(u, v, cap)` adds a directed residual-network edge from `u` to `v` and returns its edge
@@ -37,6 +37,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <functional>
 #include <limits>
 #include <queue>
@@ -85,11 +86,11 @@ class Dinic {
       int id = adj[u][ptr[u]];
       Edge &e = edges[id];
       if (dist[e.v] == dist[u] + 1 && residual(e)) {
-        T flow = dfs(e.v, std::min(pushed, e.cap - e.flow), sink);
-        if (flow > EPS) {
-          e.flow += flow;
-          edges[id ^ 1].flow -= flow;
-          return flow;
+        T next = dfs(e.v, std::min(pushed, e.cap - e.flow), sink);
+        if (next > EPS) {
+          e.flow += next;
+          edges[id ^ 1].flow -= next;
+          return next;
         }
       }
     }
@@ -99,8 +100,7 @@ class Dinic {
  public:
   struct FlowPath {
     T flow;
-    std::vector<int> vertices;
-    std::vector<int> edges;
+    std::vector<int> nodes, edges;
   };
 
   explicit Dinic(int n) : nodes(n), flow(0), adj(n), dist(n), ptr(n) {}
@@ -124,14 +124,15 @@ class Dinic {
   }
 
   T max_flow(int source, int sink) {
+    assert(source != sink);
     while (bfs(source, sink)) {
       ptr.assign(nodes, 0);
       while (true) {
-        T flow = dfs(source, std::numeric_limits<T>::max(), sink);
-        if (flow <= EPS) {
+        T pushed = dfs(source, std::numeric_limits<T>::max(), sink);
+        if (pushed <= EPS) {
           break;
         }
-        this->flow += flow;
+        flow += pushed;
       }
     }
     return flow;
@@ -174,11 +175,11 @@ class Dinic {
           const Edge &e = edges[id];
           if (rem[id] > EPS && !seen[e.v]) {
             path.edges.push_back(id);
-            path.vertices.push_back(e.v);
+            path.nodes.push_back(e.v);
             if (find_path(e.v)) {
               return true;
             }
-            path.vertices.pop_back();
+            path.nodes.pop_back();
             path.edges.pop_back();
           }
         }
@@ -246,20 +247,20 @@ int main() {
   assert(g.edge_flow(id45) == 3);
   vector<char> cut = g.min_cut(0);
   assert(cut[0] && !cut[5]);
-  vector<Dinic<int>::FlowPath> paths = g.decompose(0, 5);
-  cout << "Flow decomposition:\n";
+  auto paths = g.decompose(0, 5);
+  cout << "Flow decomposition:" << endl;
   int total = 0;
   for (const auto &path : paths) {
     cout << path.flow << ": ";
-    for (int i = 0; i < static_cast<int>(path.vertices.size()); i++) {
+    for (int i = 0; i < static_cast<int>(path.nodes.size()); i++) {
       if (i > 0) {
         cout << " -> ";
       }
-      cout << path.vertices[i];
+      cout << path.nodes[i];
     }
     cout << endl;
-    assert(path.vertices.front() == 0 && path.vertices.back() == 5);
-    assert(path.edges.size() + 1 == path.vertices.size());
+    assert(path.nodes.front() == 0 && path.nodes.back() == 5);
+    assert(path.edges.size() + 1 == path.nodes.size());
     total += path.flow;
   }
   assert(total == 5);

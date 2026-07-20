@@ -4,7 +4,8 @@ Given points in 3D, compute the triangular faces of their convex hull with an in
 Start with a tetrahedron, delete every visible face for each new point, and stitch the horizon edges
 to that point. Returned faces are oriented outward.
 
-- `convex_hull_3d(points)` returns a list of `Face{a, b, c}` index triples into `points`.
+- `convex_hull_3d(p)` returns triangular faces as `Face{a, b, c}` triples, where each face has
+  vertices `p[a]`, `p[b]`, and `p[c]`.
 
 Preconditions: at least four points, and no four points coplanar. For coplanar or highly degenerate
 inputs, perturbing points slightly or using a more robust library is recommended.
@@ -30,6 +31,7 @@ struct Point3D {
   Point3D operator-(const Point3D &p) const { return {x - p.x, y - p.y, z - p.z}; }
   Point3D operator*(double k) const { return {x * k, y * k, z * k}; }
   double dot(const Point3D &p) const { return x * p.x + y * p.y + z * p.z; }
+
   Point3D cross(const Point3D &p) const {
     return {y * p.z - z * p.y, z * p.x - x * p.z, x * p.y - y * p.x};
   }

@@ -19,8 +19,8 @@ adding new edges or increasing capacities; call `clear_flow()` first to recomput
 capacity type `T` should be signed, since reverse residual edges store negative flow.
 
 Time Complexity:
-- O(min(n*m^2, m*f)) per call to `max_flow()`, where $n$ is the number of nodes, $m$ is the number
-  of edges, and $f$ is the maximum flow.
+- O(n*m^2) per call to `max_flow()`, where $n$ is the number of nodes and $m$ is the number of
+  edges. For integer capacities, this is also O(m*f), where $f$ is the maximum flow.
 - O(n + m) per call to `min_cut()`.
 
 Space Complexity:
@@ -30,6 +30,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <limits>
 #include <queue>
 #include <vector>
@@ -66,6 +67,7 @@ class EdmondsKarp {
   }
 
   T max_flow(int source, int sink) {
+    assert(source != sink);
     while (true) {
       std::vector<Edge *> pred(nodes, nullptr);
       std::queue<int> q;
@@ -83,15 +85,15 @@ class EdmondsKarp {
       if (pred[sink] == nullptr) {
         break;
       }
-      T flow = std::numeric_limits<T>::max();
+      T aug = std::numeric_limits<T>::max();
       for (int u = sink; u != source; u = pred[u]->u) {
-        flow = std::min(flow, pred[u]->cap - pred[u]->flow);
+        aug = std::min(aug, pred[u]->cap - pred[u]->flow);
       }
       for (int u = sink; u != source; u = pred[u]->u) {
-        pred[u]->flow += flow;
-        adj[pred[u]->v][pred[u]->rev].flow -= flow;
+        pred[u]->flow += aug;
+        adj[pred[u]->v][pred[u]->rev].flow -= aug;
       }
-      this->flow += flow;
+      flow += aug;
     }
     return flow;
   }
@@ -122,8 +124,8 @@ Min-cut source side: 0 1 2
 
 ***/
 
-#include <cassert>
 #include <iostream>
+using namespace std;
 
 int main() {
   // Example graph after max flow, with each edge labeled flow/capacity:
@@ -148,16 +150,16 @@ int main() {
   int flow = g.max_flow(0, 5);
   assert(flow == 5);
   assert(g.max_flow(0, 5) == 5);
-  std::vector<char> cut = g.min_cut(0);
+  vector<char> cut = g.min_cut(0);
   assert(cut[0] && !cut[5]);
-  std::cout << "Maximum flow: " << flow << "\n";
-  std::cout << "Min-cut source side:";
+  cout << "Maximum flow: " << flow << endl;
+  cout << "Min-cut source side:";
   for (int u = 0; u < static_cast<int>(cut.size()); u++) {
     if (cut[u]) {
-      std::cout << " " << u;
+      cout << " " << u;
     }
   }
-  std::cout << "\n";
+  cout << endl;
   g.clear_flow();
   assert(g.max_flow(0, 5) == 5);
   return 0;

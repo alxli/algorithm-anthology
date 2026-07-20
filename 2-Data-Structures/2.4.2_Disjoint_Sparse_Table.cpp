@@ -16,7 +16,8 @@ center combined with the stored prefix fold beginning at the center.
 The query operation is defined by an associative function `combine(a, b)`. The default code below
 returns the "min" of the range; for "sum", `combine(a, b)` should return `a + b`.
 
-- `DisjointSparseTable<T>(lo, hi)` builds the table from two random-access iterators.
+- `DisjointSparseTable<T>(lo, hi)` builds the table over the half-open iterator range
+  $[`lo`, `hi`)$.
 - `size()` returns the size of the array.
 - `query(lo, hi)` returns `combine()` applied to all indices in $[`lo`, `hi`]$.
 
@@ -47,6 +48,9 @@ class DisjointSparseTable {
   template<typename It>
   DisjointSparseTable(It lo, It hi) : a(lo, hi) {
     len = static_cast<int>(a.size());
+    if (len == 0) {
+      return;
+    }
     int levels = 1;
     while ((1 << levels) < len) {
       levels++;
@@ -96,5 +100,9 @@ int main() {
   assert(t.query(1, 3) == -2);
   assert(t.query(4, 4) == 10);
   assert(t.query(2, 4) == 1);
+
+  vector<int> empty;
+  DisjointSparseTable<int> empty_table(empty.begin(), empty.end());
+  assert(empty_table.size() == 0);
   return 0;
 }

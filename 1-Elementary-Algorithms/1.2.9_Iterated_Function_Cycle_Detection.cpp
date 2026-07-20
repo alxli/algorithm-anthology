@@ -1,14 +1,14 @@
 /*
 
-Given a function $f$ mapping a finite set to itself and a starting value $x_0$, return the position
-and length of the cycle reached by repeatedly applying $f$. Formally, the sequence
+Given a function $f$ mapping a finite set to itself and a starting value $x_0$, return the entry
+value, position, and length of the cycle reached by repeatedly applying $f$. Formally, the sequence
   $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$
 must eventually repeat some value. If $x_i = x_j$ for $i < j$, then the sequence from $x_i$ to
-$x_{j - 1}$ repeats forever. This is useful for detecting cycles in functional graphs, pseudo-random
-generators, Pollard rho style algorithms, degenerate linked lists, and arrays where each index
-points to the next index. For example, if `nums` has size $n + 1$ and all values are in $[1, n]$,
-then $f(i)$ = `nums[i]` forms a functional graph; the duplicate value is the entry point of the
-cycle reached from $0$.
+$x_{j - 1}$ repeats forever. This is useful for detecting cycles in functional graphs (see 4.2.9),
+pseudo-random generators, Pollard rho style algorithms, degenerate linked lists, and arrays where
+each index points to the next index. For example, if an array `nums` of size $n + 1$ contains only
+values in $[1, n]$, with exactly one value occurring more than once, then $f(i)$ = `nums[i]` forms a
+functional graph; the duplicate value is the entry point of the cycle reached from $0$.
 
 Floyd's cycle-finding algorithm, a.k.a. the "tortoise and the hare algorithm", is a space-efficient
 default choice: it moves two pointers through the sequence at different speeds, finds a meeting
@@ -26,8 +26,8 @@ the cycle entry after $m$ steps. Brent first determines $n$, then advances one p
 moving both together from that fixed separation likewise makes them meet at the entry.
 
 - `find_cycle_floyd(f, x0)` repeatedly applies `f` starting from `x0` and returns the reached cycle
-  as a pair $(`start`, `length`)$, where `start` is the smallest index $i$ such that $x_i$ is in the
-  cycle, and `length` is the number of distinct values in the cycle.
+  as a tuple $(`entry`, `start`, `length`)$, where `entry` is the first cycle value, `start` is its
+  index in the sequence, and `length` is the number of distinct values in the cycle.
 - `find_cycle_brent(f, x0)` does the same with fewer calls to `f` in many cases.
 
 Time Complexity:
@@ -38,10 +38,10 @@ Space Complexity:
 
 */
 
-#include <utility>
+#include <tuple>
 
 template<typename Fn, typename T>
-std::pair<int, int> find_cycle_floyd(Fn f, T x0) {
+std::tuple<T, int, int> find_cycle_floyd(Fn f, T x0) {
   // Find a meeting point inside the cycle.
   T tortoise = f(x0), hare = f(f(x0));
   while (tortoise != hare) {
@@ -63,11 +63,11 @@ std::pair<int, int> find_cycle_floyd(Fn f, T x0) {
     hare = f(hare);
     length++;
   }
-  return {start, length};
+  return {tortoise, start, length};
 }
 
 template<typename Fn, typename T>
-std::pair<int, int> find_cycle_brent(Fn f, T x0) {
+std::tuple<T, int, int> find_cycle_brent(Fn f, T x0) {
   // Find the cycle length by doubling the search block.
   int power = 1, length = 1;
   T tortoise = x0, hare = f(x0);
@@ -93,7 +93,7 @@ std::pair<int, int> find_cycle_brent(Fn f, T x0) {
     hare = f(hare);
     start++;
   }
-  return {start, length};
+  return {tortoise, start, length};
 }
 
 /*** Example Usage ***/
@@ -129,22 +129,17 @@ void verify(int x0, int start, int length) {
 // other values in [1, n] are present at most once), find the duplicate without modifying the array.
 // Interpret each value as a pointer to the next index; the duplicate is the cycle entry.
 int find_duplicate_integer(const vector<int> &nums) {
-  auto [start, _] = find_cycle_floyd([&](int i) { return nums[i]; }, 0);
-  int res = 0;
-  for (int i = 0; i < start; i++) {
-    res = nums[res];
-  }
-  return res;
+  return get<0>(find_cycle_floyd([&](int i) { return nums[i]; }, 0));
 }
 
 int main() {
   int x0 = 0;
-  auto [floyd_start, floyd_len] = find_cycle_floyd(f, x0);
+  auto [floyd_entry, floyd_start, floyd_len] = find_cycle_floyd(f, x0);
   assert(floyd_start == 4 && floyd_len == 2);
   verify(x0, floyd_start, floyd_len);
 
-  auto [brent_start, brent_len] = find_cycle_brent(f, x0);
-  assert(brent_start == floyd_start && brent_len == floyd_len);
+  auto [brent_entry, brent_start, brent_len] = find_cycle_brent(f, x0);
+  assert(brent_entry == floyd_entry && brent_start == floyd_start && brent_len == floyd_len);
 
   assert(find_duplicate_integer({1, 3, 4, 2, 2}) == 2);
   assert(find_duplicate_integer({3, 1, 3, 4, 2}) == 3);

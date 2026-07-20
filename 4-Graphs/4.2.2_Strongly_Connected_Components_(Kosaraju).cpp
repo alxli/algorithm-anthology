@@ -1,17 +1,18 @@
 /*
 
 Given a directed graph, determine the strongly connected components (SCCs) using the Kosaraju-Sharir
-algorithm. A strongly connected component is a maximal set of vertices where every vertex can reach
-every other vertex. Condensing each SCC into one node produces a directed acyclic graph. The
-algorithm runs two passes of depth-first search: the first records the order in which nodes finish,
-and the second explores the transposed graph in reverse finish order, with each search collecting
-exactly one component.
+algorithm. A strongly connected component is a maximal set of nodes where every node can reach every
+other node. Condensing each SCC into one node produces a directed acyclic graph. The algorithm runs
+two passes of depth-first search: the first records the order in which nodes finish, and the second
+explores the transposed graph in reverse finish order, with each search collecting exactly one
+component.
 
 - `KosarajuSCC(n = 0)` constructs a directed graph of `n` nodes numbered $[0, `n`)$.
 - `add_edge(u, v)` adds the directed edge from `u` to `v`.
-- `build_scc()` populates `scc` with the strongly connected components and `component[v]` with the
-  component ID containing vertex `v`. Component IDs are in topological order: for every edge from
-  component $a$ to a different component $b$, $a < b$.
+- `build_scc()` computes the strongly connected components.
+- `components()` returns the strongly connected components from the last `build_scc()` call.
+- `component_id(v)` returns the component ID containing node `v`. Component IDs are in topological
+  order: for every edge from component $a$ to a different component $b$, $a < b$.
 
 Time Complexity:
 - O(max(n, m)) per call to `build_scc()`, where $n$ is the number of nodes and $m$ is the number of
@@ -26,17 +27,10 @@ Space Complexity:
 #include <algorithm>
 #include <vector>
 
-struct KosarajuSCC {
+class KosarajuSCC {
   std::vector<std::vector<int>> adj, rev, scc;
   std::vector<int> component;
   std::vector<char> visited;
-
-  KosarajuSCC(int n = 0) : adj(n), rev(n) {}
-
-  void add_edge(int u, int v) {
-    adj[u].push_back(v);
-    rev[v].push_back(u);
-  }
 
   void dfs(const std::vector<std::vector<int>> &g, std::vector<int> &res, int u) {
     visited[u] = true;
@@ -59,6 +53,14 @@ struct KosarajuSCC {
     }
   }
 
+ public:
+  KosarajuSCC(int n = 0) : adj(n), rev(n) {}
+
+  void add_edge(int u, int v) {
+    adj[u].push_back(v);
+    rev[v].push_back(u);
+  }
+
   void build_scc() {
     int n = static_cast<int>(adj.size());
     visited.assign(n, false);
@@ -76,11 +78,14 @@ struct KosarajuSCC {
       if (visited[u]) {
         continue;
       }
-      std::vector<int> component_vertices;
-      dfs_component(u, static_cast<int>(scc.size()), component_vertices);
-      scc.push_back(component_vertices);
+      std::vector<int> component_nodes;
+      dfs_component(u, static_cast<int>(scc.size()), component_nodes);
+      scc.push_back(component_nodes);
     }
   }
+
+  const std::vector<std::vector<int>> &components() const { return scc; }
+  int component_id(int v) const { return component[v]; }
 };
 
 /*** Example Usage and Output:
@@ -122,13 +127,13 @@ int main() {
   // SCC condensation DAG:
   // {0,1,4} -> {2,3,7} -> {5,6}
   //     \-------------------^
-  assert(g.scc.size() == 3);
-  assert(g.component[0] == g.component[1] && g.component[1] == g.component[4]);
-  assert(g.component[2] == g.component[3] && g.component[3] == g.component[7]);
-  assert(g.component[5] == g.component[6]);
-  assert(g.component[0] != g.component[2] && g.component[2] != g.component[5]);
+  assert(g.components().size() == 3);
+  assert(g.component_id(0) == g.component_id(1) && g.component_id(1) == g.component_id(4));
+  assert(g.component_id(2) == g.component_id(3) && g.component_id(3) == g.component_id(7));
+  assert(g.component_id(5) == g.component_id(6));
+  assert(g.component_id(0) != g.component_id(2) && g.component_id(2) != g.component_id(5));
   cout << "Components:" << endl;
-  for (auto &component : g.scc) {
+  for (const auto &component : g.components()) {
     for (int v : component) {
       cout << v << " ";
     }

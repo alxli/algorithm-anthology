@@ -14,15 +14,14 @@ search spaces such as real number intervals.
   $[`lo`, `hi`)$ for which the predicate `pred(k)` tests true. If `pred(k)` tests false for the
   entire input range, then `hi` is returned. The caller must ensure `pred` is monotonic on the input
   range, i.e. returning all false for some (possibly empty) prefix, followed by all true in some
-  (possibly empty) suffix. E.g., patterns `"01"`, `"00"`, and `"11"` are allowed, but `"10"` is
-  disallowed.
+  (possibly empty) suffix. E.g., patterns `01`, `00`, and `11` are allowed, but `10` is disallowed.
 - `binary_search_last_true(lo, hi, pred)` takes signed integer boundaries for the search space
   $[`lo`, `hi`)$ (i.e. including `lo`, but excluding `hi`) and returns the largest integer `k` in
   $[`lo`, `hi`)$ for which the predicate `pred(k)` tests true. If `pred(k)` tests false for the
-  entire input range, then `hi` is returned. The caller must ensure `pred` is monotonic on the input
-  range, i.e. returning all true for some (possibly empty) prefix, followed by all false in some
-  (possibly empty) suffix. E.g., patterns `"10"`, `"00"`, and `"11"` are allowed, but `"01"` is
-  disallowed.
+  entire input range, then the original `lo - 1` is returned, so `lo` must exceed the minimum
+  representable value. The caller must ensure `pred` is monotonic on the input range, i.e. returning
+  all true for some (possibly empty) prefix, followed by all false in some (possibly empty) suffix.
+  E.g., patterns `10`, `00`, and `11` are allowed, but `01` is disallowed.
 - `fbinary_search(lo, hi, pred)` is the equivalent of `binary_search_first_true()` on floating point
   predicates. Since any interval of real numbers is dense, the exact target cannot be found due to
   floating point error. Instead, a value that is very close to the border between false and true is
@@ -61,7 +60,6 @@ Int binary_search_first_true(Int lo, Int hi, Pred pred) {  // 000[1]11
 
 template<typename Int, typename Pred>
 Int binary_search_last_true(Int lo, Int hi, Pred pred) {  // 11[1]000
-  Int begin = lo, end = hi;
   while (lo < hi) {
     Int mid = lo + (hi - lo) / 2;
     if (pred(mid)) {
@@ -70,7 +68,7 @@ Int binary_search_last_true(Int lo, Int hi, Pred pred) {  // 11[1]000
       hi = mid;
     }
   }
-  return lo == begin ? end : lo - 1;  // hi if all false
+  return lo - 1;
 }
 
 template<typename Pred>
@@ -100,8 +98,8 @@ int main() {
 
   assert(binary_search_last_true(0, 7, [](int x) { return x <= 5; }) == 5);
   assert(binary_search_last_true(0, 7, [](int x) { return true; }) == 6);
-  assert(binary_search_last_true(0, 7, [](int x) { return false; }) == 7);
-  assert(binary_search_last_true(4, 4, [](int x) { return x <= 4; }) == 4);
+  assert(binary_search_last_true(0, 7, [](int x) { return false; }) == -1);
+  assert(binary_search_last_true(4, 4, [](int x) { return x <= 4; }) == 3);
 
   double res = fbinary_search(-10.0, 10.0, [](double x) { return x >= 1.2345; });
   assert(fabs(res - 1.2345) < 1e-15);

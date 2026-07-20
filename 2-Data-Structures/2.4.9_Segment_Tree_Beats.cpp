@@ -23,8 +23,8 @@ them, so each operation set must be hand-written and its amortized bound argued 
 
 - `SegTreeBeats<T>(n, v = T())` constructs an array of size `n`, indices $[0, `n`)$, all equal to
   `v`.
-- `SegTreeBeats<T>(lo, hi)` constructs an array from two random-access iterators as a range
-  $[`lo`, `hi`)$, initialized to the elements of the range in the same order.
+- `SegTreeBeats<T>(lo, hi)` constructs an array from the half-open random-access iterator range
+  $[`lo`, `hi`)$.
 - `size()` returns the size of the array.
 - `chmin(lo, hi, t)` replaces `a[i]` with `min(a[i], t)` for every `i` in $[`lo`, `hi`]$.
 - `query_sum(lo, hi)` returns the sum of `a[i]` over `i` in $[`lo`, `hi`]$.
@@ -78,7 +78,7 @@ class SegTreeBeats {
   // Lower the node's maximum to t. Valid only when max2 < t < max1, so exactly the cnt entries
   // equal to max1 change and the second maximum is left untouched.
   void apply_chmin(int i, T t) {
-    sum[i] -= (max1[i] - t) * static_cast<T>(cnt[i]);
+    sum[i] -= (max1[i] - t) * static_cast<T>(cnt[i]);  // Overflow warning.
     max1[i] = t;
   }
 
@@ -108,7 +108,7 @@ class SegTreeBeats {
     if (thi < lo || hi < tlo || max1[i] <= t) {
       return;  // Prune: outside the range, or every entry is already at most t.
     }
-    if (tlo <= lo && hi <= thi && max2[i] < t) {
+    if (tlo <= lo && hi <= thi && (lo == hi || max2[i] < t)) {
       apply_chmin(i, t);  // Break: only the maximal entries are affected.
       return;
     }
@@ -201,6 +201,10 @@ int main() {
   t.chmin(0, 4, 2);  // {2, 2, 2, 2, 1}.
   assert(t.query_sum(0, 4) == 9);
   assert(t.query_max(0, 3) == 2);
+
+  SegTreeBeats<int> lowest(1, numeric_limits<int>::lowest() + 1);
+  lowest.chmin(0, 0, numeric_limits<int>::lowest());
+  assert(lowest.at(0) == numeric_limits<int>::lowest());
 
   // Cross-check against a brute-force array over random clamps and queries.
   vector<int64_t> b{7, 1, 4, 9, 2, 6, 5, 8, 3, 0};

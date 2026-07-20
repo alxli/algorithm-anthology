@@ -1,33 +1,47 @@
 /*
 
-Builds the min Cartesian tree of an array in linear time. A Cartesian tree is a binary tree whose
+Build the min Cartesian tree of an array in linear time. A Cartesian tree is a binary tree whose
 inorder traversal is the original array order and whose heap property is determined by array values.
-For a min Cartesian tree, each parent has value less than or equal to its children.
+For a min Cartesian tree, each parent has value less than or equal to its children. Each subtree
+therefore represents a contiguous array interval whose minimum is at the subtree root. Equal values
+are broken by position, so the earlier minimum becomes an ancestor of the later one.
 
-Cartesian trees connect arrays, stacks, range minimum queries, treaps, and largest rectangle style
-problems. Equal values are broken by position, so earlier equal values become ancestors of later
-equal values.
+This gives a direct connection to range minimum queries: the minimum index in $[`lo`, `hi`]$ is the
+lowest common ancestor of indices `lo` and `hi`. The included search finds that node without extra
+LCA preprocessing. Starting at the root, it moves right while the current index is left of the range
+and left while it is right of the range; the first index inside the range is its minimum. This takes
+O(h) time for tree height $h$, which can be O(n) for a skewed tree. For many worst-case-fast
+queries, preprocess the tree for LCA or use the sparse table in 2.4.1 instead. The explicit tree is
+also useful for interval divide-and-conquer and tree DP; the largest-rectangle application is
+implemented directly with a monotone stack in 1.2.4.
 
 - `CartesianTree(a)` constructs the tree for array `a`.
-- `root[]` stores the root index.
-- `parent[]`, `left[]`, and `right[]` store neighboring node indices, or $-1$ if absent.
+- `size()` returns the size of the array.
+- `empty()` returns whether the array is empty.
+- `root()` returns the root index, or $-1$ if the array is empty.
+- `parent(i)`, `left(i)`, and `right(i)` return neighboring node indices, or $-1$ if absent.
+- `range_min_index(lo, hi)` returns the index of the minimum value in $[`lo`, `hi`]$.
 
 Time Complexity:
-- O(n) construction time, where $n$ is the array size.
+- O(n) per call to the constructor, where $n$ is the array size.
+- O(1) per call to `size()`, `empty()`, `root()`, `parent()`, `left()`, and `right()`.
+- O(h) per call to `range_min_index()`, where $h$ is the tree height and may be O(n).
 
 Space Complexity:
 - O(n) for tree arrays and the monotone stack.
 
 */
 
+#include <cassert>
 #include <vector>
 
-struct CartesianTree {
-  int root;
-  std::vector<int> parent, left, right;
+class CartesianTree {
+  int root_;
+  std::vector<int> parent_, left_, right_;
 
+ public:
   explicit CartesianTree(const std::vector<int> &a)
-      : root(-1), parent(a.size(), -1), left(a.size(), -1), right(a.size(), -1) {
+      : root_(-1), parent_(a.size(), -1), left_(a.size(), -1), right_(a.size(), -1) {
     std::vector<int> st;
     for (int i = 0, n = static_cast<int>(a.size()); i < n; i++) {
       int last = -1;
@@ -36,44 +50,64 @@ struct CartesianTree {
         st.pop_back();
       }
       if (!st.empty()) {
-        right[st.back()] = i;
-        parent[i] = st.back();
+        right_[st.back()] = i;
+        parent_[i] = st.back();
       }
       if (last != -1) {
-        left[i] = last;
-        parent[last] = i;
+        left_[i] = last;
+        parent_[last] = i;
       }
       st.push_back(i);
     }
-    root = st.empty() ? -1 : st[0];
+    root_ = st.empty() ? -1 : st[0];
+  }
+
+  int size() const { return static_cast<int>(parent_.size()); }
+  bool empty() const { return parent_.empty(); }
+  int root() const { return root_; }
+
+  int parent(int i) const {
+    assert(0 <= i && i < size());
+    return parent_[i];
+  }
+
+  int left(int i) const {
+    assert(0 <= i && i < size());
+    return left_[i];
+  }
+
+  int right(int i) const {
+    assert(0 <= i && i < size());
+    return right_[i];
+  }
+
+  int range_min_index(int lo, int hi) const {
+    assert(0 <= lo && lo <= hi && hi < size());
+    int i = root_;
+    while (i < lo || hi < i) {
+      i = i < lo ? right_[i] : left_[i];
+    }
+    return i;
   }
 };
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
-
-void inorder(const CartesianTree &t, int u, vector<int> *order) {
-  if (u == -1) {
-    return;
-  }
-  inorder(t, t.left[u], order);
-  order->push_back(u);
-  inorder(t, t.right[u], order);
-}
 
 int main() {
   vector<int> a{3, 2, 6, 1, 9};
   CartesianTree t(a);
-  // The minimum value is a[3] = 1, so index 3 is the min Cartesian tree root.
-  assert(t.root == 3);
-  assert(t.parent[1] == 3);
-  assert(t.parent[4] == 3);
+  assert(t.size() == 5 && !t.empty());
+  assert(t.root() == 3);  // The global minimum is a[3] = 1.
+  assert(t.parent(1) == 3);
+  assert(t.left(3) == 1);
+  assert(t.right(3) == 4);
+  assert(t.range_min_index(0, 2) == 1);  // min({3, 2, 6}) is a[1].
+  assert(t.range_min_index(2, 4) == 3);  // min({6, 1, 9}) is a[3].
 
-  vector<int> order;
-  inorder(t, t.root, &order);
-  // Cartesian trees preserve the original array order under inorder traversal.
-  assert((order == vector<int>{0, 1, 2, 3, 4}));
+  vector<int> equal{4, 2, 2, 3};
+  CartesianTree equal_tree(equal);
+  assert(equal_tree.range_min_index(1, 3) == 1);  // Earlier equal minima win ties.
   return 0;
 }

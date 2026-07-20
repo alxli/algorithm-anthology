@@ -2,11 +2,12 @@
 
 Maintain a tree or forest with values associated with either edges or nodes, while supporting both
 dynamic queries and dynamic updates of all values on a given path between two nodes in the tree.
-Heavy-light decomposition partitions the nodes of the tree into disjoint paths where all nodes have
-degree two, except the endpoints of a path which has degree one. A node stays on its parent's path
-when its subtree contains at least half of its parent's nodes, so walking from any node to the root
-crosses O(log n) different paths. Each path stores its values in its own lazy segment tree,
-decomposing any path query or update into O(log n) contiguous range operations.
+Heavy-light decomposition chooses at most one heavy child for each node and partitions the tree into
+maximal paths of heavy edges. This implementation keeps a child on its parent's path when its
+subtree contains at least half of its parent's nodes. Every remaining edge is light and at least
+halves the remaining subtree size, so walking from any node to the root crosses O(log n) heavy
+paths. Each path stores its values in its own lazy segment tree, decomposing any path query or
+update into O(log n) contiguous range operations.
 
 The query operation is defined by an associative `combine()` function. The default code below
 assumes a numerical tree type, defining queries for the "min" of the target range. Another possible
@@ -29,13 +30,13 @@ increment updates, `apply_delta(v, d, len)` would return `v + d` for min/max que
   adjacency list must consist of only the integers $[0, `n`)$, where `n` is `adj.size()`. No
   duplicate edges should exist. Set `VALUES_ON_EDGES` to false to store values on nodes instead.
 - `query(u, v)` returns the result of `combine()` applied to all values on the path from node `u` to
-  node `v`. The nodes must be in the same tree.
-- `update(u, v, d)` modifies all values on the path from node `u` to node `v` by respectively
-  applying the delta `d`. The nodes must be in the same tree.
+  node `v`. The nodes must be in the same tree and, when values are on edges, must be distinct.
+- `update(u, v, d)` modifies all values on the path from node `u` to node `v` by applying the delta
+  `d`. The nodes must be in the same tree.
 - `for_each_path(u, v, include_lca, f)` decomposes the path from node `u` to node `v` into heavy
   path ranges and calls `f(path, lo, hi, up)` on each range, where `up` says the path segment is
   traversed upward from `u` toward the LCA. If `VALUES_ON_EDGES = true`, pass `include_lca = false`
-  to skip the LCA's vertex slot. Returns false if `u` and `v` are in different trees.
+  to skip the LCA's node slot. Returns false if `u` and `v` are in different trees.
 
 Time Complexity:
 - O(n) per call to the constructor, where $n$ is the number of nodes.
@@ -45,7 +46,7 @@ Time Complexity:
 Space Complexity:
 - O(n) for storage of the decomposition.
 - O(n) auxiliary stack space for the constructor.
-- O(1) auxiliary for `query()` and `update()`.
+- O(log n) auxiliary for `for_each_path()`, `query()`, and `update()`.
 
 */
 
@@ -210,6 +211,8 @@ class HeavyLight {
 
   template<typename Fn>
   bool for_each_path(int u, int v, bool include_lca, Fn f) {
+    assert(0 <= u && u < static_cast<int>(root.size()));
+    assert(0 <= v && v < static_cast<int>(root.size()));
     if (root[u] != root[v]) {
       return false;
     }
@@ -237,6 +240,8 @@ class HeavyLight {
   }
 
   T query(int u, int v) {
+    assert(0 <= u && u < static_cast<int>(root.size()));
+    assert(0 <= v && v < static_cast<int>(root.size()));
     assert(root[u] == root[v]);
     assert(!VALUES_ON_EDGES || u != v);
     bool found = false;
@@ -252,6 +257,8 @@ class HeavyLight {
   }
 
   void update(int u, int v, const T &d) {
+    assert(0 <= u && u < static_cast<int>(root.size()));
+    assert(0 <= v && v < static_cast<int>(root.size()));
     assert(root[u] == root[v]);
     if (VALUES_ON_EDGES && u == v) {
       return;

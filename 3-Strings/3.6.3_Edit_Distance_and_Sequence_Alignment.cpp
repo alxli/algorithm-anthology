@@ -11,6 +11,7 @@ characters together, leave a gap in the first string, or leave a gap in the seco
 the filled table backward reconstructs one minimum-cost alignment. This is the Needleman-Wunsch
 sequence-alignment recurrence. Hirschberg's algorithm uses the same recurrence with only one DP row
 at a time, splitting the problem where an optimal alignment crosses the longer string's midpoint.
+Both `gap_cost` and `sub_cost` must be nonnegative.
 
 - `edit_distance(s1, s2)` returns the Levenshtein edit distance between strings `s1` and `s2`.
 - `align_sequences(s1, s2, gap_cost, sub_cost)` returns a pair of aligned strings for strings `s1`
@@ -109,12 +110,20 @@ std::pair<string, string> align_sequences(
 
 template<typename It>
 std::vector<int> row_cost(It lo1, It hi1, It lo2, It hi2, int gap_cost, int sub_cost) {
-  std::vector<int> res(std::distance(lo2, hi2) + 1), prev(res);
+  std::vector<int> res(std::distance(lo2, hi2) + 1);
+  for (int i = 0; i < static_cast<int>(res.size()); i++) {
+    res[i] = i * gap_cost;
+  }
+  std::vector<int> prev(res);
+  int row = 0;
   for (It it1 = lo1; it1 != hi1; ++it1) {
     res.swap(prev);
+    res[0] = ++row * gap_cost;
     int i = 0;
     for (It it2 = lo2; it2 != hi2; ++it2) {
-      res[i + 1] = (*it1 == *it2) ? prev[i] : std::min(prev[i] + sub_cost, res[i] + gap_cost);
+      res[i + 1] = (*it1 == *it2)
+                       ? prev[i]
+                       : std::min({prev[i] + sub_cost, prev[i + 1] + gap_cost, res[i] + gap_cost});
       i++;
     }
   }
@@ -134,13 +143,13 @@ void hirschberg_rec(
   }
   if (lo1 + 1 == hi1) {
     It pos = std::find(lo2, hi2, *lo1);
-    bool insert = (pos == hi2) && (gap_cost * (hi2 - lo2 + 1) < sub_cost);
-    if (lo2 == hi2 || insert) {
+    bool use_two_gaps = (pos == hi2) && (2 * gap_cost < sub_cost);
+    if (lo2 == hi2 || use_two_gaps) {
       *res1 += *lo1;
       *res2 += '_';
     }
     for (It it2 = lo2; it2 != hi2; ++it2) {
-      *res1 += (pos == it2 || (!insert && it2 == lo2)) ? *lo1 : '_';
+      *res1 += (pos == it2 || (pos == hi2 && !use_two_gaps && it2 == lo2)) ? *lo1 : '_';
       *res2 += *it2;
     }
     return;
@@ -166,7 +175,8 @@ std::pair<string, string> hirschberg_align_sequences(
     const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1
 ) {
   if (s1.size() < s2.size()) {
-    return hirschberg_align_sequences(s2, s1, gap_cost, sub_cost);
+    auto res = hirschberg_align_sequences(s2, s1, gap_cost, sub_cost);
+    return {res.second, res.first};
   }
   string res1, res2;
   hirschberg_rec(s1.begin(), s1.end(), s2.begin(), s2.end(), &res1, &res2, gap_cost, sub_cost);
@@ -191,6 +201,15 @@ int main() {
   auto alignment = align_sequences("AGGGCT", "AGGCA", 2, 3);
   assert(alignment == (std::pair<string, string>{"AGGGCT", "A_GGCA"}));
   assert(hirschberg_align_sequences("AGGGCT", "AGGCA", 2, 3) == alignment);
-  std::cout << "Aligned strings:\n" << alignment.first << "\n" << alignment.second << "\n";
+
+  assert((hirschberg_align_sequences("ab", "zabz") == std::pair<string, string>{"_ab_", "zabz"}));
+  assert(
+      (hirschberg_align_sequences("a", "bbbbbbbbbb", 1, 5) ==
+       std::pair<string, string>{"__________a", "bbbbbbbbbb_"})
+  );
+  assert((hirschberg_align_sequences("aa", "ba", 1, 2) == std::pair<string, string>{"a_a", "_ba"}));
+
+  std::cout << "Aligned strings:" << std::endl;
+  std::cout << alignment.first << std::endl << alignment.second << std::endl;
   return 0;
 }

@@ -6,8 +6,8 @@ centers; internal tangents cross between the circles. A point can be treated as 
 circle, so this also covers tangents from a point to a circle.
 
 - `circle_tangents(c1, r1, c2, r2, internal = false)` returns $0$, $1$, or $2$ tangent point pairs.
-  Each pair `{p, q}` means the tangent line touches the first circle at `p` and the second circle at
-  `q`. Set `internal = true` to get internal tangents; otherwise external tangents are returned.
+  Each pair $(p, q)$ means the tangent line touches the first circle at $p$ and the second circle at
+  $q$. Set `internal = true` to get internal tangents; otherwise external tangents are returned.
 - `all_circle_tangents(c1, r1, c2, r2)` returns all external and internal tangents.
 
 If the two circles are identical, there are infinitely many tangents and the functions return an
@@ -32,7 +32,9 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) {
+    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  }
   return C(a) == C(b);
 }
 

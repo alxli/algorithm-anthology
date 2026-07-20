@@ -2,7 +2,7 @@
 
 Solves normal-play nim and related impartial games where each position is the disjoint sum of
 independent piles. In normal play, the player who makes the last move wins. A nim position is losing
-exactly when the XOR of all pile sizes is 0.
+exactly when the XOR of all pile sizes is $0$.
 
 This is the base case of the Sprague-Grundy theorem: every finite impartial game position is
 equivalent to a Nim pile of size equal to its Grundy number, and sums of games combine by XOR.
@@ -60,7 +60,7 @@ int main() {
   assert(first_player_wins(piles));
   auto [pile_idx, new_size] = winning_move(piles);
   piles[pile_idx] = new_size;
-  // A winning move always leaves xor 0 for the opponent.
+  // A winning move always leaves XOR 0 for the opponent.
   assert(nim_sum(piles) == 0);
 
   vector<int> losing{1, 2, 3};

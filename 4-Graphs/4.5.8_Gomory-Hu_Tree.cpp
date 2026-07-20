@@ -1,24 +1,24 @@
 /*
 
 Given an undirected graph with nonnegative edge weights, build a Gomory-Hu tree: a weighted tree on
-the same vertices that represents every pairwise minimum $s$-$t$ cut value. For any two vertices $u$
-and $v$, the minimum cut value between them in the original graph is the minimum edge weight on the
-path from $u$ to $v$ in the Gomory-Hu tree.
+the same nodes that represents every pairwise minimum $s$-$t$ cut value. For any two nodes $u$ and
+$v$, the minimum cut value between them in the original graph is the minimum edge weight on the path
+from $u$ to $v$ in the Gomory-Hu tree.
 
-The algorithm starts with every vertex attached to vertex 0, then performs $n - 1$ max-flow/min-cut
-computations. After computing the minimum cut between vertex $s$ and its current parent, vertices on
-the $s$ side of that cut are reparented under $s$, gradually refining the cut-equivalent tree.
+The algorithm starts with every node attached to node $0$, then performs $n - 1$ max-flow/min-cut
+computations. After computing the minimum cut between node $s$ and its current parent, nodes on the
+$s$ side of that cut are reparented under $s$, gradually refining the cut-equivalent tree.
 
-- `gomory_hu(n, edges)` returns the $`n` - 1$ edges of a Gomory-Hu tree as $(`u`, `v`, `weight`)$
+- `gomory_hu(n, edges)` returns the `n - 1` edges of a Gomory-Hu tree as $(`u`, `v`, `weight`)$
   triplets for an undirected, weighted graph with `n` nodes and `edges` of the same shape.
-- `min_cut_value(n, tree, source, sink)` returns the minimum cut value between two vertices using a
+- `min_cut_value(n, tree, source, sink)` returns the minimum cut value between two nodes using a
   Gomory-Hu tree. Note that for many pairwise cut queries on the same tree, it's more efficient to
   prebuild the tree adjacency once and answer minimum edge-on-path queries with LCA/binary lifting
   instead of calling `min_cut_value()` each time.
 
 Time Complexity:
 - O(n) calls to maximum flow. With the included Dinic implementation, this is O(n^3*m) in the worst
-  case, where $n$ is the number of vertices and $m$ is the number of undirected edges.
+  case, where $n$ is the number of nodes and $m$ is the number of undirected edges.
 - O(n) per call to `min_cut_value()`.
 
 Space Complexity:
@@ -28,6 +28,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
+#include <functional>
 #include <limits>
 #include <queue>
 #include <tuple>
@@ -157,26 +158,6 @@ std::vector<Edge<T>> gomory_hu(int n, const std::vector<Edge<T>> &edges) {
 }
 
 template<typename T>
-T min_cut_value_dfs(
-    const std::vector<std::vector<std::pair<int, T>>> &adj, std::vector<char> &seen, int u,
-    int sink, T best
-) {
-  if (u == sink) {
-    return best;
-  }
-  seen[u] = true;
-  for (auto [v, w] : adj[u]) {
-    if (!seen[v]) {
-      T res = min_cut_value_dfs(adj, seen, v, sink, std::min(best, w));
-      if (res != -1) {
-        return res;
-      }
-    }
-  }
-  return -1;
-}
-
-template<typename T>
 T min_cut_value(int n, const std::vector<Edge<T>> &tree, int source, int sink) {
   assert(0 <= source && source < n && 0 <= sink && sink < n && source != sink);
   // For many queries, prebuild this adjacency and add LCA/binary lifting for min edge on path.
@@ -186,7 +167,22 @@ T min_cut_value(int n, const std::vector<Edge<T>> &tree, int source, int sink) {
     adj[v].emplace_back(u, w);
   }
   std::vector<char> seen(n);
-  return min_cut_value_dfs(adj, seen, source, sink, std::numeric_limits<T>::max());
+  std::function<T(int, T)> dfs = [&](int u, T best) {
+    if (u == sink) {
+      return best;
+    }
+    seen[u] = true;
+    for (auto [v, w] : adj[u]) {
+      if (!seen[v]) {
+        T res = dfs(v, std::min(best, w));
+        if (res != -1) {
+          return res;
+        }
+      }
+    }
+    return static_cast<T>(-1);
+  };
+  return dfs(source, std::numeric_limits<T>::max());
 }
 
 /*** Example Usage and Output:

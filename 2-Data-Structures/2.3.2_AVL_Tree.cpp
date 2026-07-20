@@ -32,7 +32,8 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the map elements.
-- O(log n) auxiliary stack space for `insert()`, `erase()`, and `entries()`.
+- O(log n) auxiliary stack space for `insert()`, `erase()`, `entries()`, and destruction.
+- O(n) for the vector returned by `entries()`.
 - O(1) auxiliary for all other operations.
 
 */
@@ -122,18 +123,14 @@ class AVLTree {
     }
     if (!(k < n->key || n->key < k)) {
       if (n->left != nullptr && n->right != nullptr) {
-        Node *tmp = n->right, *parent = nullptr;
+        Node *tmp = n->right;
         while (tmp->left != nullptr) {
-          parent = tmp;
           tmp = tmp->left;
         }
-        n->key = tmp->key;
+        K successor_key = tmp->key;
+        n->key = successor_key;
         n->value = tmp->value;
-        if (parent != nullptr) {
-          if (!erase(parent->left, parent->left->key)) {
-            return false;
-          }
-        } else if (!erase(n->right, n->right->key)) {
+        if (!erase(n->right, successor_key)) {
           return false;
         }
       } else {
@@ -236,5 +233,15 @@ int main() {
     cout << v;
   }
   cout << endl;
+
+  AVLTree<int, int> deep_successor;
+  for (int key : {20, 10, 30, 25, 40, 22}) {
+    deep_successor.insert(key, key);
+  }
+  assert(deep_successor.erase(20));
+  assert(
+      (deep_successor.entries() ==
+       vector<pair<int, int>>{{10, 10}, {22, 22}, {25, 25}, {30, 30}, {40, 40}})
+  );
   return 0;
 }

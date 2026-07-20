@@ -1,9 +1,9 @@
 /*
 
-A spanning arborescence rooted at a node `root` of a weighted, directed graph is a set of edges
-forming a tree in which every other node is reachable from the root along directed edges, that is,
+Given a weighted, directed graph and a root node, a spanning arborescence is a set of edges forming
+a tree in which every other node is reachable from the root along directed edges. Equivalently,
 every node except the root has exactly one incoming edge. The minimum spanning arborescence
-minimizes the total edge weight, and is the directed analog of the minimum spanning tree.
+minimizes the total edge weight and is the directed analog of the minimum spanning tree.
 
 Edmonds' (a.k.a. the Chu-Liu/Edmonds) algorithm computes the arborescence by first selecting, for
 each non-root node, its cheapest incoming edge. If these choices form no cycle, they already
@@ -13,10 +13,10 @@ Solving the problem on the contracted graph and expanding the cycles back yields
 implementation below repeats this contraction in rounds, accumulating the selected weights, until no
 cycle remains.
 
-- `directed_mst(n, root, edges)` returns the total weight of the minimum spanning arborescence
-  rooted at `root` over `n` nodes numbered $[0, `n`)$, or $-1$ if some node is unreachable from the
-  root (no arborescence exists). Edges are given as (`from`, `to`, `weight`) triples; parallel edges
-  and self-loops are allowed, with self-loops simply ignored.
+- `directed_mst(n, edges, root)` returns the total weight of the minimum spanning arborescence
+  rooted at `root` over `n` nodes numbered $[0, `n`)$, or `std::nullopt` if no arborescence exists.
+  Edges are given as (`from`, `to`, `weight`) triples; parallel edges and self-loops are allowed,
+  with self-loops simply ignored.
 
 Time Complexity:
 - O(n * m) per call, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -27,12 +27,13 @@ Space Complexity:
 */
 
 #include <cstdint>
+#include <optional>
 #include <tuple>
 #include <vector>
 
 using Edge = std::tuple<int, int, int64_t>;  // (u, v, weight)
 
-int64_t directed_mst(int n, int root, std::vector<Edge> edges) {
+std::optional<int64_t> directed_mst(int n, std::vector<Edge> edges, int root) {
   const int64_t INF = INT64_MAX / 4;
   int64_t total_dist = 0;
   while (true) {
@@ -46,10 +47,10 @@ int64_t directed_mst(int n, int root, std::vector<Edge> edges) {
     }
     for (int v = 0; v < n; v++) {
       if (v != root && min_in[v] == INF) {
-        return -1;  // Node v has no incoming edge, so it is unreachable.
+        return std::nullopt;
       }
     }
-    // Identify cycles formed by the chosen incoming edges, labeling each with an ID in `comp`.
+    // Identify cycles formed by the chosen incoming edges, labeling each with an ID in comp.
     int cycles = 0;
     std::vector<int> comp(n, -1), seen(n, -1);
     min_in[root] = 0;
@@ -93,7 +94,7 @@ int64_t directed_mst(int n, int root, std::vector<Edge> edges) {
 /*** Example Usage and Output:
 
 Minimum arborescence weight: 6
-Disconnected arborescence weight: -1
+Disconnected arborescence weight: none
 
 ***/
 
@@ -113,15 +114,18 @@ int main() {
   vector<Edge> edges{
       {0, 1, 1}, {0, 2, 5}, {1, 2, 2}, {2, 3, 3}, {3, 1, 4},
   };
-  int64_t weight = directed_mst(4, 0, edges);
+  auto weight = directed_mst(4, edges, 0);
   assert(weight == 6);  // Cheapest edges 0->1->2->3 form a tree of weight 6.
-  cout << "Minimum arborescence weight: " << weight << endl;
+  cout << "Minimum arborescence weight: " << *weight << endl;
 
   //        w=1    w=2
   // root=0 ---> 1 ---> 2       3
   vector<Edge> disconnected{{0, 1, 1}, {1, 2, 1}};
-  int64_t disconnected_weight = directed_mst(4, 0, disconnected);
-  assert(disconnected_weight == -1);  // Node 3 is unreachable from root 0.
-  cout << "Disconnected arborescence weight: " << disconnected_weight << endl;
+  auto disconnected_weight = directed_mst(4, disconnected, 0);
+  assert(!disconnected_weight);  // Node 3 is unreachable from root 0.
+  cout << "Disconnected arborescence weight: none" << endl;
+
+  vector<Edge> negative{{0, 1, -1}};
+  assert(directed_mst(2, negative, 0) == -1);  // A weight of -1 is a valid result.
   return 0;
 }

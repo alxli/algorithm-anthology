@@ -26,8 +26,9 @@ product and the total cost fit in the cost type `C`.
 Time Complexity:
 - O(n) per call to the constructor, where $n$ is the number of nodes.
 - O(1) per call to `add_edge()`.
-- O(f*n*m) per call to `min_cost_flow()`, where $f$ is the amount of flow sent, $n$ is the number of
-  nodes, and $m$ is the number of edges.
+- O(a*n*m) per call to `min_cost_flow()`, where $a$ is the number of augmenting paths, $n$ is the
+  number of nodes, and $m$ is the number of edges. For integer capacities, $a$ is at most the flow
+  sent.
 
 Space Complexity:
 - O(max(n, m)) for storage of the residual network and auxiliary arrays.
@@ -35,6 +36,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <limits>
 #include <queue>
@@ -76,6 +78,7 @@ class MinCostMaxFlow {
   }
 
   std::pair<T, C> min_cost_flow(int source, int sink, T target_flow) {
+    assert(source != sink);
     static const C INF_COST = std::numeric_limits<C>::max() / 4;
     T flow = 0;
     C cost = 0;
@@ -83,8 +86,8 @@ class MinCostMaxFlow {
     std::vector<int> parent_edge(nodes);
     std::vector<char> in_queue(nodes);
     while (flow < target_flow) {
-      std::fill(dist.begin(), dist.end(), INF_COST);
-      std::fill(in_queue.begin(), in_queue.end(), false);
+      dist.assign(nodes, INF_COST);
+      in_queue.assign(nodes, false);
       std::queue<int> q;
       dist[source] = 0;
       q.push(source);
@@ -162,9 +165,9 @@ int main() {
   assert(flow == 5);
   assert(cost == 16);
   assert(g.edge_flow(id01) == 3);
-  cout << "Flow sent: " << flow << "\n";
-  cout << "Minimum cost: " << cost << "\n";
-  cout << "Flow on edge 0->1: " << g.edge_flow(id01) << "\n";
+  cout << "Flow sent: " << flow << endl;
+  cout << "Minimum cost: " << cost << endl;
+  cout << "Flow on edge 0->1: " << g.edge_flow(id01) << endl;
   g.clear_flow();
   auto [flow2, cost2] = g.min_cost_flow(0, 5, 5);
   assert(flow2 == 5);

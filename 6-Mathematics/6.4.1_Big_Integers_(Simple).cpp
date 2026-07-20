@@ -127,8 +127,9 @@ class BigInt {
       digits = "0";
       return;
     }
-    for (n = (n > 0) ? n : -n; n > 0; n /= 10) {
-      digits += '0' + (n % 10);
+    for (; n != 0; n /= 10) {
+      int digit = static_cast<int>(n % 10);
+      digits += '0' + (digit < 0 ? -digit : digit);
     }
     normalize();
   }
@@ -211,5 +212,6 @@ int main() {
   assert(mul(a, b).to_string() == "-122739196911503356525379735104870536");
   assert(div(a, b).to_string() == "-798");
   assert(comp(a, b) == -1 && comp(a, a) == 0 && comp(b, a) == 1);
+  assert(BigInt(INT64_MIN).to_string() == "-9223372036854775808");
   return 0;
 }

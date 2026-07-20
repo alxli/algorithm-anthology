@@ -1,11 +1,11 @@
 /*
 
-Maintain a polynomial rolling hash over a sequence of elements of an arbitrary type `T`, under
-insertion and deletion at either end, in O(1) time per operation. Each element is first reduced to a
-nonnegative integer "digit" by a user-supplied hasher, so any comparable type (characters, integers,
-whole words, tuples) can be hashed. This is the deque generalization of the classic Rabin-Karp
-sliding window: pushing at the back and popping from the front is exactly a moving window, and this
-structure additionally supports pushing at the front and popping from the back.
+Maintains a polynomial rolling hash for a sequence of an arbitrary hashable type `T`, supporting
+insertion and deletion at either end in O(1) time per operation. Each element is first reduced to a
+nonnegative integer "digit" by a user-supplied hasher, so characters, integers, whole words, and
+tuples can all be hashed. This is the deque generalization of the classic Rabin-Karp sliding window:
+pushing at the back and popping from the front is exactly a moving window, and this structure
+additionally supports pushing at the front and popping from the back.
 
 The sequence of digits is hashed with the front element as the most significant digit, so a sequence
 of length $n$ has hash $\sum_{i=0}^{n-1} a_i B^{n-1-i}$ (the front element $a_0$ carries the highest
@@ -26,13 +26,16 @@ sliding window can be compared against a fixed target in O(1) per step.
 `MOD1` and `MOD2` are two distinct primes, each kept below $2^{31}$ so that the product of any two
 residues fits in a 64-bit integer; hashing modulo both and comparing the resulting pair makes a
 collision astronomically unlikely. `BASE1` and `BASE2` are the corresponding polynomial bases, which
-should exceed the largest digit value and may be randomized per run to resist adversarial inputs.
+must be nonzero modulo their corresponding primes and may be randomized per run to resist
+adversarial inputs. For a small raw alphabet, choosing bases larger than every digit also prevents
+carry-style collisions before modular reduction, but arbitrary hasher outputs need not satisfy this
+bound.
 
 The hasher's output must be nonnegative. As with any polynomial hash, comparing sequences of
 different lengths is only safe when digits are positive (for example, map an alphabet to $[1, B)$)
 so that a leading zero cannot make a shorter sequence collide with a longer one.
 
-- `HashDeque<T = int, Hash = identity_digit<T>>(hasher = Hash())` constructs an empty deque whose
+- `HashDeque<T = int, Hash = IdentityDigit<T>>(hasher = Hash())` constructs an empty deque whose
   `hasher` maps each element to its nonnegative integer digit. For integer-like `T` the default
   hasher casts the element to `uint64_t`, so `HashDeque<char>` and `HashDeque<int>` work with no
   hasher supplied.
@@ -40,8 +43,8 @@ so that a leading zero cannot make a shorter sequence collide with a longer one.
 - `push_back(x)` and `push_front(x)` append `x` at the back or front.
 - `pop_back()` and `pop_front()` remove the back or front element; the deque must be nonempty.
 - `hash()` returns the pair of hashes of the current sequence.
-- `a == b` (and `a != b`) compares two deques: it checks equal length, then equal hash pairs, so two
-  deques hold equal sequences with high probability if and only if they compare equal.
+- `a == b` (and `a != b`) compares the lengths and hash pairs of two deques. Equal sequences always
+  compare equal; equality indicates equal sequences with high probability.
 
 Time Complexity:
 - O(1) per call to every operation, plus one hasher evaluation per `push_back()` / `push_front()`.
@@ -58,14 +61,14 @@ Space Complexity:
 #include <utility>
 
 template<class T>
-struct identity_digit {
+struct IdentityDigit {
   uint64_t operator()(const T &x) const { return static_cast<uint64_t>(x); }
 };
 
-template<class T = int, class Hash = identity_digit<T>>
+template<class T = int, class Hash = IdentityDigit<T>>
 class HashDeque {
   static const uint64_t MOD1 = 1000000007, MOD2 = 1000000009;  // Distinct primes below 2^31.
-  static const uint64_t BASE1 = 131, BASE2 = 137;  // Should exceed the maximum digit value.
+  static const uint64_t BASE1 = 131, BASE2 = 137;              // Nonzero modulo MOD1 and MOD2.
 
   Hash hasher;                  // Maps an element to its nonnegative integer digit.
   std::deque<uint64_t> digits;  // Per-element digit values, retained so pops never re-hash.

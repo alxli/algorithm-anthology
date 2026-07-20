@@ -12,17 +12,21 @@ Repeating this repair after each deadline leaves a largest feasible accepted set
 
 - `select_on_time_jobs(jobs)` returns the selected jobs as original input indices in a feasible
   earliest-deadline-first execution order, for an input vector of `TimedJob` with fields `duration`
-  and `deadline`.
+  and `deadline`. Durations and deadlines must be nonnegative integers.
+
+The total duration must fit in `int64_t`.
 
 Time Complexity:
 - O(n log n) per call due to sorting and heap operations.
 
 Space Complexity:
-- O(n) auxiliary.
+- O(n) auxiliary and O(n) for the returned indices.
 
 */
 
 #include <algorithm>
+#include <cassert>
+#include <cstdint>
 #include <numeric>
 #include <queue>
 #include <utility>
@@ -36,15 +40,18 @@ std::vector<int> select_on_time_jobs(const std::vector<TimedJob> &jobs) {
   int n = static_cast<int>(jobs.size());
   std::vector<int> order(n);
   std::iota(order.begin(), order.end(), 0);
+  for (const auto &job : jobs) {
+    assert(job.duration >= 0 && job.deadline >= 0);
+  }
   std::sort(order.begin(), order.end(), [&](int i, int j) {
     return jobs[i].deadline != jobs[j].deadline ? jobs[i].deadline < jobs[j].deadline
                                                 : jobs[i].duration < jobs[j].duration;
   });
   std::priority_queue<std::pair<int, int>> accepted;
   std::vector<char> selected(n, false);
-  int time = 0;
+  int64_t time = 0;
   for (int i : order) {
-    time += jobs[i].duration;
+    time += jobs[i].duration;  // Overflow warning.
     accepted.push({jobs[i].duration, i});
     selected[i] = true;
     if (time > jobs[i].deadline) {

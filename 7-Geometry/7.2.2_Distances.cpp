@@ -18,9 +18,12 @@ floating-point `Pt` there for a meaningful (non-truncated) result.
   $0$ if the segments touch or intersect.
 - `closest_point(a, b, p)` returns the point on segment `a`-`b` closest to point `p`.
 
-Overflow warning: `sqdist()` forms squared coordinate differences and returns the coordinate
-arithmetic type. For integer point types, use a 64-bit coordinate type when coordinates may exceed a
-few tens of thousands.
+Coefficient triples passed to `line_dist()` must represent valid lines. Use a floating-point point
+type with `closest_point()` when the closest point may have fractional coordinates.
+
+Overflow warning: squared distances, dot products, and cross products are formed in the point's
+coordinate arithmetic type. For integer point types, use a 64-bit coordinate type when coordinates
+may exceed a few tens of thousands.
 
 Time Complexity:
 - O(1) for all operations.
@@ -38,7 +41,9 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) {
+    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  }
   return C(a) == C(b);
 }
 
@@ -77,7 +82,7 @@ double line_dist(const Pt &p, const Pt &a, const Pt &b) {
     return dist(p, a);
   }
   auto n = sqdist(a, b);
-  auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);
+  auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);  // Overflow warning!
   double u = static_cast<double>(d) / n;
   double dx = a.x + u * (b.x - a.x) - p.x, dy = a.y + u * (b.y - a.y) - p.y;
   return sqrt(dx * dx + dy * dy);
@@ -85,7 +90,7 @@ double line_dist(const Pt &p, const Pt &a, const Pt &b) {
 
 template<typename T>
 double line_dist(const T &a1, const T &b1, const T &c1, const T &a2, const T &b2, const T &c2) {
-  if (EQ(a1 * b2, a2 * b1)) {
+  if (EQ(static_cast<double>(a1) * b2, static_cast<double>(a2) * b1)) {
     double factor = EQ(b1, 0) ? (static_cast<double>(a1) / a2) : (static_cast<double>(b1) / b2);
     return EQ(c1, c2 * factor)
                ? 0
@@ -101,7 +106,7 @@ double seg_dist(const Pt &p, const Pt &a, const Pt &b) {
     return dist(p, a);
   }
   auto n = sqdist(a, b);
-  auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);
+  auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);  // Overflow warning!
   if (LE(d, 0) || EQ(n, 0)) {
     return dist(p, a);
   }
@@ -124,7 +129,7 @@ double seg_dist(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   auto ab_x = b.x - a.x, ab_y = b.y - a.y;
   auto ac_x = c.x - a.x, ac_y = c.y - a.y;
   auto cd_x = d.x - c.x, cd_y = d.y - c.y;
-  auto c1 = ab_x * cd_y - ab_y * cd_x;
+  auto c1 = ab_x * cd_y - ab_y * cd_x;  // Overflow warning!
   auto c2 = ac_x * ab_y - ac_y * ab_x;
   if (EQ(c1, 0) && EQ(c2, 0)) {
     auto less = [](const Pt &u, const Pt &v) { return u.x != v.x ? u.x < v.x : u.y < v.y; };
@@ -158,7 +163,7 @@ Pt closest_point(const Pt &a, const Pt &b, const Pt &p) {
     return res;
   }
   auto n = sqdist(a, b);
-  auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);
+  auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);  // Overflow warning!
   double t = static_cast<double>(d) / n;
   if (t <= 0) {
     res.x = a.x;

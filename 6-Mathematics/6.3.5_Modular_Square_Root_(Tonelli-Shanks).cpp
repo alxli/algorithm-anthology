@@ -5,8 +5,8 @@ to $a$ modulo $p$. Exactly half of the nonzero residues modulo a prime are squar
 residues), so a solution exists only for those; when it does, the two roots are $x$ and $p - x$.
 
 The Tonelli-Shanks algorithm handles the general case. Euler's criterion, $a^{(p-1)/2}$ modulo $p$,
-first tests whether $a$ is a residue at all. When $p$ is congruent to 3 modulo 4 the root is simply
-$a^{(p+1)/4}$. Otherwise the algorithm factors $p - 1$ as $s \cdot 2^e$, picks any quadratic
+first tests whether $a$ is a residue at all. When $p$ is congruent to $3 \pmod{4}$, the root is
+simply $a^{(p+1)/4}$. Otherwise the algorithm factors $p - 1$ as $s \cdot 2^e$, picks any quadratic
 non-residue to generate the 2-power part of the group, and repeatedly squares a running value to
 find the order of the current error term, correcting the candidate root until the error becomes $1$.
 
@@ -62,7 +62,7 @@ int64_t mod_sqrt(int64_t a, int64_t p) {
     return -1;  // a is a quadratic non-residue.
   }
   if (p % 4 == 3) {
-    int64_t x = powmod(a, (p + 1) / 4, p);
+    int64_t x = powmod(a, p / 4 + 1, p);
     return x < p - x ? x : p - x;
   }
   // Write p - 1 = s * 2^e with s odd.

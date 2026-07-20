@@ -8,6 +8,9 @@ O(log T) nodes whose ranges it spans. A depth-first traversal of this segment tr
 stored at each node on the way down and undoes them on the way back up, so at each leaf the disjoint
 set forest reflects exactly the edges alive at that moment.
 
+This offline method supports arbitrary undirected graphs. When updates must be processed online and
+the graph remains a forest, see the Euler Tour Tree in Section 2.7.9.
+
 Undoing unions requires a disjoint set forest with rollback (see the disjoint sets section): it
 joins by size or rank without path compression, recording each change on a stack so it can be
 reversed. Path compression is incompatible with rollback, so finding a representative costs O(log n)
@@ -26,7 +29,7 @@ rather than near-constant time.
 Time Complexity:
 - O((T + m log T) log n) for `solve()`, where $T$ is the total number of operations (`add_edge`,
   `remove_edge`, and `count_components` combined), $m$ is the number of `add_edge` operations, and
-  $n$ is the number of vertices.
+  $n$ is the number of nodes.
 - O(1) amortized per call to `add_edge()`, `remove_edge()`, and `count_components()`.
 
 Space Complexity:
@@ -172,7 +175,7 @@ using namespace std;
 int main() {
   OfflineDynamicConnectivity dc(4);
   // 0   1   2   3
-  dc.count_components();  // 4 isolated vertices.
+  dc.count_components();  // 4 isolated nodes.
   dc.add_edge(0, 1);
   dc.add_edge(2, 3);
   // 0---1   2---3

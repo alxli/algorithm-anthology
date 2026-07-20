@@ -5,16 +5,16 @@ Common number theory operations relating to modular arithmetic.
 - `gcd(a, b)` returns the greatest common divisor of `a` and `b` using the Euclidean algorithm. This
   is mainly for educational purposes, as `std::gcd(a, b)` from `<numeric>` is available as of C++17
   (`__gcd(a, b)` from `<algorithm>` in C++14 and earlier).
-- `lcm(a, b)` returns the lowest common multiple of `a` and `b`. This implemention is mainly for
+- `lcm(a, b)` returns the lowest common multiple of `a` and `b`. This implementation is mainly for
   educational purposes, as `std::lcm(a, b)` from `<numeric>` is available as of C++17.
-- `extended_euclid(a, b)` returns a pair $(`x`, `y`)$ of integers such that $\gcd(a, b) = ax + by$.
+- `extended_euclid(a, b)` returns a pair $(x, y)$ of integers such that $\gcd(a, b) = ax + by$.
 - `diophantine(a, b, c, &x, &y, &g)` solves the linear Diophantine equation $ax + by = c$, returning
   whether a solution exists (one does if and only if $\gcd(a, b)$ divides $c$), and on success sets
   `g` to $\gcd(a, b)$ and $(`x`, `y`)$ to a particular solution bounded by $\max(|a|, |b|, |c|)$ in
   magnitude. A 128-bit intermediate is used where available to keep the scaling step overflow-free.
-- `mod(a, b)` returns the value of `a` mod `b` under the true Euclidean definition of modulo, that
-  is, the smallest nonnegative integer $m$ satisfying $a + bn = m$ for some integer $n$. Note that
-  this is identical to the remainder operator `%` in C++ for nonnegative operands `a` and `b`, but
+- `mod(a, m)` returns the value of `a` mod `m` under the true Euclidean definition of modulo, that
+  is, the smallest nonnegative integer $r$ satisfying $a + mn = r$ for some integer $n$. Note that
+  this is identical to the remainder operator `%` in C++ for nonnegative operands `a` and `m`, but
   the result will differ when an operand is negative.
 - `mod_inverse(a, m)` returns an integer $x$ such that $ax \equiv 1 \pmod m$, where the arguments
   must satisfy $m > 0$ and $\gcd(a, m) = 1$.
@@ -23,7 +23,8 @@ Common number theory operations relating to modular arithmetic.
 - `crt(r1, m1, r2, m2, r, m)` merges the two congruences $x \equiv r_1 \pmod{m_1}$ and
   $x \equiv r_2 \pmod{m_2}$ for arbitrary moduli (not necessarily coprime). It returns whether the
   system is consistent, and on success sets `m` to `lcm(m_1, m_2)` and `r` to the unique solution in
-  $[0, `m`)$. Fold it pairwise to merge more than two congruences.
+  $[0, `m`)$. Both moduli must be positive, and their least common multiple must fit in `int64_t`.
+  Fold it pairwise to merge more than two congruences.
 - `garner_restore(a, p)` returns the smallest nonnegative solution $x$ for the system of
   simultaneous congruences $x \equiv `a[i]` \pmod{`p[i]`}$ for all indices `i` in $[0, n)$, where
   $n$ is `a.size()` and `p` consists of pairwise coprime integers (unlike `crt`, which allows shared
@@ -160,7 +161,14 @@ bool crt(int64_t r1, int64_t m1, int64_t r2, int64_t m2, int64_t &r, int64_t &m)
     return false;
   }
   m = m1 / g * m2;
-  r = mod(r1 + m1 * mod(x, m2 / g), m);
+#if defined(__SIZEOF_INT128__)
+  __extension__ typedef __int128 int128_t;
+  r = static_cast<int64_t>(
+      (static_cast<int128_t>(r1) + static_cast<int128_t>(m1) * mod(x, m2 / g)) % m
+  );
+#else
+  r = mod(r1 + m1 * mod(x, m2 / g), m);  // Overflow warning without int128.
+#endif
   return true;
 }
 

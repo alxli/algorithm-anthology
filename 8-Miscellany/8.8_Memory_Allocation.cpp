@@ -24,8 +24,6 @@ Space Complexity:
 
 #include <cassert>
 #include <cstddef>
-#include <new>
-#include <type_traits>
 #include <vector>
 
 static constexpr std::size_t BUFFER_SIZE = 64 << 20;
@@ -33,6 +31,9 @@ alignas(std::max_align_t) static unsigned char bump_buffer[BUFFER_SIZE];
 static std::size_t bump_pos = BUFFER_SIZE;
 
 void *operator new(std::size_t size) {
+  if (size == 0) {
+    size = 1;
+  }
   size = (size + alignof(std::max_align_t) - 1) & ~(alignof(std::max_align_t) - 1);
   assert(size <= bump_pos);
   bump_pos -= size;
@@ -55,6 +56,7 @@ struct BumpAllocator {
   BumpAllocator(const BumpAllocator<U> &) {}
 
   T *allocate(std::size_t n) {
+    static_assert(alignof(T) <= alignof(std::max_align_t), "over-aligned types are not supported");
     std::size_t size = n * sizeof(T);
     std::size_t align = alignof(T);
     assert(size <= bump_pos);

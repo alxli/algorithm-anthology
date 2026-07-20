@@ -4,24 +4,23 @@ Maintain a static set of two-dimensional points while supporting rectangle repor
 tree recursively splits points by alternating coordinates and stores a bounding box for each
 subtree, allowing whole subtrees to be accepted or pruned during a query.
 
-This implementation uses `std::pair` to represent points, requiring operators `<` and `==` to be
-defined on the numeric template type.
+This implementation uses `std::pair` to represent points, requiring operator `<` to be defined on
+the numeric template type.
 
 Use this for static point-reporting queries when O(n) space and good average performance are more
 important than a strict worst-case guarantee. Use the 2D range tree instead when adversarial point
 sets or query rectangles are expected and the extra O(n log n) space is acceptable.
 
-- `RangeKDTree<T>(lo, hi)` constructs a set from two random-access iterators to `std::pair` as a
-  range $[`lo`, `hi`)$ of points.
-- `query(x1, y1, x2, y2, f)` calls the function `f(i, p)` on each point in the set that falls into
-  the rectangular region consisting of rows $[`x1`, `x2`]$ and columns $[`y1`, `y2`]$. The first
-  argument to `f` is the 0-based index of the point in the original range given to the constructor.
-  The second argument is the point itself as an `std::pair`.
+- `RangeKDTree<T>(lo, hi)` constructs a set of `std::pair` points from the half-open
+  forward-iterator range $[`lo`, `hi`)$.
+- `query(x1, y1, x2, y2, f)` calls the function `f(p)` on each point in the set that falls into the
+  rectangular region consisting of rows $[`x1`, `x2`]$ and columns $[`y1`, `y2`]$. The argument
+  `p` is the point as an `std::pair`.
 
 Time Complexity:
 - O(n log n) per call to the constructor, where $n$ is the number of points.
-- O(log n + m) on average per call to `query()`, where $m$ is the number of points that are reported
-  by the query.
+- O(sqrt(n) + m) per call to `query()`, where $m$ is the number of points that are reported by the
+  query.
 
 Space Complexity:
 - O(n) for storage of the points.
@@ -30,18 +29,14 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <iterator>
 #include <utility>
 #include <vector>
 
 template<typename T>
 class RangeKDTree {
-  using point = std::pair<T, T>;
-
-  static inline bool comp1(const point &a, const point &b) { return a.first < b.first; }
-  static inline bool comp2(const point &a, const point &b) { return a.second < b.second; }
-
-  std::vector<point> tree, minp, maxp;
+  std::vector<std::pair<T, T>> tree, minp, maxp;
   std::vector<int> l_index, h_index;
 
   void build(int lo, int hi, bool div_x) {
@@ -50,7 +45,10 @@ class RangeKDTree {
     }
     int mid = lo + (hi - lo) / 2;
     std::nth_element(
-        tree.begin() + lo, tree.begin() + mid, tree.begin() + hi, div_x ? comp1 : comp2
+        tree.begin() + lo, tree.begin() + mid, tree.begin() + hi,
+        [div_x](const auto &a, const auto &b) {
+          return div_x ? a.first < b.first : a.second < b.second;
+        }
     );
     l_index[mid] = lo;
     h_index[mid] = hi;
@@ -70,7 +68,7 @@ class RangeKDTree {
   T x1, y1, x2, y2;
 
   template<typename Fn>
-  void query(int lo, int hi, Fn f) {
+  void query(int lo, int hi, Fn &f) {
     if (lo >= hi) {
       return;
     }
@@ -108,6 +106,7 @@ class RangeKDTree {
 
   template<typename Fn>
   void query(const T &x1, const T &y1, const T &x2, const T &y2, Fn f) {
+    assert(!(x2 < x1) && !(y2 < y1));
     this->x1 = x1;
     this->y1 = y1;
     this->x2 = x2;

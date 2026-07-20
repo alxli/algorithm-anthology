@@ -5,8 +5,8 @@ spanning tree under Manhattan distance $|x_1 - x_2| + |y_1 - y_2|$. The plane is
 rotations/reflections; in each sweep, dominance by $x + y$ identifies the only nearby candidates
 that can matter. Run Kruskal on the returned edges to obtain the MST.
 
-- `manhattan_mst_edges(points)` returns O(n) candidate edges $(`w`, `u`, `v`)$.
-- `manhattan_mst_weight(points)` is a small Kruskal wrapper that returns the MST weight.
+- `manhattan_mst_edges(p)` returns O(n) candidate edges $(`w`, `u`, `v`)$.
+- `manhattan_mst_weight(p)` is a small Kruskal wrapper that returns the MST weight.
 
 Overflow warning: the sweeps form coordinate sums, negations, and differences such as `x + y` and
 `dx + dy`. With `int64_t` coordinates, those intermediate values must fit in `int64_t`.
@@ -20,7 +20,6 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <array>
 #include <cassert>
 #include <cstdint>
 #include <map>

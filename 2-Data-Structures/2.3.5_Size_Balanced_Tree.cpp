@@ -19,8 +19,8 @@ This implementation requires an ordering on the key type `K` defined by `operato
   successful or `false` if the key to be removed was not found.
 - `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was
   not found.
-- `find_by_order(k)` returns a key-value pair of the node with a key of 0-based rank `k`, throwing
-  an exception if the rank is not in the range $[0, `size()`)$.
+- `find_by_order(k)` returns a key-value pair of the node with a key of 0-based rank `k`, which must
+  lie in the range $[0, `size()`)$.
 - `order_of_key(x)` returns the number of keys strictly less than `x`. The key does not need to be
   present in the map.
 - `entries()` returns all key-value entries in ascending order of keys.
@@ -41,7 +41,8 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the map elements.
-- O(log n) auxiliary stack space for `insert()`, `erase()`, and `entries()`.
+- O(log n) auxiliary stack space for `insert()`, `erase()`, `entries()`, and destruction.
+- O(n) for the vector returned by `entries()`.
 - O(1) auxiliary for all other operations.
 
 */
@@ -143,8 +144,10 @@ class SBTree {
       while (p->left != nullptr) {
         p = p->left;
       }
-      n->key = p->key;
-      found = erase(n->right, p->key);
+      K successor_key = p->key;
+      n->key = successor_key;
+      n->value = p->value;
+      found = erase(n->right, successor_key);
     }
     maintain(n, c);
     n->update();
@@ -265,5 +268,12 @@ int main() {
   assert(t.find_by_order(0).first == 2);
   assert(t.find_by_order(1).first == 3);
   assert(t.find_by_order(2).first == 4);
+
+  SBTree<int, char> replacement;
+  replacement.insert(2, 'b');
+  replacement.insert(1, 'a');
+  replacement.insert(3, 'c');
+  assert(replacement.erase(2));
+  assert(*replacement.find(3) == 'c');
   return 0;
 }

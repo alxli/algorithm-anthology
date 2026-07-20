@@ -10,8 +10,8 @@ rectangle sums. It avoids allocating the dense `R*C` table of the dense 2D Fenwi
 the dense and offline variants it supports rectangle updates, not just point updates. Prefer it over
 the offline 2D Fenwick tree only when updates arrive online; if every updated cell is known in
 advance, that version compresses coordinates instead of hashing and runs with better constants. It
-is less general than the sparse 2D segment tree or quadtrees because Fenwick-tree algebra relies on
-addition and subtraction.
+is less general than the sparse 2D segment tree because Fenwick-tree algebra relies on addition and
+subtraction.
 
 - `SparseFenwick2D<T, R, C>()` constructs a 2D array over rows $[0, R)$ and columns $[0, C)$. All
   values are implicitly initialized to $0$; nodes are allocated lazily as indices are touched.
@@ -25,11 +25,10 @@ addition and subtraction.
 - `at(r, c)` returns the value at index $(`r`, `c`)$.
 
 Time Complexity:
-- O(log(R)*log(C)) per call to all member functions.
+- O(log(R)*log(C)) expected per call to all member functions.
 
 Space Complexity:
-- O(n*log(R)*log(C)) for storage of the array elements, where $n$ is the number of distinct indices
-  that have been accessed across all of the operations so far.
+- O(q*log(R)*log(C)) expected for storage after $q$ updates.
 - O(1) auxiliary for all operations.
 
 */
@@ -40,6 +39,8 @@ Space Complexity:
 
 template<typename T, int R = 1000000001, int C = 1000000001>
 class SparseFenwick2D {
+  static_assert(0 < R && R < (1 << 30) && 0 < C && C < (1 << 30));
+
   std::unordered_map<int64_t, T> t1, t2, t3, t4;
 
   template<typename Map>
@@ -67,11 +68,13 @@ class SparseFenwick2D {
     add(t1, r, c, x);
     add(t2, r, c, -x * c);
     add(t3, r, c, -x * r);
-    add(t4, r, c, x * r * c);
+    add(t4, r, c, x * r * c);  // Overflow warning.
   }
 
  public:
   void add(int r1, int c1, int r2, int c2, const T &x) {
+    assert(0 <= r1 && r1 <= r2 && r2 < R);
+    assert(0 <= c1 && c1 <= c2 && c2 < C);
     add_helper(r2 + 1, c2 + 1, x);
     add_helper(r1, c2 + 1, -x);
     add_helper(r2 + 1, c1, -x);
@@ -81,7 +84,7 @@ class SparseFenwick2D {
   void add(int r, int c, const T &x) { add(r, c, r, c, x); }
   void set(int r, int c, const T &x) { add(r, c, x - at(r, c)); }
 
-  T sum(int r, int c) {
+  T sum(int r, int c) const {
     assert(-1 <= r && r < R && -1 <= c && c < C);
     r++;
     c++;
@@ -97,11 +100,13 @@ class SparseFenwick2D {
     return s1 * r * c + s2 * r + s3 * c + s4;
   }
 
-  T sum(int r1, int c1, int r2, int c2) {
+  T sum(int r1, int c1, int r2, int c2) const {
+    assert(0 <= r1 && r1 <= r2 && r2 < R);
+    assert(0 <= c1 && c1 <= c2 && c2 < C);
     return sum(r2, c2) + sum(r1 - 1, c1 - 1) - sum(r1 - 1, c2) - sum(r2, c1 - 1);
   }
 
-  T at(int r, int c) { return sum(r, c, r, c); }
+  T at(int r, int c) const { return sum(r, c, r, c); }
 };
 
 /*** Example Usage and Output:
@@ -117,7 +122,7 @@ Values:
 using namespace std;
 
 int main() {
-  SparseFenwick2D<int> t;
+  SparseFenwick2D<long long> t;
   t.set(0, 0, 5);
   t.set(0, 1, 6);
   t.set(1, 0, 7);
@@ -134,7 +139,7 @@ int main() {
   assert(t.sum(0, 0, 0, 1) == 11);
   assert(t.sum(0, 0, 1, 0) == 8);
   assert(t.sum(1, 1, 2, 2) == 29);
-  t.set(500000000, 500000000, 100);
-  assert(t.sum(0, 0, 999999999, 999999999) == 143);
+  t.set(500000000, 500000000, 1);
+  assert(t.sum(0, 0, 999999999, 999999999) == 44);
   return 0;
 }

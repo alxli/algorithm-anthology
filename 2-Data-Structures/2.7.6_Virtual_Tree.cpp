@@ -22,15 +22,15 @@ sort-and-stack logic applies directly.
 - `depth_of(u)` returns the depth of `u` in the original tree (the root has depth $0$). The original
   path length of a virtual-tree edge $(`p`, `c`)$ is `depth_of(c)` $-$ `depth_of(p)`.
 - `build(nodes)` returns the virtual tree induced by `nodes`. The result has `root` set to the
-  topmost node (the common ancestor of `nodes`), `vertices` listing every original node ID in the
+  topmost node (the common ancestor of `nodes`), `nodes` listing every original node ID in the
   virtual tree sorted by entry time, and `edges` listing each $(`p`, `c`)$ pair in original IDs.
-  Both the vertex set and the edges use the node numbering of the original tree. An empty input
-  yields an empty result with `root` $= -1$.
+  Both the node set and the edges use the node numbering of the original tree. An empty input yields
+  an empty result with `root` $= -1$.
 
 Time Complexity:
 - O(n log n) for construction, where $n$ is the number of nodes.
 - O(log n) per call to `lca()`.
-- O(k log k) per call to `build()`, where $k$ is the size of the input subset.
+- O(k log n) per call to `build()`, where $k$ is the size of the input subset.
 
 Space Complexity:
 - O(n log n) to store the binary ancestor table.
@@ -39,6 +39,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <utility>
 #include <vector>
 
@@ -65,12 +66,13 @@ class VirtualTree {
  public:
   struct Tree {
     int root = -1;
-    std::vector<int> vertices;
+    std::vector<int> nodes;
     std::vector<std::pair<int, int>> edges;  // (parent, child) in original node ids.
   };
 
   VirtualTree(const std::vector<std::vector<int>> &adj, int root) {
     int n = static_cast<int>(adj.size());
+    assert(0 <= root && root < n);
     len = 1;
     while ((1 << len) <= std::max(1, n)) {
       len++;
@@ -84,14 +86,21 @@ class VirtualTree {
   }
 
   bool is_ancestor(int parent, int child) const {
+    assert(0 <= parent && parent < static_cast<int>(tin.size()));
+    assert(0 <= child && child < static_cast<int>(tin.size()));
     return tin[parent] <= tin[child] && tout[child] <= tout[parent];
   }
 
   // Depth of u in the original tree; depth(child) - depth(parent) is the length of the original
   // path that a compressed virtual-tree edge stands for.
-  int depth_of(int u) const { return depth[u]; }
+  int depth_of(int u) const {
+    assert(0 <= u && u < static_cast<int>(depth.size()));
+    return depth[u];
+  }
 
   int lca(int u, int v) const {
+    assert(0 <= u && u < static_cast<int>(tin.size()));
+    assert(0 <= v && v < static_cast<int>(tin.size()));
     if (is_ancestor(u, v)) {
       return u;
     }
@@ -107,6 +116,9 @@ class VirtualTree {
   }
 
   Tree build(std::vector<int> nodes) const {
+    for (int u : nodes) {
+      assert(0 <= u && u < static_cast<int>(tin.size()));
+    }
     Tree res;
     if (nodes.empty()) {
       return res;
@@ -131,7 +143,7 @@ class VirtualTree {
       ancestors.push_back(v);
     }
     res.root = nodes.front();
-    res.vertices = std::move(nodes);
+    res.nodes = std::move(nodes);
     return res;
   }
 };
@@ -175,7 +187,7 @@ int main() {
   //   6     7
   VirtualTree::Tree t = vt.build({6, 7});
   assert(t.root == 0);
-  assert((t.vertices == vector<int>{0, 6, 7}));
+  assert((t.nodes == vector<int>{0, 6, 7}));
   assert(t.edges.size() == 2);
   for (auto &e : t.edges) {
     assert(e.first == 0 && (e.second == 6 || e.second == 7));
@@ -190,7 +202,7 @@ int main() {
   // 6   4
   VirtualTree::Tree u = vt.build({6, 4, 7});
   assert(u.root == 0);
-  assert((u.vertices == vector<int>{0, 1, 6, 4, 7}));
+  assert((u.nodes == vector<int>{0, 1, 6, 4, 7}));
   // Expected edges: 0->1, 1->6, 1->4, 0->7.
   vector<pair<int, int>> want{{0, 1}, {1, 6}, {1, 4}, {0, 7}};
   auto got = u.edges;
@@ -200,6 +212,6 @@ int main() {
 
   // A single node is its own virtual tree with no edges.
   VirtualTree::Tree s = vt.build({4});
-  assert(s.root == 4 && s.edges.empty() && s.vertices == vector<int>{4});
+  assert(s.root == 4 && s.edges.empty() && s.nodes == vector<int>{4});
   return 0;
 }

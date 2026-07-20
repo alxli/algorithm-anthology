@@ -1,6 +1,6 @@
 /*
 
-Given a list of distinct points in two-dimensions, order them into a valid polygon and determine the
+Given a list of distinct points in two dimensions, order them into a valid polygon and determine the
 area. The sorting comparators order two points by the sign of their cross product around a chosen
 center, that is, by angle. The area functions use the shoelace formula, summing the cross products
 of consecutive vertex pairs. The functions are templated on the point type. The local `Point` struct
@@ -8,7 +8,6 @@ of consecutive vertex pairs. The functions are templated on the point type. The 
 any struct with numeric `.x` and `.y` fields and `<` / `==` operators.
 
 - `cw_comp(a, b, c)` returns whether point `a` compares clockwise before `b` about `c`.
-- `CWComparator(c)` / `CCWComparator(c)` return comparators for `std::sort`.
 - `polygon_area_2x(lo, hi)` returns exactly double the area of the polygon with vertices specified
   by the range $[`lo`, `hi`)$ of points in either clockwise or counter-clockwise order. The return
   value is integral or floating-point, depending on the input point type. For integer vertices,
@@ -23,8 +22,8 @@ coordinate magnitude (and the shoelace sum accumulates over all vertices). For i
 use a 64-bit coordinate type (e.g. `PointL` from 7.1.1) for large or numerous coordinates.
 
 Time Complexity:
-- O(n) per call to `polygon_area`, where $n$ is the number of points.
-- O(n) per call to `polygon_centroid`.
+- O(n) per call to `polygon_area_2x()`, `polygon_area()`, and `polygon_centroid()`, where $n$ is the
+  number of points.
 - O(1) per call to `cw_comp` and the comparators.
 
 Space Complexity:
@@ -44,7 +43,9 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) {
+    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  }
   return C(a) == C(b);
 }
 
@@ -67,9 +68,9 @@ bool cw_comp(const Pt &a, const Pt &b, const Pt &c) {
   }
   auto acx = a.x - c.x, acy = a.y - c.y;
   auto bcx = b.x - c.x, bcy = b.y - c.y;
-  auto det = acx * bcy - acy * bcx;
+  auto det = acx * bcy - acy * bcx;  // Overflow warning!
   if (det == 0) {
-    auto acnorm = acx * acx + acy * acy;
+    auto acnorm = acx * acx + acy * acy;  // Overflow warning!
     auto bcnorm = bcx * bcx + bcy * bcy;
     return acnorm > bcnorm;
   }
@@ -85,7 +86,7 @@ auto polygon_area_2x(It lo, It hi) {
   }
   T area = 0;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
-    area += (T)(j->x - i->x) * (T)(j->y + i->y);
+    area += static_cast<T>(j->x - i->x) * static_cast<T>(j->y + i->y);  // Overflow warning!
   }
   return area < T(0) ? -area : area;
 }
@@ -113,8 +114,8 @@ std::pair<double, double> polygon_centroid(It lo, It hi) {
 
 /*** Example Usage and Output:
 
-Clockwise vertices: (1, 3) (1, 2) (2, 1) (0, 0) (-1, 3) 
-Counterclockwise vertices: (-1, 3) (0, 0) (2, 1) (1, 2) (1, 3) 
+Clockwise vertices: (1, 3) (1, 2) (2, 1) (0, 0) (-1, 3)
+Counterclockwise vertices: (-1, 3) (0, 0) (2, 1) (1, 2) (1, 3)
 
 ***/
 
@@ -160,17 +161,17 @@ int main() {
   Point c = mean_center(v.begin(), v.end());
   assert(EQ(c, Point(0.6, 1.8)));
   sort(v.begin(), v.end(), [c](const Point &a, const Point &b) { return cw_comp(a, b, c); });
-  cout << "Clockwise vertices: ";
+  cout << "Clockwise vertices:";
   for (const auto &p : v) {
-    cout << "(" << p.x << ", " << p.y << ") ";
+    cout << " (" << p.x << ", " << p.y << ")";
   }
   cout << endl;
   assert(EQ(polygon_area(v.begin(), v.end()), 5));
 
   sort(v.begin(), v.end(), [c](const Point &a, const Point &b) { return cw_comp(b, a, c); });
-  cout << "Counterclockwise vertices: ";
+  cout << "Counterclockwise vertices:";
   for (const auto &p : v) {
-    cout << "(" << p.x << ", " << p.y << ") ";
+    cout << " (" << p.x << ", " << p.y << ")";
   }
   cout << endl;
   assert(EQ(polygon_area(v.begin(), v.end()), 5));

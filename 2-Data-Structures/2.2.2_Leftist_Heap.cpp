@@ -11,24 +11,26 @@ merges the root's two subtrees. Unlike the self-adjusting skew heap, the explici
 every operation O(log n) in the worst case rather than amortized.
 
 - `LeftistHeap<T>()` constructs an empty priority queue.
-- `LeftistHeap<T>(lo, hi)` constructs a priority queue from two ForwardIterators, consisting of
-  elements in the range $[`lo`, `hi`)$.
+- `LeftistHeap<T>(lo, hi)` constructs a priority queue from the elements in the half-open iterator
+  range $[`lo`, `hi`)$.
 - `size()` returns the size of the priority queue.
 - `empty()` returns whether the priority queue is empty.
 - `push(v)` inserts the value `v` into the priority queue.
 - `pop()` removes the minimum element from the priority queue.
 - `top()` returns the minimum element in the priority queue.
-- `join(h)` inserts every value from `h` and sets `h` to the empty priority queue.
+- `absorb(h)` inserts every value from the distinct heap `h` and sets `h` to the empty priority
+  queue.
 
 Time Complexity:
 - O(1) per call to the first constructor, `size()`, `empty()`, and `top()`.
-- O(log n) per call to `push()`, `pop()`, and `join()`, where $n$ is the number of elements in the
+- O(log n) per call to `push()`, `pop()`, and `absorb()`, where $n$ is the number of elements in the
   priority queue.
 - O(n log n) per call to the second constructor, where $n$ is the distance between `lo` and `hi`.
 
 Space Complexity:
 - O(n) for storage of the priority queue elements.
-- O(log n) auxiliary stack space for `push()`, `pop()`, and `join()`.
+- O(log n) auxiliary stack space for `push()`, `pop()`, and `absorb()`.
+- O(n) auxiliary stack space in the worst case for destruction.
 - O(1) auxiliary for all other operations.
 
 */
@@ -105,12 +107,13 @@ class LeftistHeap {
     num_nodes--;
   }
 
-  T top() const {
+  const T &top() const {
     assert(!empty());
     return root->value;
   }
 
-  void join(LeftistHeap &h) {
+  void absorb(LeftistHeap &h) {
+    assert(this != &h);
     root = merge(root, h.root);
     num_nodes += h.num_nodes;
     h.root = nullptr;
@@ -140,7 +143,7 @@ int main() {
   h2.push(5);
   h2.push(-1);
   h2.push(0);
-  h.join(h2);
+  h.absorb(h2);
   assert(h.size() == 5);
   assert(h2.empty());
   vector<int> popped;

@@ -22,38 +22,41 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <utility>
+#include <numeric>
 #include <vector>
 
 std::vector<std::vector<char>> adj;
 int min_colors;
-std::vector<int> color, curr, id, degree;
+std::vector<int> color, curr, order;
 
-void rec(int lo, int hi, int n, int used_colors) {
+void color_rec(int pos, int used_colors) {
   if (used_colors >= min_colors) {
     return;
   }
-  if (n == hi) {
-    for (int i = lo; i < hi; i++) {
-      color[id[i]] = curr[i];
-    }
+  if (pos == static_cast<int>(order.size())) {
+    color = curr;
     min_colors = used_colors;
     return;
   }
-  std::vector<char> used(used_colors + 1);
-  for (int i = 0; i < n; i++) {
-    if (adj[id[n]][id[i]]) {
-      used[curr[i]] = true;
+  int u = order[pos];
+  for (int c = 0; c < used_colors; c++) {
+    bool valid = true;
+    for (int i = 0; i < pos; i++) {
+      int v = order[i];
+      if (adj[u][v] && curr[v] == c) {
+        valid = false;
+        break;
+      }
+    }
+    if (valid) {
+      curr[u] = c;
+      color_rec(pos + 1, used_colors);
+      curr[u] = -1;
     }
   }
-  for (int i = 0; i <= used_colors; i++) {
-    if (!used[i]) {
-      int tmp = curr[n];
-      curr[n] = i;
-      rec(lo, hi, n + 1, std::max(used_colors, i + 1));
-      curr[n] = tmp;
-    }
-  }
+  curr[u] = used_colors;
+  color_rec(pos + 1, used_colors + 1);
+  curr[u] = -1;
 }
 
 int color_graph() {
@@ -62,35 +65,33 @@ int color_graph() {
     color.clear();
     return 0;
   }
-  color.assign(n, 0);
-  curr.assign(n, 0);
-  id.assign(n + 1, 0);
-  degree.assign(n + 1, 0);
-  for (int i = 0; i <= n; i++) {
-    id[i] = i;
-    degree[i] = 0;
-  }
-  int res = 1, lo = 0;
-  for (int hi = 1; hi <= n; hi++) {
-    int best = hi;
-    for (int i = hi; i < n; i++) {
-      if (adj[id[hi - 1]][id[i]]) {
-        degree[id[i]]++;
-      }
-      if (degree[id[best]] < degree[id[i]]) {
-        best = i;
-      }
-    }
-    std::swap(id[hi], id[best]);
-    if (degree[id[hi]] == 0) {
-      min_colors = n + 1;
-      curr.assign(n, 0);
-      rec(lo, hi, lo, 0);
-      lo = hi;
-      res = std::max(res, min_colors);
+  std::vector<int> degree(n);
+  for (int u = 0; u < n; u++) {
+    for (int v = 0; v < n; v++) {
+      degree[u] += adj[u][v];
     }
   }
-  return res;
+  order.resize(n);
+  std::iota(order.begin(), order.end(), 0);
+  std::sort(order.begin(), order.end(), [&](int u, int v) {
+    if (degree[u] != degree[v]) {
+      return degree[u] > degree[v];
+    }
+    return u < v;
+  });
+  min_colors = n + 1;
+  color.assign(n, -1);
+  curr.assign(n, -1);
+  color_rec(0, 0);
+  std::vector<int> remap(min_colors, -1);
+  int colors = 0;
+  for (int &c : color) {
+    if (remap[c] == -1) {
+      remap[c] = colors++;
+    }
+    c = remap[c];
+  }
+  return min_colors;
 }
 
 /*** Example Usage and Output:

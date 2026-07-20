@@ -18,12 +18,12 @@ tableau row or column currently represents, making solution recovery independent
   for an $m$ by $n$ matrix `a` of real values, a length $m$ vector `b`, and a length $n$ vector `c`,
   returning $0$ if an optimum was found, $-1$ if there are no feasible solutions, or $1$ if the
   objective is unbounded. Set `maximize = false` to minimize instead, and use `eps` as the pivot and
-  feasibility tolerance. If an optimum is found, then the vector pointed to by `x` is populated with
-  a dense solution vector.
+  feasibility tolerance. If an optimum is found, `x` is assigned a vector of length `n`, where
+  `x[j]` is the value of the $j$-th variable.
 
 Time Complexity:
-- O(2^n) pivots per call in the worst case, where $n$ is the number of unknowns, although simplex
-  typically runs much faster in practice.
+- O(pmn), where $p$ is the total number of pivots across both phases. Each pivot takes O(mn), and
+  $p$ can be exponential in the worst case, although it is usually much smaller in practice.
 
 Space Complexity:
 - O(m*n) auxiliary.
@@ -42,9 +42,6 @@ int simplex_solve(
 ) {
   int m = static_cast<int>(a.size()), n = static_cast<int>(c.size());
   assert(x != nullptr && b.size() == a.size());
-  for (const auto &row : a) {
-    assert(row.size() == c.size());
-  }
   std::vector<int> basis(m), nonbasis(n + 1);
   std::vector<std::vector<double>> tab(m + 2, std::vector<double>(n + 2));
   for (int i = 0; i < m; i++) {

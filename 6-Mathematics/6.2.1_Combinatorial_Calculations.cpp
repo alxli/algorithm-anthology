@@ -1,32 +1,33 @@
 /*
 
-The following functions implement common operations in combinatorics. All inputs must be
-nonnegative. All return values and table entries are computed as 64-bit integers modulo an input
-argument $m$ or $p$. Modular products use ordinary `int64_t` multiplication, so the square of the
-chosen modulus must fit in `int64_t`.
+The following functions implement common operations in combinatorics. All size and count inputs must
+be nonnegative, and all moduli must be positive. All return values and table entries are computed as
+64-bit integers modulo an input argument $m$ or $p$. Modular products use ordinary `int64_t`
+multiplication, so the square of the chosen modulus must fit in `int64_t`.
 
 - `factorial(n, m = MOD)` returns $n! \bmod m$.
-- `factorialp(n, p = MOD)` returns $n! \bmod p$, where $p$ is prime.
-- `binomial_table(n, m = MOD)` returns rows $[0, `n`]$ of Pascal's triangle as a two-dimensional
-  vector $t$ such that $t[i][j] = \binom{i}{j} \bmod m$.
+- `factorial_without_p(n, p = MOD)` returns $n!$ modulo the prime $p$ after removing every factor of
+  $p$ from the factorial.
+- `binomial_table(n, m = MOD)` returns the first `n + 1` rows of Pascal's triangle as a
+  two-dimensional vector $t$ such that $t[i][j] = \binom{i}{j} \bmod m$.
 - `permute(n, k, m = MOD)` returns $(n \mathbin{\text{permute}} k) \bmod m$.
-- `choose(n, k, p = MOD)` returns $\binom{n}{k} \bmod p$, where $p$ is prime.
+- `choose(n, k, p = MOD)` returns $\binom{n}{k} \bmod p$, where $p$ is prime and $n < p$.
 - `multichoose(n, k, p = MOD)` returns $(n \mathbin{\text{multichoose}} k) \bmod p$, where $p$ is
-  prime.
-- `catalan(n, p = MOD)` returns the $n$-th Catalan number mod $p$, where $p$ is prime.
+  prime and $n + k - 1 < p$ when $n > 0$.
+- `catalan(n, p = MOD)` returns the $n$-th Catalan number mod $p$, where $p$ is prime and $2n < p$.
 - `partitions(n, m = MOD)` returns the number of partitions of $n$, mod $m$.
 - `partitions(n, k, m = MOD)` returns the number of partitions of $n$ into $k$ parts, mod $m$.
-- `stirling1(n, k, m = MOD)` returns the $(`n`, `k`)$ unsigned Stirling number of the 1st kind mod
+- `stirling1(n, k, m = MOD)` returns the $(n, k)$ unsigned Stirling number of the 1st kind mod
   $m$.
-- `stirling2(n, k, m = MOD)` returns the $(`n`, `k`)$ Stirling number of the 2nd kind mod $m$.
-- `eulerian1(n, k, m = MOD)` returns the $(`n`, `k`)$ Eulerian number of the 1st kind mod $m$, where
+- `stirling2(n, k, m = MOD)` returns the $(n, k)$ Stirling number of the 2nd kind mod $m$.
+- `eulerian1(n, k, m = MOD)` returns the $(n, k)$ Eulerian number of the 1st kind mod $m$, where
   $n > k$.
-- `eulerian2(n, k, m = MOD)` returns the $(`n`, `k`)$ Eulerian number of the 2nd kind mod $m$, where
+- `eulerian2(n, k, m = MOD)` returns the $(n, k)$ Eulerian number of the 2nd kind mod $m$, where
   $n > k$.
 
 Time Complexity:
 - O(n) for `factorial(n, m)`.
-- O(p log n) for `factorialp(n, p)`.
+- O(p log_p(n)) for `factorial_without_p(n, p)`.
 - O(n^2) for `binomial_table(n, m)`.
 - O(k) for `permute(n, k, m)`.
 - O(min(k, n - k)) for `choose(n, k, p)`.
@@ -49,7 +50,7 @@ Space Complexity:
 
 const int64_t MOD = 1000000007;
 
-int64_t factorial(int n, int m = MOD) {
+int64_t factorial(int n, int64_t m = MOD) {
   int64_t res = 1;
   for (int i = 2; i <= n; i++) {
     res = (res * i) % m;
@@ -57,7 +58,7 @@ int64_t factorial(int n, int m = MOD) {
   return res % m;
 }
 
-int64_t factorialp(int64_t n, int64_t p = MOD) {
+int64_t factorial_without_p(int64_t n, int64_t p = MOD) {
   int64_t res = 1;
   while (n > 1) {
     if (n / p % 2 == 1) {
@@ -126,6 +127,9 @@ int64_t choose(int n, int k, int64_t p = MOD) {
 }
 
 int64_t multichoose(int n, int k, int64_t p = MOD) {
+  if (n == 0) {
+    return k == 0;
+  }
   return choose(n + k - 1, k, p);
 }
 
@@ -146,7 +150,7 @@ int64_t partitions(int n, int64_t m = MOD) {
 
 int64_t partitions(int n, int k, int64_t m = MOD) {
   std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 0));
-  t[0][1] = 1;
+  t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
     for (int j = 1, h = k < i ? k : i; j <= h; j++) {
       t[i][j] = (t[i - 1][j - 1] + t[i - j][j]) % m;
@@ -223,12 +227,14 @@ int main() {
     }
   }
   assert(factorial(10) == 3628800);
-  assert(factorialp(123456) == 639390503);
+  assert(factorial_without_p(123456) == 639390503);
+  assert(factorial_without_p(7, 5) == 3);  // 7! / 5 = 1008 = 3 (mod 5).
   assert(permute(10, 4) == 5040);
   assert(choose(20, 7) == 77520);
   assert(multichoose(20, 7) == 657800);
   assert(catalan(10) == 16796);
   assert(partitions(4) == 5);
+  assert(partitions(0, 0) == 1);
   assert(partitions(100, 5) == 38225);
   assert(stirling1(4, 2) == 11);
   assert(stirling2(4, 3) == 6);

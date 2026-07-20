@@ -11,7 +11,7 @@ certain real-valued flow inputs for which the algorithm never terminates. The Ed
 is an improvement using breadth-first search, addressing this problem.
 
 - `max_flow(source, sink)` modifies the global residual capacity matrix `cap` and returns maximum
-  flow. Nodes are numbered $[0, `n`)$, where `n` is `cap.size()`.
+  flow. Nodes are numbered $[0, n)$, where $n$ is `cap.size()`.
 
 Time Complexity:
 - O(n^2*f) per call, where $n$ is the number of nodes and $f$ is the maximum flow.
@@ -23,15 +23,15 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <climits>
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
-const int INF = INT_MAX / 2;
-std::vector<std::vector<int>> cap;
+const int64_t INF = INT64_MAX / 4;
+std::vector<std::vector<int64_t>> cap;
 std::vector<char> visit;
 
-int dfs(int u, int f, int sink) {
+int64_t dfs(int u, int64_t f, int sink) {
   int n = static_cast<int>(cap.size());
   if (u == sink) {
     return f;
@@ -39,7 +39,7 @@ int dfs(int u, int f, int sink) {
   visit[u] = true;
   for (int v = 0; v < n; v++) {
     if (!visit[v] && cap[u][v] > 0) {
-      int flow = dfs(v, std::min(f, cap[u][v]), sink);
+      int64_t flow = dfs(v, std::min(f, cap[u][v]), sink);
       if (flow > 0) {
         cap[u][v] -= flow;
         cap[v][u] += flow;
@@ -52,10 +52,11 @@ int dfs(int u, int f, int sink) {
 
 int64_t max_flow(int source, int sink) {
   int n = static_cast<int>(cap.size());
+  assert(source != sink);
   int64_t total = 0;
   while (true) {
     visit.assign(n, false);
-    int flow = dfs(source, INF, sink);
+    int64_t flow = dfs(source, INF, sink);
     if (flow == 0) {
       break;
     }
@@ -81,7 +82,7 @@ int main() {
   //      v /
   //       2
   int nodes = 6;
-  cap.assign(nodes, std::vector<int>(nodes));
+  cap.assign(nodes, std::vector<int64_t>(nodes));
   cap[0][1] = 4;
   cap[0][2] = 3;
   cap[1][3] = 2;

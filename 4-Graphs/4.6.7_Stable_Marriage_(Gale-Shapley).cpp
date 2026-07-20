@@ -1,10 +1,11 @@
 /*
 
-The stable marriage problem pairs $n$ men with $n$ women, given that every person ranks all members
-of the opposite group in strict order of preference. A perfect matching is stable if no man and
-woman both prefer each other to their assigned partners; such a pair would otherwise abandon their
-matches. Unlike maximum matching, the goal is not the size of the matching (it is always perfect)
-but its stability with respect to the preference lists.
+The stable marriage problem takes $n$ men and $n$ women, with every person ranking all members of
+the opposite group in strict order of preference, and seeks a bijection between the two groups. An
+unmatched pair $(m, w)$ is a blocking pair if man $m$ prefers woman $w$ to his assigned partner and
+woman $w$ prefers man $m$ to hers. A matching is stable if it has no blocking pair. Unlike maximum
+matching, the goal is therefore not to maximize the number of pairs, but to find a complete pairing
+that satisfies this stability condition.
 
 The Gale-Shapley algorithm produces a stable matching, and a stable matching always exists. Each
 free man proposes to the most preferred woman who has not yet rejected him. A woman provisionally

@@ -29,8 +29,9 @@ Time Complexity:
 - O(1) per call to `add_edge()`.
 - O(m) to check whether initial potentials are needed, plus O(n*m) to compute them when negative
   residual costs are reachable.
-- O(f*m*log n) for the augmenting paths, where $f$ is the amount of flow sent, $n$ is the number of
-  nodes, and $m$ is the number of edges.
+- O(a*m*log n) for the augmenting paths, where $a$ is the number of augmenting paths, $n$ is the
+  number of nodes, and $m$ is the number of edges. For integer capacities, $a$ is at most the flow
+  sent.
 
 Space Complexity:
 - O(max(n, m)) for storage of the residual network and auxiliary arrays.
@@ -38,6 +39,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <functional>
 #include <limits>
@@ -63,7 +65,7 @@ class MinCostMaxFlow {
 
   void init_potentials(int source) {
     static const C INF_COST = std::numeric_limits<C>::max() / 4;
-    std::fill(potential.begin(), potential.end(), 0);
+    potential.assign(nodes, 0);
     bool has_negative_cost = false;
     for (const Edge &e : edges) {
       has_negative_cost |= residual(e) && e.cost < 0;
@@ -71,7 +73,7 @@ class MinCostMaxFlow {
     if (!has_negative_cost) {
       return;
     }
-    std::fill(potential.begin(), potential.end(), INF_COST);
+    potential.assign(nodes, INF_COST);
     std::vector<char> in_queue(nodes);
     std::queue<int> q;
     potential[source] = 0;
@@ -117,10 +119,11 @@ class MinCostMaxFlow {
     for (Edge &e : edges) {
       e.flow = 0;
     }
-    std::fill(potential.begin(), potential.end(), 0);
+    potential.assign(nodes, 0);
   }
 
   std::pair<T, C> min_cost_flow(int source, int sink, T target_flow) {
+    assert(source != sink);
     static const C INF_COST = std::numeric_limits<C>::max() / 4;
     init_potentials(source);
     T flow = 0;
@@ -128,7 +131,7 @@ class MinCostMaxFlow {
     std::vector<C> dist(nodes);
     std::vector<int> parent_edge(nodes);
     while (flow < target_flow) {
-      std::fill(dist.begin(), dist.end(), INF_COST);
+      dist.assign(nodes, INF_COST);
       std::priority_queue<std::pair<C, int>, std::vector<std::pair<C, int>>, std::greater<>> pq;
       dist[source] = 0;
       pq.push({0, source});
@@ -210,9 +213,9 @@ int main() {
   assert(flow == 5);
   assert(cost == 16);
   assert(g.edge_flow(id01) == 3);
-  cout << "Flow sent: " << flow << "\n";
-  cout << "Minimum cost: " << cost << "\n";
-  cout << "Flow on edge 0->1: " << g.edge_flow(id01) << "\n";
+  cout << "Flow sent: " << flow << endl;
+  cout << "Minimum cost: " << cost << endl;
+  cout << "Flow on edge 0->1: " << g.edge_flow(id01) << endl;
   g.clear_flow();
   auto [flow2, cost2] = g.min_cost_flow(0, 5, 5);
   assert(flow2 == 5);

@@ -13,7 +13,7 @@ solutions.
   parity ($0$ if the number of overall row swaps performed is even, or $1$ if it is odd), or $-1$
   denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix `lu` has
   `lu[i][j]` = `l[i][j]` for `i` > `j` and `lu[i][j]` = `u[i][j]` for `i` $\leq$ `j`. Note that the
-  algorithm always yields an atomic lower triangular matrix for which the diagonal entries `l[i][i]`
+  algorithm always yields a unit lower triangular matrix for which the diagonal entries `l[i][i]`
   are always equal to $1$, so this is not explicitly stored in the resulting merged matrix. For
   general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via
   the `getl(lu, i, j)` and `getu(lu, i, j)` functions. Optionally, a `vector<int>` pointer `p1col`
@@ -29,8 +29,9 @@ solutions.
   inversion was successful or $-1$ if `a` has no inverse.
 
 Time Complexity:
-- O(m^2*n) per call to `lu_decompose(a)` and `solve_system(a, b)`, where $m$ and $n$ are the number
-  of rows and columns of `a`, respectively.
+- O(m*n*min(m, n)) per call to `lu_decompose(a)`, where $m$ and $n$ are the numbers of rows and
+  columns of `a`, respectively.
+- O(m*n^2) per call to `solve_system(a, b)`, which requires $m \geq n$.
 - O(n^3) per call to `det(a)` and `invert(a)`, where $n$ is the length of square matrix `a`.
 
 Space Complexity:
@@ -42,7 +43,6 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
-#include <limits>
 #include <numeric>
 #include <vector>
 

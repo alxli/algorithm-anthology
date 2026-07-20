@@ -33,18 +33,21 @@ std::pair<int64_t, std::vector<int>> knapsack_01(
 ) {
   int n = static_cast<int>(weight.size());
   assert(static_cast<int>(value.size()) == n && capacity >= 0);
+  for (int i = 0; i < n; i++) {
+    assert(weight[i] >= 0 && value[i] >= 0);
+  }
   std::vector<int64_t> dp(capacity + 1, 0);
   std::vector<std::vector<char>> take(n, std::vector<char>(capacity + 1, false));
   for (int i = 0; i < n; i++) {
-    assert(weight[i] >= 0);
     for (int w = capacity; w >= weight[i]; w--) {
-      int64_t candidate = dp[w - weight[i]] + value[i];
+      int64_t candidate = dp[w - weight[i]] + value[i];  // Overflow warning.
       if (dp[w] < candidate) {
         dp[w] = candidate;
         take[i][w] = true;
       }
     }
   }
+  // Optional: reconstruct the selected items.
   std::vector<int> items;
   for (int i = n - 1, w = capacity; i >= 0; i--) {
     if (take[i][w]) {

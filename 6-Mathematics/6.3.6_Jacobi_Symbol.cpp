@@ -17,7 +17,7 @@ the Solovay-Strassen primality test exploits.
   result is $0$ exactly when `a` and `n` share a common factor.
 
 Time Complexity:
-- O(log a * log n) per call.
+- O(log n) arithmetic operations per call.
 
 Space Complexity:
 - O(1) auxiliary.

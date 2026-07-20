@@ -16,6 +16,7 @@ sparse, compress them to a small contiguous range first.
 
 - `WaveletTree(a, min_val, max_val)` builds the tree over the array `a`, whose values must all lie
   in [`min_val`, `max_val`].
+- `size()` returns the size of the array.
 - `kth_smallest(lo, hi, k)` returns the `k`-th smallest value among positions $[`lo`, `hi`]$, where
   `k` is 1-based (so `k == 1` returns the minimum).
 - `count_leq(lo, hi, x)` returns the number of positions `i` $\in [`lo`, `hi`]$ such that `a[i]`
@@ -26,6 +27,7 @@ sparse, compress them to a small contiguous range first.
 Time Complexity:
 - O(n log s) per call to the constructor, where $n$ is the size of the array and $s$ is the size of
   the value range.
+- O(1) per call to `size()`.
 - O(log s) per call to `kth_smallest()`, `count_leq()`, and `count_in()`.
 
 Space Complexity:
@@ -36,6 +38,8 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -46,14 +50,16 @@ class WaveletTree {
 
   WaveletTree(std::vector<int>::iterator lo, std::vector<int>::iterator hi, int x, int y)
       : min_val(x), max_val(y) {
+    assert(min_val <= max_val);
+    b.reserve((hi - lo) + 1);
+    b.push_back(0);
     if (lo >= hi) {
       return;
     }
-    int mid = min_val + (max_val - min_val) / 2;
+    int mid = min_val + static_cast<int>((static_cast<int64_t>(max_val) - min_val) / 2);
     auto go_left = [mid](int v) { return v <= mid; };
-    b.reserve((hi - lo) + 1);
-    b.push_back(0);
     for (auto it = lo; it != hi; ++it) {
+      assert(min_val <= *it && *it <= max_val);
       b.push_back(b.back() + (go_left(*it) ? 1 : 0));
     }
     if (min_val == max_val) {
@@ -90,24 +96,24 @@ class WaveletTree {
   WaveletTree(std::vector<int> a, int min_val, int max_val)
       : WaveletTree(a.begin(), a.end(), min_val, max_val) {}
 
+  int size() const { return static_cast<int>(b.size()) - 1; }
+
   int kth_smallest(int lo, int hi, int k) const {
-    int n = static_cast<int>(b.size()) - 1;
-    assert(0 <= lo && lo <= hi && hi < n);
+    assert(0 <= lo && lo <= hi && hi < size());
     assert(1 <= k && k <= hi - lo + 1);
     return kth(lo + 1, hi + 1, k);
   }
 
   int count_leq(int lo, int hi, int x) const {
-    int n = static_cast<int>(b.size()) - 1;
-    assert(0 <= lo && lo <= hi && hi < n);
+    assert(0 <= lo && lo <= hi && hi < size());
     return leq(lo + 1, hi + 1, x);
   }
 
   int count_in(int lo, int hi, int x, int y) const {
-    int n = static_cast<int>(b.size()) - 1;
-    assert(0 <= lo && lo <= hi && hi < n);
+    assert(0 <= lo && lo <= hi && hi < size());
     assert(x <= y);
-    return leq(lo + 1, hi + 1, y) - leq(lo + 1, hi + 1, x - 1);
+    int below_x = x == std::numeric_limits<int>::lowest() ? 0 : leq(lo + 1, hi + 1, x - 1);
+    return leq(lo + 1, hi + 1, y) - below_x;
   }
 };
 
@@ -120,6 +126,7 @@ int main() {
   vector<int> a{5, 2, 8, 6, 1, 9, 3};
   WaveletTree t(a, 1, 9);
 
+  assert(t.size() == 7);
   assert(t.kth_smallest(0, 6, 1) == 1);  // Minimum of the whole array.
   assert(t.kth_smallest(0, 6, 4) == 5);  // Median of the whole array.
   assert(t.kth_smallest(2, 4, 2) == 6);  // {8, 6, 1} -> 6 is 2nd smallest.
@@ -127,5 +134,9 @@ int main() {
   assert(t.count_leq(0, 6, 5) == 4);    // 5, 2, 1, 3
   assert(t.count_in(0, 6, 3, 8) == 4);  // 5, 8, 6, 3
   assert(t.count_in(1, 5, 2, 6) == 2);  // 2, 6
+
+  vector<int> extremes{numeric_limits<int>::lowest(), 0, numeric_limits<int>::max()};
+  WaveletTree extreme_tree(extremes, numeric_limits<int>::lowest(), numeric_limits<int>::max());
+  assert(extreme_tree.count_in(0, 2, numeric_limits<int>::lowest(), 0) == 2);
   return 0;
 }

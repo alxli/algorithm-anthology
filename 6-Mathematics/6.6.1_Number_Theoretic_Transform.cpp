@@ -55,7 +55,7 @@ int64_t powmod(int64_t b, int64_t e, int64_t m) {
 
 void ntt(std::vector<int64_t> &a, bool invert) {
   int n = static_cast<int>(a.size());
-  assert((n & (n - 1)) == 0 && n <= (1 << MAX_POWER_OF_TWO));
+  assert(n > 0 && (n & (n - 1)) == 0 && n <= (1 << MAX_POWER_OF_TWO));
   for (int i = 1, j = 0; i < n; i++) {
     int bit = n >> 1;
     for (; j & bit; bit >>= 1) {

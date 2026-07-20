@@ -1,8 +1,8 @@
 /*
 
-A graph consists of a set of objects (a.k.a. vertices, or nodes) and a set of connections (a.k.a.
-edges) between pairs of said objects. A graph may be stored as an adjacency list, which is a space
-efficient representation that is also time-efficient for traversals.
+A graph consists of a set of nodes and a set of connections (edges) between pairs of nodes. A graph
+may be stored as an adjacency list, which is a space-efficient representation that is also efficient
+for traversals.
 
 The following class implements a simple graph using adjacency lists, along with depth-first search
 and a few other applications. The constructor takes a flag which specifies whether the instance is a
@@ -12,8 +12,9 @@ maximum node index passed to `add_edge()` so far.
 
 - `Graph(directed = true)` constructs an empty graph, directed if `directed` is true and undirected
   otherwise.
-- `nodes()` returns the current number of nodes.
-- `operator[n]` returns a reference to the adjacency list (`std::vector<int>`) of node `n`.
+- `size()` returns the current number of nodes.
+- `operator[n]` returns a mutable or const reference to the adjacency list (`std::vector<int>`) of
+  node `n`.
 - `add_edge(u, v)` adds an edge from `u` to `v`, plus the reverse edge if the graph is undirected,
   growing the node count to accommodate the larger index if necessary.
 - `dfs(start, f)` runs a depth-first search from node `start`, calling `f(n)` on each node `n` in
@@ -80,8 +81,9 @@ class Graph {
  public:
   Graph(bool directed = true) : directed(directed) {}
 
-  int nodes() const { return static_cast<int>(adj.size()); }
+  int size() const { return static_cast<int>(adj.size()); }
   std::vector<int> &operator[](int n) { return adj[n]; }
+  const std::vector<int> &operator[](int n) const { return adj[n]; }
 
   void add_edge(int u, int v) {
     int n = static_cast<int>(adj.size());
@@ -153,7 +155,7 @@ int main() {
     cout << "DFS order: ";
     g.dfs(0, [](int n) { cout << n << " "; });
     cout << endl;
-    assert(g[0].size() == 3);
+    assert(g.size() == 12 && g[0].size() == 3);
     assert(g.is_dag());
     assert(!g.has_cycle());
   }

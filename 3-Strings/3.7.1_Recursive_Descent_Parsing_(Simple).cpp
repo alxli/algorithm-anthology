@@ -1,6 +1,6 @@
 /*
 
-Evaluate an expression in accordance to the order of operations (parentheses, unary plus and minus
+Evaluate an expression according to the order of operations (parentheses, unary plus and minus
 signs, multiplication/division, addition/subtraction). The following is a minimalistic recursive
 descent implementation using iterators. Each precedence level is parsed by its own function that
 obtains operands by calling the next-tighter level, so the call structure itself enforces the order
@@ -22,16 +22,19 @@ template<typename It>
 int eval(It &it, int prec) {
   if (prec == 0) {
     int sign = 1, res = 0;
-    for (; *it == '-'; it++) {
-      sign *= -1;
+    for (; *it == '-' || *it == '+'; it++) {
+      if (*it == '-') {
+        sign *= -1;
+      }
     }
     if (*it == '(') {
       res = eval(++it, 2);
       it++;
-    } else
+    } else {
       while (*it >= '0' && *it <= '9') {
         res = 10 * res + (*(it++) - '0');
       }
+    }
     return sign * res;
   }
   int num = eval(it, prec - 1);
@@ -65,6 +68,8 @@ int eval(const std::string &s) {
 #include <cassert>
 
 int main() {
+  assert(eval("+1") == 1);
+  assert(eval("1+-2") == -1);
   assert(eval("1++1") == 2);
   assert(eval("1+2*3*4+3*(2+2)-100") == -63);
   return 0;

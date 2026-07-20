@@ -5,9 +5,9 @@ half-plane of that line. The polygon is walked edge by edge: vertices on the lef
 are kept, and whenever an edge crosses the line, the intersection point is appended to the output.
 
 - `convex_cut(lo, hi, p, q)` returns the portion of the polygon lying on or to the left of the
-  directed line `p` $\to$ `q`. The input range $[`lo`, `hi`)$ must contain the vertices of a convex
-  polygon in boundary order, either clockwise or counterclockwise. The returned polygon preserves
-  that boundary order. The points `p` and `q` must differ.
+  directed line from `p` to `q`. The input range $[`lo`, `hi`)$ must contain the vertices of a
+  convex polygon in boundary order, either clockwise or counterclockwise. The returned polygon
+  preserves that boundary order. The points `p` and `q` must differ.
 
 The function is templated on the input point type. Side classification is done with cross products.
 For integer-coordinate inputs, classification is exact only if the intermediate products do not
@@ -31,7 +31,9 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) {
+    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  }
   return C(a) == C(b);
 }
 
@@ -49,13 +51,13 @@ struct Point {
 };
 
 template<typename PtA, typename PtB, typename PtO>
-double cross(const PtA &a, const PtB &b, const PtO &o) {
+auto cross(const PtA &a, const PtB &b, const PtO &o) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
 template<typename PtA, typename PtO, typename PtB>
 int turn(const PtA &a, const PtO &o, const PtB &b) {
-  double c = cross(a, b, o);
+  auto c = cross(a, b, o);
   return LT(c, 0) ? 1 : (LT(0, c) ? -1 : 0);
 }
 
@@ -63,10 +65,10 @@ template<typename PtA, typename PtB>
 int line_intersection(
     const PtA &p1, const PtA &p2, const PtB &p3, const PtB &p4, Point *p = nullptr
 ) {
-  double a1 = p2.y - p1.y, b1 = p1.x - p2.x;
-  double c1 = -(p1.x * p2.y - p2.x * p1.y);
-  double a2 = p4.y - p3.y, b2 = p3.x - p4.x;
-  double c2 = -(p3.x * p4.y - p4.x * p3.y);
+  double a1 = static_cast<double>(p2.y) - p1.y, b1 = static_cast<double>(p1.x) - p2.x;
+  double c1 = -(static_cast<double>(p1.x) * p2.y - static_cast<double>(p2.x) * p1.y);
+  double a2 = static_cast<double>(p4.y) - p3.y, b2 = static_cast<double>(p3.x) - p4.x;
+  double c2 = -(static_cast<double>(p3.x) * p4.y - static_cast<double>(p4.x) * p3.y);
   double x = -(c1 * b2 - c2 * b1), y = -(a1 * c2 - a2 * c1);
   double det = a1 * b2 - a2 * b1;
   if (EQ(det, 0)) {
@@ -88,13 +90,13 @@ std::vector<Point> convex_cut(It lo, It hi, const Pt &p, const Pt &q) {
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
     Point pj(static_cast<double>(j->x), static_cast<double>(j->y));
     Point pi(static_cast<double>(i->x), static_cast<double>(i->y));
-    int d1 = turn(q, p, pj), d2 = turn(q, p, pi);
+    int d1 = turn(q, p, *j), d2 = turn(q, p, *i);
     if (d1 <= 0) {
       res.push_back(pj);
     }
     if (d1 * d2 < 0) {
       Point r;
-      line_intersection(p, q, pj, pi, &r);
+      line_intersection(p, q, *j, *i, &r);
       res.push_back(r);
     }
   }
@@ -133,7 +135,7 @@ int main() {
     for (const Point &p : cut) {
       cout << " (" << p.x << "," << p.y << ")";
     }
-    cout << "\n";
+    cout << endl;
   }
   {  // On a non-convex input, the result may be multiple disjoint polygons!
     vector<Point> v{{0, 0}, {2, 2}, {0, 4}, {3, 4}, {3, 0}};

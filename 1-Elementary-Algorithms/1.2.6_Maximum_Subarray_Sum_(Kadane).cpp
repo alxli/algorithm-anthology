@@ -7,15 +7,18 @@ subarray that extends it. Thus, by including `a[i]`, the running sum becomes `ma
 and the largest running sum seen is the answer. This can be adapted to compute the maximal submatrix
 sum as well.
 
-- `max_subarray_sum(lo, hi)` returns `(sum, begin, end)` for the maximal subarray in $[`lo`, `hi`)$,
-  where `lo` and `hi` are random-access iterators to numeric types. The endpoints are inclusive.
-  This implementation requires operators `+` and `<` on the iterators' value type. By convention,
-  the empty subarray is allowed, so an input range containing only negative values returns sum $0$
-  and endpoints $[0, -1]$.
-- `max_submatrix_sum(a)` returns `(sum, r1, c1, r2, c2)` for the largest rectangular submatrix of a
-  matrix `a` with $m$ rows and $n$ columns. The corners are inclusive. This implementation requires
-  operators `+` and `<` on the matrix value type. By convention, the empty submatrix is allowed, so
-  a matrix containing only negative values returns sum $0$ with empty row and column intervals.
+- `max_subarray_sum(lo, hi)` returns the sum and inclusive endpoints $(`sum`, `begin`, `end`)$ for
+  the maximal-sum subarray of $[`lo`, `hi`)$, where `lo` and `hi` are random-access iterators to
+  numeric types. This implementation requires operators `+` and `<` on the iterators' value type. By
+  convention, the empty subarray is allowed, so an input range containing only negative values
+  returns sum $0$ and endpoints $[0, -1]$.
+- `max_submatrix_sum(a)` returns the sum and inclusive boundaries $(`sum`, `r1`, `c1`, `r2`, `c2`)$
+  for the largest rectangular submatrix of a matrix `a` with $m$ rows and $n$ columns. This
+  implementation requires operators `+` and `<` on the matrix value type. By convention, the empty
+  submatrix is allowed, so a matrix containing only negative values returns sum $0$ with empty row
+  and column intervals.
+
+All subarray and submatrix sums must fit in the value type.
 
 Time Complexity:
 - O(n) per call to `max_subarray_sum()`, where $n$ is the distance between `lo` and `hi`.
@@ -28,7 +31,6 @@ Space Complexity:
 
 */
 
-#include <algorithm>
 #include <iterator>
 #include <tuple>
 #include <vector>
@@ -42,7 +44,7 @@ auto max_subarray_sum(It lo, It hi) {
   int curr_begin = 0, begin = 0, end = -1;
   T sum = 0, max_sum = 0;
   for (It it = lo; it != hi; ++it) {
-    sum += *it;
+    sum += *it;  // Overflow warning.
     if (sum < 0) {
       sum = 0;
       curr_begin = (it - lo) + 1;
@@ -67,7 +69,7 @@ std::tuple<T, int, int, int, int> max_submatrix_sum(const std::vector<std::vecto
     std::vector<T> sums(rows, 0);
     for (int chi = clo; chi < cols; chi++) {
       for (int i = 0; i < rows; i++) {
-        sums[i] += a[i][chi];
+        sums[i] += a[i][chi];  // Overflow warning.
       }
       auto [sum, rlo, rhi] = max_subarray_sum(sums.begin(), sums.end());
       if (max_sum < sum) {
@@ -101,12 +103,12 @@ using namespace std;
 int main() {
   {
     vector<int> a{-2, -1, -3, 4, -1, 2, 1, -5, 4};
-    auto [negative_sum, negative_lo, negative_hi] = max_subarray_sum(a.begin(), a.begin() + 3);
-    assert(negative_sum == 0 && negative_lo == 0 && negative_hi == -1);
-    auto [sum, lo, hi] = max_subarray_sum(a.begin(), a.end());
+    auto [neg_sum, neg_begin, neg_end] = max_subarray_sum(a.begin(), a.begin() + 3);
+    assert(neg_sum == 0 && neg_begin == 0 && neg_end == -1);
+    auto [sum, begin, end] = max_subarray_sum(a.begin(), a.end());
     assert(sum == 6);
     cout << "Maximal sum subarray:" << endl;
-    for (int i = lo; i <= hi; i++) {
+    for (int i = begin; i <= end; i++) {
       cout << a[i] << " ";
     }
     cout << endl;

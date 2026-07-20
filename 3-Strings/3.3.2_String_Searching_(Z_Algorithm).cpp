@@ -2,32 +2,31 @@
 
 Given a single string (needle) and a single text (haystack) to be searched, determine the first
 position in which the needle occurs within the haystack in linear time using the Z algorithm. In
-comparison, `std::string::find` runs in quadratic time.
+comparison, `std::string::find` does not guarantee a linear worst-case bound.
 
 The Z array stores, for each position of a string, the length of the longest substring starting
 there that matches a prefix of the whole string. It is computed in linear time by maintaining the
 rightmost matched window and seeding each position from its mirror earlier in that window.
 
-The `find()` function below calls the Z algorithm on the concatenation of `needle` and `haystack`,
-separated by a sentinel value that is guaranteed not to collide with any byte in either input. Any
-position whose Z value reaches the needle's length marks an occurrence.
+The `find_substring_z()` function below calls the Z algorithm on the concatenation of `needle` and
+`haystack`, separated by a sentinel value that is guaranteed not to collide with any byte in either
+input. Any position whose Z value reaches the needle's length marks an occurrence.
 
-- `z_array(s)` constructs the Z array for a needle string `s` that can be used for string searching.
-  Each resulting value `z[i]` stores the length of the longest substring starting from `s[i]` which
-  is also a prefix of the needle `s`.
-- `find(haystack, needle)` returns the first position that `needle` occurs in `haystack`, or
-  `std::string::npos` if it cannot be found. Note that the function can be modified to return all
-  matches by simply letting the loop run and storing the results instead of returning early.
+- `z_array(s)` constructs the Z array of sequence `s`. Each `z[i]` is the length of the longest
+  prefix of `s` that also occurs starting at index `i`.
+- `find_substring_z(haystack, needle)` returns the first position where `needle` occurs in
+  `haystack`, or `std::string::npos` if it cannot be found. To return all matches, let the loop run
+  and store the results instead of returning early.
 
 Time Complexity:
 - O(n) per call to `z_array(s)`, where $n$ is the length of `s`.
-- O(n + m) per call to `find(haystack, needle)`, where $n$ is the length of `haystack` and $m$ is
-  the length of `needle`.
+- O(n + m) per call to `find_substring_z(haystack, needle)`, where $n$ and $m$ are the lengths of
+  `haystack` and `needle`.
 
 Space Complexity:
 - O(n) auxiliary for `z_array(s)`, where $n$ is the length of `s`.
-- O(n + m) auxiliary for `find(haystack, needle)` where $n$ is the length of `haystack` and $m$ is
-  the length of `needle`.
+- O(n + m) auxiliary for `find_substring_z(haystack, needle)`, where $n$ is the length of `haystack`
+  and $m$ is the length of `needle`.
 
 */
 
@@ -55,7 +54,7 @@ std::vector<int> z_array(const Seq &s) {
   return z;
 }
 
-std::size_t find(const string &haystack, const string &needle) {
+std::size_t find_substring_z(const string &haystack, const string &needle) {
   if (needle.empty()) {
     return 0;
   }
@@ -84,9 +83,9 @@ std::size_t find(const string &haystack, const string &needle) {
 
 int main() {
   assert((z_array(string("aaaaa")) == std::vector<int>{0, 4, 3, 2, 1}));
-  assert(find("ABC ABCDAB ABCDABCDABDE", "ABCDABD") == 15);
-  assert(find("ABC ABCDAB ABCDABCDA", "ABCDABD") == string::npos);
-  assert(find("aaa", "aa") == 0);  // First overlapping occurrence.
-  assert(find("abc", "") == 0);
+  assert(find_substring_z("ABC ABCDAB ABCDABCDABDE", "ABCDABD") == 15);
+  assert(find_substring_z("ABC ABCDAB ABCDABCDA", "ABCDABD") == string::npos);
+  assert(find_substring_z("aaa", "aa") == 0);  // First overlapping occurrence.
+  assert(find_substring_z("abc", "") == 0);
   return 0;
 }

@@ -12,7 +12,8 @@ using `EPS` and remains exact for other coordinate types.
 
 Overflow warning: the exact products `dot()`, `cross()`, and `sqnorm()` grow like the squared
 coordinate magnitude. With `TPoint<int>` these overflow a 32-bit `int` once coordinates exceed
-roughly $46000$, so use `PointL` (`TPoint<long long>`) for larger integer coordinates.
+roughly a few tens of thousands, so use `PointL` (`TPoint<long long>`) for larger integer
+coordinates.
 
 Metric operations (return `TPoint<fp_t>` or `fp_t`):
 - `norm()`, `arg()`, `proj()`, `normalize()`, `rotateCW()`, `rotateCCW()`, `reflect(line)`.
@@ -43,7 +44,6 @@ Space Complexity:
 */
 
 #include <cmath>
-#include <cstdint>
 #include <ostream>
 #include <tuple>
 #include <type_traits>
@@ -55,7 +55,9 @@ const double EPS = 1e-9;
 // or Rational, which therefore compose for all of the predicates below.
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) {
+    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  }
   return C(a) == C(b);
 }
 
@@ -82,9 +84,9 @@ struct TPoint {
       typename = std::enable_if_t<std::is_integral<U>::value && std::is_floating_point<T>::value>>
   TPoint(const TPoint<U> &p) : x(static_cast<T>(p.x)), y(static_cast<T>(p.y)) {}
 
-  bool operator==(const TPoint &p) const { return x == p.x && y == p.y; }
   friend bool EQ(const TPoint &a, const TPoint &b) { return EQ(a.x, b.x) && EQ(a.y, b.y); }
 
+  bool operator==(const TPoint &p) const { return x == p.x && y == p.y; }
   bool operator!=(const TPoint &p) const { return !(*this == p); }
   bool operator<(const TPoint &p) const { return std::tie(x, y) < std::tie(p.x, p.y); }
   bool operator>(const TPoint &p) const { return p < *this; }
@@ -119,6 +121,7 @@ struct TPoint {
 
   fp_t norm() const { return hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)); }
   fp_t arg() const { return atan2(static_cast<fp_t>(y), static_cast<fp_t>(x)); }
+
   fp_t proj(const TPoint &p) const {
     return (static_cast<fp_t>(x) * p.x + static_cast<fp_t>(y) * p.y) / p.norm();
   }
@@ -213,16 +216,10 @@ struct TPoint {
   friend TPoint rotate270(const TPoint &p, const TPoint &q) { return p.rotate270(q); }
   friend TPoint<fp_t> rotateCW(const TPoint &p, fp_t t) { return p.rotateCW(t); }
   friend TPoint<fp_t> rotateCCW(const TPoint &p, fp_t t) { return p.rotateCCW(t); }
-  friend TPoint<fp_t> rotateCW(const TPoint &p, const TPoint &q, fp_t t) {
-    return p.rotateCW(q, t);
-  }
-  friend TPoint<fp_t> rotateCCW(const TPoint &p, const TPoint &q, fp_t t) {
-    return p.rotateCCW(q, t);
-  }
+  friend TPoint<fp_t> rotateCW(const TPoint &p, const TPoint &q, fp_t t) { return p.rotateCW(q, t); }
+  friend TPoint<fp_t> rotateCCW(const TPoint &p, const TPoint &q, fp_t t) { return p.rotateCCW(q, t); }
   friend TPoint reflect(const TPoint &p, const TPoint &q) { return p.reflect(q); }
-  friend TPoint<fp_t> reflect(const TPoint &p, const TPoint &a, const TPoint &b) {
-    return p.reflect(a, b);
-  }
+  friend TPoint<fp_t> reflect(const TPoint &p, const TPoint &a, const TPoint &b) { return p.reflect(a, b); }
   // clang-format on
 
   friend std::ostream &operator<<(std::ostream &out, const TPoint &p) {

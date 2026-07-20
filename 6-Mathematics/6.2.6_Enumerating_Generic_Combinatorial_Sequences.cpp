@@ -15,6 +15,7 @@ own conventional constructor names, such as `n` and `k` for combinations.
 - `to_rank(a)` returns an integer representing the 0-based rank of the combinatorial sequence `a`.
 - `from_rank(r)` returns a combinatorial sequence of integers that is lexicographically ranked `r`,
   where `r` is a 0-based rank in the range [`0`, `total_count()`).
+- `total_count()` returns the number of valid sequences.
 - `enumerate(f)` calls the function `f(lo, hi)` on every specified combinatorial sequence in
   lexicographically increasing order, where `lo` and `hi` are two random-access iterators to a range
   $[`lo`, `hi`)$ of integers.
@@ -45,18 +46,19 @@ class AbstractEnumerator {
   int range, length;
 
   AbstractEnumerator(int r, int l) : range(r), length(l) {}
-  virtual ~AbstractEnumerator() = default;
-  virtual int64_t count(const std::vector<int> &prefix) { return 0; }
-  std::vector<int> next(std::vector<int> &a) { return from_rank(to_rank(a) + 1); }
-  int64_t total_count() { return count(std::vector<int>{}); }
+  virtual int64_t count(const std::vector<int> &prefix) = 0;
 
  public:
+  virtual ~AbstractEnumerator() = default;
+
+  int64_t total_count() { return count({}); }
+
   int64_t to_rank(const std::vector<int> &a) {
     int64_t res = 0;
+    std::vector<int> prefix;
     for (int i = 0; i < static_cast<int>(a.size()); i++) {
-      std::vector<int> prefix(a.begin(), a.end());
-      prefix.resize(i + 1);
-      for (prefix[i] = 0; prefix[i] < a[i]; prefix[i]++) {
+      prefix.push_back(0);
+      for (; prefix.back() < a[i]; prefix.back()++) {
         res += count(prefix);
       }
     }
@@ -64,18 +66,16 @@ class AbstractEnumerator {
   }
 
   std::vector<int> from_rank(int64_t r) {
-    std::vector<int> a(length);
-    for (int i = 0; i < static_cast<int>(a.size()); i++) {
-      std::vector<int> prefix(a.begin(), a.end());
-      prefix.resize(i + 1);
-      for (prefix[i] = 0; prefix[i] < range; ++prefix[i]) {
-        int64_t curr = count(prefix);
+    std::vector<int> a;
+    for (int i = 0; i < length; i++) {
+      a.push_back(0);
+      for (; a.back() < range; a.back()++) {
+        int64_t curr = count(a);
         if (r < curr) {
           break;
         }
         r -= curr;
       }
-      a[i] = prefix[i];
     }
     return a;
   }
@@ -95,7 +95,7 @@ class ArrangementEnumerator : public AbstractEnumerator {
  public:
   ArrangementEnumerator(int n, int k) : AbstractEnumerator(n, k) {}
 
-  int64_t count(const std::vector<int> &prefix) {
+  int64_t count(const std::vector<int> &prefix) override {
     int n = static_cast<int>(prefix.size());
     for (int i = 0; i < n - 1; i++) {
       if (prefix[i] == prefix[n - 1]) {
@@ -128,7 +128,7 @@ class CombinationEnumerator : public AbstractEnumerator {
     }
   }
 
-  int64_t count(const std::vector<int> &prefix) {
+  int64_t count(const std::vector<int> &prefix) override {
     int n = static_cast<int>(prefix.size());
     if (n >= 2 && prefix[n - 1] <= prefix[n - 2]) {
       return 0;
@@ -160,7 +160,7 @@ class PartitionEnumerator : public AbstractEnumerator {
     }
   }
 
-  int64_t count(const std::vector<int> &prefix) {
+  int64_t count(const std::vector<int> &prefix) override {
     int n = static_cast<int>(prefix.size()), sum = 0;
     for (int x : prefix) {
       sum += x;
@@ -184,7 +184,7 @@ class PartitionEnumerator : public AbstractEnumerator {
 3 permute 2 arrangements:
 {0,1} {0,2} {1,0} {1,2} {2,0} {2,1}
 
-Permutations of [$0$, 3):
+Permutations of [0, 3):
 {0,1,2} {0,2,1} {1,0,2} {1,2,0} {2,0,1} {2,1,0}
 
 4 choose 3 combinations:
@@ -223,7 +223,7 @@ int main() {
     cout << endl;
   }
   {
-    cout << "\nPermutations of [$0$, 3):" << endl;
+    cout << "\nPermutations of [0, 3):" << endl;
     PermutationEnumerator perm(3);
     int count = 0;
     perm.enumerate([&](auto lo, auto hi) {

@@ -1,8 +1,9 @@
 /*
 
-Computes polynomial rolling hashes for sequences, supporting O(1) contiguous subsequence hash
-queries after preprocessing. This is useful for probabilistic string matching, substring equality
-checks, repeated subarray detection, and binary-searching over candidate lengths.
+Computes polynomial rolling hashes for sequences of an arbitrary hashable type `T`, supporting O(1)
+contiguous subsequence hash queries after preprocessing. This is useful for probabilistic string
+matching, substring equality checks, repeated subarray detection, and binary-searching over
+candidate lengths.
 
 Given a sequence $a_0, a_1, \ldots, a_{n-1}$ and a value hash $h(a_i)$ for each element, the hash is
 the polynomial $H(a) = \sum_{i=0}^{n-1} h(a_i) B^{n-1-i} \pmod M$, where $B$ is `HASH_BASE` and $M$
@@ -19,21 +20,21 @@ proof of equality when exact verification is required.
 By default, each sequence value is cast to `uint64_t` and mixed. For non-integer element types, pass
 a custom value hasher that maps each element to a stable nonzero value in [`1`, `HASH_MOD`).
 
-- `RollingHash<T, ValueHasher = RollingValueHasher<T>>(hasher = ValueHasher())` constructs an empty
-  hash sequence using `hasher` to map values before mixing.
-- `RollingHash<T, ValueHasher = RollingValueHasher<T>>(first, last, hasher = ValueHasher())`
-  constructs prefix hashes for any iterator range of values accepted by the value hasher.
-- `RollingHash<T, ValueHasher = RollingValueHasher<T>>(v, hasher = ValueHasher())` constructs prefix
-  hashes for vector `v`.
-- `get(l, r)` returns the hash of the half-open subsequence $[`l`, `r`)$.
-- `hash(first, last, hasher = ValueHasher())` returns the hash of an iterator range.
-- `hash(v, hasher = ValueHasher())` returns the hash of vector `v`.
+- `RollingHash<T, Hash = ValueHasher<T>>(hasher = Hash())` constructs an empty hash sequence using
+  `hasher` to map values before mixing.
+- `RollingHash<T, Hash = ValueHasher<T>>(lo, hi, hasher = Hash())` constructs prefix hashes from the
+  values in the half-open iterator range $[`lo`, `hi`)$.
+- `RollingHash<T, Hash = ValueHasher<T>>(v, hasher = Hash())` constructs prefix hashes for vector
+  `v`.
+- `get(lo, hi)` returns the hash of the half-open subsequence $[`lo`, `hi`)$.
+- `hash(lo, hi, hasher = Hash())` returns the hash of the half-open iterator range $[`lo`, `hi`)$.
+- `hash(v, hasher = Hash())` returns the hash of vector `v`.
 - `concat(left, right, right_len)` returns the hash of the concatenation of a sequence with hash
   `left` and a sequence with hash `right` and length `right_len`.
 
 Time Complexity:
 - O(n) per constructor call and whole-sequence hash, where $n$ is the sequence length.
-- O(1) per call to `get(l, r)` and `concat(left, right, right_len)`.
+- O(1) per call to `get(lo, hi)` and `concat(left, right, right_len)`.
 
 Space Complexity:
 - O(n) for storage of prefix hashes and powers, where $n$ is the maximum sequence length processed
@@ -42,6 +43,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -85,17 +87,19 @@ uint64_t mix64(uint64_t x) {
 }
 
 template<typename T>
-struct RollingValueHasher {
-  // +1 ensures the result is in [$1$, HASH_MOD) and never zero; a zero element in a polynomial
+struct ValueHasher {
+  // +1 ensures the result is in [1, HASH_MOD) and never zero; a zero element in a polynomial
   // hash is invisible and enables trivial collisions.
-  uint64_t operator()(const T &x) const { return mix64((uint64_t)x) % (HASH_MOD - 1) + 1; }
+  uint64_t operator()(const T &x) const {
+    return mix64(static_cast<uint64_t>(x)) % (HASH_MOD - 1) + 1;
+  }
 };
 
-template<typename T, typename ValueHasher = RollingValueHasher<T>>
+template<typename T, typename Hash = ValueHasher<T>>
 class RollingHash {
   static std::vector<uint64_t> pow_base;
   std::vector<uint64_t> pref;
-  ValueHasher value_hasher;
+  Hash hasher;
 
   static void ensure_powers(int n) {
     while (static_cast<int>(pow_base.size()) <= n) {
@@ -104,60 +108,60 @@ class RollingHash {
   }
 
   template<typename It>
-  void build(It first, It last) {
+  void build(It lo, It hi) {
     pref.clear();
     pref.push_back(0);
-    for (; first != last; ++first) {
-      pref.push_back(hash_add(hash_mul(pref.back(), HASH_BASE), value_hasher(*first)));
+    for (; lo != hi; ++lo) {
+      pref.push_back(hash_add(hash_mul(pref.back(), HASH_BASE), hasher(*lo)));
     }
     ensure_powers(static_cast<int>(pref.size()) - 1);
   }
 
  public:
-  explicit RollingHash(const ValueHasher &hasher = ValueHasher()) : value_hasher(hasher) {
+  explicit RollingHash(const Hash &hasher = Hash()) : hasher(hasher) {
     ensure_powers(0);
     pref.push_back(0);
   }
 
   template<typename It>
-  RollingHash(It first, It last, const ValueHasher &hasher = ValueHasher()) : value_hasher(hasher) {
-    build(first, last);
+  RollingHash(It lo, It hi, const Hash &hasher = Hash()) : hasher(hasher) {
+    build(lo, hi);
   }
 
-  explicit RollingHash(const std::vector<T> &v, const ValueHasher &hasher = ValueHasher())
-      : value_hasher(hasher) {
+  explicit RollingHash(const std::vector<T> &v, const Hash &hasher = Hash()) : hasher(hasher) {
     build(v.begin(), v.end());
   }
 
   int size() const { return static_cast<int>(pref.size()) - 1; }
 
   uint64_t get(int lo, int hi) const {
+    assert(0 <= lo && lo <= hi && hi <= size());
     return hash_sub(pref[hi], hash_mul(pref[lo], pow_base[hi - lo]));
   }
 
   template<typename It>
-  static uint64_t hash(It first, It last, const ValueHasher &hasher = ValueHasher()) {
-    RollingHash<T, ValueHasher> h(first, last, hasher);
+  static uint64_t hash(It lo, It hi, const Hash &hasher = Hash()) {
+    RollingHash<T, Hash> h(lo, hi, hasher);
     return h.get(0, h.size());
   }
 
-  static uint64_t hash(const std::vector<T> &v, const ValueHasher &hasher = ValueHasher()) {
-    RollingHash<T, ValueHasher> h(v, hasher);
+  static uint64_t hash(const std::vector<T> &v, const Hash &hasher = Hash()) {
+    RollingHash<T, Hash> h(v, hasher);
     return h.get(0, h.size());
   }
 
   static uint64_t concat(uint64_t left, uint64_t right, int right_len) {
+    assert(right_len >= 0);
     ensure_powers(right_len);
     return hash_add(hash_mul(left, pow_base[right_len]), right);
   }
 };
 
-template<typename T, typename ValueHasher>
-std::vector<uint64_t> RollingHash<T, ValueHasher>::pow_base(1, 1);
+template<typename T, typename Hash>
+std::vector<uint64_t> RollingHash<T, Hash>::pow_base(1, 1);
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 using PointI = pair<int, int>;
@@ -193,7 +197,7 @@ int main() {
   v.push_back(1);
   v.push_back(2);
   RollingHash<int> hv(v);
-  assert(hv.get(0, 2) == hv.get(3, 5));  // [$1$, 2] == [$1$, 2]
+  assert(hv.get(0, 2) == hv.get(3, 5));  // Both ranges are [1, 2].
   assert(hv.get(0, 3) == RollingHash<int>::hash(v.begin(), v.begin() + 3));
 
   vector<PointI> poly{{1, 2}, {3, 4}};

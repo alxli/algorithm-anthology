@@ -25,6 +25,7 @@ Space Complexity:
 */
 
 #include <cmath>
+#include <cstdint>
 #include <string>
 #include <vector>
 using std::string;
@@ -38,7 +39,7 @@ std::vector<int> byte_frequencies(const string &s) {
 }
 
 double entropy(const std::vector<int> &freq) {
-  int total = 0;
+  int64_t total = 0;
   for (int i = 0; i < static_cast<int>(freq.size()); i++) {
     total += freq[i];
   }
@@ -51,7 +52,7 @@ double entropy(const std::vector<int> &freq) {
       continue;
     }
     double p = static_cast<double>(freq[i]) / total;
-    res -= p * (log(p) / log(2.0));
+    res -= p * std::log2(p);
   }
   return res;
 }
@@ -61,7 +62,7 @@ double entropy(const string &s) {
 }
 
 double expected_code_length(const std::vector<int> &freq, const std::vector<int> &length) {
-  int total = 0;
+  int64_t total = 0;
   for (int i = 0; i < static_cast<int>(freq.size()); i++) {
     total += freq[i];
   }

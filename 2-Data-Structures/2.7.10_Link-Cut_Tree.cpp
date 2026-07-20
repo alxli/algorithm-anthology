@@ -4,7 +4,7 @@ Maintain a forest of trees with values associated with its nodes, while supporti
 queries and dynamic updates of all values on any path between two nodes in a given tree. In
 addition, support testing of whether two nodes are connected in the forest, as well as the merging
 and splitting of trees by adding or removing specific edges. Link/cut forests divide each of its
-trees into vertex-disjoint paths, each represented by a splay tree.
+trees into node-disjoint paths, each represented by a splay tree.
 
 The query operation is defined by an associative `combine()` function. The default code below
 assumes a numerical forest type, defining queries for the "min" of the target range. Another
@@ -34,8 +34,8 @@ queries, and `compose_deltas(old, d)` would return `old + d`.
   connected.
 - `query(a, b)` returns the result of `combine()` applied to all values on the path from the node
   `a` to node `b`.
-- `update(a, b, d)` modifies all the values on the path from node `a` to node `b` by respectively
-  applying the delta `d`.
+- `update(a, b, d)` modifies all the values on the path from node `a` to node `b` by applying the
+  delta `d`.
 - `reroot(i)` makes node `i` the root of its tree.
 - `find_root(i)` returns the label of the root of the tree containing node `i`.
 - `lca(a, b)` returns the lowest common ancestor of `a` and `b` relative to the tree's current root.

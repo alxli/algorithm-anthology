@@ -1,17 +1,18 @@
 /*
 
 Given a list of directed lines, compute the convex polygon contained in every left half-plane.
-Half-plane intersection sorts the lines by angle, keeps only the tightest representative among
+Half-plane intersection sorts the lines by direction, keeps only the tightest representative among
 parallel lines, and maintains a deque of lines whose pairwise intersections form the current
-boundary. Angles are sorted exactly to satisfy `std::sort`'s strict ordering requirement. `EPS` is
-then used outside the comparator to group parallel directions and retain only the tightest
-half-plane in each group.
+boundary. Directions are ordered by half-plane and cross-product signs, without epsilon comparisons,
+to satisfy `std::sort`'s strict ordering requirement. `EPS` is then used outside the comparator to
+group parallel directions and retain only the tightest half-plane in each group.
 
 - `half_plane_intersection(planes)` returns the polygon cut out by the half-planes in
   counter-clockwise order. Each half-plane is represented by `HalfPlane(p, q)`, meaning the closed
   region to the left of the directed line `p` $\to$ `q`. If the intersection is empty, the function
   returns an empty vector. If the true intersection is unbounded, the returned polygon is not
-  meaningful; add explicit bounding-box half-planes when a bounded polygon is required.
+  meaningful; add explicit bounding-box half-planes when a bounded polygon is required. The two
+  points defining each half-plane must differ.
 
 Time Complexity:
 - O(n log n) per call, where $n$ is the number of half-planes.
@@ -31,7 +32,9 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) {
+    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  }
   return C(a) == C(b);
 }
 
@@ -54,17 +57,24 @@ struct Point {
 
 struct HalfPlane {
   Point p, dir;
-  double ang;
 
-  HalfPlane() : p(), dir(), ang(0) {}
-  HalfPlane(Point p, Point q) : p(p), dir(q - p), ang(atan2(dir.y, dir.x)) {}
+  HalfPlane() : p(), dir() {}
+  HalfPlane(Point p, Point q) : p(p), dir(q - p) {}
 
   bool out(const Point &q) const { return LT(dir.cross(q - p), 0); }
+
   Point intersection(const HalfPlane &h) const {
     double t = h.dir.cross(p - h.p) / dir.cross(h.dir);
     return p + dir * t;
   }
-  bool operator<(const HalfPlane &h) const { return ang < h.ang; }
+
+  bool operator<(const HalfPlane &h) const {
+    auto half = [](const Point &d) { return d.y < 0 || (d.y == 0 && d.x < 0); };
+    if (half(dir) != half(h.dir)) {
+      return half(dir) < half(h.dir);
+    }
+    return dir.cross(h.dir) > 0;
+  }
 };
 
 std::vector<Point> half_plane_intersection(std::vector<HalfPlane> planes) {

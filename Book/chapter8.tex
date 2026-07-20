@@ -106,6 +106,7 @@ class y_combinator_result {
  public:
   template<typename T>
   explicit y_combinator_result(T &&fun_) : fun(std::forward<T>(fun_)) {}
+
   template<class... Args>
   decltype(auto) operator()(Args &&...args) {
     return fun(std::ref(*this), std::forward<Args>(args)...);
@@ -630,12 +631,13 @@ Small timing helpers for local profiling and codebook examples. Use \inlinecode{
   \item \inlinecode{Timer()} starts a timer immediately.
   \item \inlinecode{timer.reset()} restarts the timer.
   \item \inlinecode{timer.elapsed()} returns the elapsed time in milliseconds as a double.
-  \item \inlinecode{benchmark(name, iterations, f)} runs \inlinecode{f()} \inlinecode{iterations} times and returns the average elapsed milliseconds per call with the given name.
+  \item \inlinecode{benchmark(name, iterations, f)} runs \inlinecode{f()} \inlinecode{iterations} times and returns the average elapsed milliseconds per call with the given name. \inlinecode{iterations} must be positive.
 \end{compactitem}
 
 Benchmarks should be treated as local measurements, not proofs of asymptotic performance. Warm-up, CPU frequency scaling, compiler optimization, and input choice can dominate tiny timings.
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <chrono>
 #include <string>
 #include <utility>
@@ -658,6 +660,7 @@ class Timer {
 
 template<typename Fun>
 std::pair<std::string, double> benchmark(const std::string &name, int iterations, Fun f) {
+  assert(iterations > 0);
   Timer timer;
   for (int i = 0; i < iterations; ++i) {
     f();
@@ -1039,8 +1042,6 @@ These snippets are not portable production allocators: they are fixed-size, mono
 \begin{lstlisting}[language=C++]
 #include <cassert>
 #include <cstddef>
-#include <new>
-#include <type_traits>
 #include <vector>
 
 static constexpr std::size_t BUFFER_SIZE = 64 << 20;
@@ -1048,6 +1049,9 @@ alignas(std::max_align_t) static unsigned char bump_buffer[BUFFER_SIZE];
 static std::size_t bump_pos = BUFFER_SIZE;
 
 void *operator new(std::size_t size) {
+  if (size == 0) {
+    size = 1;
+  }
   size = (size + alignof(std::max_align_t) - 1) & ~(alignof(std::max_align_t) - 1);
   assert(size <= bump_pos);
   bump_pos -= size;
@@ -1070,6 +1074,7 @@ struct BumpAllocator {
   BumpAllocator(const BumpAllocator<U> &) {}
 
   T *allocate(std::size_t n) {
+    static_assert(alignof(T) <= alignof(std::max_align_t), "over-aligned types are not supported");
     std::size_t size = n * sizeof(T);
     std::size_t align = alignof(T);
     assert(size <= bump_pos);

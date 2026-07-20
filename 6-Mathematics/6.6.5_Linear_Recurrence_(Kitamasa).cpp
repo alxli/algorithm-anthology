@@ -60,7 +60,11 @@ std::vector<int64_t> combine(
 
 int64_t kth_term(const std::vector<int64_t> &rec, const std::vector<int64_t> &init, int64_t n) {
   assert(n >= 0 && init.size() >= rec.size());
-  int L = static_cast<int>(rec.size());
+  std::vector<int64_t> c(rec);
+  for (int64_t &x : c) {
+    x = (x % MOD + MOD) % MOD;
+  }
+  int L = static_cast<int>(c.size());
   if (n < static_cast<int64_t>(init.size())) {
     return ((init[n] % MOD) + MOD) % MOD;
   }
@@ -70,15 +74,15 @@ int64_t kth_term(const std::vector<int64_t> &rec, const std::vector<int64_t> &in
   std::vector<int64_t> result(L, 0), base(L, 0);
   result[0] = 1;  // The polynomial 1 = x^0.
   if (L == 1) {
-    base[0] = rec[0] % MOD;  // x is congruent to c_0 modulo f.
+    base[0] = c[0];  // x is congruent to c_0 modulo f.
   } else {
     base[1] = 1;  // The polynomial x.
   }
   for (int64_t e = n; e > 0; e >>= 1) {
     if (e & 1) {
-      result = combine(result, base, rec);
+      result = combine(result, base, c);
     }
-    base = combine(base, base, rec);
+    base = combine(base, base, c);
   }
   int64_t ans = 0;
   for (int j = 0; j < L; j++) {
@@ -109,5 +113,6 @@ int main() {
     assert(kth_term(geo_rec, geo_init, i) == pw);
     pw = pw * 3 % MOD;
   }
+  assert(kth_term({-1}, {1}, 5) == MOD - 1);
   return 0;
 }

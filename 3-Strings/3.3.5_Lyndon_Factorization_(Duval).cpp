@@ -4,7 +4,7 @@ A Lyndon word is a nonempty string that is strictly smaller than all of its prop
 equivalently, strictly smaller than all of its nontrivial cyclic rotations. By the Chen-Fox-Lyndon
 theorem, every string has a unique factorization into a sequence of Lyndon words whose values are
 non-increasing: $s = w_1 w_2 \cdots w_k$ with $w_1 \geq w_2 \geq \cdots \geq w_k$. Duval's algorithm
-computes this factorization in linear time and constant auxiliary by scanning the string while
+computes this factorization in linear time and constant auxiliary space by scanning the string while
 tracking the current candidate Lyndon prefix and the position it last matched.
 
 The same scan, applied to the string viewed as a cycle, yields the starting position of its

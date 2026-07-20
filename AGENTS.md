@@ -26,11 +26,22 @@ Prefer code that a strong contestant can adapt quickly after skimming:
 - Favor clear names, explicit edge-case handling, and reusable interfaces over shortest possible
   code.
 - Avoid unrelated abstractions, inheritance-heavy designs, or framework-like scaffolding.
+- Prefer established anthology idioms over isolated STL-generic machinery. Before introducing type
+  aliases, traits, forwarding patterns, or additional template parameters, check comparable
+  sections first; use them only when they provide a capability the algorithm genuinely needs.
+- For common algorithms, preserve the concise, canonical code structure that experienced readers
+  expect. Do not replace a standard idiom with a more elaborate or superficially optimized version
+  merely to tighten a secondary bound; recognizability, adaptability, and educational value are
+  primary goals of this anthology. Deviate when there is a concrete correctness or capability
+  benefit, and keep the reason apparent in the code or documentation.
 - Do not keep compatibility wrappers or duplicate APIs unless they genuinely teach a variant.
 - When two versions are useful, distinguish them by capability or assumptions, not by historical
   accident.
 - Use assertions for preconditions that represent caller misuse; return sentinels or empty results
   for ordinary algorithmic failure when that is the section's established API.
+- Assume nested-vector matrices and grids are rectangular; do not scan every row with assertions to
+  validate their shape. Keep assertions for compatibility between separate inputs, such as matrix
+  dimensions matching a vector or assignment output.
 
 ## Formatting And Language
 
@@ -46,7 +57,11 @@ Prefer code that a strong contestant can adapt quickly after skimming:
 - In reusable code, use `std::` qualifications rather than `using namespace std;`. Example blocks
   may use `using namespace std;` when that matches the local style.
 - Prefer `static_cast<int>(container.size())` before mixing sizes with `int` indices.
-- Use `int` for ordinary indices and node IDs unless the algorithm needs a wider type.
+- Use `int` for ordinary sizes, indices, iterator distances, and node IDs unless the algorithm needs
+  a wider type. Do not introduce iterator `difference_type` aliases merely for generic formality.
+- Adjacent one-line function definitions may remain together. Surround every multiline function
+  definition with one empty line, except where an access label or enclosing brace forms the
+  boundary.
 - Use `int64_t`/`long long` for sums, weights, counts, and products that may overflow `int`.
 - Keep comments sparse and useful. Explain invariants, tricky transitions, precision choices,
   overflow risks, and non-obvious contest assumptions; do not narrate obvious assignments.
@@ -69,6 +84,10 @@ Prefer code that a strong contestant can adapt quickly after skimming:
   `maximum_matching()`, `global_min_cut()`, or `min_assignment_cost()`. Eponyms are fine when they
   are standard search terms, when the function name also names the result, or when they distinguish
   variants, e.g. `dijkstra()`, `smawk_row_minima()`, and `find_cycle_floyd()`.
+- Standalone sections may reuse canonical class names when they provide interchangeable
+  implementations or conventional domain types. When a variant exposes materially different public
+  operations, give its class a distinguishing name; do not rename internal helpers merely to make
+  every top-level name globally unique.
 - For small two-item returns, prefer `std::pair` or structured bindings over a one-off struct when
   the meaning is obvious from the API bullet. Use `std::tuple` when returning three simple values.
 
@@ -113,7 +132,9 @@ sections elsewhere, include both `Time Complexity:` and `Space Complexity:`.
   when they are semantically relevant.
 - Keep API bullets synchronized with the callable public signature: include meaningful template
   parameters, current type names, and defaulted runtime arguments exactly as users should write
-  them.
+  them. Parameter names in explicit API signatures must match the code. When they differ, normally
+  update the documentation; rename a code parameter only when its existing name is independently
+  unclear or inconsistent, not merely to satisfy the scanner.
 - Write big-O as plain text: `O(n log n)`, not `$O(n \log n)$`.
 - Use single-letter variables inside big-O expressions. Quantify named parameters afterward, e.g.
   `O(r*c*2^c)`, where $r$ and $c$ are the number of rows and columns, and not `O(rows*cols*2^cols)`.

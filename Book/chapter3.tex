@@ -44,7 +44,7 @@ string to_str(Int i) {
 int to_int(const string &s) {
   std::istringstream iss(s);
   int res;
-  if (!(iss >> res)) {
+  if (!(iss >> res) || !(iss >> std::ws).eof()) {
     throw std::runtime_error("to_int failed");
   }
   return res;
@@ -75,6 +75,7 @@ char *itoa(int value, char *str, int base = 10) {
 }
 
 bool is_integer(const string &s) {
+  // return std::regex_match(s, std::regex(R"([+-]?\d+)"));
   int i = (s.empty() || (s[0] != '-' && s[0] != '+')) ? 0 : 1;
   if (i == static_cast<int>(s.size())) {
     return false;
@@ -88,6 +89,7 @@ bool is_integer(const string &s) {
 }
 
 bool is_number(const string &s) {
+  // return std::regex_match(s, std::regex(R"([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)"));
   int i = (s.empty() || (s[0] != '-' && s[0] != '+')) ? 0 : 1;
   bool seen_digit = false, seen_dot = false;
   for (; i < static_cast<int>(s.size()); i++) {
@@ -131,16 +133,18 @@ Case Conversion:
 \begin{lstlisting}[language=C++]
 string to_upper(const string &s) {
   string res;
+  res.reserve(s.size());
   for (char c : s) {
-    res.push_back(static_cast<char>(toupper(c)));
+    res.push_back(static_cast<char>(toupper(static_cast<unsigned char>(c))));
   }
   return res;
 }
 
 string to_lower(const string &s) {
   string res;
+  res.reserve(s.size());
   for (char c : s) {
-    res.push_back(static_cast<char>(tolower(c)));
+    res.push_back(static_cast<char>(tolower(static_cast<unsigned char>(c))));
   }
   return res;
 }
@@ -173,6 +177,8 @@ string &lstrip(string &s, const string &delim = WHITESPACE) {
   std::size_t pos = s.find_first_not_of(delim);
   if (pos != string::npos) {
     s.erase(0, pos);
+  } else {
+    s.clear();
   }
   return s;
 }
@@ -181,12 +187,14 @@ string &rstrip(string &s, const string &delim = WHITESPACE) {
   std::size_t pos = s.find_last_not_of(delim);
   if (pos != string::npos) {
     s.erase(pos + 1);
+  } else {
+    s.clear();
   }
   return s;
 }
 
 string &strip(string &s, const string &delim = WHITESPACE) {
-  return lstrip(rstrip(s));
+  return lstrip(rstrip(s, delim), delim);
 }
 
 string ltrimmed(string s, const string &delim = WHITESPACE) {
@@ -207,7 +215,7 @@ Find and Replace:
   \item \inlinecode{starts\_with(s, prefix)} returns whether \inlinecode{s} begins with \inlinecode{prefix}.
   \item \inlinecode{ends\_with(s, suffix)} returns whether \inlinecode{s} ends with \inlinecode{suffix}.
   \item \inlinecode{contains(s, needle)} returns whether \inlinecode{needle} occurs in \inlinecode{s}.
-  \item \inlinecode{find\_all(haystack, needle)} returns a vector of all positions where the string \inlinecode{needle} appears in the string \inlinecode{haystack}. Matches may overlap; e.g. \inlinecode{find\_all("aaa", "aa")} returns \inlinecode{\{0, 1\}}.
+  \item \inlinecode{find\_all(haystack, needle)} returns a vector of all positions where the nonempty string \inlinecode{needle} appears in the string \inlinecode{haystack}. Matches may overlap; e.g. \inlinecode{find\_all("aaa", "aa")} returns \inlinecode{\{0, 1\}}. An empty \inlinecode{needle} produces no matches.
   \item \inlinecode{count(haystack, needle)} returns the number of non-overlapping occurrences of \inlinecode{needle} in \inlinecode{haystack}, like Python's \inlinecode{str.count}. This differs from \inlinecode{find\_all().size()}, which counts overlapping matches; e.g. \inlinecode{count("aaa", "aa")} returns $1$, but \inlinecode{find\_all("aaa", "aa")} finds $2$.
   \item \inlinecode{replace(s, old, replacement)} returns a copy of \inlinecode{s} with all occurrences of the string \inlinecode{old} replaced with the given \inlinecode{replacement}.
   \item \inlinecode{regex\_find\_all(s, pattern)} returns every substring of \inlinecode{s} matched by \inlinecode{pattern}.
@@ -231,9 +239,12 @@ bool contains(const string &s, const string &needle) {
 
 std::vector<int> find_all(const string &haystack, const string &needle) {
   std::vector<int> res;
+  if (needle.empty()) {
+    return res;
+  }
   std::size_t pos = haystack.find(needle, 0);
   while (pos != string::npos) {
-    res.push_back(pos);
+    res.push_back(static_cast<int>(pos));
     pos = haystack.find(needle, pos + 1);
   }
   return res;
@@ -290,13 +301,13 @@ Joining and Splitting:
 
 \begin{compactitem}
   \item \inlinecode{join(v, delim = " ")} returns the strings in vector \inlinecode{v} concatenated, separated by the given delimiter.
-  \item \inlinecode{repeat(s, n)} returns \inlinecode{s} concatenated with itself \inlinecode{n} times, like Python's \inlinecode{s * n}. For a single repeated character, prefer \inlinecode{std::string(n, ch)}.
+  \item \inlinecode{repeat(s, n)} returns \inlinecode{s} concatenated with itself \inlinecode{n} times, like Python's \inlinecode{s * n}, or an empty string if \inlinecode{n} is nonpositive. For a single repeated character, prefer \inlinecode{std::string(n, ch)}.
   \item \inlinecode{ljust(s, width, ch = \textquotesingle{} \textquotesingle{})} returns \inlinecode{s} left-justified (padded on the right with \inlinecode{ch}) to at least \inlinecode{width} characters, like Python's \inlinecode{str.ljust}.
   \item \inlinecode{rjust(s, width, ch = \textquotesingle{} \textquotesingle{})} returns \inlinecode{s} right-justified (padded on the left with \inlinecode{ch}) to at least \inlinecode{width} characters, like Python's \inlinecode{str.rjust}.
   \item \inlinecode{center(s, width, ch = \textquotesingle{} \textquotesingle{})} returns \inlinecode{s} centered in a field of at least \inlinecode{width} characters by padding both sides with \inlinecode{ch}, like Python's \inlinecode{str.center}. If the padding is uneven, the extra character goes on the right.
   \item \inlinecode{split(s, char delim)} returns a vector of tokens of \inlinecode{s}, split on a single character delimiter. Empty tokens are skipped, so \inlinecode{split("a::b", \textquotesingle{}:\textquotesingle{})} returns \inlinecode{\{"a", "b"\}}, not \inlinecode{\{"a", "", "b"\}}.
   \item \inlinecode{split(s, string delim = WHITESPACE)} returns a vector of tokens of \inlinecode{s}, split on a set of many possible single character delimiters. All characters of \inlinecode{delim} will be removed from \inlinecode{s}, and the remaining token(s) of \inlinecode{s} will be added sequentially to a vector and returned. As with the first version, empty tokens are skipped. For example, \inlinecode{split("a::b", ":")} returns \inlinecode{\{"a", "b"\}}, not \inlinecode{\{"a", "", "b"\}}.
-  \item \inlinecode{explode(s, delim)} returns a vector of tokens of \inlinecode{s}, split on the entire delimiter string \inlinecode{delim}. Unlike the \inlinecode{split()} functions above, \inlinecode{delim} is treated as a contiguous boundary string, not merely a set of possible boundary characters. This will not skip empty tokens. For example, \inlinecode{explode("a::::b", "::")} yields \inlinecode{\{"a", "", "b"\}}, not \inlinecode{\{"a", "b"\}}.
+  \item \inlinecode{explode(s, delim)} returns a vector of tokens of \inlinecode{s}, split on the entire delimiter string \inlinecode{delim}. Unlike the \inlinecode{split()} functions above, \inlinecode{delim} is treated as a contiguous boundary string, not merely a set of possible boundary characters. This will not skip empty tokens. For example, \inlinecode{explode("a::::b", "::")} yields \inlinecode{\{"a", "", "b"\}}, not \inlinecode{\{"a", "b"\}}. An empty delimiter returns \inlinecode{\{s\}}.
   \item \inlinecode{explode(s, char delim)} is the single-character delimiter version that also preserves empty tokens.
 \end{compactitem}
 
@@ -306,7 +317,11 @@ string join(const std::vector<string> &v, const string &delim = " ") {
     return "";
   }
   string res;
-  res.reserve(v.size() + delim.size() * (v.size() - 1));
+  std::size_t total = delim.size() * (v.size() - 1);
+  for (const string &s : v) {
+    total += s.size();
+  }
+  res.reserve(total);
   for (int i = 0; i < static_cast<int>(v.size()); i++) {
     res += (i > 0 ? delim : "") + v[i];
   }
@@ -314,6 +329,9 @@ string join(const std::vector<string> &v, const string &delim = " ") {
 }
 
 string repeat(const string &s, int n) {
+  if (n <= 0) {
+    return "";
+  }
   string res;
   res.reserve(s.size() * n);
   for (int i = 0; i < n; i++) {
@@ -371,11 +389,14 @@ std::vector<string> split(const string &s, const string &delim = WHITESPACE) {
 }
 
 std::vector<string> explode(const string &s, const string &delim) {
+  if (delim.empty()) {
+    return {s};
+  }
   std::vector<string> res;
   std::size_t last = 0, next = 0;
   while ((next = s.find(delim, last)) != string::npos) {
     res.push_back(s.substr(last, next - last));
-    last = next + static_cast<int>(delim.size());
+    last = next + delim.size();
   }
   res.push_back(s.substr(last));
   return res;
@@ -401,6 +422,13 @@ using namespace std;
 int main() {
   assert(to_str(123) + "4" == "1234");
   assert(to_int("1234") == 1234);
+  bool threw = false;
+  try {
+    to_int("123x");
+  } catch (const runtime_error &) {
+    threw = true;
+  }
+  assert(threw);
   vector<char> buffer(50);
   assert(string(itoa(1750, buffer.data(), 10)) == "1750");
   assert(string(itoa(1750, buffer.data(), 16)) == "6d6");
@@ -417,6 +445,7 @@ int main() {
   assert(lstrip(s) == "abc \n");
   assert(rstrip(s) == strip(t));
   assert(trimmed(" \t abc \n") == "abc");
+  assert(trimmed("xxx", "x").empty());
 
   vector<int> pos;
   pos.push_back(0);
@@ -427,12 +456,14 @@ int main() {
   assert(find_all("abracadabra", "ab") == pos);
   assert(count("abracadabra", "ab") == 2);
   assert(count("aaa", "aa") == 1 && find_all("aaa", "aa").size() == 2);
+  assert(find_all("abc", "").empty());
   assert(replace("abcdabba", "ab", "00") == "00cd00ba");
   assert(join(regex_find_all("a12b345", "[0-9]+"), "|") == "12|345");
   assert(join(regex_groups("abc-123", "([a-z]+)-([0-9]+)"), "|") == "abc|123");
   assert(regex_replace_all("a12b345", "[0-9]+", "#") == "a#b#");
 
   assert(repeat("ab", 3) == "ababab");
+  assert(repeat("ab", -1).empty());
   assert(rjust("42", 5, '0') == "00042");
   assert(ljust("hi", 4, '.') == "hi..");
   assert(center("ab", 5, '*') == "*ab**");
@@ -440,6 +471,7 @@ int main() {
   assert(join(split("a::b", ':'), "|") == "a|b");                 // split v1 skips empty tokens
   assert(join(split("a::b,cde:,f", ":,"), "|") == "a|b|cde|f");   // split v2
   assert(join(explode("a..b.cde....f", ".."), "|") == "a|b.cde||f");
+  assert((explode("abc", "") == vector<string>{"abc"}));
   assert(join(explode("a::b:", ':'), "|") == "a||b|");
   return 0;
 }
@@ -464,13 +496,11 @@ FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Start
   \item \inlinecode{hash\_combine32(h, x)} and \inlinecode{hash\_combine64(h, x)} fold another already-hashed value into an existing hash accumulator.
   \item \inlinecode{hash\_float(x)} and \inlinecode{hash\_double(x)} hash floating-point bit patterns, normalizing \inlinecode{-0.0} to \inlinecode{0.0}. Different NaN representations may still hash differently.
   \item \inlinecode{hash\_string\_fnv1a32(s)} and \inlinecode{hash\_string\_fnv1a64(s)} compute FNV-1a hashes of string \inlinecode{s}.
-  \item \inlinecode{hash\_range32(first, last)} and \inlinecode{hash\_range64(first, last)} hash a sequence of integer-like values.
+  \item \inlinecode{hash\_range32(lo, hi)} and \inlinecode{hash\_range64(lo, hi)} hash a sequence of integer-like values in the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{PairIntHasher} is a self-contained hasher for \inlinecode{std::pair\textless{}int, int\textgreater{}} keys, written without any dependency on the templates below so that it can be copy-pasted on its own.
   \item \inlinecode{IntHasher\textless{}Int\textgreater{}}, \inlinecode{PairHasher\textless{}A, B\textgreater{}}, \inlinecode{TupleHasher\textless{}Ts...\textgreater{}}, and \inlinecode{VectorHasher\textless{}T\textgreater{}} are hash functors passed as the third template argument of \inlinecode{std::unordered\_map} or \inlinecode{std::unordered\_set}.
   \item \inlinecode{GenericHasher\textless{}T\textgreater{}} recursively handles integer, pair, tuple, and vector keys, and falls back to \inlinecode{std::hash\textless{}T\textgreater{}} for other hashable types.
 \end{compactitem}
-
-Specializations of \inlinecode{std::hash} for \inlinecode{std::pair} and \inlinecode{std::tuple} are also provided, letting those keys be used in \inlinecode{std::unordered\_map}/\inlinecode{std::unordered\_set} without an explicit hasher argument. Specializing \inlinecode{std::hash} for purely standard types is technically nonstandard, so the functor forms above are the portable alternative. Vector keys are left to the functors to avoid clashing with the standard \inlinecode{std::hash\textless{}std::vector\textless{}char\textgreater{}\textgreater{}}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -567,18 +597,18 @@ uint64_t hash_string_fnv1a64(const std::string &s) {
 }
 
 template<typename It>
-uint32_t hash_range32(It first, It last) {
+uint32_t hash_range32(It lo, It hi) {
   uint32_t h = 0;
-  for (It it = first; it != last; ++it) {
+  for (It it = lo; it != hi; ++it) {
     h = hash_combine32(h, hash32(*it));
   }
   return h;
 }
 
 template<typename It>
-uint64_t hash_range64(It first, It last) {
+uint64_t hash_range64(It lo, It hi) {
   uint64_t h = 0;
-  for (It it = first; it != last; ++it) {
+  for (It it = lo; it != hi; ++it) {
     h = hash_combine64(h, hash64(*it));
   }
   return h;
@@ -608,7 +638,7 @@ struct ScalarHasher {
 
 // A self-contained hasher for std::pair<int, int> keys: copy just this struct when you do not need
 // the rest of this file. The two 32-bit halves pack losslessly into one 64-bit word, which the
-// SplitMix64 mixer (the same one used by mix64 above) then scrambles. Add a random seed to `key`
+// SplitMix64 mixer (the same one used by mix64 above) then scrambles. Add a random seed to key
 // before mixing, as IntHasher does, if you need anti-hacking protection.
 struct PairIntHasher {
   std::size_t operator()(const std::pair<int, int> &p) const {
@@ -668,26 +698,6 @@ struct GenericHasher<std::tuple<Ts...>> : TupleHasher<Ts...> {};
 
 template<typename T>
 struct GenericHasher<std::vector<T>> : VectorHasher<T> {};
-
-// Specializing std::hash lets pair and tuple keys be used directly in std::unordered_map and
-// std::unordered_set, with no explicit hasher template argument. The C++ standard only sanctions
-// specializing std::hash when a user-defined type is involved, so the functors above remain the
-// portable choice; these specializations are a widely supported contest convenience. Vector keys
-// are intentionally left out here to avoid clashing with the standard library's own
-// std::hash<std::vector<char>>; pass VectorHasher or GenericHasher explicitly for those.
-namespace std {
-
-template<typename A, typename B>
-struct hash<pair<A, B>> {
-  std::size_t operator()(const pair<A, B> &p) const { return ::GenericHasher<pair<A, B>>()(p); }
-};
-
-template<class... Ts>
-struct hash<tuple<Ts...>> {
-  std::size_t operator()(const tuple<Ts...> &t) const { return ::GenericHasher<tuple<Ts...>>()(t); }
-};
-
-}  // namespace std
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -741,19 +751,11 @@ int main() {
   grid[Triple(1, 'a', 3.14)] = 6;
   assert(grid[Triple(1, 'a', 3.14)] == 6);
 
-  // With the std::hash specializations, pair and tuple keys need no hasher argument.
-  unordered_map<Point, int> dist_default;
-  dist_default[Point(3, 4)] = 5;
-  assert(dist_default[Point(3, 4)] == 5);
-
-  unordered_map<Triple, int> grid_default;
-  grid_default[Triple(1, 'a', 3.14)] = 6;
-  assert(grid_default[Triple(1, 'a', 3.14)] == 6);
   return 0;
 }
 \end{lstlisting}
 \subsection{Rolling Hash}
-Computes polynomial rolling hashes for sequences, supporting $O(1)$ contiguous subsequence hash queries after preprocessing. This is useful for probabilistic string matching, substring equality checks, repeated subarray detection, and binary-searching over candidate lengths.
+Computes polynomial rolling hashes for sequences of an arbitrary hashable type \inlinecode{T}, supporting $O(1)$ contiguous subsequence hash queries after preprocessing. This is useful for probabilistic string matching, substring equality checks, repeated subarray detection, and binary-searching over candidate lengths.
 
 Given a sequence $a_0, a_1, \ldots, a_{n-1}$ and a value hash $h(a_i)$ for each element, the hash is the polynomial $H(a) = \sum_{i=0}^{n-1} h(a_i) B^{n-1-i} \pmod M$, where $B$ is \inlinecode{HASH\_BASE} and $M$ is \inlinecode{HASH\_MOD}. Equivalently, it is built left-to-right by the recurrence \inlinecode{pref[i + 1] = pref[i] * HASH\_BASE + h(a[i])}. A subsequence hash for $[{\inlinecodemath{l}}, {\inlinecodemath{r}})$ is obtained by subtracting away the prefix before $l$: \inlinecode{pref[r] - pref[l] * pow(HASH\_BASE, r - l)}.
 
@@ -762,12 +764,12 @@ The implementation works modulo the Mersenne prime $2^{61} - 1$, using \inlineco
 By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For non-integer element types, pass a custom value hasher that maps each element to a stable nonzero value in [\inlinecode{1}, \inlinecode{HASH\_MOD}).
 
 \begin{compactitem}
-  \item \inlinecode{RollingHash\textless{}T, ValueHasher = RollingValueHasher\textless{}T\textgreater{}\textgreater{}(hasher = ValueHasher())} constructs an empty hash sequence using \inlinecode{hasher} to map values before mixing.
-  \item \inlinecode{RollingHash\textless{}T, ValueHasher = RollingValueHasher\textless{}T\textgreater{}\textgreater{}(first, last, hasher = ValueHasher())} constructs prefix hashes for any iterator range of values accepted by the value hasher.
-  \item \inlinecode{RollingHash\textless{}T, ValueHasher = RollingValueHasher\textless{}T\textgreater{}\textgreater{}(v, hasher = ValueHasher())} constructs prefix hashes for vector \inlinecode{v}.
-  \item \inlinecode{get(l, r)} returns the hash of the half-open subsequence $[{\inlinecodemath{l}}, {\inlinecodemath{r}})$.
-  \item \inlinecode{hash(first, last, hasher = ValueHasher())} returns the hash of an iterator range.
-  \item \inlinecode{hash(v, hasher = ValueHasher())} returns the hash of vector \inlinecode{v}.
+  \item \inlinecode{RollingHash\textless{}T, Hash = ValueHasher\textless{}T\textgreater{}\textgreater{}(hasher = Hash())} constructs an empty hash sequence using \inlinecode{hasher} to map values before mixing.
+  \item \inlinecode{RollingHash\textless{}T, Hash = ValueHasher\textless{}T\textgreater{}\textgreater{}(lo, hi, hasher = Hash())} constructs prefix hashes from the values in the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
+  \item \inlinecode{RollingHash\textless{}T, Hash = ValueHasher\textless{}T\textgreater{}\textgreater{}(v, hasher = Hash())} constructs prefix hashes for vector \inlinecode{v}.
+  \item \inlinecode{get(lo, hi)} returns the hash of the half-open subsequence $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
+  \item \inlinecode{hash(lo, hi, hasher = Hash())} returns the hash of the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
+  \item \inlinecode{hash(v, hasher = Hash())} returns the hash of vector \inlinecode{v}.
   \item \inlinecode{concat(left, right, right\_len)} returns the hash of the concatenation of a sequence with hash \inlinecode{left} and a sequence with hash \inlinecode{right} and length \inlinecode{right\_len}.
 \end{compactitem}
 
@@ -775,7 +777,7 @@ By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per constructor call and whole-sequence hash, where $n$ is the sequence length.
-  \item $O(1)$ per call to \inlinecode{get(l, r)} and \inlinecode{concat(left, right, right\_len)}.
+  \item $O(1)$ per call to \inlinecode{get(lo, hi)} and \inlinecode{concat(left, right, right\_len)}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -786,6 +788,7 @@ By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -829,17 +832,19 @@ uint64_t mix64(uint64_t x) {
 }
 
 template<typename T>
-struct RollingValueHasher {
-  // +1 ensures the result is in [$1$, HASH_MOD) and never zero; a zero element in a polynomial
+struct ValueHasher {
+  // +1 ensures the result is in [1, HASH_MOD) and never zero; a zero element in a polynomial
   // hash is invisible and enables trivial collisions.
-  uint64_t operator()(const T &x) const { return mix64((uint64_t)x) % (HASH_MOD - 1) + 1; }
+  uint64_t operator()(const T &x) const {
+    return mix64(static_cast<uint64_t>(x)) % (HASH_MOD - 1) + 1;
+  }
 };
 
-template<typename T, typename ValueHasher = RollingValueHasher<T>>
+template<typename T, typename Hash = ValueHasher<T>>
 class RollingHash {
   static std::vector<uint64_t> pow_base;
   std::vector<uint64_t> pref;
-  ValueHasher value_hasher;
+  Hash hasher;
 
   static void ensure_powers(int n) {
     while (static_cast<int>(pow_base.size()) <= n) {
@@ -848,61 +853,61 @@ class RollingHash {
   }
 
   template<typename It>
-  void build(It first, It last) {
+  void build(It lo, It hi) {
     pref.clear();
     pref.push_back(0);
-    for (; first != last; ++first) {
-      pref.push_back(hash_add(hash_mul(pref.back(), HASH_BASE), value_hasher(*first)));
+    for (; lo != hi; ++lo) {
+      pref.push_back(hash_add(hash_mul(pref.back(), HASH_BASE), hasher(*lo)));
     }
     ensure_powers(static_cast<int>(pref.size()) - 1);
   }
 
  public:
-  explicit RollingHash(const ValueHasher &hasher = ValueHasher()) : value_hasher(hasher) {
+  explicit RollingHash(const Hash &hasher = Hash()) : hasher(hasher) {
     ensure_powers(0);
     pref.push_back(0);
   }
 
   template<typename It>
-  RollingHash(It first, It last, const ValueHasher &hasher = ValueHasher()) : value_hasher(hasher) {
-    build(first, last);
+  RollingHash(It lo, It hi, const Hash &hasher = Hash()) : hasher(hasher) {
+    build(lo, hi);
   }
 
-  explicit RollingHash(const std::vector<T> &v, const ValueHasher &hasher = ValueHasher())
-      : value_hasher(hasher) {
+  explicit RollingHash(const std::vector<T> &v, const Hash &hasher = Hash()) : hasher(hasher) {
     build(v.begin(), v.end());
   }
 
   int size() const { return static_cast<int>(pref.size()) - 1; }
 
   uint64_t get(int lo, int hi) const {
+    assert(0 <= lo && lo <= hi && hi <= size());
     return hash_sub(pref[hi], hash_mul(pref[lo], pow_base[hi - lo]));
   }
 
   template<typename It>
-  static uint64_t hash(It first, It last, const ValueHasher &hasher = ValueHasher()) {
-    RollingHash<T, ValueHasher> h(first, last, hasher);
+  static uint64_t hash(It lo, It hi, const Hash &hasher = Hash()) {
+    RollingHash<T, Hash> h(lo, hi, hasher);
     return h.get(0, h.size());
   }
 
-  static uint64_t hash(const std::vector<T> &v, const ValueHasher &hasher = ValueHasher()) {
-    RollingHash<T, ValueHasher> h(v, hasher);
+  static uint64_t hash(const std::vector<T> &v, const Hash &hasher = Hash()) {
+    RollingHash<T, Hash> h(v, hasher);
     return h.get(0, h.size());
   }
 
   static uint64_t concat(uint64_t left, uint64_t right, int right_len) {
+    assert(right_len >= 0);
     ensure_powers(right_len);
     return hash_add(hash_mul(left, pow_base[right_len]), right);
   }
 };
 
-template<typename T, typename ValueHasher>
-std::vector<uint64_t> RollingHash<T, ValueHasher>::pow_base(1, 1);
+template<typename T, typename Hash>
+std::vector<uint64_t> RollingHash<T, Hash>::pow_base(1, 1);
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 using namespace std;
 
 using PointI = pair<int, int>;
@@ -938,7 +943,7 @@ int main() {
   v.push_back(1);
   v.push_back(2);
   RollingHash<int> hv(v);
-  assert(hv.get(0, 2) == hv.get(3, 5));  // [$1$, 2] == [$1$, 2]
+  assert(hv.get(0, 2) == hv.get(3, 5));  // Both ranges are [1, 2].
   assert(hv.get(0, 3) == RollingHash<int>::hash(v.begin(), v.begin() + 3));
 
   vector<PointI> poly{{1, 2}, {3, 4}};
@@ -948,7 +953,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Rolling Hash Deque}
-Maintain a polynomial rolling hash over a sequence of elements of an arbitrary type \inlinecode{T}, under insertion and deletion at either end, in $O(1)$ time per operation. Each element is first reduced to a nonnegative integer ``digit'' by a user-supplied hasher, so any comparable type (characters, integers, whole words, tuples) can be hashed. This is the deque generalization of the classic Rabin-Karp sliding window: pushing at the back and popping from the front is exactly a moving window, and this structure additionally supports pushing at the front and popping from the back.
+Maintains a polynomial rolling hash for a sequence of an arbitrary hashable type \inlinecode{T}, supporting insertion and deletion at either end in $O(1)$ time per operation. Each element is first reduced to a nonnegative integer ``digit'' by a user-supplied hasher, so characters, integers, whole words, and tuples can all be hashed. This is the deque generalization of the classic Rabin-Karp sliding window: pushing at the back and popping from the front is exactly a moving window, and this structure additionally supports pushing at the front and popping from the back.
 
 The sequence of digits is hashed with the front element as the most significant digit, so a sequence of length $n$ has hash $\sum_{i=0}^{n-1} a_i B^{n-1-i}$ (the front element $a_0$ carries the highest power). This makes the four end operations pure $O(1)$ updates of a running accumulator:
 
@@ -961,17 +966,17 @@ The sequence of digits is hashed with the front element as the most significant 
 
 Only \inlinecode{pop\_back()} needs a modular inverse of the base, which is precomputed once. The weight of the front element, $B^{n-1}$, is maintained incrementally (multiplied by $B$ on a push, by $B^{-1}$ on a pop), so no power table or length-dependent exponentiation is needed. Each element's digit is stored when pushed, so popping never re-invokes the hasher. Because the hash depends only on the current contents, two deques with equal sequences hash equally regardless of how they were built, and a sliding window can be compared against a fixed target in $O(1)$ per step.
 
-\inlinecode{MOD1} and \inlinecode{MOD2} are two distinct primes, each kept below $2^{31}$ so that the product of any two residues fits in a 64-bit integer; hashing modulo both and comparing the resulting pair makes a collision astronomically unlikely. \inlinecode{BASE1} and \inlinecode{BASE2} are the corresponding polynomial bases, which should exceed the largest digit value and may be randomized per run to resist adversarial inputs.
+\inlinecode{MOD1} and \inlinecode{MOD2} are two distinct primes, each kept below $2^{31}$ so that the product of any two residues fits in a 64-bit integer; hashing modulo both and comparing the resulting pair makes a collision astronomically unlikely. \inlinecode{BASE1} and \inlinecode{BASE2} are the corresponding polynomial bases, which must be nonzero modulo their corresponding primes and may be randomized per run to resist adversarial inputs. For a small raw alphabet, choosing bases larger than every digit also prevents carry-style collisions before modular reduction, but arbitrary hasher outputs need not satisfy this bound.
 
 The hasher's output must be nonnegative. As with any polynomial hash, comparing sequences of different lengths is only safe when digits are positive (for example, map an alphabet to $[1, B)$) so that a leading zero cannot make a shorter sequence collide with a longer one.
 
 \begin{compactitem}
-  \item \inlinecode{HashDeque\textless{}T = int, Hash = identity\_digit\textless{}T\textgreater{}\textgreater{}(hasher = Hash())} constructs an empty deque whose \inlinecode{hasher} maps each element to its nonnegative integer digit. For integer-like \inlinecode{T} the default hasher casts the element to \inlinecode{uint64\_t}, so \inlinecode{HashDeque\textless{}char\textgreater{}} and \inlinecode{HashDeque\textless{}int\textgreater{}} work with no hasher supplied.
+  \item \inlinecode{HashDeque\textless{}T = int, Hash = IdentityDigit\textless{}T\textgreater{}\textgreater{}(hasher = Hash())} constructs an empty deque whose \inlinecode{hasher} maps each element to its nonnegative integer digit. For integer-like \inlinecode{T} the default hasher casts the element to \inlinecode{uint64\_t}, so \inlinecode{HashDeque\textless{}char\textgreater{}} and \inlinecode{HashDeque\textless{}int\textgreater{}} work with no hasher supplied.
   \item \inlinecode{size()} returns the number of elements, and \inlinecode{empty()} whether there are none.
   \item \inlinecode{push\_back(x)} and \inlinecode{push\_front(x)} append \inlinecode{x} at the back or front.
   \item \inlinecode{pop\_back()} and \inlinecode{pop\_front()} remove the back or front element; the deque must be nonempty.
   \item \inlinecode{hash()} returns the pair of hashes of the current sequence.
-  \item \inlinecode{a == b} (and \inlinecode{a != b}) compares two deques: it checks equal length, then equal hash pairs, so two deques hold equal sequences with high probability if and only if they compare equal.
+  \item \inlinecode{a == b} (and \inlinecode{a != b}) compares the lengths and hash pairs of two deques. Equal sequences always compare equal; equality indicates equal sequences with high probability.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(1)$ per call to every operation, plus one hasher evaluation per \inlinecode{push\_back()} / \inlinecode{push\_front()}.
@@ -990,14 +995,14 @@ The hasher's output must be nonnegative. As with any polynomial hash, comparing 
 #include <utility>
 
 template<class T>
-struct identity_digit {
+struct IdentityDigit {
   uint64_t operator()(const T &x) const { return static_cast<uint64_t>(x); }
 };
 
-template<class T = int, class Hash = identity_digit<T>>
+template<class T = int, class Hash = IdentityDigit<T>>
 class HashDeque {
   static const uint64_t MOD1 = 1000000007, MOD2 = 1000000009;  // Distinct primes below 2^31.
-  static const uint64_t BASE1 = 131, BASE2 = 137;  // Should exceed the maximum digit value.
+  static const uint64_t BASE1 = 131, BASE2 = 137;              // Nonzero modulo MOD1 and MOD2.
 
   Hash hasher;                  // Maps an element to its nonnegative integer digit.
   std::deque<uint64_t> digits;  // Per-element digit values, retained so pops never re-hash.
@@ -1137,19 +1142,19 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Dynamic Rolling Hash}
-Maintain a polynomial rolling hash over a nonnegative integer sequence, supporting point updates and $O(\log n)$ subsequence hash queries. Unlike the static rolling hash, which fixes its prefix hashes at construction, this structure allows any element to change between queries, which is useful for problems that compare substrings while characters are edited.
+Maintains a polynomial rolling hash for a sequence of nonnegative integers, supporting point updates and $O(\log n)$ contiguous subsequence hash queries. Unlike the static rolling hash, which fixes its prefix hashes at construction, this structure allows any element to change between queries, which is useful for problems that compare substrings while characters are edited.
 
 The key idea is to weight each element by a power of the base tied to its absolute position: storing $a_i B^i$ at index \inlinecode{i} turns the hash of any prefix into an ordinary prefix sum, which a Fenwick tree maintains under point updates. The raw sum over a half-open range $[l, h)$ is $\sum_i a_i B^i$, and multiplying by $B^{-l}$ shifts it to the position-independent value $\sum_i a_i B^{i - l}$, so two ranges with equal contents receive equal hashes (the leftmost element carries the lowest power). A segment tree could replace the Fenwick tree if lazy range updates are needed.
 
-\inlinecode{MOD1} and \inlinecode{MOD2} are two distinct primes, each kept below $2^{31}$ so that the product of any two residues fits in a 64-bit integer; hashing modulo both and comparing the resulting pair makes a collision astronomically unlikely. \inlinecode{BASE1} and \inlinecode{BASE2} are the corresponding polynomial bases, which should exceed the largest element value and may be randomized per run to resist adversarial inputs.
+\inlinecode{MOD1} and \inlinecode{MOD2} are two distinct primes, each kept below $2^{31}$ so that the product of any two residues fits in a 64-bit integer; hashing modulo both and comparing the resulting pair makes a collision astronomically unlikely. \inlinecode{BASE1} and \inlinecode{BASE2} are the corresponding polynomial bases, which must be nonzero modulo their corresponding primes and may be randomized per run to resist adversarial inputs. For a small raw alphabet, choosing bases larger than every value also prevents carry-style collisions before modular reduction, but general integer values need not satisfy this bound.
 
 Element values must be nonnegative. As with any polynomial hash, comparing subsequences of different lengths is only safe when values are positive (for example, map an alphabet to $[1, B)$) so that trailing zeros cannot make a shorter sequence collide with a longer one.
 
 \begin{compactitem}
-  \item \inlinecode{DynamicHash(a)} builds prefix hashes over the integer sequence \inlinecode{a}.
+  \item \inlinecode{DynamicRollingHash(a)} builds prefix hashes over the integer sequence \inlinecode{a}.
   \item \inlinecode{size()} returns the length of the sequence.
   \item \inlinecode{set(i, x)} assigns the value at index \inlinecode{i} to \inlinecode{x}.
-  \item \inlinecode{hash(lo, hi)} returns the pair of hashes of the half-open subsequence $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$. Two ranges are equal with high probability if and only if their \inlinecode{hash()} pairs are equal.
+  \item \inlinecode{hash(lo, hi)} returns the hash pair of the half-open subsequence $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$. Equal ranges always have equal hash pairs, while equal hash pairs indicate equal ranges with high probability.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1173,9 +1178,9 @@ Element values must be nonnegative. As with any polynomial hash, comparing subse
 #include <utility>
 #include <vector>
 
-class DynamicHash {
+class DynamicRollingHash {
   static const uint64_t MOD1 = 1000000007, MOD2 = 1000000009;  // Distinct primes below 2^31.
-  static const uint64_t BASE1 = 131, BASE2 = 137;  // Should exceed the maximum element value.
+  static const uint64_t BASE1 = 131, BASE2 = 137;              // Nonzero modulo MOD1 and MOD2.
 
   int len;
   std::vector<int> cur;
@@ -1194,13 +1199,13 @@ class DynamicHash {
     return res;
   }
 
-  void add(std::vector<uint64_t> &ft, int i, uint64_t delta, uint64_t m) {
-    for (i++; i <= len; i += i & -i) {
+  static void add(std::vector<uint64_t> &ft, int i, uint64_t delta, uint64_t m) {
+    for (i++; i < static_cast<int>(ft.size()); i += i & -i) {
       ft[i] = (ft[i] + delta) % m;
     }
   }
 
-  uint64_t sum(const std::vector<uint64_t> &ft, int i, uint64_t m) const {
+  static uint64_t sum(const std::vector<uint64_t> &ft, int i, uint64_t m) {
     uint64_t res = 0;
     for (i++; i > 0; i -= i & -i) {
       res = (res + ft[i]) % m;
@@ -1209,7 +1214,8 @@ class DynamicHash {
   }
 
  public:
-  explicit DynamicHash(const std::vector<int> &a) : len(static_cast<int>(a.size())), cur(len, 0) {
+  explicit DynamicRollingHash(const std::vector<int> &a)
+      : len(static_cast<int>(a.size())), cur(len, 0) {
     pw1.resize(len + 1);
     pw2.resize(len + 1);
     ip1.resize(len + 1);
@@ -1259,7 +1265,7 @@ using namespace std;
 int main() {
   string s = "abcabc";
   vector<int> a(s.begin(), s.end());
-  DynamicHash h(a);
+  DynamicRollingHash h(a);
   assert(h.size() == 6);
   assert(h.hash(0, 3) == h.hash(3, 6));  // "abc" == "abc".
 
@@ -1282,7 +1288,7 @@ This technique is useful for probabilistic equality checks on sets, distinct-pre
   \item \inlinecode{ZobristHash\textless{}T\textgreater{}(seed = 0)} constructs a token generator with initial value \inlinecode{seed}.
   \item \inlinecode{get(x)} returns the stable token assigned to key \inlinecode{x}, creating it if needed.
   \item \inlinecode{toggle(h, x)} returns the hash obtained by inserting \inlinecode{x} into set hash \inlinecode{h} if absent, or removing \inlinecode{x} from \inlinecode{h} if present.
-  \item \inlinecode{distinct\_prefix\_hashes(lo, hi)} returns prefix hashes where each distinct key in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ contributes only on its first occurrence.
+  \item \inlinecode{distinct\_prefix\_hashes(lo, hi)} returns \inlinecode{n + 1} hashes. Element \inlinecode{i} hashes the first \inlinecode{i} values in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ with each distinct key contributing only on its first occurrence.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1376,7 +1382,7 @@ int main() {
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{String Searching (KMP)}
-Given a single string (needle) and subsequent queries of texts (haystacks) to be searched, determine the first positions in which the needle occurs within the given haystacks in linear time using the Knuth-Morris-Pratt algorithm. In comparison, \inlinecode{std::string::find} runs in $O(n^{2})$ in the worst case. KMP precomputes, for every prefix of the needle, the length of its longest proper border (a prefix that is also a suffix). On a mismatch, the needle falls back to that border instead of restarting, so the position in the haystack never moves backward.
+Given a single string (needle) and subsequent queries of texts (haystacks) to be searched, determine the first positions in which the needle occurs within the given haystacks in linear time using the Knuth-Morris-Pratt algorithm. Unlike \inlinecode{std::string::find}, KMP guarantees a linear worst-case bound. KMP precomputes, for every prefix of the needle, the length of its longest proper border (a prefix that is also a suffix). On a mismatch, the needle falls back to that border instead of restarting, so the position in the haystack never moves backward.
 
 \begin{compactitem}
   \item \inlinecode{KMP(needle)} constructs the partial match table for a string \inlinecode{needle} that is to be searched for subsequently in \inlinecode{haystack} queries.
@@ -1420,7 +1426,7 @@ class KMP {
     }
   }
 
-  std::size_t find_in(const string &haystack) {
+  std::size_t find_in(const string &haystack) const {
     int m = static_cast<int>(needle.size());
     if (m == 0) {
       return 0;
@@ -1455,29 +1461,29 @@ int main() {
 }
 \end{lstlisting}
 \subsection{String Searching (Z Algorithm)}
-Given a single string (needle) and a single text (haystack) to be searched, determine the first position in which the needle occurs within the haystack in linear time using the Z algorithm. In comparison, \inlinecode{std::string::find} runs in quadratic time.
+Given a single string (needle) and a single text (haystack) to be searched, determine the first position in which the needle occurs within the haystack in linear time using the Z algorithm. In comparison, \inlinecode{std::string::find} does not guarantee a linear worst-case bound.
 
 The Z array stores, for each position of a string, the length of the longest substring starting there that matches a prefix of the whole string. It is computed in linear time by maintaining the rightmost matched window and seeding each position from its mirror earlier in that window.
 
-The \inlinecode{find()} function below calls the Z algorithm on the concatenation of \inlinecode{needle} and \inlinecode{haystack}, separated by a sentinel value that is guaranteed not to collide with any byte in either input. Any position whose Z value reaches the needle's length marks an occurrence.
+The \inlinecode{find\_substring\_z()} function below calls the Z algorithm on the concatenation of \inlinecode{needle} and \inlinecode{haystack}, separated by a sentinel value that is guaranteed not to collide with any byte in either input. Any position whose Z value reaches the needle's length marks an occurrence.
 
 \begin{compactitem}
-  \item \inlinecode{z\_array(s)} constructs the Z array for a needle string \inlinecode{s} that can be used for string searching. Each resulting value \inlinecode{z[i]} stores the length of the longest substring starting from \inlinecode{s[i]} which is also a prefix of the needle \inlinecode{s}.
-  \item \inlinecode{find(haystack, needle)} returns the first position that \inlinecode{needle} occurs in \inlinecode{haystack}, or \inlinecode{std::string::npos} if it cannot be found. Note that the function can be modified to return all matches by simply letting the loop run and storing the results instead of returning early.
+  \item \inlinecode{z\_array(s)} constructs the Z array of sequence \inlinecode{s}. Each \inlinecode{z[i]} is the length of the longest prefix of \inlinecode{s} that also occurs starting at index \inlinecode{i}.
+  \item \inlinecode{find\_substring\_z(haystack, needle)} returns the first position where \inlinecode{needle} occurs in \inlinecode{haystack}, or \inlinecode{std::string::npos} if it cannot be found. To return all matches, let the loop run and store the results instead of returning early.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{z\_array(s)}, where $n$ is the length of \inlinecode{s}.
-  \item $O(n + m)$ per call to \inlinecode{find(haystack, needle)}, where $n$ is the length of \inlinecode{haystack} and $m$ is the length of \inlinecode{needle}.
+  \item $O(n + m)$ per call to \inlinecode{find\_substring\_z(haystack, needle)}, where $n$ and $m$ are the lengths of \inlinecode{haystack} and \inlinecode{needle}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ auxiliary for \inlinecode{z\_array(s)}, where $n$ is the length of \inlinecode{s}.
-  \item $O(n + m)$ auxiliary for \inlinecode{find(haystack, needle)} where $n$ is the length of \inlinecode{haystack} and $m$ is the length of \inlinecode{needle}.
+  \item $O(n + m)$ auxiliary for \inlinecode{find\_substring\_z(haystack, needle)}, where $n$ is the length of \inlinecode{haystack} and $m$ is the length of \inlinecode{needle}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1505,7 +1511,7 @@ std::vector<int> z_array(const Seq &s) {
   return z;
 }
 
-std::size_t find(const string &haystack, const string &needle) {
+std::size_t find_substring_z(const string &haystack, const string &needle) {
   if (needle.empty()) {
     return 0;
   }
@@ -1535,10 +1541,10 @@ std::size_t find(const string &haystack, const string &needle) {
 
 int main() {
   assert((z_array(string("aaaaa")) == std::vector<int>{0, 4, 3, 2, 1}));
-  assert(find("ABC ABCDAB ABCDABCDABDE", "ABCDABD") == 15);
-  assert(find("ABC ABCDAB ABCDABCDA", "ABCDABD") == string::npos);
-  assert(find("aaa", "aa") == 0);  // First overlapping occurrence.
-  assert(find("abc", "") == 0);
+  assert(find_substring_z("ABC ABCDAB ABCDABCDABDE", "ABCDABD") == 15);
+  assert(find_substring_z("ABC ABCDAB ABCDABCDA", "ABCDABD") == string::npos);
+  assert(find_substring_z("aaa", "aa") == 0);  // First overlapping occurrence.
+  assert(find_substring_z("abc", "") == 0);
   return 0;
 }
 \end{lstlisting}
@@ -1555,14 +1561,14 @@ This implementation stores transitions in hash tables, which keeps lookups expec
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(m \cdot l + z \log m)$ expected per call to the constructor, where $m$ is the number of needles, $l$ is the maximum length of any needle, and $z$ is the total number of inherited output entries.
+  \item $O(L + z \log m)$ expected per call to the constructor, where $L$ is the total length of the $m$ needles and $z$ is the total number of inherited output entries.
   \item $O(n + z)$ expected per call to \inlinecode{find\_all\_in(haystack, report\_match)}, where $n$ is the length of \inlinecode{haystack} and $z$ is the number of matches.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(m \cdot l)$ for storage of the automaton, where $m$ is the number of needles and $l$ is the maximum length for any needle.
+  \item $O(L + z)$ for storage of the automaton and inherited output entries.
   \item $O(1)$ auxiliary for \inlinecode{find\_all\_in(haystack, report\_match)}.
 \end{compactitem}
 
@@ -1580,7 +1586,7 @@ class AhoCorasick {
   std::vector<std::unordered_map<char, int>> adj;
   std::vector<std::set<int>> out;
 
-  int next_state(int curr, char c) {
+  int next_state(int curr, char c) const {
     int next = curr;
     while (next != 0 && adj[next].find(c) == adj[next].end()) {
       next = fail[next];
@@ -1642,7 +1648,7 @@ class AhoCorasick {
   }
 
   template<typename Fn>
-  void find_all_in(const string &haystack, Fn report_match) {
+  void find_all_in(const string &haystack, Fn report_match) const {
     int state = 0;
     for (int i = 0; i < static_cast<int>(haystack.size()); i++) {
       state = next_state(state, haystack[i]);
@@ -1722,7 +1728,7 @@ For odd palindromes, \inlinecode{odd[i]} is the radius centered at character \in
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per constructor call, where $n$ is the length of \inlinecode{s}.
-  \item $O(1)$ per call to \inlinecode{is\_palindrome(lo, r)}.
+  \item $O(1)$ per call to \inlinecode{is\_palindrome(lo, hi)}.
   \item $O(n)$ per call to \inlinecode{longest\_palindrome()} and \inlinecode{count\_palindromes()}.
 \end{compactitem}
 
@@ -1735,6 +1741,7 @@ For odd palindromes, \inlinecode{odd[i]} is the radius centered at character \in
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -1772,6 +1779,7 @@ class Manacher {
   }
 
   bool is_palindrome(int lo, int hi) const {
+    assert(0 <= lo && lo <= hi && hi <= static_cast<int>(s.size()));
     int len = hi - lo;
     if (len <= 0) {
       return true;
@@ -1810,8 +1818,6 @@ class Manacher {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
-
 int main() {
   Manacher m("abacaba");
   assert(m.is_palindrome(0, 7));
@@ -1827,7 +1833,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Lyndon Factorization (Duval)}
-A Lyndon word is a nonempty string that is strictly smaller than all of its proper suffixes, or equivalently, strictly smaller than all of its nontrivial cyclic rotations. By the Chen-Fox-Lyndon theorem, every string has a unique factorization into a sequence of Lyndon words whose values are non-increasing: $s = w_1 w_2 \cdots w_k$ with $w_1 \geq w_2 \geq \cdots \geq w_k$. Duval's algorithm computes this factorization in linear time and constant auxiliary by scanning the string while tracking the current candidate Lyndon prefix and the position it last matched.
+A Lyndon word is a nonempty string that is strictly smaller than all of its proper suffixes, or equivalently, strictly smaller than all of its nontrivial cyclic rotations. By the Chen-Fox-Lyndon theorem, every string has a unique factorization into a sequence of Lyndon words whose values are non-increasing: $s = w_1 w_2 \cdots w_k$ with $w_1 \geq w_2 \geq \cdots \geq w_k$. Duval's algorithm computes this factorization in linear time and constant auxiliary space by scanning the string while tracking the current candidate Lyndon prefix and the position it last matched.
 
 The same scan, applied to the string viewed as a cycle, yields the starting position of its lexicographically least rotation. This is the standard way to canonicalize a necklace, for example to test whether two strings are cyclic rotations of one another.
 
@@ -1910,9 +1916,9 @@ int main() {
 }
 \end{lstlisting}
 \subsection{De Bruijn Sequence}
-A De Bruijn sequence $B(k, n)$ is a cyclic string over the alphabet $[0, k)$ of length $k^n$ in which every one of the $k^n$ possible length-$n$ strings appears exactly once as a (cyclic) substring. Reading a window of $n$ symbols and advancing one position at a time therefore cycles through all length-$n$ strings without repetition, which makes the sequence a compact way to probe every short pattern: cracking a rotating lock, addressing a shift register, or building the perfect-hash table that maps an isolated set bit to its index.
+A de Bruijn sequence $B(k, n)$ is a cyclic string over the alphabet $[0, k)$ of length $k^n$ in which every one of the $k^n$ possible length-$n$ strings appears exactly once as a (cyclic) substring. Reading a window of $n$ symbols and advancing one position at a time therefore cycles through all length-$n$ strings without repetition, which makes the sequence a compact way to probe every short pattern: cracking a rotating lock, addressing a shift register, or building the perfect-hash table that maps an isolated set bit to its index.
 
-The construction here is the Fredricksen-Kessler-Maiorana (FKM) algorithm. It concatenates, in lexicographic order, the Lyndon words (see the Lyndon factorization section) whose length divides $n$. The result is the lexicographically smallest De Bruijn sequence. The recursion enumerates these necklace representatives directly, appending the first $p$ symbols of each candidate whenever its period $p$ divides $n$.
+The construction here is the Fredricksen-Kessler-Maiorana (FKM) algorithm. It concatenates, in lexicographic order, the Lyndon words (see the Lyndon factorization section) whose length divides $n$. The result is the lexicographically smallest de Bruijn sequence. The recursion enumerates these necklace representatives directly, appending the first $p$ symbols of each candidate whenever its period $p$ divides $n$.
 
 \begin{compactitem}
   \item \inlinecode{de\_bruijn(k, n)} returns a vector of length $k^n$ holding one period of $B(k, n)$. Each entry lies in $[0, k)$. Both $k$ and $n$ must be at least $1$. Treat the result as cyclic: the length-$n$ windows that wrap past the end are exactly the ones still needed to cover all strings.
@@ -1926,7 +1932,9 @@ The construction here is the Fredricksen-Kessler-Maiorana (FKM) algorithm. It co
 #include <cassert>
 #include <vector>
 
-void de_bruijn_gen(int t, int p, int k, int n, std::vector<int> &word, std::vector<int> &seq) {
+static void de_bruijn_gen(
+    int t, int p, int k, int n, std::vector<int> &word, std::vector<int> &seq
+) {
   if (t > n) {
     if (n % p == 0) {
       for (int i = 1; i <= p; i++) {
@@ -1991,7 +1999,7 @@ int main() {
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Suffix Array and LCP (Manber-Myers)}
-Given a string $s$, a suffix array is the array of the smallest starting positions for the sorted suffixes of $s$. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of $s$. For example, $s$ = \inlinecode{"cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
+Given a string $s$, a suffix array stores the starting positions of the suffixes of $s$ in sorted order. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of $s$. For example, $s$ = \inlinecode{"cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
 
 For a string $s$ of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in $s$. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
 
@@ -2058,16 +2066,19 @@ class SuffixArrayManberMyers {
   std::vector<int> get_lcp() const {
     int n = static_cast<int>(s.size());
     if (n == 0) {
-      return {};  // Avoid constructing a vector of size (size_t)(-1).
+      return {};
     }
-    std::vector<int> lcp(n - 1);
+    std::vector<int> rank(n), lcp(n - 1);
+    for (int i = 0; i < n; i++) {
+      rank[sa[i]] = i;
+    }
     for (int i = 0, k = 0; i < n; i++) {
-      if (rk[i] < n - 1) {
-        int j = sa[rk[i] + 1];
+      if (rank[i] < n - 1) {
+        int j = sa[rank[i] + 1];
         while (std::max(i, j) + k < n && s[i + k] == s[j + k]) {
           k++;
         }
-        lcp[rk[i]] = k;
+        lcp[rank[i]] = k;
         if (k > 0) {
           k--;
         }
@@ -2076,7 +2087,7 @@ class SuffixArrayManberMyers {
     return lcp;
   }
 
-  std::size_t find(const string &needle) {
+  std::size_t find(const string &needle) const {
     if (needle.empty()) {
       return 0;
     }
@@ -2116,11 +2127,11 @@ int main() {
   for (int pos : sarr) {
     cout << " " << pos;
   }
-  cout << "\nLCP array:";
+  cout << endl << "LCP array:";
   for (int len : lcp) {
     cout << " " << len;
   }
-  cout << "\n";
+  cout << endl;
   return 0;
 }
 \end{lstlisting}
@@ -2129,7 +2140,7 @@ Suffix array: 5 3 1 0 4 2
 LCP array: 1 3 0 0 2
 \end{exampleoutput}
 \subsection{Suffix Array and LCP (Counting Sort)}
-Given a string $s$, a suffix array is the array of the smallest starting positions for the sorted suffixes of $s$. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of $s$. For example, $s$ = \inlinecode{"cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
+Given a string $s$, a suffix array stores the starting positions of the suffixes of $s$ in sorted order. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of $s$. For example, $s$ = \inlinecode{"cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
 
 For a string $s$ of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in $s$. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
 
@@ -2204,16 +2215,19 @@ class SuffixArrayCountingSort {
   std::vector<int> get_lcp() const {
     int n = static_cast<int>(s.size());
     if (n == 0) {
-      return {};  // Avoid constructing a vector of size (size_t)(-1).
+      return {};
     }
-    std::vector<int> lcp(n - 1);
+    std::vector<int> rank(n), lcp(n - 1);
+    for (int i = 0; i < n; i++) {
+      rank[sa[i]] = i;
+    }
     for (int i = 0, k = 0; i < n; i++) {
-      if (rk[i] < n - 1) {
-        int j = sa[rk[i] + 1];
+      if (rank[i] < n - 1) {
+        int j = sa[rank[i] + 1];
         while (std::max(i, j) + k < n && s[i + k] == s[j + k]) {
           k++;
         }
-        lcp[rk[i]] = k;
+        lcp[rank[i]] = k;
         if (k > 0) {
           k--;
         }
@@ -2222,7 +2236,7 @@ class SuffixArrayCountingSort {
     return lcp;
   }
 
-  std::size_t find(const string &needle) {
+  std::size_t find(const string &needle) const {
     if (needle.empty()) {
       return 0;
     }
@@ -2257,11 +2271,14 @@ int main() {
   assert(lcp == lcp_expected);
   assert(sa.find("ana") == 1);
   assert(sa.find("x") == string::npos);
+
+  SuffixArrayCountingSort repeated("bbba");
+  assert((repeated.get_lcp() == vector<int>{0, 1, 2}));
   return 0;
 }
 \end{lstlisting}
 \subsection{Suffix Array and LCP (DC3)}
-Given a string $s$, a suffix array is the array of the smallest starting positions for the sorted suffixes of $s$. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of $s$. For example, $s$ = \inlinecode{"cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
+Given a string $s$, a suffix array stores the starting positions of the suffixes of $s$ in sorted order. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of $s$. For example, $s$ = \inlinecode{"cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
 
 For a string $s$ of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in $s$. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
 
@@ -2422,7 +2439,7 @@ class SuffixArrayDC3 {
     return lcp;
   }
 
-  std::size_t find(const string &needle) {
+  std::size_t find(const string &needle) const {
     if (needle.empty()) {
       return 0;
     }
@@ -2821,7 +2838,7 @@ class RadixTree {
       }
       n->cnt--;
       // The merge below leaves counts intact: a non-terminal node with one child already has the
-      // same subtree count as that child, so reusing the node keeps its `cnt` correct.
+      // same subtree count as that child, so reusing the node keeps its cnt correct.
       if (child->children.empty() && !child->is_terminal) {
         delete child;
         n->children.erase(it);
@@ -2924,11 +2941,11 @@ class RadixTree {
         if (key[0] == s[i]) {
           int len = lcp_len(key, s, i);
           if (i + len == static_cast<int>(s.size())) {
-            // `s` ends within (or exactly at the end of) this edge: every key below qualifies.
+            // s ends within (or exactly at the end of) this edge: every key below qualifies.
             return child->cnt;
           }
           if (len < static_cast<int>(key.size())) {
-            return 0;  // `s` diverges partway along the edge.
+            return 0;  // s diverges partway along the edge.
           }
           i += len;
           n = child;
@@ -3032,6 +3049,7 @@ This implementation is Ukkonen's algorithm, which builds the tree online in line
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cstdint>
 #include <map>
 #include <string>
 #include <vector>
@@ -3040,13 +3058,13 @@ class SuffixTree {
   static const int OPEN = -1;  // Marks a leaf edge whose right end follows the growing string.
 
   struct Node {
-    int start, end;  // Edge into this node labels s[start..end]; end == OPEN means leaf_end.
+    int start, end;  // Edge into this node labels str[start..end]; end == OPEN means leaf_end.
     int link;
     std::map<char, int> next;
     Node(int start, int end) : start(start), end(end), link(0) {}
   };
 
-  std::string s;
+  std::string str;
   std::vector<Node> tree;
   int leaf_end;
   // Active point and bookkeeping for Ukkonen's algorithm.
@@ -3079,7 +3097,7 @@ class SuffixTree {
       if (active_length == 0) {
         active_edge = pos;
       }
-      char c = s[active_edge];
+      char c = str[active_edge];
       auto it = tree[active_node].next.find(c);
       if (it == tree[active_node].next.end()) {
         // Rule 2: no edge starts with c, so grow a new leaf from the active node.
@@ -3093,7 +3111,7 @@ class SuffixTree {
         if (walk_down(v)) {
           continue;  // Re-evaluate the same suffix from the deeper node.
         }
-        if (s[tree[v].start + active_length] == s[pos]) {
+        if (str[tree[v].start + active_length] == str[pos]) {
           // Rule 3: the character is already present; stop and lengthen the active point.
           if (last_new != -1) {
             tree[last_new].link = active_node;
@@ -3104,9 +3122,9 @@ class SuffixTree {
         // Rule 2 with a split: break edge v in two and attach a new leaf at the split point.
         int split = make_node(tree[v].start, tree[v].start + active_length - 1);
         tree[active_node].next[c] = split;
-        tree[split].next[s[pos]] = make_node(pos, OPEN);
+        tree[split].next[str[pos]] = make_node(pos, OPEN);
         tree[v].start += active_length;
-        tree[split].next[s[tree[v].start]] = v;
+        tree[split].next[str[tree[v].start]] = v;
         if (last_new != -1) {
           tree[last_new].link = split;
         }
@@ -3137,16 +3155,16 @@ class SuffixTree {
   }
 
  public:
-  explicit SuffixTree(const std::string &str) : s(str) {
-    s.push_back('\1');  // Unique terminal sentinel, smaller than every real character.
-    make_node(-1, -1);  // Root, at index 0; its incoming edge is never read.
+  explicit SuffixTree(const std::string &s) : str(s) {
+    str.push_back('\1');  // Unique terminal sentinel, smaller than every real character.
+    make_node(-1, -1);    // Root, at index 0; its incoming edge is never read.
     active_node = 0;
     active_edge = 0;
     active_length = 0;
     remaining = 0;
     leaf_end = -1;
     last_new = -1;
-    for (int i = 0; i < static_cast<int>(s.size()); i++) {
+    for (int i = 0; i < static_cast<int>(str.size()); i++) {
       extend(i);
     }
   }
@@ -3161,7 +3179,7 @@ class SuffixTree {
       v = it->second;
       int len = edge_len(v);
       for (int j = 0; j < len && i < m; j++, i++) {
-        if (s[tree[v].start + j] != t[i]) {
+        if (str[tree[v].start + j] != t[i]) {
           return false;
         }
       }
@@ -3169,20 +3187,20 @@ class SuffixTree {
     return true;
   }
 
-  int count_distinct_substrings() const {
-    int total = 0;
+  int64_t count_distinct_substrings() const {
+    int64_t total = 0;
     for (int v = 1; v < static_cast<int>(tree.size()); v++) {
       total += edge_len(v);
     }
-    // Every leaf edge ends in the sentinel; the s.size() suffixes of the sentineled string are the
-    // only substrings that contain it, so removing them leaves the count for the original string.
-    return total - static_cast<int>(s.size());
+    // Every leaf edge ends in the sentinel. The str.size() suffixes of the sentineled string are
+    // the only substrings containing it, so removing them leaves the original string's count.
+    return total - static_cast<int64_t>(str.size());
   }
 
   std::string longest_repeated_substring() const {
     int best_depth = 0, best_end = 0;
     deepest_internal(0, 0, best_depth, best_end);
-    return s.substr(best_end - best_depth, best_depth);
+    return str.substr(best_end - best_depth, best_depth);
   }
 };
 \end{lstlisting}
@@ -3324,9 +3342,9 @@ class SuffixAutomaton {
     return true;
   }
 
-  // Returns the starting index of the first (leftmost) occurrence of `t` as a substring, or -1 if
-  // `t` does not occur. `first_pos` stores the end index of the first occurrence of each state's
-  // class, so subtracting the length of `t` recovers its start.
+  // Returns the starting index of the first (leftmost) occurrence of t as a substring, or -1 if t
+  // does not occur. first_pos stores the end index of the first occurrence of each state's class,
+  // so subtracting the length of t recovers its start.
   int first_occurrence(const string &t) const {
     int v = 0;
     for (char c : t) {
@@ -3440,37 +3458,37 @@ class Eertree {
   };
 
   std::vector<Node> tree;
-  string s;
+  string str;
   int last;
 
   int get_suffix(int v, int pos, char c) const {
-    while (pos - 1 - tree[v].len < 0 || s[pos - 1 - tree[v].len] != c) {
+    while (pos - 1 - tree[v].len < 0 || str[pos - 1 - tree[v].len] != c) {
       v = tree[v].link;
     }
     return v;
   }
 
  public:
-  Eertree() : tree(), s(), last(1) {
+  Eertree() : tree(), str(), last(1) {
     tree.emplace_back(-1);
     tree.emplace_back(0);
     tree[0].link = 0;
     tree[1].link = 0;
   }
 
-  explicit Eertree(const string &text) : tree(), s(), last(1) {
+  explicit Eertree(const string &s) : tree(), str(), last(1) {
     tree.emplace_back(-1);
     tree.emplace_back(0);
     tree[0].link = 0;
     tree[1].link = 0;
-    for (char c : text) {
+    for (char c : s) {
       add(c);
     }
   }
 
   bool add(char c) {
-    s += c;
-    int pos = static_cast<int>(s.size()) - 1;
+    str += c;
+    int pos = static_cast<int>(str.size()) - 1;
     int cur = get_suffix(last, pos, c);
     auto it = tree[cur].next.find(c);
     if (it != tree[cur].next.end()) {
@@ -3542,7 +3560,7 @@ int main() {
 \setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Longest Common Substring}
-Given two strings, determine their longest common substring: a contiguous run of characters that appears in both. A dynamic program computes, for each pair of prefixes, the length of their longest common suffix; the largest value over all pairs locates a longest common substring. Only the previous row of the table is retained, so the auxiliary is linear in the shorter string.
+Given two strings, determine their longest common substring: a contiguous run of characters that appears in both. A dynamic program computes, for each pair of prefixes, the length of their longest common suffix; the largest value over all pairs locates a longest common substring. Only the previous row of the table is retained, so the auxiliary space is linear in the shorter string.
 
 \begin{compactitem}
   \item \inlinecode{longest\_common\_substring(s1, s2)} returns a longest common substring of \inlinecode{s1} and \inlinecode{s2} (one such substring if several are tied in length), or the empty string if they have none in common.
@@ -3720,7 +3738,7 @@ int main() {
 \subsection{Edit Distance and Sequence Alignment}
 Given two strings, determine their edit distance or a minimum-cost alignment. The Levenshtein edit distance is the minimum number of insertions, deletions, and substitutions needed to transform one string into the other. More generally, an alignment inserts gap characters \inlinecode{\_} into both strings so the final lengths match; its cost is \inlinecode{gap\_cost} times the number of inserted gaps plus \inlinecode{sub\_cost} times the number of indices where the aligned characters differ.
 
-Dynamic programming compares prefixes and chooses the cheapest last operation: align the final characters together, leave a gap in the first string, or leave a gap in the second string. Following the filled table backward reconstructs one minimum-cost alignment. This is the Needleman-Wunsch sequence-alignment recurrence. Hirschberg's algorithm uses the same recurrence with only one DP row at a time, splitting the problem where an optimal alignment crosses the longer string's midpoint.
+Dynamic programming compares prefixes and chooses the cheapest last operation: align the final characters together, leave a gap in the first string, or leave a gap in the second string. Following the filled table backward reconstructs one minimum-cost alignment. This is the Needleman-Wunsch sequence-alignment recurrence. Hirschberg's algorithm uses the same recurrence with only one DP row at a time, splitting the problem where an optimal alignment crosses the longer string's midpoint. Both \inlinecode{gap\_cost} and \inlinecode{sub\_cost} must be nonnegative.
 
 \begin{compactitem}
   \item \inlinecode{edit\_distance(s1, s2)} returns the Levenshtein edit distance between strings \inlinecode{s1} and \inlinecode{s2}.
@@ -3811,12 +3829,20 @@ std::pair<string, string> align_sequences(
 
 template<typename It>
 std::vector<int> row_cost(It lo1, It hi1, It lo2, It hi2, int gap_cost, int sub_cost) {
-  std::vector<int> res(std::distance(lo2, hi2) + 1), prev(res);
+  std::vector<int> res(std::distance(lo2, hi2) + 1);
+  for (int i = 0; i < static_cast<int>(res.size()); i++) {
+    res[i] = i * gap_cost;
+  }
+  std::vector<int> prev(res);
+  int row = 0;
   for (It it1 = lo1; it1 != hi1; ++it1) {
     res.swap(prev);
+    res[0] = ++row * gap_cost;
     int i = 0;
     for (It it2 = lo2; it2 != hi2; ++it2) {
-      res[i + 1] = (*it1 == *it2) ? prev[i] : std::min(prev[i] + sub_cost, res[i] + gap_cost);
+      res[i + 1] = (*it1 == *it2)
+                       ? prev[i]
+                       : std::min({prev[i] + sub_cost, prev[i + 1] + gap_cost, res[i] + gap_cost});
       i++;
     }
   }
@@ -3836,13 +3862,13 @@ void hirschberg_rec(
   }
   if (lo1 + 1 == hi1) {
     It pos = std::find(lo2, hi2, *lo1);
-    bool insert = (pos == hi2) && (gap_cost * (hi2 - lo2 + 1) < sub_cost);
-    if (lo2 == hi2 || insert) {
+    bool use_two_gaps = (pos == hi2) && (2 * gap_cost < sub_cost);
+    if (lo2 == hi2 || use_two_gaps) {
       *res1 += *lo1;
       *res2 += '_';
     }
     for (It it2 = lo2; it2 != hi2; ++it2) {
-      *res1 += (pos == it2 || (!insert && it2 == lo2)) ? *lo1 : '_';
+      *res1 += (pos == it2 || (pos == hi2 && !use_two_gaps && it2 == lo2)) ? *lo1 : '_';
       *res2 += *it2;
     }
     return;
@@ -3868,7 +3894,8 @@ std::pair<string, string> hirschberg_align_sequences(
     const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1
 ) {
   if (s1.size() < s2.size()) {
-    return hirschberg_align_sequences(s2, s1, gap_cost, sub_cost);
+    auto res = hirschberg_align_sequences(s2, s1, gap_cost, sub_cost);
+    return {res.second, res.first};
   }
   string res1, res2;
   hirschberg_rec(s1.begin(), s1.end(), s2.begin(), s2.end(), &res1, &res2, gap_cost, sub_cost);
@@ -3888,7 +3915,16 @@ int main() {
   auto alignment = align_sequences("AGGGCT", "AGGCA", 2, 3);
   assert(alignment == (std::pair<string, string>{"AGGGCT", "A_GGCA"}));
   assert(hirschberg_align_sequences("AGGGCT", "AGGCA", 2, 3) == alignment);
-  std::cout << "Aligned strings:\n" << alignment.first << "\n" << alignment.second << "\n";
+
+  assert((hirschberg_align_sequences("ab", "zabz") == std::pair<string, string>{"_ab_", "zabz"}));
+  assert(
+      (hirschberg_align_sequences("a", "bbbbbbbbbb", 1, 5) ==
+       std::pair<string, string>{"__________a", "bbbbbbbbbb_"})
+  );
+  assert((hirschberg_align_sequences("aa", "ba", 1, 2) == std::pair<string, string>{"a_a", "_ba"}));
+
+  std::cout << "Aligned strings:" << std::endl;
+  std::cout << alignment.first << std::endl << alignment.second << std::endl;
   return 0;
 }
 \end{lstlisting}
@@ -3985,7 +4021,7 @@ int min_insertions_palindrome(const string &s) {
 int main() {
   assert(longest_palindromic_subsequence("bbbab") == "bbbb");
   assert(longest_palindromic_subsequence("character") == "carac");
-  assert(min_insertions_palindrome("leetcode") == 5);
+  assert(min_insertions_palindrome("abcda") == 2);
   assert(min_insertions_palindrome("race") == 3);
   assert(min_insertions_palindrome("") == 0);
   return 0;
@@ -3996,7 +4032,7 @@ int main() {
 \setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Recursive Descent Parsing (Simple)}
-Evaluate an expression in accordance to the order of operations (parentheses, unary plus and minus signs, multiplication/division, addition/subtraction). The following is a minimalistic recursive descent implementation using iterators. Each precedence level is parsed by its own function that obtains operands by calling the next-tighter level, so the call structure itself enforces the order of operations.
+Evaluate an expression according to the order of operations (parentheses, unary plus and minus signs, multiplication/division, addition/subtraction). The following is a minimalistic recursive descent implementation using iterators. Each precedence level is parsed by its own function that obtains operands by calling the next-tighter level, so the call structure itself enforces the order of operations.
 
 \begin{compactitem}
   \item \inlinecode{eval(s)} returns an evaluation of the arithmetic expression \inlinecode{s}.
@@ -4013,16 +4049,19 @@ template<typename It>
 int eval(It &it, int prec) {
   if (prec == 0) {
     int sign = 1, res = 0;
-    for (; *it == '-'; it++) {
-      sign *= -1;
+    for (; *it == '-' || *it == '+'; it++) {
+      if (*it == '-') {
+        sign *= -1;
+      }
     }
     if (*it == '(') {
       res = eval(++it, 2);
       it++;
-    } else
+    } else {
       while (*it >= '0' && *it <= '9') {
         res = 10 * res + (*(it++) - '0');
       }
+    }
     return sign * res;
   }
   int num = eval(it, prec - 1);
@@ -4057,6 +4096,8 @@ int eval(const std::string &s) {
 #include <cassert>
 
 int main() {
+  assert(eval("+1") == 1);
+  assert(eval("1+-2") == -1);
   assert(eval("1++1") == 2);
   assert(eval("1+2*3*4+3*(2+2)-100") == -63);
   return 0;
@@ -4070,7 +4111,7 @@ An arbitrary operand type is supported by changing the \inlinecode{Operand} alia
 Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either [\inlinecode{"+"}, \inlinecode{"+"}] or [\inlinecode{"++"}] depending on the lexicographical ordering of conflicting operators.
 
 \begin{compactitem}
-  \item \inlinecode{RecursiveDescentParser(unary\_op, binary\_op)} initializes a parser with operators specified by hash tables \inlinecode{unary\_op} (of operator to unary function object) and \inlinecode{binary\_op} (of operator to pair of binary function object and operator precedence). Operator precedences should be numbered upwards starting at $0$ (lowest precedence, evaluated last).
+  \item \inlinecode{RecursiveDescentParser(unary\_ops, binary\_ops)} initializes a parser with operators specified by hash tables \inlinecode{unary\_ops} (of operator to unary function object) and \inlinecode{binary\_ops} (of operator to pair of binary function object and operator precedence). Operator precedences should be numbered upwards starting at $0$ (lowest precedence, evaluated last).
   \item \inlinecode{split(s)} returns a vector of tokens for the expression \inlinecode{s}, split on the given operators during construction. Each parenthesis, operator, and operand satisfying \inlinecode{is\_operand()} will be split into a separate token. The algorithm is naive, matching operators lazily in the case of overlapping operators as mentioned above. Under these circumstances, the parse may not always succeed.
   \item \inlinecode{eval(lo, hi)} returns the evaluation of a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
   \item \inlinecode{eval(s)} returns the evaluation of expression \inlinecode{s}, after first calling \inlinecode{split(s)} to obtain the tokens.
@@ -4115,10 +4156,10 @@ struct BinaryRule {
 };
 
 class RecursiveDescentParser {
-  using unary_op_map = std::unordered_map<string, UnaryOp>;
-  using binary_op_map = std::unordered_map<string, BinaryRule>;
-  unary_op_map unary_ops;
-  binary_op_map binary_ops;
+  using UnaryOpMap = std::unordered_map<string, UnaryOp>;
+  using BinaryOpMap = std::unordered_map<string, BinaryRule>;
+  UnaryOpMap unary_ops;
+  BinaryOpMap binary_ops;
   std::set<string> op_tokens;
   int max_precedence;
 
@@ -4144,7 +4185,10 @@ class RecursiveDescentParser {
   }
 
   template<typename StrIt>
-  Operand eval_unary(StrIt &lo, StrIt hi) {
+  Operand eval_unary(StrIt &lo, StrIt hi) const {
+    if (lo == hi) {
+      throw std::runtime_error("Unexpected end of expression.");
+    }
     if (is_operand(*lo)) {
       return eval_operand(*(lo++));
     }
@@ -4155,7 +4199,7 @@ class RecursiveDescentParser {
       throw std::runtime_error("Expected \"(\" during eval.");
     }
     Operand res = eval_binary(++lo, hi, 0);
-    if (*lo != ")") {
+    if (lo == hi || *lo != ")") {
       throw std::runtime_error("Expected \")\" during eval.");
     }
     ++lo;
@@ -4163,7 +4207,7 @@ class RecursiveDescentParser {
   }
 
   template<typename StrIt>
-  Operand eval_binary(StrIt &lo, StrIt hi, int precedence) {
+  Operand eval_binary(StrIt &lo, StrIt hi, int precedence) const {
     if (precedence > max_precedence) {
       return eval_unary(lo, hi);
     }
@@ -4186,7 +4230,7 @@ class RecursiveDescentParser {
   }
 
  public:
-  RecursiveDescentParser(const unary_op_map &unary_ops, const binary_op_map &binary_ops)
+  RecursiveDescentParser(const UnaryOpMap &unary_ops, const BinaryOpMap &binary_ops)
       : unary_ops(unary_ops), binary_ops(binary_ops) {
     for (const auto &[op, _] : unary_ops) {
       op_tokens.insert(op);
@@ -4198,10 +4242,10 @@ class RecursiveDescentParser {
     }
   }
 
-  std::vector<string> split(const string &s) {
+  std::vector<string> split(const string &s) const {
     std::vector<string> res;
     for (int i = 0; i < static_cast<int>(s.size()); i++) {
-      if (s[i] == ' ') {
+      if (std::isspace(static_cast<unsigned char>(s[i]))) {
         continue;
       }
       int next_paren = static_cast<int>(s.size());
@@ -4245,7 +4289,7 @@ class RecursiveDescentParser {
   }
 
   template<typename StrIt>
-  Operand eval(StrIt lo, StrIt hi) {
+  Operand eval(StrIt lo, StrIt hi) const {
     Operand res = eval_binary(lo, hi, 0);
     if (lo != hi) {
       throw std::runtime_error("Eval failed at token " + *lo + ".");
@@ -4253,7 +4297,7 @@ class RecursiveDescentParser {
     return res;
   }
 
-  Operand eval(const string &s) {
+  Operand eval(const string &s) const {
     std::vector<string> tokens = split(s);
     return eval(tokens.begin(), tokens.end());
   }
@@ -4302,14 +4346,16 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Shunting Yard Parsing}
-Evaluate an expression with custom operand types, prefix unary operators, binary operators, and precedences. Evaluation is performed using the shunting yard algorithm, which maintains operator and value stacks while respecting precedence and parentheses. Multiplication by juxtaposition is not supported.
+Evaluates an infix expression with custom operand types, prefix unary operators, binary operators, and precedences. In infix notation, binary operators appear between operands; prefix and postfix notation place operators before and after their operands, respectively. Postfix notation is also called reverse Polish notation (RPN).
+
+The shunting yard algorithm commonly converts infix expressions to postfix notation. This implementation instead maintains operator and value stacks and evaluates each operator when it would be emitted to the postfix output, avoiding an intermediate token list. Multiplication by juxtaposition is not supported.
 
 An arbitrary operand type is supported by changing the \inlinecode{Operand} alias and the static \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} helpers. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting \inlinecode{-1} as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify nonnegative numbers as operands alongside the unary operator \inlinecode{-}.
 
 Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either [\inlinecode{"+"}, \inlinecode{"+"}] or [\inlinecode{"++"}] depending on the lexicographical ordering of conflicting operators.
 
 \begin{compactitem}
-  \item \inlinecode{ShuntingYardParser(unary\_op, binary\_op)} initializes a parser with operators specified by hash tables \inlinecode{unary\_op} (of operator to unary function object) and \inlinecode{binary\_op} (of operator to pair of binary function object and operator precedence). Operator precedences should be numbered upwards starting at $0$ (lowest precedence, evaluated last).
+  \item \inlinecode{ShuntingYardParser(unary\_ops, binary\_ops)} initializes a parser with operators specified by hash tables \inlinecode{unary\_ops} (of operator to unary function object) and \inlinecode{binary\_ops} (of operator to pair of binary function object and operator precedence). Operator precedences should be numbered upwards starting at $0$ (lowest precedence, evaluated last).
   \item \inlinecode{split(s)} returns a vector of tokens for the expression \inlinecode{s}, split on the given operators during construction. Each parenthesis, operator, and operand satisfying \inlinecode{is\_operand()} will be split into a separate token. The algorithm is naive, matching operators lazily in the case of overlapping operators as mentioned above. Under these circumstances, the parse may not always succeed.
   \item \inlinecode{eval(lo, hi)} returns the evaluation of a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
   \item \inlinecode{eval(s)} returns the evaluation of expression \inlinecode{s}, after first calling \inlinecode{split(s)} to obtain the tokens.
@@ -4401,10 +4447,10 @@ class ShuntingYardParser {
     }
   }
 
-  std::vector<string> split(const string &s) {
+  std::vector<string> split(const string &s) const {
     std::vector<string> res;
     for (int i = 0; i < static_cast<int>(s.size()); i++) {
-      if (s[i] == ' ') {
+      if (std::isspace(static_cast<unsigned char>(s[i]))) {
         continue;
       }
       int next_paren = static_cast<int>(s.size());
@@ -4448,7 +4494,10 @@ class ShuntingYardParser {
   }
 
   template<typename StrIt>
-  Operand eval(StrIt lo, StrIt hi) {
+  Operand eval(StrIt lo, StrIt hi) const {
+    if (lo == hi) {
+      throw std::runtime_error("Cannot evaluate an empty expression.");
+    }
     std::stack<Operand> vals;
     std::stack<std::pair<string, bool>> op_stack;
     op_stack.emplace("(", false);
@@ -4503,7 +4552,7 @@ class ShuntingYardParser {
     return vals.top();
   }
 
-  Operand eval(const string &s) {
+  Operand eval(const string &s) const {
     std::vector<string> tokens = split(s);
     return eval(tokens.begin(), tokens.end());
   }
@@ -4583,6 +4632,7 @@ For a string with symbol probabilities $p_i$, empirical entropy is $H = -\sum_i 
 
 \begin{lstlisting}[language=C++]
 #include <cmath>
+#include <cstdint>
 #include <string>
 #include <vector>
 using std::string;
@@ -4596,7 +4646,7 @@ std::vector<int> byte_frequencies(const string &s) {
 }
 
 double entropy(const std::vector<int> &freq) {
-  int total = 0;
+  int64_t total = 0;
   for (int i = 0; i < static_cast<int>(freq.size()); i++) {
     total += freq[i];
   }
@@ -4609,7 +4659,7 @@ double entropy(const std::vector<int> &freq) {
       continue;
     }
     double p = static_cast<double>(freq[i]) / total;
-    res -= p * (log(p) / log(2.0));
+    res -= p * std::log2(p);
   }
   return res;
 }
@@ -4619,7 +4669,7 @@ double entropy(const string &s) {
 }
 
 double expected_code_length(const std::vector<int> &freq, const std::vector<int> &length) {
-  int total = 0;
+  int64_t total = 0;
   for (int i = 0; i < static_cast<int>(freq.size()); i++) {
     total += freq[i];
   }
@@ -4737,15 +4787,17 @@ This implementation uses the standard alphabet with \inlinecode{+}, \inlinecode{
 \textbf{Space Complexity}: $O(n)$ for the output string.
 
 \begin{lstlisting}[language=C++]
+#include <cstdint>
 #include <string>
 #include <vector>
 using std::string;
 
-const string BASE64_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const char *BASE64_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 string base64_encode(const string &bytes) {
   string res;
-  int val = 0, bits = -6;
+  uint32_t val = 0;
+  int bits = -6;
   for (int i = 0; i < static_cast<int>(bytes.size()); i++) {
     val = (val << 8) + static_cast<unsigned char>(bytes[i]);
     bits += 8;
@@ -4769,7 +4821,8 @@ string base64_decode(const string &text) {
     table[static_cast<unsigned char>(BASE64_ALPHABET[i])] = i;
   }
   string res;
-  int val = 0, bits = -8;
+  uint32_t val = 0;
+  int bits = -8;
   for (int i = 0; i < static_cast<int>(text.size()); i++) {
     if (text[i] == '=') {
       break;
@@ -4812,15 +4865,15 @@ The implementation below stores encoded bits as a string of \inlinecode{\textquo
 \begin{compactitem}
   \item \inlinecode{HuffmanTree(text)} constructs a Huffman tree from the character frequencies in \inlinecode{text}.
   \item \inlinecode{codes()} returns a table mapping each byte value to its bit string.
-  \item \inlinecode{encode(text)} returns the encoded bit string.
-  \item \inlinecode{decode(bits)} returns the decoded text.
+  \item \inlinecode{encode(text)} returns the encoded bit string. Every character in \inlinecode{text} must occur in the string used to construct the tree.
+  \item \inlinecode{decode(bits)} returns the decoded text for a bit string produced by this tree.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n + m \log m)$ to construct the tree, where $n$ is the input length and $m$ is the number of distinct characters.
-  \item $O(n)$ to encode or decode, plus the number of produced or consumed bits.
+  \item $O(n + b)$ to encode $n$ characters into $b$ bits, and $O(b)$ to decode $b$ bits.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -4831,8 +4884,10 @@ The implementation below stores encoded bits as a string of \inlinecode{\textquo
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <functional>
 #include <queue>
 #include <string>
+#include <utility>
 #include <vector>
 using std::string;
 
@@ -4846,14 +4901,8 @@ class HuffmanTree {
         : freq(freq), ch(ch), left(left), right(right) {}
   };
 
-  struct ByFrequency {
-    const std::vector<Node> *nodes;
-    explicit ByFrequency(const std::vector<Node> *nodes = nullptr) : nodes(nodes) {}
-    bool operator()(int a, int b) const { return (*nodes)[a].freq > (*nodes)[b].freq; }
-  };
-
-  std::vector<Node> nodes;
   int root;
+  std::vector<Node> nodes;
   std::vector<string> code;
 
   void build_codes(int u, const string &path) {
@@ -4871,26 +4920,25 @@ class HuffmanTree {
     for (int i = 0; i < static_cast<int>(text.size()); i++) {
       freq[static_cast<unsigned char>(text[i])]++;
     }
-    ByFrequency cmp(&nodes);
-    std::priority_queue<int, std::vector<int>, ByFrequency> pq(cmp);
+    std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<>> pq;
     for (int c = 0; c < 256; c++) {
       if (freq[c] > 0) {
         nodes.emplace_back(freq[c], static_cast<unsigned char>(c));
-        pq.push(static_cast<int>(nodes.size()) - 1);
+        pq.emplace(freq[c], static_cast<int>(nodes.size()) - 1);
       }
     }
     if (pq.empty()) {
       return;
     }
     while (static_cast<int>(pq.size()) > 1) {
-      int a = pq.top();
+      int a = pq.top().second;
       pq.pop();
-      int b = pq.top();
+      int b = pq.top().second;
       pq.pop();
       nodes.emplace_back(nodes[a].freq + nodes[b].freq, 0, a, b);
-      pq.push(static_cast<int>(nodes.size()) - 1);
+      pq.emplace(nodes.back().freq, static_cast<int>(nodes.size()) - 1);
     }
-    root = pq.top();
+    root = pq.top().second;
     build_codes(root, "");
   }
 
@@ -5037,13 +5085,17 @@ using namespace std;
 string escaped(const string &s) {
   string res;
   for (char c : s) {
-    if (c == '\0') {
-      res += "\\0";
-    } else {
-      res += c;
-    }
+    res += (c == '\0') ? "\\0" : string(1, c);
   }
   return res;
+}
+
+int count_runs(const string &s) {
+  int runs = 0;
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
+    runs += i == 0 || s[i] != s[i - 1];
+  }
+  return runs;
 }
 
 int main() {
@@ -5051,13 +5103,15 @@ int main() {
   assert(code.size() == 7);  // "banana" plus the sentinel.
   assert(escaped(code) == "annb\\0aa");
   assert(inverse_bwt(code) == "banana");
-  cout << "BWT(banana): " << escaped(code) << "\n";
-  cout << "inverse: " << inverse_bwt(code) << "\n";
+  cout << "BWT(banana): " << escaped(code) << endl;
+  cout << "inverse: " << inverse_bwt(code) << endl;
 
-  // The transform clusters equal characters: "mississippi" yields long runs.
-  string text = "mississippi";
-  string t = bwt(text);
-  assert(inverse_bwt(t) == text);
+  // BWT does not compress by itself, but can cluster characters for a subsequent run-length coder.
+  string text = "abracadabra abracadabra";
+  string transformed = bwt(text);
+  assert(inverse_bwt(transformed) == text);
+  assert(count_runs(text) == 23);
+  assert(count_runs(transformed) == 9);
 
   // Round-trips on assorted strings, including repeats and a single character.
   for (const string &s :

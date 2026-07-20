@@ -50,6 +50,8 @@ class AggregateQueue {
   std::vector<std::pair<T, T>> front_stack, back_stack;
 
  public:
+  AggregateQueue() = default;
+
   bool empty() const { return front_stack.empty() && back_stack.empty(); }
   int size() const { return static_cast<int>(front_stack.size() + back_stack.size()); }
 

@@ -3,15 +3,16 @@
 Given a list of points in two dimensions, computes the convex hull using the monotone chain
 algorithm and the diametral pair using rotating calipers. Monotone chain sorts the points
 lexicographically and builds the lower and upper hulls in one pass each, popping any point that
-would create a clockwise turn. Rotating calipers then walks two antipodal pointers around the hull,
-advancing whichever increases the separation, visiting every candidate diametral pair in linear
-time. The functions are templated on the iterator type; the value type of the iterator is used as
-the point type. Both functions accept either floating-point or integral coordinates, but since they
-use only cross product comparisons, they happen to be exact for integral points.
+would fail to create a counter-clockwise turn. Rotating calipers then walks two antipodal pointers
+around the hull, advancing whichever increases the separation, visiting every candidate diametral
+pair in linear time. The functions are templated on the iterator type; the value type of the
+iterator is used as the point type. Both functions accept either floating-point or integral
+coordinates, and use exact comparisons for integral points.
 
-- `convex_hull(lo, hi)` returns the convex hull in clockwise order for a range $[`lo`, `hi`)$ of
-  points. The input range is sorted lexicographically after the call. To instead return the hull
-  points counter-clockwise order, replace every `>= 0` with `<= 0`.
+- `convex_hull(lo, hi)` returns the convex hull in counter-clockwise order for a range
+  $[`lo`, `hi`)$ of points. Duplicate input points and collinear points along hull edges are
+  omitted. To instead return the hull points in clockwise order, replace the cross product
+  comparisons `<= 0` with `>= 0`.
 - `diametral_pair(lo, hi)` returns the maximum-distance pair of points.
 
 Overflow warning: `cross()` and the squared distance in `diametral_pair()` grow like the squared
@@ -28,7 +29,6 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
-#include <cstdint>
 #include <iterator>
 #include <random>
 #include <utility>
@@ -44,25 +44,28 @@ auto cross(const Pt &a, const Pt &b, const Pt &o) {
 template<typename It>
 auto convex_hull(It lo, It hi) {
   using Pt = typename std::iterator_traits<It>::value_type;
-  int k = 0;
-  if (hi - lo <= 1) {
-    return std::vector<Pt>(lo, hi);
+  std::vector<Pt> p(lo, hi);
+  std::sort(p.begin(), p.end());
+  auto same_point = [](const Pt &a, const Pt &b) { return !(a < b) && !(b < a); };
+  p.erase(std::unique(p.begin(), p.end(), same_point), p.end());
+  int n = static_cast<int>(p.size());
+  if (n <= 1) {
+    return p;
   }
-  std::vector<Pt> res(2 * static_cast<int>(hi - lo));
-  std::sort(lo, hi);
-  for (It it = lo; it != hi; ++it) {
-    while (k >= 2 && cross(res[k - 1], *it, res[k - 2]) >= 0) {
+  int k = 0;
+  std::vector<Pt> res(2 * n);
+  for (const Pt &q : p) {
+    while (k >= 2 && cross(res[k - 1], q, res[k - 2]) <= 0) {
       k--;
     }
-    res[k++] = *it;
+    res[k++] = q;
   }
   int t = k + 1;
-  for (It it = hi - 1; it != lo;) {
-    --it;
-    while (k >= t && cross(res[k - 1], *it, res[k - 2]) >= 0) {
+  for (int i = n - 2; i >= 0; i--) {
+    while (k >= t && cross(res[k - 1], p[i], res[k - 2]) <= 0) {
       k--;
     }
-    res[k++] = *it;
+    res[k++] = p[i];
   }
   res.resize(k - 1);
   return res;
@@ -115,7 +118,7 @@ auto diametral_pair(It lo, It hi) {
 
 /*** Example Usage and Output:
 
-Convex hull: (-1,3) (1,3) (2,1) (0,0)
+Convex hull: (-1,3) (0,0) (2,1) (1,3)
 Diametral pair: (0,0) (4,4)
 
 ***/
@@ -139,20 +142,21 @@ int main() {
     vector<PointI> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
     std::mt19937 rng(12345);
     std::shuffle(v.begin(), v.end(), rng);
-    vector<PointI> h{{-1, 3}, {1, 3}, {2, 1}, {0, 0}};
+    vector<PointI> h{{-1, 3}, {0, 0}, {2, 1}, {1, 3}};
     assert(convex_hull(v.begin(), v.end()) == h);
     cout << "Convex hull:";
     for (const PointI &p : h) {
       cout << " (" << p.x << "," << p.y << ")";
     }
-    cout << "\n";
+    cout << endl;
   }
   {
     vector<PointI> v{{0, 0}, {3, 0}, {0, 3}, {1, 1}, {4, 4}};
     auto [p1, p2] = diametral_pair(v.begin(), v.end());
     assert(p1 == PointI(0, 0));
     assert(p2 == PointI(4, 4));
-    cout << "Diametral pair: (" << p1.x << "," << p1.y << ") (" << p2.x << "," << p2.y << ")\n";
+    cout << "Diametral pair: (" << p1.x << "," << p1.y << ") (" << p2.x << "," << p2.y << ")"
+         << endl;
   }
   {
     vector<PointI> v{{0, 0}, {4, 0}, {4, 4}, {0, 4}, {2, 2}};
@@ -164,6 +168,11 @@ int main() {
         (p1 == PointI(0, 0) && p2 == PointI(4, 4)) || (p1 == PointI(4, 4) && p2 == PointI(0, 0)) ||
         (p1 == PointI(4, 0) && p2 == PointI(0, 4)) || (p1 == PointI(0, 4) && p2 == PointI(4, 0))
     );
+  }
+  {
+    vector<PointI> v{{2, 3}, {2, 3}, {2, 3}};
+    vector<PointI> expected{{2, 3}};
+    assert(convex_hull(v.begin(), v.end()) == expected);
   }
   return 0;
 }

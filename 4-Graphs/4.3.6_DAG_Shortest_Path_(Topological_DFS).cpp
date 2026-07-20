@@ -114,7 +114,8 @@ int main() {
   dag_shortest_path(start);
   assert(dist[dest] == 2);
   assert(pred[dest] == 3 && pred[3] == 1);
-  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
+  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
+       << endl;
   print_path(dest);
   return 0;
 }

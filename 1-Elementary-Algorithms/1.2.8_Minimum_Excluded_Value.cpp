@@ -3,8 +3,9 @@
 Computes the minimum excluded nonnegative (MEX) integer of a set of integers, that is, the smallest
 integer $x \geq 0$ that does not appear in the set. It appears frequently in array problems, game
 theory with Grundy numbers, and dynamic programming states. Since the MEX of $n$ values never
-exceeds $n$, the one-shot version only marks values in $[0, n]$. The dynamic version stores counts
-for present values and an ordered set of currently missing candidates.
+exceeds $n$, the one-shot version tracks seen values in $[0, n]$ before scanning to find the first
+missing. The dynamic version stores counts for present values and an ordered set of currently
+missing candidates.
 
 - `mex(lo, hi)` returns the MEX of the values in $[`lo`, `hi`)$.
 - `DynamicMex()` maintains the MEX of a multiset of nonnegative integers.
@@ -14,11 +15,13 @@ for present values and an ordered set of currently missing candidates.
 
 Time Complexity:
 - O(n) per call to `mex(lo, hi)`, where $n$ is the number of values.
-- O(log n) per call to `add(x)` and `remove(x)` for `DynamicMex`.
+- O(log n) expected per call to `add(x)` and `remove(x)` for `DynamicMex`, and O(n) in the
+  collision-heavy worst case for the hash table.
 - O(1) per call to `get()` for `DynamicMex`.
 
 Space Complexity:
-- O(n) auxiliary for both approaches.
+- O(n) auxiliary for `mex(lo, hi)`.
+- O(n) storage for `DynamicMex`.
 
 */
 
@@ -46,14 +49,8 @@ int mex(It lo, It hi) {
 
 class DynamicMex {
   std::unordered_map<int, int> count;
-  std::set<int> missing;
+  std::set<int> missing;  // Missing candidates in [0, size].
   int size = 0;
-
-  void ensure_candidate(int x) {
-    if (!count.count(x)) {
-      missing.insert(x);
-    }
-  }
 
  public:
   DynamicMex() { missing.insert(0); }
@@ -62,12 +59,13 @@ class DynamicMex {
     if (x < 0) {
       return;
     }
-    ensure_candidate(size + 1);
+    if (!count.count(size + 1)) {
+      missing.insert(size + 1);
+    }
     if (count[x]++ == 0) {
       missing.erase(x);
     }
     size++;
-    ensure_candidate(size + 1);
   }
 
   void remove(int x) {
@@ -75,11 +73,15 @@ class DynamicMex {
     if (it == count.end()) {
       return;
     }
-    if (--it->second == 0) {
+    bool removed_last = --it->second == 0;
+    if (removed_last) {
       count.erase(it);
-      missing.insert(x);
     }
     size--;
+    missing.erase(size + 1);
+    if (removed_last && x <= size) {
+      missing.insert(x);
+    }
   }
 
   int get() const { return *missing.begin(); }

@@ -25,14 +25,14 @@ Space Complexity:
 #include <cmath>
 #include <stdexcept>
 
-template<typename Fn>
+template<typename Fn, typename Deriv>
 double newton_root(
-    Fn f, Fn fprime, double x0, const double eps = 1e-15, const int iterations = 100
+    Fn f, Deriv fprime, double x0, const double eps = 1e-15, const int iterations = 100
 ) {
   double x = x0, error = eps + 1;
   for (int i = 0; error > eps && i < iterations; i++) {
     double xnew = x - f(x) / fprime(x);
-    error = fabs(xnew - x);
+    error = std::fabs(xnew - x);
     x = xnew;
   }
   if (error > eps) {
@@ -51,7 +51,7 @@ double secant_root(
     double xnew = x - fx * ((x - xold) / (fx - fxold));
     xold = x;
     fxold = fx;
-    error = fabs(xnew - x);
+    error = std::fabs(xnew - x);
     x = xnew;
   }
   if (error > eps) {
@@ -75,5 +75,8 @@ double fprime(double x) {
 int main() {
   assert(fabs(f(newton_root(f, fprime, 3))) < 1e-10);
   assert(fabs(f(secant_root(f, 3, 2))) < 1e-10);
+  auto g = [](double x) { return x * x - 2; };
+  auto gprime = [](double x) { return 2 * x; };
+  assert(fabs(g(newton_root(g, gprime, 1))) < 1e-10);
   return 0;
 }

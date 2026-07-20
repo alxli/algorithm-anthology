@@ -1,9 +1,9 @@
 /*
 
-Maintain a polynomial rolling hash over a nonnegative integer sequence, supporting point updates and
-O(log n) subsequence hash queries. Unlike the static rolling hash, which fixes its prefix hashes at
-construction, this structure allows any element to change between queries, which is useful for
-problems that compare substrings while characters are edited.
+Maintains a polynomial rolling hash for a sequence of nonnegative integers, supporting point updates
+and O(log n) contiguous subsequence hash queries. Unlike the static rolling hash, which fixes its
+prefix hashes at construction, this structure allows any element to change between queries, which is
+useful for problems that compare substrings while characters are edited.
 
 The key idea is to weight each element by a power of the base tied to its absolute position: storing
 $a_i B^i$ at index `i` turns the hash of any prefix into an ordinary prefix sum, which a Fenwick
@@ -15,17 +15,20 @@ A segment tree could replace the Fenwick tree if lazy range updates are needed.
 `MOD1` and `MOD2` are two distinct primes, each kept below $2^{31}$ so that the product of any two
 residues fits in a 64-bit integer; hashing modulo both and comparing the resulting pair makes a
 collision astronomically unlikely. `BASE1` and `BASE2` are the corresponding polynomial bases, which
-should exceed the largest element value and may be randomized per run to resist adversarial inputs.
+must be nonzero modulo their corresponding primes and may be randomized per run to resist
+adversarial inputs. For a small raw alphabet, choosing bases larger than every value also prevents
+carry-style collisions before modular reduction, but general integer values need not satisfy this
+bound.
 
 Element values must be nonnegative. As with any polynomial hash, comparing subsequences of different
 lengths is only safe when values are positive (for example, map an alphabet to $[1, B)$) so that
 trailing zeros cannot make a shorter sequence collide with a longer one.
 
-- `DynamicHash(a)` builds prefix hashes over the integer sequence `a`.
+- `DynamicRollingHash(a)` builds prefix hashes over the integer sequence `a`.
 - `size()` returns the length of the sequence.
 - `set(i, x)` assigns the value at index `i` to `x`.
-- `hash(lo, hi)` returns the pair of hashes of the half-open subsequence $[`lo`, `hi`)$. Two ranges
-  are equal with high probability if and only if their `hash()` pairs are equal.
+- `hash(lo, hi)` returns the hash pair of the half-open subsequence $[`lo`, `hi`)$. Equal ranges
+  always have equal hash pairs, while equal hash pairs indicate equal ranges with high probability.
 
 Time Complexity:
 - O(n log n) for the constructor, where $n$ is the length of the sequence.
@@ -43,9 +46,9 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-class DynamicHash {
+class DynamicRollingHash {
   static const uint64_t MOD1 = 1000000007, MOD2 = 1000000009;  // Distinct primes below 2^31.
-  static const uint64_t BASE1 = 131, BASE2 = 137;  // Should exceed the maximum element value.
+  static const uint64_t BASE1 = 131, BASE2 = 137;              // Nonzero modulo MOD1 and MOD2.
 
   int len;
   std::vector<int> cur;
@@ -64,13 +67,13 @@ class DynamicHash {
     return res;
   }
 
-  void add(std::vector<uint64_t> &ft, int i, uint64_t delta, uint64_t m) {
-    for (i++; i <= len; i += i & -i) {
+  static void add(std::vector<uint64_t> &ft, int i, uint64_t delta, uint64_t m) {
+    for (i++; i < static_cast<int>(ft.size()); i += i & -i) {
       ft[i] = (ft[i] + delta) % m;
     }
   }
 
-  uint64_t sum(const std::vector<uint64_t> &ft, int i, uint64_t m) const {
+  static uint64_t sum(const std::vector<uint64_t> &ft, int i, uint64_t m) {
     uint64_t res = 0;
     for (i++; i > 0; i -= i & -i) {
       res = (res + ft[i]) % m;
@@ -79,7 +82,8 @@ class DynamicHash {
   }
 
  public:
-  explicit DynamicHash(const std::vector<int> &a) : len(static_cast<int>(a.size())), cur(len, 0) {
+  explicit DynamicRollingHash(const std::vector<int> &a)
+      : len(static_cast<int>(a.size())), cur(len, 0) {
     pw1.resize(len + 1);
     pw2.resize(len + 1);
     ip1.resize(len + 1);
@@ -128,7 +132,7 @@ using namespace std;
 int main() {
   string s = "abcabc";
   vector<int> a(s.begin(), s.end());
-  DynamicHash h(a);
+  DynamicRollingHash h(a);
   assert(h.size() == 6);
   assert(h.hash(0, 3) == h.hash(3, 6));  // "abc" == "abc".
 

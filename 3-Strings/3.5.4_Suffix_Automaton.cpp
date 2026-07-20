@@ -98,9 +98,9 @@ class SuffixAutomaton {
     return true;
   }
 
-  // Returns the starting index of the first (leftmost) occurrence of `t` as a substring, or -1 if
-  // `t` does not occur. `first_pos` stores the end index of the first occurrence of each state's
-  // class, so subtracting the length of `t` recovers its start.
+  // Returns the starting index of the first (leftmost) occurrence of t as a substring, or -1 if t
+  // does not occur. first_pos stores the end index of the first occurrence of each state's class,
+  // so subtracting the length of t recovers its start.
   int first_occurrence(const string &t) const {
     int v = 0;
     for (char c : t) {

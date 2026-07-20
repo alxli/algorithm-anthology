@@ -8,7 +8,7 @@ weights.
 The meet-in-the-middle method splits the collection in half, enumerates every subset sum for each
 half, sorts one side, and binary searches for the best compatible partner. It makes no assumption
 about the sign or size of the values, so it handles negative inputs, and it is the method of choice
-when the number of items $n$ is small (up to roughly 40).
+when the number of items $n$ is small (up to roughly $40$).
 
 Pisinger's algorithm targets the opposite regime: nonnegative weights whose maximum value is small,
 with possibly many items. Let $W$ be the largest weight. It greedily takes a maximal prefix with sum
@@ -24,11 +24,13 @@ bounded-weight case of subset sum rather than the 0-1 value knapsack.
 
 - `max_subset_sum_at_most(lo, hi, v)` returns a pair $(`sum`, `items`)$ containing that maximum sum
   and the selected item indices relative to `lo`. Values may be negative. The range is supplied as
-  random-access iterators, and 64-bit integers are used in calculations to avoid overflow.
+  random-access iterators, and `v` must be nonnegative.
 - `max_subset_sum_bounded(lo, hi, target)` returns the maximum sum of any subset of the range
   $[`lo`, `hi`)$ that does not exceed `target`. All weights and `target` must be nonnegative
   integers. This is faster than meet-in-the-middle when the largest weight is small relative to
   $2^{n/2}$.
+
+All subset sums and intermediate differences in `max_subset_sum_at_most()` must fit in `int64_t`.
 
 Time Complexity:
 - O(2^{n/2}) per call to `max_subset_sum_at_most()`, where $n$ is the distance between `lo` and
@@ -43,6 +45,8 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
+#include <climits>
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -50,12 +54,13 @@ Space Complexity:
 template<typename It>
 std::pair<int64_t, std::vector<int>> max_subset_sum_at_most(It lo, It hi, int64_t v) {
   int n = static_cast<int>(hi - lo);
+  assert(v >= 0 && n >= 0 && n / 2 < 63 && n - n / 2 < 63);
   int64_t llen = 1LL << (n / 2), hlen = 1LL << (n - n / 2);
   std::vector<int64_t> lsum(llen);
   std::vector<std::pair<int64_t, int64_t>> hsum(hlen);
   for (int64_t mask = 1; mask < llen; mask++) {
     int bit = __builtin_ctzll(mask);
-    lsum[mask] = lsum[mask ^ (1LL << bit)] + *(lo + bit);
+    lsum[mask] = lsum[mask ^ (1LL << bit)] + *(lo + bit);  // Overflow warning.
   }
   for (int64_t mask = 1; mask < hlen; mask++) {
     int bit = __builtin_ctzll(mask);
@@ -65,7 +70,8 @@ std::pair<int64_t, std::vector<int>> max_subset_sum_at_most(It lo, It hi, int64_
   std::sort(hsum.begin(), hsum.end());
   int64_t best = INT64_MIN, lmask = 0, hmask = 0;
   for (int64_t mask = 0; mask < llen; mask++) {
-    auto it = std::upper_bound(hsum.begin(), hsum.end(), std::make_pair(v - lsum[mask], INT64_MAX));
+    int64_t limit = v - lsum[mask];  // Overflow warning.
+    auto it = std::upper_bound(hsum.begin(), hsum.end(), std::make_pair(limit, INT64_MAX));
     if (it != hsum.begin()) {
       --it;
       int64_t candidate = lsum[mask] + it->first;
@@ -93,9 +99,14 @@ std::pair<int64_t, std::vector<int>> max_subset_sum_at_most(It lo, It hi, int64_
 template<typename It>
 int64_t max_subset_sum_bounded(It lo, It hi, int target) {
   int n = static_cast<int>(hi - lo);
+  assert(target >= 0 && n >= 0);
+  for (It it = lo; it != hi; ++it) {
+    int64_t weight = *it;
+    assert(0 <= weight && weight <= INT_MAX);
+  }
   // Greedily take a prefix while it still fits; the optimum then lies within one weight of target.
   int sum = 0, b = 0;
-  while (b < n && sum + static_cast<int>(*(lo + b)) <= target) {
+  while (b < n && static_cast<int>(*(lo + b)) <= target - sum) {
     sum += static_cast<int>(*(lo + b++));
   }
   if (b == n) {

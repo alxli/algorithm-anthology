@@ -6,7 +6,8 @@ division modulo the prime $998244353$. Multiplication uses the number theoretic 
 inverse and division are fast enough for large polynomials while still keeping the API close to the
 underlying coefficient vectors.
 
-The code aliases one modular field element as `Coeff` and one coefficient vector as `Poly`.
+The code aliases one modular field element as `Coeff` and one coefficient vector as `Poly`. Input
+coefficients must lie in $[0, `MOD`)$.
 
 - `trim(a)` removes trailing zero coefficients from `a`.
 - `add(a, b)` returns `a + b`.
@@ -27,9 +28,8 @@ Time Complexity:
 - O(n) for `trim()`, `add()`, `subtract()`, `derivative()`, and `integral()`.
 - O(|a||b|) for the small-input branch of `multiply()`, otherwise O(n log n), where $n$ is the
   padded transform length.
-- O(n log^2 n) for `inverse(a, n)`, where $n$ is the requested length.
-- O(n log n + m log^2 m) for `divide()` and `modulo()`, where $n$ is the output quotient length and
-  $m$ is the divisor length.
+- O(n log n) for `inverse(a, n)`, where $n$ is the requested length.
+- O(n log n) for `divide()` and `modulo()`, where $n$ is the padded multiplication length.
 
 Space Complexity:
 - O(n) auxiliary.
@@ -63,7 +63,7 @@ Coeff powmod(Coeff b, Coeff e, Coeff m = MOD) {
 
 void ntt(Poly &a, bool invert) {
   int n = static_cast<int>(a.size());
-  assert((n & (n - 1)) == 0 && n <= (1 << MAX_POWER_OF_TWO));
+  assert(n > 0 && (n & (n - 1)) == 0 && n <= (1 << MAX_POWER_OF_TWO));
   for (int i = 1, j = 0; i < n; i++) {
     int bit = n >> 1;
     for (; j & bit; bit >>= 1) {

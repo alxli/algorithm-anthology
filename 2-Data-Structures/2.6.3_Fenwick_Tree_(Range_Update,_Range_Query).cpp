@@ -35,7 +35,7 @@ class FenwickRURQ {
   int len;
   std::vector<T> t1, t2;
 
-  T sum(const std::vector<T> &tree, int i) {
+  T sum(const std::vector<T> &tree, int i) const {
     assert(0 <= i && i <= len);
     T res = 0;
     for (; i != 0; i -= i & -i) {
@@ -57,26 +57,32 @@ class FenwickRURQ {
   int size() const { return len; }
 
   void add(int lo, int hi, const T &x) {
+    assert(0 <= lo && lo <= hi && hi < len);
     lo++;
     hi++;
     add(t1, lo, x);
     add(t1, hi + 1, -x);
-    add(t2, lo, x * (lo - 1));
+    add(t2, lo, x * (lo - 1));  // Overflow warning.
     add(t2, hi + 1, -x * hi);
   }
 
-  void add(int i, const T &x) { return add(i, i, x); }
+  void add(int i, const T &x) { add(i, i, x); }
   void set(int i, const T &x) { add(i, x - at(i)); }
 
-  T sum(int hi) {
+  T sum(int hi) const {
+    assert(-1 <= hi && hi < len);
     hi++;
     return hi * sum(t1, hi) - sum(t2, hi);
   }
 
-  T sum(int lo, int hi) { return sum(hi) - sum(lo - 1); }
-  T at(int i) { return sum(i, i); }
+  T sum(int lo, int hi) const {
+    assert(0 <= lo && lo <= hi && hi < len);
+    return sum(hi) - sum(lo - 1);
+  }
 
-  int max_prefix(T c) {
+  T at(int i) const { return sum(i, i); }
+
+  int max_prefix(T c) const {
     T s1 = 0, s2 = 0;
     int pos = 0, pw = 1;
     while (pw * 2 <= len) {

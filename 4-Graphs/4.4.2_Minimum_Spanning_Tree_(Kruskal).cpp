@@ -9,25 +9,27 @@ Kruskal's algorithm scans the edges in nondecreasing weight order, adding each e
 lie in different components (tracked with a disjoint-set structure) and skipping any edge that would
 form a cycle.
 
-- `kruskal_mst(n)` populates `mst` with the edge IDs in the minimum spanning tree (returning the
-  total MST weight) for a global, pre-populated edge list `edges` whose endpoints must be numbered
+- `kruskal_mst(n)` populates `mst` with the edge IDs in the minimum spanning forest and returns the
+  total MST weight for a global, pre-populated edge list `edges` whose endpoints must be numbered
   $[0, `n`)$. Each edge is stored as $(`weight`, `u`, `v`)$.
 
 Multigraphs are supported; parallel edges appear as separate entries in `edges` and any redundant
 ones are skipped once the cheaper edge has already connected the two components.
 
 Time Complexity:
-- O(m log n) per call, where $m$ is the number of edges and $n$ is the number of nodes. The internal
-  DSU uses path compression and union by size, making each DSU operation O(alpha(n)) amortized.
+- O(n + m log m) per call, where $n$ is the number of nodes and $m$ is the number of edges. The
+  internal DSU uses path compression and union by size, making each DSU operation O(alpha(n))
+  amortized.
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
-  edges
-- O(n) auxiliary stack space per call.
+  edges.
+- O(max(n, m)) auxiliary heap space and O(log n) auxiliary stack space per call.
 
 */
 
 #include <algorithm>
+#include <cstdint>
 #include <numeric>
 #include <tuple>
 #include <utility>
@@ -43,14 +45,14 @@ int find_root(int u) {
   return dsu_root[u];
 }
 
-int kruskal_mst(int n) {
+int64_t kruskal_mst(int n) {
   mst.clear();
   std::vector<int> order(edges.size());
   std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [](int a, int b) {
     return std::get<0>(edges[a]) < std::get<0>(edges[b]);
   });
-  int total_dist = 0;
+  int64_t total_dist = 0;
   dsu_root.assign(n, 0);
   dsu_size.assign(n, 1);
   std::iota(dsu_root.begin(), dsu_root.end(), 0);
@@ -100,7 +102,7 @@ int main() {
   edges.emplace_back(2, 4, 5);
   edges.emplace_back(3, 5, 6);
   edges.emplace_back(4, 6, 4);
-  int total = kruskal_mst(7);
+  int64_t total = kruskal_mst(7);
   assert(total == 13);
   assert(mst.size() == 5);
   cout << "Total distance: " << total << endl;

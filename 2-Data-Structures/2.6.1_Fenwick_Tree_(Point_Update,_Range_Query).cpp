@@ -63,7 +63,11 @@ class Fenwick {
 
   void set(int i, const T &x) { add(i, x - at(i)); }
   T at(int i) const { return sum(i, i); }
-  T sum(int lo, int hi) const { return sum(hi) - sum(lo - 1); }
+
+  T sum(int lo, int hi) const {
+    assert(0 <= lo && lo <= hi && hi < len);
+    return sum(hi) - sum(lo - 1);
+  }
 
   int max_prefix(T c) const {
     int pos = 0, pw = 1;
@@ -100,8 +104,8 @@ int main() {
   freq.add(1, 1);                   // One element of value 1.
   freq.add(3, 3);                   // Three elements of value 3.
   freq.add(6, 1);                   // One element of value 6.
-  assert(freq.max_prefix(0) == 1);  // The longest prefix with count at most 0 is [$0$, 1).
-  assert(freq.max_prefix(3) == 3);  // Prefix [$0$, 3) has count 1; [$0$, 4) has count 4.
-  assert(freq.max_prefix(4) == 6);  // Prefix [$0$, 6) has count 4; [$0$, 7) has count 5.
+  assert(freq.max_prefix(0) == 1);  // The longest prefix with count at most 0 is [0, 1).
+  assert(freq.max_prefix(3) == 3);  // Prefix [0, 3) has count 1; [0, 4) has count 4.
+  assert(freq.max_prefix(4) == 6);  // Prefix [0, 6) has count 4; [0, 7) has count 5.
   return 0;
 }

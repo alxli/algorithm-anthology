@@ -141,7 +141,7 @@ class RadixTree {
       }
       n->cnt--;
       // The merge below leaves counts intact: a non-terminal node with one child already has the
-      // same subtree count as that child, so reusing the node keeps its `cnt` correct.
+      // same subtree count as that child, so reusing the node keeps its cnt correct.
       if (child->children.empty() && !child->is_terminal) {
         delete child;
         n->children.erase(it);
@@ -244,11 +244,11 @@ class RadixTree {
         if (key[0] == s[i]) {
           int len = lcp_len(key, s, i);
           if (i + len == static_cast<int>(s.size())) {
-            // `s` ends within (or exactly at the end of) this edge: every key below qualifies.
+            // s ends within (or exactly at the end of) this edge: every key below qualifies.
             return child->cnt;
           }
           if (len < static_cast<int>(key.size())) {
-            return 0;  // `s` diverges partway along the edge.
+            return 0;  // s diverges partway along the edge.
           }
           i += len;
           n = child;

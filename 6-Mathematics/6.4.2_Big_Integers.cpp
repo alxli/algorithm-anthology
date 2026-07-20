@@ -19,7 +19,7 @@ is a `BigInt` at any given level of evaluation.
   conversions are also available through explicit casts to `int`, `long long`, `double`, and
   `long double`.
 - `v.abs()` returns the absolute value of big integer `v`.
-- `a.comp(b)` returns $-1$, $0$, or $1$ depending on whether the big integers `a` and `b` compare
+- `a.comp(v)` returns $-1$, $0$, or $1$ depending on whether the big integers `a` and `v` compare
   less, equal, or greater, respectively.
 - Operators `<`, `>`, `<=`, `>=`, `==`, `!=`, `+`, `-`, `*`, `/`, `%`, `++`, `--`, `+=`, `-=`, `*=`,
   `/=`, and `%=` are defined analogous to those on integer primitives. Addition, subtraction, and
@@ -30,7 +30,7 @@ is a `BigInt` at any given level of evaluation.
   computed together by normalized long division: scale the operands so the divisor's leading limb is
   large, estimate each quotient limb from the top one or two limbs of the running remainder, correct
   the estimate by adding the divisor back if necessary, then unscale the remainder.
-- `a.div(b)` returns a pair consisting of the quotient and remainder.
+- `a.div(v)` returns a pair consisting of the quotient and remainder when `a` is divided by `v`.
 - `v.pow(n)` returns `v` raised to the power of $n$.
 - `v.sqrt()` returns the integral part of the square root of big integer `v`.
 - `v.nth_root(n)` returns the integral part of the $n$-th root of big integer `v`.
@@ -51,6 +51,8 @@ Time Complexity:
 - O(M(d) log n) per call to `pow(n)`, where $d$ is the maximum digit length reached during
   exponentiation and $M(d)$ denotes the cost of one multiplication of two $d$-digit big integers
   using the selected multiplication method above.
+- O(d^2) per call to `sqrt()`, where $d$ is the number of digits.
+- O((d/k)*M(d)*log k) per call to `nth_root(k)`, from binary search over a $d/k$-digit answer.
 
 Space Complexity:
 - O(n) for storage of the big integer.
@@ -62,6 +64,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
+#include <climits>
 #include <cmath>
 #include <complex>
 #include <cstdint>
@@ -293,14 +296,11 @@ class BigInt {
   }
 
   BigInt &operator=(int64_t v) {
-    sign = 1;
-    if (v < 0) {
-      sign = -1;
-      v = -v;
-    }
+    sign = v < 0 ? -1 : 1;
     digits.clear();
-    for (; v > 0; v /= BASE) {
-      digits.push_back(v % BASE);
+    for (; v != 0; v /= BASE) {
+      int limb = static_cast<int>(v % BASE);
+      digits.push_back(limb < 0 ? -limb : limb);
     }
     return *this;
   }
@@ -345,11 +345,10 @@ class BigInt {
   }
 
   int64_t to_llong() const {
-    int64_t res = 0;
-    for (int i = static_cast<int>(digits.size()) - 1; i >= 0; i--) {
-      res = res * BASE + digits[i];
-    }
-    return res * sign;
+    std::stringstream ss(to_string());
+    int64_t res;
+    ss >> res;
+    return res;
   }
 
   double to_double() const {
@@ -382,10 +381,17 @@ class BigInt {
   friend bool operator==(const BigInt &a, const BigInt &b) { return a.comp(b) == 0; }
   friend bool operator!=(const BigInt &a, const BigInt &b) { return a.comp(b) != 0; }
 
-  // clang-format off
-  BigInt abs() const { BigInt res(*this); res.sign = 1; return res; }
-  BigInt operator-() const { BigInt res(*this); res.sign = -sign; return res; }
-  // clang-format on
+  BigInt abs() const {
+    BigInt res(*this);
+    res.sign = 1;
+    return res;
+  }
+
+  BigInt operator-() const {
+    BigInt res(*this);
+    if (!digits.empty()) res.sign = -sign;
+    return res;
+  }
 
   friend BigInt operator+(const BigInt &a, const BigInt &b) {
     return add(a.digits, b.digits, a.sign, b.sign);
@@ -396,16 +402,18 @@ class BigInt {
   }
 
   void operator*=(int v) {
-    if (v < 0) {
+    int64_t factor = v;
+    if (factor < 0) {
       sign = -sign;
-      v = -v;
+      factor = -factor;
     }
-    for (int i = 0, carry = 0; i < static_cast<int>(digits.size()) || carry; i++) {
+    int64_t carry = 0;
+    for (int i = 0; i < static_cast<int>(digits.size()) || carry; i++) {
       if (i == static_cast<int>(digits.size())) {
         digits.push_back(0);
       }
-      int64_t curr = digits[i] * static_cast<int64_t>(v) + carry;
-      carry = static_cast<int>((curr / BASE));
+      int64_t curr = digits[i] * factor + carry;
+      carry = curr / BASE;
       digits[i] = static_cast<int>((curr % BASE));
     }
     normalize();
@@ -455,14 +463,16 @@ class BigInt {
 
   BigInt &operator/=(int v) {
     assert(v != 0);
-    if (v < 0) {
+    int64_t divisor = v;
+    if (divisor < 0) {
       sign = -sign;
-      v = -v;
+      divisor = -divisor;
     }
-    for (int i = static_cast<int>(digits.size()) - 1, rem = 0; i >= 0; i--) {
+    int64_t rem = 0;
+    for (int i = static_cast<int>(digits.size()) - 1; i >= 0; i--) {
       int64_t curr = digits[i] + rem * static_cast<int64_t>(BASE);
-      digits[i] = static_cast<int>((curr / v));
-      rem = static_cast<int>((curr % v));
+      digits[i] = static_cast<int>((curr / divisor));
+      rem = curr % divisor;
     }
     normalize();
     return *this;
@@ -476,14 +486,15 @@ class BigInt {
 
   int operator%(int v) const {
     assert(v != 0);
-    if (v < 0) {
-      v = -v;
+    int64_t divisor = v;
+    if (divisor < 0) {
+      divisor = -divisor;
     }
-    int m = 0;
+    int64_t m = 0;
     for (int i = static_cast<int>(digits.size()) - 1; i >= 0; i--) {
-      m = (digits[i] + m * static_cast<int64_t>(BASE)) % v;
+      m = (digits[i] + m * static_cast<int64_t>(BASE)) % divisor;
     }
-    return m * sign;
+    return static_cast<int>(m * sign);
   }
 
   std::pair<BigInt, BigInt> div(const BigInt &v) const {
@@ -518,7 +529,7 @@ class BigInt {
   BigInt operator++(int){ BigInt t(*this); operator++(); return t; }
   BigInt operator--(int){ BigInt t(*this); operator--(); return t; }
   BigInt &operator++() { *this = *this + BigInt(1); return *this; }
-  BigInt &operator--() { *this = *this - BigInt(1); return *this; }  
+  BigInt &operator--() { *this = *this - BigInt(1); return *this; }
   BigInt &operator+=(const BigInt &v) { *this = *this + v; return *this; }
   BigInt &operator-=(const BigInt &v) { *this = *this - v; return *this; }
   BigInt &operator*=(const BigInt &v) { *this = *this * v; return *this; }
@@ -693,5 +704,11 @@ int main() {
   assert(static_cast<int>(x) == -6);
   assert(static_cast<long long>(x) == -6LL);
   assert(static_cast<double>(x) == -6.0);
+  assert(BigInt(INT64_MIN).to_string() == "-9223372036854775808");
+  assert(BigInt(INT64_MIN).to_llong() == INT64_MIN);
+  assert(-BigInt(0) == 0);
+  assert(BigInt(3) * INT_MIN == "-6442450944");
+  assert(BigInt("6442450944") / INT_MIN == -3);
+  assert(BigInt("6442450945") % INT_MIN == 1);
   return 0;
 }

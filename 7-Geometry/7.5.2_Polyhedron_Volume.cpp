@@ -3,9 +3,13 @@
 Given an oriented triangular mesh of a closed polyhedron, compute its signed volume. Each triangle
 contributes the signed volume of the tetrahedron formed by the triangle $abc$ and the origin
 $((a \times b) \cdot c) / 6$. If faces are oriented outward, the result is positive for the
-orientation used by `convex_hull_3d()` in 7.5.2; take `abs()` if only the magnitude is needed.
+orientation used by `convex_hull_3d()` in 7.5.3; take `abs()` if only the magnitude is needed.
 
-- `signed_polyhedron_volume(points, faces)` returns the signed volume. Each face is an index triple.
+- `signed_polyhedron_volume(p, faces)` returns the signed volume. Each face `(a, b, c)` represents
+  the triangle with vertices `p[a]`, `p[b]`, and `p[c]`.
+
+Overflow warning: for integral point types, each scalar triple product must fit in the point's
+coordinate arithmetic type before it is converted to `double`.
 
 Time Complexity:
 - O(f) per call, where $f$ is the number of triangular faces.
@@ -17,13 +21,13 @@ Space Complexity:
 
 #include <cmath>
 #include <tuple>
-#include <type_traits>
 #include <vector>
 
 struct Point3D {
   double x, y, z;
   Point3D(double x = 0, double y = 0, double z = 0) : x(x), y(y), z(z) {}
   double dot(const Point3D &p) const { return x * p.x + y * p.y + z * p.z; }
+
   Point3D cross(const Point3D &p) const {
     return {y * p.z - z * p.y, z * p.x - x * p.z, x * p.y - y * p.x};
   }
@@ -33,7 +37,7 @@ template<typename Pt, typename F>
 double signed_polyhedron_volume(const std::vector<Pt> &p, const std::vector<F> &faces) {
   double volume = 0;
   for (const auto &[a, b, c] : faces) {
-    volume += p[a].cross(p[b]).dot(p[c]);
+    volume += p[a].cross(p[b]).dot(p[c]);  // Overflow warning!
   }
   return volume / 6.0;
 }

@@ -30,17 +30,14 @@ Space Complexity:
 #include <vector>
 
 const int64_t INF = INT64_MAX / 4;
-std::vector<std::vector<int64_t>> adj, dp;
+std::vector<std::vector<int64_t>> adj;
 std::vector<int> path;
 
 int64_t shortest_hamiltonian_path() {
   int n = static_cast<int>(adj.size());
   assert(1 <= n && n < 31);
-  for (const auto &row : adj) {
-    assert(static_cast<int>(row.size()) == n);
-  }
   int max_mask = (1 << n) - 1;
-  dp.assign(max_mask + 1, std::vector<int64_t>(n, INF));
+  std::vector<std::vector<int64_t>> dp(max_mask + 1, std::vector<int64_t>(n, INF));
   path.assign(n, 0);
   for (int i = 0; i < n; i++) {
     dp[1 << i][i] = 0;
@@ -50,7 +47,8 @@ int64_t shortest_hamiltonian_path() {
       if ((mask & (1 << i)) != 0) {
         for (int j = 0; j < n; j++) {
           if ((mask & (1 << j)) != 0 && dp[mask ^ (1 << i)][j] != INF) {
-            dp[mask][i] = std::min(dp[mask][i], dp[mask ^ (1 << i)][j] + adj[j][i]);
+            int64_t candidate = dp[mask ^ (1 << i)][j] + adj[j][i];  // Overflow warning!
+            dp[mask][i] = std::min(dp[mask][i], candidate);
           }
         }
       }
@@ -80,13 +78,12 @@ int64_t shortest_hamiltonian_path() {
 int64_t shortest_hamiltonian_cycle() {
   int n = static_cast<int>(adj.size());
   assert(1 <= n && n < 31);
-  for (const auto &row : adj) assert(static_cast<int>(row.size()) == n);
   if (n == 1) {
     path = {0};
     return 0;
   }
   int max_mask = (1 << n) - 1;
-  dp.assign(max_mask + 1, std::vector<int64_t>(n, INF));
+  std::vector<std::vector<int64_t>> dp(max_mask + 1, std::vector<int64_t>(n, INF));
   path.assign(n, 0);
   dp[1][0] = 0;
   for (int mask = 1; mask <= max_mask; mask += 2) {
@@ -94,7 +91,8 @@ int64_t shortest_hamiltonian_cycle() {
       if ((mask & (1 << i)) != 0) {
         for (int j = 0; j < n; j++) {
           if ((mask & (1 << j)) != 0 && dp[mask ^ (1 << i)][j] != INF) {
-            dp[mask][i] = std::min(dp[mask][i], dp[mask ^ (1 << i)][j] + adj[j][i]);
+            int64_t candidate = dp[mask ^ (1 << i)][j] + adj[j][i];  // Overflow warning!
+            dp[mask][i] = std::min(dp[mask][i], candidate);
           }
         }
       }
@@ -164,7 +162,7 @@ int main() {
   for (int i = 1; i < nodes; i++) {
     cout << "->" << path[i];
   }
-  cout << "\n\n";
+  cout << endl << endl;
   int64_t cycle_len = shortest_hamiltonian_cycle();
   assert(cycle_len == 6);
   assert((path == vector<int>{0, 1, 2}));

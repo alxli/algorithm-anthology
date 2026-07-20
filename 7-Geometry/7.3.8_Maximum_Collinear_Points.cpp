@@ -5,8 +5,10 @@ line. For every anchor point, normalize the direction vector to every other poin
 `gcd(abs(dx), abs(dy))` and choosing a canonical sign; equal normalized directions from the same
 anchor are collinear with it.
 
-- `max_collinear_points(points)` returns the largest number of collinear points. Duplicate points
-  are counted as separate input points.
+- `max_collinear_points(p)` returns the largest number of collinear points. Duplicate points are
+  counted as separate input points.
+
+Overflow warning: coordinate differences and their absolute values must fit in `int64_t`.
 
 Time Complexity:
 - O(n^2 log n) per call, where $n$ is the number of points.
@@ -40,7 +42,7 @@ int max_collinear_points(const std::vector<Point> &p) {
       if (i == j) {
         continue;
       }
-      int64_t dx = p[j].x - p[i].x, dy = p[j].y - p[i].y;
+      int64_t dx = p[j].x - p[i].x, dy = p[j].y - p[i].y;  // Overflow warning!
       if (dx == 0 && dy == 0) {
         duplicates++;
         continue;

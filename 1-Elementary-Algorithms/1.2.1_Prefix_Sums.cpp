@@ -12,6 +12,8 @@ four entries by inclusion-exclusion.
 - `rectangle_sum(pref, r1, c1, r2, c2)` returns the sum of the rectangle with rows $[`r1`, `r2`]$
   and columns $[`c1`, `c2`]$.
 
+All prefix sums and intermediate inclusion-exclusion results must fit in `int64_t`.
+
 Time Complexity:
 - O(n) per call to `prefix_sums(a)`, where $n$ is the array size.
 - O(m*n) per call to `prefix_sums_2d(a)`, where $m$ and $n$ are the number of rows and columns of
@@ -19,8 +21,8 @@ Time Complexity:
 - O(1) per range or rectangle query.
 
 Space Complexity:
-- O(n) for `prefix_sums(a)`.
-- O(m*n) for `prefix_sums_2d(a)`.
+- O(n) for the array returned by `prefix_sums(a)`.
+- O(m*n) for the table returned by `prefix_sums_2d(a)`.
 - O(1) auxiliary for `range_sum()` and `rectangle_sum()`.
 
 */
@@ -31,7 +33,7 @@ Space Complexity:
 std::vector<int64_t> prefix_sums(const std::vector<int> &a) {
   std::vector<int64_t> pref(a.size() + 1, 0);
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
-    pref[i + 1] = pref[i] + a[i];
+    pref[i + 1] = pref[i] + a[i];  // Overflow warning.
   }
   return pref;
 }
@@ -46,7 +48,8 @@ std::vector<std::vector<int64_t>> prefix_sums_2d(const std::vector<std::vector<i
   std::vector<std::vector<int64_t>> pref(rows + 1, std::vector<int64_t>(cols + 1, 0));
   for (int i = 0; i < rows; i++) {
     for (int j = 0; j < cols; j++) {
-      pref[i + 1][j + 1] = a[i][j] + pref[i][j + 1] + pref[i + 1][j] - pref[i][j];
+      pref[i + 1][j + 1] =
+          a[i][j] + pref[i][j + 1] + pref[i + 1][j] - pref[i][j];  // Overflow warning.
     }
   }
   return pref;
@@ -66,8 +69,8 @@ using namespace std;
 int main() {
   vector<int> a{3, -1, 4, 1, 5};
   auto pref = prefix_sums(a);
-  assert(range_sum(pref, 0, 4) == 12);  // Whole array a[0..4]
-  assert(range_sum(pref, 1, 3) == 4);   // -1 + 4 + 1
+  assert(range_sum(pref, 0, 4) == 12);  // Whole array.
+  assert(range_sum(pref, 1, 3) == 4);   // -1 + 4 + 1.
   assert(range_sum(pref, 2, 2) == 4);   // Single element.
 
   // clang-format off
@@ -77,7 +80,7 @@ int main() {
   };
   // clang-format on
   auto pre2 = prefix_sums_2d(grid);
-  assert(rectangle_sum(pre2, 0, 1, 1, 2) == 16);  // rows 0..1, cols 1..2
+  assert(rectangle_sum(pre2, 0, 1, 1, 2) == 16);  // Rows 0-1 and columns 1-2.
   assert(rectangle_sum(pre2, 0, 0, 1, 2) == 21);  // Whole grid.
   assert(rectangle_sum(pre2, 1, 1, 1, 1) == 5);   // Single cell.
   return 0;

@@ -115,22 +115,25 @@ class RerootingTree {
       down[u] = finalize(acc, u);
     }
     for (int u : order) {
-      std::vector<int> children;
       std::vector<Data> vals;
       for (int v : adj[u]) {
         if (parent[v] == u) {
-          children.push_back(v);
           vals.push_back(lift(down[v], v, u));
+        } else {
+          vals.push_back(outside[u]);
         }
       }
       std::vector<Data> suffix(vals.size() + 1, identity);
       for (int i = static_cast<int>(vals.size()) - 1; i >= 0; i--) {
         suffix[i] = combine(vals[i], suffix[i + 1]);
       }
-      Data prefix = outside[u];
-      for (int i = 0; i < static_cast<int>(children.size()); i++) {
-        Data without_child = finalize(combine(prefix, suffix[i + 1]), u);
-        outside[children[i]] = lift(without_child, u, children[i]);
+      Data prefix = identity;
+      for (int i = 0; i < static_cast<int>(adj[u].size()); i++) {
+        int v = adj[u][i];
+        if (parent[v] == u) {
+          Data without_child = finalize(combine(prefix, suffix[i + 1]), u);
+          outside[v] = lift(without_child, u, v);
+        }
         prefix = combine(prefix, vals[i]);
       }
       answer[u] = finalize(prefix, u);
@@ -147,6 +150,7 @@ Sum of distances from each root: 8 5 8 6 9
 
 #include <cassert>
 #include <iostream>
+#include <string>
 using namespace std;
 
 vector<int64_t> sum_distances_all_roots(RerootingTree &tree) {
@@ -190,10 +194,21 @@ int main() {
   assert(!tree.is_ancestor(3, 2));
   vector<int64_t> distances = sum_distances_all_roots(tree);
   assert((distances == vector<int64_t>{8, 5, 8, 6, 9}));
+
+  // Associative contributions retain adjacency-list order even when combine is not commutative.
+  RerootingTree ordered(3);
+  ordered.add_edge(1, 2);
+  ordered.add_edge(0, 1);  // adj[1] is [2, 0], while 0 is its parent in the initial rooting.
+  auto combine = [](string a, const string &b) { return a + b; };
+  auto finalize = [](string a, int u) { return a + to_string(u); };
+  auto lift = [](const string &a, int, int) { return a; };
+  vector<string> traversal = ordered.rerooting_dp(string{}, combine, finalize, lift);
+  assert(traversal[1] == "201");
+
   cout << "Sum of distances from each root:";
   for (int64_t d : distances) {
     cout << " " << d;
   }
-  cout << "\n";
+  cout << endl;
   return 0;
 }

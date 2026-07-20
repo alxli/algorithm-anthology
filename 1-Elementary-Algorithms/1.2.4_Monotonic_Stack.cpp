@@ -31,12 +31,15 @@ changing the comparison from strict to non-strict (e.g. `>=` to `>`) toggles how
 - `largest_zero_submatrix(a)` returns the area of the largest all-zero rectangular submatrix of the
   0/1 matrix `a`.
 
+Histogram areas must fit in the height value type.
+
 Time Complexity:
 - O(n) per call to all one-dimensional functions, where $n$ is the size of the input.
 - O(r*c) per call to `largest_zero_submatrix()`, where $r$ and $c$ are the matrix dimensions.
 
 Space Complexity:
-- O(n) auxiliary for the stack and result.
+- O(n) auxiliary and O(n) for the returned indices from each neighbor query.
+- O(n) auxiliary for `largest_rectangle()`.
 - O(c) auxiliary for `largest_zero_submatrix()`.
 
 */
@@ -112,7 +115,7 @@ T largest_rectangle(const std::vector<T> &heights) {
   std::vector<int> left = previous_less(heights), right = next_less(heights);
   T best = 0;
   for (int i = 0; i < n; i++) {
-    T area = heights[i] * (right[i] - left[i] - 1);
+    T area = heights[i] * (right[i] - left[i] - 1);  // Overflow warning.
     if (area > best) {
       best = area;
     }
@@ -125,9 +128,6 @@ int largest_zero_submatrix(const std::vector<std::vector<char>> &a) {
     return 0;
   }
   int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
-  for (const auto &row : a) {
-    assert(static_cast<int>(row.size()) == cols);
-  }
   int best = 0;
   std::vector<int> height(cols, 0);
   for (int i = 0; i < rows; i++) {

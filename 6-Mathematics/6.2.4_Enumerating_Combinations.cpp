@@ -13,9 +13,9 @@ rank. Bitmask successors use the same order as increasing integers with a fixed 
   $[`lo`, `hi`)$ of $n$ elements for which the function will rearrange such that the $k$ elements in
   $[`lo`, `mid`)$ become the next lexicographically greater combination. The function returns true
   if such a combination exists, or false if $[`lo`, `mid`)$ already consists of the
-  lexicographically greatest combination of the elements in $[`lo`, `hi`)$ (in which case the values
-  are unchanged). This implementation requires an ordering on the set of possible elements defined
-  by `operator<` on the iterator's value type.
+  lexicographically greatest combination of the elements in $[`lo`, `hi`)$, in which case the range
+  is reset to its first combination. This implementation requires an ordering on the set of possible
+  elements defined by `operator<` on the iterator's value type.
 - `next_combination(n, a)` rearranges `a` to become the next lexicographically greater combination
   of distinct integers in the range $[0, `n`)$. The vector `a` must be sorted and contain distinct
   integers in the range $[0, `n`)$.
@@ -50,7 +50,6 @@ Space Complexity:
 
 #include <algorithm>
 #include <cstdint>
-#include <iterator>
 #include <utility>
 #include <vector>
 
@@ -185,7 +184,7 @@ bool next_combination_with_repeats(int n, std::vector<int> &a) {
 112 113 114 123 124 134 234
 
 "abcde" choose 3 with masks:
-abc abd acd bcd abe ace bce ade bde
+abc abd acd bcd abe ace bce ade bde cde
 
 5 choose 3:
 {0,1,2} {0,1,3} {0,1,4} {0,2,3} {0,2,4} {0,3,4} {1,2,3} {1,2,4} {1,3,4} {2,3,4}
@@ -225,13 +224,7 @@ int main() {
     int n = 5, k = 3;
     string char_set = "abcde";  // Must be distinct.
     cout << "\n\"" << char_set << "\" choose " << k << " with masks:" << endl;
-    int64_t mask = 0, dest = 0;
-    for (int i = 0; i < k; i++) {
-      mask |= (1 << i);
-    }
-    for (int i = k - 1; i < n; i++) {
-      dest |= (1 << i);
-    }
+    int64_t mask = (1LL << k) - 1, limit = 1LL << n;
     int count = 0;
     do {
       for (int i = 0; i < n; i++) {
@@ -242,14 +235,14 @@ int main() {
       cout << " ";
       count++;
       mask = next_combination_mask(mask);
-    } while (mask != dest);
-    assert(count == 9);  // Stops before the sentinel mask.
+    } while (mask < limit);
+    assert(count == 10);
     cout << endl;
   }
   {  // Combinations of distinct integers in [0, n).
     int n = 5, k = 3;
     vector<int> a{0, 1, 2};
-    cout << "\n" << n << " choose " << k << ":" << endl;
+    cout << endl << n << " choose " << k << ":" << endl;
     int count = 0;
     do {
       print_range(a.begin(), a.end());
@@ -264,7 +257,7 @@ int main() {
   {  // Combinations with repeats.
     int n = 3, k = 2;
     vector<int> a{0, 0};
-    cout << "\n" << n << " multichoose " << k << ":" << endl;
+    cout << endl << n << " multichoose " << k << ":" << endl;
     int count = 0;
     do {
       print_range(a.begin(), a.end());

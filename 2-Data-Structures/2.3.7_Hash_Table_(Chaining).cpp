@@ -9,7 +9,8 @@ rehash never moves existing nodes, so pointers from `find()` and references from
 valid, and load factors above 1 are tolerated gracefully. The costs are a separate allocation per
 entry and cache-unfriendly pointer chasing during traversal.
 
-- `ChainingHashMap<K, V, Hash>(size = 128)` constructs an empty map with `size` buckets.
+- `ChainingHashMap<K, V, Hash>(buckets = 128)` constructs an empty map with the positive number of
+  buckets given by `buckets`.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if a new
@@ -34,17 +35,22 @@ This is an educational implementation; in practice prefer one of the standard op
   wrappers with a randomized integer hash.
 
 Time Complexity:
-- O(1) per call to the constructor, `size()`, and `empty()`.
-- O(1) amortized per call to `insert()`, `erase()`, `find()`, and `operator[]`.
-- O(n) per call to `entries()`, where $n$ is the number of entries in the map.
+- O(b) per call to the constructor, where $b$ is the initial number of buckets.
+- O(1) per call to `size()` and `empty()`.
+- O(1) expected amortized per call to `insert()`, `erase()`, `find()`, and `operator[]`, and O(n) in
+  the collision-heavy worst case.
+- O(n + b) per call to `entries()`, where $n$ is the number of entries and $b$ is the number of
+  buckets.
 
 Space Complexity:
-- O(n) for storage of the map elements.
-- O(n) auxiliary for `insert()`.
+- O(n + b) for storage of the map elements and buckets.
+- O(n + b) auxiliary during a rehash.
+- O(n) for the vector returned by `entries()`.
 - O(1) auxiliary for all other operations.
 
 */
 
+#include <cassert>
 #include <cstdint>
 #include <list>
 #include <utility>
@@ -65,16 +71,20 @@ class ChainingHashMap {
     auto old = std::move(table);
     table_size = 2 * table_size;
     table.assign(table_size, std::list<HashNode>());
-    num_entries = 0;
     for (auto &bucket : old) {
-      for (auto &entry : bucket) {
-        insert(entry.key, entry.value);
+      while (!bucket.empty()) {
+        auto it = bucket.begin();
+        uint32_t i = Hash()(it->key) % table_size;
+        table[i].splice(table[i].end(), bucket, it);
       }
     }
   }
 
  public:
-  explicit ChainingHashMap(int size = 128) : table(size), table_size(size), num_entries(0) {}
+  explicit ChainingHashMap(int buckets = 128) : table_size(buckets), num_entries(0) {
+    assert(buckets > 0);
+    table.resize(buckets);
+  }
 
   int size() const { return num_entries; }
   bool empty() const { return num_entries == 0; }
@@ -214,5 +224,11 @@ int main() {
   assert(m.size() == 2);
   assert(m["foo"] == '\0');
   assert(m.size() == 3);
+
+  ChainingHashMap<string, char, Hasher> stable(1);
+  stable["x"] = 'x';
+  char *ptr = stable.find("x");
+  stable["y"] = 'y';  // Rehashes without relocating the existing list node.
+  assert(ptr == stable.find("x") && *ptr == 'x');
   return 0;
 }

@@ -12,7 +12,7 @@ relies on hashing and is the only one of the three that also supports rectangle 
 offline 2D Fenwick tree when the coordinates are large but every updated cell is known before the
 queries begin, which lets it coordinate-compress instead of hashing for markedly better constants
 than the sparse version. For non-additive aggregates such as min/max with custom updates, use a 2D
-segment tree or quadtree instead, since Fenwick-tree algebra relies on addition and subtraction.
+segment tree instead, since Fenwick-tree algebra relies on addition and subtraction.
 
 - `Fenwick2D<T>(rows, cols)` constructs a `rows` by `cols` array with 0-based indices, with all
   values initialized to $0$.
@@ -71,6 +71,8 @@ class Fenwick2D {
   }
 
   T sum(int r1, int c1, int r2, int c2) const {
+    assert(0 <= r1 && r1 <= r2 && r2 < rows);
+    assert(0 <= c1 && c1 <= c2 && c2 < cols);
     return sum(r2, c2) - sum(r1 - 1, c2) - sum(r2, c1 - 1) + sum(r1 - 1, c1 - 1);
   }
 

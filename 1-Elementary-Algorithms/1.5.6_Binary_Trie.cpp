@@ -36,17 +36,24 @@ Time Complexity:
 
 Space Complexity:
 - O(n * b) for storage, where $n$ is the number of distinct values inserted so far.
+- O(1) auxiliary per operation.
 
 */
 
 #include <array>
+#include <cassert>
+#include <climits>
 #include <cstdint>
 #include <vector>
 
 template<typename U = uint32_t, int BITS = 30>
 class BinaryTrie {
+  static_assert(0 < BITS && BITS < static_cast<int>(sizeof(U) * CHAR_BIT));
+
   std::vector<std::array<int, 2>> child;  // child[node][bit], where 0 means no child.
   std::vector<int> cnt;                   // Number of stored values passing through each node.
+
+  static void assert_fits(U x) { assert((x >> BITS) == 0); }
 
   int new_node() {
     child.push_back({0, 0});
@@ -61,6 +68,7 @@ class BinaryTrie {
   bool empty() const { return cnt[0] == 0; }
 
   void insert(U x) {
+    assert_fits(x);
     int node = 0;
     cnt[node]++;
     for (int b = BITS - 1; b >= 0; b--) {
@@ -75,6 +83,7 @@ class BinaryTrie {
   }
 
   int count(U x) const {
+    assert_fits(x);
     int node = 0;
     for (int b = BITS - 1; b >= 0; b--) {
       int next = child[node][(x >> b) & 1];
@@ -100,6 +109,8 @@ class BinaryTrie {
   }
 
   U max_xor(U x) const {
+    assert(!empty());
+    assert_fits(x);
     int node = 0;
     U res = 0;
     for (int b = BITS - 1; b >= 0; b--) {
@@ -116,6 +127,8 @@ class BinaryTrie {
   }
 
   U min_xor(U x) const {
+    assert(!empty());
+    assert_fits(x);
     int node = 0;
     U res = 0;
     for (int b = BITS - 1; b >= 0; b--) {
@@ -132,6 +145,7 @@ class BinaryTrie {
   }
 
   int count_xor_less(U x, U k) const {
+    assert_fits(x);
     if ((k >> BITS) != 0) {
       return cnt[0];  // Every XOR result is below 2^BITS, which is at most k.
     }

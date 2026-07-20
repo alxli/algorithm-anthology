@@ -20,8 +20,8 @@ magnitude. With 64-bit integer coordinates, it overflows once coordinates exceed
 For floating-point coordinates the test is subject to the usual rounding error.
 
 Time Complexity:
-- O(n^6) per call, where $n$ is the number of points. The empty-circumcircle test contributes O(n^4)
-  while O(n^2) comes from checking candidate triangles against previously accepted triangles.
+- O(n^6) per call, where $n$ is the number of points. There are O(n^3) candidate triangles; each
+  scans all points and, conservatively, up to O(n^3) previously accepted candidates.
 
 Space Complexity:
 - O(n) auxiliary, excluding the returned triangulation.
@@ -37,7 +37,9 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) {
+    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  }
   return C(a) == C(b);
 }
 

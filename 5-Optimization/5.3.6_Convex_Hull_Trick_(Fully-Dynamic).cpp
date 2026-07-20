@@ -1,25 +1,25 @@
 /*
 
-Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, answer queries at specified
-$x$-coordinates, each asking for the minimum $y$-value over all given lines. To instead have the
-queries optimize for maximum $y$-value, call the constructor with `query_max = true`. This is useful
-for dynamic programming recurrences of the form `dp[i] = min(m[j] * x[i] + b[j])` when line slopes
-and query coordinates are not monotone.
+Maintains a dynamic set of lines $y = mx + b$ and answers minimum value queries at integer points.
+Lines and queries may arrive in arbitrary order, making this useful for dynamic programming
+recurrences of the form `dp[i] = min(m[j] * x[i] + b[j])` without monotone slopes or query
+coordinates. The same interface can answer maximum queries when constructed with `query_max = true`.
 
-The following implementation is a fully dynamic variant of the convex hull optimization technique,
-using a self-balancing binary search tree (`std::set`) to support the ability to call `add_line()`
-and `query()` in any desired order. The tree stores the lower envelope of the lines sorted by slope:
-inserting a line removes any neighbors it dominates, and each line records the interval of queries
-for which it is the best, so a query is a single tree lookup.
+This fully dynamic convex hull stores the envelope in a self-balancing binary search tree
+(`std::set`). Inserting a line removes any neighbors it dominates, and each remaining line records
+the last coordinate where it is optimal, so a query is one tree lookup. Unlike a Li Chao tree, this
+structure requires no fixed coordinate domain and its complexity depends on the number of lines
+rather than the domain width. Prefer it when the domain is unknown or very large, or when maximum
+queries are needed; a Li Chao tree is often simpler when a manageable domain is known.
 
 - `HullOptimizer(query_max = false)` constructs an empty hull. By default, `query(x)` minimizes; if
   `query_max` is true, `query(x)` maximizes.
-- `add_line(m, b)` inserts line $y = mx + b$ (can be called in any order).
+- `add_line(m, b)` inserts line $y = mx + b$. Lines may be added in any order.
 - `query(x)` returns the best $y$-value among all inserted lines at coordinate `x`. At least one
-  line must have been inserted.
+  line must have been inserted, and query coordinates may be supplied in any order.
 
-Overflow warning: border updates subtract slopes/intercepts and `query()` evaluates `m * x + b`, so
-those intermediate values must fit in `int64_t`.
+Overflow warning: minimization negates the coefficients, border updates subtract slopes/intercepts,
+and `query()` evaluates `m * x + b`, so those intermediate values must fit in `int64_t`.
 
 Time Complexity:
 - O(log n) amortized per call to `add_line()` and O(log n) per call to `query()`, where $n$ is the

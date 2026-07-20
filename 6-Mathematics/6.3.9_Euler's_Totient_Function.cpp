@@ -9,7 +9,7 @@ product formula $\phi(n) = n \prod_{p \mid n} (1 - 1/p)$ taken over the distinct
 $n$. `phi(n)` applies this formula directly, factoring `n` by trial division. `phi_table(n)`
 computes the whole range at once with a sieve of Eratosthenes: starting from `v[i] = i`, it sweeps
 each prime $p$ across its multiples `j` and folds in the factor $(1 - 1/p)$ by replacing `v[j]` with
-`v[j] - v[j] / p`. This is faster than the alternative that uses the divisor-sum identity
+$`v[j]` - `v[j]` / p$. This is faster than the alternative that uses the divisor-sum identity
 $\sum_{d \mid n} \phi(d) = n$ to subtract each `v[i]` from its multiples, which costs O(n log n).
 
 The overload `phi_table(lo, hi)` computes the totients of a high but narrow range with a segmented
@@ -21,15 +21,15 @@ than $\sqrt{`hi`}$ (a number at most `hi` can have at most one such factor).
 - `phi(n)` returns Euler's totient of `n`.
 - `phi_table(n)` returns a vector `v` of length `n + 1` such that `v[i]` stores `phi(i)` for every
   `i` in the range $[0, `n`]$.
-- `phi_table(lo, hi)` returns a vector `v` of length `hi - lo + 1` such that `v[i - lo]` stores
+- `phi_table(lo, hi)` returns a vector `v` of length $`hi` - `lo` + 1$ such that `v[i - lo]` stores
   `phi(i)` for every `i` in the range $[`lo`, `hi`]$. This overload assumes `lo` $\geq 0$; if `hi` <
   `lo`, it returns an empty vector.
 
 Time Complexity:
 - O(sqrt(n)) per call to `phi(n)`.
 - O(n log log n) per call to `phi_table(n)`.
-- O(w*log(log(h)) + sqrt(h)) per call to `phi_table(lo, hi)`, where $w = `hi` - `lo` + 1$ and
-  $h = `hi`$.
+- O(sqrt(`hi`)*log(log(`hi`)) + w*log(log(`hi`))) per call to `phi_table(lo, hi)`, where
+  $w = `hi` - `lo` + 1$.
 
 Space Complexity:
 - O(1) auxiliary for `phi(n)`.
@@ -81,7 +81,7 @@ std::vector<int> phi_table(int lo, int hi) {
   while (1LL * (root + 1) * (root + 1) <= hi) {
     root++;
   }
-  // Sieve the primes up to sqrt(hi); these are the only ones that can divide a value in [lo, hi].
+  // Sieve the primes up to sqrt(hi); any larger prime divisor is the one leftover factor.
   std::vector<char> composite(root + 1, false);
   std::vector<int> primes;
   for (int i = 2; i <= root; i++) {

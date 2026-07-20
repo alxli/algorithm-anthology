@@ -1,17 +1,17 @@
 /*
 
 A functional graph is a directed graph in which every node has exactly one outgoing edge, given by a
-successor function `f`, where `f[i]` is the node reached in one step from node `i`. Following the
+successor function $f$, where $f(i)$ is the node reached in one step from node $i$. Following the
 edges from any node eventually enters a cycle, so each weakly connected component consists of one
 directed cycle with trees of nodes feeding into it. This structure underlies problems about
-iterating a function: where a sequence `i`, `f[i]`, `f[f[i]]`, ... ends up, and how far it is from
+iterating a function: where a sequence $i, f(i), f(f(i)), \ldots$ ends up, and how far it is from
 repeating.
 
 Building the structure peels away nodes of in-degree zero to expose the cycles (the survivors), then
 labels each cycle and walks the remaining tail nodes to record their distance to the cycle. A binary
-lifting table stores `f` applied $2^k$ times, so any number of steps can be taken in logarithmic
-time. Together these answer, for any node, which cycle it eventually reaches, how many steps until
-it gets there, and exactly where it lands after a huge number of steps.
+lifting table stores the function applied $2^k$ times, so any number of steps can be taken in
+logarithmic time. Together these answer, for any node, which cycle it eventually reaches, how many
+steps until it gets there, and exactly where it lands after a huge number of steps.
 
 - `FunctionalGraph(f)` builds the structure for the successor function `f` over nodes numbered
   $[0, `n`)$, where `n` is `f.size()`.
@@ -39,7 +39,6 @@ Space Complexity:
 #include <vector>
 
 class FunctionalGraph {
-  int n, LOG;
   std::vector<std::vector<int>> up;  // up[k][i] = f applied 2^k times to i.
   std::vector<char> on_cyc;
   std::vector<int> to_cyc;  // Steps from i to the first cycle node.
@@ -56,14 +55,14 @@ class FunctionalGraph {
   }
 
  public:
-  FunctionalGraph(const std::vector<int> &f) : n(f.size()) {
-    LOG = 1;
-    while ((1 << LOG) < n) {
-      LOG++;
+  FunctionalGraph(const std::vector<int> &f) {
+    int n = static_cast<int>(f.size()), levels = 1;
+    while ((1LL << levels) < n) {
+      levels++;
     }
-    up.assign(LOG + 1, std::vector<int>(n));
+    up.assign(levels + 1, std::vector<int>(n));
     up[0] = f;
-    for (int k = 1; k <= LOG; k++) {
+    for (int k = 1; k <= levels; k++) {
       for (int i = 0; i < n; i++) {
         up[k][i] = up[k - 1][up[k - 1][i]];
       }
