@@ -118,14 +118,9 @@ class Graph {
   }
 };
 
-/*** Example Usage and Output:
-
-DFS order: 0 1 2 3 4 5 6 7 8 9 10 11
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -152,9 +147,9 @@ int main() {
     g.add_edge(7, 11);
     g.add_edge(8, 9);
     g.add_edge(8, 10);
-    cout << "DFS order: ";
-    g.dfs(0, [](int n) { cout << n << " "; });
-    cout << endl;
+    vector<int> order;
+    g.dfs(0, [&](int u) { order.push_back(u); });
+    assert((order == vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}));
     assert(g.size() == 12 && g[0].size() == 3);
     assert(g.is_dag());
     assert(!g.has_cycle());

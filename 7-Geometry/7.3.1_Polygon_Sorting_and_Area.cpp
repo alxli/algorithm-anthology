@@ -11,7 +11,7 @@ any struct with numeric `.x` and `.y` fields and `<` / `==` operators.
 - `polygon_area_2x(lo, hi)` returns exactly double the area of the polygon with vertices specified
   by the range $[`lo`, `hi`)$ of points in either clockwise or counter-clockwise order. The return
   value is integral or floating-point, depending on the input point type. For integer vertices,
-  divide by 2 in the caller if the exact area is needed.
+  divide by $2$ in the caller if the exact area is needed.
 - `polygon_area(lo, hi)` returns the area as `double`.
 - `polygon_centroid(lo, hi)` returns the centroid (center of mass) of a non-degenerate simple
   polygon with vertices in boundary order as an `std::pair<double, double>`. It uses signed shoelace
@@ -43,9 +43,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -112,14 +110,9 @@ std::pair<double, double> polygon_centroid(It lo, It hi) {
   return {cx / (3 * area2), cy / (3 * area2)};
 }
 
-/*** Example Usage and Output:
+/*** Example Usage ***/
 
-Clockwise vertices: (1, 3) (1, 2) (2, 1) (0, 0) (-1, 3)
-Counterclockwise vertices: (-1, 3) (0, 0) (2, 1) (1, 2) (1, 3)
-
-***/
-
-#include <iostream>
+#include <cassert>
 #include <vector>
 using namespace std;
 
@@ -156,24 +149,16 @@ Point mean_center(It lo, It hi) {
 int main() {
   vector<Point> points{Point(1, 3), Point(1, 2), Point(2, 1), Point(0, 0), Point(-1, 3)};
   vector<Point> v(points);
-  std::mt19937 rng(1234567);
+  std::mt19937 rng(1234567);  // Fixed seed for reproducibility.
   std::shuffle(v.begin(), v.end(), rng);
   Point c = mean_center(v.begin(), v.end());
   assert(EQ(c, Point(0.6, 1.8)));
   sort(v.begin(), v.end(), [c](const Point &a, const Point &b) { return cw_comp(a, b, c); });
-  cout << "Clockwise vertices:";
-  for (const auto &p : v) {
-    cout << " (" << p.x << ", " << p.y << ")";
-  }
-  cout << endl;
+  assert((v == vector<Point>{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}}));
   assert(EQ(polygon_area(v.begin(), v.end()), 5));
 
   sort(v.begin(), v.end(), [c](const Point &a, const Point &b) { return cw_comp(b, a, c); });
-  cout << "Counterclockwise vertices:";
-  for (const auto &p : v) {
-    cout << " (" << p.x << ", " << p.y << ")";
-  }
-  cout << endl;
+  assert((v == vector<Point>{{-1, 3}, {0, 0}, {2, 1}, {1, 2}, {1, 3}}));
   assert(EQ(polygon_area(v.begin(), v.end()), 5));
 
   // Integer points: polygon_area_2x is exact (no float arithmetic).

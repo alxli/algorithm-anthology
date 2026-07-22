@@ -64,34 +64,31 @@ class IterativeSegTree {
   int len, base;
   std::vector<T> value;
 
- public:
-  explicit IterativeSegTree(int n, const T &v = T()) : len(n), base(1) {
-    assert(len > 0);
+  template<typename Gen>
+  void build(const Gen &gen) {
+    base = 1;
     while (base < len) {
       base <<= 1;
     }
     value.assign(2 * base, T());
     for (int i = 0; i < len; i++) {
-      value[base + i] = v;
+      value[base + i] = gen(i);
     }
     for (int i = base - 1; i > 0; i--) {
       value[i] = combine(value[i << 1], value[i << 1 | 1]);
     }
   }
 
-  template<typename It>
-  IterativeSegTree(It lo, It hi) : len(hi - lo), base(1) {
+ public:
+  explicit IterativeSegTree(int n, const T &v = T()) : len(n) {
     assert(len > 0);
-    while (base < len) {
-      base <<= 1;
-    }
-    value.assign(2 * base, T());
-    for (int i = 0; i < len; i++) {
-      value[base + i] = *(lo + i);
-    }
-    for (int i = base - 1; i > 0; i--) {
-      value[i] = combine(value[i << 1], value[i << 1 | 1]);
-    }
+    build([&](int) { return v; });
+  }
+
+  template<typename It>
+  IterativeSegTree(It lo, It hi) : len(hi - lo) {
+    assert(len > 0);
+    build([&](int i) { return *(lo + i); });
   }
 
   int size() const { return len; }
@@ -180,26 +177,18 @@ class IterativeSegTree {
   }
 };
 
-/*** Example Usage and Output:
+/*** Example Usage ***/
 
-Values: 6 -2 4 8 10
-The minimum value in the range [0, 3] is -2.
-
-***/
-
-#include <iostream>
 using namespace std;
 
 int main() {
   vector<int> a{6, -2, 1, 8, 10};
   IterativeSegTree<int> t(a.begin(), a.end());
   t.update(2, 4);
-  cout << "Values:";
+  vector<int> expected{6, -2, 4, 8, 10};
   for (int i = 0; i < t.size(); i++) {
-    cout << " " << t.at(i);
+    assert(t.at(i) == expected[i]);
   }
-  cout << endl;
-  cout << "The minimum value in the range [0, 3] is " << t.query(0, 3) << "." << endl;
   assert(t.query(0, 3) == -2);
 
   assert(t.max_right(0, [](int mn) { return mn > -2; }) == 1);

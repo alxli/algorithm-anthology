@@ -142,14 +142,9 @@ class RerootingTree {
   }
 };
 
-/*** Example Usage and Output:
-
-Sum of distances from each root: 8 5 8 6 9
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 #include <string>
 using namespace std;
 
@@ -205,10 +200,5 @@ int main() {
   vector<string> traversal = ordered.rerooting_dp(string{}, combine, finalize, lift);
   assert(traversal[1] == "201");
 
-  cout << "Sum of distances from each root:";
-  for (int64_t d : distances) {
-    cout << " " << d;
-  }
-  cout << endl;
   return 0;
 }

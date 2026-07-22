@@ -77,18 +77,10 @@ void rotate3(It lo, It mid, It hi) {
   }
 }
 
-/*** Example Usage and Output:
-
-before sort:  2 4 2 0 5 10 7 3 7 1
-after sort:   0 1 2 2 3 4 5 7 7 10
-rotate left:  1 2 2 3 4 5 7 7 10 0
-rotate right: 0 1 2 2 3 4 5 7 7 10
-
-***/
+/*** Example Usage ***/
 
 #include <algorithm>
 #include <cassert>
-#include <iostream>
 #include <vector>
 using namespace std;
 
@@ -115,36 +107,19 @@ int main() {
 
   // Example from: http://en.cppreference.com/w/cpp/algorithm/rotate
   vector<int> a{2, 4, 2, 0, 5, 10, 7, 3, 7, 1};
-  cout << "before sort:  ";
-  for (const auto &x : a) {
-    cout << x << " ";
-  }
-  cout << endl;
 
   // Insertion sort.
   for (auto i = a.begin(); i != a.end(); ++i) {
     rotate1(std::upper_bound(a.begin(), i, *i), i, i + 1);
   }
-  cout << "after sort:   ";
-  for (const auto &x : a) {
-    cout << x << " ";
-  }
-  cout << endl;
+  assert((a == vector<int>{0, 1, 2, 2, 3, 4, 5, 7, 7, 10}));
 
   // Simple rotation to the left.
   rotate2(a.begin(), a.begin() + 1, a.end());
-  cout << "rotate left:  ";
-  for (const auto &x : a) {
-    cout << x << " ";
-  }
-  cout << endl;
+  assert((a == vector<int>{1, 2, 2, 3, 4, 5, 7, 7, 10, 0}));
 
   // Simple rotation to the right.
   rotate3(a.rbegin(), a.rbegin() + 1, a.rend());
-  cout << "rotate right: ";
-  for (const auto &x : a) {
-    cout << x << " ";
-  }
-  cout << endl;
+  assert((a == vector<int>{0, 1, 2, 2, 3, 4, 5, 7, 7, 10}));
   return 0;
 }

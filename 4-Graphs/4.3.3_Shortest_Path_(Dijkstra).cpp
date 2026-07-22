@@ -1,8 +1,8 @@
 /*
 
 Given a starting node in a weighted, directed graph with nonnegative weights only, visit every
-connected node and determine the minimum distance to each such node. Optionally, output the shortest
-path to a specific destination node using the shortest-path tree from the predecessor array `pred`.
+connected node and determine the minimum distance to each such node. Optionally, reconstruct the
+shortest path to a destination node using the shortest-path tree from the predecessor array `pred`.
 
 Dijkstra's algorithm repeatedly selects the unvisited node of smallest tentative distance using a
 priority queue and relaxes its outgoing edges. Dijkstra's algorithm requires nonnegative edge
@@ -11,7 +11,9 @@ nonnegative, a node's distance is final the first time it is removed from the qu
 
 - `dijkstra(start)` populates `dist` and `pred` for a global, pre-populated adjacency list `adj`
   whose nodes are numbered $[0, `n`)$, where `n` is `adj.size()`. Each edge is stored as
-  $(`neighbor`, `weight`)$, where `weight` is nonnegative.
+  (`neighbor`, `weight`), where `weight` is nonnegative.
+- `get_path(dest)` returns the path from `start` to `dest`, or an empty vector if `dest` is
+  unreachable, after the latest call to `dijkstra()`.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 `start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the
@@ -19,14 +21,17 @@ destination to `start`, then reverse that sequence to recover the path.
 
 Time Complexity:
 - O(n + m log n) per call, where $n$ is the number of nodes and $m$ is the number of edges.
+- O(p) per call to `get_path()`, where $p$ is the number of nodes in the returned path.
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
   edges.
 - O(max(n, m)) auxiliary.
+- O(p) for the path returned by `get_path()`.
 
 */
 
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <functional>
@@ -63,29 +68,22 @@ void dijkstra(int start) {
   }
 }
 
-/*** Example Usage and Output:
+std::vector<int> get_path(int dest) {
+  if (dist[dest] == INF) {
+    return {};
+  }
+  std::vector<int> path;
+  for (int v = dest; v != -1; v = pred[v]) {
+    path.push_back(v);
+  }
+  std::reverse(path.begin(), path.end());
+  return path;
+}
 
-The shortest distance from 0 to 3 is 5.
-Take the path: 0->1->2->3.
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
-
-void print_path(int dest) {
-  vector<int> path;
-  for (int j = dest; pred[j] != -1; j = pred[j]) {
-    path.push_back(pred[j]);
-  }
-  cout << "Take the path: ";
-  while (!path.empty()) {
-    cout << path.back() << "->";
-    path.pop_back();
-  }
-  cout << dest << "." << endl;
-}
 
 int main() {
   //     w=2     w=2
@@ -103,9 +101,6 @@ int main() {
   int start = 0, dest = 3;
   dijkstra(start);
   assert(dist[dest] == 5);
-  assert(pred[dest] == 2 && pred[2] == 1 && pred[1] == 0);
-  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
-       << endl;
-  print_path(dest);
+  assert((get_path(dest) == vector<int>{0, 1, 2, 3}));
   return 0;
 }

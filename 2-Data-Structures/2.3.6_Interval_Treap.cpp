@@ -248,15 +248,9 @@ class IntervalTreap {
   }
 };
 
-/*** Example Usage and Output:
-
-Intervals intersecting [16, 20]: [5, 20] [10, 30] [10, 40] [15, 20]
-All intervals: [5, 20] [10, 30] [10, 40] [12, 15] [15, 20]
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -273,13 +267,13 @@ int main() {
   assert(t.size() == 5);
   assert(*t.find_key(3, 9) == (pair<int, int>{5, 20}));
   assert(*t.find_value(3, 9) == 'd');
-  cout << "Intervals intersecting [16, 20]:";
-  auto print = [](int lo, int hi, char v) { cout << " [" << lo << ", " << hi << "]"; };
-  t.find_all(16, 20, print);
-  cout << "\nAll intervals:";
-  for (const auto &[lo, hi, v] : t.entries()) {
-    print(lo, hi, v);
-  }
-  cout << endl;
+  vector<pair<int, int>> intersections;
+  t.find_all(16, 20, [&](int lo, int hi, char) { intersections.emplace_back(lo, hi); });
+  assert((intersections == vector<pair<int, int>>{{5, 20}, {10, 30}, {10, 40}, {15, 20}}));
+  assert(
+      (t.entries() == vector<tuple<int, int, char>>{
+                          {5, 20, 'd'}, {10, 30, 'b'}, {10, 40, 'f'}, {12, 15, 'e'}, {15, 20, 'a'}
+                      })
+  );
   return 0;
 }

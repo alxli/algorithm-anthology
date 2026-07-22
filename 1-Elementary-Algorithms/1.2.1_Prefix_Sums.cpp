@@ -6,34 +6,45 @@ difference arrays, and two-dimensional grids. Each table entry stores the sum of
 it, so any range sum is the difference of two entries; in two dimensions, rectangle sums combine
 four entries by inclusion-exclusion.
 
+Prefix sums can also be combined with a frequency table to count subarrays having a target sum. When
+the current prefix sum is $s$, every earlier prefix sum equal to $s - t$ identifies a subarray with
+sum $t$. Recording frequencies rather than only whether a prefix exists counts duplicate sums
+correctly.
+
 - `prefix_sums(a)` returns array `pref` with `pref[0] = 0` and `pref[i + 1] = a[0] + ... + a[i]`.
 - `range_sum(pref, lo, hi)` returns the sum of range $[`lo`, `hi`]$.
 - `prefix_sums_2d(a)` returns a two-dimensional prefix sum table for matrix `a`.
 - `rectangle_sum(pref, r1, c1, r2, c2)` returns the sum of the rectangle with rows $[`r1`, `r2`]$
   and columns $[`c1`, `c2`]$.
+- `count_subarrays_with_sum(a, target)` returns the number of contiguous subarrays whose sum is
+  `target`.
 
-All prefix sums and intermediate inclusion-exclusion results must fit in `int64_t`.
+All prefix sums, target differences, inclusion-exclusion results, and returned counts must fit in
+`int64_t`.
 
 Time Complexity:
 - O(n) per call to `prefix_sums(a)`, where $n$ is the array size.
 - O(m*n) per call to `prefix_sums_2d(a)`, where $m$ and $n$ are the number of rows and columns of
   `a`, respectively.
 - O(1) per range or rectangle query.
+- O(n) expected per call to `count_subarrays_with_sum(a, target)`.
 
 Space Complexity:
 - O(n) for the array returned by `prefix_sums(a)`.
 - O(m*n) for the table returned by `prefix_sums_2d(a)`.
 - O(1) auxiliary for `range_sum()` and `rectangle_sum()`.
+- O(n) auxiliary for `count_subarrays_with_sum(a, target)`.
 
 */
 
 #include <cstdint>
+#include <unordered_map>
 #include <vector>
 
 std::vector<int64_t> prefix_sums(const std::vector<int> &a) {
   std::vector<int64_t> pref(a.size() + 1, 0);
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
-    pref[i + 1] = pref[i] + a[i];  // Overflow warning.
+    pref[i + 1] = pref[i] + a[i];
   }
   return pref;
 }
@@ -48,8 +59,7 @@ std::vector<std::vector<int64_t>> prefix_sums_2d(const std::vector<std::vector<i
   std::vector<std::vector<int64_t>> pref(rows + 1, std::vector<int64_t>(cols + 1, 0));
   for (int i = 0; i < rows; i++) {
     for (int j = 0; j < cols; j++) {
-      pref[i + 1][j + 1] =
-          a[i][j] + pref[i][j + 1] + pref[i + 1][j] - pref[i][j];  // Overflow warning.
+      pref[i + 1][j + 1] = a[i][j] + pref[i][j + 1] + pref[i + 1][j] - pref[i][j];
     }
   }
   return pref;
@@ -59,6 +69,20 @@ int64_t rectangle_sum(
     const std::vector<std::vector<int64_t>> &pref, int r1, int c1, int r2, int c2
 ) {
   return pref[r2 + 1][c2 + 1] - pref[r1][c2 + 1] - pref[r2 + 1][c1] + pref[r1][c1];
+}
+
+int64_t count_subarrays_with_sum(const std::vector<int> &a, int64_t target) {
+  std::unordered_map<int64_t, int64_t> count{{0, 1}};
+  int64_t sum = 0, result = 0;
+  for (int x : a) {
+    sum += x;
+    int64_t needed = sum - target;
+    if (auto it = count.find(needed); it != count.end()) {
+      result += it->second;
+    }
+    count[sum]++;
+  }
+  return result;
 }
 
 /*** Example Usage ***/
@@ -72,6 +96,8 @@ int main() {
   assert(range_sum(pref, 0, 4) == 12);  // Whole array.
   assert(range_sum(pref, 1, 3) == 4);   // -1 + 4 + 1.
   assert(range_sum(pref, 2, 2) == 4);   // Single element.
+  assert(count_subarrays_with_sum(a, 4) == 2);
+  assert(count_subarrays_with_sum(vector<int>{0, 0, 0}, 0) == 6);
 
   // clang-format off
   vector<vector<int>> grid{

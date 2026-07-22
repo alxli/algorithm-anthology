@@ -118,18 +118,9 @@ int64_t shortest_hamiltonian_cycle() {
   return res;
 }
 
-/*** Example Usage and Output:
-
-Shortest Hamiltonian path length: 3
-Path: 0->1->2
-
-Shortest Hamiltonian cycle length: 6
-Cycle: 0->1->2->0
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -157,20 +148,8 @@ int main() {
   int64_t path_len = shortest_hamiltonian_path();
   assert(path_len == 3);
   assert((path == vector<int>{0, 1, 2}));
-  cout << "Shortest Hamiltonian path length: " << path_len << endl;
-  cout << "Path: " << path[0];
-  for (int i = 1; i < nodes; i++) {
-    cout << "->" << path[i];
-  }
-  cout << endl << endl;
   int64_t cycle_len = shortest_hamiltonian_cycle();
   assert(cycle_len == 6);
   assert((path == vector<int>{0, 1, 2}));
-  cout << "Shortest Hamiltonian cycle length: " << cycle_len << endl;
-  cout << "Cycle: ";
-  for (int i = 0; i < nodes; i++) {
-    cout << path[i] << "->";
-  }
-  cout << path[0] << endl;
   return 0;
 }

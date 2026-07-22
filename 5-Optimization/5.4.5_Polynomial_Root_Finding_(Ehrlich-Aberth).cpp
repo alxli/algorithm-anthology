@@ -179,53 +179,42 @@ std::vector<cdbl> find_all_roots(
   return find_all_roots(q, eps, iterations);
 }
 
-/*** Example Usage and Output:
-
-Roots of -1 + 2x - 6x^2 + 2x^3:
-(0.15098, -0.40314)
-(0.15098, 0.40314)
-(2.69805, 0.00000)
-Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
-(-3.00000, -2.00000)
-(-0.92308, 1.38462)
-(0.00000, -1.00000)
-(0.00000, 1.00000)
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <cstdio>
 using namespace std;
 
 cdbl eval(const cpoly &p, const cdbl &x) {
   return eval_with_derivative(p, x).first;
 }
 
-void print_roots(vector<cdbl> x) {
-  sort(x.begin(), x.end(), [](const cdbl &a, const cdbl &b) {
-    return abs(a.real() - b.real()) > 0.5e-5 ? a.real() < b.real() : a.imag() < b.imag();
-  });
-  for (const auto &z : x) {
-    dbl real = abs(z.real()) < 0.5e-5 ? 0 : z.real();
-    dbl imag = abs(z.imag()) < 0.5e-5 ? 0 : z.imag();
-    printf("(%.5Lf, %.5Lf)\n", real, imag);
+void assert_roots(const vector<cdbl> &actual, const vector<cdbl> &expected) {
+  assert(actual.size() == expected.size());
+  vector<char> matched(actual.size());
+  for (const cdbl &root : expected) {
+    int found = -1;
+    for (int i = 0; i < static_cast<int>(actual.size()); i++) {
+      if (!matched[i] && abs(actual[i] - root) < CHECK_EPS) {
+        found = i;
+        break;
+      }
+    }
+    assert(found != -1);
+    matched[found] = true;
   }
 }
 
 int main() {
   {  // -1 + 2x - 6x^2 + 2x^3
-    printf("Roots of -1 + 2x - 6x^2 + 2x^3:\n");
     vector<dbl> p{-1.0, 2.0, -6.0, 2.0};
     vector<cdbl> roots = find_all_roots(p);
     assert(roots.size() == 3);
     for (const auto &root : roots) {
       assert(abs(eval(cpoly(p.begin(), p.end()), root)) < CHECK_EPS);
     }
-    print_roots(roots);
   }
   {  // (-24+36i) + (-26+12i)x + (-30+40i)x^2 + (-26+12i)x^3 + (-6+4i)x^4
     // = ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
-    printf("Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):\n");
     cpoly p;
     p.emplace_back(-24, 36);
     p.emplace_back(-26, 12);
@@ -237,7 +226,7 @@ int main() {
     for (const auto &root : roots) {
       assert(abs(eval(p, root)) < CHECK_EPS);
     }
-    print_roots(roots);
+    assert_roots(roots, {{-3, -2}, {-12.0L / 13, 18.0L / 13}, {0, -1}, {0, 1}});
   }
   return 0;
 }

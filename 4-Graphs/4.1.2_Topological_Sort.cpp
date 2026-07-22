@@ -90,13 +90,8 @@ std::vector<int> toposort_kahn() {
   return static_cast<int>(res.size()) == n ? res : std::vector<int>();
 }
 
-/*** Example Usage and Output:
+/*** Example Usage ***/
 
-The topological order: 2 1 0 4 3 7 6 5
-
-***/
-
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -119,11 +114,7 @@ int main() {
   adj[3].push_back(7);
   adj[4].push_back(6);
   vector<int> dfs_res = toposort_dfs();
-  cout << "The topological order:";
-  for (int v : dfs_res) {
-    cout << " " << v;
-  }
-  cout << endl;
+  assert((dfs_res == vector<int>{2, 1, 0, 4, 3, 7, 6, 5}));
   vector<int> kahn = toposort_kahn();
   assert(dfs_res.size() == adj.size());
   assert(kahn.size() == adj.size());

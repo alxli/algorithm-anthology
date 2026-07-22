@@ -10,7 +10,7 @@ and predicates are templated on the point type `Pt` and only read `.x`/`.y`, so 
 
 - `Circle()` constructs the zero-radius circle centered at the origin.
 - `Circle(r)` constructs a circle of radius `abs(r)` centered at the origin.
-- `Circle(h, k, r)` constructs a circle of radius `abs(r)` centered at $(`h`, `k`)$.
+- `Circle(h, k, r)` constructs a circle of radius `abs(r)` centered at (`h`, `k`).
 - `Circle(o, r)` constructs a circle of radius `abs(r)` centered at point `o`.
 - `Circle(a, b)` constructs the circle whose diameter is segment `a`-`b`.
 - `Circle(a, b, c)` constructs the circumcircle through non-collinear points `a`, `b`, and `c`,
@@ -52,15 +52,13 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - EPS;
   return C(a) < C(b);
 }
 

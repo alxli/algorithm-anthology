@@ -2,9 +2,9 @@
 
 Given two strings, determine their edit distance or a minimum-cost alignment. The Levenshtein edit
 distance is the minimum number of insertions, deletions, and substitutions needed to transform one
-string into the other. More generally, an alignment inserts gap characters `_` into both strings so
-the final lengths match; its cost is `gap_cost` times the number of inserted gaps plus `sub_cost`
-times the number of indices where the aligned characters differ.
+string into the other. More generally, an alignment inserts gap characters `'_'` into both strings
+so that the final lengths match; its cost is `gap_cost` times the number of inserted gaps plus
+`sub_cost` times the number of indices where the aligned characters differ.
 
 Dynamic programming compares prefixes and chooses the cheapest last operation: align the final
 characters together, leave a gap in the first string, or leave a gap in the second string. Following

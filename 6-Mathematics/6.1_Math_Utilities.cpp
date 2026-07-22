@@ -70,15 +70,13 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - EPS;
   return C(a) < C(b);
 }
 
@@ -91,12 +89,12 @@ template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool rEQ(T ref, U val) {
-  return C(ref) == C(val) || std::fabs(C(ref) - C(val)) <= EPS * std::fabs(C(ref));
+  return C(ref) == C(val) || fabs(C(ref) - C(val)) <= EPS * fabs(C(ref));
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool rEQ_sym(T x, U y) {
-  return C(x) == C(y) || std::fabs(C(x) - C(y)) <= EPS * std::max(std::fabs(C(x)), std::fabs(C(y)));
+  return C(x) == C(y) || fabs(C(x) - C(y)) <= EPS * std::max(fabs(C(x)), fabs(C(y)));
 }
 
 /*
@@ -219,8 +217,8 @@ Double round_half_random(const Double &x) {
   return (rng() % 2 == 0) ? round_half_from0(x) : round_half_to0(x);
 }
 
-template<typename Double, typename RoundingFunction>
-Double round_n_places(const Double &x, unsigned int n, RoundingFunction f) {
+template<typename Double, typename RoundFn>
+Double round_n_places(const Double &x, unsigned int n, RoundFn f) {
   Double scale = pow(10, n);
   return f(x * scale) / scale;
 }
@@ -229,9 +227,9 @@ Double round_n_places(const Double &x, unsigned int n, RoundingFunction f) {
 
 Modular Arithmetic:
 
-- `addmod(a, b, m)` returns `(a + b) mod m` and `submod(a, b, m)` returns `(a - b) mod m`, each in
-  $[0, `m`)$. Both operands may be negative or unreduced; they are normalized before arithmetic to
-  avoid signed overflow. The modulus `m` must be positive.
+- `addmod(a, b, m)` and `submod(a, b, m)` respectively return addition and subtraction modulo `m`,
+  each result in $[0, `m`)$. Both operands may be negative or unreduced; they are normalized before
+  arithmetic to avoid signed overflow. The modulus `m` must be positive.
 - `mulmod(x, n, m)` returns `x` multiplied by `n`, modulo `m`. This is done in a way to avoid
   overflow: on compilers with `__uint128_t` it uses one wide product, while the portable fallback
   uses double-and-add multiplication. The fallback is slower by a logarithmic factor, but avoids

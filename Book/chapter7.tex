@@ -53,15 +53,13 @@ const double EPS = 1e-9;
 // or Rational, which therefore compose for all of the predicates below.
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - EPS;
   return C(a) < C(b);
 }
 
@@ -336,9 +334,7 @@ const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 // or Rational, which therefore compose for all of the predicates below.
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -533,7 +529,7 @@ This implementation stores and computes circle parameters in \inlinecode{double}
 \begin{compactitem}
   \item \inlinecode{Circle()} constructs the zero-radius circle centered at the origin.
   \item \inlinecode{Circle(r)} constructs a circle of radius \inlinecode{abs(r)} centered at the origin.
-  \item \inlinecode{Circle(h, k, r)} constructs a circle of radius \inlinecode{abs(r)} centered at $({\inlinecodemath{h}}, {\inlinecodemath{k}})$.
+  \item \inlinecode{Circle(h, k, r)} constructs a circle of radius \inlinecode{abs(r)} centered at (\inlinecode{h}, \inlinecode{k}).
   \item \inlinecode{Circle(o, r)} constructs a circle of radius \inlinecode{abs(r)} centered at point \inlinecode{o}.
   \item \inlinecode{Circle(a, b)} constructs the circle whose diameter is segment \inlinecode{a}-\inlinecode{b}.
   \item \inlinecode{Circle(a, b, c)} constructs the circumcircle through non-collinear points \inlinecode{a}, \inlinecode{b}, and \inlinecode{c}, throwing if the points are collinear.
@@ -569,15 +565,13 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - EPS;
   return C(a) < C(b);
 }
 
@@ -772,15 +766,13 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - EPS;
   return C(a) < C(b);
 }
 
@@ -867,7 +859,7 @@ int main() {
 Common axis-aligned rectangle calculations in two dimensions. The functions are templated on the point type \inlinecode{Pt}, which should accept \inlinecode{Point}, \inlinecode{PointD}, or \inlinecode{PointI} from 7.1.1, or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields.
 
 \begin{compactitem}
-  \item \inlinecode{point\_in\_rectangle(p, v, w, h, edge\_is\_inside = true)} returns whether point \inlinecode{p} lies inside the axis-aligned rectangle whose opposite corners are \inlinecode{v} and $({\inlinecodemath{v.x + w}}, {\inlinecodemath{v.y + h}})$. Negative widths and heights are supported. The \inlinecode{edge\_is\_inside} flag controls whether boundary points count.
+  \item \inlinecode{point\_in\_rectangle(p, v, w, h, edge\_is\_inside = true)} returns whether point \inlinecode{p} lies inside the axis-aligned rectangle whose opposite corners are \inlinecode{v} and (\inlinecode{v.x + w}, \inlinecode{v.y + h}). Negative widths and heights are supported. The \inlinecode{edge\_is\_inside} flag controls whether boundary points count.
   \item \inlinecode{point\_in\_rectangle(p, a, b, edge\_is\_inside = true)} returns whether point \inlinecode{p} lies inside the axis-aligned rectangle with opposite corners \inlinecode{a} and \inlinecode{b}.
   \item \inlinecode{rectangle\_intersection(a1, b1, a2, b2, \&p, \&q, edge\_is\_inside = true)} computes the intersection of two axis-aligned rectangles, where \inlinecode{a1}/\inlinecode{b1} and \inlinecode{a2}/\inlinecode{b2} are opposite-corner pairs. Returns $-1$ if the rectangles are disjoint, $0$ if they partially intersect, $1$ if the first rectangle is completely inside the second, and $2$ if the second rectangle is completely inside the first. If an intersection exists, its lower-left and upper-right corners are stored in \inlinecode{p} and \inlinecode{q} when those pointers are non-null. The \inlinecode{edge\_is\_inside} flag controls whether boundary-only contact counts as intersecting.
 \end{compactitem}
@@ -887,15 +879,13 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - EPS;
   return C(a) < C(b);
 }
 
@@ -1032,15 +1022,13 @@ const double RAD = 180 / PI;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - EPS;
   return C(a) < C(b);
 }
 
@@ -1164,15 +1152,13 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - EPS;
   return C(a) < C(b);
 }
 
@@ -1347,7 +1333,7 @@ Intersection calculations in two dimensions for straight lines and line segments
 
 Coefficient triples must represent valid lines, and each point pair used to define an infinite line must contain two distinct points.
 
-Overflow warning: the exact integer paths multiply coordinate differences (cross products and squared lengths), which grow like the squared coordinate magnitude. With 32-bit \inlinecode{int} coordinates these overflow once coordinates exceed roughly $46000$, so for larger integer inputs use a point type with 64-bit (\inlinecode{int64\_t}) coordinates.
+Overflow warning: the exact integer paths multiply coordinate differences (cross products and squared lengths), which grow like the squared coordinate magnitude. With 32-bit \inlinecode{int} coordinates these overflow once coordinates exceed roughly a few tens of thousands, so for larger integer inputs use a point type with 64-bit (\inlinecode{int64\_t}) coordinates.
 
 \textbf{Time Complexity}: $O(1)$ for all operations.
 
@@ -1362,15 +1348,13 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - EPS;
   return C(a) < C(b);
 }
 
@@ -1640,15 +1624,13 @@ const double EPS = 1e-9, PI = acos(-1.0);
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - EPS;
   return C(a) < C(b);
 }
 
@@ -1891,15 +1873,13 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - EPS;
   return C(a) < C(b);
 }
 
@@ -1992,7 +1972,7 @@ Given a list of distinct points in two dimensions, order them into a valid polyg
 
 \begin{compactitem}
   \item \inlinecode{cw\_comp(a, b, c)} returns whether point \inlinecode{a} compares clockwise before \inlinecode{b} about \inlinecode{c}.
-  \item \inlinecode{polygon\_area\_2x(lo, hi)} returns exactly double the area of the polygon with vertices specified by the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of points in either clockwise or counter-clockwise order. The return value is integral or floating-point, depending on the input point type. For integer vertices, divide by 2 in the caller if the exact area is needed.
+  \item \inlinecode{polygon\_area\_2x(lo, hi)} returns exactly double the area of the polygon with vertices specified by the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of points in either clockwise or counter-clockwise order. The return value is integral or floating-point, depending on the input point type. For integer vertices, divide by $2$ in the caller if the exact area is needed.
   \item \inlinecode{polygon\_area(lo, hi)} returns the area as \inlinecode{double}.
   \item \inlinecode{polygon\_centroid(lo, hi)} returns the centroid (center of mass) of a non-degenerate simple polygon with vertices in boundary order as an \inlinecode{std::pair\textless{}double, double\textgreater{}}. It uses signed shoelace weights, so either clockwise or counter-clockwise inputs will work.
 \end{compactitem}
@@ -2021,9 +2001,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -2093,7 +2071,7 @@ std::pair<double, double> polygon_centroid(It lo, It hi) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <iostream>
+#include <cassert>
 #include <vector>
 using namespace std;
 
@@ -2130,24 +2108,16 @@ Point mean_center(It lo, It hi) {
 int main() {
   vector<Point> points{Point(1, 3), Point(1, 2), Point(2, 1), Point(0, 0), Point(-1, 3)};
   vector<Point> v(points);
-  std::mt19937 rng(1234567);
+  std::mt19937 rng(1234567);  // Fixed seed for reproducibility.
   std::shuffle(v.begin(), v.end(), rng);
   Point c = mean_center(v.begin(), v.end());
   assert(EQ(c, Point(0.6, 1.8)));
   sort(v.begin(), v.end(), [c](const Point &a, const Point &b) { return cw_comp(a, b, c); });
-  cout << "Clockwise vertices:";
-  for (const auto &p : v) {
-    cout << " (" << p.x << ", " << p.y << ")";
-  }
-  cout << endl;
+  assert((v == vector<Point>{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}}));
   assert(EQ(polygon_area(v.begin(), v.end()), 5));
 
   sort(v.begin(), v.end(), [c](const Point &a, const Point &b) { return cw_comp(b, a, c); });
-  cout << "Counterclockwise vertices:";
-  for (const auto &p : v) {
-    cout << " (" << p.x << ", " << p.y << ")";
-  }
-  cout << endl;
+  assert((v == vector<Point>{{-1, 3}, {0, 0}, {2, 1}, {1, 2}, {1, 3}}));
   assert(EQ(polygon_area(v.begin(), v.end()), 5));
 
   // Integer points: polygon_area_2x is exact (no float arithmetic).
@@ -2159,10 +2129,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-Clockwise vertices: (1, 3) (1, 2) (2, 1) (0, 0) (-1, 3)
-Counterclockwise vertices: (-1, 3) (0, 0) (2, 1) (1, 2) (1, 3)
-\end{exampleoutput}
 \subsection{Point-in-Polygon}
 Given a point \inlinecode{p} and a polygon, determines whether \inlinecode{p} lies inside using ray casting. A ray cast from \inlinecode{p} must cross the polygon's boundary an odd number of times exactly when \inlinecode{p} is inside, so the function counts crossings between a horizontal ray and each polygon edge. The function is templated on the point type \inlinecode{Pt}. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}, \inlinecode{PointD}, or \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. All comparisons are exact (no epsilon): the ray-crossing parity needs a consistent comparison to be correct, and the result is exact for integer-coordinate points.
 
@@ -2170,7 +2136,7 @@ Given a point \inlinecode{p} and a polygon, determines whether \inlinecode{p} li
   \item \inlinecode{point\_in\_polygon(p, lo, hi, edge\_is\_inside = true)} returns whether \inlinecode{p} lies within the polygon with vertices specified by the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of points in either clockwise or counter-clockwise order. The \inlinecode{edge\_is\_inside} flag controls whether points exactly on an edge or vertex count as inside.
 \end{compactitem}
 
-Overflow warning: the edge orientation test forms a cross product that grows like the squared coordinate magnitude. For integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) once coordinates exceed roughly $46000$.
+Overflow warning: the edge orientation test forms a cross product that grows like the squared coordinate magnitude. For integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) once coordinates exceed roughly a few tens of thousands.
 
 \textbf{Time Complexity}: $O(n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
@@ -2348,7 +2314,6 @@ auto diametral_pair(It lo, It hi) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <iostream>
 #include <vector>
 using namespace std;
 
@@ -2364,23 +2329,16 @@ struct PointI {
 int main() {
   {
     vector<PointI> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
-    std::mt19937 rng(12345);
+    std::mt19937 rng(1234567);  // Fixed seed for reproducibility.
     std::shuffle(v.begin(), v.end(), rng);
     vector<PointI> h{{-1, 3}, {0, 0}, {2, 1}, {1, 3}};
     assert(convex_hull(v.begin(), v.end()) == h);
-    cout << "Convex hull:";
-    for (const PointI &p : h) {
-      cout << " (" << p.x << "," << p.y << ")";
-    }
-    cout << endl;
   }
   {
     vector<PointI> v{{0, 0}, {3, 0}, {0, 3}, {1, 1}, {4, 4}};
     auto [p1, p2] = diametral_pair(v.begin(), v.end());
     assert(p1 == PointI(0, 0));
     assert(p2 == PointI(4, 4));
-    cout << "Diametral pair: (" << p1.x << "," << p1.y << ") (" << p2.x << "," << p2.y << ")"
-         << endl;
   }
   {
     vector<PointI> v{{0, 0}, {4, 0}, {4, 4}, {0, 4}, {2, 2}};
@@ -2401,10 +2359,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-Convex hull: (-1,3) (0,0) (2,1) (1,3)
-Diametral pair: (0,0) (4,4)
-\end{exampleoutput}
 \subsection{Convex Polygon Queries}
 Given a convex polygon in counter-clockwise order, answer containment and tangent/intersection queries. Point containment is logarithmic by splitting the polygon into triangles sharing \inlinecode{poly[0]}. The line and tangent helpers below are written as simple linear scans; this is shorter and less assumption-heavy than the classic logarithmic versions, while still documenting the exact query semantics in one place.
 
@@ -2616,15 +2570,13 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - EPS;
   return C(a) < C(b);
 }
 
@@ -3213,7 +3165,7 @@ int main() {
 Given points in the plane, produce a small set of candidate edges guaranteed to contain a minimum spanning tree under Manhattan distance $|x_1 - x_2| + |y_1 - y_2|$. The plane is swept in four rotations/reflections; in each sweep, dominance by $x + y$ identifies the only nearby candidates that can matter. Run Kruskal on the returned edges to obtain the MST.
 
 \begin{compactitem}
-  \item \inlinecode{manhattan\_mst\_edges(p)} returns $O(n)$ candidate edges $({\inlinecodemath{w}}, {\inlinecodemath{u}}, {\inlinecodemath{v}})$.
+  \item \inlinecode{manhattan\_mst\_edges(p)} returns $O(n)$ candidate edges as tuples (\inlinecode{weight}, \inlinecode{u}, \inlinecode{v}).
   \item \inlinecode{manhattan\_mst\_weight(p)} is a small Kruskal wrapper that returns the MST weight.
 \end{compactitem}
 
@@ -3349,15 +3301,13 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - EPS;
   return C(a) < C(b);
 }
 
@@ -3424,7 +3374,6 @@ std::vector<Point> convex_cut(It lo, It hi, const Pt &p, const Pt &q) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <iostream>
 using namespace std;
 
 struct PointI {
@@ -3446,11 +3395,6 @@ int main() {
     vector<Point> c{{-1, 3}, {0, 3}, {0, 0}};
     vector<Point> cut = convex_cut(v.begin(), v.end(), Point(0, 0), Point(0, 1));
     assert(EQ(cut, c));
-    cout << "Cut polygon:";
-    for (const Point &p : cut) {
-      cout << " (" << p.x << "," << p.y << ")";
-    }
-    cout << endl;
   }
   {  // On a non-convex input, the result may be multiple disjoint polygons!
     vector<Point> v{{0, 0}, {2, 2}, {0, 4}, {3, 4}, {3, 0}};
@@ -3465,9 +3409,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-Cut polygon: (-1,3) (0,3) (0,0)
-\end{exampleoutput}
 \subsection{Half-Plane Intersection}
 Given a list of directed lines, compute the convex polygon contained in every left half-plane. Half-plane intersection sorts the lines by direction, keeps only the tightest representative among parallel lines, and maintains a deque of lines whose pairwise intersections form the current boundary. Directions are ordered by half-plane and cross-product signs, without epsilon comparisons, to satisfy \inlinecode{std::sort}'s strict ordering requirement. \inlinecode{EPS} is then used outside the comparator to group parallel directions and retain only the tightest half-plane in each group.
 
@@ -3490,15 +3431,13 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - EPS;
   return C(a) < C(b);
 }
 
@@ -3647,9 +3586,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -3808,15 +3745,13 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - EPS;
   return C(a) < C(b);
 }
 
@@ -4078,15 +4013,13 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - EPS;
   return C(a) < C(b);
 }
 
@@ -4232,15 +4165,13 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - EPS;
   return C(a) < C(b);
 }
 
@@ -4539,9 +4470,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -4615,7 +4544,7 @@ int main() {
 Given an oriented triangular mesh of a closed polyhedron, compute its signed volume. Each triangle contributes the signed volume of the tetrahedron formed by the triangle $abc$ and the origin $((a \times b) \cdot c) / 6$. If faces are oriented outward, the result is positive for the orientation used by \inlinecode{convex\_hull\_3d()} in 7.5.3; take \inlinecode{abs()} if only the magnitude is needed.
 
 \begin{compactitem}
-  \item \inlinecode{signed\_polyhedron\_volume(p, faces)} returns the signed volume. Each face \inlinecode{(a, b, c)} represents the triangle with vertices \inlinecode{p[a]}, \inlinecode{p[b]}, and \inlinecode{p[c]}.
+  \item \inlinecode{signed\_polyhedron\_volume(p, faces)} returns the signed volume. Each face triplet (\inlinecode{a}, \inlinecode{b}, \inlinecode{c}) represents the triangle with vertices \inlinecode{p[a]}, \inlinecode{p[b]}, and \inlinecode{p[c]}.
 \end{compactitem}
 
 Overflow warning: for integral point types, each scalar triple product must fit in the point's coordinate arithmetic type before it is converted to \inlinecode{double}.

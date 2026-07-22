@@ -306,26 +306,18 @@ class ImplicitTreap {
   }
 };
 
-/*** Example Usage and Output:
-
-Values: 99 -2 1 8 10 11 (min: -2)
-Values: 90 -2 1 8 10 11 (min: -2)
-Values: 2 2 1 8 10 11 (min: 1)
-Values: 2 10 8 1 2 11 (min: 1)
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 #include <vector>
 using namespace std;
 
-void print(ImplicitTreap<int> &t) {
-  cout << "Values:";
+vector<int> values(ImplicitTreap<int> &t) {
+  vector<int> result;
   for (int i = 0; i < t.size(); i++) {
-    cout << " " << t.at(i);
+    result.push_back(t.at(i));
   }
-  cout << " (min: " << t.query(0, t.size() - 1) << ")" << endl;
+  return result;
 }
 
 int main() {
@@ -339,21 +331,21 @@ int main() {
   assert(t.size() == 6);
   assert(t.at(5) == 11);
   assert(t.query(0, t.size() - 1) == -2);
-  print(t);
+  assert((values(t) == vector<int>{99, -2, 1, 8, 10, 11}));
 
   // Replace the first value by inserting 90 before it and erasing the old 99.
   t.insert(0, 90);
   t.erase(1);
   assert(t.at(0) == 90);
   assert(t.at(1) == -2);
-  print(t);
+  assert((values(t) == vector<int>{90, -2, 1, 8, 10, 11}));
 
   // Assign 2 to the first two values.
   t.update(0, 1, 2);
   assert(t.at(0) == 2);
   assert(t.at(1) == 2);
   assert(t.query(0, t.size() - 1) == 1);
-  print(t);
+  assert((values(t) == vector<int>{2, 2, 1, 8, 10, 11}));
 
   // Reverse the middle range: {2, 2, 1, 8, 10, 11} becomes {2, 10, 8, 1, 2, 11}.
   t.reverse(1, 4);
@@ -362,6 +354,6 @@ int main() {
   assert(t.at(4) == 2);
   assert(t.at(5) == 11);
   assert(t.query(0, t.size() - 1) == 1);
-  print(t);
+  assert((values(t) == vector<int>{2, 10, 8, 1, 2, 11}));
   return 0;
 }

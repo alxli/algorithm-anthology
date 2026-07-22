@@ -125,16 +125,9 @@ std::vector<int> maximum_matching(const std::vector<std::vector<int>> &adj) {
   return match;
 }
 
-/*** Example Usage and Output:
-
-Matched 2 pair(s):
-0 1
-2 3
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 vector<vector<int>> adj;
@@ -161,12 +154,7 @@ int main() {
     add_edge(3, 0);
     vector<int> match = maximum_matching(adj);
     assert(matching_size(match) == 2);
-    cout << "Matched " << matching_size(match) << " pair(s):" << endl;
-    for (int i = 0; i < nodes; i++) {
-      if (match[i] != -1 && i < match[i]) {
-        cout << i << " " << match[i] << endl;
-      }
-    }
+    assert((match == vector<int>{1, 0, 3, 2}));
   }
   {
     // 3---0---1---4

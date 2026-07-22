@@ -56,28 +56,14 @@ std::vector<int> longest_increasing_subsequence(It lo, It hi) {
   return res;
 }
 
-/*** Example Usage and Output:
-
--5 1 9 10 11 13
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
-
-template<typename It>
-void print_range(It lo, const vector<int> &indices) {
-  for (int i : indices) {
-    cout << *(lo + i) << " ";
-  }
-  cout << endl;
-}
 
 int main() {
   vector<int> a{-2, -5, 1, 9, 10, 8, 11, 10, 13, 11};
   vector<int> res = longest_increasing_subsequence(a.begin(), a.end());
   assert((res == vector<int>{1, 2, 3, 4, 6, 8}));
-  print_range(a.begin(), res);
   return 0;
 }

@@ -9,7 +9,7 @@ The greedy choice is safe because among all intervals that could be chosen first
 the earliest finish time leaves the most room for the remaining intervals. In any optimal solution,
 the first chosen interval can be exchanged for an earliest-finishing compatible interval without
 reducing the number of intervals selected. Repeating this argument after each choice proves the
-greedy algorithm optimal. The weighted version in 1.3.2 needs dynamic programming instead.
+greedy algorithm optimal. The weighted version in 1.3.3 needs dynamic programming instead.
 
 Intervals are represented as half-open ranges $[`start`, `finish`)$, so two intervals are compatible
 if the next interval's `start` is at least the previous interval's `finish`.

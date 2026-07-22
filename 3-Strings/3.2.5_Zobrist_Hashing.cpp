@@ -83,7 +83,7 @@ using namespace std;
 int main() {
   vector<int> a{1, 2, 1, 3};
   vector<int> b{2, 1, 3};
-  ZobristHash<int> zh(123);
+  ZobristHash<int> zh(1234567);  // Fixed seed for reproducibility.
   vector<uint64_t> pa = zh.distinct_prefix_hashes(a.begin(), a.end());
   vector<uint64_t> pb = zh.distinct_prefix_hashes(b.begin(), b.end());
 

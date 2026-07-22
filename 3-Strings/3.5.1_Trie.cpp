@@ -178,22 +178,9 @@ class Trie {
   }
 };
 
-/*** Example Usage and Output:
-
-("", 0)
-("a", 1)
-("i", 6)
-("in", 7)
-("inn", 8)
-("tea", 3)
-("ted", 4)
-("ten", 5)
-("to", 2)
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -203,7 +190,21 @@ int main() {
   for (int i = 0; i < static_cast<int>(s.size()); i++) {
     assert(t.insert(s[i], i));
   }
-  t.walk([](string k, int v) { cout << "(\"" << k << "\", " << v << ")" << endl; });
+  vector<pair<string, int>> entries;
+  t.walk([&](string key, int value) { entries.emplace_back(key, value); });
+  assert(
+      (entries == vector<pair<string, int>>{
+                      {"", 0},
+                      {"a", 1},
+                      {"i", 6},
+                      {"in", 7},
+                      {"inn", 8},
+                      {"tea", 3},
+                      {"ted", 4},
+                      {"ten", 5},
+                      {"to", 2}
+                  })
+  );
   assert(!t.empty());
   assert(t.size() == 9);
   assert(!t.insert(s[0], 2));

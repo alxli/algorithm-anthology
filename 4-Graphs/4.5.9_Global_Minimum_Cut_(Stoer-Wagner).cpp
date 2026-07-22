@@ -13,8 +13,8 @@ cut, the "cut of the phase". The last two nodes added are then merged into a sin
 the next phase begins on the smaller graph. After $n - 1$ phases every candidate has been
 considered, and the smallest is the global minimum cut.
 
-- `global_min_cut(cap)` returns a pair $(`weight`, `side`)$ for a graph as a symmetric capacity
-  matrix `cap` (with $0$ for the diagonal and absent edges), where `weight` is the total weight of
+- `global_min_cut(cap)` returns a pair (`weight`, `side`) for a graph as a symmetric capacity matrix
+  `cap` (with $0$ for the diagonal and absent edges), where `weight` is the total weight of
   the global minimum cut and `side` lists the nodes on one side of that cut. The graph must have at
   least two nodes.
 
@@ -84,15 +84,9 @@ std::pair<int64_t, std::vector<int>> global_min_cut(std::vector<std::vector<int6
   return best;
 }
 
-/*** Example Usage and Output:
-
-Global min cut weight: 3
-One side: 1 2
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -110,12 +104,6 @@ int main() {
   auto [weight, side] = global_min_cut(cap);
   assert(weight == 3);
   assert((side == vector<int>{1, 2}));  // The shore {1, 2}, opposite the single node 0.
-  cout << "Global min cut weight: " << weight << endl;
-  cout << "One side:";
-  for (int u : side) {
-    cout << " " << u;
-  }
-  cout << endl;
 
   vector<vector<int64_t>> disconnected{{0, 0}, {0, 0}};
   assert(global_min_cut(disconnected).first == 0);

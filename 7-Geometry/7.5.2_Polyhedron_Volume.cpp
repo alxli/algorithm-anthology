@@ -5,8 +5,8 @@ contributes the signed volume of the tetrahedron formed by the triangle $abc$ an
 $((a \times b) \cdot c) / 6$. If faces are oriented outward, the result is positive for the
 orientation used by `convex_hull_3d()` in 7.5.3; take `abs()` if only the magnitude is needed.
 
-- `signed_polyhedron_volume(p, faces)` returns the signed volume. Each face `(a, b, c)` represents
-  the triangle with vertices `p[a]`, `p[b]`, and `p[c]`.
+- `signed_polyhedron_volume(p, faces)` returns the signed volume. Each face triplet (`a`, `b`, `c`)
+  represents the triangle with vertices `p[a]`, `p[b]`, and `p[c]`.
 
 Overflow warning: for integral point types, each scalar triple product must fit in the point's
 coordinate arithmetic type before it is converted to `double`.

@@ -1,8 +1,8 @@
 /*
 
 Given a weighted, directed graph with possibly negative weights, determine the minimum distance
-between all pairs of start and destination nodes in the graph. Optionally, output the shortest path
-between two nodes using the next-hop matrix precomputed `next_node`.
+between all pairs of start and destination nodes in the graph. Optionally, reconstruct a shortest
+path between two nodes using the precomputed next-hop matrix `next_node`.
 
 Floyd-Warshall's algorithm is a dynamic program over intermediate nodes: for each node $k$ in turn,
 every pair $(i, j)$ is relaxed by considering a path through $k$, so once all $k$ have been
@@ -12,6 +12,8 @@ processed the matrix holds the all-pairs shortest distances.
 - `floyd_warshall()` updates the global adjacency matrix `dist` so `dist[u][v]` stores the shortest
   path from $u$ to $v$, and updates `next_node` for path reconstruction. If the graph contains
   negative-weighted cycles, there is no shortest path and an error will be thrown.
+- `get_path(start, dest)` returns the shortest path from `start` to `dest`, or an empty vector if
+  `dest` is unreachable from `start`, after the latest call to `floyd_warshall()`.
 
 For path reconstruction, `next_node[i][j]` stores the next node to visit after `i` on a current
 shortest path from `i` to `j`. It is initialized to `j` for every pair and, when a shorter route `i`
@@ -22,10 +24,12 @@ therefore walks the path from source to destination. This value is meaningful on
 Time Complexity:
 - O(n^2) per call to `init_floyd()`, where $n$ is the number of nodes.
 - O(n^3) per call to `floyd_warshall()`.
+- O(p) per call to `get_path()`, where $p$ is the number of nodes in the returned path.
 
 Space Complexity:
 - O(n^2) for storage of the graph, where $n$ is the number of nodes.
 - O(1) auxiliary per call to `floyd_warshall()`.
+- O(p) for the path returned by `get_path()`.
 
 */
 
@@ -70,25 +74,22 @@ void floyd_warshall() {
   }
 }
 
-/*** Example Usage and Output:
+std::vector<int> get_path(int start, int dest) {
+  if (dist[start][dest] == INF) {
+    return {};
+  }
+  std::vector<int> path{start};
+  while (start != dest) {
+    start = next_node[start][dest];
+    path.push_back(start);
+  }
+  return path;
+}
 
-The shortest distance from 0 to 2 is 3.
-Take the path: 0->1->2.
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
-
-void print_path(int u, int v) {
-  cout << "Take the path: " << u;
-  while (u != v) {
-    u = next_node[u][v];
-    cout << "->" << u;
-  }
-  cout << "." << endl;
-}
 
 int main() {
   //    w=1      w=2
@@ -103,9 +104,6 @@ int main() {
   floyd_warshall();
   int start = 0, dest = 2;
   assert(dist[start][dest] == 3);
-  assert(next_node[start][dest] == 1);
-  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[start][dest]
-       << "." << endl;
-  print_path(start, dest);
+  assert((get_path(start, dest) == vector<int>{0, 1, 2}));
   return 0;
 }

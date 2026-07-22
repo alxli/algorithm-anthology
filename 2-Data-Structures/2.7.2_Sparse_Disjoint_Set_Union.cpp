@@ -113,15 +113,10 @@ class SparseDSU {
   }
 };
 
-/*** Example Usage and Output:
-
-[a, b, f], [c], [d, e, g]
-
-***/
+/*** Example Usage ***/
 
 #include <algorithm>
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -141,17 +136,6 @@ int main() {
     sort(group.begin(), group.end());
   }
   sort(s.begin(), s.end());
-  bool first_set = true;
-  for (const auto &group : s) {
-    cout << (first_set ? "[" : ", [");
-    first_set = false;
-    bool first_value = true;
-    for (char value : group) {
-      cout << (first_value ? "" : ", ") << value;
-      first_value = false;
-    }
-    cout << "]";
-  }
-  cout << endl;
+  assert((s == vector<vector<char>>{{'a', 'b', 'f'}, {'c'}, {'d', 'e', 'g'}}));
   return 0;
 }

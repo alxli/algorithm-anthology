@@ -24,6 +24,7 @@ Space Complexity:
 
 */
 
+#include <algorithm>
 #include <climits>
 #include <vector>
 
@@ -88,17 +89,9 @@ class TarjanSCC {
   int component_id(int v) const { return component[v]; }
 };
 
-/*** Example Usage and Output:
-
-Components:
-5 6
-7 3 2
-4 1 0
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -128,16 +121,15 @@ int main() {
   // {0,1,4} -> {2,3,7} -> {5,6}
   //     \-------------------^
   assert(g.components().size() == 3);
+  vector<vector<int>> components = g.components();
+  for (auto &component : components) {
+    sort(component.begin(), component.end());
+  }
+  sort(components.begin(), components.end());
+  assert((components == vector<vector<int>>{{0, 1, 4}, {2, 3, 7}, {5, 6}}));
   assert(g.component_id(0) == g.component_id(1) && g.component_id(1) == g.component_id(4));
   assert(g.component_id(2) == g.component_id(3) && g.component_id(3) == g.component_id(7));
   assert(g.component_id(5) == g.component_id(6));
   assert(g.component_id(0) != g.component_id(2) && g.component_id(2) != g.component_id(5));
-  cout << "Components:" << endl;
-  for (const auto &component : g.components()) {
-    for (int v : component) {
-      cout << v << " ";
-    }
-    cout << endl;
-  }
   return 0;
 }

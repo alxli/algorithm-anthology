@@ -60,15 +60,13 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - EPS;
   return C(a) < C(b);
 }
 
@@ -79,12 +77,12 @@ template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool rEQ(T ref, U val) {
-  return C(ref) == C(val) || std::fabs(C(ref) - C(val)) <= EPS * std::fabs(C(ref));
+  return C(ref) == C(val) || fabs(C(ref) - C(val)) <= EPS * fabs(C(ref));
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool rEQ_sym(T x, U y) {
-  return C(x) == C(y) || std::fabs(C(x) - C(y)) <= EPS * std::max(std::fabs(C(x)), std::fabs(C(y)));
+  return C(x) == C(y) || fabs(C(x) - C(y)) <= EPS * std::max(fabs(C(x)), fabs(C(y)));
 }
 \end{lstlisting}
 Sign Functions:
@@ -193,8 +191,8 @@ Double round_half_random(const Double &x) {
   return (rng() % 2 == 0) ? round_half_from0(x) : round_half_to0(x);
 }
 
-template<typename Double, typename RoundingFunction>
-Double round_n_places(const Double &x, unsigned int n, RoundingFunction f) {
+template<typename Double, typename RoundFn>
+Double round_n_places(const Double &x, unsigned int n, RoundFn f) {
   Double scale = pow(10, n);
   return f(x * scale) / scale;
 }
@@ -202,7 +200,7 @@ Double round_n_places(const Double &x, unsigned int n, RoundingFunction f) {
 Modular Arithmetic:
 
 \begin{compactitem}
-  \item \inlinecode{addmod(a, b, m)} returns \inlinecode{(a + b) mod m} and \inlinecode{submod(a, b, m)} returns \inlinecode{(a - b) mod m}, each in $[0, {\inlinecodemath{m}})$. Both operands may be negative or unreduced; they are normalized before arithmetic to avoid signed overflow. The modulus \inlinecode{m} must be positive.
+  \item \inlinecode{addmod(a, b, m)} and \inlinecode{submod(a, b, m)} respectively return addition and subtraction modulo \inlinecode{m}, each result in $[0, {\inlinecodemath{m}})$. Both operands may be negative or unreduced; they are normalized before arithmetic to avoid signed overflow. The modulus \inlinecode{m} must be positive.
   \item \inlinecode{mulmod(x, n, m)} returns \inlinecode{x} multiplied by \inlinecode{n}, modulo \inlinecode{m}. This is done in a way to avoid overflow: on compilers with \inlinecode{\_\_uint128\_t} it uses one wide product, while the portable fallback uses double-and-add multiplication. The fallback is slower by a logarithmic factor, but avoids relying on nonstandard 128-bit integers. Unlike \inlinecode{addmod}/\inlinecode{submod}, this takes unsigned operands and supports a full 64-bit modulus.
   \item \inlinecode{powmod(x, n, m)} returns \inlinecode{x} raised to the power \inlinecode{n}, modulo \inlinecode{m}.
 \end{compactitem}
@@ -1697,7 +1695,7 @@ Common number theory operations relating to modular arithmetic.
   \item \inlinecode{gcd(a, b)} returns the greatest common divisor of \inlinecode{a} and \inlinecode{b} using the Euclidean algorithm. This is mainly for educational purposes, as \inlinecode{std::gcd(a, b)} from \inlinecode{\textless{}numeric\textgreater{}} is available as of C++17 (\inlinecode{\_\_gcd(a, b)} from \inlinecode{\textless{}algorithm\textgreater{}} in C++14 and earlier).
   \item \inlinecode{lcm(a, b)} returns the lowest common multiple of \inlinecode{a} and \inlinecode{b}. This implementation is mainly for educational purposes, as \inlinecode{std::lcm(a, b)} from \inlinecode{\textless{}numeric\textgreater{}} is available as of C++17.
   \item \inlinecode{extended\_euclid(a, b)} returns a pair $(x, y)$ of integers such that $\gcd(a, b) = ax + by$.
-  \item \inlinecode{diophantine(a, b, c, \&x, \&y, \&g)} solves the linear Diophantine equation $ax + by = c$, returning whether a solution exists (one does if and only if $\gcd(a, b)$ divides $c$), and on success sets \inlinecode{g} to $\gcd(a, b)$ and $({\inlinecodemath{x}}, {\inlinecodemath{y}})$ to a particular solution bounded by $\max(|a|, |b|, |c|)$ in magnitude. A 128-bit intermediate is used where available to keep the scaling step overflow-free.
+  \item \inlinecode{diophantine(a, b, c, \&x, \&y, \&g)} solves the linear Diophantine equation $ax + by = c$, returning whether a solution exists (one does if and only if $\gcd(a, b)$ divides $c$), and on success sets \inlinecode{g} to $\gcd(a, b)$ and (\inlinecode{x}, \inlinecode{y}) to a particular solution bounded by $\max(|a|, |b|, |c|)$ in magnitude. A 128-bit intermediate is used where available to keep the scaling step overflow-free.
   \item \inlinecode{mod(a, m)} returns the value of \inlinecode{a} mod \inlinecode{m} under the true Euclidean definition of modulo, that is, the smallest nonnegative integer $r$ satisfying $a + mn = r$ for some integer $n$. Note that this is identical to the remainder operator \inlinecode{\%} in C++ for nonnegative operands \inlinecode{a} and \inlinecode{m}, but the result will differ when an operand is negative.
   \item \inlinecode{mod\_inverse(a, m)} returns an integer $x$ such that $ax \equiv 1 \pmod m$, where the arguments must satisfy $m > 0$ and $\gcd(a, m) = 1$.
   \item \inlinecode{generate\_inverse(p)} returns a vector \inlinecode{v} of integers where for each index $i$ in the vector, $i \cdot {\inlinecodemath{v[i]}} \equiv 1 \pmod p$, where the argument $p$ is prime.
@@ -2673,6 +2671,8 @@ Generate prime numbers using the Sieve of Eratosthenes, which repeatedly marks t
 
 The range overload \inlinecode{sieve(lo, hi)} uses a segmented sieve, letting primes in a high but narrow window be found without sieving everything below it. Since every composite at most \inlinecode{hi} has a prime factor at most $\sqrt{{\inlinecodemath{hi}}}$, it first sieves the primes up to $\sqrt{{\inlinecodemath{hi}}}$, then uses only those primes to mark composites within $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ (each prime $p$ starting at the first of its multiples that is at least both $p^2$ and \inlinecode{lo}). This needs only $O(w + \sqrt{h})$ space, where $w = {\inlinecodemath{hi}} - {\inlinecodemath{lo}} + 1$ and $h = {\inlinecodemath{hi}}$, instead of the $O(h)$ space that sieving all of $[2, {\inlinecodemath{hi}}]$ would require.
 
+The linear sieve finds the least prime factor of each integer. When processing \inlinecode{i}, it marks \inlinecode{i * p} for each known prime \inlinecode{p} no greater than \inlinecode{least[i]}. Every composite \inlinecode{x} is therefore generated exactly once: writing \inlinecode{x = i * p}, where \inlinecode{p} is its least prime factor, gives \inlinecode{p} $\leq$ \inlinecode{least[i]}, while any representation using a larger prime is skipped. This single visit per composite gives the $O(n)$ running time.
+
 \begin{compactitem}
   \item \inlinecode{sieve(n)} returns a vector of all the primes less than or equal to \inlinecode{n}.
   \item \inlinecode{sieve(lo, hi)} returns a vector of all the primes in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
@@ -2827,7 +2827,7 @@ sieve(n=10000000): 0.042641s
 sieve([1000000000, 1005000000]): 0.01969s
 \end{exampleoutput}
 \subsection{Prime Tests and Factorization}
-Test whether an integer is prime and compute the prime factorization of an integer $n$. The Miller-Rabin test writes $n - 1 = d \cdot 2^r$ and squares $a^d$ repeatedly, checking that the sequence behaves the only way it can for a prime; a base $a$ that breaks the pattern is a witness that $n$ is composite. For large composite inputs, Pollard's rho iterates a pseudorandom map modulo $n$; two iterates that collide modulo a hidden prime factor reveal that factor through a GCD with their difference. Prime factorizations are represented as sorted vectors of $({\inlinecodemath{prime}}, {\inlinecodemath{exponent}})$ pairs. For $0$ and $1$, the prime factorization is empty.
+Test whether an integer is prime and compute the prime factorization of an integer $n$. The Miller-Rabin test writes $n - 1 = d \cdot 2^r$ and squares $a^d$ repeatedly, checking that the sequence behaves the only way it can for a prime; a base $a$ that breaks the pattern is a witness that $n$ is composite. For large composite inputs, Pollard's rho iterates a pseudorandom map modulo $n$; two iterates that collide modulo a hidden prime factor reveal that factor through a GCD with their difference. Prime factorizations are represented as sorted vectors of (\inlinecode{prime}, \inlinecode{exponent}) pairs. For $0$ and $1$, the prime factorization is empty.
 
 \begin{compactitem}
   \item \inlinecode{is\_prime\_slow(n)} returns whether the integer \inlinecode{n} is prime using trial division.
@@ -4412,7 +4412,7 @@ class BigInt {
     if (n == 0) {
       return BigInt(0);
     }
-    static std::mt19937 rng(1234567);
+    static std::mt19937 rng(std::random_device{}());
     std::uniform_int_distribution<int> first_digit(1, 9), digit(0, 9);
     std::string s(1, static_cast<char>('0' + first_digit(rng)));
     for (int i = 1; i < n; i++) {
@@ -4466,7 +4466,7 @@ int main() {
       }
     }
   }
-  std::mt19937 rng(1234567);
+  std::mt19937 rng(1234567);  // Fixed seed for reproducibility.
   std::uniform_int_distribution<int> length_dist(1, 100);
   for (int i = 0; i < 20; i++) {
     int n = length_dist(rng);
@@ -4931,8 +4931,7 @@ Matrix<T> power_sum(const Matrix<T> &a, unsigned int p) {
   if (p == 0) {
     return make_matrix<T>(n, n);
   }
-  // [A A]^p = [A^p  A + A^2 + ... + A^p]
-  // [0 I]     [ 0                 I          ]
+  // The upper-right block of [[A, A], [0, I]]^p is A + A^2 + ... + A^p.
   Matrix<T> block = make_matrix<T>(2 * n, 2 * n);
   for (int i = 0; i < n; i++) {
     block[i][i] = a[i][i];

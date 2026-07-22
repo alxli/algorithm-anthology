@@ -7,8 +7,8 @@
 Binary search can be generally used to find the input value corresponding to any output value of a monotonic (strictly non-increasing or strictly non-decreasing) function in $O(\log n)$ time with respect to the domain size. This is a special case of finding the exact point at which any given monotonic Boolean function changes from true to false or vice versa. Each step evaluates the midpoint of the current interval and keeps the half that still contains the transition point, halving the search space until it closes on the answer. Unlike searching through an array, discrete binary search is not restricted by available memory, making it useful for handling infinitely large search spaces such as real number intervals.
 
 \begin{compactitem}
-  \item \inlinecode{binary\_search\_first\_true(lo, hi, pred)} takes signed integer boundaries for the search space $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ (i.e. including \inlinecode{lo}, but excluding \inlinecode{hi}) and returns the smallest integer \inlinecode{k} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ for which the predicate \inlinecode{pred(k)} tests true. If \inlinecode{pred(k)} tests false for the entire input range, then \inlinecode{hi} is returned. The caller must ensure \inlinecode{pred} is monotonic on the input range, i.e. returning all false for some (possibly empty) prefix, followed by all true in some (possibly empty) suffix. E.g., patterns \inlinecode{01}, \inlinecode{00}, and \inlinecode{11} are allowed, but \inlinecode{10} is disallowed.
-  \item \inlinecode{binary\_search\_last\_true(lo, hi, pred)} takes signed integer boundaries for the search space $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ (i.e. including \inlinecode{lo}, but excluding \inlinecode{hi}) and returns the largest integer \inlinecode{k} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ for which the predicate \inlinecode{pred(k)} tests true. If \inlinecode{pred(k)} tests false for the entire input range, then the original \inlinecode{lo - 1} is returned, so \inlinecode{lo} must exceed the minimum representable value. The caller must ensure \inlinecode{pred} is monotonic on the input range, i.e. returning all true for some (possibly empty) prefix, followed by all false in some (possibly empty) suffix. E.g., patterns \inlinecode{10}, \inlinecode{00}, and \inlinecode{11} are allowed, but \inlinecode{01} is disallowed.
+  \item \inlinecode{binary\_search\_first\_true(lo, hi, pred)} takes signed integer boundaries for the search space $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ (i.e. including \inlinecode{lo}, but excluding \inlinecode{hi}) and returns the smallest integer \inlinecode{k} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ for which the predicate \inlinecode{pred(k)} tests true. If \inlinecode{pred(k)} tests false for the entire input range, then the original \inlinecode{hi} is returned. The caller must ensure \inlinecode{pred} is monotonically ascending on the input range, i.e. returning all false for some (possibly empty) prefix, followed by all true in some (possibly empty) suffix. E.g., patterns \inlinecode{01}, \inlinecode{00}, and \inlinecode{11} are allowed, but \inlinecode{10} is disallowed.
+  \item \inlinecode{binary\_search\_last\_true(lo, hi, pred)} takes signed integer boundaries for the search space $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ (i.e. including \inlinecode{lo}, but excluding \inlinecode{hi}) and returns the largest integer \inlinecode{k} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ for which the predicate \inlinecode{pred(k)} tests true. If \inlinecode{pred(k)} tests false for the entire input range, then the original \inlinecode{lo - 1} is returned, so \inlinecode{lo} must exceed the minimum representable value. The caller must ensure \inlinecode{pred} is monotonically descending on the input range, i.e. returning all true for some (possibly empty) prefix, followed by all false in some (possibly empty) suffix. E.g., patterns \inlinecode{10}, \inlinecode{00}, and \inlinecode{11} are allowed, but \inlinecode{01} is disallowed.
   \item \inlinecode{fbinary\_search(lo, hi, pred)} is the equivalent of \inlinecode{binary\_search\_first\_true()} on floating point predicates. Since any interval of real numbers is dense, the exact target cannot be found due to floating point error. Instead, a value that is very close to the border between false and true is returned. The precision of the answer depends on the number of repetitions the function performs. Since each repetition bisects the search space, the absolute error of the answer is $1/(2^n)$ times the distance between \inlinecode{lo} and \inlinecode{hi} after $n$ repetitions. Although the error can be controlled by looping until the distance shrinks to an arbitrary epsilon, it is simpler to let the loop run for a desired number of iterations until floating point arithmetic breaks down. $100$ iterations is usually sufficient, since the search space will be reduced to $2^{-100}$ (roughly $10^{-30}$) times its original size. This implementation can be modified to find the ``last true'' point by simply interchanging the assignments of \inlinecode{lo} and \inlinecode{hi} in the if-else statements.
 \end{compactitem}
 
@@ -191,7 +191,7 @@ Given a unimodal function $f$, find the position of its global minimum or maximu
 
 Ternary search splits the interval into thirds. It is the simplest to reason about, but it recomputes both probe points each step, spending two function evaluations per iteration while the interval shrinks to two-thirds.
 
-Golden-section search places the probes at the golden ratio so that one probe is reused as an interior point of the next, smaller interval. It therefore performs only one new evaluation per iteration while shrinking the interval by a factor of $1/\varphi$ (about 0.618), and reaches a given accuracy in roughly 2.4 times fewer evaluations than ternary search. Prefer it when the function is expensive to evaluate.
+Golden-section search places the probes at the golden ratio so that one probe is reused as an interior point of the next, smaller interval. It therefore performs only one new evaluation per iteration while shrinking the interval by a factor of $1/\varphi$ (about 0.618), and reaches a given accuracy in roughly $2.4$ times fewer evaluations than ternary search. Prefer it when the function is expensive to evaluate.
 
 The discrete version operates on an integer domain, narrowing by thirds until at most three candidates remain and then scanning them. It returns the index of the optimum rather than a real coordinate. As with ternary search on reals, the function must be strictly unimodal.
 
@@ -323,7 +323,7 @@ Given a continuous geometric objective $f(x, y)$ and a (possibly arbitrary) star
 The heuristic starts at the guess and evaluates one step in each of eight evenly spaced directions. It moves to the best improving neighbor, checks all eight directions again, and reduces the step size when no neighbor improves the answer. This repeats until the step size falls below the chosen threshold. Success depends heavily on the behavior of $f$ and the initial guess, so the result is not guaranteed to be the global minimum.
 
 \begin{compactitem}
-  \item \inlinecode{hill\_climb\_min(f, x0, y0, \&best\_x, \&best\_y, step\_min = 1e-9, step\_max = 1e6)} returns an approximate minimum value of function \inlinecode{f} reached by hill climbing from the starting guess $({\inlinecodemath{x0}}, {\inlinecodemath{y0}})$. If either optional pointer \inlinecode{best\_x} or \inlinecode{best\_y} is supplied, the corresponding coordinate of the point attaining the returned value is stored through it. The search starts with step size \inlinecode{step\_max} and stops below \inlinecode{step\_min}.
+  \item \inlinecode{hill\_climb\_min(f, x0, y0, \&best\_x, \&best\_y, step\_min = 1e-9, step\_max = 1e6)} returns an approximate minimum value of function \inlinecode{f} reached by hill climbing an initial guess (\inlinecode{x0}, \inlinecode{y0}). If either optional pointer \inlinecode{best\_x} or \inlinecode{best\_y} is supplied, the corresponding coordinate of the point attaining the returned value is stored through it. The search starts with step size \inlinecode{step\_max} and stops below \inlinecode{step\_min}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(k + s)$ calls to \inlinecode{f()}, where $k$ is the number of times the step size is reduced and $s$ is the total number of improving moves accepted.
@@ -398,7 +398,7 @@ Approximately minimizes an energy function $E(s)$ over an arbitrary state space 
 Starting from an initial state $s$, each iteration generates a random neighboring state $s'$. An improving move is always accepted, while a worsening move is accepted with probability $\exp(-(E(s') - E(s))/T)$ at temperature $T$. High temperatures encourage exploration across energy barriers; as the temperature decreases, the search increasingly favors improvements. The best state is tracked separately because the current state may later move to a worse one.
 
 \begin{compactitem}
-  \item \inlinecode{anneal\_min(initial, energy, rand\_neighbor, rng, ...)} returns \inlinecode{(best\_energy, best\_state)}. The callable \inlinecode{energy(state)} returns the state's energy, while \inlinecode{rand\_neighbor(state, temp, rng)} returns a randomly chosen nearby state. The optional temperature arguments default to \inlinecode{temp\_start = 1000}, \inlinecode{temp\_end = 1e-6}, and \inlinecode{cooling\_rate = 0.995}. \inlinecode{temp\_end} must be positive and less than \inlinecode{temp\_start}, while \inlinecode{cooling\_rate} must be strictly between 0 and 1.
+  \item \inlinecode{anneal\_min(initial, energy, rand\_neighbor, rng, ...)} returns (\inlinecode{best\_energy}, \inlinecode{best\_state}) given an initial state \inlinecode{initial}, a callable \inlinecode{energy(state)} that returns the state's energy, and a callable \inlinecode{rand\_neighbor(state, temp, rng)} that returns a randomly chosen nearby state. Optional parameters default to \inlinecode{temp\_start = 1000}, \inlinecode{temp\_end = 1e-6}, and \inlinecode{cooling\_rate = 0.995}. \inlinecode{temp\_end} must be positive and less than \inlinecode{temp\_start}, while \inlinecode{cooling\_rate} must be strictly between $0$ and $1$.
 \end{compactitem}
 
 The geometric schedule repeatedly multiplies the temperature by \inlinecode{cooling\_rate}, performing $k = \lceil \log(T_{end}/T_{start}) / \log(r) \rceil$ iterations. Temperature has the same scale as energy: multiplying every energy by a constant requires multiplying both temperature bounds by the same constant to preserve acceptance probabilities. For continuous states, temperature can also control the neighbor step size. Slower cooling, independent restarts, and a time-based stopping condition often improve results, but simulated annealing never proves optimality.
@@ -449,7 +449,7 @@ std::pair<double, State> anneal_min(
 using namespace std;
 
 int main() {
-  mt19937 rng(1234567);  // Set your own seed, or use random_device{}().
+  mt19937 rng(1234567);  // Fixed seed for reproducibility.
 
   // Escape the local minimum near x = 1 and find the lower minimum near x = -1.
   auto energy_1d = [](double x) { return (x * x - 1) * (x * x - 1) + 0.2 * x; };
@@ -497,10 +497,10 @@ int main() {
 \subsection{Divide-and-Conquer DP Optimization}
 Computes one layer of a dynamic program of the form \inlinecode{dp\_cur[i] = min(dp\_prev[k] + cost(k, i))}, where $0 \leq {\inlinecodemath{k}} \leq {\inlinecodemath{i}}$. Let \inlinecode{opt[i]} be the smallest index \inlinecode{k} attaining this minimum. Divide-and-conquer optimization applies when \inlinecode{opt[i]} $\leq$ \inlinecode{opt[i + 1]}, so the best transition index moves only to the right as \inlinecode{i} increases.
 
-To compute \inlinecode{dp\_cur[l..r]}, evaluate its midpoint and record its best transition as \inlinecode{best\_k}. Monotonicity restricts every optimum in the left half to indices at most \inlinecode{best\_k}, and every optimum in the right half to indices at least \inlinecode{best\_k}. Recursively applying these bounds avoids checking every transition for every state. The caller must verify the required monotonicity property.
+To compute \inlinecode{dp\_cur[lo..hi]}, evaluate its midpoint and record its best transition as \inlinecode{best\_k}. Monotonicity restricts every optimum in the left half to indices at most \inlinecode{best\_k}, and every optimum in the right half to indices at least \inlinecode{best\_k}. Recursively applying these bounds avoids checking every transition for every state. The caller must verify the required monotonicity property.
 
 \begin{compactitem}
-  \item \inlinecode{compute\_dp\_layer(dp\_prev, dp\_cur, l, r, opt\_l, opt\_r, cost)} fills \inlinecode{dp\_cur[l..r]} using candidate transition indices in [\inlinecode{opt\_l}, \inlinecode{opt\_r}]. The template parameter \inlinecode{cost} must be callable such that \inlinecode{cost(k, i)} returns the transition cost from previous state \inlinecode{k} to current state \inlinecode{i}.
+  \item \inlinecode{compute\_dp\_layer(dp\_prev, dp\_cur, lo, hi, opt\_lo, opt\_hi, cost)} fills \inlinecode{dp\_cur[lo..hi]} using candidate transition indices in [\inlinecode{opt\_lo}, \inlinecode{opt\_hi}]. The template parameter \inlinecode{cost} must be callable such that \inlinecode{cost(k, i)} returns the transition cost from previous state \inlinecode{k} to current state \inlinecode{i}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ calls to \inlinecode{cost(k, i)} per layer when each state has $O(n)$ possible transitions.
@@ -516,17 +516,17 @@ const int64_t INF = (1LL << 62);
 
 template<typename Cost>
 void compute_dp_layer(
-    const std::vector<int64_t> &dp_prev, std::vector<int64_t> &dp_cur, int l, int r, int opt_l,
-    int opt_r, Cost cost
+    const std::vector<int64_t> &dp_prev, std::vector<int64_t> &dp_cur, int lo, int hi, int opt_lo,
+    int opt_hi, Cost cost
 ) {
-  if (l > r) {
+  if (lo > hi) {
     return;
   }
-  int mid = l + (r - l) / 2;
+  int mid = lo + (hi - lo) / 2;
   int64_t best = INF;
-  int best_k = opt_l;
-  int upper = std::min(mid, opt_r);
-  for (int k = opt_l; k <= upper; k++) {
+  int best_k = opt_lo;
+  int upper = std::min(mid, opt_hi);
+  for (int k = opt_lo; k <= upper; k++) {
     int64_t candidate = dp_prev[k] + cost(k, mid);  // Overflow warning!
     if (candidate < best) {
       best = candidate;
@@ -534,8 +534,8 @@ void compute_dp_layer(
     }
   }
   dp_cur[mid] = best;
-  compute_dp_layer(dp_prev, dp_cur, l, mid - 1, opt_l, best_k, cost);
-  compute_dp_layer(dp_prev, dp_cur, mid + 1, r, best_k, opt_r, cost);
+  compute_dp_layer(dp_prev, dp_cur, lo, mid - 1, opt_lo, best_k, cost);
+  compute_dp_layer(dp_prev, dp_cur, mid + 1, hi, best_k, opt_hi, cost);
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -740,10 +740,10 @@ std::vector<std::vector<int64_t>> knuth_interval_dp(
     for (int l = 0; l + len <= n; l++) {
       int r = l + len;
       dp[l][r] = INF;
-      int start = std::max(opt[l][r - 1], l + 1);
-      int finish = std::min(opt[l + 1][r], r - 1);
+      int split_lo = std::max(opt[l][r - 1], l + 1);
+      int split_hi = std::min(opt[l + 1][r], r - 1);
       int64_t interval_cost = cost(l, r);
-      for (int k = start; k <= finish; k++) {
+      for (int k = split_lo; k <= split_hi; k++) {
         int64_t candidate = dp[l][k] + dp[k][r] + interval_cost;  // Overflow warning!
         if (candidate < dp[l][r]) {
           dp[l][r] = candidate;
@@ -1112,40 +1112,40 @@ class LiChaoTree {
     delete n;
   }
 
-  static void add_line(Node *&n, int64_t l, int64_t r, Line f) {
+  static void add_line(Node *&n, int64_t lo, int64_t hi, Line f) {
     if (n == nullptr) {
       n = new Node(f);
       return;
     }
-    int64_t mid = l + (r - l) / 2;
-    bool left_better = f.eval(l) < n->f.eval(l);
+    int64_t mid = lo + (hi - lo) / 2;
+    bool left_better = f.eval(lo) < n->f.eval(lo);
     bool mid_better = f.eval(mid) < n->f.eval(mid);
     if (mid_better) {
       std::swap(f, n->f);
     }
-    if (l == r) {
+    if (lo == hi) {
       return;
     }
     if (left_better != mid_better) {
-      add_line(n->left, l, mid, f);
+      add_line(n->left, lo, mid, f);
     } else {
-      add_line(n->right, mid + 1, r, f);
+      add_line(n->right, mid + 1, hi, f);
     }
   }
 
-  static int64_t query(Node *n, int64_t l, int64_t r, int64_t x) {
+  static int64_t query(Node *n, int64_t lo, int64_t hi, int64_t x) {
     if (n == nullptr) {
       return INF;
     }
     int64_t res = n->f.eval(x);
-    if (l == r) {
+    if (lo == hi) {
       return res;
     }
-    int64_t mid = l + (r - l) / 2;
+    int64_t mid = lo + (hi - lo) / 2;
     if (x <= mid) {
-      return std::min(res, query(n->left, l, mid, x));
+      return std::min(res, query(n->left, lo, mid, x));
     }
-    return std::min(res, query(n->right, mid + 1, r, x));
+    return std::min(res, query(n->right, mid + 1, hi, x));
   }
 
  public:
@@ -1305,7 +1305,7 @@ double newton_root(
   double x = x0, error = eps + 1;
   for (int i = 0; error > eps && i < iterations; i++) {
     double xnew = x - f(x) / fprime(x);
-    error = std::fabs(xnew - x);
+    error = fabs(xnew - x);
     x = xnew;
   }
   if (error > eps) {
@@ -1324,7 +1324,7 @@ double secant_root(
     double xnew = x - fx * ((x - xold) / (fx - fxold));
     xold = x;
     fxold = fx;
-    error = std::fabs(xnew - x);
+    error = fabs(xnew - x);
     x = xnew;
   }
   if (error > eps) {
@@ -1396,10 +1396,10 @@ double horner_eval(const std::vector<double> &p, double x) {
 
 double find_one_root(const std::vector<double> &p, double a, double b, const double eps = 1e-15) {
   double pa = horner_eval(p, a), pb = horner_eval(p, b);
-  if (std::fabs(pa) <= eps) {
+  if (fabs(pa) <= eps) {
     return a;
   }
-  if (std::fabs(pb) <= eps) {
+  if (fabs(pb) <= eps) {
     return b;
   }
   bool paneg = pa < 0, pbneg = pb < 0;
@@ -1571,55 +1571,47 @@ std::vector<cdouble> find_all_roots(
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cstdio>
+#include <cassert>
 using namespace std;
 
-void print_roots(vector<cdouble> x) {
-  sort(x.begin(), x.end(), [](const cdouble &a, const cdouble &b) {
-    return abs(a.real() - b.real()) > 0.5e-5 ? a.real() < b.real() : a.imag() < b.imag();
-  });
-  for (const auto &z : x) {
-    double real = abs(z.real()) < 0.5e-5 ? 0 : z.real();
-    double imag = abs(z.imag()) < 0.5e-5 ? 0 : z.imag();
-    printf("(%.5lf, %.5lf)\n", real, imag);
+void assert_roots(vector<cdouble> actual, vector<cdouble> expected) {
+  assert(actual.size() == expected.size());
+  vector<char> matched(actual.size());
+  for (const cdouble &root : expected) {
+    int found = -1;
+    for (int i = 0; i < static_cast<int>(actual.size()); i++) {
+      if (!matched[i] && abs(actual[i] - root) < 1e-8) {
+        found = i;
+        break;
+      }
+    }
+    assert(found != -1);
+    matched[found] = true;
   }
 }
 
 int main() {
   {  // 140 - 13x - 8x^2 + x^3 = (x + 4)(x - 5)(x - 7)
-    printf("Roots of 140 - 13x - 8x^2 + x^3:\n");
     cpoly p;
     p.push_back(140);
     p.push_back(-13);
     p.push_back(-8);
     p.push_back(1);
-    print_roots(find_all_roots(p));
+    assert_roots(find_all_roots(p), {-4, 5, 7});
   }
   {  // (-24+36i) + (-26+12i)x + (-30+40i)x^2 + (-26+12i)x^3 + (-6+4i)x^4
     // = ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
-    printf("Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):\n");
     cpoly p;
     p.emplace_back(-24, 36);
     p.emplace_back(-26, 12);
     p.emplace_back(-30, 40);
     p.emplace_back(-26, 12);
     p.emplace_back(-6, 4);
-    print_roots(find_all_roots(p));
+    assert_roots(find_all_roots(p), {{-3, -2}, {-12.0 / 13, 18.0 / 13}, {0, -1}, {0, 1}});
   }
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-Roots of 140 - 13x - 8x^2 + x^3:
-(-4.00000, 0.00000)
-(5.00000, 0.00000)
-(7.00000, 0.00000)
-Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
-(-3.00000, -2.00000)
-(-0.92308, 1.38462)
-(0.00000, -1.00000)
-(0.00000, 1.00000)
-\end{exampleoutput}
 \subsection{Polynomial Root Finding (Ehrlich-Aberth)}
 Finds every complex root $x$ for a polynomial $p$ such that $p(x) = 0$. The Ehrlich-Aberth method is a simultaneous iteration: every root estimate is updated using both the Newton correction and a repulsion term from the other estimates.
 
@@ -1799,38 +1791,39 @@ std::vector<cdbl> find_all_roots(
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <cstdio>
 using namespace std;
 
 cdbl eval(const cpoly &p, const cdbl &x) {
   return eval_with_derivative(p, x).first;
 }
 
-void print_roots(vector<cdbl> x) {
-  sort(x.begin(), x.end(), [](const cdbl &a, const cdbl &b) {
-    return abs(a.real() - b.real()) > 0.5e-5 ? a.real() < b.real() : a.imag() < b.imag();
-  });
-  for (const auto &z : x) {
-    dbl real = abs(z.real()) < 0.5e-5 ? 0 : z.real();
-    dbl imag = abs(z.imag()) < 0.5e-5 ? 0 : z.imag();
-    printf("(%.5Lf, %.5Lf)\n", real, imag);
+void assert_roots(const vector<cdbl> &actual, const vector<cdbl> &expected) {
+  assert(actual.size() == expected.size());
+  vector<char> matched(actual.size());
+  for (const cdbl &root : expected) {
+    int found = -1;
+    for (int i = 0; i < static_cast<int>(actual.size()); i++) {
+      if (!matched[i] && abs(actual[i] - root) < CHECK_EPS) {
+        found = i;
+        break;
+      }
+    }
+    assert(found != -1);
+    matched[found] = true;
   }
 }
 
 int main() {
   {  // -1 + 2x - 6x^2 + 2x^3
-    printf("Roots of -1 + 2x - 6x^2 + 2x^3:\n");
     vector<dbl> p{-1.0, 2.0, -6.0, 2.0};
     vector<cdbl> roots = find_all_roots(p);
     assert(roots.size() == 3);
     for (const auto &root : roots) {
       assert(abs(eval(cpoly(p.begin(), p.end()), root)) < CHECK_EPS);
     }
-    print_roots(roots);
   }
   {  // (-24+36i) + (-26+12i)x + (-30+40i)x^2 + (-26+12i)x^3 + (-6+4i)x^4
     // = ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
-    printf("Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):\n");
     cpoly p;
     p.emplace_back(-24, 36);
     p.emplace_back(-26, 12);
@@ -1842,22 +1835,11 @@ int main() {
     for (const auto &root : roots) {
       assert(abs(eval(p, root)) < CHECK_EPS);
     }
-    print_roots(roots);
+    assert_roots(roots, {{-3, -2}, {-12.0L / 13, 18.0L / 13}, {0, -1}, {0, 1}});
   }
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-Roots of -1 + 2x - 6x^2 + 2x^3:
-(0.15098, -0.40314)
-(0.15098, 0.40314)
-(2.69805, 0.00000)
-Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
-(-3.00000, -2.00000)
-(-0.92308, 1.38462)
-(0.00000, -1.00000)
-(0.00000, 1.00000)
-\end{exampleoutput}
 \subsection{Integration (Simpson)}
 Computes the definite integral from $a$ to $b$ for a continuous function $f$ using the composite Simpson's rule: the interval is split into $n$ equal subintervals and each consecutive pair is approximated by a parabola, giving the approximation $\int_{a}^{b} f(x) \,dx \approx$ $h/3 \cdot [f(x_0) + 4f(x_1) + 2f(x_2) + \ldots + 4f(x_{n-1}) + f(x_n)]$ with step $h = (b - a)/n$.
 

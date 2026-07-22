@@ -93,6 +93,17 @@ class IterativeLazySegTree {
     }
   }
 
+  template<typename Gen>
+  void build(const Gen &gen) {
+    init_storage();
+    for (int i = 0; i < len; i++) {
+      value[base + i] = gen(i);
+    }
+    for (int i = base - 1; i > 0; i--) {
+      pull(i);
+    }
+  }
+
   void pull(int i) { value[i] = combine(value[i << 1], value[i << 1 | 1]); }
 
   void apply(int i, const T &d) {
@@ -131,25 +142,13 @@ class IterativeLazySegTree {
  public:
   explicit IterativeLazySegTree(int n, const T &v = T()) : len(n) {
     assert(len > 0);
-    init_storage();
-    for (int i = 0; i < len; i++) {
-      value[base + i] = v;
-    }
-    for (int i = base - 1; i > 0; i--) {
-      pull(i);
-    }
+    build([&](int) { return v; });
   }
 
   template<typename It>
   IterativeLazySegTree(It lo, It hi) : len(hi - lo) {
     assert(len > 0);
-    init_storage();
-    for (int i = 0; i < len; i++) {
-      value[base + i] = *(lo + i);
-    }
-    for (int i = base - 1; i > 0; i--) {
-      pull(i);
-    }
+    build([&](int i) { return *(lo + i); });
   }
 
   int size() const { return len; }
@@ -268,34 +267,26 @@ class IterativeLazySegTree {
   }
 };
 
-/*** Example Usage and Output:
+/*** Example Usage ***/
 
-Values: 6 -2 4 8 10
-Values: 5 5 5 1 5
-
-***/
-
-#include <iostream>
 using namespace std;
 
 int main() {
   vector<int> a{6, -2, 1, 8, 10};
   IterativeLazySegTree<int> t(a.begin(), a.end());
   t.update(2, 4);
-  cout << "Values:";
+  vector<int> expected{6, -2, 4, 8, 10};
   for (int i = 0; i < t.size(); i++) {
-    cout << " " << t.at(i);
+    assert(t.at(i) == expected[i]);
   }
-  cout << endl;
   assert(t.query(0, 3) == -2);
   t.update(0, 4, 5);
   t.update(3, 2);
   t.update(3, 1);
-  cout << "Values:";
+  expected = {5, 5, 5, 1, 5};
   for (int i = 0; i < t.size(); i++) {
-    cout << " " << t.at(i);
+    assert(t.at(i) == expected[i]);
   }
-  cout << endl;
   assert(t.query(0, 3) == 1);
 
   // Boundary search works through lazy updates too; values are now {5, 5, 5, 1, 5}.

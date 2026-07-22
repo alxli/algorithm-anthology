@@ -91,15 +91,9 @@ std::optional<int64_t> directed_mst(int n, std::vector<Edge> edges, int root) {
   return total_dist;
 }
 
-/*** Example Usage and Output:
-
-Minimum arborescence weight: 6
-Disconnected arborescence weight: none
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -116,14 +110,12 @@ int main() {
   };
   auto weight = directed_mst(4, edges, 0);
   assert(weight == 6);  // Cheapest edges 0->1->2->3 form a tree of weight 6.
-  cout << "Minimum arborescence weight: " << *weight << endl;
 
   //        w=1    w=2
   // root=0 ---> 1 ---> 2       3
   vector<Edge> disconnected{{0, 1, 1}, {1, 2, 1}};
   auto disconnected_weight = directed_mst(4, disconnected, 0);
   assert(!disconnected_weight);  // Node 3 is unreachable from root 0.
-  cout << "Disconnected arborescence weight: none" << endl;
 
   vector<Edge> negative{{0, 1, -1}};
   assert(directed_mst(2, negative, 0) == -1);  // A weight of -1 is a valid result.

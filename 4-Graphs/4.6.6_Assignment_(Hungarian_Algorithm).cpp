@@ -112,15 +112,9 @@ std::pair<T, std::vector<int>> max_assignment(std::vector<std::vector<T>> value)
   return {max_value * static_cast<T>(value.size()) - min_cost, assignment};  // Overflow warning!
 }
 
-/*** Example Usage and Output:
+/*** Example Usage ***/
 
-Minimum assignment cost: 9
-Assignments: (0->1) (1->0) (2->2)
-Maximum assignment value: 24
-
-***/
-
-#include <iostream>
+#include <cassert>
 using namespace std;
 
 int main() {
@@ -131,19 +125,10 @@ int main() {
   };
   auto [min_cost, assignment] = min_assignment(cost);
   assert(min_cost == 9);
-  assert(assignment[0] == 1);
-  assert(assignment[1] == 0);
-  assert(assignment[2] == 2);
-  cout << "Minimum assignment cost: " << min_cost << endl;
-  cout << "Assignments:";
-  for (int worker = 0; worker < static_cast<int>(assignment.size()); worker++) {
-    cout << " (" << worker << "->" << assignment[worker] << ")";
-  }
-  cout << endl;
+  assert((assignment == vector<int>{1, 0, 2}));
 
   auto [max_value, max_jobs] = max_assignment(cost);
   assert(max_value == 24);
   assert((max_jobs == vector<int>{0, 3, 1}));
-  cout << "Maximum assignment value: " << max_value << endl;
   return 0;
 }

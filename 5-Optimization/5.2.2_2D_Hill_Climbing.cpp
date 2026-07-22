@@ -10,10 +10,10 @@ threshold. Success depends heavily on the behavior of $f$ and the initial guess,
 not guaranteed to be the global minimum.
 
 - `hill_climb_min(f, x0, y0, &best_x, &best_y, step_min = 1e-9, step_max = 1e6)` returns an
-  approximate minimum value of function `f` reached by hill climbing from the starting guess
-  $(`x0`, `y0`)$. If either optional pointer `best_x` or `best_y` is supplied, the corresponding
-  coordinate of the point attaining the returned value is stored through it. The search starts with
-  step size `step_max` and stops below `step_min`.
+  approximate minimum value of function `f` reached by hill climbing an initial guess (`x0`, `y0`).
+  If either optional pointer `best_x` or `best_y` is supplied, the corresponding coordinate of the
+  point attaining the returned value is stored through it. The search starts with step size
+  `step_max` and stops below `step_min`.
 
 Time Complexity:
 - O(k + s) calls to `f()`, where $k$ is the number of times the step size is reduced and $s$ is the

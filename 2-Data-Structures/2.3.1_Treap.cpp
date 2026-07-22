@@ -249,15 +249,9 @@ class Treap {
   std::optional<std::pair<K, V>> next(const K &k) const { return upper_bound(k); }
 };
 
-/*** Example Usage and Output:
-
-abcde
-bcde
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -277,16 +271,12 @@ int main() {
   assert(t.next(4)->first == 5);
   assert(!t.prev(1));
   assert(!t.next(5));
-  for (const auto &[k, v] : t.entries()) {
-    cout << v;
-  }
-  cout << endl;
+  assert(
+      (t.entries() == vector<pair<int, char>>{{1, 'a'}, {2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}})
+  );
   assert(t.erase(1));
   assert(!t.erase(1));
   assert(t.find(1) == nullptr);
-  for (const auto &[k, v] : t.entries()) {
-    cout << v;
-  }
-  cout << endl;
+  assert((t.entries() == vector<pair<int, char>>{{2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}}));
   return 0;
 }

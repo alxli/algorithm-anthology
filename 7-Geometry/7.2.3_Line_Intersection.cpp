@@ -29,8 +29,8 @@ must contain two distinct points.
 
 Overflow warning: the exact integer paths multiply coordinate differences (cross products and
 squared lengths), which grow like the squared coordinate magnitude. With 32-bit `int` coordinates
-these overflow once coordinates exceed roughly $46000$, so for larger integer inputs use a point
-type with 64-bit (`int64_t`) coordinates.
+these overflow once coordinates exceed roughly a few tens of thousands, so for larger integer inputs
+use a point type with 64-bit (`int64_t`) coordinates.
 
 Time Complexity:
 - O(1) for all operations.
@@ -48,15 +48,13 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - EPS;
   return C(a) < C(b);
 }
 

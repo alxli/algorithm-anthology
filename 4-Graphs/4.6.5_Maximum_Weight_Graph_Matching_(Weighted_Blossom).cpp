@@ -383,15 +383,9 @@ class WeightedGeneralMatching {
   }
 };
 
-/*** Example Usage and Output:
-
-Maximum matching weight: 12
-Matched pairs: (1,2) (3,4)
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -410,15 +404,6 @@ int main() {
   assert(g.partner(1) == 2 && g.partner(2) == 1);
   assert(g.partner(3) == 4 && g.partner(4) == 3);
   assert(g.partner(0) == -1);  // Node 0 is left unmatched.
-  cout << "Maximum matching weight: " << weight << endl;
-  cout << "Matched pairs:";
-  for (int u = 0; u < 5; u++) {
-    int v = g.partner(u);
-    if (u < v) {
-      cout << " (" << u << "," << v << ")";
-    }
-  }
-  cout << endl;
 
   //   w=3   w=3   w=5
   // 0-----1-----2-----3

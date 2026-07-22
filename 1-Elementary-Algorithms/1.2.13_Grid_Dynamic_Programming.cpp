@@ -11,7 +11,7 @@ reconstructs one optimal path. The helpers below assume movement only down or ri
 
 - `count_grid_paths(blocked)` returns the number of paths from the upper-left cell to the
   lower-right cell, moving only down or right and avoiding blocked cells marked nonzero.
-- `min_grid_path_cost(cost)` returns a pair $(`sum`, `path`)$ containing the minimum cost of a
+- `min_grid_path_cost(cost)` returns a pair (`sum`, `path`) containing the minimum cost of a
   down/right path from the upper-left cell to the lower-right cell and the cells of one optimal path
   in order. If the grid is empty, `sum` is $0$ and `path` is empty.
 

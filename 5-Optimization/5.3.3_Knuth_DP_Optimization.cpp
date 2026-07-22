@@ -48,10 +48,10 @@ std::vector<std::vector<int64_t>> knuth_interval_dp(
     for (int l = 0; l + len <= n; l++) {
       int r = l + len;
       dp[l][r] = INF;
-      int start = std::max(opt[l][r - 1], l + 1);
-      int finish = std::min(opt[l + 1][r], r - 1);
+      int split_lo = std::max(opt[l][r - 1], l + 1);
+      int split_hi = std::min(opt[l + 1][r], r - 1);
       int64_t interval_cost = cost(l, r);
-      for (int k = start; k <= finish; k++) {
+      for (int k = split_lo; k <= split_hi; k++) {
         int64_t candidate = dp[l][k] + dp[k][r] + interval_cost;  // Overflow warning!
         if (candidate < dp[l][r]) {
           dp[l][r] = candidate;

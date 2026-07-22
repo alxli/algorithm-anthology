@@ -55,6 +55,7 @@ Space Complexity:
 #include <cstdint>
 #include <limits>
 #include <optional>
+#include <vector>
 
 template<typename T, int N = 1000000000>
 class SparseSegTree {
@@ -246,14 +247,8 @@ class SparseSegTree {
   }
 };
 
-/*** Example Usage and Output:
+/*** Example Usage ***/
 
-Values: 6 -2 4 8 10
-Values: 5 5 5 1 5
-
-***/
-
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -263,20 +258,18 @@ int main() {
   t.update(2, 4);
   t.update(3, 8);
   t.update(4, 10);
-  cout << "Values:";
+  vector<int> expected{6, -2, 4, 8, 10};
   for (int i = 0; i < 5; i++) {
-    cout << " " << t.at(i);
+    assert(t.at(i) == expected[i]);
   }
-  cout << endl;
   assert(t.query(0, 3) == -2);
   t.update(0, 4, 5);
   t.update(3, 2);
   t.update(3, 1);
-  cout << "Values:";
+  expected = {5, 5, 5, 1, 5};
   for (int i = 0; i < 5; i++) {
-    cout << " " << t.at(i);
+    assert(t.at(i) == expected[i]);
   }
-  cout << endl;
   assert(t.query(0, 3) == 1);
 
   // Boundary search over the sparse domain; values at indices 0..4 are now {5, 5, 5, 1, 5}.

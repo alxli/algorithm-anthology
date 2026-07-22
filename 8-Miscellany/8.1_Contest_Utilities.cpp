@@ -112,7 +112,7 @@ class y_combinator_result {
   template<typename T>
   explicit y_combinator_result(T &&fun_) : fun(std::forward<T>(fun_)) {}
 
-  template<class... Args>
+  template<typename... Args>
   decltype(auto) operator()(Args &&...args) {
     return fun(std::ref(*this), std::forward<Args>(args)...);
   }
@@ -163,7 +163,7 @@ int main() {
   pq.push(1);
   assert(pq.top() == 1);
 
-  RNG rng(123);
+  RNG rng(1234567);  // Fixed seed for reproducibility.
   int r = rng.uniform_int(1, 6);
   assert(1 <= r && r <= 6);
   double d = rng.uniform_real();

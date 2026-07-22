@@ -93,16 +93,9 @@ int diameter() {
   return dfs(furthest_node, -1, 0).first;
 }
 
-/*** Example Usage and Output:
-
-Centers: 1 4
-Centroid: 4
-Diameter length: 3
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 void add_edge(int u, int v) {
@@ -124,11 +117,5 @@ int main() {
   assert(centers.size() == 2 && centers[0] == 1 && centers[1] == 4);
   assert(find_centroid() == 4);
   assert(diameter() == 3);
-  cout << "Centers:";
-  for (int u : centers) {
-    cout << " " << u;
-  }
-  cout << endl << "Centroid: " << find_centroid() << endl;
-  cout << "Diameter length: " << diameter() << endl;
   return 0;
 }

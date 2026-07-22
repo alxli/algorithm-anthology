@@ -198,15 +198,9 @@ class AVLTree {
   }
 };
 
-/*** Example Usage and Output:
-
-abcde
-bcde
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -221,18 +215,14 @@ int main() {
   assert(*t.find(4) == 'd');
   assert(!t.insert(4, 'd'));
   assert(t.size() == 5);
-  for (const auto &[k, v] : t.entries()) {
-    cout << v;
-  }
-  cout << endl;
+  assert(
+      (t.entries() == vector<pair<int, char>>{{1, 'a'}, {2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}})
+  );
   assert(t.erase(1));
   assert(!t.erase(1));
   assert(t.find(1) == nullptr);
   assert(t.size() == 4);
-  for (const auto &[k, v] : t.entries()) {
-    cout << v;
-  }
-  cout << endl;
+  assert((t.entries() == vector<pair<int, char>>{{2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}}));
 
   AVLTree<int, int> deep_successor;
   for (int key : {20, 10, 30, 25, 40, 22}) {

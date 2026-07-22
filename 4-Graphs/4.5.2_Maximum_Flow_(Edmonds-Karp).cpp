@@ -117,14 +117,9 @@ class EdmondsKarp {
   }
 };
 
-/*** Example Usage and Output:
+/*** Example Usage ***/
 
-Maximum flow: 5
-Min-cut source side: 0 1 2
-
-***/
-
-#include <iostream>
+#include <cassert>
 using namespace std;
 
 int main() {
@@ -151,15 +146,7 @@ int main() {
   assert(flow == 5);
   assert(g.max_flow(0, 5) == 5);
   vector<char> cut = g.min_cut(0);
-  assert(cut[0] && !cut[5]);
-  cout << "Maximum flow: " << flow << endl;
-  cout << "Min-cut source side:";
-  for (int u = 0; u < static_cast<int>(cut.size()); u++) {
-    if (cut[u]) {
-      cout << " " << u;
-    }
-  }
-  cout << endl;
+  assert((cut == vector<char>{true, true, true, false, false, false}));
   g.clear_flow();
   assert(g.max_flow(0, 5) == 5);
   return 0;

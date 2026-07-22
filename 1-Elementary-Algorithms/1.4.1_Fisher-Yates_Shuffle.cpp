@@ -20,8 +20,9 @@ Space Complexity:
 #include <algorithm>
 #include <random>
 
-template<typename It, typename URBG>
-void fisher_yates_shuffle(It lo, It hi, URBG &rng) {
+template<typename It>
+void fisher_yates_shuffle(It lo, It hi) {
+  static std::mt19937 rng(std::random_device{}());
   int n = static_cast<int>(hi - lo);
   for (int i = n - 1; i > 0; i--) {
     std::uniform_int_distribution<int> dist(0, i);
@@ -39,8 +40,7 @@ using namespace std;
 
 int main() {
   vector<int> a{1, 2, 3, 4, 5}, original(a);
-  mt19937 rng(123456);
-  fisher_yates_shuffle(a.begin(), a.end(), rng);
+  fisher_yates_shuffle(a.begin(), a.end());
   sort(a.begin(), a.end());
   assert(a == original);
   return 0;

@@ -17,9 +17,9 @@ segment tree instead, since Fenwick-tree algebra relies on addition and subtract
 - `Fenwick2D<T>(rows, cols)` constructs a `rows` by `cols` array with 0-based indices, with all
   values initialized to $0$.
 - `size_rows()` and `size_cols()` return the number of rows and columns.
-- `add(r, c, x)` adds `x` to the value at index $(`r`, `c`)$.
-- `set(r, c, x)` assigns `x` to the value at index $(`r`, `c`)$.
-- `at(r, c)` returns the value at index $(`r`, `c`)$.
+- `add(r, c, x)` adds `x` to the value at index (`r`, `c`).
+- `set(r, c, x)` assigns `x` to the value at index (`r`, `c`).
+- `at(r, c)` returns the value at index (`r`, `c`).
 - `sum(r, c)` returns the sum of the rectangle with rows $[0, `r`]$ and columns $[0, `c`]$.
 - `sum(r1, c1, r2, c2)` returns the sum of the rectangle with rows $[`r1`, `r2`]$ and columns
   $[`c1`, `c2`]$.

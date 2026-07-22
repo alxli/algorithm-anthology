@@ -124,30 +124,9 @@ class BridgeDecomposition {
   int component_id(int u) const { return component[u]; }
 };
 
-/*** Example Usage and Output:
+/*** Example Usage ***/
 
-Bridges:
-1 2
-5 4
-3 7
-2-edge-connected components:
-0 1 5
-2
-3
-4
-6
-7
-Adjacency List for Bridge Forest:
-0 => 1 3
-1 => 0
-2 => 5
-3 => 0
-4 =>
-5 => 2
-
-***/
-
-#include <iostream>
+#include <cassert>
 using namespace std;
 
 int main() {
@@ -162,26 +141,14 @@ int main() {
   g.add_edge(3, 7);
   g.add_edge(4, 5);
   g.build_bridges();
-  cout << "Bridges:" << endl;
-  for (auto [u, v] : g.bridges()) {
-    cout << u << " " << v << endl;
-  }
-  cout << "2-edge-connected components:" << endl;
-  for (const auto &component : g.components()) {
-    for (int v : component) {
-      cout << v << " ";
-    }
-    cout << endl;
-  }
+  assert((g.bridges() == vector<pair<int, int>>{{1, 2}, {5, 4}, {3, 7}}));
   g.build_bridge_forest();
-  cout << "Adjacency List for Bridge Forest:" << endl;
-  const auto &forest = g.bridge_forest();
-  for (int i = 0, n = static_cast<int>(forest.size()); i < n; i++) {
-    cout << i << " =>";
-    for (int v : forest[i]) {
-      cout << " " << v;
-    }
-    cout << endl;
+  vector<vector<int>> components = g.components();
+  for (auto &component : components) {
+    sort(component.begin(), component.end());
   }
+  sort(components.begin(), components.end());
+  assert((components == vector<vector<int>>{{0, 1, 5}, {2}, {3}, {4}, {6}, {7}}));
+  assert((g.bridge_forest() == vector<vector<int>>{{1, 3}, {0}, {5}, {0}, {}, {2}}));
   return 0;
 }

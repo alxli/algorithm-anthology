@@ -114,25 +114,19 @@ class SqrtDecomposition {
   }
 };
 
-/*** Example Usage and Output:
-
-Values: 6 -2 4 8 10
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
   vector<int> a{6, -2, 1, 8, 10};
   SqrtDecomposition<int> sd(a.begin(), a.end());
   sd.update(2, 4);
-  cout << "Values:";
+  vector<int> expected{6, -2, 4, 8, 10};
   for (int i = 0; i < sd.size(); i++) {
-    cout << " " << sd.at(i);
+    assert(sd.at(i) == expected[i]);
   }
-  cout << endl;
   assert(sd.query(0, 3) == -2);
   return 0;
 }

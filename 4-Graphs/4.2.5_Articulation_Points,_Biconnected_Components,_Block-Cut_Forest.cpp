@@ -154,27 +154,9 @@ class BiconnectedComponents {
   int block_cut_id(int v) const { return forest_id[v]; }
 };
 
-/*** Example Usage and Output:
+/*** Example Usage ***/
 
-Articulation points: 1 5
-Biconnected components:
-1 2
-4 5
-0 1 5
-3 7
-6
-Adjacency List for Block-Cut Forest:
-0 => 5
-1 => 6
-2 => 5 6
-3 =>
-4 =>
-5 => 0 2
-6 => 1 2
-
-***/
-
-#include <iostream>
+#include <cassert>
 using namespace std;
 
 int main() {
@@ -189,26 +171,9 @@ int main() {
   g.add_edge(3, 7);
   g.add_edge(4, 5);
   g.build_bcc();
-  cout << "Articulation points:";
-  for (int v : g.articulation_points()) {
-    cout << " " << v;
-  }
-  cout << endl << "Biconnected components:" << endl;
-  for (const auto &component : g.components()) {
-    for (int v : component) {
-      cout << v << " ";
-    }
-    cout << endl;
-  }
+  assert((g.articulation_points() == vector<int>{1, 5}));
+  assert((g.components() == vector<vector<int>>{{1, 2}, {4, 5}, {0, 1, 5}, {3, 7}, {6}}));
   g.build_block_cut_forest();
-  cout << "Adjacency List for Block-Cut Forest:" << endl;
-  const auto &forest = g.block_cut_forest();
-  for (int i = 0, n = static_cast<int>(forest.size()); i < n; i++) {
-    cout << i << " =>";
-    for (int v : forest[i]) {
-      cout << " " << v;
-    }
-    cout << endl;
-  }
+  assert((g.block_cut_forest() == vector<vector<int>>{{5}, {6}, {5, 6}, {}, {}, {0, 2}, {1, 2}}));
   return 0;
 }

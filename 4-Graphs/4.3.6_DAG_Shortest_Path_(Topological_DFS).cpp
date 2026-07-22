@@ -10,8 +10,10 @@ way to find the critical path in a schedule of dependent tasks.
 
 - `dag_shortest_path(start)` populates `dist` and `pred` for a global, pre-populated adjacency list
   `adj` whose nodes are numbered $[0, `n`)$, where `n` is `adj.size()`. Each edge is stored as
-  $(`neighbor`, `weight`)$ and may have any sign. `dist[v]` is set to `INF` for nodes not reachable
+  (`neighbor`, `weight`) and may have any sign. `dist[v]` is set to `INF` for nodes not reachable
   from `start`, and `pred` stores the shortest-path tree for path reconstruction.
+- `get_path(dest)` returns the path from `start` to `dest`, or an empty vector if `dest` is
+  unreachable, after the latest call to `dag_shortest_path()`.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 `start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the
@@ -19,10 +21,12 @@ destination to `start`, then reverse that sequence to recover the path.
 
 Time Complexity:
 - O(n + m) per call, where $n$ is the number of nodes and $m$ is the number of edges.
+- O(p) per call to `get_path()`, where $p$ is the number of nodes in the returned path.
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph.
 - O(n) auxiliary.
+- O(p) for the path returned by `get_path()`.
 
 */
 
@@ -72,29 +76,22 @@ void dag_shortest_path(int start) {
   }
 }
 
-/*** Example Usage and Output:
+std::vector<int> get_path(int dest) {
+  if (dist[dest] == INF) {
+    return {};
+  }
+  std::vector<int> path;
+  for (int v = dest; v != -1; v = pred[v]) {
+    path.push_back(v);
+  }
+  std::reverse(path.begin(), path.end());
+  return path;
+}
 
-The shortest distance from 0 to 4 is 2.
-Take the path: 0->1->3->4.
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
-
-void print_path(int dest) {
-  vector<int> path;
-  for (int j = dest; pred[j] != -1; j = pred[j]) {
-    path.push_back(pred[j]);
-  }
-  cout << "Take the path: ";
-  while (!path.empty()) {
-    cout << path.back() << "->";
-    path.pop_back();
-  }
-  cout << dest << "." << endl;
-}
 
 int main() {
   //        w=1    w=-2     w=3
@@ -113,9 +110,6 @@ int main() {
   int start = 0, dest = 4;
   dag_shortest_path(start);
   assert(dist[dest] == 2);
-  assert(pred[dest] == 3 && pred[3] == 1);
-  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
-       << endl;
-  print_path(dest);
+  assert((get_path(dest) == vector<int>{0, 1, 3, 4}));
   return 0;
 }

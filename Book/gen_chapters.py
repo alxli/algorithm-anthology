@@ -137,7 +137,7 @@ def format_math_expression(expression):
             # \inlinecodemath box within math mode.
             close = expression.find('`', i + 1)
             if close != -1:
-                # Wrapped in braces so it is a valid single operand after `^` or `_`.
+                # Wrapped in braces so it is a valid single operand after '^' or '_'.
                 result.append(r'{\inlinecodemath{' + escape_latex_code(expression[i + 1:close]) + '}}')
                 i = close + 1
                 continue

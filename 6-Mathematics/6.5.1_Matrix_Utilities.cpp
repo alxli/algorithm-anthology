@@ -255,8 +255,7 @@ Matrix<T> power_sum(const Matrix<T> &a, unsigned int p) {
   if (p == 0) {
     return make_matrix<T>(n, n);
   }
-  // [A A]^p = [A^p  A + A^2 + ... + A^p]
-  // [0 I]     [ 0                 I          ]
+  // The upper-right block of [[A, A], [0, I]]^p is A + A^2 + ... + A^p.
   Matrix<T> block = make_matrix<T>(2 * n, 2 * n);
   for (int i = 0; i < n; i++) {
     block[i][i] = a[i][i];

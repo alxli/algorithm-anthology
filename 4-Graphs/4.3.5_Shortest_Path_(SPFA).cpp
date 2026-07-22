@@ -10,8 +10,10 @@ is not adversarial.
 
 - `spfa(start)` populates `dist` and `pred` for a global, pre-populated adjacency list `adj` which
   must consist of nodes numbered $[0, `n`)$, where `n` is `adj.size()`. Each edge is stored as
-  $(`neighbor`, `weight`)$. The function returns `false` if it detects a reachable negative cycle,
-  and returns `true` otherwise.
+  (`neighbor`, `weight`). The function returns `false` if it detects a reachable negative cycle, and
+  returns `true` otherwise.
+- `get_path(dest)` returns the path from `start` to `dest` after a successful call to `spfa()`, or
+  an empty vector if `dest` is unreachable.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 `start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the
@@ -20,14 +22,17 @@ destination to `start`, then reverse that sequence to recover the path.
 Time Complexity:
 - O(n*m) per call in the worst case, where $n$ is the number of nodes and $m$ is the number of
   edges.
+- O(p) per call to `get_path()`, where $p$ is the number of nodes in the returned path.
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
   edges.
 - O(n) auxiliary queue space per call.
+- O(p) for the path returned by `get_path()`.
 
 */
 
+#include <algorithm>
 #include <cstdint>
 #include <queue>
 #include <utility>
@@ -70,29 +75,22 @@ bool spfa(int start) {
   return true;
 }
 
-/*** Example Usage and Output:
+std::vector<int> get_path(int dest) {
+  if (dist[dest] == INF) {
+    return {};
+  }
+  std::vector<int> path;
+  for (int v = dest; v != -1; v = pred[v]) {
+    path.push_back(v);
+  }
+  std::reverse(path.begin(), path.end());
+  return path;
+}
 
-The shortest distance from 0 to 3 is 5.
-Take the path: 0->1->2->3.
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
-
-void print_path(int dest) {
-  vector<int> path;
-  for (int j = dest; pred[j] != -1; j = pred[j]) {
-    path.push_back(pred[j]);
-  }
-  cout << "Take the path: ";
-  while (!path.empty()) {
-    cout << path.back() << "->";
-    path.pop_back();
-  }
-  cout << dest << "." << endl;
-}
 
 int main() {
   //        w=4
@@ -110,10 +108,7 @@ int main() {
   int start = 0, dest = 3;
   spfa(start);
   assert(dist[dest] == 5);
-  assert(pred[dest] == 2 && pred[2] == 1);
-  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
-       << endl;
-  print_path(dest);
+  assert((get_path(dest) == vector<int>{0, 1, 2, 3}));
 
   adj[3].emplace_back(1, -2);  // The cycle 1 -> 2 -> 3 -> 1 now has total weight -1.
   assert(!spfa(start));

@@ -10,11 +10,12 @@ $\exp(-(E(s') - E(s))/T)$ at temperature $T$. High temperatures encourage explor
 barriers; as the temperature decreases, the search increasingly favors improvements. The best state
 is tracked separately because the current state may later move to a worse one.
 
-- `anneal_min(initial, energy, rand_neighbor, rng, ...)` returns `(best_energy, best_state)`. The
-  callable `energy(state)` returns the state's energy, while `rand_neighbor(state, temp, rng)`
-  returns a randomly chosen nearby state. The optional temperature arguments default to
-  `temp_start = 1000`, `temp_end = 1e-6`, and `cooling_rate = 0.995`. `temp_end` must be positive
-  and less than `temp_start`, while `cooling_rate` must be strictly between 0 and 1.
+- `anneal_min(initial, energy, rand_neighbor, rng, ...)` returns (`best_energy`, `best_state`) given
+  an initial state `initial`, a callable `energy(state)` that returns the state's energy, and a
+  callable `rand_neighbor(state, temp, rng)` that returns a randomly chosen nearby state. Optional
+  parameters default to `temp_start = 1000`, `temp_end = 1e-6`, and `cooling_rate = 0.995`.
+  `temp_end` must be positive and less than `temp_start`, while `cooling_rate` must be strictly
+  between $0$ and $1$.
 
 The geometric schedule repeatedly multiplies the temperature by `cooling_rate`, performing
 $k = \lceil \log(T_{end}/T_{start}) / \log(r) \rceil$ iterations. Temperature has the same scale as
@@ -74,7 +75,7 @@ std::pair<double, State> anneal_min(
 using namespace std;
 
 int main() {
-  mt19937 rng(1234567);  // Set your own seed, or use random_device{}().
+  mt19937 rng(1234567);  // Fixed seed for reproducibility.
 
   // Escape the local minimum near x = 1 and find the lower minimum near x = -1.
   auto energy_1d = [](double x) { return (x * x - 1) * (x * x - 1) + 0.2 * x; };

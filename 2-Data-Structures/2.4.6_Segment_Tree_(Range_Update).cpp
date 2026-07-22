@@ -67,26 +67,15 @@ class LazySegTree {
   std::vector<T> value, delta;
   std::vector<char> pending;
 
-  void build(int i, int lo, int hi, const T &v) {
+  template<typename Gen>
+  void build(int i, int lo, int hi, const Gen &gen) {
     if (lo == hi) {
-      value[i] = v;
+      value[i] = gen(lo);
       return;
     }
     int mid = lo + (hi - lo) / 2;
-    build(i * 2 + 1, lo, mid, v);
-    build(i * 2 + 2, mid + 1, hi, v);
-    value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
-  }
-
-  template<typename It>
-  void build(int i, int lo, int hi, It arr) {
-    if (lo == hi) {
-      value[i] = *(arr + lo);
-      return;
-    }
-    int mid = lo + (hi - lo) / 2;
-    build(i * 2 + 1, lo, mid, arr);
-    build(i * 2 + 2, mid + 1, hi, arr);
+    build(i * 2 + 1, lo, mid, gen);
+    build(i * 2 + 2, mid + 1, hi, gen);
     value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
@@ -183,14 +172,14 @@ class LazySegTree {
   explicit LazySegTree(int n, const T &v = T())
       : len(n), value(4 * len), delta(4 * len), pending(4 * len, false) {
     assert(len > 0);
-    build(0, 0, len - 1, v);
+    build(0, 0, len - 1, [&](int) { return v; });
   }
 
   template<typename It>
   LazySegTree(It lo, It hi)
       : len(hi - lo), value(4 * len), delta(4 * len), pending(4 * len, false) {
     assert(len > 0);
-    build(0, 0, len - 1, lo);
+    build(0, 0, len - 1, [&](int i) { return *(lo + i); });
   }
 
   int size() const { return len; }
@@ -232,34 +221,26 @@ class LazySegTree {
   }
 };
 
-/*** Example Usage and Output:
+/*** Example Usage ***/
 
-Values: 6 -2 4 8 10
-Values: 5 5 5 1 5
-
-***/
-
-#include <iostream>
 using namespace std;
 
 int main() {
   vector<int> a{6, -2, 1, 8, 10};
   LazySegTree<int> t(a.begin(), a.end());
   t.update(2, 4);
-  cout << "Values:";
+  vector<int> expected{6, -2, 4, 8, 10};
   for (int i = 0; i < t.size(); i++) {
-    cout << " " << t.at(i);
+    assert(t.at(i) == expected[i]);
   }
-  cout << endl;
   assert(t.query(0, 3) == -2);
   t.update(0, 4, 5);
   t.update(3, 2);
   t.update(3, 1);
-  cout << "Values:";
+  expected = {5, 5, 5, 1, 5};
   for (int i = 0; i < t.size(); i++) {
-    cout << " " << t.at(i);
+    assert(t.at(i) == expected[i]);
   }
-  cout << endl;
   assert(t.query(0, 3) == 1);
 
   // Boundary search works through lazy updates too; values are now {5, 5, 5, 1, 5}.

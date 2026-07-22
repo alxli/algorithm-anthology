@@ -112,17 +112,8 @@ class SkewHeap {
   }
 };
 
-/*** Example Usage and Output:
+/*** Example Usage ***/
 
--1
-0
-5
-10
-12
-
-***/
-
-#include <iostream>
 #include <vector>
 using namespace std;
 
@@ -139,7 +130,6 @@ int main() {
   assert(h2.empty());
   vector<int> popped;
   while (!h.empty()) {
-    cout << h.top() << endl;
     popped.push_back(h.top());
     h.pop();
   }

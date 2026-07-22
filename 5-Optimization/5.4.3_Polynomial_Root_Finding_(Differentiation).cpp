@@ -47,10 +47,10 @@ double horner_eval(const std::vector<double> &p, double x) {
 
 double find_one_root(const std::vector<double> &p, double a, double b, const double eps = 1e-15) {
   double pa = horner_eval(p, a), pb = horner_eval(p, b);
-  if (std::fabs(pa) <= eps) {
+  if (fabs(pa) <= eps) {
     return a;
   }
-  if (std::fabs(pb) <= eps) {
+  if (fabs(pb) <= eps) {
     return b;
   }
   bool paneg = pa < 0, pbneg = pb < 0;

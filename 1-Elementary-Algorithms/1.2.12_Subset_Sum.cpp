@@ -22,7 +22,7 @@ the target beyond that window. This routine is sometimes called "fast knapsack,"
 it maximizes a subset sum rather than packing items with distinct values, so it is really the
 bounded-weight case of subset sum rather than the 0-1 value knapsack.
 
-- `max_subset_sum_at_most(lo, hi, v)` returns a pair $(`sum`, `items`)$ containing that maximum sum
+- `max_subset_sum_at_most(lo, hi, v)` returns a pair (`sum`, `items`) containing that maximum sum
   and the selected item indices relative to `lo`. Values may be negative. The range is supplied as
   random-access iterators, and `v` must be nonnegative.
 - `max_subset_sum_bounded(lo, hi, target)` returns the maximum sum of any subset of the range

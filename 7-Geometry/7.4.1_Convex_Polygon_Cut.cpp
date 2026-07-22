@@ -31,15 +31,13 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - EPS;
   return C(a) < C(b);
 }
 
@@ -103,13 +101,8 @@ std::vector<Point> convex_cut(It lo, It hi, const Pt &p, const Pt &q) {
   return res;
 }
 
-/*** Example Usage and Output:
+/*** Example Usage ***/
 
-Cut polygon: (-1,3) (0,3) (0,0)
-
-***/
-
-#include <iostream>
 using namespace std;
 
 struct PointI {
@@ -131,11 +124,6 @@ int main() {
     vector<Point> c{{-1, 3}, {0, 3}, {0, 0}};
     vector<Point> cut = convex_cut(v.begin(), v.end(), Point(0, 0), Point(0, 1));
     assert(EQ(cut, c));
-    cout << "Cut polygon:";
-    for (const Point &p : cut) {
-      cout << " (" << p.x << "," << p.y << ")";
-    }
-    cout << endl;
   }
   {  // On a non-convex input, the result may be multiple disjoint polygons!
     vector<Point> v{{0, 0}, {2, 2}, {0, 4}, {3, 4}, {3, 0}};

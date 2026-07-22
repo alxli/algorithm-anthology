@@ -1,8 +1,8 @@
 /*
 
 Given a starting node in a weighted, directed graph with possibly negative weights, visit every
-connected node and determine the minimum distance to each such node. Optionally, output the shortest
-path to a specific destination node using the shortest-path tree from the predecessor array `pred`.
+connected node and determine the minimum distance to each such node. Optionally, reconstruct the
+shortest path to a destination node using the shortest-path tree from the predecessor array `pred`.
 
 Bellman-Ford relaxes every edge in the graph up to $n - 1$ times, stopping early if a pass makes no
 changes. Since any shortest path uses at most $n - 1$ edges, all distances are correct after these
@@ -14,6 +14,8 @@ node and start from it.)
 
 - `bellman_ford(n, start)` populates `dist` and `pred` for a global, pre-populated edge list `edges`
   whose endpoints must be numbered $[0, `n`)$.
+- `get_path(dest)` returns the path from `start` to `dest`, or an empty vector if `dest` is
+  unreachable, after the latest call to `bellman_ford()`.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 `start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the
@@ -21,14 +23,17 @@ destination to `start`, then reverse that sequence to recover the path.
 
 Time Complexity:
 - O(n*m) per call, where $n$ is the number of nodes and $m$ is the number of edges.
+- O(p) per call to `get_path()`, where $p$ is the number of nodes in the returned path.
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
   edges.
 - O(n) auxiliary.
+- O(p) for the path returned by `get_path()`.
 
 */
 
+#include <algorithm>
 #include <cstdint>
 #include <stdexcept>
 #include <tuple>
@@ -64,29 +69,22 @@ void bellman_ford(int n, int start) {
   }
 }
 
-/*** Example Usage and Output:
+std::vector<int> get_path(int dest) {
+  if (dist[dest] == INF) {
+    return {};
+  }
+  std::vector<int> path;
+  for (int v = dest; v != -1; v = pred[v]) {
+    path.push_back(v);
+  }
+  std::reverse(path.begin(), path.end());
+  return path;
+}
 
-The shortest distance from 0 to 2 is 3.
-Take the path: 0->1->2.
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
-
-void print_path(int dest) {
-  vector<int> path;
-  for (int j = dest; pred[j] != -1; j = pred[j]) {
-    path.push_back(pred[j]);
-  }
-  cout << "Take the path: ";
-  while (!path.empty()) {
-    cout << path.back() << "->";
-    path.pop_back();
-  }
-  cout << dest << "." << endl;
-}
 
 int main() {
   //    w=1      w=2
@@ -100,9 +98,6 @@ int main() {
   int start = 0, dest = 2;
   bellman_ford(3, start);
   assert(dist[dest] == 3);
-  assert(pred[dest] == 1);
-  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
-       << endl;
-  print_path(dest);
+  assert((get_path(dest) == vector<int>{0, 1, 2}));
   return 0;
 }

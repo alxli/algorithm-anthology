@@ -7,32 +7,46 @@ subarray that extends it. Thus, by including `a[i]`, the running sum becomes `ma
 and the largest running sum seen is the answer. This can be adapted to compute the maximal submatrix
 sum as well.
 
-- `max_subarray_sum(lo, hi)` returns the sum and inclusive endpoints $(`sum`, `begin`, `end`)$ for
-  the maximal-sum subarray of $[`lo`, `hi`)$, where `lo` and `hi` are random-access iterators to
-  numeric types. This implementation requires operators `+` and `<` on the iterators' value type. By
+Two related scans maintain slightly different states. For a circular array, the best wrapped
+subarray is the whole-array sum minus the minimum-sum subarray. For a maximum-product subarray, a
+negative value swaps the roles of the minimum and maximum products ending at the previous position,
+so both products must be tracked.
+
+- `max_subarray_sum(lo, hi)` returns the sum and inclusive endpoints (`sum`, `begin`, `end`) for the
+  maximal-sum subarray of $[`lo`, `hi`)$, where `lo` and `hi` are random-access iterators to numeric
+  types. This implementation requires operators `+` and `<` on the iterators' value type. By
   convention, the empty subarray is allowed, so an input range containing only negative values
   returns sum $0$ and endpoints $[0, -1]$.
-- `max_submatrix_sum(a)` returns the sum and inclusive boundaries $(`sum`, `r1`, `c1`, `r2`, `c2`)$
+- `max_circular_subarray_sum(lo, hi)` returns a tuple (`sum`, `begin`, `end`) containing the maximal
+  circular-subarray sum and its inclusive endpoints. If `begin <= end`, the result is an ordinary
+  range; if `begin > end`, it wraps from `begin` through the end of the input and continues through
+  `end`. The empty subarray is allowed under the same convention as `max_subarray_sum()`.
+- `max_product_subarray(lo, hi)` returns a tuple (`product`, `begin`, `end`) containing the product
+  and inclusive endpoints of a nonempty maximal-product subarray, or product $0$ and endpoints
+  $[0, -1]$ for an empty input range.
+- `max_submatrix_sum(a)` returns the sum and inclusive boundaries (`sum`, `r1`, `c1`, `r2`, `c2`)
   for the largest rectangular submatrix of a matrix `a` with $m$ rows and $n$ columns. This
   implementation requires operators `+` and `<` on the matrix value type. By convention, the empty
   submatrix is allowed, so a matrix containing only negative values returns sum $0$ with empty row
   and column intervals.
 
-All subarray and submatrix sums must fit in the value type.
+All subarray sums, subarray products, and submatrix sums must fit in the value type.
 
 Time Complexity:
-- O(n) per call to `max_subarray_sum()`, where $n$ is the distance between `lo` and `hi`.
+- O(n) per call to `max_subarray_sum()`, `max_circular_subarray_sum()`, and
+  `max_product_subarray()`, where $n$ is the distance between `lo` and `hi`.
 - O(m*n^2) per call to `max_submatrix_sum()`, where $m$ is the number of rows and $n$ is the number
   of columns in the matrix.
 
 Space Complexity:
-- O(1) auxiliary for `max_subarray_sum()`.
+- O(1) auxiliary for each subarray function.
 - O(m) auxiliary for `max_submatrix_sum()`, where $m$ is the number of rows in the matrix.
 
 */
 
 #include <iterator>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 template<typename It>
@@ -55,6 +69,73 @@ auto max_subarray_sum(It lo, It hi) {
     }
   }
   return std::make_tuple(max_sum, begin, end);
+}
+
+template<typename It>
+auto max_circular_subarray_sum(It lo, It hi) {
+  using T = typename std::iterator_traits<It>::value_type;
+  auto [max_sum, begin, end] = max_subarray_sum(lo, hi);
+  if (lo == hi) {
+    return std::make_tuple(max_sum, begin, end);
+  }
+  int n = hi - lo, curr_begin = 0, min_begin = 0, min_end = -1;
+  T total = 0, min_sum = 0, curr_sum = 0;
+  for (It it = lo; it != hi; ++it) {
+    total += *it;     // Overflow warning.
+    curr_sum += *it;  // Overflow warning.
+    if (0 < curr_sum) {
+      curr_sum = 0;
+      curr_begin = (it - lo) + 1;
+    } else if (curr_sum < min_sum) {
+      min_sum = curr_sum;
+      min_begin = curr_begin;
+      min_end = it - lo;
+    }
+  }
+  T wrapped_sum = total - min_sum;
+  if (max_sum < wrapped_sum) {
+    max_sum = wrapped_sum;
+    begin = (min_end + 1) % n;
+    end = (min_begin + n - 1) % n;
+  }
+  return std::make_tuple(max_sum, begin, end);
+}
+
+template<typename It>
+auto max_product_subarray(It lo, It hi) {
+  using T = typename std::iterator_traits<It>::value_type;
+  if (lo == hi) {
+    return std::make_tuple(T(), 0, -1);
+  }
+  T max_ending = *lo, min_ending = *lo, best = *lo;
+  int max_begin = 0, min_begin = 0, begin = 0, end = 0;
+  for (It it = lo + 1; it != hi; ++it) {
+    int i = it - lo;
+    if (*it < 0) {
+      std::swap(max_ending, min_ending);
+      std::swap(max_begin, min_begin);
+    }
+    T next_max = max_ending * *it;  // Overflow warning.
+    T next_min = min_ending * *it;  // Overflow warning.
+    if (next_max < *it) {
+      max_ending = *it;
+      max_begin = i;
+    } else {
+      max_ending = next_max;
+    }
+    if (*it < next_min) {
+      min_ending = *it;
+      min_begin = i;
+    } else {
+      min_ending = next_min;
+    }
+    if (best < max_ending) {
+      best = max_ending;
+      begin = max_begin;
+      end = i;
+    }
+  }
+  return std::make_tuple(best, begin, end);
 }
 
 template<typename T>
@@ -112,6 +193,15 @@ int main() {
       cout << a[i] << " ";
     }
     cout << endl;
+
+    vector<int> circular{5, -3, 5};
+    auto [circular_sum, circular_begin, circular_end] =
+        max_circular_subarray_sum(circular.begin(), circular.end());
+    assert(circular_sum == 10 && circular_begin == 2 && circular_end == 0);
+
+    vector<int> b{2, 3, -2, 4};
+    auto [product, product_begin, product_end] = max_product_subarray(b.begin(), b.end());
+    assert(product == 6 && product_begin == 0 && product_end == 1);
   }
   {
     // clang-format off

@@ -15,12 +15,12 @@ domino tiling, the mask is a profile of the current row; this technique is often
 broken profile or plug DP. A domino covers exactly two edge-adjacent cells, so each piece is either
 horizontal ($1 \times 2$) or vertical ($2 \times 1$).
 
-- `assignment_min_cost(cost)` returns a pair $(`sum`, `job`)$, where `sum` is the minimum cost of
+- `assignment_min_cost(cost)` returns a pair (`sum`, `job`), where `sum` is the minimum cost of
   assigning each worker to a distinct job, and `job[i]` is the job assigned to worker `i`. The input
   is a square matrix with one row per worker and one column per job.
-- `minimum_set_cover(sets, universe_size)` returns a pair $(`count`, `chosen`)$, where `count` is
-  the minimum number of sets needed to cover all elements in $[0, u)$, where $u$ is `universe_size`,
-  and `chosen` contains one optimal list of set indices. If no cover exists, `count` is $-1$ and
+- `minimum_set_cover(sets, universe_size)` returns a pair (`count`, `chosen`), where `count` is the
+  minimum number of sets needed to cover all elements in $[0, u)$, where $u$ is `universe_size`, and
+  `chosen` contains one optimal list of set indices. If no cover exists, `count` is $-1$ and
   `chosen` is empty. Each input set is represented as a bitmask.
 - `partition_min_cost(group_cost)` returns the minimum total cost to partition all elements into
   disjoint nonempty groups, where `group_cost[mask]` is the cost of taking `mask` as one group.

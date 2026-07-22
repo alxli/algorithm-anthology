@@ -188,15 +188,9 @@ class SkipList {
   }
 };
 
-/*** Example Usage and Output:
-
-abcde
-bcde
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -211,17 +205,13 @@ int main() {
   assert(*l.find(4) == 'd');
   assert(!l.insert(4, 'd'));
   assert(l.size() == 5);
-  for (const auto &[k, v] : l.entries()) {
-    cout << v;
-  }
-  cout << endl;
+  assert(
+      (l.entries() == vector<pair<int, char>>{{1, 'a'}, {2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}})
+  );
   assert(l.erase(1));
   assert(!l.erase(1));
   assert(l.find(1) == nullptr);
   assert(l.size() == 4);
-  for (const auto &[k, v] : l.entries()) {
-    cout << v;
-  }
-  cout << endl;
+  assert((l.entries() == vector<pair<int, char>>{{2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}}));
   return 0;
 }

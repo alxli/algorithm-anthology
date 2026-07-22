@@ -27,11 +27,11 @@ dynamic programming recurrence.
   such pair exists. The input array must be sorted.
 - `three_sum(a, target)` returns three original indices whose values sum to `target`, or
   $(-1, -1, -1)$ if none exist.
-- `min_length_at_least(a, target)` returns $(`length`, `lo`, `hi`)$, the minimum length and
+- `min_length_at_least(a, target)` returns a tuple (`length`, `lo`, `hi`), the minimum length and
   inclusive endpoints of a contiguous subarray with sum at least `target`, or length $-1$ if none
   exists. Values in `a` must be nonnegative. If `target` is nonpositive, it returns the empty
   subarray.
-- `longest_at_most_k_distinct(a, k)` returns $(`length`, `lo`, `hi`)$, the maximum length and
+- `longest_at_most_k_distinct(a, k)` returns a tuple (`length`, `lo`, `hi`), the maximum length and
   inclusive endpoints of a contiguous subarray containing at most `k` distinct values. If `k` is
   nonpositive, it returns the empty subarray.
 - `sliding_window_extrema(a, k, comp = std::less<>)` returns the extreme value in each window of

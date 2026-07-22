@@ -32,7 +32,7 @@ double newton_root(
   double x = x0, error = eps + 1;
   for (int i = 0; error > eps && i < iterations; i++) {
     double xnew = x - f(x) / fprime(x);
-    error = std::fabs(xnew - x);
+    error = fabs(xnew - x);
     x = xnew;
   }
   if (error > eps) {
@@ -51,7 +51,7 @@ double secant_root(
     double xnew = x - fx * ((x - xold) / (fx - fxold));
     xold = x;
     fxold = fx;
-    error = std::fabs(xnew - x);
+    error = fabs(xnew - x);
     x = xnew;
   }
   if (error > eps) {

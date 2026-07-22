@@ -36,7 +36,7 @@ auto stress(int trials, Generate generate, Solve solve, Brute brute)
 using namespace std;
 
 int main() {
-  std::mt19937 rng(123);
+  std::mt19937 rng(1234567);  // Fixed seed for reproducibility.
 
   auto generate = [&] {
     int n = std::uniform_int_distribution<int>(1, 8)(rng);

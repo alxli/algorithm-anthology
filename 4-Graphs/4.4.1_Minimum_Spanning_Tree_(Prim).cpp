@@ -71,19 +71,9 @@ int64_t prim_mst() {
   return total_dist;
 }
 
-/*** Example Usage and Output:
-
-Total distance: 13
-0 <-> 2 (3)
-0 <-> 1 (4)
-3 <-> 4 (1)
-4 <-> 5 (2)
-5 <-> 6 (3)
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 void add_edge(int u, int v, int w) {
@@ -109,10 +99,8 @@ int main() {
   add_edge(6, 4, 4);
   int64_t total = prim_mst();
   assert(total == 13);
-  assert(mst.size() == 5);
-  cout << "Total distance: " << total << endl;
-  for (auto [u, v, w] : mst) {
-    cout << u << " <-> " << v << " (" << w << ")" << endl;
-  }
+  assert(
+      (mst == vector<tuple<int, int, int>>{{0, 2, 3}, {0, 1, 4}, {3, 4, 1}, {4, 5, 2}, {5, 6, 3}})
+  );
   return 0;
 }

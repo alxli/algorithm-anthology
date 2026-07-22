@@ -26,7 +26,7 @@ the cycle entry after $m$ steps. Brent first determines $n$, then advances one p
 moving both together from that fixed separation likewise makes them meet at the entry.
 
 - `find_cycle_floyd(f, x0)` repeatedly applies `f` starting from `x0` and returns the reached cycle
-  as a tuple $(`entry`, `start`, `length`)$, where `entry` is the first cycle value, `start` is its
+  as a tuple (`entry`, `start`, `length`), where `entry` is the first cycle value, `start` is its
   index in the sequence, and `length` is the number of distinct values in the cycle.
 - `find_cycle_brent(f, x0)` does the same with fewer calls to `f` in many cases.
 

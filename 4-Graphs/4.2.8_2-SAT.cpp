@@ -108,14 +108,9 @@ class TwoSAT {
   const std::vector<int> &assignment() const { return solution; }
 };
 
-/*** Example Usage and Output:
-
-Assignment: 1 1 1
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -129,11 +124,6 @@ int main() {
   solver.add_true(x0);
   solver.add(1, true, 2, false);
   assert(solver.satisfiable());
-  assert(solver.assignment()[0]);
-  cout << "Assignment:";
-  for (bool value : solver.assignment()) {
-    cout << " " << value;
-  }
-  cout << endl;
+  assert((solver.assignment() == vector<int>{true, true, true}));
   return 0;
 }

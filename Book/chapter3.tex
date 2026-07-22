@@ -673,7 +673,7 @@ struct VectorHasher {
   }
 };
 
-template<class... Ts>
+template<typename... Ts>
 struct TupleHasher {
   std::size_t operator()(const std::tuple<Ts...> &t) const {
     uint64_t h = 0;
@@ -693,7 +693,7 @@ struct GenericHasher : ScalarHasher<T> {};
 template<typename A, typename B>
 struct GenericHasher<std::pair<A, B>> : PairHasher<A, B> {};
 
-template<class... Ts>
+template<typename... Ts>
 struct GenericHasher<std::tuple<Ts...>> : TupleHasher<Ts...> {};
 
 template<typename T>
@@ -994,12 +994,12 @@ The hasher's output must be nonnegative. As with any polynomial hash, comparing 
 #include <deque>
 #include <utility>
 
-template<class T>
+template<typename T>
 struct IdentityDigit {
   uint64_t operator()(const T &x) const { return static_cast<uint64_t>(x); }
 };
 
-template<class T = int, class Hash = IdentityDigit<T>>
+template<typename T = int, typename Hash = IdentityDigit<T>>
 class HashDeque {
   static const uint64_t MOD1 = 1000000007, MOD2 = 1000000009;  // Distinct primes below 2^31.
   static const uint64_t BASE1 = 131, BASE2 = 137;              // Nonzero modulo MOD1 and MOD2.
@@ -1362,7 +1362,7 @@ using namespace std;
 int main() {
   vector<int> a{1, 2, 1, 3};
   vector<int> b{2, 1, 3};
-  ZobristHash<int> zh(123);
+  ZobristHash<int> zh(1234567);  // Fixed seed for reproducibility.
   vector<uint64_t> pa = zh.distinct_prefix_hashes(a.begin(), a.end());
   vector<uint64_t> pb = zh.distinct_prefix_hashes(b.begin(), b.end());
 
@@ -1664,7 +1664,6 @@ class AhoCorasick {
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <iostream>
 #include <utility>
 using namespace std;
 
@@ -1696,22 +1695,9 @@ int main() {
   ac.find_all_in("zzzz", [&](const string &needle, int pos) { none.push_back({needle, pos}); });
   assert(none.empty());
 
-  ac.find_all_in("abccab", [](const string &needle, int pos) {
-    cout << "Matched \"" << needle << "\" at position " << pos << "." << endl;
-  });
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-Matched "a" at position 0.
-Matched "ab" at position 0.
-Matched "bc" at position 1.
-Matched "c" at position 2.
-Matched "c" at position 3.
-Matched "a" at position 4.
-Matched "ab" at position 4.
-Matched "abccab" at position 0.
-\end{exampleoutput}
 \subsection{Palindrome Searching (Manacher)}
 Computes all odd- and even-length palindromic radii of a string in linear time using Manacher's algorithm. These radii can be used to test whether any substring is a palindrome in $O(1)$, find the longest palindromic substring, or count all palindromic substrings. The algorithm tracks the rightmost known palindrome and seeds each new center with the radius of its mirror inside that window, so characters are only ever compared when a palindrome is extended past the window.
 
@@ -2111,7 +2097,6 @@ class SuffixArrayManberMyers {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -2123,22 +2108,9 @@ int main() {
   assert(lcp == lcp_expected);
   assert(sa.find("ana") == 1);
   assert(sa.find("x") == string::npos);
-  cout << "Suffix array:";
-  for (int pos : sarr) {
-    cout << " " << pos;
-  }
-  cout << endl << "LCP array:";
-  for (int len : lcp) {
-    cout << " " << len;
-  }
-  cout << endl;
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-Suffix array: 5 3 1 0 4 2
-LCP array: 1 3 0 0 2
-\end{exampleoutput}
 \subsection{Suffix Array and LCP (Counting Sort)}
 Given a string $s$, a suffix array stores the starting positions of the suffixes of $s$ in sorted order. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of $s$. For example, $s$ = \inlinecode{"cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
 
@@ -2655,7 +2627,6 @@ class Trie {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -2665,7 +2636,21 @@ int main() {
   for (int i = 0; i < static_cast<int>(s.size()); i++) {
     assert(t.insert(s[i], i));
   }
-  t.walk([](string k, int v) { cout << "(\"" << k << "\", " << v << ")" << endl; });
+  vector<pair<string, int>> entries;
+  t.walk([&](string key, int value) { entries.emplace_back(key, value); });
+  assert(
+      (entries == vector<pair<string, int>>{
+                      {"", 0},
+                      {"a", 1},
+                      {"i", 6},
+                      {"in", 7},
+                      {"inn", 8},
+                      {"tea", 3},
+                      {"ted", 4},
+                      {"ten", 5},
+                      {"to", 2}
+                  })
+  );
   assert(!t.empty());
   assert(t.size() == 9);
   assert(!t.insert(s[0], 2));
@@ -2694,17 +2679,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-("", 0)
-("a", 1)
-("i", 6)
-("in", 7)
-("inn", 8)
-("tea", 3)
-("ted", 4)
-("ten", 5)
-("to", 2)
-\end{exampleoutput}
 \subsection{Radix Tree}
 Maintain a map of strings to values using a compressed tree data structure. Each node corresponds to a substring of an inserted string, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node. Contrary to a regular trie, a radix tree is more space efficient as it combines chains of nodes with only a single child. Children are stored in hash tables, and \inlinecode{walk()} sorts child labels as needed to preserve lexicographic traversal.
 
@@ -2971,7 +2945,6 @@ class RadixTree {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -2981,7 +2954,21 @@ int main() {
   for (int i = 0; i < static_cast<int>(s.size()); i++) {
     assert(t.insert(s[i], i));
   }
-  t.walk([](string k, int v) { cout << "(\"" << k << "\", " << v << ")" << endl; });
+  vector<pair<string, int>> entries;
+  t.walk([&](string key, int value) { entries.emplace_back(key, value); });
+  assert(
+      (entries == vector<pair<string, int>>{
+                      {"", 0},
+                      {"a", 1},
+                      {"i", 6},
+                      {"in", 7},
+                      {"inn", 8},
+                      {"tea", 3},
+                      {"ted", 4},
+                      {"ten", 5},
+                      {"to", 2}
+                  })
+  );
   assert(!t.empty());
   assert(t.size() == 9);
   assert(!t.insert(s[0], 2));
@@ -3010,17 +2997,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-("", 0)
-("a", 1)
-("i", 6)
-("in", 7)
-("inn", 8)
-("tea", 3)
-("ted", 4)
-("ten", 5)
-("to", 2)
-\end{exampleoutput}
 \subsection{Suffix Tree (Ukkonen)}
 A suffix tree is the compressed trie of every suffix of a string: a rooted tree in which each edge is labeled with a substring, no two edges leaving a node start with the same character, and the concatenation of labels from the root to each leaf spells one suffix. Paths from the root therefore spell exactly the distinct substrings of the string, which makes the tree a powerful index for substring queries, repeated-substring problems, and many other tasks. It is the explicit-pointer counterpart of the suffix automaton; the two store the same information and either can be converted into the other.
 
@@ -3736,7 +3712,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Edit Distance and Sequence Alignment}
-Given two strings, determine their edit distance or a minimum-cost alignment. The Levenshtein edit distance is the minimum number of insertions, deletions, and substitutions needed to transform one string into the other. More generally, an alignment inserts gap characters \inlinecode{\_} into both strings so the final lengths match; its cost is \inlinecode{gap\_cost} times the number of inserted gaps plus \inlinecode{sub\_cost} times the number of indices where the aligned characters differ.
+Given two strings, determine their edit distance or a minimum-cost alignment. The Levenshtein edit distance is the minimum number of insertions, deletions, and substitutions needed to transform one string into the other. More generally, an alignment inserts gap characters \inlinecode{\textquotesingle{}\_\textquotesingle{}} into both strings so that the final lengths match; its cost is \inlinecode{gap\_cost} times the number of inserted gaps plus \inlinecode{sub\_cost} times the number of indices where the aligned characters differ.
 
 Dynamic programming compares prefixes and chooses the cheapest last operation: align the final characters together, leave a gap in the first string, or leave a gap in the second string. Following the filled table backward reconstructs one minimum-cost alignment. This is the Needleman-Wunsch sequence-alignment recurrence. Hirschberg's algorithm uses the same recurrence with only one DP row at a time, splitting the problem where an optimal alignment crosses the longer string's midpoint. Both \inlinecode{gap\_cost} and \inlinecode{sub\_cost} must be nonnegative.
 

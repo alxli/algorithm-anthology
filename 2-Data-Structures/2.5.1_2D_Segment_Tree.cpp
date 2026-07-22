@@ -21,10 +21,10 @@ dense storage.
   initialized to `value`.
 - `SegTree2D<T>(a)` constructs the tree from the matrix `a`.
 - `size_rows()` and `size_cols()` return the dimensions of the array.
-- `update(r, c, d)` applies delta `d` to the entry at index $(`r`, `c`)$.
-- `at(r, c)` returns the value at index $(`r`, `c`)$.
-- `query(r1, c1, r2, c2)` returns the aggregate over the rectangle with rows $[`r1`, `r2`]$ and
-  columns $[`c1`, `c2`]$.
+- `update(r, c, d)` applies delta `d` to the entry at index (`r`, `c`).
+- `at(r, c)` returns the value at index (`r`, `c`).
+- `query(r1, c1, r2, c2)` returns the aggregate over the rectangle with rows in $[`r1`, `r2`]$ and
+  columns in $[`c1`, `c2`]$.
 
 Time Complexity:
 - O(R*C) per call to either constructor, where $R$ and $C$ are the matrix dimensions.
@@ -50,7 +50,14 @@ class SegTree2D {
   int rows, cols;
   std::vector<std::vector<T>> tree;
 
-  void build() {
+  template<typename Gen>
+  void build(const Gen &gen) {
+    tree.assign(2 * rows, std::vector<T>(2 * cols));
+    for (int r = 0; r < rows; r++) {
+      for (int c = 0; c < cols; c++) {
+        tree[r + rows][c + cols] = gen(r, c);
+      }
+    }
     for (int r = rows; r < 2 * rows; r++) {
       for (int c = cols - 1; c > 0; c--) {
         tree[r][c] = combine(tree[r][2 * c], tree[r][2 * c + 1]);
@@ -77,23 +84,15 @@ class SegTree2D {
   }
 
  public:
-  SegTree2D(int rows, int cols, const T &value = T())
-      : rows(rows), cols(cols), tree(2 * rows, std::vector<T>(2 * cols, value)) {
+  SegTree2D(int rows, int cols, const T &value = T()) : rows(rows), cols(cols) {
     assert(rows > 0 && cols > 0);
-    build();
+    build([&](int, int) { return value; });
   }
 
   explicit SegTree2D(const std::vector<std::vector<T>> &a)
-      : rows(static_cast<int>(a.size())),
-        cols(rows == 0 ? 0 : static_cast<int>(a[0].size())),
-        tree(2 * rows, std::vector<T>(2 * cols)) {
+      : rows(static_cast<int>(a.size())), cols(rows == 0 ? 0 : static_cast<int>(a[0].size())) {
     assert(rows > 0 && cols > 0);
-    for (int r = 0; r < rows; r++) {
-      for (int c = 0; c < cols; c++) {
-        tree[r + rows][c + cols] = a[r][c];
-      }
-    }
-    build();
+    build([&](int r, int c) { return a[r][c]; });
   }
 
   int size_rows() const { return rows; }

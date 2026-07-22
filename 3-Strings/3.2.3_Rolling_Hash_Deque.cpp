@@ -60,12 +60,12 @@ Space Complexity:
 #include <deque>
 #include <utility>
 
-template<class T>
+template<typename T>
 struct IdentityDigit {
   uint64_t operator()(const T &x) const { return static_cast<uint64_t>(x); }
 };
 
-template<class T = int, class Hash = IdentityDigit<T>>
+template<typename T = int, typename Hash = IdentityDigit<T>>
 class HashDeque {
   static const uint64_t MOD1 = 1000000007, MOD2 = 1000000009;  // Distinct primes below 2^31.
   static const uint64_t BASE1 = 131, BASE2 = 137;              // Nonzero modulo MOD1 and MOD2.

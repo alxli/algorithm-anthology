@@ -62,14 +62,9 @@ class FenwickRUPQ {
   }
 };
 
-/*** Example Usage and Output:
-
-Values: 5 10 15 10 10
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -82,10 +77,5 @@ int main() {
   assert(t.at(1) == 10);
   assert(t.at(2) == 15);
   assert(t.at(4) == 10);
-  cout << "Values: ";
-  for (int i = 0; i < t.size(); i++) {
-    cout << t.at(i) << " ";
-  }
-  cout << endl;
   return 0;
 }

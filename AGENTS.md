@@ -73,6 +73,10 @@ Prefer code that a strong contestant can adapt quickly after skimming:
 - Template type parameters are conventional short names such as `T`, `U`, `C`, `Fn`, `Compare`.
 - Runtime function parameters are lowercase, even when `const` and defaulted:
   `eps`, `iterations`, `maximize`, `edge_is_inside`, `touch_is_intersect`.
+- Prefer `lo` and `hi` for generic iterator, search, and numeric range bounds. Use more specific
+  names such as `tgt_lo`/`tgt_hi` when two ranges coexist. Preserve established domain terms where
+  they carry meaning, including scheduling `start`/`finish`, graph `start`, matrix `r`/`c`,
+  and STL-style `first`/`last`.
 - Compile-time template knobs and named constants are uppercase:
   `VALUES_ON_EDGES`, `CANONICALIZE`, `EXACT`, `EPS`, `INF`, `NAIVE_CUTOFF`.
 - For graph code, use `u` and `v` for edge endpoints. Use `w` or `weight` for edge weights, and
@@ -173,13 +177,19 @@ sections elsewhere, include both `Time Complexity:` and `Space Complexity:`.
 
 - Every section should compile as a standalone program through `run_examples.py`.
 - Keep example code after the marker. Include only what is needed to exercise the implementation.
-- Prefer `assert`-based examples for behavior. Use printed output only when it teaches the result;
-  then use `/*** Example Usage and Output:`.
+- Prefer `assert`-based examples for behavior, including exact container comparisons when the
+  returned sequence is compact. Use printed output only when its presentation teaches something,
+  such as timings, a matrix or alignment, an encoded representation, an enumeration, or debugging
+  behavior; then use `/*** Example Usage and Output:`.
 - Examples may define helpers such as `print_range()` or `eval()` when they make the demonstration
   clearer.
 - Examples should exercise the behavior a contestant is likely to misunderstand: degenerate inputs,
   disconnected components, non-default flags, node-vs-edge conventions, or the witness returned by
   the API.
+- Seed random engines in examples and tests with the fixed seed `1234567` so failures and output
+  are reproducible. Reusable randomized implementations should instead seed once from
+  `std::random_device{}()`, unless the API accepts a caller-provided seed or engine. Per-run
+  steady-clock salts used to harden hash tables are a separate intentional convention.
 - When examples rely on exact equality for floating-point-looking objects, either use `EQ()` or add
   a short comment explaining why exact equality is intentional.
 - ASCII diagrams are welcome when they make tree/graph/data-structure updates easier to follow.
@@ -187,6 +197,9 @@ sections elsewhere, include both `Time Complexity:` and `Space Complexity:`.
 
 ## Precision And Numeric Code
 
+- Use plain `fabs()` rather than `std::fabs()` to match the anthology's compact convention for
+  `<cmath>` functions. In the templated `EQ()` and `LT()` helpers, use `EPS` directly instead of
+  `static_cast<C>(EPS)`; the floating-point expression converts it implicitly.
 - Floating-point tolerance constants are usually named `EPS` and kept as uppercase constants.
 - Runtime tolerance parameters are lowercase `eps`.
 - Geometry `operator==` and `operator<` should remain exact so points and lines work predictably in
@@ -263,6 +276,8 @@ them as a convention. The current code-consistency pass in `scan_quality.py` che
 - direct `std::random_device{}` seeding inside examples, where a fixed seed keeps examples
   reproducible;
 - C `rand()`/`srand()` usage, which should be replaced by a C++ random engine and distribution.
+- `std::fabs()` usage, which should follow the anthology's plain `fabs()` convention.
+- `static_cast<C>(EPS)` in floating-point comparison helpers, where direct `EPS` is clearer.
 
 When scanning for code quality, first run `python3 scan_quality.py` and fix deterministic
 findings. Then do a bounded exploratory pass for one new family of smells, such as dead example

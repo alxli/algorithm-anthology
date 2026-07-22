@@ -115,21 +115,11 @@ class RangeKDTree {
   }
 };
 
-/*** Example Usage and Output:
-
-(2, -1) (1, 4) (2, 2) (-1, -1)
-(1, 4) (2, 2) (3, 1)
-
-***/
+/*** Example Usage ***/
 
 #include <algorithm>
 #include <cassert>
-#include <iostream>
 using namespace std;
-
-void print(const pair<int, int> &p) {
-  cout << "(" << p.first << ", " << p.second << ") ";
-}
 
 int main() {
   vector<pair<int, int>> v{{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
@@ -144,9 +134,5 @@ int main() {
   t.query(1, 1, 4, 8, collect);
   sort(got.begin(), got.end());
   assert((got == vector<pair<int, int>>{{1, 4}, {2, 2}, {3, 1}}));
-  t.query(-1, -1, 2, 5, print);
-  cout << endl;
-  t.query(1, 1, 4, 8, print);
-  cout << endl;
   return 0;
 }

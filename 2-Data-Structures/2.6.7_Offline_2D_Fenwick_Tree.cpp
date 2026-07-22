@@ -21,14 +21,14 @@ Usage is two-phase. First declare every cell that will be updated with `reserve(
 target reserved cells, but queries may use any coordinates.
 
 - `OfflineFenwick2D<T>()` constructs an empty structure in the declaration phase.
-- `reserve(r, c)` declares that the cell $(`r`, `c`)$ may later be updated. Call before `build()`.
+- `reserve(r, c)` declares that the cell (`r`, `c`) may later be updated. Call before `build()`.
 - `build()` finalizes the coordinate compression. Call exactly once, after all `reserve()` calls.
-- `add(r, c, x)` adds `x` to the value at index $(`r`, `c`)$, which must have been reserved.
-- `set(r, c, x)` assigns `x` to the value at index $(`r`, `c`)$, which must have been reserved.
+- `add(r, c, x)` adds `x` to the value at index (`r`, `c`), which must have been reserved.
+- `set(r, c, x)` assigns `x` to the value at index (`r`, `c`), which must have been reserved.
 - `sum(r, c)` returns the sum of the rectangle with rows $[0, `r`]$ and columns $[0, `c`]$.
 - `sum(r1, c1, r2, c2)` returns the sum of the rectangle with rows $[`r1`, `r2`]$ and columns
   $[`c1`, `c2`]$.
-- `at(r, c)` returns the value at index $(`r`, `c`)$.
+- `at(r, c)` returns the value at index (`r`, `c`).
 
 Time Complexity:
 - O(n log^2 n) per call to `build()`, where $n$ is the number of reserved cells.

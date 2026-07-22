@@ -106,14 +106,9 @@ class Dominators {
   }
 };
 
-/*** Example Usage and Output:
-
-Immediate dominators: 0 0 0 0 3 3 3
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -131,11 +126,6 @@ int main() {
   g.add_edge(4, 6);
   g.add_edge(5, 6);
   vector<int> idom = g.find_dominators(0);
-  assert(g.find_dominators(0) == idom);
-  cout << "Immediate dominators:";
-  for (int v : idom) {
-    cout << " " << v;
-  }
-  cout << endl;
+  assert((idom == vector<int>{0, 0, 0, 0, 3, 3, 3}));
   return 0;
 }

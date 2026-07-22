@@ -115,22 +115,10 @@ class AhoCorasick {
   }
 };
 
-/*** Example Usage and Output:
-
-Matched "a" at position 0.
-Matched "ab" at position 0.
-Matched "bc" at position 1.
-Matched "c" at position 2.
-Matched "c" at position 3.
-Matched "a" at position 4.
-Matched "ab" at position 4.
-Matched "abccab" at position 0.
-
-***/
+/*** Example Usage ***/
 
 #include <algorithm>
 #include <cassert>
-#include <iostream>
 #include <utility>
 using namespace std;
 
@@ -162,8 +150,5 @@ int main() {
   ac.find_all_in("zzzz", [&](const string &needle, int pos) { none.push_back({needle, pos}); });
   assert(none.empty());
 
-  ac.find_all_in("abccab", [](const string &needle, int pos) {
-    cout << "Matched \"" << needle << "\" at position " << pos << "." << endl;
-  });
   return 0;
 }

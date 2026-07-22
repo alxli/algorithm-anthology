@@ -210,7 +210,7 @@ struct VectorHasher {
   }
 };
 
-template<class... Ts>
+template<typename... Ts>
 struct TupleHasher {
   std::size_t operator()(const std::tuple<Ts...> &t) const {
     uint64_t h = 0;
@@ -230,7 +230,7 @@ struct GenericHasher : ScalarHasher<T> {};
 template<typename A, typename B>
 struct GenericHasher<std::pair<A, B>> : PairHasher<A, B> {};
 
-template<class... Ts>
+template<typename... Ts>
 struct GenericHasher<std::tuple<Ts...>> : TupleHasher<Ts...> {};
 
 template<typename T>

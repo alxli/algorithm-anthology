@@ -14,7 +14,7 @@ options as possible.
 Intervals are treated as half-open ranges $[`start`, `finish`)$, so one interval may reuse a room
 that another interval vacates at the same time.
 
-- `partition_intervals(intervals)` returns a pair $(`rooms`, `room`)$, where `rooms` is the minimum
+- `partition_intervals(intervals)` returns a pair (`rooms`, `room`), where `rooms` is the minimum
   number of rooms and `room[i]` is the assigned room for input interval `i`. Each
   `PartitionInterval` has fields `start` and `finish`, which must satisfy `start < finish`.
 

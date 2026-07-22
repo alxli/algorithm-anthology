@@ -4,8 +4,8 @@ Local-only debug printing for contest code. The macro expands to a no-op unless 
 (e.g. by passing `-DLOCAL` to the compiler flags), so it can remain in submitted code without
 producing output.
 
-- `dbg_repr(x)` returns a string representation of arithmetic types, strings, pairs, tuples, and
-  iterable containers.
+- `dbg_repr(x)` returns a string representation of arithmetic types, strings, pairs, tuples,
+  iterable containers, and custom types that support insertion into `std::ostream`.
 - `dbg(a, b, c)` prints the function name, line number, argument names, and values to `std::cerr`
   when `LOCAL` is defined.
 - `pr(a, b, c)` prints only the values to `std::cerr` when `LOCAL` is defined.
@@ -35,6 +35,14 @@ struct is_iterable<
     T, std::void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>()))>>
     : std::true_type {};
 
+template<typename T, typename = void>
+struct is_streamable : std::false_type {};
+
+template<typename T>
+struct is_streamable<
+    T, std::void_t<decltype(std::declval<std::ostream &>() << std::declval<const T &>())>>
+    : std::true_type {};
+
 // clang-format off
 std::string dbg_repr(const std::string &s) { return '"' + s + '"'; }
 std::string dbg_repr(const char *s) { return dbg_repr(std::string(s)); }
@@ -60,6 +68,17 @@ typename std::enable_if<std::is_floating_point<T>::value, std::string>::type dbg
   return out.str();
 }
 
+template<typename T>
+typename std::enable_if<
+    is_streamable<T>::value && !is_iterable<T>::value && !std::is_arithmetic<T>::value &&
+        !std::is_convertible<T, std::string>::value,
+    std::string>::type
+dbg_repr(const T &x) {
+  std::ostringstream out;
+  out << x;
+  return out.str();
+}
+
 template<typename A, typename B>
 std::string dbg_repr(const std::pair<A, B> &p) {
   return "(" + dbg_repr(p.first) + ", " + dbg_repr(p.second) + ")";
@@ -73,7 +92,7 @@ std::string dbg_tuple_repr(const Tuple &t, std::index_sequence<Is...>) {
   return res + ")";
 }
 
-template<class... Ts>
+template<typename... Ts>
 std::string dbg_repr(const std::tuple<Ts...> &t) {
   return dbg_tuple_repr(t, std::index_sequence_for<Ts...>{});
 }
@@ -98,7 +117,7 @@ void dbg_out(bool) {
   std::cerr << '\n';
 }
 
-template<typename Head, class... Tail>
+template<typename Head, typename... Tail>
 void dbg_out(bool leading_space, const Head &head, const Tail &...tail) {
   if (leading_space) {
     std::cerr << ' ';
@@ -150,6 +169,14 @@ string dbg_repr(const Edge &e) {
   return "Edge{" + dbg_repr(e.u) + "->" + dbg_repr(e.v) + ", w=" + dbg_repr(e.w) + "}";
 }
 
+struct Streamable {
+  int value;
+
+  friend ostream &operator<<(ostream &out, const Streamable &x) {
+    return out << "Streamable(" << x.value << ")";
+  }
+};
+
 int main() {
   vector<int> v = {1, 2, 3};
   auto p = make_pair(4, string("x"));
@@ -163,6 +190,8 @@ int main() {
   assert(dbg_repr(mp) == "{(\"a\", 1), (\"b\", 2)}");
   assert(dbg_repr(pt) == "Point(2, 3)");
   assert(dbg_repr(e) == "Edge{0->1, w=5}");
+  assert(dbg_repr(Streamable{6}) == "Streamable(6)");
+  assert(dbg_repr(vector<Streamable>{{7}, {8}}) == "{Streamable(7), Streamable(8)}");
   double d = 3.141592653589793;
   dbg(v);
   dbg(p, t, mp);

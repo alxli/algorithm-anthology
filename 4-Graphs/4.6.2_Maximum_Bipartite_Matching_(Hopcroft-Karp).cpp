@@ -90,17 +90,9 @@ int bipartite_matching_hk(int n2) {
   return res;
 }
 
-/*** Example Usage and Output:
-
-Matched 3 pair(s):
-1 0
-0 1
-2 2
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -118,11 +110,6 @@ int main() {
   adj[2].push_back(3);
   int pairs = bipartite_matching_hk(n2);
   assert(pairs == 3);
-  cout << "Matched " << pairs << " pair(s):" << endl;
-  for (int i = 0; i < n2; i++) {
-    if (match_right[i] != -1) {
-      cout << match_right[i] << " " << i << endl;
-    }
-  }
+  assert((match_right == vector<int>{1, 0, 2, -1}));
   return 0;
 }

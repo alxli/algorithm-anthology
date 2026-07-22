@@ -299,30 +299,10 @@ class EulerianGraph {
   }
 };
 
-/*** Example Usage and Output:
-
-Simple directed path: 0->1->2->0->3
-Directed Eulerian cycle: 0->1->3->4->1->2->0
-Undirected Eulerian cycle: 0->1->4->3->1->2->0
-Parallel-edge cycle: 0->1->0
-Directed Eulerian path: 0->1->2
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
-
-void print_nodes(const string &label, const vector<int> &nodes) {
-  cout << label << ": ";
-  for (int i = 0; i < static_cast<int>(nodes.size()); i++) {
-    if (i > 0) {
-      cout << "->";
-    }
-    cout << nodes[i];
-  }
-  cout << endl;
-}
 
 int main() {
   {
@@ -339,7 +319,6 @@ int main() {
     vector<int> path = eulerian_path_directed(adj);
     assert((path == vector<int>{0, 1, 2, 0, 3}));
     assert(eulerian_path_directed(adj, 1).empty());
-    print_nodes("Simple directed path", path);
   }
   {
     // 0 <--- 2
@@ -357,9 +336,8 @@ int main() {
     g.add_edge(4, 1);
     auto trail = g.eulerian_path(0);
     assert(trail.edges.size() == 6);
-    assert(trail.nodes.front() == 0 && trail.nodes.back() == 0);
+    assert((trail.nodes == vector<int>{0, 1, 3, 4, 1, 2, 0}));
     assert(trail.is_cycle());
-    print_nodes("Directed Eulerian cycle", trail.nodes);
   }
   {
     // 0 ---- 2
@@ -376,10 +354,11 @@ int main() {
     g.add_edge(3, 4);
     g.add_edge(4, 1);
     auto trail = g.eulerian_path();
-    assert(trail.edges.size() == 6);
-    assert(trail.nodes.front() == trail.nodes.back());
+    vector<int> used_edges = trail.edges;
+    sort(used_edges.begin(), used_edges.end());
+    assert((used_edges == vector<int>{0, 1, 2, 3, 4, 5}));
+    assert(trail.nodes.size() == 7);
     assert(trail.is_cycle());
-    print_nodes("Undirected Eulerian cycle", trail.nodes);
   }
   {
     EulerianGraph g(2, false);
@@ -387,8 +366,8 @@ int main() {
     int b = g.add_edge(0, 1);
     auto trail = g.eulerian_path(0);
     assert(trail.is_cycle());
+    assert((trail.nodes == vector<int>{0, 1, 0}));
     assert((trail.edges == vector<int>{a, b} || trail.edges == vector<int>{b, a}));
-    print_nodes("Parallel-edge cycle", trail.nodes);
   }
   {
     EulerianGraph g(0, false);
@@ -402,7 +381,6 @@ int main() {
     assert(trail.start == 0);
     assert((trail.nodes == vector<int>{0, 1, 2}));
     assert(!trail.is_cycle());
-    print_nodes("Directed Eulerian path", trail.nodes);
   }
   return 0;
 }

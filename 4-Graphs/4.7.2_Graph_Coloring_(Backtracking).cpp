@@ -94,17 +94,9 @@ int color_graph() {
   return min_colors;
 }
 
-/*** Example Usage and Output:
-
-Colored using 3 color(s):
-Color 1: 0 3
-Color 2: 1 2
-Color 3: 4
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 void add_edge(int u, int v) {
@@ -136,15 +128,6 @@ int main() {
       }
     }
   }
-  cout << "Colored using " << colors << " color(s):" << endl;
-  for (int i = 0; i < colors; i++) {
-    cout << "Color " << i + 1 << ":";
-    for (int j = 0; j < nodes; j++) {
-      if (color[j] == i) {
-        cout << " " << j;
-      }
-    }
-    cout << endl;
-  }
+  assert((color == vector<int>{0, 1, 1, 0, 2}));
   return 0;
 }

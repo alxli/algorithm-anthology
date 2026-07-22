@@ -630,7 +630,7 @@ class BigInt {
     if (n == 0) {
       return BigInt(0);
     }
-    static std::mt19937 rng(1234567);
+    static std::mt19937 rng(std::random_device{}());
     std::uniform_int_distribution<int> first_digit(1, 9), digit(0, 9);
     std::string s(1, static_cast<char>('0' + first_digit(rng)));
     for (int i = 1; i < n; i++) {
@@ -683,7 +683,7 @@ int main() {
       }
     }
   }
-  std::mt19937 rng(1234567);
+  std::mt19937 rng(1234567);  // Fixed seed for reproducibility.
   std::uniform_int_distribution<int> length_dist(1, 100);
   for (int i = 0; i < 20; i++) {
     int n = length_dist(rng);

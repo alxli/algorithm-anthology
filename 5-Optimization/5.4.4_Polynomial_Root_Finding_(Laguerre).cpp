@@ -108,54 +108,45 @@ std::vector<cdouble> find_all_roots(
   return res;
 }
 
-/*** Example Usage and Output:
+/*** Example Usage ***/
 
-Roots of 140 - 13x - 8x^2 + x^3:
-(-4.00000, 0.00000)
-(5.00000, 0.00000)
-(7.00000, 0.00000)
-Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
-(-3.00000, -2.00000)
-(-0.92308, 1.38462)
-(0.00000, -1.00000)
-(0.00000, 1.00000)
-
-***/
-
-#include <cstdio>
+#include <cassert>
 using namespace std;
 
-void print_roots(vector<cdouble> x) {
-  sort(x.begin(), x.end(), [](const cdouble &a, const cdouble &b) {
-    return abs(a.real() - b.real()) > 0.5e-5 ? a.real() < b.real() : a.imag() < b.imag();
-  });
-  for (const auto &z : x) {
-    double real = abs(z.real()) < 0.5e-5 ? 0 : z.real();
-    double imag = abs(z.imag()) < 0.5e-5 ? 0 : z.imag();
-    printf("(%.5lf, %.5lf)\n", real, imag);
+void assert_roots(vector<cdouble> actual, vector<cdouble> expected) {
+  assert(actual.size() == expected.size());
+  vector<char> matched(actual.size());
+  for (const cdouble &root : expected) {
+    int found = -1;
+    for (int i = 0; i < static_cast<int>(actual.size()); i++) {
+      if (!matched[i] && abs(actual[i] - root) < 1e-8) {
+        found = i;
+        break;
+      }
+    }
+    assert(found != -1);
+    matched[found] = true;
   }
 }
 
 int main() {
   {  // 140 - 13x - 8x^2 + x^3 = (x + 4)(x - 5)(x - 7)
-    printf("Roots of 140 - 13x - 8x^2 + x^3:\n");
     cpoly p;
     p.push_back(140);
     p.push_back(-13);
     p.push_back(-8);
     p.push_back(1);
-    print_roots(find_all_roots(p));
+    assert_roots(find_all_roots(p), {-4, 5, 7});
   }
   {  // (-24+36i) + (-26+12i)x + (-30+40i)x^2 + (-26+12i)x^3 + (-6+4i)x^4
     // = ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
-    printf("Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):\n");
     cpoly p;
     p.emplace_back(-24, 36);
     p.emplace_back(-26, 12);
     p.emplace_back(-30, 40);
     p.emplace_back(-26, 12);
     p.emplace_back(-6, 4);
-    print_roots(find_all_roots(p));
+    assert_roots(find_all_roots(p), {{-3, -2}, {-12.0 / 13, 18.0 / 13}, {0, -1}, {0, 1}});
   }
   return 0;
 }

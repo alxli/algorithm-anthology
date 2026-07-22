@@ -103,40 +103,26 @@ class CoordinateCompressor {
   bool contains(const T &x) const { return std::binary_search(values.begin(), values.end(), x); }
 };
 
-/*** Example Usage and Output:
+/*** Example Usage ***/
 
-0 4 4 1 3 2 5 5
-0 4 4 1 3 2 5 5
-1 0 2 0 3 1
-
-***/
-
-#include <iostream>
+#include <cassert>
 using namespace std;
-
-template<typename It>
-void print_range(It lo, It hi) {
-  while (lo != hi) {
-    cout << *lo++ << " ";
-  }
-  cout << endl;
-}
 
 int main() {
   {
     vector<int> a{1, 30, 30, 7, 9, 8, 99, 99};
     compress1(a.begin(), a.end());
-    print_range(a.begin(), a.end());
+    assert((a == vector<int>{0, 4, 4, 1, 3, 2, 5, 5}));
   }
   {
     vector<int> a{1, 30, 30, 7, 9, 8, 99, 99};
     compress2(a.begin(), a.end());
-    print_range(a.begin(), a.end());
+    assert((a == vector<int>{0, 4, 4, 1, 3, 2, 5, 5}));
   }
   {  // Non-integral types work too, as long as ints can be assigned to them.
     vector<double> a{0.5, -1.0, 3, -1.0, 20, 0.5};
     compress1(a.begin(), a.end());
-    print_range(a.begin(), a.end());
+    assert((a == vector<double>{1, 0, 2, 0, 3, 1}));
   }
   {
     vector<int> a{10, 5, 30, 5, 20};

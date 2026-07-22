@@ -94,17 +94,19 @@ class OfflineDynamicConnectivity {
     comps++;
   }
 
-  void add_interval(int node, int lo, int hi, int l, int r, const std::pair<int, int> &e) {
-    if (r < lo || hi < l) {
+  void add_interval(
+      int node, int lo, int hi, int tgt_lo, int tgt_hi, const std::pair<int, int> &e
+  ) {
+    if (tgt_hi < lo || hi < tgt_lo) {
       return;
     }
-    if (l <= lo && hi <= r) {
+    if (tgt_lo <= lo && hi <= tgt_hi) {
       seg[node].push_back(e);
       return;
     }
     int mid = lo + (hi - lo) / 2;
-    add_interval(2 * node, lo, mid, l, r, e);
-    add_interval(2 * node + 1, mid + 1, hi, l, r, e);
+    add_interval(2 * node, lo, mid, tgt_lo, tgt_hi, e);
+    add_interval(2 * node + 1, mid + 1, hi, tgt_lo, tgt_hi, e);
   }
 
   void dfs(int node, int lo, int hi) {

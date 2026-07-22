@@ -13,9 +13,9 @@ that would appear there in sorted order, all earlier positions contain values no
 all later positions contain values no smaller than it. Choosing pivots uniformly at random gives
 expected linear time, while the three-way split avoids unnecessary work on duplicate-heavy inputs.
 
-- `partition_three_way(lo, hi, pivot)` rearranges $[`lo`, `hi`)$ in-place and returns iterators
-  $(`mid1`, `mid2`)$, where $[`lo`, `mid1`)$ is less than `pivot`, $[`mid1`, `mid2`)$ is equal to
-  `pivot`, and $[`mid2`, `hi`)$ is greater than `pivot`.
+- `partition_three_way(lo, hi, pivot)` rearranges $[`lo`, `hi`)$ in-place and returns a pair of
+  iterators (`mid1`, `mid2`), where $[`lo`, `mid1`)$ is less than `pivot`, $[`mid1`, `mid2`)$ is
+  equal to `pivot`, and $[`mid2`, `hi`)$ is greater than `pivot`.
 - `nth_element2(lo, nth, hi)` rearranges $[`lo`, `hi`)$ in-place around the 0-based rank represented
   by iterator `nth`. This requires random-access iterators and `operator<` on the value type.
 

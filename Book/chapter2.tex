@@ -501,7 +501,6 @@ class BinaryHeap {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -512,7 +511,6 @@ int main() {
   h.push(10);
   vector<int> popped;
   while (!h.empty()) {
-    cout << h.top() << endl;
     popped.push_back(h.top());
     h.pop();
   }
@@ -521,13 +519,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
--1
-0
-5
-10
-12
-\end{exampleoutput}
 \subsection{Leftist Heap}
 Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum as well as efficient merging with other instances. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator\textless{}}. A leftist heap stores at each node a rank (the length of the shortest path to a missing descendant) and keeps every left child's rank at least that of its right child, so the right spine has length $O(\log n)$. Merging walks only this right spine, swapping children where needed to restore the invariant. Every other operation reduces to this merge: insertion merges a one-node heap, and extraction of the minimum merges the root's two subtrees. Unlike the self-adjusting skew heap, the explicit rank bound makes every operation $O(\log n)$ in the worst case rather than amortized.
 
@@ -649,7 +640,6 @@ class LeftistHeap {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <iostream>
 #include <vector>
 using namespace std;
 
@@ -666,7 +656,6 @@ int main() {
   assert(h2.empty());
   vector<int> popped;
   while (!h.empty()) {
-    cout << h.top() << endl;
     popped.push_back(h.top());
     h.pop();
   }
@@ -674,13 +663,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
--1
-0
-5
-10
-12
-\end{exampleoutput}
 \subsection{Skew Heap}
 Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum as well as efficient merging with other instances. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator\textless{}}. A skew heap attempts to maintain balance by unconditionally swapping all nodes in the merge path when merging. Every other operation reduces to this merge: insertion merges a one-node heap, and extraction of the minimum merges the root's two subtrees.
 
@@ -795,7 +777,6 @@ class SkewHeap {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <iostream>
 #include <vector>
 using namespace std;
 
@@ -812,7 +793,6 @@ int main() {
   assert(h2.empty());
   vector<int> popped;
   while (!h.empty()) {
-    cout << h.top() << endl;
     popped.push_back(h.top());
     h.pop();
   }
@@ -820,13 +800,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
--1
-0
-5
-10
-12
-\end{exampleoutput}
 \subsection{Pairing Heap}
 Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum as well as efficient merging with other instances. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator\textless{}}. A pairing heap is a heap-ordered multi-way tree, using a two-pass merge to self-adjust during each deletion. Unlike the other heaps in this section, it also supports \inlinecode{decrease\_key()} and \inlinecode{erase()} via handles returned by \inlinecode{push()}, the feature pairing heaps are best known for.
 
@@ -1005,7 +978,6 @@ class PairingHeap {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <iostream>
 #include <vector>
 using namespace std;
 
@@ -1029,7 +1001,6 @@ int main() {
 
   vector<int> popped;
   while (!h.empty()) {
-    cout << h.top() << endl;
     popped.push_back(h.top());
     h.pop();
   }
@@ -1037,13 +1008,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
--1
-0
-5
-10
-12
-\end{exampleoutput}
 
 \section{\texorpdfstring{Dictionaries and Ordered Sets}{2.3 Dictionaries and Ordered Sets}}
 \setcounter{section}{3}
@@ -1293,7 +1257,6 @@ class Treap {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -1313,24 +1276,16 @@ int main() {
   assert(t.next(4)->first == 5);
   assert(!t.prev(1));
   assert(!t.next(5));
-  for (const auto &[k, v] : t.entries()) {
-    cout << v;
-  }
-  cout << endl;
+  assert(
+      (t.entries() == vector<pair<int, char>>{{1, 'a'}, {2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}})
+  );
   assert(t.erase(1));
   assert(!t.erase(1));
   assert(t.find(1) == nullptr);
-  for (const auto &[k, v] : t.entries()) {
-    cout << v;
-  }
-  cout << endl;
+  assert((t.entries() == vector<pair<int, char>>{{2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}}));
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-abcde
-bcde
-\end{exampleoutput}
 \subsection{AVL Tree}
 Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible key appears at most once in the collection. An AVL tree is a binary search tree balanced by height, guaranteeing $O(\log n)$ worst-case running time in insertions and deletions by making sure that the heights of the left and right subtrees at every node differ by at most $1$. Whenever an insertion or deletion breaks this invariant, it is repaired with one or two rotations at each affected node along the search path.
 
@@ -1530,7 +1485,6 @@ class AVLTree {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -1545,18 +1499,14 @@ int main() {
   assert(*t.find(4) == 'd');
   assert(!t.insert(4, 'd'));
   assert(t.size() == 5);
-  for (const auto &[k, v] : t.entries()) {
-    cout << v;
-  }
-  cout << endl;
+  assert(
+      (t.entries() == vector<pair<int, char>>{{1, 'a'}, {2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}})
+  );
   assert(t.erase(1));
   assert(!t.erase(1));
   assert(t.find(1) == nullptr);
   assert(t.size() == 4);
-  for (const auto &[k, v] : t.entries()) {
-    cout << v;
-  }
-  cout << endl;
+  assert((t.entries() == vector<pair<int, char>>{{2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}}));
 
   AVLTree<int, int> deep_successor;
   for (int key : {20, 10, 30, 25, 40, 22}) {
@@ -1570,10 +1520,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-abcde
-bcde
-\end{exampleoutput}
 \subsection{Red-Black Tree}
 Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible key appears at most once in the collection. A red-black tree is a binary search tree balanced by coloring its nodes red or black, then constraining node colors on any simple path from the root to a leaf. Specifically, a red node may never have a red child, and every path from the root to a null leaf must pass through the same number of black nodes, which together bound the tree's height to $O(\log n)$. Insertions and deletions repair these invariants by recoloring nodes and performing rotations.
 
@@ -1904,7 +1850,6 @@ class RedBlackTree {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -1919,18 +1864,14 @@ int main() {
   assert(*t.find(4) == 'd');
   assert(!t.insert(4, 'd'));
   assert(t.size() == 5);
-  for (const auto &[k, v] : t.entries()) {
-    cout << v;
-  }
-  cout << endl;
+  assert(
+      (t.entries() == vector<pair<int, char>>{{1, 'a'}, {2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}})
+  );
   assert(t.erase(1));
   assert(!t.erase(1));
   assert(t.find(1) == nullptr);
   assert(t.size() == 4);
-  for (const auto &[k, v] : t.entries()) {
-    cout << v;
-  }
-  cout << endl;
+  assert((t.entries() == vector<pair<int, char>>{{2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}}));
   for (int key : {2, 3, 4, 5}) {
     assert(t.erase(key));
   }
@@ -1938,10 +1879,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-abcde
-bcde
-\end{exampleoutput}
 \subsection{Splay Tree}
 Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible key appears at most once in the collection. A splay tree is a balanced binary search tree with the additional property that recently accessed elements are quick to access again. Every operation ``splays'' its target node up to the root through a series of rotations, reshaping the tree so that frequently accessed keys settle near the top. A single operation may degrade to $O(n)$, but any sequence of operations averages out to $O(\log n)$ amortized each.
 
@@ -2133,7 +2070,6 @@ class SplayTree {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -2147,25 +2083,17 @@ int main() {
   assert(!t.empty() && t.size() == 5);
   assert(*t.find(4) == 'd');
   assert(!t.insert(4, 'd'));
-  for (const auto &[k, v] : t.entries()) {
-    cout << v;
-  }
-  cout << endl;
+  assert(
+      (t.entries() == vector<pair<int, char>>{{1, 'a'}, {2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}})
+  );
   assert(t.erase(1));
   assert(!t.erase(1));
   assert(t.find(1) == nullptr);
   assert(t.size() == 4);
-  for (const auto &[k, v] : t.entries()) {
-    cout << v;
-  }
-  cout << endl;
+  assert((t.entries() == vector<pair<int, char>>{{2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}}));
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-abcde
-bcde
-\end{exampleoutput}
 \subsection{Size Balanced Tree}
 Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible key appears at most once in the collection. In addition, support queries for keys given their ranks as well as queries for the ranks of given keys. A size balanced tree augments each node with the size of its subtree, using it to maintain balance and compute order statistics. After each update, rotations restore the invariant that every subtree is at least as large as each of its sibling's child subtrees, keeping the height logarithmic.
 
@@ -2392,7 +2320,6 @@ class SBTree {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -2404,17 +2331,13 @@ int main() {
   assert(t.insert(4, 'd'));
   assert(*t.find(4) == 'd');
   assert(!t.insert(4, 'd'));
-  for (const auto &[k, v] : t.entries()) {
-    cout << v;
-  }
-  cout << endl;
+  assert(
+      (t.entries() == vector<pair<int, char>>{{1, 'a'}, {2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}})
+  );
   assert(t.erase(1));
   assert(!t.erase(1));
   assert(t.find(1) == nullptr);
-  for (const auto &[k, v] : t.entries()) {
-    cout << v;
-  }
-  cout << endl;
+  assert((t.entries() == vector<pair<int, char>>{{2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}}));
   assert(t.order_of_key(2) == 0);
   assert(t.order_of_key(3) == 1);
   assert(t.order_of_key(5) == 3);
@@ -2432,10 +2355,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-abcde
-bcde
-\end{exampleoutput}
 \subsection{Interval Treap}
 Maintain an ordered map from closed, one-dimensional intervals to values while supporting efficient reporting of any or all entries that intersect with a given query interval. A treap is used to process the entries, where keys are compared lexicographically as pairs. Each node is additionally augmented with the maximum upper endpoint among the intervals in its subtree, letting intersection queries skip any subtree whose maximum falls below the query interval's lower bound.
 
@@ -2681,7 +2600,6 @@ class IntervalTreap {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -2698,21 +2616,17 @@ int main() {
   assert(t.size() == 5);
   assert(*t.find_key(3, 9) == (pair<int, int>{5, 20}));
   assert(*t.find_value(3, 9) == 'd');
-  cout << "Intervals intersecting [16, 20]:";
-  auto print = [](int lo, int hi, char v) { cout << " [" << lo << ", " << hi << "]"; };
-  t.find_all(16, 20, print);
-  cout << "\nAll intervals:";
-  for (const auto &[lo, hi, v] : t.entries()) {
-    print(lo, hi, v);
-  }
-  cout << endl;
+  vector<pair<int, int>> intersections;
+  t.find_all(16, 20, [&](int lo, int hi, char) { intersections.emplace_back(lo, hi); });
+  assert((intersections == vector<pair<int, int>>{{5, 20}, {10, 30}, {10, 40}, {15, 20}}));
+  assert(
+      (t.entries() == vector<tuple<int, int, char>>{
+                          {5, 20, 'd'}, {10, 30, 'b'}, {10, 40, 'f'}, {12, 15, 'e'}, {15, 20, 'a'}
+                      })
+  );
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-Intervals intersecting [16, 20]: [5, 20] [10, 30] [10, 40] [15, 20]
-All intervals: [5, 20] [10, 30] [10, 40] [12, 15] [15, 20]
-\end{exampleoutput}
 \subsection{Hash Table (Chaining)}
 Maintain an unordered map: a collection of key-value pairs in which each key appears at most once. Keys are hashed into buckets, and this implementation resolves collisions by chaining the entries in each bucket into a linked list. It requires \inlinecode{operator==} on the key type and a hash functor.
 
@@ -3422,7 +3336,6 @@ class SkipList {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -3437,25 +3350,17 @@ int main() {
   assert(*l.find(4) == 'd');
   assert(!l.insert(4, 'd'));
   assert(l.size() == 5);
-  for (const auto &[k, v] : l.entries()) {
-    cout << v;
-  }
-  cout << endl;
+  assert(
+      (l.entries() == vector<pair<int, char>>{{1, 'a'}, {2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}})
+  );
   assert(l.erase(1));
   assert(!l.erase(1));
   assert(l.find(1) == nullptr);
   assert(l.size() == 4);
-  for (const auto &[k, v] : l.entries()) {
-    cout << v;
-  }
-  cout << endl;
+  assert((l.entries() == vector<pair<int, char>>{{2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}}));
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-abcde
-bcde
-\end{exampleoutput}
 
 \section{\texorpdfstring{Range Queries in One Dimension}{2.4 Range Queries in One Dimension}}
 \setcounter{section}{4}
@@ -3763,25 +3668,20 @@ class SqrtDecomposition {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
   vector<int> a{6, -2, 1, 8, 10};
   SqrtDecomposition<int> sd(a.begin(), a.end());
   sd.update(2, 4);
-  cout << "Values:";
+  vector<int> expected{6, -2, 4, 8, 10};
   for (int i = 0; i < sd.size(); i++) {
-    cout << " " << sd.at(i);
+    assert(sd.at(i) == expected[i]);
   }
-  cout << endl;
   assert(sd.query(0, 3) == -2);
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-Values: 6 -2 4 8 10
-\end{exampleoutput}
 \subsection{Mo's Algorithm}
 Mo's algorithm answers a batch of range queries offline by reordering them so that the current window [\inlinecode{cur\_l}, \inlinecode{cur\_r}] can be transformed into the next query's range with as few single-element insertions and deletions as possible. It applies whenever there is no fast direct formula, but extending or shrinking the window by one element updates the answer cheaply, as with the number of distinct values in a range or the sum of squares of element frequencies.
 
@@ -3912,26 +3812,15 @@ class SegTree {
   int len;
   std::vector<T> value;
 
-  void build(int i, int lo, int hi, const T &v) {
+  template<typename Gen>
+  void build(int i, int lo, int hi, const Gen &gen) {
     if (lo == hi) {
-      value[i] = v;
+      value[i] = gen(lo);
       return;
     }
     int mid = lo + (hi - lo) / 2;
-    build(i * 2 + 1, lo, mid, v);
-    build(i * 2 + 2, mid + 1, hi, v);
-    value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
-  }
-
-  template<typename It>
-  void build(int i, int lo, int hi, It arr) {
-    if (lo == hi) {
-      value[i] = *(arr + lo);
-      return;
-    }
-    int mid = lo + (hi - lo) / 2;
-    build(i * 2 + 1, lo, mid, arr);
-    build(i * 2 + 2, mid + 1, hi, arr);
+    build(i * 2 + 1, lo, mid, gen);
+    build(i * 2 + 2, mid + 1, hi, gen);
     value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
@@ -4009,13 +3898,13 @@ class SegTree {
  public:
   explicit SegTree(int n, const T &v = T()) : len(n), value(4 * len) {
     assert(len > 0);
-    build(0, 0, len - 1, v);
+    build(0, 0, len - 1, [&](int) { return v; });
   }
 
   template<typename It>
   SegTree(It lo, It hi) : len(hi - lo), value(4 * len) {
     assert(len > 0);
-    build(0, 0, len - 1, lo);
+    build(0, 0, len - 1, [&](int i) { return *(lo + i); });
   }
 
   int size() const { return len; }
@@ -4055,19 +3944,16 @@ class SegTree {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <iostream>
 using namespace std;
 
 int main() {
   vector<int> a{6, -2, 1, 8, 10};
   SegTree<int> t(a.begin(), a.end());
   t.update(2, 4);
-  cout << "Values:";
+  vector<int> expected{6, -2, 4, 8, 10};
   for (int i = 0; i < t.size(); i++) {
-    cout << " " << t.at(i);
+    assert(t.at(i) == expected[i]);
   }
-  cout << endl;
-  cout << "The minimum value in the range [0, 3] is " << t.query(0, 3) << "." << endl;
   assert(t.query(0, 3) == -2);
 
   // Boundary search by accumulated aggregate: stop before including the -2 at index 1.
@@ -4078,10 +3964,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-Values: 6 -2 4 8 10
-The minimum value in the range [0, 3] is -2.
-\end{exampleoutput}
 \subsection{Segment Tree (Range Update)}
 Maintain a fixed-size array while supporting range updates and range aggregate queries. Lazy propagation lets a segment tree defer work below intervals covered by an update: each node stores an aggregate value and a pending update that is pushed to its children only when needed.
 
@@ -4136,26 +4018,15 @@ class LazySegTree {
   std::vector<T> value, delta;
   std::vector<char> pending;
 
-  void build(int i, int lo, int hi, const T &v) {
+  template<typename Gen>
+  void build(int i, int lo, int hi, const Gen &gen) {
     if (lo == hi) {
-      value[i] = v;
+      value[i] = gen(lo);
       return;
     }
     int mid = lo + (hi - lo) / 2;
-    build(i * 2 + 1, lo, mid, v);
-    build(i * 2 + 2, mid + 1, hi, v);
-    value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
-  }
-
-  template<typename It>
-  void build(int i, int lo, int hi, It arr) {
-    if (lo == hi) {
-      value[i] = *(arr + lo);
-      return;
-    }
-    int mid = lo + (hi - lo) / 2;
-    build(i * 2 + 1, lo, mid, arr);
-    build(i * 2 + 2, mid + 1, hi, arr);
+    build(i * 2 + 1, lo, mid, gen);
+    build(i * 2 + 2, mid + 1, hi, gen);
     value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
@@ -4252,14 +4123,14 @@ class LazySegTree {
   explicit LazySegTree(int n, const T &v = T())
       : len(n), value(4 * len), delta(4 * len), pending(4 * len, false) {
     assert(len > 0);
-    build(0, 0, len - 1, v);
+    build(0, 0, len - 1, [&](int) { return v; });
   }
 
   template<typename It>
   LazySegTree(It lo, It hi)
       : len(hi - lo), value(4 * len), delta(4 * len), pending(4 * len, false) {
     assert(len > 0);
-    build(0, 0, len - 1, lo);
+    build(0, 0, len - 1, [&](int i) { return *(lo + i); });
   }
 
   int size() const { return len; }
@@ -4304,27 +4175,24 @@ class LazySegTree {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <iostream>
 using namespace std;
 
 int main() {
   vector<int> a{6, -2, 1, 8, 10};
   LazySegTree<int> t(a.begin(), a.end());
   t.update(2, 4);
-  cout << "Values:";
+  vector<int> expected{6, -2, 4, 8, 10};
   for (int i = 0; i < t.size(); i++) {
-    cout << " " << t.at(i);
+    assert(t.at(i) == expected[i]);
   }
-  cout << endl;
   assert(t.query(0, 3) == -2);
   t.update(0, 4, 5);
   t.update(3, 2);
   t.update(3, 1);
-  cout << "Values:";
+  expected = {5, 5, 5, 1, 5};
   for (int i = 0; i < t.size(); i++) {
-    cout << " " << t.at(i);
+    assert(t.at(i) == expected[i]);
   }
-  cout << endl;
   assert(t.query(0, 3) == 1);
 
   // Boundary search works through lazy updates too; values are now {5, 5, 5, 1, 5}.
@@ -4333,10 +4201,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-Values: 6 -2 4 8 10
-Values: 5 5 5 1 5
-\end{exampleoutput}
 \subsection{Iterative Segment Tree (Point Update)}
 Maintain a fixed-size array while supporting point updates and range aggregate queries using an iterative segment tree. The leaves begin at a power-of-two offset in a flat array, and each internal node stores the aggregate of its two children. Point updates rebuild ancestors by walking upward, while queries scan a decomposition of the requested range. Compared with the recursive segment tree, these flat loops avoid recursive stack usage and can reduce constant factors.
 
@@ -4388,34 +4252,31 @@ class IterativeSegTree {
   int len, base;
   std::vector<T> value;
 
- public:
-  explicit IterativeSegTree(int n, const T &v = T()) : len(n), base(1) {
-    assert(len > 0);
+  template<typename Gen>
+  void build(const Gen &gen) {
+    base = 1;
     while (base < len) {
       base <<= 1;
     }
     value.assign(2 * base, T());
     for (int i = 0; i < len; i++) {
-      value[base + i] = v;
+      value[base + i] = gen(i);
     }
     for (int i = base - 1; i > 0; i--) {
       value[i] = combine(value[i << 1], value[i << 1 | 1]);
     }
   }
 
-  template<typename It>
-  IterativeSegTree(It lo, It hi) : len(hi - lo), base(1) {
+ public:
+  explicit IterativeSegTree(int n, const T &v = T()) : len(n) {
     assert(len > 0);
-    while (base < len) {
-      base <<= 1;
-    }
-    value.assign(2 * base, T());
-    for (int i = 0; i < len; i++) {
-      value[base + i] = *(lo + i);
-    }
-    for (int i = base - 1; i > 0; i--) {
-      value[i] = combine(value[i << 1], value[i << 1 | 1]);
-    }
+    build([&](int) { return v; });
+  }
+
+  template<typename It>
+  IterativeSegTree(It lo, It hi) : len(hi - lo) {
+    assert(len > 0);
+    build([&](int i) { return *(lo + i); });
   }
 
   int size() const { return len; }
@@ -4507,19 +4368,16 @@ class IterativeSegTree {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <iostream>
 using namespace std;
 
 int main() {
   vector<int> a{6, -2, 1, 8, 10};
   IterativeSegTree<int> t(a.begin(), a.end());
   t.update(2, 4);
-  cout << "Values:";
+  vector<int> expected{6, -2, 4, 8, 10};
   for (int i = 0; i < t.size(); i++) {
-    cout << " " << t.at(i);
+    assert(t.at(i) == expected[i]);
   }
-  cout << endl;
-  cout << "The minimum value in the range [0, 3] is " << t.query(0, 3) << "." << endl;
   assert(t.query(0, 3) == -2);
 
   assert(t.max_right(0, [](int mn) { return mn > -2; }) == 1);
@@ -4527,10 +4385,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-Values: 6 -2 4 8 10
-The minimum value in the range [0, 3] is -2.
-\end{exampleoutput}
 \subsection{Iterative Segment Tree (Range Update)}
 Maintain a fixed-size array while supporting range updates and range aggregate queries using a iterative segment tree with lazy propagation. The leaves begin at a power-of-two offset in a flat array, and each internal node stores an aggregate value plus a pending update. Range updates and queries push pending updates only along paths that inspect children, then scan a decomposition of the requested range. Compared with the recursive lazy segment tree, these flat loops avoid recursive stack usage and can reduce constant factors, though the recursive version is usually easier to adapt when the update or search logic becomes unusual.
 
@@ -4603,6 +4457,17 @@ class IterativeLazySegTree {
     }
   }
 
+  template<typename Gen>
+  void build(const Gen &gen) {
+    init_storage();
+    for (int i = 0; i < len; i++) {
+      value[base + i] = gen(i);
+    }
+    for (int i = base - 1; i > 0; i--) {
+      pull(i);
+    }
+  }
+
   void pull(int i) { value[i] = combine(value[i << 1], value[i << 1 | 1]); }
 
   void apply(int i, const T &d) {
@@ -4641,25 +4506,13 @@ class IterativeLazySegTree {
  public:
   explicit IterativeLazySegTree(int n, const T &v = T()) : len(n) {
     assert(len > 0);
-    init_storage();
-    for (int i = 0; i < len; i++) {
-      value[base + i] = v;
-    }
-    for (int i = base - 1; i > 0; i--) {
-      pull(i);
-    }
+    build([&](int) { return v; });
   }
 
   template<typename It>
   IterativeLazySegTree(It lo, It hi) : len(hi - lo) {
     assert(len > 0);
-    init_storage();
-    for (int i = 0; i < len; i++) {
-      value[base + i] = *(lo + i);
-    }
-    for (int i = base - 1; i > 0; i--) {
-      pull(i);
-    }
+    build([&](int i) { return *(lo + i); });
   }
 
   int size() const { return len; }
@@ -4781,27 +4634,24 @@ class IterativeLazySegTree {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <iostream>
 using namespace std;
 
 int main() {
   vector<int> a{6, -2, 1, 8, 10};
   IterativeLazySegTree<int> t(a.begin(), a.end());
   t.update(2, 4);
-  cout << "Values:";
+  vector<int> expected{6, -2, 4, 8, 10};
   for (int i = 0; i < t.size(); i++) {
-    cout << " " << t.at(i);
+    assert(t.at(i) == expected[i]);
   }
-  cout << endl;
   assert(t.query(0, 3) == -2);
   t.update(0, 4, 5);
   t.update(3, 2);
   t.update(3, 1);
-  cout << "Values:";
+  expected = {5, 5, 5, 1, 5};
   for (int i = 0; i < t.size(); i++) {
-    cout << " " << t.at(i);
+    assert(t.at(i) == expected[i]);
   }
-  cout << endl;
   assert(t.query(0, 3) == 1);
 
   // Boundary search works through lazy updates too; values are now {5, 5, 5, 1, 5}.
@@ -4810,10 +4660,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-Values: 6 -2 4 8 10
-Values: 5 5 5 1 5
-\end{exampleoutput}
 \subsection{Segment Tree Beats}
 Maintain a fixed-size array under the range ``chmin'' update \inlinecode{a[i] = min(a[i], t)} for all \inlinecode{i} in a range, while answering range-sum and range-maximum queries. An ordinary lazy segment tree cannot represent a clamp like this with a single composable tag, because clamping affects only the entries that currently exceed \inlinecode{t}. Segment tree beats (the Ji Driver tree) resolves this by storing, for each node, the strict maximum, the second-largest distinct value, and a count of entries equal to the maximum. A clamp then has three cases at each node: if \inlinecode{t} $\geq$ \inlinecode{max1}, the clamp changes nothing and the recursion stops (the prune case); if \inlinecode{max2} \textless{} \inlinecode{t} \textless{} \inlinecode{max1}, every entry equal to \inlinecode{max1} drops to \inlinecode{t} and all others are untouched, so the node updates in $O(1)$, the sum falls by $({\inlinecodemath{max1}} - {\inlinecodemath{t}}) * {\inlinecodemath{count}}$, and \inlinecode{max1} becomes \inlinecode{t} (the break, or tag, case); otherwise (\inlinecode{t} $\leq$ \inlinecode{max2}) the node is too coarse to update directly, so the clamp recurses into both children and re-pulls. The lazy tag pushes down to a child only when the child's maximum is larger.
 
@@ -5071,6 +4917,7 @@ For the boundary-search functions, \inlinecode{pred} takes aggregate \inlinecode
 #include <cstdint>
 #include <limits>
 #include <optional>
+#include <vector>
 
 template<typename T, int N = 1000000000>
 class SparseSegTree {
@@ -5265,7 +5112,6 @@ class SparseSegTree {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -5275,20 +5121,18 @@ int main() {
   t.update(2, 4);
   t.update(3, 8);
   t.update(4, 10);
-  cout << "Values:";
+  vector<int> expected{6, -2, 4, 8, 10};
   for (int i = 0; i < 5; i++) {
-    cout << " " << t.at(i);
+    assert(t.at(i) == expected[i]);
   }
-  cout << endl;
   assert(t.query(0, 3) == -2);
   t.update(0, 4, 5);
   t.update(3, 2);
   t.update(3, 1);
-  cout << "Values:";
+  expected = {5, 5, 5, 1, 5};
   for (int i = 0; i < 5; i++) {
-    cout << " " << t.at(i);
+    assert(t.at(i) == expected[i]);
   }
-  cout << endl;
   assert(t.query(0, 3) == 1);
 
   // Boundary search over the sparse domain; values at indices 0..4 are now {5, 5, 5, 1, 5}.
@@ -5297,10 +5141,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-Values: 6 -2 4 8 10
-Values: 5 5 5 1 5
-\end{exampleoutput}
 \subsection{Persistent Segment Tree}
 Maintain immutable versions of a fixed-size array while supporting point updates and range aggregate queries. Each update creates a new root by copying only the $O(\log n)$ nodes on the path from the root to the updated leaf. All unchanged subtrees are shared with previous versions, and updates may branch from any stored version.
 
@@ -6107,16 +5947,15 @@ class ImplicitTreap {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <iostream>
 #include <vector>
 using namespace std;
 
-void print(ImplicitTreap<int> &t) {
-  cout << "Values:";
+vector<int> values(ImplicitTreap<int> &t) {
+  vector<int> result;
   for (int i = 0; i < t.size(); i++) {
-    cout << " " << t.at(i);
+    result.push_back(t.at(i));
   }
-  cout << " (min: " << t.query(0, t.size() - 1) << ")" << endl;
+  return result;
 }
 
 int main() {
@@ -6130,21 +5969,21 @@ int main() {
   assert(t.size() == 6);
   assert(t.at(5) == 11);
   assert(t.query(0, t.size() - 1) == -2);
-  print(t);
+  assert((values(t) == vector<int>{99, -2, 1, 8, 10, 11}));
 
   // Replace the first value by inserting 90 before it and erasing the old 99.
   t.insert(0, 90);
   t.erase(1);
   assert(t.at(0) == 90);
   assert(t.at(1) == -2);
-  print(t);
+  assert((values(t) == vector<int>{90, -2, 1, 8, 10, 11}));
 
   // Assign 2 to the first two values.
   t.update(0, 1, 2);
   assert(t.at(0) == 2);
   assert(t.at(1) == 2);
   assert(t.query(0, t.size() - 1) == 1);
-  print(t);
+  assert((values(t) == vector<int>{2, 2, 1, 8, 10, 11}));
 
   // Reverse the middle range: {2, 2, 1, 8, 10, 11} becomes {2, 10, 8, 1, 2, 11}.
   t.reverse(1, 4);
@@ -6153,16 +5992,10 @@ int main() {
   assert(t.at(4) == 2);
   assert(t.at(5) == 11);
   assert(t.query(0, t.size() - 1) == 1);
-  print(t);
+  assert((values(t) == vector<int>{2, 10, 8, 1, 2, 11}));
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-Values: 99 -2 1 8 10 11 (min: -2)
-Values: 90 -2 1 8 10 11 (min: -2)
-Values: 2 2 1 8 10 11 (min: 1)
-Values: 2 10 8 1 2 11 (min: 1)
-\end{exampleoutput}
 
 \section{\texorpdfstring{Range Queries in Two Dimensions}{2.5 Range Queries in Two Dimensions}}
 \setcounter{section}{5}
@@ -6180,9 +6013,9 @@ Use this when the grid is small enough for $O(R \cdot C)$ storage and queries ne
   \item \inlinecode{SegTree2D\textless{}T\textgreater{}(rows, cols, value = T())} constructs a \inlinecode{rows} by \inlinecode{cols} array with all entries initialized to \inlinecode{value}.
   \item \inlinecode{SegTree2D\textless{}T\textgreater{}(a)} constructs the tree from the matrix \inlinecode{a}.
   \item \inlinecode{size\_rows()} and \inlinecode{size\_cols()} return the dimensions of the array.
-  \item \inlinecode{update(r, c, d)} applies delta \inlinecode{d} to the entry at index $({\inlinecodemath{r}}, {\inlinecodemath{c}})$.
-  \item \inlinecode{at(r, c)} returns the value at index $({\inlinecodemath{r}}, {\inlinecodemath{c}})$.
-  \item \inlinecode{query(r1, c1, r2, c2)} returns the aggregate over the rectangle with rows $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
+  \item \inlinecode{update(r, c, d)} applies delta \inlinecode{d} to the entry at index (\inlinecode{r}, \inlinecode{c}).
+  \item \inlinecode{at(r, c)} returns the value at index (\inlinecode{r}, \inlinecode{c}).
+  \item \inlinecode{query(r1, c1, r2, c2)} returns the aggregate over the rectangle with rows in $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns in $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -6214,7 +6047,14 @@ class SegTree2D {
   int rows, cols;
   std::vector<std::vector<T>> tree;
 
-  void build() {
+  template<typename Gen>
+  void build(const Gen &gen) {
+    tree.assign(2 * rows, std::vector<T>(2 * cols));
+    for (int r = 0; r < rows; r++) {
+      for (int c = 0; c < cols; c++) {
+        tree[r + rows][c + cols] = gen(r, c);
+      }
+    }
     for (int r = rows; r < 2 * rows; r++) {
       for (int c = cols - 1; c > 0; c--) {
         tree[r][c] = combine(tree[r][2 * c], tree[r][2 * c + 1]);
@@ -6241,23 +6081,15 @@ class SegTree2D {
   }
 
  public:
-  SegTree2D(int rows, int cols, const T &value = T())
-      : rows(rows), cols(cols), tree(2 * rows, std::vector<T>(2 * cols, value)) {
+  SegTree2D(int rows, int cols, const T &value = T()) : rows(rows), cols(cols) {
     assert(rows > 0 && cols > 0);
-    build();
+    build([&](int, int) { return value; });
   }
 
   explicit SegTree2D(const std::vector<std::vector<T>> &a)
-      : rows(static_cast<int>(a.size())),
-        cols(rows == 0 ? 0 : static_cast<int>(a[0].size())),
-        tree(2 * rows, std::vector<T>(2 * cols)) {
+      : rows(static_cast<int>(a.size())), cols(rows == 0 ? 0 : static_cast<int>(a[0].size())) {
     assert(rows > 0 && cols > 0);
-    for (int r = 0; r < rows; r++) {
-      for (int c = 0; c < cols; c++) {
-        tree[r + rows][c + cols] = a[r][c];
-      }
-    }
-    build();
+    build([&](int r, int c) { return a[r][c]; });
   }
 
   int size_rows() const { return rows; }
@@ -6336,8 +6168,8 @@ Use the dense 2D segment tree in the previous section when the grid is modest en
 \begin{compactitem}
   \item \inlinecode{SparseSegTree2D\textless{}T, R, C\textgreater{}(v = T())} constructs a two-dimensional array with rows $[0, R]$ and columns $[0, C]$. All array values are implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
   \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
-  \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{combine()} applied to every value in the rectangular region consisting of rows $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
-  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at $({\inlinecodemath{r}}, {\inlinecodemath{c}})$ to \inlinecode{apply\_delta(v, d)}.
+  \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{combine()} applied to every value in the rectangular region consisting of rows in $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns in $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
+  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{apply\_delta(v, d)}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -6736,12 +6568,7 @@ class RangeTree {
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <iostream>
 using namespace std;
-
-void print(int, const pair<int, int> &p) {
-  cout << "(" << p.first << ", " << p.second << ") ";
-}
 
 int main() {
   vector<pair<int, int>> v{{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
@@ -6763,17 +6590,9 @@ int main() {
   t.query(1, 1, 4, 8, collect);
   sort(got.begin(), got.end());
   assert((got == vector<pair<int, int>>{{1, 4}, {2, 2}, {3, 1}}));
-  t.query(-1, -1, 2, 5, print);
-  cout << endl;
-  t.query(1, 1, 4, 8, print);
-  cout << endl;
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-(-1, -1) (2, -1) (2, 2) (1, 4)
-(1, 4) (2, 2) (3, 1)
-\end{exampleoutput}
 \subsection{K-d Tree for 2D Range Query}
 Maintain a static set of two-dimensional points while supporting rectangle reporting queries. A k-d tree recursively splits points by alternating coordinates and stores a bounding box for each subtree, allowing whole subtrees to be accepted or pruned during a query.
 
@@ -6893,12 +6712,7 @@ class RangeKDTree {
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <iostream>
 using namespace std;
-
-void print(const pair<int, int> &p) {
-  cout << "(" << p.first << ", " << p.second << ") ";
-}
 
 int main() {
   vector<pair<int, int>> v{{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
@@ -6913,17 +6727,9 @@ int main() {
   t.query(1, 1, 4, 8, collect);
   sort(got.begin(), got.end());
   assert((got == vector<pair<int, int>>{{1, 4}, {2, 2}, {3, 1}}));
-  t.query(-1, -1, 2, 5, print);
-  cout << endl;
-  t.query(1, 1, 4, 8, print);
-  cout << endl;
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-(2, -1) (1, 4) (2, 2) (-1, -1)
-(1, 4) (2, 2) (3, 1)
-\end{exampleoutput}
 \subsection{K-d Tree for Nearest Neighbor}
 Maintain a static set of two-dimensional points while supporting nearest-neighbor queries. A k-d tree recursively splits points by the coordinate with larger spread, searches the more promising side first, and only explores the other side when its splitting plane can still improve the answer.
 
@@ -6933,7 +6739,7 @@ Use this for static nearest-neighbor queries on point sets in low dimensions. It
 
 \begin{compactitem}
   \item \inlinecode{NearestKDTree\textless{}T\textgreater{}(lo, hi)} constructs a set of \inlinecode{std::pair} points from the half-open forward-iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
-  \item \inlinecode{nearest(x, y, can\_equal = true)} returns a point in the set that is closest to $({\inlinecodemath{x}}, {\inlinecodemath{y}})$ by Euclidean distance. This may be equal to $({\inlinecodemath{x}}, {\inlinecodemath{y}})$ only if \inlinecode{can\_equal} is \inlinecode{true}; at least one eligible point must exist.
+  \item \inlinecode{nearest(x, y, can\_equal = true)} returns a point in the set that is closest to (\inlinecode{x}, \inlinecode{y}) by Euclidean distance. This may be equal to (\inlinecode{x}, \inlinecode{y}) only if \inlinecode{can\_equal} is \inlinecode{true}; at least one eligible point must exist.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -7248,7 +7054,6 @@ class FenwickRUPQ {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -7261,17 +7066,9 @@ int main() {
   assert(t.at(1) == 10);
   assert(t.at(2) == 15);
   assert(t.at(4) == 10);
-  cout << "Values: ";
-  for (int i = 0; i < t.size(); i++) {
-    cout << t.at(i) << " ";
-  }
-  cout << endl;
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-Values: 5 10 15 10 10
-\end{exampleoutput}
 \subsection{Fenwick Tree (Range Update, Range Query)}
 Maintain a numerical array while supporting range increments and range-sum queries. This uses two Fenwick trees to recover prefix sums after difference-array updates: if the difference array stores range additions, then the prefix sum through \inlinecode{hi} can be written as \inlinecode{hi*sum(t1, hi) - sum(t2, hi)}.
 
@@ -7382,7 +7179,6 @@ class FenwickRURQ {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -7393,11 +7189,10 @@ int main() {
   }
   t.add(0, 2, 5);
   t.set(3, -5);
-  cout << "Values: ";
+  vector<int> expected{15, 6, 7, -5, 4};
   for (int i = 0; i < t.size(); i++) {
-    cout << t.at(i) << " ";
+    assert(t.at(i) == expected[i]);
   }
-  cout << endl;
   assert(t.sum(0, 4) == 27);
   FenwickRURQ<int> freq(8);
   freq.add(1, 1, 1);
@@ -7409,9 +7204,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-Values: 15 6 7 -5 4
-\end{exampleoutput}
 \subsection{Sparse Fenwick Tree (Range Update, Range Query)}
 Maintain a numerical array over a huge index range while supporting range increments and range-sum queries. This is the sparse version of the two-tree Fenwick range-update/range-query trick: only Fenwick nodes reached by previous operations are stored, using \inlinecode{std::unordered\_map} instead of dense vectors.
 
@@ -7514,7 +7306,6 @@ class SparseFenwick {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <iostream>
 #include <vector>
 using namespace std;
 
@@ -7526,11 +7317,10 @@ int main() {
   }
   t.add(0, 2, 5);
   t.set(3, -5);
-  cout << "Values: ";
+  vector<int> expected{15, 6, 7, -5, 4};
   for (int i = 0; i < 5; i++) {
-    cout << t.at(i) << " ";
+    assert(t.at(i) == expected[i]);
   }
-  cout << endl;
   assert(t.sum(0, 4) == 27);
   t.add(500000001, 500000010, 3);
   t.add(500000011, 500000015, 5);
@@ -7547,9 +7337,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-Values: 15 6 7 -5 4
-\end{exampleoutput}
 \subsection{2D Fenwick Tree}
 Maintain a two-dimensional numerical array while supporting point increments and rectangle-sum queries. This is the two-dimensional form of the standard Fenwick tree: each internal entry stores a rectangular block sum, and a prefix query combines $O(\log\left(R\right) \cdot \log\left(C\right))$ disjoint blocks.
 
@@ -7558,9 +7345,9 @@ Choose among the three 2D Fenwick trees by coordinate range and update style. Us
 \begin{compactitem}
   \item \inlinecode{Fenwick2D\textless{}T\textgreater{}(rows, cols)} constructs a \inlinecode{rows} by \inlinecode{cols} array with 0-based indices, with all values initialized to $0$.
   \item \inlinecode{size\_rows()} and \inlinecode{size\_cols()} return the number of rows and columns.
-  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index $({\inlinecodemath{r}}, {\inlinecodemath{c}})$.
-  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index $({\inlinecodemath{r}}, {\inlinecodemath{c}})$.
-  \item \inlinecode{at(r, c)} returns the value at index $({\inlinecodemath{r}}, {\inlinecodemath{c}})$.
+  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
+  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
+  \item \inlinecode{at(r, c)} returns the value at index (\inlinecode{r}, \inlinecode{c}).
   \item \inlinecode{sum(r, c)} returns the sum of the rectangle with rows $[0, {\inlinecodemath{r}}]$ and columns $[0, {\inlinecodemath{c}}]$.
   \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with rows $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
 \end{compactitem}
@@ -7652,12 +7439,12 @@ Choose this for huge sparse grids when the operation is additive: point or recta
 
 \begin{compactitem}
   \item \inlinecode{SparseFenwick2D\textless{}T, R, C\textgreater{}()} constructs a 2D array over rows $[0, R)$ and columns $[0, C)$. All values are implicitly initialized to $0$; nodes are allocated lazily as indices are touched.
-  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index $({\inlinecodemath{r}}, {\inlinecodemath{c}})$.
+  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
   \item \inlinecode{add(r1, c1, r2, c2, x)} adds \inlinecode{x} to all indices in the rectangle with rows $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
-  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index $({\inlinecodemath{r}}, {\inlinecodemath{c}})$.
+  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
   \item \inlinecode{sum(r, c)} returns the sum of the rectangle with rows $[0, {\inlinecodemath{r}}]$ and columns $[0, {\inlinecodemath{c}}]$.
-  \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with rows $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
-  \item \inlinecode{at(r, c)} returns the value at index $({\inlinecodemath{r}}, {\inlinecodemath{c}})$.
+  \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with rows in $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns in $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
+  \item \inlinecode{at(r, c)} returns the value at index (\inlinecode{r}, \inlinecode{c}).
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(\log\left(R\right) \cdot \log\left(C\right))$ expected per call to all member functions.
@@ -7790,13 +7577,13 @@ Usage is two-phase. First declare every cell that will be updated with \inlineco
 
 \begin{compactitem}
   \item \inlinecode{OfflineFenwick2D\textless{}T\textgreater{}()} constructs an empty structure in the declaration phase.
-  \item \inlinecode{reserve(r, c)} declares that the cell $({\inlinecodemath{r}}, {\inlinecodemath{c}})$ may later be updated. Call before \inlinecode{build()}.
+  \item \inlinecode{reserve(r, c)} declares that the cell (\inlinecode{r}, \inlinecode{c}) may later be updated. Call before \inlinecode{build()}.
   \item \inlinecode{build()} finalizes the coordinate compression. Call exactly once, after all \inlinecode{reserve()} calls.
-  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index $({\inlinecodemath{r}}, {\inlinecodemath{c}})$, which must have been reserved.
-  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index $({\inlinecodemath{r}}, {\inlinecodemath{c}})$, which must have been reserved.
+  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}), which must have been reserved.
+  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}), which must have been reserved.
   \item \inlinecode{sum(r, c)} returns the sum of the rectangle with rows $[0, {\inlinecodemath{r}}]$ and columns $[0, {\inlinecodemath{c}}]$.
   \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with rows $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
-  \item \inlinecode{at(r, c)} returns the value at index $({\inlinecodemath{r}}, {\inlinecodemath{c}})$.
+  \item \inlinecode{at(r, c)} returns the value at index (\inlinecode{r}, \inlinecode{c}).
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -8146,7 +7933,6 @@ class SparseDSU {
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -8166,24 +7952,10 @@ int main() {
     sort(group.begin(), group.end());
   }
   sort(s.begin(), s.end());
-  bool first_set = true;
-  for (const auto &group : s) {
-    cout << (first_set ? "[" : ", [");
-    first_set = false;
-    bool first_value = true;
-    for (char value : group) {
-      cout << (first_value ? "" : ", ") << value;
-      first_value = false;
-    }
-    cout << "]";
-  }
-  cout << endl;
+  assert((s == vector<vector<char>>{{'a', 'b', 'f'}, {'c'}, {'d', 'e', 'g'}}));
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-[a, b, f], [c], [d, e, g]
-\end{exampleoutput}
 \subsection{Rollback Disjoint Set Union}
 Maintains disjoint sets while supporting rollback to previous snapshots. Rollback DSU is useful for offline dynamic connectivity, divide-and-conquer over time, and backtracking search where unions must be undone.
 
@@ -8599,8 +8371,8 @@ The construction sorts the subset by depth-first entry time, which lists the nod
 \begin{compactitem}
   \item \inlinecode{VirtualTree(adj, root)} builds the structure over a tree rooted at \inlinecode{root}, given a bidirectional adjacency list \inlinecode{adj} of nodes numbered $[0, {\inlinecodemath{n}})$, where \inlinecode{n} is \inlinecode{adj.size()}.
   \item \inlinecode{lca(u, v)} returns the lowest common ancestor of nodes \inlinecode{u} and \inlinecode{v}.
-  \item \inlinecode{depth\_of(u)} returns the depth of \inlinecode{u} in the original tree (the root has depth $0$). The original path length of a virtual-tree edge $({\inlinecodemath{p}}, {\inlinecodemath{c}})$ is \inlinecode{depth\_of(c)} $-$ \inlinecode{depth\_of(p)}.
-  \item \inlinecode{build(nodes)} returns the virtual tree induced by \inlinecode{nodes}. The result has \inlinecode{root} set to the topmost node (the common ancestor of \inlinecode{nodes}), \inlinecode{nodes} listing every original node ID in the virtual tree sorted by entry time, and \inlinecode{edges} listing each $({\inlinecodemath{p}}, {\inlinecodemath{c}})$ pair in original IDs. Both the node set and the edges use the node numbering of the original tree. An empty input yields an empty result with \inlinecode{root} $= -1$.
+  \item \inlinecode{depth\_of(u)} returns the depth of \inlinecode{u} in the original tree (the root has depth $0$). The original path length of a virtual-tree edge \inlinecode{p}-\inlinecode{c} is \inlinecode{depth\_of(c)} $-$ \inlinecode{depth\_of(p)}.
+  \item \inlinecode{build(nodes)} returns the virtual tree induced by \inlinecode{nodes}. The result has \inlinecode{root} set to the topmost node (the common ancestor of \inlinecode{nodes}), \inlinecode{nodes} listing every original node ID in the virtual tree sorted by entry time, and \inlinecode{edges} listing each (\inlinecode{p}, \inlinecode{c}) pair in original IDs. Both the node set and the edges use the node numbering of the original tree. An empty input yields an empty result with \inlinecode{root} $= -1$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -9465,7 +9237,7 @@ class EulerTourTree {
   }
 
  public:
-  explicit EulerTourTree(int n) : n(n), rng(1234567), adj(n) {}
+  explicit EulerTourTree(int n) : n(n), rng(std::random_device{}()), adj(n) {}
 
   ~EulerTourTree() {
     for (Node *node : allocated) {
@@ -10515,7 +10287,6 @@ class TopTree {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -10577,10 +10348,7 @@ int main() {
   //     2----------4
   //        v=30   v=50
   assert(tree.subtree_query(2, 4) == 58);
-  cout << tree.path_query(0, 3) << endl;
+  assert(tree.path_query(0, 3) == 124);
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-124
-\end{exampleoutput}

@@ -159,7 +159,7 @@ class EulerTourTree {
   }
 
  public:
-  explicit EulerTourTree(int n) : n(n), rng(1234567), adj(n) {}
+  explicit EulerTourTree(int n) : n(n), rng(std::random_device{}()), adj(n) {}
 
   ~EulerTourTree() {
     for (Node *node : allocated) {

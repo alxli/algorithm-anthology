@@ -100,13 +100,8 @@ class SparseFenwick {
   }
 };
 
-/*** Example Usage and Output:
+/*** Example Usage ***/
 
-Values: 15 6 7 -5 4
-
-***/
-
-#include <iostream>
 #include <vector>
 using namespace std;
 
@@ -118,11 +113,10 @@ int main() {
   }
   t.add(0, 2, 5);
   t.set(3, -5);
-  cout << "Values: ";
+  vector<int> expected{15, 6, 7, -5, 4};
   for (int i = 0; i < 5; i++) {
-    cout << t.at(i) << " ";
+    assert(t.at(i) == expected[i]);
   }
-  cout << endl;
   assert(t.sum(0, 4) == 27);
   t.add(500000001, 500000010, 3);
   t.add(500000011, 500000015, 5);

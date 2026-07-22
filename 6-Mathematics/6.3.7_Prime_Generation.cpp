@@ -11,6 +11,12 @@ multiples that is at least both $p^2$ and `lo`). This needs only O(w + sqrt(h)) 
 $w = `hi` - `lo` + 1$ and $h = `hi`$, instead of the O(h) space that sieving all of $[2, `hi`]$
 would require.
 
+The linear sieve finds the least prime factor of each integer. When processing `i`, it marks `i * p`
+for each known prime `p` no greater than `least[i]`. Every composite `x` is therefore generated
+exactly once: writing `x = i * p`, where `p` is its least prime factor, gives `p` $\leq$ `least[i]`,
+while any representation using a larger prime is skipped. This single visit per composite gives the
+O(n) running time.
+
 - `sieve(n)` returns a vector of all the primes less than or equal to `n`.
 - `sieve(lo, hi)` returns a vector of all the primes in the range $[`lo`, `hi`]$.
 - `linear_sieve(n, least_out = nullptr)` returns a vector of all primes less than or equal to `n` in

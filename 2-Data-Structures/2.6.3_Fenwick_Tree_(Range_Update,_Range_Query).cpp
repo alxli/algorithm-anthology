@@ -103,13 +103,8 @@ class FenwickRURQ {
   }
 };
 
-/*** Example Usage and Output:
+/*** Example Usage ***/
 
-Values: 15 6 7 -5 4
-
-***/
-
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -120,11 +115,10 @@ int main() {
   }
   t.add(0, 2, 5);
   t.set(3, -5);
-  cout << "Values: ";
+  vector<int> expected{15, 6, 7, -5, 4};
   for (int i = 0; i < t.size(); i++) {
-    cout << t.at(i) << " ";
+    assert(t.at(i) == expected[i]);
   }
-  cout << endl;
   assert(t.sum(0, 4) == 27);
   FenwickRURQ<int> freq(8);
   freq.add(1, 1, 1);

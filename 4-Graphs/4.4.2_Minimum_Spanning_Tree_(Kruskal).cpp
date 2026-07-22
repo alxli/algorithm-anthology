@@ -11,7 +11,7 @@ form a cycle.
 
 - `kruskal_mst(n)` populates `mst` with the edge IDs in the minimum spanning forest and returns the
   total MST weight for a global, pre-populated edge list `edges` whose endpoints must be numbered
-  $[0, `n`)$. Each edge is stored as $(`weight`, `u`, `v`)$.
+  $[0, `n`)$. Each edge is stored as a tuple (`weight`, `u`, `v`).
 
 Multigraphs are supported; parallel edges appear as separate entries in `edges` and any redundant
 ones are skipped once the cheaper edge has already connected the two components.
@@ -72,19 +72,9 @@ int64_t kruskal_mst(int n) {
   return total_dist;
 }
 
-/*** Example Usage and Output:
-
-Total distance: 13
-3 <-> 4
-4 <-> 5
-2 <-> 0
-5 <-> 6
-0 <-> 1
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -104,11 +94,6 @@ int main() {
   edges.emplace_back(4, 6, 4);
   int64_t total = kruskal_mst(7);
   assert(total == 13);
-  assert(mst.size() == 5);
-  cout << "Total distance: " << total << endl;
-  for (int id : mst) {
-    auto &[w, u, v] = edges[id];
-    cout << u << " <-> " << v << endl;
-  }
+  assert((mst == vector<int>{3, 4, 2, 5, 0}));
   return 0;
 }

@@ -18,7 +18,7 @@ a basis element covers.
 - `contains(x)` returns whether `x` is representable as the XOR of some subset of the inserted
   values, i.e. whether it reduces to $0$ against the basis.
 - `max_xor(base = 0)` returns the maximum value of `base` XORed with some subset XOR of the basis.
-  With the default `base` of 0, this is the maximum subset XOR.
+  With the default `base` of $0$, this is the maximum subset XOR.
 - `size()` returns the number of elements in the basis (its rank).
 
 Time Complexity:

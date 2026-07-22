@@ -15,14 +15,14 @@ subtraction.
 
 - `SparseFenwick2D<T, R, C>()` constructs a 2D array over rows $[0, R)$ and columns $[0, C)$. All
   values are implicitly initialized to $0$; nodes are allocated lazily as indices are touched.
-- `add(r, c, x)` adds `x` to the value at index $(`r`, `c`)$.
+- `add(r, c, x)` adds `x` to the value at index (`r`, `c`).
 - `add(r1, c1, r2, c2, x)` adds `x` to all indices in the rectangle with rows $[`r1`, `r2`]$ and
   columns $[`c1`, `c2`]$.
-- `set(r, c, x)` assigns `x` to the value at index $(`r`, `c`)$.
+- `set(r, c, x)` assigns `x` to the value at index (`r`, `c`).
 - `sum(r, c)` returns the sum of the rectangle with rows $[0, `r`]$ and columns $[0, `c`]$.
-- `sum(r1, c1, r2, c2)` returns the sum of the rectangle with rows $[`r1`, `r2`]$ and columns
+- `sum(r1, c1, r2, c2)` returns the sum of the rectangle with rows in $[`r1`, `r2`]$ and columns in
   $[`c1`, `c2`]$.
-- `at(r, c)` returns the value at index $(`r`, `c`)$.
+- `at(r, c)` returns the value at index (`r`, `c`).
 
 Time Complexity:
 - O(log(R)*log(C)) expected per call to all member functions.

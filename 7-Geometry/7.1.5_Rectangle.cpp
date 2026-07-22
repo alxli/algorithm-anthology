@@ -5,9 +5,8 @@ point type `Pt`, which should accept `Point`, `PointD`, or `PointI` from 7.1.1, 
 numeric `.x` and `.y` fields.
 
 - `point_in_rectangle(p, v, w, h, edge_is_inside = true)` returns whether point `p` lies inside the
-  axis-aligned rectangle whose opposite corners are `v` and $(`v.x + w`, `v.y + h`)$. Negative
-  widths and heights are supported. The `edge_is_inside` flag controls whether boundary points
-  count.
+  axis-aligned rectangle whose opposite corners are `v` and (`v.x + w`, `v.y + h`). Negative widths
+  and heights are supported. The `edge_is_inside` flag controls whether boundary points count.
 - `point_in_rectangle(p, a, b, edge_is_inside = true)` returns whether point `p` lies inside the
   axis-aligned rectangle with opposite corners `a` and `b`.
 - `rectangle_intersection(a1, b1, a2, b2, &p, &q, edge_is_inside = true)` computes the intersection
@@ -37,15 +36,13 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) {
-    return C(a) == C(b) || std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
-  }
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - EPS;
   return C(a) < C(b);
 }
 

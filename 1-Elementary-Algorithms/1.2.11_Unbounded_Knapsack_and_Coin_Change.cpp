@@ -12,12 +12,12 @@ each multiset of coins is counted once, independent of ordering. For minimum coi
 chooses the best previous sum `sum - coin`, and the predecessor coin reconstructs one optimal
 multiset.
 
-- `unbounded_knapsack(weight, value, capacity)` returns a pair $(`value`, `count`)$ containing the
-  maximum value achievable with total weight at most `capacity` and `count[i]`, the number of copies
-  selected of each item `i`.
+- `unbounded_knapsack(weight, value, capacity)` returns a pair (`best_value`, `count`) containing
+  the maximum value achievable with total weight at most `capacity` and `count[i]`, the number of
+  copies selected of each item `i`.
 - `count_coin_change(coins, target)` returns the number of unordered ways to make sum `target` using
   the given coin denominations.
-- `min_coin_change(coins, target)` returns a pair $(`count`, `used`)$, where `count` is the minimum
+- `min_coin_change(coins, target)` returns a pair (`count`, `used`), where `count` is the minimum
   number of coins needed to make sum `target`, and `used[i]` is the number of copies of `coins[i]`
   in one optimal multiset. If `target` cannot be formed, `count` is $-1$ and `used` is empty.
 
@@ -118,8 +118,8 @@ using namespace std;
 int main() {
   vector<int> weight{3, 4, 5};
   vector<int64_t> value{4, 5, 7};
-  auto [best, count] = unbounded_knapsack(weight, value, 10);
-  assert(best == 14);
+  auto [best_value, count] = unbounded_knapsack(weight, value, 10);
+  assert(best_value == 14);
   assert((count == vector<int>{0, 0, 2}));
 
   vector<int> coins{1, 2, 5};

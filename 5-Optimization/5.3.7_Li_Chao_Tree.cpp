@@ -61,40 +61,40 @@ class LiChaoTree {
     delete n;
   }
 
-  static void add_line(Node *&n, int64_t l, int64_t r, Line f) {
+  static void add_line(Node *&n, int64_t lo, int64_t hi, Line f) {
     if (n == nullptr) {
       n = new Node(f);
       return;
     }
-    int64_t mid = l + (r - l) / 2;
-    bool left_better = f.eval(l) < n->f.eval(l);
+    int64_t mid = lo + (hi - lo) / 2;
+    bool left_better = f.eval(lo) < n->f.eval(lo);
     bool mid_better = f.eval(mid) < n->f.eval(mid);
     if (mid_better) {
       std::swap(f, n->f);
     }
-    if (l == r) {
+    if (lo == hi) {
       return;
     }
     if (left_better != mid_better) {
-      add_line(n->left, l, mid, f);
+      add_line(n->left, lo, mid, f);
     } else {
-      add_line(n->right, mid + 1, r, f);
+      add_line(n->right, mid + 1, hi, f);
     }
   }
 
-  static int64_t query(Node *n, int64_t l, int64_t r, int64_t x) {
+  static int64_t query(Node *n, int64_t lo, int64_t hi, int64_t x) {
     if (n == nullptr) {
       return INF;
     }
     int64_t res = n->f.eval(x);
-    if (l == r) {
+    if (lo == hi) {
       return res;
     }
-    int64_t mid = l + (r - l) / 2;
+    int64_t mid = lo + (hi - lo) / 2;
     if (x <= mid) {
-      return std::min(res, query(n->left, l, mid, x));
+      return std::min(res, query(n->left, lo, mid, x));
     }
-    return std::min(res, query(n->right, mid + 1, r, x));
+    return std::min(res, query(n->right, mid + 1, hi, x));
   }
 
  public:

@@ -1,28 +1,36 @@
 /*
 
-Given a starting node in an unweighted, directed graph, visit every connected node and determine the
-minimum distance to each such node. Breadth-first search explores nodes in order of increasing
-distance using a queue, so the first time a node is reached is via a shortest path. Optionally,
-output the shortest path to a specific destination node using the shortest-path tree from the
-predecessor vector `pred`.
+Given one or more starting nodes in an unweighted, directed graph, visit every reachable node and
+determine its minimum distance from any start. Breadth-first search explores nodes in order of
+increasing distance using a queue, so the first time a node is reached is via a shortest path.
+Initializing the queue with several distance-$0$ sources gives multi-source BFS without changing the
+traversal. Optionally, reconstruct a shortest path using the predecessor vector `pred`.
 
-- `bfs(start)` populates `dist` and `pred` for a global, pre-populated adjacency list `adj` which
-  must consist of nodes numbered $[0, `n`)$, where `n` is `adj.size()`.
+- `bfs(starts)` populates `dist` and `pred` from every node in `starts`, assigning each node its
+  minimum distance from any start. The global, pre-populated adjacency list `adj` must consist of
+  nodes numbered $[0, `n`)$, where `n` is `adj.size()`. Pass a singleton vector for single-source
+  BFS.
+- `get_path(dest)` returns the path from a nearest starting node to `dest`, or an empty vector if
+  `dest` is unreachable, after the latest call to `bfs()`.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
-`start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the
-destination to `start`, then reverse that sequence to recover the path.
+a nearest start to `v`, or $-1$ if `v` is a starting node or unreachable. Follow `pred` backward
+from the destination to its starting node, then reverse that sequence to recover the path.
 
 Time Complexity:
-- O(max(n, m)) per call, where $n$ is the number of nodes and $m$ is the number of edges.
+- O(max(n, m, s)) per call, where $n$ is the number of nodes, $m$ is the number of edges, and $s$ is
+  the number of supplied starting nodes. For single-source BFS, $s = 1$.
+- O(p) per call to `get_path()`, where $p$ is the number of nodes in the returned path.
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
   edges.
 - O(n) auxiliary.
+- O(p) for the path returned by `get_path()`.
 
 */
 
+#include <algorithm>
 #include <climits>
 #include <queue>
 #include <vector>
@@ -31,13 +39,18 @@ const int INF = INT_MAX / 2;
 std::vector<std::vector<int>> adj;
 std::vector<int> dist, pred;
 
-void bfs(int start) {
+void bfs(const std::vector<int> &starts) {
   int n = static_cast<int>(adj.size());
   dist.assign(n, INF);
   pred.assign(n, -1);
   std::queue<int> q;
-  dist[start] = 0;
-  q.push(start);
+  for (int start : starts) {
+    if (dist[start] == 0) {
+      continue;
+    }
+    dist[start] = 0;
+    q.push(start);
+  }
   while (!q.empty()) {
     int u = q.front();
     q.pop();
@@ -52,29 +65,22 @@ void bfs(int start) {
   }
 }
 
-/*** Example Usage and Output:
+std::vector<int> get_path(int dest) {
+  if (dist[dest] == INF) {
+    return {};
+  }
+  std::vector<int> path;
+  for (int v = dest; v != -1; v = pred[v]) {
+    path.push_back(v);
+  }
+  std::reverse(path.begin(), path.end());
+  return path;
+}
 
-The shortest distance from 0 to 3 is 2.
-Take the path: 0->1->3.
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
-
-void print_path(int dest) {
-  vector<int> path;
-  for (int j = dest; pred[j] != -1; j = pred[j]) {
-    path.push_back(pred[j]);
-  }
-  cout << "Take the path: ";
-  while (!path.empty()) {
-    cout << path.back() << "->";
-    path.pop_back();
-  }
-  cout << dest << "." << endl;
-}
 
 int main() {
   // 0 --> 1 --> 2
@@ -87,11 +93,13 @@ int main() {
   adj[1].push_back(3);
   adj[2].push_back(3);
   int start = 0, dest = 3;
-  bfs(start);
+  bfs(vector<int>{start});
   assert(dist[dest] == 2);
-  assert(pred[dest] == 1);
-  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
-       << endl;
-  print_path(dest);
+  assert((get_path(dest) == vector<int>{0, 1, 3}));
+
+  bfs(vector<int>{0, 2});
+  assert(dist[2] == 0);
+  assert(dist[3] == 1);
+  assert((get_path(3) == vector<int>{2, 3}));
   return 0;
 }

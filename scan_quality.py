@@ -30,13 +30,23 @@ EXAMPLE_HELPER_RE = re.compile(
 C_RAND_RE = re.compile(
     r"((?<![A-Za-z0-9_])::rand\s*\(|(?<!::)\brand\s*\(\s*\)\s*%|\bsrand\s*\()"
 )
+QUALIFIED_FABS_RE = re.compile(r"\bstd::fabs\b")
+CAST_EPS_RE = re.compile(r"\bstatic_cast<C>\(EPS\)")
+FIXED_ENGINE_SEED_RE = re.compile(
+    r"(?:std::)?(?:mt19937|mt19937_64)\s+[A-Za-z_][A-Za-z0-9_]*"
+    r"\s*\(\s*([0-9]+)[uUlL]*\s*\)"
+)
+FIXED_RANDOM_WRAPPER_SEED_RE = re.compile(
+    r"(?:\bRNG|\bZobristHash<[^;()]+>)\s+[A-Za-z_][A-Za-z0-9_]*"
+    r"\s*\(\s*([0-9]+)[uUlL]*\s*\)"
+)
 CONTROL_BLOCK_RE = re.compile(r"^(?:if|for|while|switch|catch)\b")
 
 STYLE_PATTERNS = [
     (
         re.compile(
             r"if constexpr \(std::is_floating_point_v<C>\) return "
-            r"std::fabs\(C\(a\) - C\(b\)\) <= static_cast<C>\(EPS\);"
+            r"fabs\(C\(a\) - C\(b\)\) <= EPS;"
         ),
         "Check exact equality before subtracting so same-signed infinities compare equal.",
     ),
@@ -392,7 +402,9 @@ def scan_code_consistency(paths):
     for path in paths:
         text = path.read_text()
         lines = text.splitlines()
+        in_block_comment = False
         for line_no, line in enumerate(lines, start=1):
+            code, in_block_comment = strip_cpp_comments_and_strings(line, in_block_comment)
             if C_RAND_RE.search(line):
                 issues.append(
                     Issue(
@@ -403,20 +415,91 @@ def scan_code_consistency(paths):
                         line,
                     )
                 )
+            if QUALIFIED_FABS_RE.search(code):
+                issues.append(
+                    Issue(
+                        path,
+                        line_no,
+                        "code-consistency",
+                        "Use plain fabs() to match the anthology's <cmath> convention.",
+                        line,
+                    )
+                )
+            if CAST_EPS_RE.search(code):
+                issues.append(
+                    Issue(
+                        path,
+                        line_no,
+                        "code-consistency",
+                        "Use EPS directly; floating-point comparisons convert it implicitly.",
+                        line,
+                    )
+                )
 
         marker = text.find("/*** Example Usage")
         if marker == -1:
             continue
+
+        implementation = text[:marker]
+        implementation_start = []
+        in_block_comment = False
+        for line in implementation.splitlines():
+            code, in_block_comment = strip_cpp_comments_and_strings(line, in_block_comment)
+            implementation_start.append(code)
+        engine_members = set()
+        for code in implementation_start:
+            engine_members.update(
+                re.findall(
+                    r"(?:std::)?(?:mt19937|mt19937_64)\s+([A-Za-z_][A-Za-z0-9_]*)\s*;",
+                    code,
+                )
+            )
+        for offset, (line, code) in enumerate(
+            zip(implementation.splitlines(), implementation_start), start=1
+        ):
+            if FIXED_ENGINE_SEED_RE.search(code) or any(
+                re.search(rf"\b{re.escape(name)}\s*\(\s*[0-9]+[uUlL]*\s*\)", code)
+                for name in engine_members
+            ):
+                issues.append(
+                    Issue(
+                        path,
+                        offset,
+                        "code-consistency",
+                        "Seed reusable randomized implementations at runtime, "
+                        "not with a fixed literal.",
+                        line,
+                    )
+                )
+
         example = text[marker:]
         example_start_line = text[:marker].count("\n") + 1
+        in_block_comment = False
         for offset, line in enumerate(example.splitlines(), start=0):
-            if "std::random_device{}" in line:
+            code, in_block_comment = strip_cpp_comments_and_strings(line, in_block_comment)
+            if re.search(r"(?:std::)?random_device\s*\{\s*\}", code):
                 issues.append(
                     Issue(
                         path,
                         example_start_line + offset,
                         "code-consistency",
                         "Use a fixed seed in examples so output and assertions are reproducible.",
+                        line,
+                    )
+                )
+            fixed_seed = FIXED_ENGINE_SEED_RE.search(code)
+            wrapper_seed = FIXED_RANDOM_WRAPPER_SEED_RE.search(code)
+            if (
+                fixed_seed is not None and fixed_seed.group(1) != "1234567"
+            ) or (
+                wrapper_seed is not None and wrapper_seed.group(1) != "1234567"
+            ):
+                issues.append(
+                    Issue(
+                        path,
+                        example_start_line + offset,
+                        "code-consistency",
+                        "Use fixed seed 1234567 consistently in examples and tests.",
                         line,
                     )
                 )
@@ -625,10 +708,48 @@ def scan_markup_outside_docstrings(paths):
                         path,
                         line_no,
                         "markup-outside-docstring",
-                        "Use math/code markup only in block docstrings; listings render it literally.",
+                        "Use math/code markup only in block docstrings; "
+                        "listings render it literally.",
                         line,
                     )
                 )
+    return issues
+
+
+def scan_result_parameter_name_collisions(paths):
+    issues = []
+    bullet_re = re.compile(
+        r"(?ms)^- `([A-Za-z_][A-Za-z0-9_]*)\(([^\n`]*)\)`(.*?)(?=^- `|^\s*$)"
+    )
+    result_names_re = re.compile(
+        r"\breturns?\s+(?:an?\s+|the\s+)?(?:analogous\s+)?(?:pair|tuple)"
+        r"(?:\s+of\s+[A-Za-z-]+)?\s+"
+        r"\((`[A-Za-z_][A-Za-z0-9_]*`(?:, `[A-Za-z_][A-Za-z0-9_]*`)+)\)",
+        re.IGNORECASE,
+    )
+    for path in paths:
+        lines = path.read_text().splitlines()
+        for start, end in docstring_ranges(lines):
+            doc = "\n".join(lines[start + 1:end])
+            for bullet in bullet_re.finditer(doc):
+                description = bullet.group(3)
+                result = result_names_re.search(description)
+                if result is None:
+                    continue
+                params = bullet.group(2)
+                for name in re.findall(r"`([A-Za-z_][A-Za-z0-9_]*)`", result.group(1)):
+                    if re.search(rf"(?<![A-Za-z0-9_]){re.escape(name)}(?=\s*(?:=|,|$))", params):
+                        line_no = start + 2 + doc[:bullet.start()].count("\n")
+                        issues.append(
+                            Issue(
+                                path,
+                                line_no,
+                                "result-parameter-name",
+                                f"Result field `{name}` repeats a parameter name; "
+                                "make its role distinct.",
+                                lines[line_no - 1],
+                            )
+                        )
     return issues
 
 
@@ -1070,6 +1191,7 @@ def main():
     issues.extend(scan_function_spacing(paths))
     issues.extend(scan_known_style_drift(paths))
     issues.extend(scan_markup_outside_docstrings(paths))
+    issues.extend(scan_result_parameter_name_collisions(paths))
     issues.extend(scan_default_argument_docs(paths))
     issues.extend(scan_api_parameter_names(paths))
     issues.extend(scan_documented_api_names(paths))

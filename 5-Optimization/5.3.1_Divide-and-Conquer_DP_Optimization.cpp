@@ -5,13 +5,14 @@ where $0 \leq `k` \leq `i`$. Let `opt[i]` be the smallest index `k` attaining th
 Divide-and-conquer optimization applies when `opt[i]` $\leq$ `opt[i + 1]`, so the best transition
 index moves only to the right as `i` increases.
 
-To compute `dp_cur[l..r]`, evaluate its midpoint and record its best transition as `best_k`.
+To compute `dp_cur[lo..hi]`, evaluate its midpoint and record its best transition as `best_k`.
 Monotonicity restricts every optimum in the left half to indices at most `best_k`, and every optimum
 in the right half to indices at least `best_k`. Recursively applying these bounds avoids checking
 every transition for every state. The caller must verify the required monotonicity property.
 
-- `compute_dp_layer(dp_prev, dp_cur, l, r, opt_l, opt_r, cost)` fills `dp_cur[l..r]` using candidate
-  transition indices in [`opt_l`, `opt_r`]. The template parameter `cost` must be callable such that
+- `compute_dp_layer(dp_prev, dp_cur, lo, hi, opt_lo, opt_hi, cost)` fills `dp_cur[lo..hi]` using
+  candidate transition indices in [`opt_lo`, `opt_hi`]. The template parameter `cost` must be
+  callable such that
   `cost(k, i)` returns the transition cost from previous state `k` to current state `i`.
 
 Time Complexity:
@@ -30,17 +31,17 @@ const int64_t INF = (1LL << 62);
 
 template<typename Cost>
 void compute_dp_layer(
-    const std::vector<int64_t> &dp_prev, std::vector<int64_t> &dp_cur, int l, int r, int opt_l,
-    int opt_r, Cost cost
+    const std::vector<int64_t> &dp_prev, std::vector<int64_t> &dp_cur, int lo, int hi, int opt_lo,
+    int opt_hi, Cost cost
 ) {
-  if (l > r) {
+  if (lo > hi) {
     return;
   }
-  int mid = l + (r - l) / 2;
+  int mid = lo + (hi - lo) / 2;
   int64_t best = INF;
-  int best_k = opt_l;
-  int upper = std::min(mid, opt_r);
-  for (int k = opt_l; k <= upper; k++) {
+  int best_k = opt_lo;
+  int upper = std::min(mid, opt_hi);
+  for (int k = opt_lo; k <= upper; k++) {
     int64_t candidate = dp_prev[k] + cost(k, mid);  // Overflow warning!
     if (candidate < best) {
       best = candidate;
@@ -48,8 +49,8 @@ void compute_dp_layer(
     }
   }
   dp_cur[mid] = best;
-  compute_dp_layer(dp_prev, dp_cur, l, mid - 1, opt_l, best_k, cost);
-  compute_dp_layer(dp_prev, dp_cur, mid + 1, r, best_k, opt_r, cost);
+  compute_dp_layer(dp_prev, dp_cur, lo, mid - 1, opt_lo, best_k, cost);
+  compute_dp_layer(dp_prev, dp_cur, mid + 1, hi, best_k, opt_hi, cost);
 }
 
 /*** Example Usage ***/

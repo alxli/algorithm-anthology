@@ -579,13 +579,8 @@ class TopTree {
   }
 };
 
-/*** Example Usage and Output:
+/*** Example Usage ***/
 
-124
-
-***/
-
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -647,6 +642,6 @@ int main() {
   //     2----------4
   //        v=30   v=50
   assert(tree.subtree_query(2, 4) == 58);
-  cout << tree.path_query(0, 3) << endl;
+  assert(tree.path_query(0, 3) == 124);
   return 0;
 }

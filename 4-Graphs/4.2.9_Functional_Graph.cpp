@@ -139,16 +139,9 @@ class FunctionalGraph {
   }
 };
 
-/*** Example Usage and Output:
-
-Cycle count: 1
-dist_to_cycle[5] = 3
-successor(5, 4) = 2
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 int main() {
@@ -171,8 +164,5 @@ int main() {
   assert(g.successor(5, 3) == 1);    // 5 -> 4 -> 3 -> 1.
   assert(g.successor(5, 4) == 2);    // One more step around into the cycle.
   assert(g.successor(0, 100) == 1);  // 100 mod 3 == 1 step around the cycle.
-  cout << "Cycle count: " << g.num_cycles() << endl;
-  cout << "dist_to_cycle[5] = " << g.dist_to_cycle(5) << endl;
-  cout << "successor(5, 4) = " << g.successor(5, 4) << endl;
   return 0;
 }

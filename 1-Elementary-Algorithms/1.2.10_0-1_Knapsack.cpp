@@ -8,11 +8,11 @@ with total weight at most `w` after processing some prefix of the items. Iterati
 decreasing order is what enforces the 0-1 constraint; it prevents the same item from being reused
 during the current item update.
 
-- `knapsack_01(weight, value, capacity)` returns a pair $(`value`, `items`)$ containing the maximum
-  value and the selected item indices in increasing order, where item `i` has weight `weight[i]` and
-  value `value[i]`. All weights must be nonnegative integers. Items with weight $0$ are allowed and
-  can each be taken once. The take/skip decision for every item and capacity is stored to
-  reconstruct the optimal subset.
+- `knapsack_01(weight, value, capacity)` returns a pair (`best_value`, `items`) containing the
+  maximum value and the selected item indices in increasing order, where item `i` has weight
+  `weight[i]` and value `value[i]`. All weights must be nonnegative integers. Items with weight
+  $0$ are allowed and can each be taken once. The take/skip decision for every item and capacity is
+  stored to reconstruct the optimal subset.
 
 Time Complexity:
 - O(n*W) per call, where $n$ is the number of items and $W$ is `capacity`.
@@ -68,8 +68,8 @@ int main() {
   vector<int> weight{3, 4, 5, 9};
   vector<int64_t> value{4, 5, 7, 10};
 
-  auto [best, items] = knapsack_01(weight, value, 8);
-  assert(best == 11);
+  auto [best_value, items] = knapsack_01(weight, value, 8);
+  assert(best_value == 11);
   assert((items == vector<int>{0, 2}));
   return 0;
 }

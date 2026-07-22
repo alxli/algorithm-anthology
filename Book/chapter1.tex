@@ -329,7 +329,7 @@ int main() {
   }
   cout << "------" << endl;
 
-  std::mt19937 rng(1234567);
+  std::mt19937 rng(1234567);  // Fixed seed for reproducibility.
   vector<int> data;
   for (int i = 0; i < 5000000; i++) {
     data.push_back(static_cast<int>(rng()));
@@ -374,7 +374,7 @@ Partition a range around a pivot, or select the element with a given sorted rank
 Quickselect repeatedly applies this partition and continues only into the group containing the desired rank. This is the same task as \inlinecode{std::nth\_element()}: after the call, \inlinecode{*nth} is the value that would appear there in sorted order, all earlier positions contain values no larger than it, and all later positions contain values no smaller than it. Choosing pivots uniformly at random gives expected linear time, while the three-way split avoids unnecessary work on duplicate-heavy inputs.
 
 \begin{compactitem}
-  \item \inlinecode{partition\_three\_way(lo, hi, pivot)} rearranges $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ in-place and returns iterators $({\inlinecodemath{mid1}}, {\inlinecodemath{mid2}})$, where $[{\inlinecodemath{lo}}, {\inlinecodemath{mid1}})$ is less than \inlinecode{pivot}, $[{\inlinecodemath{mid1}}, {\inlinecodemath{mid2}})$ is equal to \inlinecode{pivot}, and $[{\inlinecodemath{mid2}}, {\inlinecodemath{hi}})$ is greater than \inlinecode{pivot}.
+  \item \inlinecode{partition\_three\_way(lo, hi, pivot)} rearranges $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ in-place and returns a pair of iterators (\inlinecode{mid1}, \inlinecode{mid2}), where $[{\inlinecodemath{lo}}, {\inlinecodemath{mid1}})$ is less than \inlinecode{pivot}, $[{\inlinecodemath{mid1}}, {\inlinecodemath{mid2}})$ is equal to \inlinecode{pivot}, and $[{\inlinecodemath{mid2}}, {\inlinecodemath{hi}})$ is greater than \inlinecode{pivot}.
   \item \inlinecode{nth\_element2(lo, nth, hi)} rearranges $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ in-place around the 0-based rank represented by iterator \inlinecode{nth}. This requires random-access iterators and \inlinecode{operator\textless{}} on the value type.
 \end{compactitem}
 
@@ -534,7 +534,6 @@ void rotate3(It lo, It mid, It hi) {
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <iostream>
 #include <vector>
 using namespace std;
 
@@ -561,46 +560,23 @@ int main() {
 
   // Example from: http://en.cppreference.com/w/cpp/algorithm/rotate
   vector<int> a{2, 4, 2, 0, 5, 10, 7, 3, 7, 1};
-  cout << "before sort:  ";
-  for (const auto &x : a) {
-    cout << x << " ";
-  }
-  cout << endl;
 
   // Insertion sort.
   for (auto i = a.begin(); i != a.end(); ++i) {
     rotate1(std::upper_bound(a.begin(), i, *i), i, i + 1);
   }
-  cout << "after sort:   ";
-  for (const auto &x : a) {
-    cout << x << " ";
-  }
-  cout << endl;
+  assert((a == vector<int>{0, 1, 2, 2, 3, 4, 5, 7, 7, 10}));
 
   // Simple rotation to the left.
   rotate2(a.begin(), a.begin() + 1, a.end());
-  cout << "rotate left:  ";
-  for (const auto &x : a) {
-    cout << x << " ";
-  }
-  cout << endl;
+  assert((a == vector<int>{1, 2, 2, 3, 4, 5, 7, 7, 10, 0}));
 
   // Simple rotation to the right.
   rotate3(a.rbegin(), a.rbegin() + 1, a.rend());
-  cout << "rotate right: ";
-  for (const auto &x : a) {
-    cout << x << " ";
-  }
-  cout << endl;
+  assert((a == vector<int>{0, 1, 2, 2, 3, 4, 5, 7, 7, 10}));
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-before sort:  2 4 2 0 5 10 7 3 7 1
-after sort:   0 1 2 2 3 4 5 7 7 10
-rotate left:  1 2 2 3 4 5 7 7 10 0
-rotate right: 0 1 2 2 3 4 5 7 7 10
-\end{exampleoutput}
 \subsection{Coordinate Compression}
 Given a range of $n$ numerical elements, reassign each element to an integer in the domain $[0, k)$, where $k$ is the number of distinct elements in the original range, while preserving the initial relative ordering of elements. That is, if $a$ is the array of original values and $b$ is the array of compressed values, then every pair of indices $i, j$ in $[0, n)$ shall satisfy $a[i] < a[j]$ if and only if $b[i] < b[j]$.
 
@@ -704,32 +680,24 @@ class CoordinateCompressor {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <iostream>
+#include <cassert>
 using namespace std;
-
-template<typename It>
-void print_range(It lo, It hi) {
-  while (lo != hi) {
-    cout << *lo++ << " ";
-  }
-  cout << endl;
-}
 
 int main() {
   {
     vector<int> a{1, 30, 30, 7, 9, 8, 99, 99};
     compress1(a.begin(), a.end());
-    print_range(a.begin(), a.end());
+    assert((a == vector<int>{0, 4, 4, 1, 3, 2, 5, 5}));
   }
   {
     vector<int> a{1, 30, 30, 7, 9, 8, 99, 99};
     compress2(a.begin(), a.end());
-    print_range(a.begin(), a.end());
+    assert((a == vector<int>{0, 4, 4, 1, 3, 2, 5, 5}));
   }
   {  // Non-integral types work too, as long as ints can be assigned to them.
     vector<double> a{0.5, -1.0, 3, -1.0, 20, 0.5};
     compress1(a.begin(), a.end());
-    print_range(a.begin(), a.end());
+    assert((a == vector<double>{1, 0, 2, 0, 3, 1}));
   }
   {
     vector<int> a{10, 5, 30, 5, 20};
@@ -753,11 +721,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-0 4 4 1 3 2 5 5
-0 4 4 1 3 2 5 5
-1 0 2 0 3 1
-\end{exampleoutput}
 \subsection{Counting Inversions}
 The number of inversions for a sequence $a$ is the number of ordered pairs $(i, j)$ such that $i < j$ and $a[i] > a[j]$. This is roughly how ``close'' an array is to being sorted, but is \textit{not} the minimum number of swaps required to sort the array. If the array is sorted, then the inversion count is $0$. If the array is sorted in decreasing order, then the inversion count is maximal. The following two functions are each techniques to efficiently count inversions. In the merge sort approach, whenever the merge step emits an element from the right half, that element jumps ahead of every unmerged left-half element, and exactly that many inversions are added to the count.
 
@@ -870,14 +833,17 @@ int main() {
 \subsection{Prefix Sums}
 Precomputes prefix sums so range-sum queries can be answered in constant time. This is one of the most common array preprocessing tools, and also appears as a building block for subarray sums, difference arrays, and two-dimensional grids. Each table entry stores the sum of all elements before it, so any range sum is the difference of two entries; in two dimensions, rectangle sums combine four entries by inclusion-exclusion.
 
+Prefix sums can also be combined with a frequency table to count subarrays having a target sum. When the current prefix sum is $s$, every earlier prefix sum equal to $s - t$ identifies a subarray with sum $t$. Recording frequencies rather than only whether a prefix exists counts duplicate sums correctly.
+
 \begin{compactitem}
   \item \inlinecode{prefix\_sums(a)} returns array \inlinecode{pref} with \inlinecode{pref[0] = 0} and \inlinecode{pref[i + 1] = a[0] + ... + a[i]}.
   \item \inlinecode{range\_sum(pref, lo, hi)} returns the sum of range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{prefix\_sums\_2d(a)} returns a two-dimensional prefix sum table for matrix \inlinecode{a}.
   \item \inlinecode{rectangle\_sum(pref, r1, c1, r2, c2)} returns the sum of the rectangle with rows $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
+  \item \inlinecode{count\_subarrays\_with\_sum(a, target)} returns the number of contiguous subarrays whose sum is \inlinecode{target}.
 \end{compactitem}
 
-All prefix sums and intermediate inclusion-exclusion results must fit in \inlinecode{int64\_t}.
+All prefix sums, target differences, inclusion-exclusion results, and returned counts must fit in \inlinecode{int64\_t}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -885,6 +851,7 @@ All prefix sums and intermediate inclusion-exclusion results must fit in \inline
   \item $O(n)$ per call to \inlinecode{prefix\_sums(a)}, where $n$ is the array size.
   \item $O(m \cdot n)$ per call to \inlinecode{prefix\_sums\_2d(a)}, where $m$ and $n$ are the number of rows and columns of \inlinecode{a}, respectively.
   \item $O(1)$ per range or rectangle query.
+  \item $O(n)$ expected per call to \inlinecode{count\_subarrays\_with\_sum(a, target)}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -893,16 +860,18 @@ All prefix sums and intermediate inclusion-exclusion results must fit in \inline
   \item $O(n)$ for the array returned by \inlinecode{prefix\_sums(a)}.
   \item $O(m \cdot n)$ for the table returned by \inlinecode{prefix\_sums\_2d(a)}.
   \item $O(1)$ auxiliary for \inlinecode{range\_sum()} and \inlinecode{rectangle\_sum()}.
+  \item $O(n)$ auxiliary for \inlinecode{count\_subarrays\_with\_sum(a, target)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <cstdint>
+#include <unordered_map>
 #include <vector>
 
 std::vector<int64_t> prefix_sums(const std::vector<int> &a) {
   std::vector<int64_t> pref(a.size() + 1, 0);
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
-    pref[i + 1] = pref[i] + a[i];  // Overflow warning.
+    pref[i + 1] = pref[i] + a[i];
   }
   return pref;
 }
@@ -917,8 +886,7 @@ std::vector<std::vector<int64_t>> prefix_sums_2d(const std::vector<std::vector<i
   std::vector<std::vector<int64_t>> pref(rows + 1, std::vector<int64_t>(cols + 1, 0));
   for (int i = 0; i < rows; i++) {
     for (int j = 0; j < cols; j++) {
-      pref[i + 1][j + 1] =
-          a[i][j] + pref[i][j + 1] + pref[i + 1][j] - pref[i][j];  // Overflow warning.
+      pref[i + 1][j + 1] = a[i][j] + pref[i][j + 1] + pref[i + 1][j] - pref[i][j];
     }
   }
   return pref;
@@ -928,6 +896,20 @@ int64_t rectangle_sum(
     const std::vector<std::vector<int64_t>> &pref, int r1, int c1, int r2, int c2
 ) {
   return pref[r2 + 1][c2 + 1] - pref[r1][c2 + 1] - pref[r2 + 1][c1] + pref[r1][c1];
+}
+
+int64_t count_subarrays_with_sum(const std::vector<int> &a, int64_t target) {
+  std::unordered_map<int64_t, int64_t> count{{0, 1}};
+  int64_t sum = 0, result = 0;
+  for (int x : a) {
+    sum += x;
+    int64_t needed = sum - target;
+    if (auto it = count.find(needed); it != count.end()) {
+      result += it->second;
+    }
+    count[sum]++;
+  }
+  return result;
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -942,6 +924,8 @@ int main() {
   assert(range_sum(pref, 0, 4) == 12);  // Whole array.
   assert(range_sum(pref, 1, 3) == 4);   // -1 + 4 + 1.
   assert(range_sum(pref, 2, 2) == 4);   // Single element.
+  assert(count_subarrays_with_sum(a, 4) == 2);
+  assert(count_subarrays_with_sum(vector<int>{0, 0, 0}, 0) == 6);
 
   vector<vector<int>> grid{
     {1, 2, 3},
@@ -1094,8 +1078,8 @@ The examples below cover sorted 2-sum/3-sum variants, finding the shortest subar
 \begin{compactitem}
   \item \inlinecode{two\_sum\_sorted(a, target)} returns two indices whose values sum to \inlinecode{target}, or $(-1, -1)$ if no such pair exists. The input array must be sorted.
   \item \inlinecode{three\_sum(a, target)} returns three original indices whose values sum to \inlinecode{target}, or $(-1, -1, -1)$ if none exist.
-  \item \inlinecode{min\_length\_at\_least(a, target)} returns $({\inlinecodemath{length}}, {\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, the minimum length and inclusive endpoints of a contiguous subarray with sum at least \inlinecode{target}, or length $-1$ if none exists. Values in \inlinecode{a} must be nonnegative. If \inlinecode{target} is nonpositive, it returns the empty subarray.
-  \item \inlinecode{longest\_at\_most\_k\_distinct(a, k)} returns $({\inlinecodemath{length}}, {\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, the maximum length and inclusive endpoints of a contiguous subarray containing at most \inlinecode{k} distinct values. If \inlinecode{k} is nonpositive, it returns the empty subarray.
+  \item \inlinecode{min\_length\_at\_least(a, target)} returns a tuple (\inlinecode{length}, \inlinecode{lo}, \inlinecode{hi}), the minimum length and inclusive endpoints of a contiguous subarray with sum at least \inlinecode{target}, or length $-1$ if none exists. Values in \inlinecode{a} must be nonnegative. If \inlinecode{target} is nonpositive, it returns the empty subarray.
+  \item \inlinecode{longest\_at\_most\_k\_distinct(a, k)} returns a tuple (\inlinecode{length}, \inlinecode{lo}, \inlinecode{hi}), the maximum length and inclusive endpoints of a contiguous subarray containing at most \inlinecode{k} distinct values. If \inlinecode{k} is nonpositive, it returns the empty subarray.
   \item \inlinecode{sliding\_window\_extrema(a, k, comp = std::less\textless{}\textgreater{})} returns the extreme value in each window of length \inlinecode{k}. With the default \inlinecode{less\textless{}\textgreater{}} comparator it returns minimums; passing \inlinecode{greater\textless{}\textgreater{}} returns maximums.
 \end{compactitem}
 
@@ -1623,30 +1607,35 @@ int main() {
 \subsection{Maximum Subarray Sum (Kadane)}
 Given an array of numbers, determine the maximum possible sum of any contiguous subarray. Kadane's algorithm scans the array while maintaining the maximum nonnegative sum of a subarray ending at the current position. A negative running sum is discarded because it can only reduce the sum of every subarray that extends it. Thus, by including \inlinecode{a[i]}, the running sum becomes \inlinecode{max(0, sum + a[i])}, and the largest running sum seen is the answer. This can be adapted to compute the maximal submatrix sum as well.
 
+Two related scans maintain slightly different states. For a circular array, the best wrapped subarray is the whole-array sum minus the minimum-sum subarray. For a maximum-product subarray, a negative value swaps the roles of the minimum and maximum products ending at the previous position, so both products must be tracked.
+
 \begin{compactitem}
-  \item \inlinecode{max\_subarray\_sum(lo, hi)} returns the sum and inclusive endpoints $({\inlinecodemath{sum}}, {\inlinecodemath{begin}}, {\inlinecodemath{end}})$ for the maximal-sum subarray of $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to numeric types. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} on the iterators' value type. By convention, the empty subarray is allowed, so an input range containing only negative values returns sum $0$ and endpoints $[0, -1]$.
-  \item \inlinecode{max\_submatrix\_sum(a)} returns the sum and inclusive boundaries $({\inlinecodemath{sum}}, {\inlinecodemath{r1}}, {\inlinecodemath{c1}}, {\inlinecodemath{r2}}, {\inlinecodemath{c2}})$ for the largest rectangular submatrix of a matrix \inlinecode{a} with $m$ rows and $n$ columns. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} on the matrix value type. By convention, the empty submatrix is allowed, so a matrix containing only negative values returns sum $0$ with empty row and column intervals.
+  \item \inlinecode{max\_subarray\_sum(lo, hi)} returns the sum and inclusive endpoints (\inlinecode{sum}, \inlinecode{begin}, \inlinecode{end}) for the maximal-sum subarray of $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to numeric types. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} on the iterators' value type. By convention, the empty subarray is allowed, so an input range containing only negative values returns sum $0$ and endpoints $[0, -1]$.
+  \item \inlinecode{max\_circular\_subarray\_sum(lo, hi)} returns a tuple (\inlinecode{sum}, \inlinecode{begin}, \inlinecode{end}) containing the maximal circular-subarray sum and its inclusive endpoints. If \inlinecode{begin \textless{}= end}, the result is an ordinary range; if \inlinecode{begin \textgreater{} end}, it wraps from \inlinecode{begin} through the end of the input and continues through \inlinecode{end}. The empty subarray is allowed under the same convention as \inlinecode{max\_subarray\_sum()}.
+  \item \inlinecode{max\_product\_subarray(lo, hi)} returns a tuple (\inlinecode{product}, \inlinecode{begin}, \inlinecode{end}) containing the product and inclusive endpoints of a nonempty maximal-product subarray, or product $0$ and endpoints $[0, -1]$ for an empty input range.
+  \item \inlinecode{max\_submatrix\_sum(a)} returns the sum and inclusive boundaries (\inlinecode{sum}, \inlinecode{r1}, \inlinecode{c1}, \inlinecode{r2}, \inlinecode{c2}) for the largest rectangular submatrix of a matrix \inlinecode{a} with $m$ rows and $n$ columns. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} on the matrix value type. By convention, the empty submatrix is allowed, so a matrix containing only negative values returns sum $0$ with empty row and column intervals.
 \end{compactitem}
 
-All subarray and submatrix sums must fit in the value type.
+All subarray sums, subarray products, and submatrix sums must fit in the value type.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to \inlinecode{max\_subarray\_sum()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+  \item $O(n)$ per call to \inlinecode{max\_subarray\_sum()}, \inlinecode{max\_circular\_subarray\_sum()}, and \inlinecode{max\_product\_subarray()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
   \item $O(m \cdot n^{2})$ per call to \inlinecode{max\_submatrix\_sum()}, where $m$ is the number of rows and $n$ is the number of columns in the matrix.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(1)$ auxiliary for \inlinecode{max\_subarray\_sum()}.
+  \item $O(1)$ auxiliary for each subarray function.
   \item $O(m)$ auxiliary for \inlinecode{max\_submatrix\_sum()}, where $m$ is the number of rows in the matrix.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <iterator>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 template<typename It>
@@ -1669,6 +1658,73 @@ auto max_subarray_sum(It lo, It hi) {
     }
   }
   return std::make_tuple(max_sum, begin, end);
+}
+
+template<typename It>
+auto max_circular_subarray_sum(It lo, It hi) {
+  using T = typename std::iterator_traits<It>::value_type;
+  auto [max_sum, begin, end] = max_subarray_sum(lo, hi);
+  if (lo == hi) {
+    return std::make_tuple(max_sum, begin, end);
+  }
+  int n = hi - lo, curr_begin = 0, min_begin = 0, min_end = -1;
+  T total = 0, min_sum = 0, curr_sum = 0;
+  for (It it = lo; it != hi; ++it) {
+    total += *it;     // Overflow warning.
+    curr_sum += *it;  // Overflow warning.
+    if (0 < curr_sum) {
+      curr_sum = 0;
+      curr_begin = (it - lo) + 1;
+    } else if (curr_sum < min_sum) {
+      min_sum = curr_sum;
+      min_begin = curr_begin;
+      min_end = it - lo;
+    }
+  }
+  T wrapped_sum = total - min_sum;
+  if (max_sum < wrapped_sum) {
+    max_sum = wrapped_sum;
+    begin = (min_end + 1) % n;
+    end = (min_begin + n - 1) % n;
+  }
+  return std::make_tuple(max_sum, begin, end);
+}
+
+template<typename It>
+auto max_product_subarray(It lo, It hi) {
+  using T = typename std::iterator_traits<It>::value_type;
+  if (lo == hi) {
+    return std::make_tuple(T(), 0, -1);
+  }
+  T max_ending = *lo, min_ending = *lo, best = *lo;
+  int max_begin = 0, min_begin = 0, begin = 0, end = 0;
+  for (It it = lo + 1; it != hi; ++it) {
+    int i = it - lo;
+    if (*it < 0) {
+      std::swap(max_ending, min_ending);
+      std::swap(max_begin, min_begin);
+    }
+    T next_max = max_ending * *it;  // Overflow warning.
+    T next_min = min_ending * *it;  // Overflow warning.
+    if (next_max < *it) {
+      max_ending = *it;
+      max_begin = i;
+    } else {
+      max_ending = next_max;
+    }
+    if (*it < next_min) {
+      min_ending = *it;
+      min_begin = i;
+    } else {
+      min_ending = next_min;
+    }
+    if (best < max_ending) {
+      best = max_ending;
+      begin = max_begin;
+      end = i;
+    }
+  }
+  return std::make_tuple(best, begin, end);
 }
 
 template<typename T>
@@ -1717,6 +1773,15 @@ int main() {
       cout << a[i] << " ";
     }
     cout << endl;
+
+    vector<int> circular{5, -3, 5};
+    auto [circular_sum, circular_begin, circular_end] =
+        max_circular_subarray_sum(circular.begin(), circular.end());
+    assert(circular_sum == 10 && circular_begin == 2 && circular_end == 0);
+
+    vector<int> b{2, 3, -2, 4};
+    auto [product, product_begin, product_end] = max_product_subarray(b.begin(), b.end());
+    assert(product == 6 && product_begin == 0 && product_end == 1);
   }
   {
     vector<vector<int>> a{{0, -2, -7, 0, 5},
@@ -1798,28 +1863,15 @@ std::vector<int> longest_increasing_subsequence(It lo, It hi) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <iostream>
 using namespace std;
-
-template<typename It>
-void print_range(It lo, const vector<int> &indices) {
-  for (int i : indices) {
-    cout << *(lo + i) << " ";
-  }
-  cout << endl;
-}
 
 int main() {
   vector<int> a{-2, -5, 1, 9, 10, 8, 11, 10, 13, 11};
   vector<int> res = longest_increasing_subsequence(a.begin(), a.end());
   assert((res == vector<int>{1, 2, 3, 4, 6, 8}));
-  print_range(a.begin(), res);
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
--5 1 9 10 11 13
-\end{exampleoutput}
 \subsection{Minimum Excluded Value}
 Computes the minimum excluded nonnegative (MEX) integer of a set of integers, that is, the smallest integer $x \geq 0$ that does not appear in the set. It appears frequently in array problems, game theory with Grundy numbers, and dynamic programming states. Since the MEX of $n$ values never exceeds $n$, the one-shot version tracks seen values in $[0, n]$ before scanning to find the first missing. The dynamic version stores counts for present values and an ordered set of currently missing candidates.
 
@@ -1946,7 +1998,7 @@ Floyd's cycle-finding algorithm, a.k.a. the ``tortoise and the hare algorithm'',
 For Floyd's algorithm, suppose the tail has length $m$ and the cycle has length $n$. At a meeting, the hare has traveled twice as far as the tortoise, so the tortoise's distance is a multiple of $n$. Consequently, the distance from the meeting point around the cycle to its entry is congruent to $m$ modulo $n$. Resetting one pointer to $x_0$ and advancing both one step at a time makes them meet at the cycle entry after $m$ steps. Brent first determines $n$, then advances one pointer $n$ steps; moving both together from that fixed separation likewise makes them meet at the entry.
 
 \begin{compactitem}
-  \item \inlinecode{find\_cycle\_floyd(f, x0)} repeatedly applies \inlinecode{f} starting from \inlinecode{x0} and returns the reached cycle as a tuple $({\inlinecodemath{entry}}, {\inlinecodemath{start}}, {\inlinecodemath{length}})$, where \inlinecode{entry} is the first cycle value, \inlinecode{start} is its index in the sequence, and \inlinecode{length} is the number of distinct values in the cycle.
+  \item \inlinecode{find\_cycle\_floyd(f, x0)} repeatedly applies \inlinecode{f} starting from \inlinecode{x0} and returns the reached cycle as a tuple (\inlinecode{entry}, \inlinecode{start}, \inlinecode{length}), where \inlinecode{entry} is the first cycle value, \inlinecode{start} is its index in the sequence, and \inlinecode{length} is the number of distinct values in the cycle.
   \item \inlinecode{find\_cycle\_brent(f, x0)} does the same with fewer calls to \inlinecode{f} in many cases.
 \end{compactitem}
 
@@ -2070,7 +2122,7 @@ Solves the 0-1 knapsack problem: given items with nonnegative integer weights an
 The one-dimensional dynamic programming array \inlinecode{dp[w]} stores the best value that can be achieved with total weight at most \inlinecode{w} after processing some prefix of the items. Iterating weights in decreasing order is what enforces the 0-1 constraint; it prevents the same item from being reused during the current item update.
 
 \begin{compactitem}
-  \item \inlinecode{knapsack\_01(weight, value, capacity)} returns a pair $({\inlinecodemath{value}}, {\inlinecodemath{items}})$ containing the maximum value and the selected item indices in increasing order, where item \inlinecode{i} has weight \inlinecode{weight[i]} and value \inlinecode{value[i]}. All weights must be nonnegative integers. Items with weight $0$ are allowed and can each be taken once. The take/skip decision for every item and capacity is stored to reconstruct the optimal subset.
+  \item \inlinecode{knapsack\_01(weight, value, capacity)} returns a pair (\inlinecode{best\_value}, \inlinecode{items}) containing the maximum value and the selected item indices in increasing order, where item \inlinecode{i} has weight \inlinecode{weight[i]} and value \inlinecode{value[i]}. All weights must be nonnegative integers. Items with weight $0$ are allowed and can each be taken once. The take/skip decision for every item and capacity is stored to reconstruct the optimal subset.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \cdot W)$ per call, where $n$ is the number of items and $W$ is \inlinecode{capacity}.
@@ -2125,8 +2177,8 @@ int main() {
   vector<int> weight{3, 4, 5, 9};
   vector<int64_t> value{4, 5, 7, 10};
 
-  auto [best, items] = knapsack_01(weight, value, 8);
-  assert(best == 11);
+  auto [best_value, items] = knapsack_01(weight, value, 8);
+  assert(best_value == 11);
   assert((items == vector<int>{0, 2}));
   return 0;
 }
@@ -2137,9 +2189,9 @@ Solves unbounded knapsack and two related coin change problems, where each item 
 For unbounded maximum-value knapsack, capacities are processed in increasing order. Thus, when computing \inlinecode{dp[w]}, every smaller-capacity state \inlinecode{dp[w - weight[i]]} is already final and may itself contain item \inlinecode{i}, allowing unlimited reuse. For unordered coin change, coins are the outer loop so each multiset of coins is counted once, independent of ordering. For minimum coins, each target sum chooses the best previous sum \inlinecode{sum - coin}, and the predecessor coin reconstructs one optimal multiset.
 
 \begin{compactitem}
-  \item \inlinecode{unbounded\_knapsack(weight, value, capacity)} returns a pair $({\inlinecodemath{value}}, {\inlinecodemath{count}})$ containing the maximum value achievable with total weight at most \inlinecode{capacity} and \inlinecode{count[i]}, the number of copies selected of each item \inlinecode{i}.
+  \item \inlinecode{unbounded\_knapsack(weight, value, capacity)} returns a pair (\inlinecode{best\_value}, \inlinecode{count}) containing the maximum value achievable with total weight at most \inlinecode{capacity} and \inlinecode{count[i]}, the number of copies selected of each item \inlinecode{i}.
   \item \inlinecode{count\_coin\_change(coins, target)} returns the number of unordered ways to make sum \inlinecode{target} using the given coin denominations.
-  \item \inlinecode{min\_coin\_change(coins, target)} returns a pair $({\inlinecodemath{count}}, {\inlinecodemath{used}})$, where \inlinecode{count} is the minimum number of coins needed to make sum \inlinecode{target}, and \inlinecode{used[i]} is the number of copies of \inlinecode{coins[i]} in one optimal multiset. If \inlinecode{target} cannot be formed, \inlinecode{count} is $-1$ and \inlinecode{used} is empty.
+  \item \inlinecode{min\_coin\_change(coins, target)} returns a pair (\inlinecode{count}, \inlinecode{used}), where \inlinecode{count} is the minimum number of coins needed to make sum \inlinecode{target}, and \inlinecode{used[i]} is the number of copies of \inlinecode{coins[i]} in one optimal multiset. If \inlinecode{target} cannot be formed, \inlinecode{count} is $-1$ and \inlinecode{used} is empty.
 \end{compactitem}
 
 \inlinecode{capacity} and \inlinecode{target} must be nonnegative integers. Weights and coin denominations must be positive. Coin denominations must also be distinct when counting ways; duplicate denominations are treated as different coin types and overcount identical multisets.
@@ -2242,8 +2294,8 @@ using namespace std;
 int main() {
   vector<int> weight{3, 4, 5};
   vector<int64_t> value{4, 5, 7};
-  auto [best, count] = unbounded_knapsack(weight, value, 10);
-  assert(best == 14);
+  auto [best_value, count] = unbounded_knapsack(weight, value, 10);
+  assert(best_value == 14);
   assert((count == vector<int>{0, 0, 2}));
 
   vector<int> coins{1, 2, 5};
@@ -2266,7 +2318,7 @@ The meet-in-the-middle method splits the collection in half, enumerates every su
 Pisinger's algorithm targets the opposite regime: nonnegative weights whose maximum value is small, with possibly many items. Let $W$ be the largest weight. It greedily takes a maximal prefix with sum $s$ that fits the target; because the next weight is at most $W$ and does not fit, $s$ is greater than \inlinecode{target} $- W$. The prefix itself is feasible, so the optimum lies between $s$ and \inlinecode{target} and only that width-$W$ window matters. A balanced sweep explores exchanges that add later items to sums below the target and remove earlier items from sums above it. For each sum, it retains the farthest prefix boundary reached, which dominates smaller boundaries because it permits at least the same future exchanges. This gives a running time linear in the number of items times $W$, independent of the target beyond that window. This routine is sometimes called ``fast knapsack,'' a slight misnomer: it maximizes a subset sum rather than packing items with distinct values, so it is really the bounded-weight case of subset sum rather than the 0-1 value knapsack.
 
 \begin{compactitem}
-  \item \inlinecode{max\_subset\_sum\_at\_most(lo, hi, v)} returns a pair $({\inlinecodemath{sum}}, {\inlinecodemath{items}})$ containing that maximum sum and the selected item indices relative to \inlinecode{lo}. Values may be negative. The range is supplied as random-access iterators, and \inlinecode{v} must be nonnegative.
+  \item \inlinecode{max\_subset\_sum\_at\_most(lo, hi, v)} returns a pair (\inlinecode{sum}, \inlinecode{items}) containing that maximum sum and the selected item indices relative to \inlinecode{lo}. Values may be negative. The range is supplied as random-access iterators, and \inlinecode{v} must be nonnegative.
   \item \inlinecode{max\_subset\_sum\_bounded(lo, hi, target)} returns the maximum sum of any subset of the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ that does not exceed \inlinecode{target}. All weights and \inlinecode{target} must be nonnegative integers. This is faster than meet-in-the-middle when the largest weight is small relative to $2^{n/2}$.
 \end{compactitem}
 
@@ -2415,7 +2467,7 @@ For path-counting, \inlinecode{dp[r][c]} stores the number of ways to reach cell
 
 \begin{compactitem}
   \item \inlinecode{count\_grid\_paths(blocked)} returns the number of paths from the upper-left cell to the lower-right cell, moving only down or right and avoiding blocked cells marked nonzero.
-  \item \inlinecode{min\_grid\_path\_cost(cost)} returns a pair $({\inlinecodemath{sum}}, {\inlinecodemath{path}})$ containing the minimum cost of a down/right path from the upper-left cell to the lower-right cell and the cells of one optimal path in order. If the grid is empty, \inlinecode{sum} is $0$ and \inlinecode{path} is empty.
+  \item \inlinecode{min\_grid\_path\_cost(cost)} returns a pair (\inlinecode{sum}, \inlinecode{path}) containing the minimum cost of a down/right path from the upper-left cell to the lower-right cell and the cells of one optimal path in order. If the grid is empty, \inlinecode{sum} is $0$ and \inlinecode{path} is empty.
 \end{compactitem}
 
 Path counts and path costs must fit in \inlinecode{int64\_t}.
@@ -2521,14 +2573,153 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Interval Dynamic Programming}
+Solves matrix-chain multiplication as a canonical example of interval dynamic programming. Matrix multiplication is associative, but multiplying an $a$-by-$b$ matrix with a $b$-by-$c$ matrix costs $abc$ scalar multiplications, so the choice of parenthesization can greatly affect the total cost.
+
+For a chain of matrices, $dp(l,r)$ is the minimum cost of multiplying matrices $l$ through $r$. Trying every final split $k$ gives the recurrence $dp(l,r) = \min_{l \le k < r}(dp(l,k) + dp(k+1,r) + d_l d_{k+1} d_{r+1})$. Processing intervals in increasing order of length ensures that both subintervals have already been solved. The same pattern applies whenever a contiguous interval is formed by combining two smaller intervals.
+
+\begin{compactitem}
+  \item \inlinecode{matrix\_chain\_order(dimensions)} returns a pair (\inlinecode{operations}, \inlinecode{parenthesization}) containing the minimum number of scalar multiplications and one optimal parenthesization. Matrix \inlinecode{i} has dimensions \inlinecode{dimensions[i]} by \inlinecode{dimensions[i + 1]}; all dimensions must be positive.
+\end{compactitem}
+
+The minimum cost and all intermediate products must fit in \inlinecode{int64\_t}.
+
+\textbf{Time Complexity}: $O(n^{3})$ per call, where $n$ is the number of matrices.
+
+\textbf{Space Complexity}: $O(n^{2})$ auxiliary for the dynamic programming and split tables.
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cstdint>
+#include <string>
+#include <utility>
+#include <vector>
+
+std::string matrix_chain_parenthesization(
+    const std::vector<std::vector<int>> &split, int lo, int hi
+) {
+  if (lo == hi) {
+    return "A" + std::to_string(lo);
+  }
+  int k = split[lo][hi];
+  return "(" + matrix_chain_parenthesization(split, lo, k) + " * " +
+         matrix_chain_parenthesization(split, k + 1, hi) + ")";
+}
+
+std::pair<int64_t, std::string> matrix_chain_order(const std::vector<int> &dimensions) {
+  assert(dimensions.size() >= 2);
+  for (int d : dimensions) {
+    assert(d > 0);
+  }
+  int n = static_cast<int>(dimensions.size()) - 1;
+  std::vector<std::vector<int64_t>> dp(n, std::vector<int64_t>(n, 0));
+  std::vector<std::vector<int>> split(n, std::vector<int>(n, 0));
+  for (int length = 2; length <= n; length++) {
+    for (int lo = 0; lo + length <= n; lo++) {
+      int hi = lo + length - 1;
+      for (int k = lo; k < hi; k++) {
+        int64_t candidate = dp[lo][k] + dp[k + 1][hi] +
+                            static_cast<int64_t>(dimensions[lo]) * dimensions[k + 1] *
+                                dimensions[hi + 1];  // Overflow warning.
+        if (k == lo || candidate < dp[lo][hi]) {
+          dp[lo][hi] = candidate;
+          split[lo][hi] = k;
+        }
+      }
+    }
+  }
+  return {dp[0][n - 1], matrix_chain_parenthesization(split, 0, n - 1)};
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+using namespace std;
+
+int main() {
+  auto [operations, parenthesization] = matrix_chain_order({40, 20, 30, 10, 30});
+  assert(operations == 26000);
+  assert(parenthesization == "((A0 * (A1 * A2)) * A3)");
+
+  auto [single_operations, single_parenthesization] = matrix_chain_order({3, 5});
+  assert(single_operations == 0 && single_parenthesization == "A0");
+  return 0;
+}
+\end{lstlisting}
 
 \section{\texorpdfstring{Greedy and Scheduling}{1.3 Greedy and Scheduling}}
 \setcounter{section}{3}
 \setcounter{subsection}{0}
+\subsection{Fractional Knapsack}
+Solves the fractional knapsack problem: given items with positive integer weights and nonnegative integer values, choose any fraction of each item to maximize total value without exceeding a capacity limit.
+
+The greedy algorithm processes items in decreasing order of value per unit weight, taking each item in full until only part of the next item fits. This is optimal because replacing any weight taken from a lower-density item with the same weight from a higher-density item cannot decrease the total value. Unlike 0-1 knapsack, allowing fractions makes each such exchange feasible.
+
+\begin{compactitem}
+  \item \inlinecode{fractional\_knapsack(weight, value, capacity)} returns a pair (\inlinecode{best\_value}, \inlinecode{fraction}) containing the maximum value and the fraction of each input item taken. Item \inlinecode{i} has weight \inlinecode{weight[i]} and value \inlinecode{value[i]}, and \inlinecode{fraction[i]} is in $[0, 1]$.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n \log n)$ per call due to sorting, where $n$ is the number of items.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary and $O(n)$ for the returned fractions.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <numeric>
+#include <utility>
+#include <vector>
+
+std::pair<double, std::vector<double>> fractional_knapsack(
+    const std::vector<int> &weight, const std::vector<int> &value, int capacity
+) {
+  int n = static_cast<int>(weight.size());
+  assert(static_cast<int>(value.size()) == n && capacity >= 0);
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
+  for (int i = 0; i < n; i++) {
+    assert(weight[i] > 0 && value[i] >= 0);
+  }
+  std::sort(order.begin(), order.end(), [&](int i, int j) {
+    int64_t lhs = static_cast<int64_t>(value[i]) * weight[j];
+    int64_t rhs = static_cast<int64_t>(value[j]) * weight[i];
+    return lhs != rhs ? lhs > rhs : i < j;
+  });
+
+  double best_value = 0;
+  std::vector<double> fraction(n, 0);
+  for (int i : order) {
+    int taken = std::min(capacity, weight[i]);
+    fraction[i] = static_cast<double>(taken) / weight[i];
+    best_value += fraction[i] * value[i];
+    capacity -= taken;
+    if (capacity == 0) {
+      break;
+    }
+  }
+  return {best_value, fraction};
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cmath>
+using namespace std;
+
+int main() {
+  vector<int> weight{10, 20, 30};
+  vector<int> value{60, 100, 120};
+  auto [best_value, fraction] = fractional_knapsack(weight, value, 50);
+  assert(abs(best_value - 240) < 1e-9);
+  assert((fraction == vector<double>{1, 1, 2.0 / 3}));
+  return 0;
+}
+\end{lstlisting}
 \subsection{Interval Scheduling}
 Selects the maximum number of non-overlapping intervals using the classic earliest-finish-time greedy algorithm. This is the unweighted interval scheduling problem, also known as activity selection: every interval has the same value, so the objective is to choose as many compatible intervals as possible.
 
-The greedy choice is safe because among all intervals that could be chosen first, taking one with the earliest finish time leaves the most room for the remaining intervals. In any optimal solution, the first chosen interval can be exchanged for an earliest-finishing compatible interval without reducing the number of intervals selected. Repeating this argument after each choice proves the greedy algorithm optimal. The weighted version in 1.3.2 needs dynamic programming instead.
+The greedy choice is safe because among all intervals that could be chosen first, taking one with the earliest finish time leaves the most room for the remaining intervals. In any optimal solution, the first chosen interval can be exchanged for an earliest-finishing compatible interval without reducing the number of intervals selected. Repeating this argument after each choice proves the greedy algorithm optimal. The weighted version in 1.3.3 needs dynamic programming instead.
 
 Intervals are represented as half-open ranges $[{\inlinecodemath{start}}, {\inlinecodemath{finish}})$, so two intervals are compatible if the next interval's \inlinecode{start} is at least the previous interval's \inlinecode{finish}.
 
@@ -2597,7 +2788,7 @@ Selects a maximum-weight subset of non-overlapping intervals using dynamic progr
 Intervals are represented as half-open ranges $[{\inlinecodemath{start}}, {\inlinecodemath{finish}})$, so two intervals are compatible if the next interval's \inlinecode{start} is at least the previous interval's \inlinecode{finish}.
 
 \begin{compactitem}
-  \item \inlinecode{select\_weighted\_intervals(intervals)} returns a pair $({\inlinecodemath{weight}}, {\inlinecodemath{selected}})$ containing that maximum weight and the selected intervals as original input indices in execution order, from an input vector of \inlinecode{WeightedInterval} with fields \inlinecode{start}, \inlinecode{finish}, and \inlinecode{weight}. \inlinecode{dp[i]} stores the best answer using the first \inlinecode{i} intervals after sorting by finish time. Every interval must satisfy \inlinecode{start} $\leq$ \inlinecode{finish}. The empty subset is allowed, so nonpositive weights need not be selected.
+  \item \inlinecode{select\_weighted\_intervals(intervals)} returns a pair (\inlinecode{weight}, \inlinecode{selected}) containing that maximum weight and the selected intervals as original input indices in execution order, from an input vector of \inlinecode{WeightedInterval} with fields \inlinecode{start}, \inlinecode{finish}, and \inlinecode{weight}. \inlinecode{dp[i]} stores the best answer using the first \inlinecode{i} intervals after sorting by finish time. Every interval must satisfy \inlinecode{start \textless{} finish}. The empty subset is allowed, so nonpositive weights need not be selected.
 \end{compactitem}
 
 Accumulated weights must fit in \inlinecode{int64\_t}.
@@ -2691,7 +2882,7 @@ The greedy algorithm sorts intervals by start time and reuses the group whose cu
 Intervals are treated as half-open ranges $[{\inlinecodemath{start}}, {\inlinecodemath{finish}})$, so one interval may reuse a room that another interval vacates at the same time.
 
 \begin{compactitem}
-  \item \inlinecode{partition\_intervals(intervals)} returns a pair $({\inlinecodemath{rooms}}, {\inlinecodemath{room}})$, where \inlinecode{rooms} is the minimum number of rooms and \inlinecode{room[i]} is the assigned room for input interval \inlinecode{i}. Each \inlinecode{PartitionInterval} has fields \inlinecode{start} and \inlinecode{finish}, which must satisfy \inlinecode{start \textless{} finish}.
+  \item \inlinecode{partition\_intervals(intervals)} returns a pair (\inlinecode{rooms}, \inlinecode{room}), where \inlinecode{rooms} is the minimum number of rooms and \inlinecode{room[i]} is the assigned room for input interval \inlinecode{i}. Each \inlinecode{PartitionInterval} has fields \inlinecode{start} and \inlinecode{finish}, which must satisfy \inlinecode{start \textless{} finish}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting and priority queue operations.
@@ -2768,7 +2959,7 @@ Schedules unit-time jobs with deadlines and profits to maximize total profit. Ea
 The latest-slot choice is safe because it uses the current high-profit job while leaving earlier slots available for jobs with tighter deadlines. A disjoint-set forest over time slots makes this efficient: \inlinecode{find\_root(t)} returns the latest still-free slot at or before \inlinecode{t}, and occupying slot \inlinecode{t} links it to the next candidate slot \inlinecode{t - 1}.
 
 \begin{compactitem}
-  \item \inlinecode{select\_deadline\_jobs(jobs)} returns a pair $({\inlinecodemath{profit}}, {\inlinecodemath{slot}})$ containing that maximum profit and \inlinecode{slot[i]}, the assigned time slot of input job \inlinecode{i}, or $-1$ if that job is not selected, for a vector of \inlinecode{Job} with fields \inlinecode{deadline} and \inlinecode{profit}. Deadlines are positive integers, and assigned slots are numbered starting from $1$. Jobs with nonpositive profit are not selected.
+  \item \inlinecode{select\_deadline\_jobs(jobs)} returns a pair (\inlinecode{profit}, \inlinecode{slot}) containing that maximum profit and \inlinecode{slot[i]}, the assigned time slot of input job \inlinecode{i}, or $-1$ if that job is not selected, for a vector of \inlinecode{Job} with fields \inlinecode{deadline} and \inlinecode{profit}. Deadlines are positive integers, and assigned slots are numbered starting from $1$. Jobs with nonpositive profit are not selected.
 \end{compactitem}
 
 The total profit must fit in \inlinecode{int64\_t}.
@@ -2948,8 +3139,9 @@ The algorithm scans from right to left. At each position $i$, it chooses a rando
 #include <algorithm>
 #include <random>
 
-template<typename It, typename URBG>
-void fisher_yates_shuffle(It lo, It hi, URBG &rng) {
+template<typename It>
+void fisher_yates_shuffle(It lo, It hi) {
+  static std::mt19937 rng(std::random_device{}());
   int n = static_cast<int>(hi - lo);
   for (int i = n - 1; i > 0; i--) {
     std::uniform_int_distribution<int> dist(0, i);
@@ -2968,8 +3160,7 @@ using namespace std;
 
 int main() {
   vector<int> a{1, 2, 3, 4, 5}, original(a);
-  mt19937 rng(123456);
-  fisher_yates_shuffle(a.begin(), a.end(), rng);
+  fisher_yates_shuffle(a.begin(), a.end());
   sort(a.begin(), a.end());
   assert(a == original);
   return 0;
@@ -3099,28 +3290,43 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Majority Element (Boyer-Moore)}
-Given a range of $n$ elements, find the majority element: an element that occurs strictly more than $\lfloor n/2 \rfloor$ times in the range.
+\subsection{Frequent Elements}
+Finds frequent elements in a range using cancellation algorithms that retain only a small set of candidates. Boyer-Moore finds a possible majority element, while Misra-Gries generalizes the same idea to frequencies above any threshold $n/k$.
 
-The Boyer-Moore voting algorithm performs a first pass while maintaining a single candidate and a counter, incrementing it on a match and decrementing on a mismatch. Each decrement can be viewed as canceling one candidate occurrence against one different occurrence. Removing pairs of different values cannot eliminate a true majority, so if one exists, it survives all cancellations as the final candidate. The second pass counts the candidate's occurrences to confirm it truly holds a majority. The range is therefore traversed twice, so it only needs to be supplied as ForwardIterators rather than random-access.
+The Boyer-Moore voting algorithm maintains one candidate and counter, incrementing on a match and decrementing on a mismatch. Each decrement cancels two different values. Removing such pairs cannot eliminate an element occurring more than $\lfloor n/2 \rfloor$ times, so a true majority survives as the final candidate. A second pass verifies that candidate.
 
-If a majority element is guaranteed in advance to exist, the verification pass can be dropped and the candidate returned directly. The candidate phase alone is single-pass, so that variant could be written as a ``true'' streaming API with one element per call.
+Misra-Gries keeps at most $k - 1$ candidates. A tracked value increments its counter, an untracked value claims a free counter, and otherwise every counter is decremented. Each full decrement cancels $k$ distinct occurrences, so any value occurring more than $\lfloor n/k \rfloor$ times must remain a candidate. These candidates require a second pass for exact verification because the algorithm does not retain the stream.
 
 \begin{compactitem}
-  \item \inlinecode{majority\_element(lo, hi)} returns an iterator to the first occurrence of the majority element of $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, or \inlinecode{hi} if no majority element exists. Requires \inlinecode{operator==} on the value type.
+  \item \inlinecode{majority\_element(lo, hi)} returns an iterator to the first occurrence of the majority element of $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, or \inlinecode{hi} if no majority element exists. The range must provide ForwardIterators, and its value type must support equality.
+  \item \inlinecode{frequent\_candidates(lo, hi, k)} returns a hash table of candidate values to their residual counters. \inlinecode{k} must be at least $2$, and the value type must support equality and \inlinecode{std::hash}. Use \inlinecode{k = 2} for the unverified Boyer-Moore candidate phase.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to \inlinecode{majority\_element(lo, hi)}, where $n$ is the range length.
+  \item $O(n)$ expected per call to \inlinecode{frequent\_candidates(lo, hi, k)}: a full-table decrement cancels $k$ occurrences, so all decrement sweeps take $O(n)$ total.
+  \item $O(n \cdot k)$ in the collision-heavy worst case for \inlinecode{frequent\_candidates()}.
+\end{compactitem}
 
-\textbf{Space Complexity}: $O(1)$ auxiliary.
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ auxiliary for \inlinecode{majority\_element()}.
+  \item $O(k)$ for the candidates returned by \inlinecode{frequent\_candidates()}.
+\end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
+#include <iterator>
+#include <unordered_map>
+
 template<typename It>
 It majority_element(It lo, It hi) {
-  int count = 0, n = 0;
+  int count = 0;
   It candidate = lo;
   for (It it = lo; it != hi; ++it) {
-    n++;  // Tally the size to avoid an extra O(n) std::distance() pass for ForwardIterators.
     if (count == 0) {
       candidate = it;
       count = 1;
@@ -3130,10 +3336,12 @@ It majority_element(It lo, It hi) {
       count--;
     }
   }
-  // Second pass: verify the candidate. Omit this if a majority is guaranteed to exist.
+  // Second pass to verify. If a majority is guaranteed, skip and return candidate directly instead.
+  int n = 0;
   count = 0;
   It first = hi;
   for (It it = lo; it != hi; ++it) {
+    n++;
     if (*it == *candidate) {
       if (first == hi) {
         first = it;
@@ -3146,11 +3354,33 @@ It majority_element(It lo, It hi) {
   }
   return first;
 }
+
+template<typename It>
+auto frequent_candidates(It lo, It hi, int k) {
+  using T = typename std::iterator_traits<It>::value_type;
+  assert(k >= 2);
+  std::unordered_map<T, int> count;
+  for (It it = lo; it != hi; ++it) {
+    if (auto found = count.find(*it); found != count.end()) {
+      found->second++;
+    } else if (static_cast<int>(count.size()) < k - 1) {
+      count[*it] = 1;
+    } else {
+      for (auto jt = count.begin(); jt != count.end();) {
+        if (--jt->second == 0) {
+          jt = count.erase(jt);
+        } else {
+          ++jt;
+        }
+      }
+    }
+  }
+  return count;
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 #include <vector>
 
 int main() {
@@ -3158,11 +3388,21 @@ int main() {
   assert(majority_element(a.begin(), a.end()) == a.begin());
   std::vector<int> b{2, 3, 3, 3, 2, 1};
   assert(majority_element(b.begin(), b.end()) == b.end());
+
+  std::vector<int> c{1, 2, 1, 3, 1, 2, 1, 4, 2, 2, 2};
+  auto candidates = frequent_candidates(c.begin(), c.end(), 3);
+  assert(candidates.count(1));
+  assert(candidates.count(2));
+  assert(!candidates.count(3));
   return 0;
 }
 \end{lstlisting}
-\subsection{Online Statistics (Welford)}
-Maintains the mean and variance of a stream of numbers in one pass using Welford's algorithm. The naive formula $\operatorname{Var}(X) = E[X^2] - E[X]^2$ can lose precision when the two terms are large and close together. Welford instead maintains the current mean $\bar{x}_n$ (stored as \inlinecode{avg}) and the unnormalized second central moment $M_{2,n} = \sum_{i=1}^{n}(x_i - \bar{x}_n)^2$ (stored as \inlinecode{m2}). Each new value shifts the running mean by its deviation divided by the new count, then adds the product of its deviations from the old and new means to \inlinecode{m2}. Population and sample variance follow by dividing \inlinecode{m2} by $n$ or $n - 1$.
+\subsection{Online Statistics}
+Maintains summary statistics as values arrive without storing the stream externally. Welford's algorithm computes the mean and variance using constant storage, while a pair of heaps maintains the exact median using linear storage.
+
+The naive variance formula $\operatorname{Var}(X) = E[X^2] - E[X]^2$ can lose precision when the two terms are large and close together. Welford instead maintains the current mean $\bar{x}_n$ (stored as \inlinecode{avg}) and the unnormalized second central moment $M_{2,n} = \sum_{i=1}^{n}(x_i - \bar{x}_n)^2$ (stored as \inlinecode{m2}). Each new value shifts the running mean by its deviation divided by the new count, then adds the product of its deviations from the old and new means to \inlinecode{m2}.
+
+For the median, a max-heap stores the lower half of the values and a min-heap stores the upper half. The heaps are balanced so that the lower heap has either the same number of values as the upper heap or one extra value. Their roots are therefore the middle value or values of the stream.
 
 \begin{compactitem}
   \item \inlinecode{OnlineStatistics()} constructs an empty summary.
@@ -3171,13 +3411,34 @@ Maintains the mean and variance of a stream of numbers in one pass using Welford
   \item \inlinecode{mean()} returns the current arithmetic mean, or $0$ if the summary is empty.
   \item \inlinecode{variance\_population()} returns population variance, dividing by $n$, or $0$ if the summary is empty.
   \item \inlinecode{variance\_sample()} returns sample variance, dividing by $n - 1$, or $0$ if fewer than two values have been added.
+  \item \inlinecode{OnlineMedian\textless{}T\textgreater{}()} constructs an empty median tracker for an ordered numeric type \inlinecode{T}.
+  \item \inlinecode{add(x)} inserts \inlinecode{x} into the median tracker.
+  \item \inlinecode{count()} and \inlinecode{empty()} return the number of values and whether the tracker is empty.
+  \item \inlinecode{lower\_median()} returns the lower of the two middle values, or the middle value for an odd count. The tracker must be nonempty.
+  \item \inlinecode{median()} returns the middle value for an odd count or the arithmetic mean of the two middle values for an even count. The tracker must be nonempty.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(1)$ per call to \inlinecode{add(x)} and each query.
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to \inlinecode{OnlineStatistics::add()} and each \inlinecode{OnlineStatistics} query.
+  \item $O(\log n)$ per call to \inlinecode{OnlineMedian::add()}, where $n$ is the number of values stored.
+  \item $O(1)$ per \inlinecode{OnlineMedian} query.
+\end{compactitem}
 
-\textbf{Space Complexity}: $O(1)$ storage.
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ for \inlinecode{OnlineStatistics}.
+  \item $O(n)$ for \inlinecode{OnlineMedian}.
+\end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
+#include <functional>
+#include <queue>
+#include <vector>
+
 class OnlineStatistics {
   int n;
   double avg, m2;
@@ -3198,15 +3459,52 @@ class OnlineStatistics {
   double variance_population() const { return n == 0 ? 0 : m2 / n; }
   double variance_sample() const { return n <= 1 ? 0 : m2 / (n - 1); }
 };
+
+template<typename T>
+class OnlineMedian {
+  std::priority_queue<T> lower;
+  std::priority_queue<T, std::vector<T>, std::greater<T>> upper;
+
+ public:
+  bool empty() const { return lower.empty(); }
+  int count() const { return static_cast<int>(lower.size() + upper.size()); }
+
+  void add(const T &x) {
+    if (lower.empty() || x <= lower.top()) {
+      lower.push(x);
+    } else {
+      upper.push(x);
+    }
+    if (lower.size() < upper.size()) {
+      lower.push(upper.top());
+      upper.pop();
+    } else if (lower.size() > upper.size() + 1) {
+      upper.push(lower.top());
+      lower.pop();
+    }
+  }
+
+  const T &lower_median() const {
+    assert(!empty());
+    return lower.top();
+  }
+
+  double median() const {
+    assert(!empty());
+    if (lower.size() != upper.size()) {
+      return static_cast<double>(lower.top());
+    }
+    return static_cast<double>(lower.top()) / 2 + static_cast<double>(upper.top()) / 2;
+  }
+};
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 #include <cmath>
 
 bool EQ(double a, double b) {
-  return std::fabs(a - b) < 1e-9;
+  return fabs(a - b) < 1e-9;
 }
 
 int main() {
@@ -3239,68 +3537,18 @@ int main() {
   assert(EQ(shifted.mean(), 1e12 + 2));
   assert(EQ(shifted.variance_population(), 2.0 / 3));
   assert(EQ(shifted.variance_sample(), 1.0));
-  return 0;
-}
-\end{lstlisting}
-\subsection{Frequent Elements (Misra-Gries)}
-Finds candidate frequent elements in a stream using the Misra-Gries algorithm. With parameter $k$, the algorithm keeps at most $k - 1$ counters and guarantees that every value occurring more than $\lfloor n/k \rfloor$ times appears among the returned candidates. Each element increments its counter if already tracked, claims a counter if one of the $k - 1$ slots is free, and otherwise decrements every counter, discarding those that reach zero. Since a decrement step cancels $k$ distinct occurrences at once, it can happen at most $\lfloor n/k \rfloor$ times, so any value occurring more often must survive.
 
-The candidates are not automatically verified, since the algorithm intentionally uses sublinear memory and does not retain the stream. If exact frequencies are needed, make a second pass over the input and count only the returned candidates.
-
-\begin{compactitem}
-  \item \inlinecode{frequent\_candidates(lo, hi, k)} returns a hash table of candidate values to their residual counters. \inlinecode{k} must be at least $2$, and the value type must support equality and \inlinecode{std::hash}. Use \inlinecode{k = 2} for the Boyer-Moore majority-candidate special case.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(n)$ expected per call: a full-table decrement cancels $k$ occurrences and therefore happens at most $\lfloor n/k \rfloor$ times, so all decrement sweeps take $O(n)$ total. Hash-table operations take $O(1)$ expected time each.
-  \item $O(n \cdot k)$ in the collision-heavy worst case for the hash table.
-\end{compactitem}
-
-\textbf{Space Complexity}: $O(1)$ auxiliary and $O(k)$ for the returned candidates.
-
-\begin{lstlisting}[language=C++]
-#include <cassert>
-#include <iterator>
-#include <unordered_map>
-
-template<typename It>
-auto frequent_candidates(It lo, It hi, int k) {
-  using T = typename std::iterator_traits<It>::value_type;
-  assert(k >= 2);
-  std::unordered_map<T, int> count;
-  for (It it = lo; it != hi; ++it) {
-    if (auto found = count.find(*it); found != count.end()) {
-      found->second++;
-    } else if (static_cast<int>(count.size()) < k - 1) {
-      count[*it] = 1;
-    } else {
-      for (auto jt = count.begin(); jt != count.end();) {
-        if (--jt->second == 0) {
-          jt = count.erase(jt);
-        } else {
-          ++jt;
-        }
-      }
-    }
-  }
-  return count;
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-#include <vector>
-using namespace std;
-
-int main() {
-  vector<int> a{1, 2, 1, 3, 1, 2, 1, 4, 2, 2, 2};
-  unordered_map<int, int> candidates = frequent_candidates(a.begin(), a.end(), 3);
-  assert(candidates.count(1));
-  assert(candidates.count(2));
-  assert(!candidates.count(3));
+  OnlineMedian<int> medians;
+  assert(medians.empty() && medians.count() == 0);
+  medians.add(5);
+  assert(EQ(medians.median(), 5));
+  medians.add(1);
+  assert(EQ(medians.median(), 3));
+  medians.add(9);
+  assert(EQ(medians.median(), 5));
+  medians.add(3);
+  assert(medians.lower_median() == 3);
+  assert(EQ(medians.median(), 4));
   return 0;
 }
 \end{lstlisting}
@@ -3563,8 +3811,8 @@ Bitmask dynamic programming uses a bitmask to represent a small set or frontier,
 For assignment, \inlinecode{dp[mask]} is the minimum cost after assigning the first \inlinecode{popcount(mask)} workers to the selected jobs. The next worker tries every unused job. For set cover, \inlinecode{dp[mask]} is the minimum number of chosen sets needed to cover exactly the elements in \inlinecode{mask}; adding one set moves to the union mask. For set partitioning, iterating all submasks gives the recurrence \inlinecode{dp[mask] = min(dp[mask \textasciicircum{} sub] + cost[sub])}. Over all masks, this has $O(3^{n})$ transitions. For domino tiling, the mask is a profile of the current row; this technique is often called DP on a broken profile or plug DP. A domino covers exactly two edge-adjacent cells, so each piece is either horizontal ($1 \times 2$) or vertical ($2 \times 1$).
 
 \begin{compactitem}
-  \item \inlinecode{assignment\_min\_cost(cost)} returns a pair $({\inlinecodemath{sum}}, {\inlinecodemath{job}})$, where \inlinecode{sum} is the minimum cost of assigning each worker to a distinct job, and \inlinecode{job[i]} is the job assigned to worker \inlinecode{i}. The input is a square matrix with one row per worker and one column per job.
-  \item \inlinecode{minimum\_set\_cover(sets, universe\_size)} returns a pair $({\inlinecodemath{count}}, {\inlinecodemath{chosen}})$, where \inlinecode{count} is the minimum number of sets needed to cover all elements in $[0, u)$, where $u$ is \inlinecode{universe\_size}, and \inlinecode{chosen} contains one optimal list of set indices. If no cover exists, \inlinecode{count} is $-1$ and \inlinecode{chosen} is empty. Each input set is represented as a bitmask.
+  \item \inlinecode{assignment\_min\_cost(cost)} returns a pair (\inlinecode{sum}, \inlinecode{job}), where \inlinecode{sum} is the minimum cost of assigning each worker to a distinct job, and \inlinecode{job[i]} is the job assigned to worker \inlinecode{i}. The input is a square matrix with one row per worker and one column per job.
+  \item \inlinecode{minimum\_set\_cover(sets, universe\_size)} returns a pair (\inlinecode{count}, \inlinecode{chosen}), where \inlinecode{count} is the minimum number of sets needed to cover all elements in $[0, u)$, where $u$ is \inlinecode{universe\_size}, and \inlinecode{chosen} contains one optimal list of set indices. If no cover exists, \inlinecode{count} is $-1$ and \inlinecode{chosen} is empty. Each input set is represented as a bitmask.
   \item \inlinecode{partition\_min\_cost(group\_cost)} returns the minimum total cost to partition all elements into disjoint nonempty groups, where \inlinecode{group\_cost[mask]} is the cost of taking \inlinecode{mask} as one group.
   \item \inlinecode{count\_domino\_tilings(rows, cols)} returns the number of ways to tile a \inlinecode{rows} by \inlinecode{cols} rectangle with $1 \times 2$ and $2 \times 1$ dominoes.
 \end{compactitem}
@@ -3837,7 +4085,7 @@ The basis is kept in row-echelon form: the $i$-th basis element is either $0$ or
   \item \inlinecode{XorBasis()} constructs an empty basis over \inlinecode{mask\_t}, which is \inlinecode{uint64\_t} by default.
   \item \inlinecode{insert(x)} adds \inlinecode{x} to the basis, returning \inlinecode{true} if \inlinecode{x} was linearly independent of the current basis (increasing its size), or \inlinecode{false} if \inlinecode{x} was already representable as a subset XOR.
   \item \inlinecode{contains(x)} returns whether \inlinecode{x} is representable as the XOR of some subset of the inserted values, i.e. whether it reduces to $0$ against the basis.
-  \item \inlinecode{max\_xor(base = 0)} returns the maximum value of \inlinecode{base} XORed with some subset XOR of the basis. With the default \inlinecode{base} of 0, this is the maximum subset XOR.
+  \item \inlinecode{max\_xor(base = 0)} returns the maximum value of \inlinecode{base} XORed with some subset XOR of the basis. With the default \inlinecode{base} of $0$, this is the maximum subset XOR.
   \item \inlinecode{size()} returns the number of elements in the basis (its rank).
 \end{compactitem}
 

@@ -30,8 +30,8 @@ tree in 2.6.5.
   as indices are touched.
 - `at(r, c)` returns the value at row `r`, column `c`.
 - `query(r1, c1, r2, c2)` returns the result of `combine()` applied to every value in the
-  rectangular region consisting of rows $[`r1`, `r2`]$ and columns $[`c1`, `c2`]$.
-- `update(r, c, d)` assigns the value `v` at $(`r`, `c`)$ to `apply_delta(v, d)`.
+  rectangular region consisting of rows in $[`r1`, `r2`]$ and columns in $[`c1`, `c2`]$.
+- `update(r, c, d)` assigns the value `v` at (`r`, `c`) to `apply_delta(v, d)`.
 
 Time Complexity:
 - O(1) per call to the constructor.
