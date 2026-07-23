@@ -28,7 +28,7 @@ passed to `intersection()` must be valid.
 - `intersection_area(c1, c2)` returns the intersection area of circles `c1` and `c2`.
 
 Time Complexity:
-- O(1) for all operations.
+- O(1) per operation.
 
 Space Complexity:
 - O(1) auxiliary for all operations.

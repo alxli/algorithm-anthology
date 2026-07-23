@@ -12,7 +12,7 @@ comparison therefore discards half of the remaining indices.
   Either endpoint may be returned when it is no greater than its sole neighbor.
 
 Time Complexity:
-- O(log n) comparisons, where $n$ is the size of `a`.
+- O(log n) comparisons per call, where $n$ is the size of `a`.
 
 Space Complexity:
 - O(1) auxiliary.

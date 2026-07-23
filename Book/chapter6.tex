@@ -7,12 +7,12 @@ Common mathematic constants and functions, most of which already have standard S
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ for most operations.
+  \item $O(1)$ per call to most operations.
   \item $O(1)$ per call to \inlinecode{mulmod()} with \inlinecode{\_\_uint128\_t}, or $O(\log n)$ with the portable fallback, where $n$ is the second argument.
   \item $O(\log n)$ calls to \inlinecode{mulmod()} per call to \inlinecode{powmod(x, n, m)}.
-  \item $O(d \cdot e)$ for \inlinecode{convert\_base(d, a, b)}, where $d$ is the number of input digits and $e$ is the number of output digits.
-  \item $O(\log_{b}\left(x + 1\right) + 1)$ for \inlinecode{to\_base(x, b)}.
-  \item $O(x / 1000 + 1)$ for \inlinecode{to\_roman(x)}, due to the repeated \inlinecode{M} prefix.
+  \item $O(d \cdot e)$ per call to \inlinecode{convert\_base(d, a, b)}, where $d$ is the number of input digits and $e$ is the number of output digits.
+  \item $O(\log_{b}\left(x + 1\right) + 1)$ per call to \inlinecode{to\_base()}.
+  \item $O(x / 1000 + 1)$ per call to \inlinecode{to\_roman()} due to the repeated \inlinecode{M} prefix.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -397,15 +397,15 @@ The following functions implement common operations in combinatorics. All size a
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ for \inlinecode{factorial(n, m)}.
-  \item $O(p \log_{p}\left(n\right))$ for \inlinecode{factorial\_without\_p(n, p)}.
-  \item $O(n^{2})$ for \inlinecode{binomial\_table(n, m)}.
-  \item $O(k)$ for \inlinecode{permute(n, k, m)}.
-  \item $O(\min\left(k, n - k\right))$ for \inlinecode{choose(n, k, p)}.
-  \item $O(k)$ for \inlinecode{multichoose(n, k, p)}.
-  \item $O(n)$ for \inlinecode{catalan(n, p)}.
-  \item $O(n^{2})$ for \inlinecode{partitions(n, m)}.
-  \item $O(n \cdot k)$ for \inlinecode{partitions(n, k, m)}, \inlinecode{stirling1(n, k, m)}, \inlinecode{stirling2(n, k, m)}, \inlinecode{eulerian1(n, k, m)}, and \inlinecode{eulerian2(n, k, m)}.
+  \item $O(n)$ per call to \inlinecode{factorial()}.
+  \item $O(p \log_{p}\left(n\right))$ per call to \inlinecode{factorial\_without\_p()}.
+  \item $O(n^{2})$ per call to \inlinecode{binomial\_table()}.
+  \item $O(k)$ per call to \inlinecode{permute()}.
+  \item $O(\min\left(k, n - k\right))$ per call to \inlinecode{choose()}.
+  \item $O(k)$ per call to \inlinecode{multichoose()}.
+  \item $O(n)$ per call to \inlinecode{catalan()}.
+  \item $O(n^{2})$ per call to \inlinecode{partitions(n, m)}.
+  \item $O(n \cdot k)$ per call to \inlinecode{partitions(n, k, m)}, \inlinecode{stirling1()}, \inlinecode{stirling2()}, \inlinecode{eulerian1()}, and \inlinecode{eulerian2()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -631,8 +631,8 @@ For arrangements without repeats, each prefix fixes some used values and leaves 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \cdot k)$ for \inlinecode{next\_arrangement(n, a)}, \inlinecode{arrangement\_by\_rank(n, k, r)}, and \inlinecode{rank\_by\_arrangement(n, a)}, where $k$ is the size of \inlinecode{a}.
-  \item $O(k)$ for \inlinecode{next\_arrangement\_with\_repeats(n, a)}.
+  \item $O(n \cdot k)$ per call to \inlinecode{next\_arrangement()}, \inlinecode{arrangement\_by\_rank()}, and \inlinecode{rank\_by\_arrangement(n, a)}, where $k$ is the size of \inlinecode{a}.
+  \item $O(k)$ per call to \inlinecode{next\_arrangement\_with\_repeats()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -803,8 +803,8 @@ The lexicographic successor is found by locating the rightmost ascent, increasin
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n^{2})$ per call to \inlinecode{next\_permutation\_(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
-  \item $O(n^{2})$ per call to \inlinecode{next\_permutation(a)}, \inlinecode{permutation\_by\_rank(n, r)}, and \inlinecode{rank\_by\_permutation(a)}.
-  \item $O(1)$ per call to \inlinecode{next\_permutation\_mask(x)}.
+  \item $O(n^{2})$ per call to \inlinecode{next\_permutation()}, \inlinecode{permutation\_by\_rank()}, and \inlinecode{rank\_by\_permutation()}.
+  \item $O(1)$ per call to \inlinecode{next\_permutation\_mask()}.
   \item $O(n)$ per call to \inlinecode{permutation\_cycles()}.
 \end{compactitem}
 
@@ -912,12 +912,12 @@ int64_t rank_by_permutation(const std::vector<int> &a) {
   return res;
 }
 
-using cycles = std::vector<std::vector<int>>;
+using Cycles = std::vector<std::vector<int>>;
 
-cycles permutation_cycles(const std::vector<int> &a) {
+Cycles permutation_cycles(const std::vector<int> &a) {
   int n = static_cast<int>(a.size());
   std::vector<char> visit(n);
-  cycles res;
+  Cycles res;
   for (int i = 0; i < n; i++) {
     if (!visit[i]) {
       int j = i;
@@ -990,7 +990,7 @@ int main() {
   {  // Decomposition into cycles.
     vector<int> a{3, 1, 0, 2};
     cout << "\nDecomposition of {3,1,0,2} into cycles:" << endl;
-    cycles c = permutation_cycles(a);
+    Cycles c = permutation_cycles(a);
     assert(c.size() == 2);
     assert((c[0] == vector<int>{0, 3, 2}));
     assert((c[1] == vector<int>{1}));
@@ -1033,7 +1033,7 @@ The lexicographic successor advances the rightmost chosen position that can stil
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{next\_combination(lo, mid, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
   \item $O(k)$ per call to \inlinecode{next\_combination(n, a)} and \inlinecode{next\_combination\_with\_repeats(n, a)}, where $k$ is the size of \inlinecode{a}.
-  \item $O(1)$ per call to \inlinecode{next\_combination\_mask(x)}.
+  \item $O(1)$ per call to \inlinecode{next\_combination\_mask()}.
   \item $O(n \cdot k)$ per call to \inlinecode{combination\_by\_rank()} and \inlinecode{rank\_by\_combination()}.
 \end{compactitem}
 
@@ -1282,8 +1282,8 @@ The lexicographic successor edits the suffix of a non-increasing partition: incr
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{next\_partition()}.
-  \item $O(n^{2})$ per call to \inlinecode{partition\_by\_rank(n, r)} and \inlinecode{rank\_by\_partition(p)}.
-  \item $O(p(n))$ per call to \inlinecode{generate\_increasing\_partitions(n, f)}, where $p(n)$ is the number of partitions of $n$.
+  \item $O(n^{2})$ per call to \inlinecode{partition\_by\_rank()} and \inlinecode{rank\_by\_partition()}.
+  \item $O(p(n))$ per call to \inlinecode{generate\_increasing\_partitions()}, where $p(n)$ is the number of partitions of $n$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1456,7 +1456,7 @@ Let $A$ be the number of candidate values considered at each position (the base 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(L)$ auxiliary per call to \inlinecode{to\_rank()}, \inlinecode{from\_rank()}, and \inlinecode{enumerate()}, excluding output storage.
+  \item $O(L)$ auxiliary for \inlinecode{to\_rank()}, \inlinecode{from\_rank()}, and \inlinecode{enumerate()}, excluding output storage.
   \item $O(1)$ object storage for \inlinecode{ArrangementEnumerator} and \inlinecode{PermutationEnumerator}.
   \item $O(A^{2})$ object storage for \inlinecode{CombinationEnumerator} and $O(L^{2})$ object storage for \inlinecode{PartitionEnumerator} tables.
 \end{compactitem}
@@ -1474,7 +1474,6 @@ class AbstractEnumerator {
 
  public:
   virtual ~AbstractEnumerator() = default;
-
   int64_t total_count() { return count({}); }
 
   int64_t to_rank(const std::vector<int> &a) {
@@ -1708,16 +1707,16 @@ Common number theory operations relating to modular arithmetic.
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(\log\left(a + b\right))$ per call to \inlinecode{gcd(a, b)}, \inlinecode{lcm(a, b)}, \inlinecode{extended\_euclid(a, b)}, \inlinecode{mod\_inverse(a, b)}, \inlinecode{diophantine(a, b, c, ...)}, and \inlinecode{crt(...)}.
-  \item $O(1)$ for \inlinecode{mod(a, b)}.
-  \item $O(p)$ for \inlinecode{generate\_inverse(p)}.
-  \item $O(n^{2})$ for \inlinecode{garner\_restore(a, p)} and \inlinecode{garner\_restore\_mod(a, p, m)}.
+  \item $O(1)$ per call to \inlinecode{mod()}.
+  \item $O(p)$ per call to \inlinecode{generate\_inverse()}.
+  \item $O(n^{2})$ per call to \inlinecode{garner\_restore()} and \inlinecode{garner\_restore\_mod()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(p)$ auxiliary for \inlinecode{generate\_inverse(p)}.
-  \item $O(n)$ auxiliary for \inlinecode{garner\_restore(a, p)} and \inlinecode{garner\_restore\_mod(a, p, m)}.
+  \item $O(p)$ auxiliary for \inlinecode{generate\_inverse()}.
+  \item $O(n)$ auxiliary for \inlinecode{garner\_restore()} and \inlinecode{garner\_restore\_mod()}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -2011,7 +2010,7 @@ Division uses the extended Euclidean algorithm, so the divisor only needs to be 
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per addition, subtraction, multiplication, comparison, and stream output.
-  \item $O(\log n)$ per call to \inlinecode{pow(n)}.
+  \item $O(\log n)$ per call to \inlinecode{pow()}.
   \item $O(\log m)$ per call to \inlinecode{inv()} and division, where $m = {\inlinecodemath{MOD}}$.
   \item $O(n)$ total table growth to answer factorials and combinations up to size \inlinecode{n}.
 \end{compactitem}
@@ -2684,15 +2683,15 @@ The linear sieve finds the least prime factor of each integer. When processing \
 \begin{compactitem}
   \item $O(n \log \log n)$ per call to \inlinecode{sieve(n)}.
   \item $O(\sqrt{{\inlinecodemath{hi}}} \cdot \log\left(\log\left({\inlinecodemath{hi}}\right)\right) + w \cdot \log\left(\log\left({\inlinecodemath{hi}}\right)\right))$ per call to \inlinecode{sieve(lo, hi)}, where $w = {\inlinecodemath{hi}} - {\inlinecodemath{lo}} + 1$.
-  \item $O(n)$ per call to \inlinecode{linear\_sieve(n, least\_out)}.
+  \item $O(n)$ per call to \inlinecode{linear\_sieve()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ auxiliary per call to \inlinecode{sieve(n)}.
-  \item $O(w + \sqrt{{\inlinecodemath{hi}}})$ auxiliary per call to \inlinecode{sieve(lo, hi)}.
-  \item $O(n)$ auxiliary per call to \inlinecode{linear\_sieve(n, least\_out)}.
+  \item $O(n)$ auxiliary for \inlinecode{sieve(n)}.
+  \item $O(w + \sqrt{{\inlinecodemath{hi}}})$ auxiliary for \inlinecode{sieve(lo, hi)}.
+  \item $O(n)$ auxiliary for \inlinecode{linear\_sieve()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -2848,14 +2847,14 @@ Modular multiplication inside Miller-Rabin and Pollard's rho uses \inlinecode{\_
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(\sqrt{n})$ per call to \inlinecode{is\_prime\_slow(n)} and \inlinecode{factorize\_slow(n)}.
-  \item $O(k \cdot \log\left(n\right))$ modular multiplications for \inlinecode{is\_probable\_prime(n, k)} and $O(\log\left(n\right))$ for \inlinecode{is\_prime(n)}. The portable multiplication fallback adds another $O(\log\left(n\right))$ factor.
-  \item $O(c)$ to rebuild the cache through \inlinecode{cached\_sieve(c)}, or $O(1)$ when the existing cache is large enough.
+  \item $O(\sqrt{n})$ per call to \inlinecode{is\_prime\_slow()} and \inlinecode{factorize\_slow()}.
+  \item $O(k \cdot \log\left(n\right))$ modular multiplications per call to \inlinecode{is\_probable\_prime()} and $O(\log\left(n\right))$ per call to \inlinecode{is\_prime()}. The portable multiplication fallback adds another $O(\log\left(n\right))$ factor.
+  \item $O(c)$ per call to \inlinecode{cached\_sieve()} when rebuilding the cache, or $O(1)$ when the existing cache is large enough.
   \item $O(\sqrt{p})$ expected modular multiplications per call to \inlinecode{rho\_factor(n)}, where $p$ is the smallest prime factor of \inlinecode{n}. For composite \inlinecode{n}, this is at most $O(n^{1/4})$.
-  \item $O(n^{1/4})$ expected for \inlinecode{factorize\_rho(n)}. \inlinecode{factorize(n, L)} additionally performs $O(L/\log\left(L\right))$ trial divisions and takes $O(L)$ time if the prime cache must be rebuilt to \inlinecode{L}.
-  \item $O(|a| + |b|)$ for \inlinecode{merge\_factors(a, b)}.
-  \item $O(d \log\left(d\right))$ for \inlinecode{divisors\_from\_factors(factors)}, where $d$ is the number of divisors generated, due to sorting the result.
-  \item $O(L/\log\left(L\right) + n^{1/4} + d \log\left(d\right))$ expected for \inlinecode{get\_divisors(n)}, plus $O(L)$ if the prime cache must be rebuilt.
+  \item $O(n^{1/4})$ expected per call to \inlinecode{factorize\_rho()}. \inlinecode{factorize(n, L)} additionally performs $O(L/\log\left(L\right))$ trial divisions and takes $O(L)$ time if the prime cache must be rebuilt to \inlinecode{L}.
+  \item $O(|a| + |b|)$ per call to \inlinecode{merge\_factors()}.
+  \item $O(d \log\left(d\right))$ per call to \inlinecode{divisors\_from\_factors()}, where $d$ is the number of divisors generated, due to sorting the result.
+  \item $O(L/\log\left(L\right) + n^{1/4} + d \log\left(d\right))$ expected per call to \inlinecode{get\_divisors()}, plus $O(L)$ if the prime cache must be rebuilt.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -3067,10 +3066,10 @@ SieveCache &cached_sieve(int n) {
   return cache;
 }
 
-using vfactors = std::vector<std::pair<int64_t, int>>;
+using Factors = std::vector<std::pair<int64_t, int>>;
 
-vfactors merge_factors(const vfactors &a, const vfactors &b) {
-  vfactors res;
+Factors merge_factors(const Factors &a, const Factors &b) {
+  Factors res;
   int i = 0, j = 0;
   while (i < static_cast<int>(a.size()) || j < static_cast<int>(b.size())) {
     if (i < static_cast<int>(a.size()) && j < static_cast<int>(b.size()) &&
@@ -3090,12 +3089,12 @@ vfactors merge_factors(const vfactors &a, const vfactors &b) {
   return res;
 }
 
-vfactors factorize_rho(int64_t n) {
+Factors factorize_rho(int64_t n) {
   if (n <= 1) {
     return {};
   }
   if (n % 2 == 0) {
-    return merge_factors(vfactors{{2, 1}}, factorize_rho(n / 2));
+    return merge_factors(Factors{{2, 1}}, factorize_rho(n / 2));
   }
   if (is_prime(n)) {
     return {{n, 1}};
@@ -3107,13 +3106,13 @@ vfactors factorize_rho(int64_t n) {
   return merge_factors(factorize_rho(p), factorize_rho(n / p));
 }
 
-vfactors factorize(int64_t n, int small_prime_limit = 1000000) {
+Factors factorize(int64_t n, int small_prime_limit = 1000000) {
   if (n <= 1) {
     return {};
   }
   const SieveCache &sieve = cached_sieve(small_prime_limit);
   if (n <= sieve.limit) {
-    vfactors res;
+    Factors res;
     while (n > 1) {
       int p = sieve.least[n], cnt = 0;
       do {
@@ -3124,7 +3123,7 @@ vfactors factorize(int64_t n, int small_prime_limit = 1000000) {
     }
     return res;
   }
-  vfactors res;
+  Factors res;
   const std::vector<int> &primes = sieve.primes;
   for (int p : primes) {
     if (p > small_prime_limit || static_cast<int64_t>(p) > n / p) {
@@ -3142,7 +3141,7 @@ vfactors factorize(int64_t n, int small_prime_limit = 1000000) {
   return merge_factors(res, factorize_rho(n));
 }
 
-std::vector<int64_t> divisors_from_factors(const vfactors &factors) {
+std::vector<int64_t> divisors_from_factors(const Factors &factors) {
   std::vector<int64_t> res{1};
   for (const auto &factor : factors) {
     int old_size = static_cast<int>(res.size());
@@ -3175,13 +3174,13 @@ std::vector<int64_t> get_divisors(int64_t n) {
 #include <set>
 using namespace std;
 
-void validate(int64_t n, const vfactors &factors) {
+void validate(int64_t n, const Factors &factors) {
   if (n <= 1) {
     assert(factors.empty());
     return;
   }
   if (is_prime(n)) {
-    assert((factors == vfactors{{n, 1}}));
+    assert((factors == Factors{{n, 1}}));
     return;
   }
   int64_t prod = 1;
@@ -3264,7 +3263,7 @@ int main() {
     }
   }
   {  // Compressed factors are convenient for building divisors.
-    vfactors factors{{2, 3}, {3, 2}, {5, 1}};
+    Factors factors{{2, 3}, {3, 2}, {5, 1}};
     vector<int64_t> divisors = divisors_from_factors(factors);
     assert(divisors.size() == 24);
     assert(divisors.front() == 1 && divisors.back() == 360);
@@ -3286,10 +3285,10 @@ int main() {
     cout << fixed << setprecision(3);
     for (int64_t n : nums) {
       clock_t start = clock();
-      vfactors factors1 = factorize_slow(n);
+      Factors factors1 = factorize_slow(n);
       double t1 = static_cast<double>(clock() - start) / CLOCKS_PER_SEC;
       start = clock();
-      vfactors factors2 = factorize(n);
+      Factors factors2 = factorize(n);
       double t2 = static_cast<double>(clock() - start) / CLOCKS_PER_SEC;
       validate(n, factors1);
       validate(n, factors2);
@@ -3472,17 +3471,17 @@ Inclusion-exclusion itself counts the size of a union by alternately adding and 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(\sqrt{n})$ per call to \inlinecode{mobius(n)}.
-  \item $O(n)$ per call to \inlinecode{mobius\_sieve(n)}.
-  \item $O(\sqrt{m} + 2^{k} \cdot k)$ per call to \inlinecode{count\_coprime(n, m)}, where $k$ is the number of distinct prime factors of $m$ (at most 15 for $m$ within 64-bit range).
+  \item $O(\sqrt{n})$ per call to \inlinecode{mobius()}.
+  \item $O(n)$ per call to \inlinecode{mobius\_sieve()}.
+  \item $O(\sqrt{m} + 2^{k} \cdot k)$ per call to \inlinecode{count\_coprime()}, where $k$ is the number of distinct prime factors of $m$ (at most 15 for $m$ within 64-bit range).
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ auxiliary for \inlinecode{mobius\_sieve(n)}.
-  \item $O(k)$ auxiliary for \inlinecode{count\_coprime(n, m)}.
-  \item $O(1)$ auxiliary for \inlinecode{mobius(n)}.
+  \item $O(n)$ auxiliary for \inlinecode{mobius\_sieve()}.
+  \item $O(k)$ auxiliary for \inlinecode{count\_coprime()}.
+  \item $O(1)$ auxiliary for \inlinecode{mobius()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3832,9 +3831,9 @@ Perform operations on arbitrary precision big integers internally represented as
   \item $O(n)$ per call to the constructors, \inlinecode{size()}, \inlinecode{to\_string()}, \inlinecode{to\_llong()}, \inlinecode{to\_double()}, \inlinecode{to\_ldouble()}, \inlinecode{abs()}, \inlinecode{comp()}, \inlinecode{rand()}, and all comparison and arithmetic operators except multiplication, division, and modulo, where $n$ is total number of digits in the arguments and result for each operation.
   \item $O(n \cdot \log\left(n\right) \cdot \log\left(\log\left(n\right)\right))$ or $O(n^{1.585})$ per call to multiplication operations, depending on whether \inlinecode{USE\_FFT\_MULT} is set to true or false.
   \item $O(n \cdot m)$ per call to division and modulo operations, where $n$ and $m$ are the number of digits in the dividend and divisor, respectively.
-  \item $O(M(d) \log n)$ per call to \inlinecode{pow(n)}, where $d$ is the maximum digit length reached during exponentiation and $M(d)$ denotes the cost of one multiplication of two $d$-digit big integers using the selected multiplication method above.
+  \item $O(M(d) \log n)$ per call to \inlinecode{pow()}, where $d$ is the maximum digit length reached during exponentiation and $M(d)$ denotes the cost of one multiplication of two $d$-digit big integers using the selected multiplication method above.
   \item $O(d^{2})$ per call to \inlinecode{sqrt()}, where $d$ is the number of digits.
-  \item $O((d/k) \cdot M(d) \cdot \log k)$ per call to \inlinecode{nth\_root(k)}, from binary search over a $d/k$-digit answer.
+  \item $O((d/k) \cdot M(d) \cdot \log k)$ per call to \inlinecode{nth\_root()}, from binary search over a $d/k$-digit answer.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -4712,13 +4711,13 @@ Exponentiation uses the usual iterative binary exponentiation pattern: keep an a
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(m \cdot n)$ for construction, output, comparison, and scalar arithmetic of $m$ by $n$ matrices.
-  \item $O(1)$ for \inlinecode{rows(a)} and \inlinecode{columns(a)}.
-  \item $O(m \cdot n)$ for matrix-matrix addition and subtraction of $m$ by $n$ matrices.
-  \item $O(n^{3} \log p)$ for exponentiation of an $n$ by $n$ matrix to power $p$.
-  \item $O(n^{3} \log p)$ for power sum of an $n$ by $n$ matrix to power $p$.
-  \item $O(m \cdot n \cdot k)$ for multiplication of an $m$ by $n$ matrix by an $n$ by $k$ matrix.
-  \item $O(m \cdot n)$ for \inlinecode{transpose()}, \inlinecode{transpose\_in\_place()}, \inlinecode{rotate()}, and \inlinecode{rotate\_in\_place()} of $m$ by $n$ matrices.
+  \item $O(m \cdot n)$ per construction, output, comparison, or scalar-arithmetic operation on $m$ by $n$ matrices.
+  \item $O(1)$ per call to \inlinecode{rows()} and \inlinecode{columns()}.
+  \item $O(m \cdot n)$ per matrix-matrix addition or subtraction of $m$ by $n$ matrices.
+  \item $O(n^{3} \log p)$ per exponentiation of an $n$ by $n$ matrix to power $p$.
+  \item $O(n^{3} \log p)$ per call to \inlinecode{power\_sum()} for an $n$ by $n$ matrix and power $p$.
+  \item $O(m \cdot n \cdot k)$ per multiplication of an $m$ by $n$ matrix by an $n$ by $k$ matrix.
+  \item $O(m \cdot n)$ per call to \inlinecode{transpose()}, \inlinecode{transpose\_in\_place()}, \inlinecode{rotate()}, and \inlinecode{rotate\_in\_place()} on an $m$ by $n$ matrix.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -5110,15 +5109,15 @@ Converts a matrix to reduced row echelon form using Gaussian elimination to solv
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(m \cdot n \cdot \min\left(m, n\right))$ for \inlinecode{row\_reduce(a)} and \inlinecode{matrix\_rank(a)}, where $m$ and $n$ are the numbers of rows and columns of \inlinecode{a}, respectively.
-  \item $O(m \cdot n^{2})$ for \inlinecode{solve\_system(a, b)}, which returns immediately when $m < n$.
+  \item $O(m \cdot n \cdot \min\left(m, n\right))$ per call to \inlinecode{row\_reduce(a)} and \inlinecode{matrix\_rank(a)}, where $m$ and $n$ are the numbers of rows and columns of \inlinecode{a}, respectively.
+  \item $O(m \cdot n^{2})$ per call to \inlinecode{solve\_system()}, which returns immediately when $m < n$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(1)$ auxiliary for \inlinecode{row\_reduce(a)}.
-  \item $O(m \cdot n)$ auxiliary for \inlinecode{matrix\_rank(a)} and \inlinecode{solve\_system(a)}.
+  \item $O(1)$ auxiliary for \inlinecode{row\_reduce()}.
+  \item $O(m \cdot n)$ auxiliary for \inlinecode{matrix\_rank()} and \inlinecode{solve\_system()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -5475,7 +5474,7 @@ The LU decomposition of a matrix $a$ with row-partial pivoting is a factorizatio
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(m \cdot n \cdot \min\left(m, n\right))$ per call to \inlinecode{lu\_decompose(a)}, where $m$ and $n$ are the numbers of rows and columns of \inlinecode{a}, respectively.
-  \item $O(m \cdot n^{2})$ per call to \inlinecode{solve\_system(a, b)}, which requires $m \geq n$.
+  \item $O(m \cdot n^{2})$ per call to \inlinecode{solve\_system()}, which requires $m \geq n$.
   \item $O(n^{3})$ per call to \inlinecode{det(a)} and \inlinecode{invert(a)}, where $n$ is the length of square matrix \inlinecode{a}.
 \end{compactitem}
 
@@ -5483,8 +5482,8 @@ The LU decomposition of a matrix $a$ with row-partial pivoting is a factorizatio
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for \inlinecode{lu\_decompose()}.
-  \item $O(n^{2})$ for \inlinecode{det(a)} and \inlinecode{invert(a)}.
-  \item $O(m \cdot n)$ auxiliary for \inlinecode{solve\_system(a, b)}.
+  \item $O(n^{2})$ auxiliary for \inlinecode{det()} and \inlinecode{invert()}.
+  \item $O(m \cdot n)$ auxiliary for \inlinecode{solve\_system()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -5945,10 +5944,10 @@ Sparse elimination chooses, in each pivot column, the available pivot row with t
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(\log d)$ per call to \inlinecode{get()}, \inlinecode{set()}, and \inlinecode{add()}, where $d$ is the number of nonzeros in the touched row or column.
-  \item $O(1)$ for \inlinecode{transpose()} and $O(n)$ for \inlinecode{multiply\_vector()}, where $n$ is the number of stored nonzero entries.
-  \item $O((r_i + r_j) \cdot \log d)$ for \inlinecode{swap\_rows(i, j)}, where $r_i$ and $r_j$ are the sizes of the two rows.
+  \item $O(1)$ per call to \inlinecode{transpose()} and $O(n)$ per call to \inlinecode{multiply\_vector()}, where $n$ is the number of stored nonzero entries.
+  \item $O((r_i + r_j) \cdot \log d)$ per call to \inlinecode{swap\_rows(i, j)}, where $r_i$ and $r_j$ are the sizes of the two rows.
   \item $O(f \cdot \log d)$ for sparse elimination, where $f$ is the number of entry updates performed after fill-in and $d$ is a touched row or column size. In the worst case this is still cubic.
-  \item $O(f \cdot \log d)$ for \inlinecode{det()}, \inlinecode{sparse\_rank()}, and \inlinecode{solve\_system()}.
+  \item $O(f \cdot \log d)$ per call to \inlinecode{det()}, \inlinecode{sparse\_rank()}, and \inlinecode{solve\_system()}.
   \item $O(1)$ per call to \inlinecode{height()}, \inlinecode{width()}, \inlinecode{nonzeros()}, \inlinecode{row()}, and \inlinecode{column()}.
 \end{compactitem}
 
@@ -6267,7 +6266,7 @@ The transform replaces a coefficient vector with its evaluations at the powers o
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ per call to \inlinecode{ntt()}, where $n$ is the length of the vector.
-  \item $O(|a||b|)$ for the small-input branch of \inlinecode{convolve()}, otherwise $O(n \log n)$, where $n$ is the padded transform length.
+  \item $O(|a||b|)$ per call to \inlinecode{convolve()} on small inputs and $O(n \log n)$ otherwise, where $n$ is the padded transform length.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -6400,7 +6399,7 @@ The trade-off is precision. Complex arithmetic in double precision accumulates r
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ per call to \inlinecode{fft()}, where $n$ is the length of the vector.
-  \item $O(|a||b|)$ for the small-input branch of \inlinecode{convolve()}, otherwise $O(n \log n)$, where $n$ is the padded transform length.
+  \item $O(|a||b|)$ per call to \inlinecode{convolve()} on small inputs and $O(n \log n)$ otherwise, where $n$ is the padded transform length.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -6530,10 +6529,10 @@ The inverse is a formal power series inverse modulo $x^n$: it finds $b$ such tha
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ for \inlinecode{trim()}, \inlinecode{add()}, \inlinecode{subtract()}, \inlinecode{derivative()}, and \inlinecode{integral()}.
-  \item $O(|a||b|)$ for the small-input branch of \inlinecode{multiply()}, otherwise $O(n \log n)$, where $n$ is the padded transform length.
-  \item $O(n \log n)$ for \inlinecode{inverse(a, n)}, where $n$ is the requested length.
-  \item $O(n \log n)$ for \inlinecode{divide()} and \inlinecode{modulo()}, where $n$ is the padded multiplication length.
+  \item $O(n)$ per call to \inlinecode{trim()}, \inlinecode{add()}, \inlinecode{subtract()}, \inlinecode{derivative()}, and \inlinecode{integral()}.
+  \item $O(|a||b|)$ per call to \inlinecode{multiply()} on small inputs and $O(n \log n)$ otherwise, where $n$ is the padded transform length.
+  \item $O(n \log n)$ per call to \inlinecode{inverse(a, n)}, where $n$ is the requested length.
+  \item $O(n \log n)$ per call to \inlinecode{divide()} and \inlinecode{modulo()}, where $n$ is the padded multiplication length.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(n)$ auxiliary.
@@ -6968,7 +6967,7 @@ Coefficient recovery uses Newton's divided differences. It first replaces the sa
   \item \inlinecode{interpolate\_at(x, y, t)} returns $P({\inlinecodemath{t}})$ modulo \inlinecode{MOD} for that same polynomial, without building its coefficients.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n^{2} \log p)$ for \inlinecode{interpolate()} and $O(n^{2} + n \log p)$ for \inlinecode{interpolate\_at()}, where $n$ is the number of points and $p$ is \inlinecode{MOD}.
+\textbf{Time Complexity}: $O(n^{2} \log p)$ per call to \inlinecode{interpolate()} and $O(n^{2} + n \log p)$ per call to \inlinecode{interpolate\_at()}, where $n$ is the number of points and $p$ is \inlinecode{MOD}.
 
 \textbf{Space Complexity}: $O(n)$ auxiliary.
 
@@ -7248,8 +7247,8 @@ For a sum of independent impartial games, the combined Grundy number is the XOR 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(k)$ for \inlinecode{sum\_grundy(grundies)}, where $k$ is the input length.
-  \item $O(n \cdot m)$ for \inlinecode{subtraction\_game\_grundy(max\_stones, moves)}, where $n$ is \inlinecode{max\_stones} and $m$ is the number of allowed moves.
+  \item $O(k)$ per call to \inlinecode{sum\_grundy()}, where $k$ is the input length.
+  \item $O(n \cdot m)$ per call to \inlinecode{subtraction\_game\_grundy(max\_stones, moves)}, where $n$ is \inlinecode{max\_stones} and $m$ is the number of allowed moves.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -7396,7 +7395,7 @@ The example game is ``take $1$ or $2$ stones'': starting with \inlinecode{stones
   \item \inlinecode{best\_take(stones)} returns an optimal first move using alpha-beta pruning, either $1$ or $2$, for positive \inlinecode{stones}.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(b^{d})$ in the worst case, where $b$ is branching factor and $d$ is search depth. Alpha-beta can achieve $O(b^{d/2})$ with optimal move ordering.
+\textbf{Time Complexity}: $O(b^{d})$ per call in the worst case, where $b$ is branching factor and $d$ is search depth. Alpha-beta can achieve $O(b^{d/2})$ with optimal move ordering.
 
 \textbf{Space Complexity}: $O(d)$ auxiliary recursion stack space.
 

@@ -100,15 +100,14 @@ struct QuadEdgePool {
   std::vector<Edge<T> *> edges;
 
   QuadEdgePool() = default;
+  QuadEdgePool(const QuadEdgePool &) = delete;
+  QuadEdgePool &operator=(const QuadEdgePool &) = delete;
 
   ~QuadEdgePool() {
     for (Edge<T> *e : edges) {
       delete e;
     }
   }
-
-  QuadEdgePool(const QuadEdgePool &) = delete;
-  QuadEdgePool &operator=(const QuadEdgePool &) = delete;
 
   Edge<T> *make_edge(const Point<T> &u, const Point<T> &v) {
     Edge<T> *e1 = new Edge<T>, *e2 = new Edge<T>, *e3 = new Edge<T>, *e4 = new Edge<T>;

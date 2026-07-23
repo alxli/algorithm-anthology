@@ -12,9 +12,9 @@ Grundy numbers. This is the Sprague-Grundy theorem.
 - `sum_grundy(grundies)` returns the XOR of component Grundy numbers.
 
 Time Complexity:
-- O(k) for `sum_grundy(grundies)`, where $k$ is the input length.
-- O(n*m) for `subtraction_game_grundy(max_stones, moves)`, where $n$ is `max_stones` and $m$ is the
-  number of allowed moves.
+- O(k) per call to `sum_grundy()`, where $k$ is the input length.
+- O(n*m) per call to `subtraction_game_grundy(max_stones, moves)`, where $n$ is `max_stones` and $m$
+  is the number of allowed moves.
 
 Space Complexity:
 - O(1) auxiliary for `sum_grundy(grundies)`.

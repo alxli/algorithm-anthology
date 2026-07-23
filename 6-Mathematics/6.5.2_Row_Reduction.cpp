@@ -17,13 +17,13 @@ systems of linear equations, LU decomposition with row partial pivoting should b
   solution, then the output pointer `x` is populated with the solution vector of length $n$.
 
 Time Complexity:
-- O(m*n*min(m, n)) for `row_reduce(a)` and `matrix_rank(a)`, where $m$ and $n$ are the numbers of
-  rows and columns of `a`, respectively.
-- O(m*n^2) for `solve_system(a, b)`, which returns immediately when $m < n$.
+- O(m*n*min(m, n)) per call to `row_reduce(a)` and `matrix_rank(a)`, where $m$ and $n$ are the
+  numbers of rows and columns of `a`, respectively.
+- O(m*n^2) per call to `solve_system()`, which returns immediately when $m < n$.
 
 Space Complexity:
-- O(1) auxiliary for `row_reduce(a)`.
-- O(m*n) auxiliary for `matrix_rank(a)` and `solve_system(a)`.
+- O(1) auxiliary for `row_reduce()`.
+- O(m*n) auxiliary for `matrix_rank()` and `solve_system()`.
 
 */
 

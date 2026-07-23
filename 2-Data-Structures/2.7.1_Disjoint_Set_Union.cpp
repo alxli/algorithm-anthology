@@ -21,7 +21,7 @@ construction. For arbitrary element types, see Sparse Disjoint Set Union.
   occurred or `false` if `u` and `v` already belonged to the same partition.
 
 Time Complexity:
-- O(n) per call to `DSU(n)`, and O(1) per call to `sets()`.
+- O(n) per call to the constructor, and O(1) per call to `sets()`.
 - O(alpha(n)) per call to `find_root()`, `set_size()`, `is_united()`, and `unite()`, where $n$ is
   the number of elements, and $\alpha(n)$ is the extremely slow growing inverse of the Ackermann
   function (effectively a very small constant for all practical values of $n$).

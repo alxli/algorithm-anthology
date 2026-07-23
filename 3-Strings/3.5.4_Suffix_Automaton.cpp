@@ -19,7 +19,7 @@ state representing the longest proper suffix of that class.
   `t`.
 
 Time Complexity:
-- O(n) expected to construct the automaton for a string of length $n$.
+- O(n) expected per call to the constructor for a string of length $n$.
 - O(m) expected per call to `contains(t)`, `first_occurrence(t)`, or `longest_common_substring(t)`,
   where $m$ is the length of `t`.
 - O(n) per call to `count_distinct_substrings()`.

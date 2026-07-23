@@ -24,9 +24,9 @@ part. This lets the algorithms skip whole blocks of partitions sharing a common 
 
 Time Complexity:
 - O(n) per call to `next_partition()`.
-- O(n^2) per call to `partition_by_rank(n, r)` and `rank_by_partition(p)`.
-- O(p(n)) per call to `generate_increasing_partitions(n, f)`, where $p(n)$ is the number of
-  partitions of $n$.
+- O(n^2) per call to `partition_by_rank()` and `rank_by_partition()`.
+- O(p(n)) per call to `generate_increasing_partitions()`, where $p(n)$ is the number of partitions
+  of $n$.
 
 Space Complexity:
 - O(1) auxiliary for `next_partition()`.

@@ -9,7 +9,7 @@ Common string functions, many of which already have standard STL equivalents. Mo
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ auxiliary per call to operations that return a new string or vector of strings.
+  \item $O(n)$ auxiliary for operations that return a new string or vector of strings.
   \item $O(1)$ auxiliary for in-place operations.
 \end{compactitem}
 
@@ -776,8 +776,8 @@ By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per constructor call and whole-sequence hash, where $n$ is the sequence length.
-  \item $O(1)$ per call to \inlinecode{get(lo, hi)} and \inlinecode{concat(left, right, right\_len)}.
+  \item $O(n)$ per call to the constructor or \inlinecode{hash()}, where $n$ is the sequence length.
+  \item $O(1)$ per call to \inlinecode{get()} and \inlinecode{concat()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1160,7 +1160,7 @@ Element values must be nonnegative. As with any polynomial hash, comparing subse
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \log n)$ for the constructor, where $n$ is the length of the sequence.
+  \item $O(n \log n)$ per call to the constructor, where $n$ is the length of the sequence.
   \item $O(\log n)$ per call to \inlinecode{set()} and \inlinecode{hash()}.
   \item $O(1)$ per call to \inlinecode{size()}.
 \end{compactitem}
@@ -1294,7 +1294,7 @@ This technique is useful for probabilistic equality checks on sets, distinct-pre
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ expected per call to \inlinecode{get(x)} and \inlinecode{toggle(h, x)}.
+  \item $O(1)$ expected per call to \inlinecode{get()} and \inlinecode{toggle()}.
   \item $O(n)$ expected per call to \inlinecode{distinct\_prefix\_hashes(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 \end{compactitem}
 
@@ -1302,7 +1302,7 @@ This technique is useful for probabilistic equality checks on sets, distinct-pre
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for stored key tokens, where $n$ is the number of distinct keys seen so far.
-  \item $O(n)$ auxiliary for \inlinecode{distinct\_prefix\_hashes(lo, hi)}.
+  \item $O(n)$ auxiliary for \inlinecode{distinct\_prefix\_hashes()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1400,7 +1400,7 @@ Given a single string (needle) and subsequent queries of texts (haystacks) to be
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(m)$ for storage of the partial match table, where $m$ is the length of \inlinecode{needle}.
-  \item $O(1)$ auxiliary for \inlinecode{find\_in(haystack)}.
+  \item $O(1)$ auxiliary for \inlinecode{find\_in()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1569,7 +1569,7 @@ This implementation stores transitions in hash tables, which keeps lookups expec
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(L + z)$ for storage of the automaton and inherited output entries.
-  \item $O(1)$ auxiliary for \inlinecode{find\_all\_in(haystack, report\_match)}.
+  \item $O(1)$ auxiliary for \inlinecode{find\_all\_in()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1713,8 +1713,8 @@ For odd palindromes, \inlinecode{odd[i]} is the radius centered at character \in
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per constructor call, where $n$ is the length of \inlinecode{s}.
-  \item $O(1)$ per call to \inlinecode{is\_palindrome(lo, hi)}.
+  \item $O(n)$ per call to the constructor, where $n$ is the length of \inlinecode{s}.
+  \item $O(1)$ per call to \inlinecode{is\_palindrome()}.
   \item $O(n)$ per call to \inlinecode{longest\_palindrome()} and \inlinecode{count\_palindromes()}.
 \end{compactitem}
 
@@ -1835,8 +1835,8 @@ Both functions below operate on any random-access sequence whose elements suppor
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(k)$ auxiliary for \inlinecode{lyndon\_factorization(s)}, where $k$ is the number of factors.
-  \item $O(1)$ auxiliary for \inlinecode{min\_rotation(s)}.
+  \item $O(k)$ auxiliary for \inlinecode{lyndon\_factorization()}, where $k$ is the number of factors.
+  \item $O(1)$ auxiliary for \inlinecode{min\_rotation()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3012,7 +3012,7 @@ This implementation is Ukkonen's algorithm, which builds the tree online in line
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ to construct the tree for a string of length $n$ (using a per-node ordered map, $O(n \log s)$ where $s$ is the alphabet size).
+  \item $O(n)$ per call to the constructor for a string of length $n$ (using a per-node ordered map, $O(n \log s)$ where $s$ is the alphabet size).
   \item $O(m \log s)$ per call to \inlinecode{contains(t)}, where $m$ is the length of \inlinecode{t}.
   \item $O(n)$ per call to \inlinecode{count\_distinct\_substrings()} and \inlinecode{longest\_repeated\_substring()}.
 \end{compactitem}
@@ -3237,7 +3237,7 @@ Each state represents an equivalence class of substrings with the same set of en
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ expected to construct the automaton for a string of length $n$.
+  \item $O(n)$ expected per call to the constructor for a string of length $n$.
   \item $O(m)$ expected per call to \inlinecode{contains(t)}, \inlinecode{first\_occurrence(t)}, or \inlinecode{longest\_common\_substring(t)}, where $m$ is the length of \inlinecode{t}.
   \item $O(n)$ per call to \inlinecode{count\_distinct\_substrings()}.
 \end{compactitem}
@@ -3407,8 +3407,8 @@ The structure has two roots: one of length $-1$, which simplifies boundary cases
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ expected to build the tree for a string of length $n$.
-  \item $O(1)$ expected amortized per call to \inlinecode{add(c)}.
+  \item $O(n)$ expected per call to the constructor for a string of length $n$.
+  \item $O(1)$ expected amortized per call to \inlinecode{add()}.
   \item $O(n)$ per call to \inlinecode{count\_occurrences()}.
 \end{compactitem}
 
@@ -3727,7 +3727,7 @@ Dynamic programming compares prefixes and chooses the cheapest last operation: a
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(\min\left(n, m\right))$ auxiliary heap space for \inlinecode{edit\_distance(s1, s2)}.
+  \item $O(\min\left(n, m\right))$ auxiliary heap space for \inlinecode{edit\_distance()}.
   \item $O(n \cdot m)$ auxiliary heap space for \inlinecode{align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
   \item $O(\log\left(\max\left(n, m\right)\right))$ auxiliary stack space and $O(\min\left(n, m\right))$ auxiliary heap space for \inlinecode{hirschberg\_align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
 \end{compactitem}
@@ -3924,8 +3924,8 @@ The longest palindromic subsequence (LPS) is a maximum-length subsequence that r
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n^{2})$ auxiliary for \inlinecode{longest\_palindromic\_subsequence(s)}.
-  \item $O(n)$ auxiliary for \inlinecode{min\_insertions\_palindrome(s)}.
+  \item $O(n^{2})$ auxiliary for \inlinecode{longest\_palindromic\_subsequence()}.
+  \item $O(n)$ auxiliary for \inlinecode{min\_insertions\_palindrome()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -4016,7 +4016,7 @@ Evaluate an expression according to the order of operations (parentheses, unary 
 
 \textbf{Time Complexity}: $O(n)$ per call, where $n$ is the length of \inlinecode{s}.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary stack space per call, where $n$ is the length of \inlinecode{s}.
+\textbf{Space Complexity}: $O(n)$ auxiliary stack space, where $n$ is the length of \inlinecode{s}.
 
 \begin{lstlisting}[language=C++]
 #include <string>
@@ -4602,7 +4602,7 @@ For a string with symbol probabilities $p_i$, empirical entropy is $H = -\sum_i 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(m)$ auxiliary for \inlinecode{byte\_frequencies(s)}.
+  \item $O(m)$ auxiliary for \inlinecode{byte\_frequencies()}.
   \item $O(1)$ auxiliary for the other operations.
 \end{compactitem}
 
@@ -4848,8 +4848,8 @@ The implementation below stores encoded bits as a string of \inlinecode{\textquo
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n + m \log m)$ to construct the tree, where $n$ is the input length and $m$ is the number of distinct characters.
-  \item $O(n + b)$ to encode $n$ characters into $b$ bits, and $O(b)$ to decode $b$ bits.
+  \item $O(n + m \log m)$ per call to the constructor, where $n$ is the input length and $m$ is the number of distinct characters.
+  \item $O(n + b)$ per call to \inlinecode{encode()} for $n$ characters producing $b$ bits, and $O(b)$ per call to \inlinecode{decode()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}

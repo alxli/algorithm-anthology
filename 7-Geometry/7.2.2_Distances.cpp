@@ -26,7 +26,7 @@ coordinate arithmetic type. For integer point types, use a 64-bit coordinate typ
 may exceed a few tens of thousands.
 
 Time Complexity:
-- O(1) for all operations.
+- O(1) per operation.
 
 Space Complexity:
 - O(1) auxiliary for all operations.

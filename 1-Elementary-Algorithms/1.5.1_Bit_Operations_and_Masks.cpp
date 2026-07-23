@@ -4,7 +4,7 @@ Integers are all fixed-size sets of bits, where the $i$-th bit (counting from th
 bit where $i = 0$) is "present" when set to $1$. Treating an `int` as a bitmask makes set
 membership, insertion, deletion, and iteration into single machine instructions, which is why
 bitmasks are the backbone of subset dynamic programming and many low-level tricks. The helpers below
-operate on `mask_t`, which is `uint32_t` by default; change its alias to `uint64_t` to use 64-bit
+operate on `Mask`, which is `uint32_t` by default; change its alias to `uint64_t` to use 64-bit
 masks. The loop implementations below exist for education only; production code should prefer the
 matching GCC built-ins when available, or on C++20 systems the generic `constexpr` equivalents from
 the `<bit>` header, which are additionally well-defined at $0$.
@@ -32,9 +32,9 @@ the `<bit>` header, which are additionally well-defined at $0$.
   order.
 
 Time Complexity:
-- O(b) worst case per call to `popcount(x)`, `parity(x)`, `ctz(x)`, `ffs(x)`, `clz(x)`, and
-  `for_each_set_bit(x, f)`, where $b$ is `MASK_BITS`.
-- O(1) for all other operations.
+- O(b) worst case per call to `popcount()`, `parity()`, `ctz()`, `ffs()`, `clz()`, and
+  `for_each_set_bit()`, where $b$ is `MASK_BITS`.
+- O(1) per call to every other function.
 
 Space Complexity:
 - O(1) auxiliary for all operations.
@@ -45,21 +45,21 @@ Space Complexity:
 #include <climits>
 #include <cstdint>
 
-using mask_t = uint32_t;
-const int MASK_BITS = sizeof(mask_t) * CHAR_BIT;
+using Mask = uint32_t;
+const int MASK_BITS = sizeof(Mask) * CHAR_BIT;
 
 // clang-format off
-bool test_bit(mask_t x, int i) { return (x >> i) & 1; }
-mask_t set_bit(mask_t x, int i) { return x | (mask_t{1} << i); }
-mask_t clear_bit(mask_t x, int i) { return x & ~(mask_t{1} << i); }
-mask_t toggle_bit(mask_t x, int i) { return x ^ (mask_t{1} << i); }
-mask_t lowest_set_bit(mask_t x) { return x & -x; }
-mask_t clear_lowest_set_bit(mask_t x) { return x & (x - 1); }
+bool test_bit(Mask x, int i) { return (x >> i) & 1; }
+Mask set_bit(Mask x, int i) { return x | (Mask{1} << i); }
+Mask clear_bit(Mask x, int i) { return x & ~(Mask{1} << i); }
+Mask toggle_bit(Mask x, int i) { return x ^ (Mask{1} << i); }
+Mask lowest_set_bit(Mask x) { return x & -x; }
+Mask clear_lowest_set_bit(Mask x) { return x & (x - 1); }
 // clang-format on
 
 // popcount(), parity(), ctz(), ffs(), and clz() are spelled out here for educational purposes.
 
-int popcount(mask_t x) {  // std::popcount(x) in C++20.
+int popcount(Mask x) {  // std::popcount(x) in C++20.
   int count = 0;
   for (; x != 0; x = clear_lowest_set_bit(x)) {
     count++;
@@ -67,11 +67,11 @@ int popcount(mask_t x) {  // std::popcount(x) in C++20.
   return count;
 }
 
-int parity(mask_t x) {
+int parity(Mask x) {
   return popcount(x) & 1;
 }
 
-int ctz(mask_t x) {  // std::countr_zero(x) in C++20.
+int ctz(Mask x) {  // std::countr_zero(x) in C++20.
   assert(x != 0);
   int count = 0;
   for (; (x & 1) == 0; x >>= 1) {
@@ -80,35 +80,35 @@ int ctz(mask_t x) {  // std::countr_zero(x) in C++20.
   return count;
 }
 
-int ffs(mask_t x) {
+int ffs(Mask x) {
   return x == 0 ? 0 : ctz(x) + 1;
 }
 
-int clz(mask_t x) {  // std::countl_zero(x) in C++20.
+int clz(Mask x) {  // std::countl_zero(x) in C++20.
   assert(x != 0);
   int count = 0;
-  for (mask_t mask = mask_t{1} << (MASK_BITS - 1); (x & mask) == 0; mask >>= 1) {
+  for (Mask mask = Mask{1} << (MASK_BITS - 1); (x & mask) == 0; mask >>= 1) {
     count++;
   }
   return count;
 }
 
-bool is_pow2(mask_t x) {  // std::has_single_bit(x) in C++20.
+bool is_pow2(Mask x) {  // std::has_single_bit(x) in C++20.
   return x != 0 && (x & (x - 1)) == 0;
 }
 
-mask_t floor_pow2(mask_t x) {  // std::bit_floor(x) in C++20.
+Mask floor_pow2(Mask x) {  // std::bit_floor(x) in C++20.
   assert(x != 0);
-  return mask_t{1} << (MASK_BITS - 1 - clz(x));
+  return Mask{1} << (MASK_BITS - 1 - clz(x));
 }
 
-mask_t ceil_pow2(mask_t x) {  // std::bit_ceil(x) in C++20.
-  assert(0 < x && x <= (mask_t{1} << (MASK_BITS - 1)));
-  return is_pow2(x) ? x : mask_t{1} << (MASK_BITS - clz(x));
+Mask ceil_pow2(Mask x) {  // std::bit_ceil(x) in C++20.
+  assert(0 < x && x <= (Mask{1} << (MASK_BITS - 1)));
+  return is_pow2(x) ? x : Mask{1} << (MASK_BITS - clz(x));
 }
 
 template<typename Fn>
-void for_each_set_bit(mask_t x, Fn f) {
+void for_each_set_bit(Mask x, Fn f) {
   while (x != 0) {
     f(ctz(x));
     x = clear_lowest_set_bit(x);
@@ -122,7 +122,7 @@ void for_each_set_bit(mask_t x, Fn f) {
 using namespace std;
 
 int main() {
-  mask_t x = 0b101100;
+  Mask x = 0b101100;
   assert(test_bit(x, 2) == true);
   assert(test_bit(x, 0) == false);
   assert(set_bit(x, 0) == 0b101101u);
@@ -148,7 +148,7 @@ int main() {
   assert(floor_pow2(20) == 16u);
   assert(ceil_pow2(20) == 32u);
   assert(ceil_pow2(16) == 16u);
-  assert(ceil_pow2((mask_t{1} << (MASK_BITS - 1)) - 1) == (mask_t{1} << (MASK_BITS - 1)));
+  assert(ceil_pow2((Mask{1} << (MASK_BITS - 1)) - 1) == (Mask{1} << (MASK_BITS - 1)));
 
   vector<int> bits;
   for_each_set_bit(x, [&](int b) { bits.push_back(b); });

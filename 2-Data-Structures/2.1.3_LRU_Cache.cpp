@@ -20,8 +20,8 @@ with `move_to_front(&sentinel, node)`, and evict `sentinel.prev`.
 - `size()` returns the number of keys currently stored.
 
 Time Complexity:
-- O(1) expected amortized per call to `get(key, &value)` and `put(key, value)`, and O(n) in the
-  collision-heavy worst case for the hash table.
+- O(1) expected amortized per call to `get()` and `put()`, and O(n) in the collision-heavy worst
+  case for the hash table.
 
 Space Complexity:
 - O(n), where $n$ is the cache capacity.
@@ -47,11 +47,9 @@ Space Complexity:
 
 template<typename K, typename V>
 class LRUCache {
-  using ListIter = typename std::list<std::pair<K, V>>::iterator;
-
   int cap;
   std::list<std::pair<K, V>> items;
-  std::unordered_map<K, ListIter> where;
+  std::unordered_map<K, decltype(items.begin())> where;
 
  public:
   explicit LRUCache(int capacity) : cap(capacity) { assert(capacity >= 0); }

@@ -18,12 +18,12 @@ computes those prefix XORs in doubling steps to recover the original rank.
   $0 \leq `n` < `MASK_BITS`$.
 
 Time Complexity:
-- O(1) per call to `gray_code(k)`.
-- O(log b) per call to `inverse_gray_code(g)`, where $b$ is `MASK_BITS`.
+- O(1) per call to `gray_code()`.
+- O(log b) per call to `inverse_gray_code()`, where $b$ is `MASK_BITS`.
 - O(2^n) per call to `gray_sequence(n)`.
 
 Space Complexity:
-- O(1) auxiliary for `gray_code(k)` and `inverse_gray_code(g)`.
+- O(1) auxiliary for `gray_code()` and `inverse_gray_code()`.
 - O(1) auxiliary and O(2^n) for the returned sequence from `gray_sequence(n)`.
 
 */
@@ -33,24 +33,24 @@ Space Complexity:
 #include <cstdint>
 #include <vector>
 
-using mask_t = uint32_t;
-const int MASK_BITS = sizeof(mask_t) * CHAR_BIT;
+using Mask = uint32_t;
+const int MASK_BITS = sizeof(Mask) * CHAR_BIT;
 
-mask_t gray_code(mask_t k) {
+Mask gray_code(Mask k) {
   return k ^ (k >> 1);
 }
 
-mask_t inverse_gray_code(mask_t g) {
+Mask inverse_gray_code(Mask g) {
   for (int shift = 1; shift < MASK_BITS && (g >> shift) != 0; shift <<= 1) {
     g ^= g >> shift;
   }
   return g;
 }
 
-std::vector<mask_t> gray_sequence(int n) {
+std::vector<Mask> gray_sequence(int n) {
   assert(0 <= n && n < MASK_BITS);
-  std::vector<mask_t> res(mask_t{1} << n);
-  for (mask_t k = 0; k < static_cast<mask_t>(res.size()); k++) {
+  std::vector<Mask> res(Mask{1} << n);
+  for (Mask k = 0; k < static_cast<Mask>(res.size()); k++) {
     res[k] = gray_code(k);
   }
   return res;
@@ -67,15 +67,15 @@ int main() {
   assert(gray_code(2) == 0b011u);
   assert(gray_code(3) == 0b010u);
 
-  for (mask_t k = 0; k < 256; k++) {
+  for (Mask k = 0; k < 256; k++) {
     assert(inverse_gray_code(gray_code(k)) == k);
   }
   assert(inverse_gray_code(gray_code(0xdeadbeefu)) == 0xdeadbeefu);
 
-  vector<mask_t> seq = gray_sequence(3);
+  vector<Mask> seq = gray_sequence(3);
   assert(seq.size() == 8);
   for (int i = 0; i < static_cast<int>(seq.size()); i++) {
-    mask_t diff = seq[i] ^ seq[(i + 1) % seq.size()];
+    Mask diff = seq[i] ^ seq[(i + 1) % seq.size()];
     assert((diff & (diff - 1)) == 0);  // Cyclically, one bit changes per step.
   }
   return 0;

@@ -18,8 +18,8 @@ $[`i` - `even[i]`, `i` + `even[i]`)$.
   multiplicity by position.
 
 Time Complexity:
-- O(n) per constructor call, where $n$ is the length of `s`.
-- O(1) per call to `is_palindrome(lo, hi)`.
+- O(n) per call to the constructor, where $n$ is the length of `s`.
+- O(1) per call to `is_palindrome()`.
 - O(n) per call to `longest_palindrome()` and `count_palindromes()`.
 
 Space Complexity:

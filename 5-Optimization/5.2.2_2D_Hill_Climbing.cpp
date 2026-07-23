@@ -16,8 +16,8 @@ not guaranteed to be the global minimum.
   `step_max` and stops below `step_min`.
 
 Time Complexity:
-- O(k + s) calls to `f()`, where $k$ is the number of times the step size is reduced and $s$ is the
-  total number of improving moves accepted.
+- O(k + s) calls to `f()` per call, where $k$ is the number of times the step size is reduced and
+  $s$ is the total number of improving moves accepted.
 
 Space Complexity:
 - O(1) auxiliary.

@@ -26,16 +26,16 @@ multiplication, so the square of the chosen modulus must fit in `int64_t`.
   $n > k$.
 
 Time Complexity:
-- O(n) for `factorial(n, m)`.
-- O(p log_p(n)) for `factorial_without_p(n, p)`.
-- O(n^2) for `binomial_table(n, m)`.
-- O(k) for `permute(n, k, m)`.
-- O(min(k, n - k)) for `choose(n, k, p)`.
-- O(k) for `multichoose(n, k, p)`.
-- O(n) for `catalan(n, p)`.
-- O(n^2) for `partitions(n, m)`.
-- O(n*k) for `partitions(n, k, m)`, `stirling1(n, k, m)`, `stirling2(n, k, m)`,
-  `eulerian1(n, k, m)`, and `eulerian2(n, k, m)`.
+- O(n) per call to `factorial()`.
+- O(p log_p(n)) per call to `factorial_without_p()`.
+- O(n^2) per call to `binomial_table()`.
+- O(k) per call to `permute()`.
+- O(min(k, n - k)) per call to `choose()`.
+- O(k) per call to `multichoose()`.
+- O(n) per call to `catalan()`.
+- O(n^2) per call to `partitions(n, m)`.
+- O(n*k) per call to `partitions(n, k, m)`, `stirling1()`, `stirling2()`, `eulerian1()`, and
+  `eulerian2()`.
 
 Space Complexity:
 - O(n^2) auxiliary for `binomial_table(n, m)`.

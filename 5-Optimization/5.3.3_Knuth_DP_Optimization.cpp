@@ -18,7 +18,7 @@ sufficient conditions.
   is filled with the chosen split points.
 
 Time Complexity:
-- O(n^2) calls to `cost(l, r)` and O(n^2) candidate split checks.
+- O(n^2) calls to `cost()` and O(n^2) candidate split checks per call.
 
 Space Complexity:
 - O(n^2) for the `dp` and `opt` tables.

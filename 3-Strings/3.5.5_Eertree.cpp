@@ -17,8 +17,8 @@ the longest palindromic suffix of the current string.
   each node `v`.
 
 Time Complexity:
-- O(n) expected to build the tree for a string of length $n$.
-- O(1) expected amortized per call to `add(c)`.
+- O(n) expected per call to the constructor for a string of length $n$.
+- O(1) expected amortized per call to `add()`.
 - O(n) per call to `count_occurrences()`.
 
 Space Complexity:

@@ -31,7 +31,7 @@ trailing zeros cannot make a shorter sequence collide with a longer one.
   always have equal hash pairs, while equal hash pairs indicate equal ranges with high probability.
 
 Time Complexity:
-- O(n log n) for the constructor, where $n$ is the length of the sequence.
+- O(n log n) per call to the constructor, where $n$ is the length of the sequence.
 - O(log n) per call to `set()` and `hash()`.
 - O(1) per call to `size()`.
 

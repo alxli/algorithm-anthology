@@ -32,9 +32,9 @@ coordinate. As with ternary search on reals, the function must be strictly unimo
   index.
 
 Time Complexity:
-- O(log(n / `eps`)) calls to `f()` for the continuous searches, where $n$ is the distance between
+- O(log(n / `eps`)) calls to `f()` per continuous-search call, where $n$ is the distance between
   `lo` and `hi`. Golden-section makes about half as many per iteration as ternary search.
-- O(log n) calls to `f()` for the discrete searches.
+- O(log n) calls to `f()` per discrete-search call.
 
 Space Complexity:
 - O(1) auxiliary for all operations.

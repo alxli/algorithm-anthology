@@ -32,7 +32,7 @@ The points passed to `angle()` must differ from its vertex `o`, vectors passed t
 must be nonzero, and coefficient pairs passed to its line overload must represent valid lines.
 
 Time Complexity:
-- O(1) for all operations.
+- O(1) per operation.
 
 Space Complexity:
 - O(1) auxiliary for all operations.

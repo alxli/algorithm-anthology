@@ -18,13 +18,13 @@ matters.
   in $[`lo`, `hi`)$ with each distinct key contributing only on its first occurrence.
 
 Time Complexity:
-- O(1) expected per call to `get(x)` and `toggle(h, x)`.
+- O(1) expected per call to `get()` and `toggle()`.
 - O(n) expected per call to `distinct_prefix_hashes(lo, hi)`, where $n$ is the distance between `lo`
   and `hi`.
 
 Space Complexity:
 - O(n) for stored key tokens, where $n$ is the number of distinct keys seen so far.
-- O(n) auxiliary for `distinct_prefix_hashes(lo, hi)`.
+- O(n) auxiliary for `distinct_prefix_hashes()`.
 
 */
 

@@ -174,13 +174,13 @@ std::vector<T> sliding_window_extrema(const std::vector<T> &a, int k, Compare co
 
 A monotone queue can be used to maintain the minimum or maximum value in an online sliding window.
 This is useful for dynamic programming recurrences where each transition may only come from one of
-the last $w$ states, such as `dp[i] = a[i] + min(dp[j])` for $j \in [i - w, i - 1]$.
+the last $w$ states, such as $dp(i) = a_i + \min_{j \in [i - w, i - 1]} dp(j)$.
 
 The queue stores candidate (`index`, `value`) pairs in monotone order. Expired indices are removed
 from the front, and dominated values are removed from the back before inserting a new candidate.
 
-- `MonotoneQueue<T, Compare>()` constructs an empty queue. Use `std::less<T>` for minimum queries
-  and `std::greater<T>` for maximum queries.
+- `MonotoneQueue<T, Compare = std::less<T>>()` constructs an empty queue for minimum queries by
+  default. Use `std::greater<T>` for maximum queries.
 - `push(index, value)` inserts candidate `value` at position `index`, removing dominated candidates
   from the back.
 - `expire(first_valid)` removes candidates with index less than `first_valid`.
@@ -197,7 +197,7 @@ Space Complexity:
 
 */
 
-template<typename T, typename Compare>
+template<typename T, typename Compare = std::less<T>>
 class MonotoneQueue {
   std::deque<std::pair<int, T>> q;
   Compare better;
@@ -261,7 +261,7 @@ int main() {
   vector<int> f{4, 2, 7, 1, 3, 6};
   int max_jump = 3;
   vector<int> dp(f.size());
-  MonotoneQueue<int, less<int>> best;
+  MonotoneQueue<int> best;
   dp[0] = f[0];
   best.push(0, dp[0]);
   for (int i = 1; i < static_cast<int>(f.size()); i++) {

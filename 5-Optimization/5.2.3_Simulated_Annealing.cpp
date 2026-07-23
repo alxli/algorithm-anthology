@@ -29,8 +29,8 @@ states, adapt the loop to mutate and revert moves in place and update the energy
 terms instead.
 
 Time Complexity:
-- O(k(C_E + C_N)), where $k$ is the number of temperature levels and $C_E$ and $C_N$ are the costs
-  of evaluating the energy and generating a neighboring state.
+- O(k(C_E + C_N)) per call, where $k$ is the number of temperature levels and $C_E$ and $C_N$ are
+  the costs of evaluating the energy and generating a neighboring state.
 
 Space Complexity:
 - O(S) for the current, next, and best states, where $S$ is the size of one state.

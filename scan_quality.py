@@ -359,6 +359,61 @@ def scan_docstrings(paths):
     return issues
 
 
+def scan_time_complexity_scope(paths):
+    issues = []
+    aggregate_scope_re = re.compile(
+        r"\b(?:in total|for construction|to process|to check|for the augmenting paths|"
+        r"calls to maximum flow|for any|constructor time|total table growth|"
+        r"for sparse elimination|on first use)\b"
+    )
+    for path in paths:
+        lines = path.read_text().splitlines()
+        in_time = False
+        bullet = ""
+        bullet_line = 0
+
+        def check_bullet():
+            if (
+                bullet.startswith("- O(")
+                and " per " not in bullet
+                and not aggregate_scope_re.search(bullet)
+            ):
+                issues.append(
+                    Issue(
+                        path,
+                        bullet_line,
+                        "complexity-scope",
+                        "State the unit of work, usually with `per call` or `per operation`.",
+                        lines[bullet_line - 1],
+                    )
+                )
+
+        for line_no, line in enumerate(lines, start=1):
+            stripped = line.strip()
+            if stripped == "Time Complexity:":
+                in_time = True
+                bullet = ""
+                continue
+            if not in_time:
+                continue
+            if stripped == "Space Complexity:" or stripped == "*/":
+                if bullet:
+                    check_bullet()
+                in_time = False
+                bullet = ""
+            elif stripped.startswith("- "):
+                if bullet:
+                    check_bullet()
+                bullet = stripped
+                bullet_line = line_no
+            elif bullet and line.startswith("  "):
+                bullet += " " + stripped
+            elif not stripped and bullet:
+                check_bullet()
+                bullet = ""
+    return issues
+
+
 def scan_example_markers(paths):
     issues = []
     marker_re = re.compile(r"/\*\*\* Example Usage.*?\*\*\*/", re.DOTALL)
@@ -997,7 +1052,11 @@ def code_interval_bounds_are_indices(line, context):
     if not interval:
         return False
     vars_ = re.findall(r"`([a-z])`", interval.group(0))
-    return bool(vars_) and all(re.search(r"`[^`]*\[" + var + r"\][^`]*`", context) for var in vars_)
+    array_indices = bool(vars_) and all(
+        re.search(r"`[^`]*\[" + var + r"\][^`]*`", context) for var in vars_
+    )
+    partition_invariant = "maintains, in order" in context and "unclassified" in context
+    return array_indices or partition_invariant
 
 
 def api_param_bound_is_math_dominant(var, context):
@@ -1185,6 +1244,7 @@ def main():
     paths = list(cpp_files())
     issues = []
     issues.extend(scan_docstrings(paths))
+    issues.extend(scan_time_complexity_scope(paths))
     issues.extend(scan_atomic_inline_wrapping(paths))
     issues.extend(scan_example_markers(paths))
     issues.extend(scan_code_consistency(paths))

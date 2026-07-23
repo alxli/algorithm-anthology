@@ -20,7 +20,7 @@ Li Chao tree has a simpler invariant and is easier to extend to lines active onl
 Overflow warning: each comparison and query evaluates `m * x + b`, which must fit in `int64_t`.
 
 Time Complexity:
-- O(log d) per call to `add_line(m, b)` and `query(x)`, where $d$ is the distance between `lo` and
+- O(log d) per call to `add_line()` and `query()`, where $d$ is the distance between `lo` and
   `hi`.
 
 Space Complexity:

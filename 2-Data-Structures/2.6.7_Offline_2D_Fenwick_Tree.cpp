@@ -75,8 +75,6 @@ class OfflineFenwick2D {
   }
 
  public:
-  OfflineFenwick2D() = default;
-
   void reserve(int r, int c) {
     assert(!built);
     pending.emplace_back(r, c);

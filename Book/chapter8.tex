@@ -712,15 +712,14 @@ int main() {
   assert(timer.elapsed() >= 0.0);
 
   volatile long long sink = 0;
-  auto res = benchmark("sum", 5, [&] {
+  auto [name, avg_time] = benchmark("sum", 5, [&] {
     long long cur = 0;
     for (int x : v) {
       cur += x;
     }
     sink += cur;
   });
-  assert(res.first == "sum");
-  assert(res.second >= 0.0);
+  assert(name == "sum" && avg_time >= 0.0);
   assert(sink > 0);
   return 0;
 }

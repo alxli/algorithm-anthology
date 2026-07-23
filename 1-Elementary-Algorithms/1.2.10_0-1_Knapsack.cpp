@@ -15,7 +15,7 @@ during the current item update.
   stored to reconstruct the optimal subset.
 
 Time Complexity:
-- O(n*W) per call, where $n$ is the number of items and $W$ is `capacity`.
+- O(n*W) per call, where $n$ is the number of items and $W$ is the capacity.
 
 Space Complexity:
 - O(n*W) auxiliary.

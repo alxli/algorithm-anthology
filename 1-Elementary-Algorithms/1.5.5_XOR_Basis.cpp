@@ -12,7 +12,7 @@ highest set bit is bit $i$, and no two basis elements share the same highest bit
 means XORing it against the basis elements from the highest bit down, eliminating each set bit that
 a basis element covers.
 
-- `XorBasis()` constructs an empty basis over `mask_t`, which is `uint64_t` by default.
+- `XorBasis()` constructs an empty basis over `Mask`, which is `uint64_t` by default.
 - `insert(x)` adds `x` to the basis, returning `true` if `x` was linearly independent of the current
   basis (increasing its size), or `false` if `x` was already representable as a subset XOR.
 - `contains(x)` returns whether `x` is representable as the XOR of some subset of the inserted
@@ -35,17 +35,15 @@ Space Complexity:
 #include <climits>
 #include <cstdint>
 
-using mask_t = uint64_t;
-const int MASK_BITS = sizeof(mask_t) * CHAR_BIT;
+using Mask = uint64_t;
+const int MASK_BITS = sizeof(Mask) * CHAR_BIT;
 
 class XorBasis {
-  std::array<mask_t, MASK_BITS> basis{};  // basis[i] != 0 has its highest set bit at bit i.
+  std::array<Mask, MASK_BITS> basis{};  // basis[i] != 0 has its highest set bit at bit i.
   int sz = 0;
 
  public:
-  XorBasis() = default;
-
-  bool insert(mask_t x) {
+  bool insert(Mask x) {
     for (int i = MASK_BITS - 1; i >= 0; i--) {
       if (!((x >> i) & 1)) {
         continue;
@@ -60,7 +58,7 @@ class XorBasis {
     return false;
   }
 
-  bool contains(mask_t x) const {
+  bool contains(Mask x) const {
     for (int i = MASK_BITS - 1; i >= 0; i--) {
       if (((x >> i) & 1) && basis[i] != 0) {
         x ^= basis[i];
@@ -69,7 +67,7 @@ class XorBasis {
     return x == 0;
   }
 
-  mask_t max_xor(mask_t base = 0) const {
+  Mask max_xor(Mask base = 0) const {
     for (int i = MASK_BITS - 1; i >= 0; i--) {
       if ((base ^ basis[i]) > base) {
         base ^= basis[i];

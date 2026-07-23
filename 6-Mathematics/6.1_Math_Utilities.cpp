@@ -5,14 +5,14 @@ implementations below are for educational purposes only and may not be as heavil
 standard library counterparts.
 
 Time Complexity:
-- O(1) for most operations.
+- O(1) per call to most operations.
 - O(1) per call to `mulmod()` with `__uint128_t`, or O(log n) with the portable fallback, where $n$
   is the second argument.
 - O(log n) calls to `mulmod()` per call to `powmod(x, n, m)`.
-- O(d*e) for `convert_base(d, a, b)`, where $d$ is the number of input digits and $e$ is the number
-  of output digits.
-- O(log_b(x + 1) + 1) for `to_base(x, b)`.
-- O(x / 1000 + 1) for `to_roman(x)`, due to the repeated `M` prefix.
+- O(d*e) per call to `convert_base(d, a, b)`, where $d$ is the number of input digits and $e$ is the
+  number of output digits.
+- O(log_b(x + 1) + 1) per call to `to_base()`.
+- O(x / 1000 + 1) per call to `to_roman()` due to the repeated `M` prefix.
 
 Space Complexity:
 - O(1) auxiliary for most operations.

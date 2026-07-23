@@ -22,8 +22,9 @@ tableau row or column currently represents, making solution recovery independent
   `x[j]` is the value of the $j$-th variable.
 
 Time Complexity:
-- O(pmn), where $p$ is the total number of pivots across both phases. Each pivot takes O(mn), and
-  $p$ can be exponential in the worst case, although it is usually much smaller in practice.
+- O(pmn) per call, where $p$ is the total number of pivots across both phases. Each pivot takes
+  O(mn), and $p$ can be exponential in the worst case, although it is usually much smaller in
+  practice.
 
 Space Complexity:
 - O(m*n) auxiliary.

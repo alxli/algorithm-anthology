@@ -1,11 +1,10 @@
 /*
 
 Given an array of numbers, determine the maximum possible sum of any contiguous subarray. Kadane's
-algorithm scans the array while maintaining the maximum nonnegative sum of a subarray ending at the
-current position. A negative running sum is discarded because it can only reduce the sum of every
-subarray that extends it. Thus, by including `a[i]`, the running sum becomes `max(0, sum + a[i])`,
-and the largest running sum seen is the answer. This can be adapted to compute the maximal submatrix
-sum as well.
+algorithm scans the array while maintaining a nonnegative running sum. At each position, it adds the
+current value, records the largest sum seen, and resets the running sum to zero if it becomes
+negative. Discarding a negative sum is safe because it could only reduce every subarray extending
+it. This can be adapted to compute the maximal submatrix sum as well.
 
 Two related scans maintain slightly different states. For a circular array, the best wrapped
 subarray is the whole-array sum minus the minimum-sum subarray. For a maximum-product subarray, a
@@ -18,19 +17,19 @@ so both products must be tracked.
   convention, the empty subarray is allowed, so an input range containing only negative values
   returns sum $0$ and endpoints $[0, -1]$.
 - `max_circular_subarray_sum(lo, hi)` returns a tuple (`sum`, `begin`, `end`) containing the maximal
-  circular-subarray sum and its inclusive endpoints. If `begin <= end`, the result is an ordinary
-  range; if `begin > end`, it wraps from `begin` through the end of the input and continues through
-  `end`. The empty subarray is allowed under the same convention as `max_subarray_sum()`.
+  circular-subarray sum and its inclusive endpoints. If `begin` $\leq$ `end`, the result is an
+  ordinary range; if `begin` > `end`, it wraps from `begin` through the end of the input and
+  continues through `end`. The empty subarray is allowed under the same convention as
+  `max_subarray_sum()`.
 - `max_product_subarray(lo, hi)` returns a tuple (`product`, `begin`, `end`) containing the product
   and inclusive endpoints of a nonempty maximal-product subarray, or product $0$ and endpoints
   $[0, -1]$ for an empty input range.
 - `max_submatrix_sum(a)` returns the sum and inclusive boundaries (`sum`, `r1`, `c1`, `r2`, `c2`)
-  for the largest rectangular submatrix of a matrix `a` with $m$ rows and $n$ columns. This
-  implementation requires operators `+` and `<` on the matrix value type. By convention, the empty
-  submatrix is allowed, so a matrix containing only negative values returns sum $0$ with empty row
-  and column intervals.
+  for the largest rectangular submatrix of a matrix `a`. This implementation requires operators `+`
+  and `<` on the matrix value type. By convention, the empty submatrix is allowed, so a matrix
+  containing only negative values returns sum $0$ with empty row and column intervals.
 
-All subarray sums, subarray products, and submatrix sums must fit in the value type.
+Overflow warning: All resulting sums and products must fit in the value type.
 
 Time Complexity:
 - O(n) per call to `max_subarray_sum()`, `max_circular_subarray_sum()`, and
@@ -78,7 +77,7 @@ auto max_circular_subarray_sum(It lo, It hi) {
   if (lo == hi) {
     return std::make_tuple(max_sum, begin, end);
   }
-  int n = hi - lo, curr_begin = 0, min_begin = 0, min_end = -1;
+  int curr_begin = 0, min_begin = 0, min_end = -1;
   T total = 0, min_sum = 0, curr_sum = 0;
   for (It it = lo; it != hi; ++it) {
     total += *it;     // Overflow warning.
@@ -95,6 +94,7 @@ auto max_circular_subarray_sum(It lo, It hi) {
   T wrapped_sum = total - min_sum;
   if (max_sum < wrapped_sum) {
     max_sum = wrapped_sum;
+    int n = static_cast<int>(hi - lo);
     begin = (min_end + 1) % n;
     end = (min_begin + n - 1) % n;
   }

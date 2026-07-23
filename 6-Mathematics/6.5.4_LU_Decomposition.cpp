@@ -31,13 +31,13 @@ solutions.
 Time Complexity:
 - O(m*n*min(m, n)) per call to `lu_decompose(a)`, where $m$ and $n$ are the numbers of rows and
   columns of `a`, respectively.
-- O(m*n^2) per call to `solve_system(a, b)`, which requires $m \geq n$.
+- O(m*n^2) per call to `solve_system()`, which requires $m \geq n$.
 - O(n^3) per call to `det(a)` and `invert(a)`, where $n$ is the length of square matrix `a`.
 
 Space Complexity:
 - O(1) auxiliary for `lu_decompose()`.
-- O(n^2) for `det(a)` and `invert(a)`.
-- O(m*n) auxiliary for `solve_system(a, b)`.
+- O(n^2) auxiliary for `det()` and `invert()`.
+- O(m*n) auxiliary for `solve_system()`.
 
 */
 

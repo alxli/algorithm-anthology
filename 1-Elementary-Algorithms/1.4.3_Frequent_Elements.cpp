@@ -26,7 +26,7 @@ Time Complexity:
 - O(n) per call to `majority_element(lo, hi)`, where $n$ is the range length.
 - O(n) expected per call to `frequent_candidates(lo, hi, k)`: a full-table decrement cancels $k$
   occurrences, so all decrement sweeps take O(n) total.
-- O(n*k) in the collision-heavy worst case for `frequent_candidates()`.
+- O(n*k) per call to `frequent_candidates()` in the collision-heavy worst case.
 
 Space Complexity:
 - O(1) auxiliary for `majority_element()`.

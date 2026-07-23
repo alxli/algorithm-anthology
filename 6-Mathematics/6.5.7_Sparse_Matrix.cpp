@@ -37,12 +37,13 @@ unfriendly inputs.
 Time Complexity:
 - O(log d) per call to `get()`, `set()`, and `add()`, where $d$ is the number of nonzeros in the
   touched row or column.
-- O(1) for `transpose()` and O(n) for `multiply_vector()`, where $n$ is the number of stored nonzero
-  entries.
-- O((r_i + r_j)*log d) for `swap_rows(i, j)`, where $r_i$ and $r_j$ are the sizes of the two rows.
+- O(1) per call to `transpose()` and O(n) per call to `multiply_vector()`, where $n$ is the number
+  of stored nonzero entries.
+- O((r_i + r_j)*log d) per call to `swap_rows(i, j)`, where $r_i$ and $r_j$ are the sizes of the two
+  rows.
 - O(f * log d) for sparse elimination, where $f$ is the number of entry updates performed after
   fill-in and $d$ is a touched row or column size. In the worst case this is still cubic.
-- O(f * log d) for `det()`, `sparse_rank()`, and `solve_system()`.
+- O(f * log d) per call to `det()`, `sparse_rank()`, and `solve_system()`.
 - O(1) per call to `height()`, `width()`, `nonzeros()`, `row()`, and `column()`.
 
 Space Complexity:

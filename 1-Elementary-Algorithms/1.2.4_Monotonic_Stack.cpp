@@ -8,11 +8,11 @@ largest rectangle in a histogram. Each index is pushed and popped at most once, 
 in linear time. A largest all-zero submatrix can then be found by sweeping rows, turning each row
 into a histogram of consecutive zeros ending at that row.
 
-For a histogram bar `i`, the nearest strictly lower bars on its left and right are exactly the first
-positions that prevent a rectangle of height `heights[i]` from extending farther. Its widest such
-rectangle therefore spans the positions between those boundaries. For a binary matrix, the height at
-each column counts consecutive zeros ending in the current row; every all-zero rectangle has some
-bottom row, so solving one histogram per row considers every possible rectangle.
+For any histogram bar, the nearest strictly lower bars to its left and right are the first positions
+that prevent a rectangle at the current bar's height from extending farther. The widest such
+rectangle therefore spans the positions strictly between those boundaries. For a binary matrix, the
+height at each column counts consecutive zeros ending in the current row; every all-zero rectangle
+has some bottom row, so solving one histogram per row considers every possible rectangle.
 
 All functions below take a vector `a` of $n$ comparable values and return a vector of $n$ indices. A
 "less" query uses a strictly smaller neighbor and a "greater" query uses a strictly larger one;
@@ -26,8 +26,8 @@ changing the comparison from strict to non-strict (e.g. `>=` to `>`) toggles how
   if there's no such index.
 - `next_greater(a)` returns, for each $i$, the smallest index $j > i$ with $a[j] > a[i]$, or $n$ if
   there's no such index.
-- `largest_rectangle(heights)` returns the maximum area of an axis-aligned rectangle that fits under
-  the given histogram, given an array of `heights` where each bar has width $1$.
+- `largest_histogram_rectangle(heights)` returns the maximum area of an axis-aligned rectangle that
+  fits under the given histogram, given an array of `heights` where each bar has width $1$.
 - `largest_zero_submatrix(a)` returns the area of the largest all-zero rectangular submatrix of the
   0/1 matrix `a`.
 
@@ -39,7 +39,7 @@ Time Complexity:
 
 Space Complexity:
 - O(n) auxiliary and O(n) for the returned indices from each neighbor query.
-- O(n) auxiliary for `largest_rectangle()`.
+- O(n) auxiliary for `largest_histogram_rectangle()`.
 - O(c) auxiliary for `largest_zero_submatrix()`.
 
 */
@@ -110,7 +110,7 @@ std::vector<int> next_greater(const std::vector<T> &a) {
 }
 
 template<typename T>
-T largest_rectangle(const std::vector<T> &heights) {
+T largest_histogram_rectangle(const std::vector<T> &heights) {
   int n = static_cast<int>(heights.size());
   std::vector<int> left = previous_less(heights), right = next_less(heights);
   T best = 0;
@@ -134,7 +134,7 @@ int largest_zero_submatrix(const std::vector<std::vector<char>> &a) {
     for (int j = 0; j < cols; j++) {
       height[j] = a[i][j] ? 0 : height[j] + 1;
     }
-    best = std::max(best, largest_rectangle(height));
+    best = std::max(best, largest_histogram_rectangle(height));
   }
   return best;
 }
@@ -152,7 +152,7 @@ int main() {
 
   vector<int> hist{2, 1, 5, 6, 2, 3};
   // The best histogram rectangle uses bars 2 and 3: min height 5 times width 2.
-  assert(largest_rectangle(hist) == 10);
+  assert(largest_histogram_rectangle(hist) == 10);
 
   vector<vector<char>> grid{
       {1, 0, 1, 1, 0, 0},

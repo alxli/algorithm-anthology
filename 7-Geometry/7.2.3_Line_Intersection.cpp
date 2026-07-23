@@ -33,7 +33,7 @@ these overflow once coordinates exceed roughly a few tens of thousands, so for l
 use a point type with 64-bit (`int64_t`) coordinates.
 
 Time Complexity:
-- O(1) for all operations.
+- O(1) per operation.
 
 Space Complexity:
 - O(1) auxiliary for all operations.

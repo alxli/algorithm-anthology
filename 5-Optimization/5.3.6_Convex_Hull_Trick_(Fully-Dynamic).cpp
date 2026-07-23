@@ -50,9 +50,9 @@ class HullOptimizer {
   std::multiset<Line> hull;
   bool query_max;
 
-  using hulliter = std::multiset<Line>::iterator;
+  using HullIter = std::multiset<Line>::iterator;
 
-  bool update_border(hulliter x, hulliter y) {
+  bool update_border(HullIter x, HullIter y) {
     if (y == hull.end()) {
       x->xhi = INT64_MAX;
       return false;

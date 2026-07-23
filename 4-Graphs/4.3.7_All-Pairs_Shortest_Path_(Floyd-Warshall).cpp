@@ -28,7 +28,7 @@ Time Complexity:
 
 Space Complexity:
 - O(n^2) for storage of the graph, where $n$ is the number of nodes.
-- O(1) auxiliary per call to `floyd_warshall()`.
+- O(1) auxiliary.
 - O(p) for the path returned by `get_path()`.
 
 */

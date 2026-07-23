@@ -48,11 +48,11 @@ Time Complexity:
   `USE_FFT_MULT` is set to true or false.
 - O(n*m) per call to division and modulo operations, where $n$ and $m$ are the number of digits in
   the dividend and divisor, respectively.
-- O(M(d) log n) per call to `pow(n)`, where $d$ is the maximum digit length reached during
+- O(M(d) log n) per call to `pow()`, where $d$ is the maximum digit length reached during
   exponentiation and $M(d)$ denotes the cost of one multiplication of two $d$-digit big integers
   using the selected multiplication method above.
 - O(d^2) per call to `sqrt()`, where $d$ is the number of digits.
-- O((d/k)*M(d)*log k) per call to `nth_root(k)`, from binary search over a $d/k$-digit answer.
+- O((d/k)*M(d)*log k) per call to `nth_root()`, from binary search over a $d/k$-digit answer.
 
 Space Complexity:
 - O(n) for storage of the big integer.

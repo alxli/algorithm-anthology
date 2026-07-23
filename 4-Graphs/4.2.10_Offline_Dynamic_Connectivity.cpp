@@ -27,9 +27,9 @@ rather than near-constant time.
   `count_components()` query in the order issued, the number of connected components at that time.
 
 Time Complexity:
-- O((T + m log T) log n) for `solve()`, where $T$ is the total number of operations (`add_edge`,
-  `remove_edge`, and `count_components` combined), $m$ is the number of `add_edge` operations, and
-  $n$ is the number of nodes.
+- O((T + m log T) log n) per call to `solve()`, where $T$ is the total number of operations
+  (`add_edge`, `remove_edge`, and `count_components` combined), $m$ is the number of `add_edge`
+  operations, and $n$ is the number of nodes.
 - O(1) amortized per call to `add_edge()`, `remove_edge()`, and `count_components()`.
 
 Space Complexity:

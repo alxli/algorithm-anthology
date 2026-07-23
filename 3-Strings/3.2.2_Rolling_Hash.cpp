@@ -33,8 +33,8 @@ a custom value hasher that maps each element to a stable nonzero value in [`1`, 
   `left` and a sequence with hash `right` and length `right_len`.
 
 Time Complexity:
-- O(n) per constructor call and whole-sequence hash, where $n$ is the sequence length.
-- O(1) per call to `get(lo, hi)` and `concat(left, right, right_len)`.
+- O(n) per call to the constructor or `hash()`, where $n$ is the sequence length.
+- O(1) per call to `get()` and `concat()`.
 
 Space Complexity:
 - O(n) for storage of prefix hashes and powers, where $n$ is the maximum sequence length processed

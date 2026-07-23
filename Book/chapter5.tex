@@ -15,8 +15,8 @@ Binary search can be generally used to find the input value corresponding to any
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(\log n)$ calls will be made to \inlinecode{pred()} in \inlinecode{binary\_search\_first\_true()} and \inlinecode{binary\_search\_last\_true()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
-  \item $O(n)$ calls will be made to \inlinecode{pred()} in \inlinecode{fbinary\_search()}, where $n$ is the number of iterations performed.
+  \item $O(\log n)$ calls to \inlinecode{pred()} per call to \inlinecode{binary\_search\_first\_true()} and \inlinecode{binary\_search\_last\_true()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+  \item $O(n)$ calls to \inlinecode{pred()} per call to \inlinecode{fbinary\_search()}, where $n$ is the number of iterations.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
@@ -93,7 +93,7 @@ This is useful for answer-search problems over unbounded or very large integer d
   \item \inlinecode{exponential\_search\_first\_true(lo, pred)} returns the smallest integer \inlinecode{x} greater than or equal to \inlinecode{lo} such that \inlinecode{pred(x)} is true.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(\log n)$ calls to \inlinecode{pred()}, where $n$ is the distance from \inlinecode{lo} to the first true value.
+\textbf{Time Complexity}: $O(\log n)$ calls to \inlinecode{pred()} per call, where $n$ is the distance from \inlinecode{lo} to the first true value.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
@@ -146,7 +146,7 @@ Compare the middle element with its right neighbor. If the sequence slopes downw
   \item \inlinecode{local\_min\_index(a)} returns the index of a non-strict local minimum in the nonempty array \inlinecode{a}. Either endpoint may be returned when it is no greater than its sole neighbor.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(\log n)$ comparisons, where $n$ is the size of \inlinecode{a}.
+\textbf{Time Complexity}: $O(\log n)$ comparisons per call, where $n$ is the size of \inlinecode{a}.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
@@ -204,8 +204,8 @@ The discrete version operates on an integer domain, narrowing by thirds until at
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(\log\left(n / {\inlinecodemath{eps}}\right))$ calls to \inlinecode{f()} for the continuous searches, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}. Golden-section makes about half as many per iteration as ternary search.
-  \item $O(\log n)$ calls to \inlinecode{f()} for the discrete searches.
+  \item $O(\log\left(n / {\inlinecodemath{eps}}\right))$ calls to \inlinecode{f()} per continuous-search call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}. Golden-section makes about half as many per iteration as ternary search.
+  \item $O(\log n)$ calls to \inlinecode{f()} per discrete-search call.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
@@ -326,7 +326,7 @@ The heuristic starts at the guess and evaluates one step in each of eight evenly
   \item \inlinecode{hill\_climb\_min(f, x0, y0, \&best\_x, \&best\_y, step\_min = 1e-9, step\_max = 1e6)} returns an approximate minimum value of function \inlinecode{f} reached by hill climbing an initial guess (\inlinecode{x0}, \inlinecode{y0}). If either optional pointer \inlinecode{best\_x} or \inlinecode{best\_y} is supplied, the corresponding coordinate of the point attaining the returned value is stored through it. The search starts with step size \inlinecode{step\_max} and stops below \inlinecode{step\_min}.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(k + s)$ calls to \inlinecode{f()}, where $k$ is the number of times the step size is reduced and $s$ is the total number of improving moves accepted.
+\textbf{Time Complexity}: $O(k + s)$ calls to \inlinecode{f()} per call, where $k$ is the number of times the step size is reduced and $s$ is the total number of improving moves accepted.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
@@ -405,7 +405,7 @@ The geometric schedule repeatedly multiplies the temperature by \inlinecode{cool
 
 This generic interface copies each proposed state and recomputes its energy. For large permutation states, adapt the loop to mutate and revert moves in place and update the energy from the affected terms instead.
 
-\textbf{Time Complexity}: $O(k(C_E + C_N))$, where $k$ is the number of temperature levels and $C_E$ and $C_N$ are the costs of evaluating the energy and generating a neighboring state.
+\textbf{Time Complexity}: $O(k(C_E + C_N))$ per call, where $k$ is the number of temperature levels and $C_E$ and $C_N$ are the costs of evaluating the energy and generating a neighboring state.
 
 \textbf{Space Complexity}: $O(S)$ for the current, next, and best states, where $S$ is the size of one state.
 
@@ -503,7 +503,7 @@ To compute \inlinecode{dp\_cur[lo..hi]}, evaluate its midpoint and record its be
   \item \inlinecode{compute\_dp\_layer(dp\_prev, dp\_cur, lo, hi, opt\_lo, opt\_hi, cost)} fills \inlinecode{dp\_cur[lo..hi]} using candidate transition indices in [\inlinecode{opt\_lo}, \inlinecode{opt\_hi}]. The template parameter \inlinecode{cost} must be callable such that \inlinecode{cost(k, i)} returns the transition cost from previous state \inlinecode{k} to current state \inlinecode{i}.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n \log n)$ calls to \inlinecode{cost(k, i)} per layer when each state has $O(n)$ possible transitions.
+\textbf{Time Complexity}: $O(n \log n)$ calls to \inlinecode{cost()} per call, when computing one layer whose states each have $O(n)$ possible transitions.
 
 \textbf{Space Complexity}: $O(\log n)$ auxiliary stack space.
 
@@ -712,7 +712,7 @@ A direct implementation checks every split and takes $O(n^{3})$. Knuth optimizat
   \item \inlinecode{knuth\_interval\_dp(n, cost, \&opt)} computes minimum costs for all half-open intervals $[{\inlinecodemath{l}}, {\inlinecodemath{r}})$ over \inlinecode{n} items. The template parameter \inlinecode{cost} must be callable such that \inlinecode{cost(l, r)} returns the interval cost added after choosing the best split. If the optional pointer \inlinecode{opt} is supplied, it is filled with the chosen split points.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n^{2})$ calls to \inlinecode{cost(l, r)} and $O(n^{2})$ candidate split checks.
+\textbf{Time Complexity}: $O(n^{2})$ calls to \inlinecode{cost()} and $O(n^{2})$ candidate split checks per call.
 
 \textbf{Space Complexity}: $O(n^{2})$ for the \inlinecode{dp} and \inlinecode{opt} tables.
 
@@ -983,9 +983,9 @@ class HullOptimizer {
   std::multiset<Line> hull;
   bool query_max;
 
-  using hulliter = std::multiset<Line>::iterator;
+  using HullIter = std::multiset<Line>::iterator;
 
-  bool update_border(hulliter x, hulliter y) {
+  bool update_border(HullIter x, HullIter y) {
     if (y == hull.end()) {
       x->xhi = INT64_MAX;
       return false;
@@ -1070,7 +1070,7 @@ A Li Chao tree fixes an inclusive coordinate domain $[{\inlinecodemath{lo}}, {\i
 
 Overflow warning: each comparison and query evaluates \inlinecode{m * x + b}, which must fit in \inlinecode{int64\_t}.
 
-\textbf{Time Complexity}: $O(\log d)$ per call to \inlinecode{add\_line(m, b)} and \inlinecode{query(x)}, where $d$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\textbf{Time Complexity}: $O(\log d)$ per call to \inlinecode{add\_line()} and \inlinecode{query()}, where $d$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -1194,7 +1194,7 @@ Finds an $x$ in an interval $[a, b]$ for a continuous function $f$ such that $f(
   \item \inlinecode{falsi\_illinois\_root(f, a, b, iterations = 100)} returns a root in an interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a continuous function $f$ under the same endpoint conditions, using the Illinois algorithm variant of the false position (a.k.a. regula falsi) method.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n)$ calls will be made to \inlinecode{f()} in \inlinecode{bisection\_root()} and \inlinecode{falsi\_illinois\_root()}, where $n$ is the number of iterations performed.
+\textbf{Time Complexity}: $O(n)$ calls to \inlinecode{f()} per call to \inlinecode{bisection\_root()} and \inlinecode{falsi\_illinois\_root()}, where $n$ is the number of iterations.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for both operations.
 
@@ -1290,7 +1290,7 @@ Finds an $x$ for a continuous function $f$ such that $f(x) = 0$ using iterative 
   \item \inlinecode{secant\_root(f, x0, x1, eps = 1e-15, iterations = 100)} returns a root $x$ for a function \inlinecode{f} using two initial guesses \inlinecode{x0} and \inlinecode{x1} which should be relatively close to $x$.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n)$ calls will be made to \inlinecode{f()} in \inlinecode{newton\_root()} and \inlinecode{secant\_root()}, where $n$ is the number of iterations performed.
+\textbf{Time Complexity}: $O(n)$ calls to \inlinecode{f()} per call to \inlinecode{newton\_root()} and \inlinecode{secant\_root()}, where $n$ is the number of iterations.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for both operations.
 
@@ -1625,15 +1625,15 @@ This routine is intended for well-scaled polynomials when all complex roots are 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to \inlinecode{eval\_with\_derivative(p, x)}, where $n$ is the degree of the polynomial.
-  \item $O(n^{2} t)$ per call to \inlinecode{find\_all\_roots(p, eps, iterations)}, where $n$ is the degree of the polynomial and $t$ is the number of iterations required to reach the desired precision.
+  \item $O(n)$ per call to \inlinecode{eval\_with\_derivative()}, where $n$ is the degree of the polynomial.
+  \item $O(n^{2} t)$ per call to \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial and $t$ is the number of iterations required to reach the desired precision.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(1)$ auxiliary for \inlinecode{eval\_with\_derivative(p, x)}.
-  \item $O(n)$ auxiliary for \inlinecode{find\_all\_roots(p, eps, iterations)}, where $n$ is the degree of the polynomial.
+  \item $O(1)$ auxiliary for \inlinecode{eval\_with\_derivative()}.
+  \item $O(n)$ auxiliary for \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1895,7 +1895,7 @@ The implementation uses a two-phase simplex tableau. Phase 1 introduces an artif
   \item \inlinecode{simplex\_solve(a, b, c, \&x, maximize = true, eps = 1e-10)} solves the linear programming problem for an $m$ by $n$ matrix \inlinecode{a} of real values, a length $m$ vector \inlinecode{b}, and a length $n$ vector \inlinecode{c}, returning $0$ if an optimum was found, $-1$ if there are no feasible solutions, or $1$ if the objective is unbounded. Set \inlinecode{maximize = false} to minimize instead, and use \inlinecode{eps} as the pivot and feasibility tolerance. If an optimum is found, \inlinecode{x} is assigned a vector of length \inlinecode{n}, where \inlinecode{x[j]} is the value of the $j$-th variable.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(pmn)$, where $p$ is the total number of pivots across both phases. Each pivot takes $O(mn)$, and $p$ can be exponential in the worst case, although it is usually much smaller in practice.
+\textbf{Time Complexity}: $O(pmn)$ per call, where $p$ is the total number of pivots across both phases. Each pivot takes $O(mn)$, and $p$ can be exponential in the worst case, although it is usually much smaller in practice.
 
 \textbf{Space Complexity}: $O(m \cdot n)$ auxiliary.
 

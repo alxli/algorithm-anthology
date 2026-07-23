@@ -36,10 +36,9 @@ search spaces such as real number intervals.
   point by simply interchanging the assignments of `lo` and `hi` in the if-else statements.
 
 Time Complexity:
-- O(log n) calls will be made to `pred()` in `binary_search_first_true()` and
+- O(log n) calls to `pred()` per call to `binary_search_first_true()` and
   `binary_search_last_true()`, where $n$ is the distance between `lo` and `hi`.
-- O(n) calls will be made to `pred()` in `fbinary_search()`, where $n$ is the number of iterations
-  performed.
+- O(n) calls to `pred()` per call to `fbinary_search()`, where $n$ is the number of iterations.
 
 Space Complexity:
 - O(1) auxiliary for all operations.

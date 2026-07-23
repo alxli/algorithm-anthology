@@ -24,8 +24,8 @@ The input must therefore not contain the character `'\1'`.
   the empty string if every character is distinct.
 
 Time Complexity:
-- O(n) to construct the tree for a string of length $n$ (using a per-node ordered map, O(n log s)
-  where $s$ is the alphabet size).
+- O(n) per call to the constructor for a string of length $n$ (using a per-node ordered map,
+  O(n log s) where $s$ is the alphabet size).
 - O(m log s) per call to `contains(t)`, where $m$ is the length of `t`.
 - O(n) per call to `count_distinct_substrings()` and `longest_repeated_substring()`.
 

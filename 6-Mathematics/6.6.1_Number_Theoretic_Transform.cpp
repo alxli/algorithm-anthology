@@ -22,7 +22,7 @@ and all arithmetic taken modulo the prime.
 
 Time Complexity:
 - O(n log n) per call to `ntt()`, where $n$ is the length of the vector.
-- O(|a||b|) for the small-input branch of `convolve()`, otherwise O(n log n), where $n$ is the
+- O(|a||b|) per call to `convolve()` on small inputs and O(n log n) otherwise, where $n$ is the
   padded transform length.
 
 Space Complexity:

@@ -25,7 +25,7 @@ Time Complexity:
 
 Space Complexity:
 - O(L + z) for storage of the automaton and inherited output entries.
-- O(1) auxiliary for `find_all_in(haystack, report_match)`.
+- O(1) auxiliary for `find_all_in()`.
 
 */
 

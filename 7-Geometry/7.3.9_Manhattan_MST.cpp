@@ -12,7 +12,7 @@ Overflow warning: the sweeps form coordinate sums, negations, and differences su
 `dx + dy`. With `int64_t` coordinates, those intermediate values must fit in `int64_t`.
 
 Time Complexity:
-- O(n log n), where $n$ is the number of points.
+- O(n log n) per call, where $n$ is the number of points.
 
 Space Complexity:
 - O(n) auxiliary.

@@ -25,12 +25,11 @@ For cycle detection, see the variant on iterated functions in chapter 1, which c
 for linked lists.
 
 Time Complexity:
-- O(n) per call to `reverse_list(head)` and `split_half(head, &second)`.
-- O(n + m) per call to `merge_sorted_lists(a, b)`.
-- O(1) per call to `splice_after(pos, before)`.
-- O(k) per call to `splice_range_after(pos, before_first, last)`, where $k$ is the number of moved
-  nodes. The actual pointer splicing is O(1), but this compact version walks to the end of the moved
-  range.
+- O(n) per call to `reverse_list()` and `split_half()`.
+- O(n + m) per call to `merge_sorted_lists()`.
+- O(1) per call to `splice_after()`.
+- O(k) per call to `splice_range_after()`, where $k$ is the number of moved nodes. The actual
+  pointer splicing is O(1), but this compact version walks to the end of the moved range.
 
 Space Complexity:
 - O(1) auxiliary for all operations.

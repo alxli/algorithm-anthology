@@ -31,9 +31,8 @@ orbit until it returns to its start.
 
 Time Complexity:
 - O(n^2) per call to `next_permutation_(lo, hi)`, where $n$ is the distance between `lo` and `hi`.
-- O(n^2) per call to `next_permutation(a)`, `permutation_by_rank(n, r)`, and
-  `rank_by_permutation(a)`.
-- O(1) per call to `next_permutation_mask(x)`.
+- O(n^2) per call to `next_permutation()`, `permutation_by_rank()`, and `rank_by_permutation()`.
+- O(1) per call to `next_permutation_mask()`.
 - O(n) per call to `permutation_cycles()`.
 
 Space Complexity:
@@ -138,12 +137,12 @@ int64_t rank_by_permutation(const std::vector<int> &a) {
   return res;
 }
 
-using cycles = std::vector<std::vector<int>>;
+using Cycles = std::vector<std::vector<int>>;
 
-cycles permutation_cycles(const std::vector<int> &a) {
+Cycles permutation_cycles(const std::vector<int> &a) {
   int n = static_cast<int>(a.size());
   std::vector<char> visit(n);
-  cycles res;
+  Cycles res;
   for (int i = 0; i < n; i++) {
     if (!visit[i]) {
       int j = i;
@@ -228,7 +227,7 @@ int main() {
   {  // Decomposition into cycles.
     vector<int> a{3, 1, 0, 2};
     cout << "\nDecomposition of {3,1,0,2} into cycles:" << endl;
-    cycles c = permutation_cycles(a);
+    Cycles c = permutation_cycles(a);
     assert(c.size() == 2);
     assert((c[0] == vector<int>{0, 3, 2}));
     assert((c[1] == vector<int>{1}));

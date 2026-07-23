@@ -19,8 +19,8 @@ for a win for the player to move at the root and $-1$ for a loss.
   positive `stones`.
 
 Time Complexity:
-- O(b^d) in the worst case, where $b$ is branching factor and $d$ is search depth. Alpha-beta can
-  achieve O(b^{d/2}) with optimal move ordering.
+- O(b^d) per call in the worst case, where $b$ is branching factor and $d$ is search depth.
+  Alpha-beta can achieve O(b^{d/2}) with optimal move ordering.
 
 Space Complexity:
 - O(d) auxiliary recursion stack space.

@@ -14,8 +14,8 @@ precision, with the secant method converging approximately $1.6$ times slower th
   using two initial guesses `x0` and `x1` which should be relatively close to $x$.
 
 Time Complexity:
-- O(n) calls will be made to `f()` in `newton_root()` and `secant_root()`, where $n$ is the number
-  of iterations performed.
+- O(n) calls to `f()` per call to `newton_root()` and `secant_root()`, where $n$ is the number of
+  iterations.
 
 Space Complexity:
 - O(1) auxiliary for both operations.

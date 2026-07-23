@@ -3,9 +3,11 @@
 Partition a range around a pivot, or select the element with a given sorted rank without fully
 sorting the range. Three-way partitioning, also known as the Dutch National Flag algorithm,
 rearranges the elements into consecutive groups less than, equal to, and greater than the pivot. A
-single pass maintains these three groups plus an unclassified region. When an element greater than
-the pivot is swapped with the end of the unclassified region, the incoming element must still be
-examined before the scan advances.
+single pass maintains, in order, $[`lo`, `lt`)$ less than the pivot, $[`lt`, `mid`)$ equal to it,
+$[`mid`, `gt`)$ unclassified, and $[`gt`, `hi`)$ greater than it. A less-than element is swapped
+with `*lt` and advances both `lt` and `mid`; an equal element advances only `mid`; and a
+greater-than element is swapped with `*--gt` without advancing `mid`, since the incoming element is
+still unclassified.
 
 Quickselect repeatedly applies this partition and continues only into the group containing the
 desired rank. This is the same task as `std::nth_element()`: after the call, `*nth` is the value
@@ -34,14 +36,14 @@ Space Complexity:
 
 template<typename It, typename T>
 std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot) {
-  It lt = lo, i = lo, gt = hi;
-  while (i != gt) {
-    if (*i < pivot) {
-      std::iter_swap(lt++, i++);
-    } else if (pivot < *i) {
-      std::iter_swap(i, --gt);
+  It lt = lo, mid = lo, gt = hi;
+  while (mid != gt) {
+    if (*mid < pivot) {
+      std::iter_swap(lt++, mid++);
+    } else if (pivot < *mid) {
+      std::iter_swap(mid, --gt);
     } else {
-      ++i;
+      ++mid;
     }
   }
   return {lt, gt};

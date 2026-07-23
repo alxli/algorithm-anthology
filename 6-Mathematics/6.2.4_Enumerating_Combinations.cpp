@@ -39,7 +39,7 @@ Time Complexity:
 - O(n) per call to `next_combination(lo, mid, hi)`, where $n$ is the distance between `lo` and `hi`.
 - O(k) per call to `next_combination(n, a)` and `next_combination_with_repeats(n, a)`, where $k$ is
   the size of `a`.
-- O(1) per call to `next_combination_mask(x)`.
+- O(1) per call to `next_combination_mask()`.
 - O(n*k) per call to `combination_by_rank()` and `rank_by_combination()`.
 
 Space Complexity:

@@ -26,15 +26,14 @@ positive. Coin denominations must also be distinct when counting ways; duplicate
 treated as different coin types and overcount identical multisets.
 
 Time Complexity:
-- O(n*W) for `unbounded_knapsack()`, where $n$ is the number of items and $W$ is `capacity`.
-- O(c*t) for `count_coin_change(coins, target)`, where $c$ is the number of coin denominations and
-  $t$ is `target`.
-- O(c*t) for `min_coin_change(coins, target)`.
+- O(n*W) per call to `unbounded_knapsack()`, where $n$ is the number of items and $W$ is `capacity`.
+- O(c*t) per call to `count_coin_change()` and `min_coin_change()`, where $c$ is the number of coin
+  denominations and $t$ is the target.
 
 Space Complexity:
 - O(W) auxiliary and O(n) for the returned `count` from `unbounded_knapsack()`.
-- O(t) auxiliary for `count_coin_change(coins, target)`.
-- O(t) auxiliary and O(c) for the returned `used` from `min_coin_change(coins, target)`.
+- O(t) auxiliary for `count_coin_change()`.
+- O(t) auxiliary and O(c) for the returned `used` from `min_coin_change()`.
 
 */
 

@@ -24,7 +24,7 @@ theoretic transform; use the FFT for real-valued convolution or big-integer mult
 
 Time Complexity:
 - O(n log n) per call to `fft()`, where $n$ is the length of the vector.
-- O(|a||b|) for the small-input branch of `convolve()`, otherwise O(n log n), where $n$ is the
+- O(|a||b|) per call to `convolve()` on small inputs and O(n log n) otherwise, where $n$ is the
   padded transform length.
 
 Space Complexity:

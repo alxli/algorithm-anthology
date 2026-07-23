@@ -1,13 +1,15 @@
 /*
 
-Computes the minimum excluded nonnegative (MEX) integer of a set of integers, that is, the smallest
-integer $x \geq 0$ that does not appear in the set. It appears frequently in array problems, game
-theory with Grundy numbers, and dynamic programming states. Since the MEX of $n$ values never
-exceeds $n$, the one-shot version tracks seen values in $[0, n]$ before scanning to find the first
-missing. The dynamic version stores counts for present values and an ordered set of currently
-missing candidates.
+Given a set of integers, find the minimum excluded nonnegative value (MEX), that is, the smallest
+integer $x \geq 0$ that does not appear in the set. MEX often appears in array problems, game theory
+with Grundy numbers, and dynamic programming states. Since the MEX of $n$ values never exceeds $n$,
+the one-shot version tracks seen values in $[0, n]$ before scanning to find the first missing.
 
 - `mex(lo, hi)` returns the MEX of the values in $[`lo`, `hi`)$.
+
+The MEX of a dynamic multiset can be computed using counts of present values and an ordered set of
+currently missing candidates.
+
 - `DynamicMex()` maintains the MEX of a multiset of nonnegative integers.
 - `add(x)` inserts one copy of value `x` if `x` $\geq 0$.
 - `remove(x)` removes one copy of value `x` if present.

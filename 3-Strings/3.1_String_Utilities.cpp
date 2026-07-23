@@ -9,7 +9,7 @@ Time Complexity:
   all input strings. Exceptions are noted with the individual functions below.
 
 Space Complexity:
-- O(n) auxiliary per call to operations that return a new string or vector of strings.
+- O(n) auxiliary for operations that return a new string or vector of strings.
 - O(1) auxiliary for in-place operations.
 
 */

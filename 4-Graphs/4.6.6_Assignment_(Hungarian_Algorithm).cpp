@@ -26,7 +26,7 @@ Time Complexity:
 
 Space Complexity:
 - O(n + m) auxiliary, not counting the input matrix and returned assignment.
-- O(n*m) auxiliary per call to `max_assignment()` for the transformed matrix.
+- O(n*m) auxiliary for `max_assignment()` due to the transformed matrix.
 
 */
 

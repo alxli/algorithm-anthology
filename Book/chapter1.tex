@@ -41,14 +41,14 @@ template<typename It, typename Compare = std::less<>>
 void quicksort(It lo, It hi, Compare comp = Compare()) {
   while (hi - lo >= 2) {
     auto pivot = *(lo + (hi - lo) / 2);
-    It lt = lo, i = lo, gt = hi;
-    while (i != gt) {
-      if (comp(*i, pivot)) {
-        std::iter_swap(lt++, i++);
-      } else if (comp(pivot, *i)) {
-        std::iter_swap(i, --gt);
+    It lt = lo, mid = lo, gt = hi;
+    while (mid != gt) {
+      if (comp(*mid, pivot)) {
+        std::iter_swap(lt++, mid++);
+      } else if (comp(pivot, *mid)) {
+        std::iter_swap(mid, --gt);
       } else {
-        ++i;
+        ++mid;
       }
     }
     if (lt - lo < hi - gt) {
@@ -369,7 +369,7 @@ combsort():   0.365s
 radix_sort(): 0.016s
 \end{exampleoutput}
 \subsection{Partitioning and Selection}
-Partition a range around a pivot, or select the element with a given sorted rank without fully sorting the range. Three-way partitioning, also known as the Dutch National Flag algorithm, rearranges the elements into consecutive groups less than, equal to, and greater than the pivot. A single pass maintains these three groups plus an unclassified region. When an element greater than the pivot is swapped with the end of the unclassified region, the incoming element must still be examined before the scan advances.
+Partition a range around a pivot, or select the element with a given sorted rank without fully sorting the range. Three-way partitioning, also known as the Dutch National Flag algorithm, rearranges the elements into consecutive groups less than, equal to, and greater than the pivot. A single pass maintains, in order, $[{\inlinecodemath{lo}}, {\inlinecodemath{lt}})$ less than the pivot, $[{\inlinecodemath{lt}}, {\inlinecodemath{mid}})$ equal to it, $[{\inlinecodemath{mid}}, {\inlinecodemath{gt}})$ unclassified, and $[{\inlinecodemath{gt}}, {\inlinecodemath{hi}})$ greater than it. A less-than element is swapped with \inlinecode{*lt} and advances both \inlinecode{lt} and \inlinecode{mid}; an equal element advances only \inlinecode{mid}; and a greater-than element is swapped with \inlinecode{*--gt} without advancing \inlinecode{mid}, since the incoming element is still unclassified.
 
 Quickselect repeatedly applies this partition and continues only into the group containing the desired rank. This is the same task as \inlinecode{std::nth\_element()}: after the call, \inlinecode{*nth} is the value that would appear there in sorted order, all earlier positions contain values no larger than it, and all later positions contain values no smaller than it. Choosing pivots uniformly at random gives expected linear time, while the three-way split avoids unnecessary work on duplicate-heavy inputs.
 
@@ -394,14 +394,14 @@ Quickselect repeatedly applies this partition and continues only into the group 
 
 template<typename It, typename T>
 std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot) {
-  It lt = lo, i = lo, gt = hi;
-  while (i != gt) {
-    if (*i < pivot) {
-      std::iter_swap(lt++, i++);
-    } else if (pivot < *i) {
-      std::iter_swap(i, --gt);
+  It lt = lo, mid = lo, gt = hi;
+  while (mid != gt) {
+    if (*mid < pivot) {
+      std::iter_swap(lt++, mid++);
+    } else if (pivot < *mid) {
+      std::iter_swap(mid, --gt);
     } else {
-      ++i;
+      ++mid;
     }
   }
   return {lt, gt};
@@ -470,7 +470,7 @@ These functions are equivalent to \inlinecode{std::rotate()}, taking three itera
 All three versions below achieve the same result using in-place algorithms.
 
 \begin{compactitem}
-  \item \inlinecode{rotate1(lo, mid, hi)} uses a straightforward swapping algorithm requiring ForwardIterators.
+  \item \inlinecode{rotate1(lo, mid, hi)} requires ForwardIterators and repeatedly swaps the next elements of the two unfinished subranges. When the right iterator reaches \inlinecode{hi}, it wraps to the current \inlinecode{mid}; when the left iterator reaches \inlinecode{mid}, that boundary advances to the right iterator.
   \item \inlinecode{rotate2(lo, mid, hi)} requires BidirectionalIterators, applying a trick with three reversals. Writing the input subranges as \inlinecode{A B}, two initial reversals yield \inlinecode{reverse(A) reverse(B)}; then the whole range is reversed to yield \inlinecode{B A}, restoring the order within each subrange.
   \item \inlinecode{rotate3(lo, mid, hi)} requires random-access iterators, applying a juggling algorithm which first divides the range into \inlinecode{gcd(hi - lo, mid - lo)} sets and then rotates the corresponding elements in each set. The method follows the permutation that sends each position to its rotated destination. These form that many disjoint cycles, so walking each cycle once moves every element to its final position.
 \end{compactitem}
@@ -514,7 +514,8 @@ void rotate3(It lo, It mid, It hi) {
   if (lo == mid || mid == hi) {
     return;
   }
-  int n = hi - lo, jump = mid - lo;
+  int n = static_cast<int>(hi - lo);
+  int jump = static_cast<int>(mid - lo);
   int g = std::gcd(jump, n), cycle = n / g;
   for (int i = 0; i < g; i++) {
     int curr = i, next;
@@ -601,9 +602,9 @@ All implementations below take ranges as ForwardIterators and require \inlinecod
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ per call to \inlinecode{compress1(lo, hi)}, \inlinecode{compress2(lo, hi)}, and \inlinecode{CoordinateCompressor(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
-  \item $O(1)$ amortized per call to \inlinecode{add(x)}, and $O(m \log m)$ per call to \inlinecode{build()}, where $m$ is the total number of values registered.
-  \item $O(\log k)$ per call to \inlinecode{rank(x)} and \inlinecode{contains(x)}, where $k$ is the number of distinct values.
-  \item $O(1)$ per call to \inlinecode{value(r)} and \inlinecode{size()}.
+  \item $O(1)$ amortized per call to \inlinecode{add()}, and $O(m \log m)$ per call to \inlinecode{build()}, where $m$ is the total number of values registered.
+  \item $O(\log k)$ per call to \inlinecode{rank()} and \inlinecode{contains()}, where $k$ is the number of distinct values.
+  \item $O(1)$ per call to \inlinecode{value()} and \inlinecode{size()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -752,14 +753,15 @@ The number of inversions for a sequence $a$ is the number of ordered pairs $(i, 
 
 template<typename It, typename Compare = std::less<>>
 int64_t inversions(It lo, It hi, Compare comp = Compare()) {
-  if (hi - lo < 2) {
+  int n = static_cast<int>(hi - lo);
+  if (n < 2) {
     return 0;
   }
-  It mid = lo + (hi - lo - 1) / 2, a = lo, c = mid + 1;
+  It mid = lo + (n - 1) / 2, a = lo, c = mid + 1;
   int64_t res = inversions(lo, mid + 1, comp) + inversions(mid + 1, hi, comp);
   using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> merged;
-  merged.reserve(hi - lo);
+  merged.reserve(n);
   while (a <= mid && c < hi) {
     if (comp(*c, *a)) {
       merged.push_back(*(c++));
@@ -836,7 +838,7 @@ Precomputes prefix sums so range-sum queries can be answered in constant time. T
 Prefix sums can also be combined with a frequency table to count subarrays having a target sum. When the current prefix sum is $s$, every earlier prefix sum equal to $s - t$ identifies a subarray with sum $t$. Recording frequencies rather than only whether a prefix exists counts duplicate sums correctly.
 
 \begin{compactitem}
-  \item \inlinecode{prefix\_sums(a)} returns array \inlinecode{pref} with \inlinecode{pref[0] = 0} and \inlinecode{pref[i + 1] = a[0] + ... + a[i]}.
+  \item \inlinecode{prefix\_sums(a)} returns the prefix sum array \inlinecode{pref} with \inlinecode{pref[0]} $= 0$ and \inlinecode{pref[i + 1]} equal to the sum of \inlinecode{a[0]} through \inlinecode{a[i]}.
   \item \inlinecode{range\_sum(pref, lo, hi)} returns the sum of range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{prefix\_sums\_2d(a)} returns a two-dimensional prefix sum table for matrix \inlinecode{a}.
   \item \inlinecode{rectangle\_sum(pref, r1, c1, r2, c2)} returns the sum of the rectangle with rows $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
@@ -1220,12 +1222,12 @@ std::vector<T> sliding_window_extrema(const std::vector<T> &a, int k, Compare co
   return res;
 }
 \end{lstlisting}
-A monotone queue can be used to maintain the minimum or maximum value in an online sliding window. This is useful for dynamic programming recurrences where each transition may only come from one of the last $w$ states, such as \inlinecode{dp[i] = a[i] + min(dp[j])} for $j \in [i - w, i - 1]$.
+A monotone queue can be used to maintain the minimum or maximum value in an online sliding window. This is useful for dynamic programming recurrences where each transition may only come from one of the last $w$ states, such as $dp(i) = a_i + \min_{j \in [i - w, i - 1]} dp(j)$.
 
 The queue stores candidate (\inlinecode{index}, \inlinecode{value}) pairs in monotone order. Expired indices are removed from the front, and dominated values are removed from the back before inserting a new candidate.
 
 \begin{compactitem}
-  \item \inlinecode{MonotoneQueue\textless{}T, Compare\textgreater{}()} constructs an empty queue. Use \inlinecode{std::less\textless{}T\textgreater{}} for minimum queries and \inlinecode{std::greater\textless{}T\textgreater{}} for maximum queries.
+  \item \inlinecode{MonotoneQueue\textless{}T, Compare = std::less\textless{}T\textgreater{}\textgreater{}()} constructs an empty queue for minimum queries by default. Use \inlinecode{std::greater\textless{}T\textgreater{}} for maximum queries.
   \item \inlinecode{push(index, value)} inserts candidate \inlinecode{value} at position \inlinecode{index}, removing dominated candidates from the back.
   \item \inlinecode{expire(first\_valid)} removes candidates with index less than \inlinecode{first\_valid}.
   \item \inlinecode{top()} returns the best active (\inlinecode{index}, \inlinecode{value}) pair. The queue must be nonempty.
@@ -1243,7 +1245,7 @@ The queue stores candidate (\inlinecode{index}, \inlinecode{value}) pairs in mon
 \textbf{Space Complexity}: $O(w)$ for storage of a sliding window of width $w$.
 
 \begin{lstlisting}[language=C++]
-template<typename T, typename Compare>
+template<typename T, typename Compare = std::less<T>>
 class MonotoneQueue {
   std::deque<std::pair<int, T>> q;
   Compare better;
@@ -1308,7 +1310,7 @@ int main() {
   vector<int> f{4, 2, 7, 1, 3, 6};
   int max_jump = 3;
   vector<int> dp(f.size());
-  MonotoneQueue<int, less<int>> best;
+  MonotoneQueue<int> best;
   dp[0] = f[0];
   best.push(0, dp[0]);
   for (int i = 1; i < static_cast<int>(f.size()); i++) {
@@ -1323,7 +1325,7 @@ int main() {
 \subsection{Monotonic Stack}
 A monotonic stack maintains its elements in sorted order as values are pushed, popping away any entries that would violate the ordering. Scanning an array once while keeping such a stack of indices answers, for every position, where the nearest smaller or larger neighbor lies. These ``nearest smaller/greater'' relationships underlie many array problems, the most famous being the largest rectangle in a histogram. Each index is pushed and popped at most once, so a full scan runs in linear time. A largest all-zero submatrix can then be found by sweeping rows, turning each row into a histogram of consecutive zeros ending at that row.
 
-For a histogram bar \inlinecode{i}, the nearest strictly lower bars on its left and right are exactly the first positions that prevent a rectangle of height \inlinecode{heights[i]} from extending farther. Its widest such rectangle therefore spans the positions between those boundaries. For a binary matrix, the height at each column counts consecutive zeros ending in the current row; every all-zero rectangle has some bottom row, so solving one histogram per row considers every possible rectangle.
+For any histogram bar, the nearest strictly lower bars to its left and right are the first positions that prevent a rectangle at the current bar's height from extending farther. The widest such rectangle therefore spans the positions strictly between those boundaries. For a binary matrix, the height at each column counts consecutive zeros ending in the current row; every all-zero rectangle has some bottom row, so solving one histogram per row considers every possible rectangle.
 
 All functions below take a vector \inlinecode{a} of $n$ comparable values and return a vector of $n$ indices. A ``less'' query uses a strictly smaller neighbor and a ``greater'' query uses a strictly larger one; changing the comparison from strict to non-strict (e.g. \inlinecode{\textgreater{}=} to \inlinecode{\textgreater{}}) toggles how ties are handled.
 
@@ -1332,7 +1334,7 @@ All functions below take a vector \inlinecode{a} of $n$ comparable values and re
   \item \inlinecode{next\_less(a)} returns, for each $i$, the smallest index $j > i$ with $a[j] < a[i]$, or $n$ if there's no such index.
   \item \inlinecode{previous\_greater(a)} returns, for each $i$, the largest index $j < i$ with $a[j] > a[i]$, or $-1$ if there's no such index.
   \item \inlinecode{next\_greater(a)} returns, for each $i$, the smallest index $j > i$ with $a[j] > a[i]$, or $n$ if there's no such index.
-  \item \inlinecode{largest\_rectangle(heights)} returns the maximum area of an axis-aligned rectangle that fits under the given histogram, given an array of \inlinecode{heights} where each bar has width $1$.
+  \item \inlinecode{largest\_histogram\_rectangle(heights)} returns the maximum area of an axis-aligned rectangle that fits under the given histogram, given an array of \inlinecode{heights} where each bar has width $1$.
   \item \inlinecode{largest\_zero\_submatrix(a)} returns the area of the largest all-zero rectangular submatrix of the 0/1 matrix \inlinecode{a}.
 \end{compactitem}
 
@@ -1349,7 +1351,7 @@ Histogram areas must fit in the height value type.
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ auxiliary and $O(n)$ for the returned indices from each neighbor query.
-  \item $O(n)$ auxiliary for \inlinecode{largest\_rectangle()}.
+  \item $O(n)$ auxiliary for \inlinecode{largest\_histogram\_rectangle()}.
   \item $O(c)$ auxiliary for \inlinecode{largest\_zero\_submatrix()}.
 \end{compactitem}
 
@@ -1420,7 +1422,7 @@ std::vector<int> next_greater(const std::vector<T> &a) {
 }
 
 template<typename T>
-T largest_rectangle(const std::vector<T> &heights) {
+T largest_histogram_rectangle(const std::vector<T> &heights) {
   int n = static_cast<int>(heights.size());
   std::vector<int> left = previous_less(heights), right = next_less(heights);
   T best = 0;
@@ -1444,7 +1446,7 @@ int largest_zero_submatrix(const std::vector<std::vector<char>> &a) {
     for (int j = 0; j < cols; j++) {
       height[j] = a[i][j] ? 0 : height[j] + 1;
     }
-    best = std::max(best, largest_rectangle(height));
+    best = std::max(best, largest_histogram_rectangle(height));
   }
   return best;
 }
@@ -1463,7 +1465,7 @@ int main() {
 
   vector<int> hist{2, 1, 5, 6, 2, 3};
   // The best histogram rectangle uses bars 2 and 3: min height 5 times width 2.
-  assert(largest_rectangle(hist) == 10);
+  assert(largest_histogram_rectangle(hist) == 10);
 
   vector<vector<char>> grid{
       {1, 0, 1, 1, 0, 0},
@@ -1523,8 +1525,6 @@ class AggregateQueue {
   std::vector<std::pair<T, T>> front_stack, back_stack;
 
  public:
-  AggregateQueue() = default;
-
   bool empty() const { return front_stack.empty() && back_stack.empty(); }
   int size() const { return static_cast<int>(front_stack.size() + back_stack.size()); }
 
@@ -1605,18 +1605,18 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Maximum Subarray Sum (Kadane)}
-Given an array of numbers, determine the maximum possible sum of any contiguous subarray. Kadane's algorithm scans the array while maintaining the maximum nonnegative sum of a subarray ending at the current position. A negative running sum is discarded because it can only reduce the sum of every subarray that extends it. Thus, by including \inlinecode{a[i]}, the running sum becomes \inlinecode{max(0, sum + a[i])}, and the largest running sum seen is the answer. This can be adapted to compute the maximal submatrix sum as well.
+Given an array of numbers, determine the maximum possible sum of any contiguous subarray. Kadane's algorithm scans the array while maintaining a nonnegative running sum. At each position, it adds the current value, records the largest sum seen, and resets the running sum to zero if it becomes negative. Discarding a negative sum is safe because it could only reduce every subarray extending it. This can be adapted to compute the maximal submatrix sum as well.
 
 Two related scans maintain slightly different states. For a circular array, the best wrapped subarray is the whole-array sum minus the minimum-sum subarray. For a maximum-product subarray, a negative value swaps the roles of the minimum and maximum products ending at the previous position, so both products must be tracked.
 
 \begin{compactitem}
   \item \inlinecode{max\_subarray\_sum(lo, hi)} returns the sum and inclusive endpoints (\inlinecode{sum}, \inlinecode{begin}, \inlinecode{end}) for the maximal-sum subarray of $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to numeric types. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} on the iterators' value type. By convention, the empty subarray is allowed, so an input range containing only negative values returns sum $0$ and endpoints $[0, -1]$.
-  \item \inlinecode{max\_circular\_subarray\_sum(lo, hi)} returns a tuple (\inlinecode{sum}, \inlinecode{begin}, \inlinecode{end}) containing the maximal circular-subarray sum and its inclusive endpoints. If \inlinecode{begin \textless{}= end}, the result is an ordinary range; if \inlinecode{begin \textgreater{} end}, it wraps from \inlinecode{begin} through the end of the input and continues through \inlinecode{end}. The empty subarray is allowed under the same convention as \inlinecode{max\_subarray\_sum()}.
+  \item \inlinecode{max\_circular\_subarray\_sum(lo, hi)} returns a tuple (\inlinecode{sum}, \inlinecode{begin}, \inlinecode{end}) containing the maximal circular-subarray sum and its inclusive endpoints. If \inlinecode{begin} $\leq$ \inlinecode{end}, the result is an ordinary range; if \inlinecode{begin} \textgreater{} \inlinecode{end}, it wraps from \inlinecode{begin} through the end of the input and continues through \inlinecode{end}. The empty subarray is allowed under the same convention as \inlinecode{max\_subarray\_sum()}.
   \item \inlinecode{max\_product\_subarray(lo, hi)} returns a tuple (\inlinecode{product}, \inlinecode{begin}, \inlinecode{end}) containing the product and inclusive endpoints of a nonempty maximal-product subarray, or product $0$ and endpoints $[0, -1]$ for an empty input range.
-  \item \inlinecode{max\_submatrix\_sum(a)} returns the sum and inclusive boundaries (\inlinecode{sum}, \inlinecode{r1}, \inlinecode{c1}, \inlinecode{r2}, \inlinecode{c2}) for the largest rectangular submatrix of a matrix \inlinecode{a} with $m$ rows and $n$ columns. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} on the matrix value type. By convention, the empty submatrix is allowed, so a matrix containing only negative values returns sum $0$ with empty row and column intervals.
+  \item \inlinecode{max\_submatrix\_sum(a)} returns the sum and inclusive boundaries (\inlinecode{sum}, \inlinecode{r1}, \inlinecode{c1}, \inlinecode{r2}, \inlinecode{c2}) for the largest rectangular submatrix of a matrix \inlinecode{a}. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} on the matrix value type. By convention, the empty submatrix is allowed, so a matrix containing only negative values returns sum $0$ with empty row and column intervals.
 \end{compactitem}
 
-All subarray sums, subarray products, and submatrix sums must fit in the value type.
+Overflow warning: All resulting sums and products must fit in the value type.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -1667,7 +1667,7 @@ auto max_circular_subarray_sum(It lo, It hi) {
   if (lo == hi) {
     return std::make_tuple(max_sum, begin, end);
   }
-  int n = hi - lo, curr_begin = 0, min_begin = 0, min_end = -1;
+  int curr_begin = 0, min_begin = 0, min_end = -1;
   T total = 0, min_sum = 0, curr_sum = 0;
   for (It it = lo; it != hi; ++it) {
     total += *it;     // Overflow warning.
@@ -1684,6 +1684,7 @@ auto max_circular_subarray_sum(It lo, It hi) {
   T wrapped_sum = total - min_sum;
   if (max_sum < wrapped_sum) {
     max_sum = wrapped_sum;
+    int n = static_cast<int>(hi - lo);
     begin = (min_end + 1) % n;
     end = (min_begin + n - 1) % n;
   }
@@ -1811,9 +1812,7 @@ Maximal sum submatrix:
 -1 8
 \end{exampleoutput}
 \subsection{Longest Increasing Subsequence}
-Given a range of elements, determine a longest subsequence of the range where all elements are in strictly ascending order. The subsequence is not necessarily contiguous or unique, so only one such answer will be found. This implementation requires random-access iterators and \inlinecode{operator\textless{}} on the value type.
-
-The answer is computed by scanning left to right while maintaining, for each length, the smallest possible tail value of an increasing subsequence of that length. Each element extends or improves one of these tails, located in $O(\log n)$ by binary search; predecessor links then reconstruct the subsequence.
+Given a range of elements, determine a longest subsequence where all elements are in strictly increasing order. The subsequence is not necessarily contiguous or unique, so only one such answer will be found. The answer is computed by scanning left to right while maintaining, for each length, the smallest possible tail value of an increasing subsequence of that length. Each element extends or improves one of these tails, located in $O(\log n)$ by binary search; predecessor links then reconstruct the subsequence. This implementation requires random-access iterators and \inlinecode{operator\textless{}} on the value type.
 
 \begin{compactitem}
   \item \inlinecode{longest\_increasing\_subsequence(lo, hi)} returns the indices relative to \inlinecode{lo} of one longest strictly increasing subsequence of $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, in order.
@@ -1834,8 +1833,8 @@ std::vector<int> longest_increasing_subsequence(It lo, It hi) {
     return {};
   }
   int len = 0;
-  // prev[i] = index of the predecessor of element i in its LIS (or -1 if first).
-  // tail[i] = index (into [lo, hi)) of the last element of the best known LIS of length i+1.
+  // prev[i] = index of the predecessor of element i in its LIS (or -1 for the first LIS element).
+  // tail[i] = index (into [lo, hi)) of the last element of the best known LIS of length i + 1.
   std::vector<int> prev(n), tail(n);
   for (int i = 0; i < n; i++) {
     // Find the tail to extend or improve. Comparing by value through the stored indices keeps
@@ -1873,10 +1872,15 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Minimum Excluded Value}
-Computes the minimum excluded nonnegative (MEX) integer of a set of integers, that is, the smallest integer $x \geq 0$ that does not appear in the set. It appears frequently in array problems, game theory with Grundy numbers, and dynamic programming states. Since the MEX of $n$ values never exceeds $n$, the one-shot version tracks seen values in $[0, n]$ before scanning to find the first missing. The dynamic version stores counts for present values and an ordered set of currently missing candidates.
+Given a set of integers, find the minimum excluded nonnegative value (MEX), that is, the smallest integer $x \geq 0$ that does not appear in the set. MEX often appears in array problems, game theory with Grundy numbers, and dynamic programming states. Since the MEX of $n$ values never exceeds $n$, the one-shot version tracks seen values in $[0, n]$ before scanning to find the first missing.
 
 \begin{compactitem}
   \item \inlinecode{mex(lo, hi)} returns the MEX of the values in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
+\end{compactitem}
+
+The MEX of a dynamic multiset can be computed using counts of present values and an ordered set of currently missing candidates.
+
+\begin{compactitem}
   \item \inlinecode{DynamicMex()} maintains the MEX of a multiset of nonnegative integers.
   \item \inlinecode{add(x)} inserts one copy of value \inlinecode{x} if \inlinecode{x} $\geq 0$.
   \item \inlinecode{remove(x)} removes one copy of value \inlinecode{x} if present.
@@ -2125,7 +2129,7 @@ The one-dimensional dynamic programming array \inlinecode{dp[w]} stores the best
   \item \inlinecode{knapsack\_01(weight, value, capacity)} returns a pair (\inlinecode{best\_value}, \inlinecode{items}) containing the maximum value and the selected item indices in increasing order, where item \inlinecode{i} has weight \inlinecode{weight[i]} and value \inlinecode{value[i]}. All weights must be nonnegative integers. Items with weight $0$ are allowed and can each be taken once. The take/skip decision for every item and capacity is stored to reconstruct the optimal subset.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n \cdot W)$ per call, where $n$ is the number of items and $W$ is \inlinecode{capacity}.
+\textbf{Time Complexity}: $O(n \cdot W)$ per call, where $n$ is the number of items and $W$ is the capacity.
 
 \textbf{Space Complexity}: $O(n \cdot W)$ auxiliary.
 
@@ -2199,17 +2203,16 @@ For unbounded maximum-value knapsack, capacities are processed in increasing ord
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \cdot W)$ for \inlinecode{unbounded\_knapsack()}, where $n$ is the number of items and $W$ is \inlinecode{capacity}.
-  \item $O(c \cdot t)$ for \inlinecode{count\_coin\_change(coins, target)}, where $c$ is the number of coin denominations and $t$ is \inlinecode{target}.
-  \item $O(c \cdot t)$ for \inlinecode{min\_coin\_change(coins, target)}.
+  \item $O(n \cdot W)$ per call to \inlinecode{unbounded\_knapsack()}, where $n$ is the number of items and $W$ is \inlinecode{capacity}.
+  \item $O(c \cdot t)$ per call to \inlinecode{count\_coin\_change()} and \inlinecode{min\_coin\_change()}, where $c$ is the number of coin denominations and $t$ is the target.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(W)$ auxiliary and $O(n)$ for the returned \inlinecode{count} from \inlinecode{unbounded\_knapsack()}.
-  \item $O(t)$ auxiliary for \inlinecode{count\_coin\_change(coins, target)}.
-  \item $O(t)$ auxiliary and $O(c)$ for the returned \inlinecode{used} from \inlinecode{min\_coin\_change(coins, target)}.
+  \item $O(t)$ auxiliary for \inlinecode{count\_coin\_change()}.
+  \item $O(t)$ auxiliary and $O(c)$ for the returned \inlinecode{used} from \inlinecode{min\_coin\_change()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -2686,7 +2689,6 @@ std::pair<double, std::vector<double>> fractional_knapsack(
     int64_t rhs = static_cast<int64_t>(value[j]) * weight[i];
     return lhs != rhs ? lhs > rhs : i < j;
   });
-
   double best_value = 0;
   std::vector<double> fraction(n, 0);
   for (int i : order) {
@@ -3212,8 +3214,6 @@ class ReservoirSampleOne {
   int seen = 0;
 
  public:
-  ReservoirSampleOne() = default;
-
   void add(const T &x) {
     seen++;
     if (rand_int(1, seen) == 1) {
@@ -3307,7 +3307,7 @@ Misra-Gries keeps at most $k - 1$ candidates. A tracked value increments its cou
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{majority\_element(lo, hi)}, where $n$ is the range length.
   \item $O(n)$ expected per call to \inlinecode{frequent\_candidates(lo, hi, k)}: a full-table decrement cancels $k$ occurrences, so all decrement sweeps take $O(n)$ total.
-  \item $O(n \cdot k)$ in the collision-heavy worst case for \inlinecode{frequent\_candidates()}.
+  \item $O(n \cdot k)$ per call to \inlinecode{frequent\_candidates()} in the collision-heavy worst case.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -3402,8 +3402,6 @@ Maintains summary statistics as values arrive without storing the stream externa
 
 The naive variance formula $\operatorname{Var}(X) = E[X^2] - E[X]^2$ can lose precision when the two terms are large and close together. Welford instead maintains the current mean $\bar{x}_n$ (stored as \inlinecode{avg}) and the unnormalized second central moment $M_{2,n} = \sum_{i=1}^{n}(x_i - \bar{x}_n)^2$ (stored as \inlinecode{m2}). Each new value shifts the running mean by its deviation divided by the new count, then adds the product of its deviations from the old and new means to \inlinecode{m2}.
 
-For the median, a max-heap stores the lower half of the values and a min-heap stores the upper half. The heaps are balanced so that the lower heap has either the same number of values as the upper heap or one extra value. Their roots are therefore the middle value or values of the stream.
-
 \begin{compactitem}
   \item \inlinecode{OnlineStatistics()} constructs an empty summary.
   \item \inlinecode{add(x)} incorporates one more value \inlinecode{x} into the summary.
@@ -3411,6 +3409,11 @@ For the median, a max-heap stores the lower half of the values and a min-heap st
   \item \inlinecode{mean()} returns the current arithmetic mean, or $0$ if the summary is empty.
   \item \inlinecode{variance\_population()} returns population variance, dividing by $n$, or $0$ if the summary is empty.
   \item \inlinecode{variance\_sample()} returns sample variance, dividing by $n - 1$, or $0$ if fewer than two values have been added.
+\end{compactitem}
+
+For the median, a max-heap stores the lower half of the values and a min-heap stores the upper half. The heaps are balanced so that the lower heap has either the same number of values as the upper heap or one extra value. Their roots are therefore the middle value or values of the stream.
+
+\begin{compactitem}
   \item \inlinecode{OnlineMedian\textless{}T\textgreater{}()} constructs an empty median tracker for an ordered numeric type \inlinecode{T}.
   \item \inlinecode{add(x)} inserts \inlinecode{x} into the median tracker.
   \item \inlinecode{count()} and \inlinecode{empty()} return the number of values and whether the tracker is empty.
@@ -3557,7 +3560,7 @@ int main() {
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Bit Operations and Masks}
-Integers are all fixed-size sets of bits, where the $i$-th bit (counting from the least significant bit where $i = 0$) is ``present'' when set to $1$. Treating an \inlinecode{int} as a bitmask makes set membership, insertion, deletion, and iteration into single machine instructions, which is why bitmasks are the backbone of subset dynamic programming and many low-level tricks. The helpers below operate on \inlinecode{mask\_t}, which is \inlinecode{uint32\_t} by default; change its alias to \inlinecode{uint64\_t} to use 64-bit masks. The loop implementations below exist for education only; production code should prefer the matching GCC built-ins when available, or on C++20 systems the generic \inlinecode{constexpr} equivalents from the \inlinecode{\textless{}bit\textgreater{}} header, which are additionally well-defined at $0$.
+Integers are all fixed-size sets of bits, where the $i$-th bit (counting from the least significant bit where $i = 0$) is ``present'' when set to $1$. Treating an \inlinecode{int} as a bitmask makes set membership, insertion, deletion, and iteration into single machine instructions, which is why bitmasks are the backbone of subset dynamic programming and many low-level tricks. The helpers below operate on \inlinecode{Mask}, which is \inlinecode{uint32\_t} by default; change its alias to \inlinecode{uint64\_t} to use 64-bit masks. The loop implementations below exist for education only; production code should prefer the matching GCC built-ins when available, or on C++20 systems the generic \inlinecode{constexpr} equivalents from the \inlinecode{\textless{}bit\textgreater{}} header, which are additionally well-defined at $0$.
 
 \begin{compactitem}
   \item \inlinecode{test\_bit(x, i)} returns whether the \inlinecode{i}-th bit of \inlinecode{x} is set, where $0 \leq {\inlinecodemath{i}} < {\inlinecodemath{MASK\_BITS}}$.
@@ -3577,8 +3580,8 @@ Integers are all fixed-size sets of bits, where the $i$-th bit (counting from th
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(b)$ worst case per call to \inlinecode{popcount(x)}, \inlinecode{parity(x)}, \inlinecode{ctz(x)}, \inlinecode{ffs(x)}, \inlinecode{clz(x)}, and \inlinecode{for\_each\_set\_bit(x, f)}, where $b$ is \inlinecode{MASK\_BITS}.
-  \item $O(1)$ for all other operations.
+  \item $O(b)$ worst case per call to \inlinecode{popcount()}, \inlinecode{parity()}, \inlinecode{ctz()}, \inlinecode{ffs()}, \inlinecode{clz()}, and \inlinecode{for\_each\_set\_bit()}, where $b$ is \inlinecode{MASK\_BITS}.
+  \item $O(1)$ per call to every other function.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
@@ -3588,19 +3591,19 @@ Integers are all fixed-size sets of bits, where the $i$-th bit (counting from th
 #include <climits>
 #include <cstdint>
 
-using mask_t = uint32_t;
-const int MASK_BITS = sizeof(mask_t) * CHAR_BIT;
+using Mask = uint32_t;
+const int MASK_BITS = sizeof(Mask) * CHAR_BIT;
 
-bool test_bit(mask_t x, int i) { return (x >> i) & 1; }
-mask_t set_bit(mask_t x, int i) { return x | (mask_t{1} << i); }
-mask_t clear_bit(mask_t x, int i) { return x & ~(mask_t{1} << i); }
-mask_t toggle_bit(mask_t x, int i) { return x ^ (mask_t{1} << i); }
-mask_t lowest_set_bit(mask_t x) { return x & -x; }
-mask_t clear_lowest_set_bit(mask_t x) { return x & (x - 1); }
+bool test_bit(Mask x, int i) { return (x >> i) & 1; }
+Mask set_bit(Mask x, int i) { return x | (Mask{1} << i); }
+Mask clear_bit(Mask x, int i) { return x & ~(Mask{1} << i); }
+Mask toggle_bit(Mask x, int i) { return x ^ (Mask{1} << i); }
+Mask lowest_set_bit(Mask x) { return x & -x; }
+Mask clear_lowest_set_bit(Mask x) { return x & (x - 1); }
 
 // popcount(), parity(), ctz(), ffs(), and clz() are spelled out here for educational purposes.
 
-int popcount(mask_t x) {  // std::popcount(x) in C++20.
+int popcount(Mask x) {  // std::popcount(x) in C++20.
   int count = 0;
   for (; x != 0; x = clear_lowest_set_bit(x)) {
     count++;
@@ -3608,11 +3611,11 @@ int popcount(mask_t x) {  // std::popcount(x) in C++20.
   return count;
 }
 
-int parity(mask_t x) {
+int parity(Mask x) {
   return popcount(x) & 1;
 }
 
-int ctz(mask_t x) {  // std::countr_zero(x) in C++20.
+int ctz(Mask x) {  // std::countr_zero(x) in C++20.
   assert(x != 0);
   int count = 0;
   for (; (x & 1) == 0; x >>= 1) {
@@ -3621,35 +3624,35 @@ int ctz(mask_t x) {  // std::countr_zero(x) in C++20.
   return count;
 }
 
-int ffs(mask_t x) {
+int ffs(Mask x) {
   return x == 0 ? 0 : ctz(x) + 1;
 }
 
-int clz(mask_t x) {  // std::countl_zero(x) in C++20.
+int clz(Mask x) {  // std::countl_zero(x) in C++20.
   assert(x != 0);
   int count = 0;
-  for (mask_t mask = mask_t{1} << (MASK_BITS - 1); (x & mask) == 0; mask >>= 1) {
+  for (Mask mask = Mask{1} << (MASK_BITS - 1); (x & mask) == 0; mask >>= 1) {
     count++;
   }
   return count;
 }
 
-bool is_pow2(mask_t x) {  // std::has_single_bit(x) in C++20.
+bool is_pow2(Mask x) {  // std::has_single_bit(x) in C++20.
   return x != 0 && (x & (x - 1)) == 0;
 }
 
-mask_t floor_pow2(mask_t x) {  // std::bit_floor(x) in C++20.
+Mask floor_pow2(Mask x) {  // std::bit_floor(x) in C++20.
   assert(x != 0);
-  return mask_t{1} << (MASK_BITS - 1 - clz(x));
+  return Mask{1} << (MASK_BITS - 1 - clz(x));
 }
 
-mask_t ceil_pow2(mask_t x) {  // std::bit_ceil(x) in C++20.
-  assert(0 < x && x <= (mask_t{1} << (MASK_BITS - 1)));
-  return is_pow2(x) ? x : mask_t{1} << (MASK_BITS - clz(x));
+Mask ceil_pow2(Mask x) {  // std::bit_ceil(x) in C++20.
+  assert(0 < x && x <= (Mask{1} << (MASK_BITS - 1)));
+  return is_pow2(x) ? x : Mask{1} << (MASK_BITS - clz(x));
 }
 
 template<typename Fn>
-void for_each_set_bit(mask_t x, Fn f) {
+void for_each_set_bit(Mask x, Fn f) {
   while (x != 0) {
     f(ctz(x));
     x = clear_lowest_set_bit(x);
@@ -3664,7 +3667,7 @@ void for_each_set_bit(mask_t x, Fn f) {
 using namespace std;
 
 int main() {
-  mask_t x = 0b101100;
+  Mask x = 0b101100;
   assert(test_bit(x, 2) == true);
   assert(test_bit(x, 0) == false);
   assert(set_bit(x, 0) == 0b101101u);
@@ -3690,7 +3693,7 @@ int main() {
   assert(floor_pow2(20) == 16u);
   assert(ceil_pow2(20) == 32u);
   assert(ceil_pow2(16) == 16u);
-  assert(ceil_pow2((mask_t{1} << (MASK_BITS - 1)) - 1) == (mask_t{1} << (MASK_BITS - 1)));
+  assert(ceil_pow2((Mask{1} << (MASK_BITS - 1)) - 1) == (Mask{1} << (MASK_BITS - 1)));
 
   vector<int> bits;
   for_each_set_bit(x, [&](int b) { bits.push_back(b); });
@@ -3707,7 +3710,7 @@ Gosper's hack advances to the next mask with the same popcount. It isolates the 
 
 \begin{compactitem}
   \item \inlinecode{submasks(m)} returns all submasks of \inlinecode{m}, including \inlinecode{m} itself and 0, in decreasing order.
-  \item \inlinecode{next\_popcount(x)} returns the smallest integer greater than \inlinecode{x} with the same number of set bits (Gosper's hack), for \inlinecode{x \textgreater{} 0} when that next mask is representable in \inlinecode{mask\_t}.
+  \item \inlinecode{next\_popcount(x)} returns the smallest integer greater than \inlinecode{x} with the same number of set bits (Gosper's hack), for \inlinecode{x \textgreater{} 0} when that next mask is representable in \inlinecode{Mask}.
   \item \inlinecode{masks\_with\_popcount(n, k)} returns all \inlinecode{k}-bit subsets of an \inlinecode{n}-bit universe as masks, in increasing order, where $0 \leq k \leq n < {\inlinecodemath{MASK\_BITS}}$.
   \item \inlinecode{subset\_sum\_transform(f)} overwrites \inlinecode{f} (indexed by mask over \inlinecode{n} bits) so that \inlinecode{f[m]} becomes the sum of the original \inlinecode{f[s]} over all submasks \inlinecode{s} of \inlinecode{m}. This ``sum over subsets'' (SOS) DP is the bitmask analog of a prefix sum, accumulating one bit dimension at a time. The value type must support \inlinecode{+=}, and all intermediate sums must be representable.
 \end{compactitem}
@@ -3716,7 +3719,7 @@ Gosper's hack advances to the next mask with the same popcount. It isolates the 
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(2^{p})$ per call to \inlinecode{submasks(m)}, where $p$ is \inlinecode{popcount(m)}.
-  \item $O(1)$ per call to \inlinecode{next\_popcount(x)}.
+  \item $O(1)$ per call to \inlinecode{next\_popcount()}.
   \item $O(\binom{n}{k})$ per call to \inlinecode{masks\_with\_popcount(n, k)}.
   \item $O(n \cdot 2^{n})$ per call to \inlinecode{subset\_sum\_transform(f)}, where \inlinecode{f} has $2^n$ entries.
 \end{compactitem}
@@ -3724,7 +3727,7 @@ Gosper's hack advances to the next mask with the same popcount. It isolates the 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(1)$ auxiliary for \inlinecode{next\_popcount(x)} and \inlinecode{subset\_sum\_transform(f)}.
+  \item $O(1)$ auxiliary for \inlinecode{next\_popcount()} and \inlinecode{subset\_sum\_transform()}.
   \item $O(1)$ auxiliary and $O(s)$ for the returned masks from \inlinecode{submasks(m)} and \inlinecode{masks\_with\_popcount(n, k)}, where $s$ is the result size.
 \end{compactitem}
 
@@ -3734,12 +3737,12 @@ Gosper's hack advances to the next mask with the same popcount. It isolates the 
 #include <cstdint>
 #include <vector>
 
-using mask_t = uint32_t;
-const int MASK_BITS = sizeof(mask_t) * CHAR_BIT;
+using Mask = uint32_t;
+const int MASK_BITS = sizeof(Mask) * CHAR_BIT;
 
-std::vector<mask_t> submasks(mask_t m) {
-  std::vector<mask_t> res;
-  mask_t s = m;
+std::vector<Mask> submasks(Mask m) {
+  std::vector<Mask> res;
+  Mask s = m;
   while (true) {
     res.push_back(s);
     if (s == 0) {
@@ -3750,20 +3753,20 @@ std::vector<mask_t> submasks(mask_t m) {
   return res;
 }
 
-mask_t next_popcount(mask_t x) {
-  mask_t c = x & (mask_t{0} - x), r = x + c;
+Mask next_popcount(Mask x) {
+  Mask c = x & (Mask{0} - x), r = x + c;
   assert(x != 0 && r != 0);
   return r | (((x ^ r) >> 2) / c);
 }
 
-std::vector<mask_t> masks_with_popcount(int n, int k) {
+std::vector<Mask> masks_with_popcount(int n, int k) {
   assert(0 <= k && k <= n && n < MASK_BITS);
-  std::vector<mask_t> res;
+  std::vector<Mask> res;
   if (k == 0) {
     return {0};
   }
-  mask_t limit = mask_t{1} << n;
-  for (mask_t x = (mask_t{1} << k) - 1; x < limit; x = next_popcount(x)) {
+  Mask limit = Mask{1} << n;
+  for (Mask x = (Mask{1} << k) - 1; x < limit; x = next_popcount(x)) {
     res.push_back(x);
   }
   return res;
@@ -3789,11 +3792,11 @@ void subset_sum_transform(std::vector<T> &f) {
 using namespace std;
 
 int main() {
-  assert((submasks(0b101) == vector<mask_t>{0b101, 0b100, 0b001, 0b000}));
+  assert((submasks(0b101) == vector<Mask>{0b101, 0b100, 0b001, 0b000}));
 
   assert(next_popcount(0b0110) == 0b1001u);
   assert(
-      (masks_with_popcount(4, 2) == vector<mask_t>{0b0011, 0b0101, 0b0110, 0b1001, 0b1010, 0b1100})
+      (masks_with_popcount(4, 2) == vector<Mask>{0b0011, 0b0101, 0b0110, 0b1001, 0b1010, 0b1100})
   );
 
   // f[m] = 1 for every mask; after the transform f[m] counts submasks of m = 2^popcount(m).
@@ -4009,15 +4012,15 @@ The \inlinecode{k}-th Gray code is obtained from the ordinary binary value \inli
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ per call to \inlinecode{gray\_code(k)}.
-  \item $O(\log b)$ per call to \inlinecode{inverse\_gray\_code(g)}, where $b$ is \inlinecode{MASK\_BITS}.
+  \item $O(1)$ per call to \inlinecode{gray\_code()}.
+  \item $O(\log b)$ per call to \inlinecode{inverse\_gray\_code()}, where $b$ is \inlinecode{MASK\_BITS}.
   \item $O(2^{n})$ per call to \inlinecode{gray\_sequence(n)}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(1)$ auxiliary for \inlinecode{gray\_code(k)} and \inlinecode{inverse\_gray\_code(g)}.
+  \item $O(1)$ auxiliary for \inlinecode{gray\_code()} and \inlinecode{inverse\_gray\_code()}.
   \item $O(1)$ auxiliary and $O(2^{n})$ for the returned sequence from \inlinecode{gray\_sequence(n)}.
 \end{compactitem}
 
@@ -4027,24 +4030,24 @@ The \inlinecode{k}-th Gray code is obtained from the ordinary binary value \inli
 #include <cstdint>
 #include <vector>
 
-using mask_t = uint32_t;
-const int MASK_BITS = sizeof(mask_t) * CHAR_BIT;
+using Mask = uint32_t;
+const int MASK_BITS = sizeof(Mask) * CHAR_BIT;
 
-mask_t gray_code(mask_t k) {
+Mask gray_code(Mask k) {
   return k ^ (k >> 1);
 }
 
-mask_t inverse_gray_code(mask_t g) {
+Mask inverse_gray_code(Mask g) {
   for (int shift = 1; shift < MASK_BITS && (g >> shift) != 0; shift <<= 1) {
     g ^= g >> shift;
   }
   return g;
 }
 
-std::vector<mask_t> gray_sequence(int n) {
+std::vector<Mask> gray_sequence(int n) {
   assert(0 <= n && n < MASK_BITS);
-  std::vector<mask_t> res(mask_t{1} << n);
-  for (mask_t k = 0; k < static_cast<mask_t>(res.size()); k++) {
+  std::vector<Mask> res(Mask{1} << n);
+  for (Mask k = 0; k < static_cast<Mask>(res.size()); k++) {
     res[k] = gray_code(k);
   }
   return res;
@@ -4062,15 +4065,15 @@ int main() {
   assert(gray_code(2) == 0b011u);
   assert(gray_code(3) == 0b010u);
 
-  for (mask_t k = 0; k < 256; k++) {
+  for (Mask k = 0; k < 256; k++) {
     assert(inverse_gray_code(gray_code(k)) == k);
   }
   assert(inverse_gray_code(gray_code(0xdeadbeefu)) == 0xdeadbeefu);
 
-  vector<mask_t> seq = gray_sequence(3);
+  vector<Mask> seq = gray_sequence(3);
   assert(seq.size() == 8);
   for (int i = 0; i < static_cast<int>(seq.size()); i++) {
-    mask_t diff = seq[i] ^ seq[(i + 1) % seq.size()];
+    Mask diff = seq[i] ^ seq[(i + 1) % seq.size()];
     assert((diff & (diff - 1)) == 0);  // Cyclically, one bit changes per step.
   }
   return 0;
@@ -4082,7 +4085,7 @@ An XOR basis (also called a linear basis over the field GF(2)) is the analog of 
 The basis is kept in row-echelon form: the $i$-th basis element is either $0$ or a value whose highest set bit is bit $i$, and no two basis elements share the same highest bit. Reducing a value means XORing it against the basis elements from the highest bit down, eliminating each set bit that a basis element covers.
 
 \begin{compactitem}
-  \item \inlinecode{XorBasis()} constructs an empty basis over \inlinecode{mask\_t}, which is \inlinecode{uint64\_t} by default.
+  \item \inlinecode{XorBasis()} constructs an empty basis over \inlinecode{Mask}, which is \inlinecode{uint64\_t} by default.
   \item \inlinecode{insert(x)} adds \inlinecode{x} to the basis, returning \inlinecode{true} if \inlinecode{x} was linearly independent of the current basis (increasing its size), or \inlinecode{false} if \inlinecode{x} was already representable as a subset XOR.
   \item \inlinecode{contains(x)} returns whether \inlinecode{x} is representable as the XOR of some subset of the inserted values, i.e. whether it reduces to $0$ against the basis.
   \item \inlinecode{max\_xor(base = 0)} returns the maximum value of \inlinecode{base} XORed with some subset XOR of the basis. With the default \inlinecode{base} of $0$, this is the maximum subset XOR.
@@ -4108,17 +4111,15 @@ The basis is kept in row-echelon form: the $i$-th basis element is either $0$ or
 #include <climits>
 #include <cstdint>
 
-using mask_t = uint64_t;
-const int MASK_BITS = sizeof(mask_t) * CHAR_BIT;
+using Mask = uint64_t;
+const int MASK_BITS = sizeof(Mask) * CHAR_BIT;
 
 class XorBasis {
-  std::array<mask_t, MASK_BITS> basis{};  // basis[i] != 0 has its highest set bit at bit i.
+  std::array<Mask, MASK_BITS> basis{};  // basis[i] != 0 has its highest set bit at bit i.
   int sz = 0;
 
  public:
-  XorBasis() = default;
-
-  bool insert(mask_t x) {
+  bool insert(Mask x) {
     for (int i = MASK_BITS - 1; i >= 0; i--) {
       if (!((x >> i) & 1)) {
         continue;
@@ -4133,7 +4134,7 @@ class XorBasis {
     return false;
   }
 
-  bool contains(mask_t x) const {
+  bool contains(Mask x) const {
     for (int i = MASK_BITS - 1; i >= 0; i--) {
       if (((x >> i) & 1) && basis[i] != 0) {
         x ^= basis[i];
@@ -4142,7 +4143,7 @@ class XorBasis {
     return x == 0;
   }
 
-  mask_t max_xor(mask_t base = 0) const {
+  Mask max_xor(Mask base = 0) const {
     for (int i = MASK_BITS - 1; i >= 0; i--) {
       if ((base ^ basis[i]) > base) {
         base ^= basis[i];

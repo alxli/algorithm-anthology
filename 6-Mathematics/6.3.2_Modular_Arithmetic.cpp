@@ -50,7 +50,7 @@ prime and the requested factorials are invertible modulo $p$.
 
 Time Complexity:
 - O(1) per addition, subtraction, multiplication, comparison, and stream output.
-- O(log n) per call to `pow(n)`.
+- O(log n) per call to `pow()`.
 - O(log m) per call to `inv()` and division, where $m = `MOD`$.
 - O(n) total table growth to answer factorials and combinations up to size `n`.
 

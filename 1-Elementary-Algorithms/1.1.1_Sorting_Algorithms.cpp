@@ -49,14 +49,14 @@ template<typename It, typename Compare = std::less<>>
 void quicksort(It lo, It hi, Compare comp = Compare()) {
   while (hi - lo >= 2) {
     auto pivot = *(lo + (hi - lo) / 2);
-    It lt = lo, i = lo, gt = hi;
-    while (i != gt) {
-      if (comp(*i, pivot)) {
-        std::iter_swap(lt++, i++);
-      } else if (comp(pivot, *i)) {
-        std::iter_swap(i, --gt);
+    It lt = lo, mid = lo, gt = hi;
+    while (mid != gt) {
+      if (comp(*mid, pivot)) {
+        std::iter_swap(lt++, mid++);
+      } else if (comp(pivot, *mid)) {
+        std::iter_swap(mid, --gt);
       } else {
-        ++i;
+        ++mid;
       }
     }
     if (lt - lo < hi - gt) {

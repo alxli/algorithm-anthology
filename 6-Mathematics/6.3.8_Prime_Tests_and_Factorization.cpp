@@ -39,20 +39,20 @@ speed, with a slower portable double-and-add fallback to avoid overflow on compi
 integers.
 
 Time Complexity:
-- O(sqrt(n)) per call to `is_prime_slow(n)` and `factorize_slow(n)`.
-- O(k*log(n)) modular multiplications for `is_probable_prime(n, k)` and O(log(n)) for `is_prime(n)`.
-  The portable multiplication fallback adds another O(log(n)) factor.
-- O(c) to rebuild the cache through `cached_sieve(c)`, or O(1) when the existing cache is large
-  enough.
+- O(sqrt(n)) per call to `is_prime_slow()` and `factorize_slow()`.
+- O(k*log(n)) modular multiplications per call to `is_probable_prime()` and O(log(n)) per call to
+  `is_prime()`. The portable multiplication fallback adds another O(log(n)) factor.
+- O(c) per call to `cached_sieve()` when rebuilding the cache, or O(1) when the existing cache is
+  large enough.
 - O(sqrt(p)) expected modular multiplications per call to `rho_factor(n)`, where $p$ is the smallest
   prime factor of `n`. For composite `n`, this is at most O(n^{1/4}).
-- O(n^{1/4}) expected for `factorize_rho(n)`. `factorize(n, L)` additionally performs O(L/log(L))
-  trial divisions and takes O(L) time if the prime cache must be rebuilt to `L`.
-- O(|a| + |b|) for `merge_factors(a, b)`.
-- O(d log(d)) for `divisors_from_factors(factors)`, where $d$ is the number of divisors generated,
+- O(n^{1/4}) expected per call to `factorize_rho()`. `factorize(n, L)` additionally performs
+  O(L/log(L)) trial divisions and takes O(L) time if the prime cache must be rebuilt to `L`.
+- O(|a| + |b|) per call to `merge_factors()`.
+- O(d log(d)) per call to `divisors_from_factors()`, where $d$ is the number of divisors generated,
   due to sorting the result.
-- O(L/log(L) + n^{1/4} + d log(d)) expected for `get_divisors(n)`, plus O(L) if the prime cache must
-  be rebuilt.
+- O(L/log(L) + n^{1/4} + d log(d)) expected per call to `get_divisors()`, plus O(L) if the prime
+  cache must be rebuilt.
 
 Space Complexity:
 - O(c) cached space for the largest `cached_sieve(c)` call.
@@ -264,10 +264,10 @@ SieveCache &cached_sieve(int n) {
   return cache;
 }
 
-using vfactors = std::vector<std::pair<int64_t, int>>;
+using Factors = std::vector<std::pair<int64_t, int>>;
 
-vfactors merge_factors(const vfactors &a, const vfactors &b) {
-  vfactors res;
+Factors merge_factors(const Factors &a, const Factors &b) {
+  Factors res;
   int i = 0, j = 0;
   while (i < static_cast<int>(a.size()) || j < static_cast<int>(b.size())) {
     if (i < static_cast<int>(a.size()) && j < static_cast<int>(b.size()) &&
@@ -287,12 +287,12 @@ vfactors merge_factors(const vfactors &a, const vfactors &b) {
   return res;
 }
 
-vfactors factorize_rho(int64_t n) {
+Factors factorize_rho(int64_t n) {
   if (n <= 1) {
     return {};
   }
   if (n % 2 == 0) {
-    return merge_factors(vfactors{{2, 1}}, factorize_rho(n / 2));
+    return merge_factors(Factors{{2, 1}}, factorize_rho(n / 2));
   }
   if (is_prime(n)) {
     return {{n, 1}};
@@ -304,13 +304,13 @@ vfactors factorize_rho(int64_t n) {
   return merge_factors(factorize_rho(p), factorize_rho(n / p));
 }
 
-vfactors factorize(int64_t n, int small_prime_limit = 1000000) {
+Factors factorize(int64_t n, int small_prime_limit = 1000000) {
   if (n <= 1) {
     return {};
   }
   const SieveCache &sieve = cached_sieve(small_prime_limit);
   if (n <= sieve.limit) {
-    vfactors res;
+    Factors res;
     while (n > 1) {
       int p = sieve.least[n], cnt = 0;
       do {
@@ -321,7 +321,7 @@ vfactors factorize(int64_t n, int small_prime_limit = 1000000) {
     }
     return res;
   }
-  vfactors res;
+  Factors res;
   const std::vector<int> &primes = sieve.primes;
   for (int p : primes) {
     if (p > small_prime_limit || static_cast<int64_t>(p) > n / p) {
@@ -339,7 +339,7 @@ vfactors factorize(int64_t n, int small_prime_limit = 1000000) {
   return merge_factors(res, factorize_rho(n));
 }
 
-std::vector<int64_t> divisors_from_factors(const vfactors &factors) {
+std::vector<int64_t> divisors_from_factors(const Factors &factors) {
   std::vector<int64_t> res{1};
   for (const auto &factor : factors) {
     int old_size = static_cast<int>(res.size());
@@ -389,13 +389,13 @@ num:                    factorize_slow():   factorize():
 #include <set>
 using namespace std;
 
-void validate(int64_t n, const vfactors &factors) {
+void validate(int64_t n, const Factors &factors) {
   if (n <= 1) {
     assert(factors.empty());
     return;
   }
   if (is_prime(n)) {
-    assert((factors == vfactors{{n, 1}}));
+    assert((factors == Factors{{n, 1}}));
     return;
   }
   int64_t prod = 1;
@@ -480,7 +480,7 @@ int main() {
     }
   }
   {  // Compressed factors are convenient for building divisors.
-    vfactors factors{{2, 3}, {3, 2}, {5, 1}};
+    Factors factors{{2, 3}, {3, 2}, {5, 1}};
     vector<int64_t> divisors = divisors_from_factors(factors);
     assert(divisors.size() == 24);
     assert(divisors.front() == 1 && divisors.back() == 360);
@@ -502,10 +502,10 @@ int main() {
     cout << fixed << setprecision(3);
     for (int64_t n : nums) {
       clock_t start = clock();
-      vfactors factors1 = factorize_slow(n);
+      Factors factors1 = factorize_slow(n);
       double t1 = static_cast<double>(clock() - start) / CLOCKS_PER_SEC;
       start = clock();
-      vfactors factors2 = factorize(n);
+      Factors factors2 = factorize(n);
       double t2 = static_cast<double>(clock() - start) / CLOCKS_PER_SEC;
       validate(n, factors1);
       validate(n, factors2);

@@ -25,11 +25,11 @@ polynomials, compute a truncated series inverse of the reversed divisor, multipl
 reverse back.
 
 Time Complexity:
-- O(n) for `trim()`, `add()`, `subtract()`, `derivative()`, and `integral()`.
-- O(|a||b|) for the small-input branch of `multiply()`, otherwise O(n log n), where $n$ is the
+- O(n) per call to `trim()`, `add()`, `subtract()`, `derivative()`, and `integral()`.
+- O(|a||b|) per call to `multiply()` on small inputs and O(n log n) otherwise, where $n$ is the
   padded transform length.
-- O(n log n) for `inverse(a, n)`, where $n$ is the requested length.
-- O(n log n) for `divide()` and `modulo()`, where $n$ is the padded multiplication length.
+- O(n log n) per call to `inverse(a, n)`, where $n$ is the requested length.
+- O(n log n) per call to `divide()` and `modulo()`, where $n$ is the padded multiplication length.
 
 Space Complexity:
 - O(n) auxiliary.

@@ -16,7 +16,8 @@ every transition for every state. The caller must verify the required monotonici
   `cost(k, i)` returns the transition cost from previous state `k` to current state `i`.
 
 Time Complexity:
-- O(n log n) calls to `cost(k, i)` per layer when each state has O(n) possible transitions.
+- O(n log n) calls to `cost()` per call, when computing one layer whose states each have O(n)
+  possible transitions.
 
 Space Complexity:
 - O(log n) auxiliary stack space.

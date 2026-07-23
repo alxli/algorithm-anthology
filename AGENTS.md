@@ -148,13 +148,22 @@ sections elsewhere, include both `Time Complexity:` and `Space Complexity:`.
   `O(log n)`, where $n$ is the distance between `lo` and `hi`, rather than `O(log(hi - lo))`.
   In the rare cases where endpoint names appear directly inside a math expression, keep code
   identifiers in backticks so they render as texttt/code.
-- In a complexity block for a section with only one exposed API, write `per call` without repeating
-  the function signature. Keep names for callbacks or helper operations when they are the thing
-  being counted, e.g. O(n) calls to the callback `pred()` per call.
+- Scope callable time bounds with `per call`. In a section with only one exposed API, write plain
+  `per call` without repeating the function signature; with multiple APIs, write "per call to
+  `foo()` and `bar()`". Use the actual unit instead for non-call aggregates, e.g. `per operation`,
+  `for construction`, `in total`, `for any sequence of ...`, or `on first use`.
+- Keep names for callbacks or helper operations when they are the thing being counted, e.g. O(n)
+  calls to the callback `pred()` per call.
+- In complexity blocks, omit function arguments by default. Keep them when they distinguish
+  overloads or variants with different bounds, or when a later clause uses an argument to define a
+  complexity variable, e.g. ``O(n) per call to `find(s)`, where $n$ is the length of `s`.`` Do not
+  repeat arguments merely to mirror the API bullet.
 - In space complexity, use plain `O(...) auxiliary` for ordinary temporary memory when there is
   no nearby stack-space comparison. If the same block also mentions recursive or call-stack memory,
   call the non-stack temporary memory `auxiliary heap space` so the two costs are distinct. Use
   `for storage of ...` or `for the returned ...` when describing persistent storage or output size.
+  Do not add `per call` to ordinary auxiliary-space bullets; name the relevant function when the
+  section contains multiple APIs with different space bounds.
 - Use math mode for variables and inequalities in prose: `$n$`, `$\leq$`, `$\geq$`, `$-1$`.
 - Prefer half-open interval notation for numbered domains, e.g. nodes in `$[0, n)$`, instead of
   spelling out "from $0$ to `$n - 1`".

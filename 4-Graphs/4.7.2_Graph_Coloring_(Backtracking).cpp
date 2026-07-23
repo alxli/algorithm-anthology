@@ -17,7 +17,7 @@ Time Complexity:
 
 Space Complexity:
 - O(n^2) for storage of the graph, where $n$ is the number of nodes.
-- O(n) auxiliary stack space and O(n) auxiliary heap space per call.
+- O(n) auxiliary stack space and O(n) auxiliary heap space.
 
 */
 

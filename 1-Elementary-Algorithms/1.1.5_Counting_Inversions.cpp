@@ -33,14 +33,15 @@ Space Complexity:
 
 template<typename It, typename Compare = std::less<>>
 int64_t inversions(It lo, It hi, Compare comp = Compare()) {
-  if (hi - lo < 2) {
+  int n = static_cast<int>(hi - lo);
+  if (n < 2) {
     return 0;
   }
-  It mid = lo + (hi - lo - 1) / 2, a = lo, c = mid + 1;
+  It mid = lo + (n - 1) / 2, a = lo, c = mid + 1;
   int64_t res = inversions(lo, mid + 1, comp) + inversions(mid + 1, hi, comp);
   using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> merged;
-  merged.reserve(hi - lo);
+  merged.reserve(n);
   while (a <= mid && c < hi) {
     if (comp(*c, *a)) {
       merged.push_back(*(c++));

@@ -21,7 +21,7 @@ For integer-coordinate inputs, comparisons are exact as long as intermediate coo
 subtractions, and min/max values do not overflow. Floating-point inputs use EPS-based comparisons.
 
 Time Complexity:
-- O(1) for all operations.
+- O(1) per operation.
 
 Space Complexity:
 - O(1) auxiliary for all operations.

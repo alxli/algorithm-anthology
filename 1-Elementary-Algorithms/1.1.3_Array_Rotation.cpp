@@ -10,7 +10,9 @@ two rotated subarrays.
 
 All three versions below achieve the same result using in-place algorithms.
 
-- `rotate1(lo, mid, hi)` uses a straightforward swapping algorithm requiring ForwardIterators.
+- `rotate1(lo, mid, hi)` requires ForwardIterators and repeatedly swaps the next elements of the two
+  unfinished subranges. When the right iterator reaches `hi`, it wraps to the current `mid`; when
+  the left iterator reaches `mid`, that boundary advances to the right iterator.
 - `rotate2(lo, mid, hi)` requires BidirectionalIterators, applying a trick with three reversals.
   Writing the input subranges as `A B`, two initial reversals yield `reverse(A) reverse(B)`; then
   the whole range is reversed to yield `B A`, restoring the order within each subrange.
@@ -62,7 +64,8 @@ void rotate3(It lo, It mid, It hi) {
   if (lo == mid || mid == hi) {
     return;
   }
-  int n = hi - lo, jump = mid - lo;
+  int n = static_cast<int>(hi - lo);
+  int jump = static_cast<int>(mid - lo);
   int g = std::gcd(jump, n), cycle = n / g;
   for (int i = 0; i < g; i++) {
     int curr = i, next;

@@ -11,7 +11,8 @@ the current prefix sum is $s$, every earlier prefix sum equal to $s - t$ identif
 sum $t$. Recording frequencies rather than only whether a prefix exists counts duplicate sums
 correctly.
 
-- `prefix_sums(a)` returns array `pref` with `pref[0] = 0` and `pref[i + 1] = a[0] + ... + a[i]`.
+- `prefix_sums(a)` returns the prefix sum array `pref` with `pref[0]` $= 0$ and `pref[i + 1]` equal
+  to the sum of `a[0]` through `a[i]`.
 - `range_sum(pref, lo, hi)` returns the sum of range $[`lo`, `hi`]$.
 - `prefix_sums_2d(a)` returns a two-dimensional prefix sum table for matrix `a`.
 - `rectangle_sum(pref, r1, c1, r2, c2)` returns the sum of the rectangle with rows $[`r1`, `r2`]$

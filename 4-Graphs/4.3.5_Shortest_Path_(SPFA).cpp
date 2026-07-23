@@ -27,7 +27,7 @@ Time Complexity:
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
   edges.
-- O(n) auxiliary queue space per call.
+- O(n) auxiliary queue space.
 - O(p) for the path returned by `get_path()`.
 
 */

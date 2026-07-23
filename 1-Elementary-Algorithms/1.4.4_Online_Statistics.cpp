@@ -10,10 +10,6 @@ as `avg`) and the unnormalized second central moment $M_{2,n} = \sum_{i=1}^{n}(x
 (stored as `m2`). Each new value shifts the running mean by its deviation divided by the new count,
 then adds the product of its deviations from the old and new means to `m2`.
 
-For the median, a max-heap stores the lower half of the values and a min-heap stores the upper half.
-The heaps are balanced so that the lower heap has either the same number of values as the upper heap
-or one extra value. Their roots are therefore the middle value or values of the stream.
-
 - `OnlineStatistics()` constructs an empty summary.
 - `add(x)` incorporates one more value `x` into the summary.
 - `count()` returns the number of values seen so far.
@@ -22,6 +18,11 @@ or one extra value. Their roots are therefore the middle value or values of the 
   empty.
 - `variance_sample()` returns sample variance, dividing by $n - 1$, or $0$ if fewer than two values
   have been added.
+
+For the median, a max-heap stores the lower half of the values and a min-heap stores the upper half.
+The heaps are balanced so that the lower heap has either the same number of values as the upper heap
+or one extra value. Their roots are therefore the middle value or values of the stream.
+
 - `OnlineMedian<T>()` constructs an empty median tracker for an ordered numeric type `T`.
 - `add(x)` inserts `x` into the median tracker.
 - `count()` and `empty()` return the number of values and whether the tracker is empty.

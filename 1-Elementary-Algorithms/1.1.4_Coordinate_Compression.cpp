@@ -29,10 +29,10 @@ offline queries arriving separately from the array being compressed).
 Time Complexity:
 - O(n log n) per call to `compress1(lo, hi)`, `compress2(lo, hi)`, and
   `CoordinateCompressor(lo, hi)`, where $n$ is the distance between `lo` and `hi`.
-- O(1) amortized per call to `add(x)`, and O(m log m) per call to `build()`, where $m$ is the total
+- O(1) amortized per call to `add()`, and O(m log m) per call to `build()`, where $m$ is the total
   number of values registered.
-- O(log k) per call to `rank(x)` and `contains(x)`, where $k$ is the number of distinct values.
-- O(1) per call to `value(r)` and `size()`.
+- O(log k) per call to `rank()` and `contains()`, where $k$ is the number of distinct values.
+- O(1) per call to `value()` and `size()`.
 
 Space Complexity:
 - O(n) auxiliary for `compress1()` and `compress2()`.

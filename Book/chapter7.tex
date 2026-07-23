@@ -754,7 +754,7 @@ Use an integral point type for integer coordinates, and a floating-point type fo
 
 Overflow warning: each individual cross product is still on the order of the squared coordinate magnitude, so for integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) once coordinates reach a few tens of thousands.
 
-\textbf{Time Complexity}: $O(1)$ for all operations.
+\textbf{Time Complexity}: $O(1)$ per operation.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
@@ -866,7 +866,7 @@ Common axis-aligned rectangle calculations in two dimensions. The functions are 
 
 For integer-coordinate inputs, comparisons are exact as long as intermediate coordinate additions, subtractions, and min/max values do not overflow. Floating-point inputs use EPS-based comparisons.
 
-\textbf{Time Complexity}: $O(1)$ for all operations.
+\textbf{Time Complexity}: $O(1)$ per operation.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
@@ -1006,7 +1006,7 @@ Angle calculations in two dimensions. All operations are inherently floating-poi
 
 The points passed to \inlinecode{angle()} must differ from its vertex \inlinecode{o}, vectors passed to \inlinecode{angle\_between()} must be nonzero, and coefficient pairs passed to its line overload must represent valid lines.
 
-\textbf{Time Complexity}: $O(1)$ for all operations.
+\textbf{Time Complexity}: $O(1)$ per operation.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
@@ -1139,7 +1139,7 @@ Coefficient triples passed to \inlinecode{line\_dist()} must represent valid lin
 
 Overflow warning: squared distances, dot products, and cross products are formed in the point's coordinate arithmetic type. For integer point types, use a 64-bit coordinate type when coordinates may exceed a few tens of thousands.
 
-\textbf{Time Complexity}: $O(1)$ for all operations.
+\textbf{Time Complexity}: $O(1)$ per operation.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
@@ -1335,7 +1335,7 @@ Coefficient triples must represent valid lines, and each point pair used to defi
 
 Overflow warning: the exact integer paths multiply coordinate differences (cross products and squared lengths), which grow like the squared coordinate magnitude. With 32-bit \inlinecode{int} coordinates these overflow once coordinates exceed roughly a few tens of thousands, so for larger integer inputs use a point type with 64-bit (\inlinecode{int64\_t}) coordinates.
 
-\textbf{Time Complexity}: $O(1)$ for all operations.
+\textbf{Time Complexity}: $O(1)$ per operation.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
@@ -1611,7 +1611,7 @@ Circle radii are normalized to be nonnegative. \inlinecode{tangent()} requires a
   \item \inlinecode{intersection\_area(c1, c2)} returns the intersection area of circles \inlinecode{c1} and \inlinecode{c2}.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(1)$ for all operations.
+\textbf{Time Complexity}: $O(1)$ per operation.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
@@ -2994,9 +2994,9 @@ bool find_intersection(It lo, It hi, Seg *res1, Seg *res2, const bool touch_is_i
     int order = ycmp(*a, *b, x);
     return (order == 0) ? (a - lo < b - lo) : (order < 0);
   };
-  using active_set = std::set<It, decltype(cmp)>;
-  active_set s(cmp);
-  std::vector<typename active_set::iterator> position(hi - lo);
+  using ActiveSet = std::set<It, decltype(cmp)>;
+  ActiveSet s(cmp);
+  std::vector<typename ActiveSet::iterator> position(hi - lo);
   for (const auto &ev : e) {
     It seg = ev.seg;
     if (ev.type == 1) {
@@ -3171,7 +3171,7 @@ Given points in the plane, produce a small set of candidate edges guaranteed to 
 
 Overflow warning: the sweeps form coordinate sums, negations, and differences such as \inlinecode{x + y} and \inlinecode{dx + dy}. With \inlinecode{int64\_t} coordinates, those intermediate values must fit in \inlinecode{int64\_t}.
 
-\textbf{Time Complexity}: $O(n \log n)$, where $n$ is the number of points.
+\textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the number of points.
 
 \textbf{Space Complexity}: $O(n)$ auxiliary.
 
@@ -4220,15 +4220,14 @@ struct QuadEdgePool {
   std::vector<Edge<T> *> edges;
 
   QuadEdgePool() = default;
+  QuadEdgePool(const QuadEdgePool &) = delete;
+  QuadEdgePool &operator=(const QuadEdgePool &) = delete;
 
   ~QuadEdgePool() {
     for (Edge<T> *e : edges) {
       delete e;
     }
   }
-
-  QuadEdgePool(const QuadEdgePool &) = delete;
-  QuadEdgePool &operator=(const QuadEdgePool &) = delete;
 
   Edge<T> *make_edge(const Point<T> &u, const Point<T> &v) {
     Edge<T> *e1 = new Edge<T>, *e2 = new Edge<T>, *e3 = new Edge<T>, *e4 = new Edge<T>;

@@ -36,13 +36,13 @@ Common number theory operations relating to modular arithmetic.
 Time Complexity:
 - O(log(a + b)) per call to `gcd(a, b)`, `lcm(a, b)`, `extended_euclid(a, b)`, `mod_inverse(a, b)`,
   `diophantine(a, b, c, ...)`, and `crt(...)`.
-- O(1) for `mod(a, b)`.
-- O(p) for `generate_inverse(p)`.
-- O(n^2) for `garner_restore(a, p)` and `garner_restore_mod(a, p, m)`.
+- O(1) per call to `mod()`.
+- O(p) per call to `generate_inverse()`.
+- O(n^2) per call to `garner_restore()` and `garner_restore_mod()`.
 
 Space Complexity:
-- O(p) auxiliary for `generate_inverse(p)`.
-- O(n) auxiliary for `garner_restore(a, p)` and `garner_restore_mod(a, p, m)`.
+- O(p) auxiliary for `generate_inverse()`.
+- O(n) auxiliary for `garner_restore()` and `garner_restore_mod()`.
 - O(1) auxiliary for all other operations.
 
 */

@@ -17,10 +17,10 @@ state.
 - `rollback(snapshot)` undoes all changes made after `snapshot`.
 
 Time Complexity:
-- O(n) per call to `RollbackDSU(n)`.
+- O(n) per call to the constructor.
 - O(1) per call to `sets()`.
-- O(log n) worst-case per call to `find_root(u)`, `is_united(u, v)`, and `unite(u, v)`.
-- O(1) per undone union during `rollback(snapshot)`.
+- O(log n) worst-case per call to `find_root()`, `is_united()`, and `unite()`.
+- O(1) per undone union during `rollback()`.
 
 Space Complexity:
 - O(n + q) for $q$ successful unions stored in the rollback history.

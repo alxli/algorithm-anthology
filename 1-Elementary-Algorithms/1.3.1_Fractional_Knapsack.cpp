@@ -43,7 +43,6 @@ std::pair<double, std::vector<double>> fractional_knapsack(
     int64_t rhs = static_cast<int64_t>(value[j]) * weight[i];
     return lhs != rhs ? lhs > rhs : i < j;
   });
-
   double best_value = 0;
   std::vector<double> fraction(n, 0);
   for (int i : order) {

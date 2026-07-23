@@ -46,8 +46,6 @@ class ReservoirSampleOne {
   int seen = 0;
 
  public:
-  ReservoirSampleOne() = default;
-
   void add(const T &x) {
     seen++;
     if (rand_int(1, seen) == 1) {

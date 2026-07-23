@@ -18,8 +18,8 @@ original size.
   of the false position (a.k.a. regula falsi) method.
 
 Time Complexity:
-- O(n) calls will be made to `f()` in `bisection_root()` and `falsi_illinois_root()`, where $n$ is
-  the number of iterations performed.
+- O(n) calls to `f()` per call to `bisection_root()` and `falsi_illinois_root()`, where $n$ is the
+  number of iterations.
 
 Space Complexity:
 - O(1) auxiliary for both operations.

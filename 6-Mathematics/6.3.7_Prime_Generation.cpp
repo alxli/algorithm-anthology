@@ -27,12 +27,12 @@ Time Complexity:
 - O(n log log n) per call to `sieve(n)`.
 - O(sqrt(`hi`)*log(log(`hi`)) + w*log(log(`hi`))) per call to `sieve(lo, hi)`, where
   $w = `hi` - `lo` + 1$.
-- O(n) per call to `linear_sieve(n, least_out)`.
+- O(n) per call to `linear_sieve()`.
 
 Space Complexity:
-- O(n) auxiliary per call to `sieve(n)`.
-- O(w + sqrt(`hi`)) auxiliary per call to `sieve(lo, hi)`.
-- O(n) auxiliary per call to `linear_sieve(n, least_out)`.
+- O(n) auxiliary for `sieve(n)`.
+- O(w + sqrt(`hi`)) auxiliary for `sieve(lo, hi)`.
+- O(n) auxiliary for `linear_sieve()`.
 
 */
 

@@ -24,7 +24,7 @@ Time Complexity:
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
   edges.
-- O(max(n, m)) auxiliary heap space and O(log n) auxiliary stack space per call.
+- O(max(n, m)) auxiliary heap space and O(log n) auxiliary stack space.
 
 */
 

@@ -34,14 +34,15 @@ sum uses a block matrix identity that $\begin{bmatrix} A & A \\ 0 & I \end{bmatr
 $A + A^2 + \dots + A^p$ in its upper-right block.
 
 Time Complexity:
-- O(m*n) for construction, output, comparison, and scalar arithmetic of $m$ by $n$ matrices.
-- O(1) for `rows(a)` and `columns(a)`.
-- O(m*n) for matrix-matrix addition and subtraction of $m$ by $n$ matrices.
-- O(n^3 log p) for exponentiation of an $n$ by $n$ matrix to power $p$.
-- O(n^3 log p) for power sum of an $n$ by $n$ matrix to power $p$.
-- O(m*n*k) for multiplication of an $m$ by $n$ matrix by an $n$ by $k$ matrix.
-- O(m*n) for `transpose()`, `transpose_in_place()`, `rotate()`, and `rotate_in_place()` of $m$ by
-  $n$ matrices.
+- O(m*n) per construction, output, comparison, or scalar-arithmetic operation on $m$ by $n$
+  matrices.
+- O(1) per call to `rows()` and `columns()`.
+- O(m*n) per matrix-matrix addition or subtraction of $m$ by $n$ matrices.
+- O(n^3 log p) per exponentiation of an $n$ by $n$ matrix to power $p$.
+- O(n^3 log p) per call to `power_sum()` for an $n$ by $n$ matrix and power $p$.
+- O(m*n*k) per multiplication of an $m$ by $n$ matrix by an $n$ by $k$ matrix.
+- O(m*n) per call to `transpose()`, `transpose_in_place()`, `rotate()`, and `rotate_in_place()` on
+  an $m$ by $n$ matrix.
 
 Space Complexity:
 - O(1) auxiliary for `rows()`, `columns()`, `a[i][j]` access, comparison operators, and in-place

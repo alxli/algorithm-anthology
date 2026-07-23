@@ -19,8 +19,8 @@ O(n^2) modular inverses, while point evaluation performs $n$.
   its coefficients.
 
 Time Complexity:
-- O(n^2 log p) for `interpolate()` and O(n^2 + n log p) for `interpolate_at()`, where $n$ is the
-  number of points and $p$ is `MOD`.
+- O(n^2 log p) per call to `interpolate()` and O(n^2 + n log p) per call to `interpolate_at()`,
+  where $n$ is the number of points and $p$ is `MOD`.
 
 Space Complexity:
 - O(n) auxiliary.

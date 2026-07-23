@@ -23,10 +23,10 @@ For cycle detection, see the variant on iterated functions in chapter 1, which c
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to \inlinecode{reverse\_list(head)} and \inlinecode{split\_half(head, \&second)}.
-  \item $O(n + m)$ per call to \inlinecode{merge\_sorted\_lists(a, b)}.
-  \item $O(1)$ per call to \inlinecode{splice\_after(pos, before)}.
-  \item $O(k)$ per call to \inlinecode{splice\_range\_after(pos, before\_first, last)}, where $k$ is the number of moved nodes. The actual pointer splicing is $O(1)$, but this compact version walks to the end of the moved range.
+  \item $O(n)$ per call to \inlinecode{reverse\_list()} and \inlinecode{split\_half()}.
+  \item $O(n + m)$ per call to \inlinecode{merge\_sorted\_lists()}.
+  \item $O(1)$ per call to \inlinecode{splice\_after()}.
+  \item $O(k)$ per call to \inlinecode{splice\_range\_after()}, where $k$ is the number of moved nodes. The actual pointer splicing is $O(1)$, but this compact version walks to the end of the moved range.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
@@ -307,7 +307,7 @@ To implement the same cache without \inlinecode{std::list}, use the intrusive do
   \item \inlinecode{size()} returns the number of keys currently stored.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(1)$ expected amortized per call to \inlinecode{get(key, \&value)} and \inlinecode{put(key, value)}, and $O(n)$ in the collision-heavy worst case for the hash table.
+\textbf{Time Complexity}: $O(1)$ expected amortized per call to \inlinecode{get()} and \inlinecode{put()}, and $O(n)$ in the collision-heavy worst case for the hash table.
 
 \textbf{Space Complexity}: $O(n)$, where $n$ is the cache capacity.
 
@@ -331,11 +331,9 @@ To implement the same cache without \inlinecode{std::list}, use the intrusive do
 
 template<typename K, typename V>
 class LRUCache {
-  using ListIter = typename std::list<std::pair<K, V>>::iterator;
-
   int cap;
   std::list<std::pair<K, V>> items;
-  std::unordered_map<K, ListIter> where;
+  std::unordered_map<K, decltype(items.begin())> where;
 
  public:
   explicit LRUCache(int capacity) : cap(capacity) { assert(capacity >= 0); }
@@ -7636,8 +7634,6 @@ class OfflineFenwick2D {
   }
 
  public:
-  OfflineFenwick2D() = default;
-
   void reserve(int r, int c) {
     assert(!built);
     pending.emplace_back(r, c);
@@ -7749,7 +7745,7 @@ This version is simplified to work only on the fixed set of integer elements $[0
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to \inlinecode{DSU(n)}, and $O(1)$ per call to \inlinecode{sets()}.
+  \item $O(n)$ per call to the constructor, and $O(1)$ per call to \inlinecode{sets()}.
   \item $O(\alpha\left(n\right))$ per call to \inlinecode{find\_root()}, \inlinecode{set\_size()}, \inlinecode{is\_united()}, and \inlinecode{unite()}, where $n$ is the number of elements, and $\alpha(n)$ is the extremely slow growing inverse of the Ackermann function (effectively a very small constant for all practical values of $n$).
 \end{compactitem}
 
@@ -7974,10 +7970,10 @@ Path compression is intentionally not used, because it is hard to undo. Union by
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to \inlinecode{RollbackDSU(n)}.
+  \item $O(n)$ per call to the constructor.
   \item $O(1)$ per call to \inlinecode{sets()}.
-  \item $O(\log n)$ worst-case per call to \inlinecode{find\_root(u)}, \inlinecode{is\_united(u, v)}, and \inlinecode{unite(u, v)}.
-  \item $O(1)$ per undone union during \inlinecode{rollback(snapshot)}.
+  \item $O(\log n)$ worst-case per call to \inlinecode{find\_root()}, \inlinecode{is\_united()}, and \inlinecode{unite()}.
+  \item $O(1)$ per undone union during \inlinecode{rollback()}.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(n + q)$ for $q$ successful unions stored in the rollback history.
@@ -8387,7 +8383,7 @@ The construction sorts the subset by depth-first entry time, which lists the nod
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ to store the binary ancestor table.
-  \item $O(k)$ auxiliary plus result size per call to \inlinecode{build()}.
+  \item $O(k)$ auxiliary plus result size for \inlinecode{build()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]

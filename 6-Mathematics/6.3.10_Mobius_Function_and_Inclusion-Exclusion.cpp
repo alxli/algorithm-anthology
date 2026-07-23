@@ -19,15 +19,15 @@ divisors of $m$, so `count_coprime(n, m)` equals $\sum_{d \mid m} \mu(d) \lfloor
   inclusion-exclusion over the distinct prime factors of `m`.
 
 Time Complexity:
-- O(sqrt(n)) per call to `mobius(n)`.
-- O(n) per call to `mobius_sieve(n)`.
-- O(sqrt(m) + 2^k * k) per call to `count_coprime(n, m)`, where $k$ is the number of distinct prime
+- O(sqrt(n)) per call to `mobius()`.
+- O(n) per call to `mobius_sieve()`.
+- O(sqrt(m) + 2^k * k) per call to `count_coprime()`, where $k$ is the number of distinct prime
   factors of $m$ (at most 15 for $m$ within 64-bit range).
 
 Space Complexity:
-- O(n) auxiliary for `mobius_sieve(n)`.
-- O(k) auxiliary for `count_coprime(n, m)`.
-- O(1) auxiliary for `mobius(n)`.
+- O(n) auxiliary for `mobius_sieve()`.
+- O(k) auxiliary for `count_coprime()`.
+- O(1) auxiliary for `mobius()`.
 
 */
 

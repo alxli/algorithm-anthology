@@ -18,8 +18,8 @@ Time Complexity:
   $n$ is the length of `s`.
 
 Space Complexity:
-- O(n^2) auxiliary for `longest_palindromic_subsequence(s)`.
-- O(n) auxiliary for `min_insertions_palindrome(s)`.
+- O(n^2) auxiliary for `longest_palindromic_subsequence()`.
+- O(n) auxiliary for `min_insertions_palindrome()`.
 
 */
 

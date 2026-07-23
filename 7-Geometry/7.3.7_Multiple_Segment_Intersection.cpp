@@ -150,9 +150,9 @@ bool find_intersection(It lo, It hi, Seg *res1, Seg *res2, const bool touch_is_i
     int order = ycmp(*a, *b, x);
     return (order == 0) ? (a - lo < b - lo) : (order < 0);
   };
-  using active_set = std::set<It, decltype(cmp)>;
-  active_set s(cmp);
-  std::vector<typename active_set::iterator> position(hi - lo);
+  using ActiveSet = std::set<It, decltype(cmp)>;
+  ActiveSet s(cmp);
+  std::vector<typename ActiveSet::iterator> position(hi - lo);
   for (const auto &ev : e) {
     It seg = ev.seg;
     if (ev.type == 1) {

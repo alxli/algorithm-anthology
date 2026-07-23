@@ -29,7 +29,7 @@ Time Complexity:
   respectively.
 
 Space Complexity:
-- O(min(n, m)) auxiliary heap space for `edit_distance(s1, s2)`.
+- O(min(n, m)) auxiliary heap space for `edit_distance()`.
 - O(n*m) auxiliary heap space for `align_sequences(s1, s2)`, where $n$ and $m$ are the lengths of
   `s1` and `s2`, respectively.
 - O(log(max(n, m))) auxiliary stack space and O(min(n, m)) auxiliary heap space for

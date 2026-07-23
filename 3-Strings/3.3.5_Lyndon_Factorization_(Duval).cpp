@@ -24,8 +24,8 @@ Time Complexity:
 - O(n) per call to `lyndon_factorization(s)` and `min_rotation(s)`, where $n$ is the length of `s`.
 
 Space Complexity:
-- O(k) auxiliary for `lyndon_factorization(s)`, where $k$ is the number of factors.
-- O(1) auxiliary for `min_rotation(s)`.
+- O(k) auxiliary for `lyndon_factorization()`, where $k$ is the number of factors.
+- O(1) auxiliary for `min_rotation()`.
 
 */
 
