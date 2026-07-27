@@ -6,12 +6,12 @@ every node other than the source and sink.
 
 The Ford-Fulkerson method repeatedly finds any augmenting path from source to sink in the residual
 graph (here by depth-first search) and pushes as much flow as the path allows, until no augmenting
-path remains. This algorithm should only be used on graphs with integer capacities, as there exists
-certain real-valued flow inputs for which the algorithm never terminates. The Edmonds-Karp algorithm
-is an improvement using breadth-first search, addressing this problem.
+path remains. This algorithm should only be used on graphs with integer capacities, because some
+real-valued inputs can make it fail to terminate. The Edmonds-Karp algorithm instead uses
+breadth-first search and always terminates in polynomial time.
 
-- `max_flow(source, sink)` modifies the global residual capacity matrix `cap` and returns maximum
-  flow. Nodes are numbered $[0, n)$, where $n$ is `cap.size()`.
+- `max_flow(source, sink)` modifies the global residual capacity matrix `cap` and returns the
+  maximum flow. Nodes are numbered $[0, n)$, where $n$ is `cap.size()`.
 
 Time Complexity:
 - O(n^2*f) per call, where $n$ is the number of nodes and $f$ is the maximum flow.

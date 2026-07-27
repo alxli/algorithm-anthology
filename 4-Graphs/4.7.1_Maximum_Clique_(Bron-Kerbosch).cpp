@@ -95,6 +95,7 @@ int64_t max_clique_weighted_rec(const std::vector<Mask> &g, int64_t curr, Mask p
 
 int64_t max_clique_weighted() {
   int n = static_cast<int>(adj.size());
+  assert(static_cast<int>(w.size()) == n);
   std::vector<Mask> g = build_mask_graph();
   return max_clique_weighted_rec(g, 0, (Mask{1} << n) - 1, 0);
 }

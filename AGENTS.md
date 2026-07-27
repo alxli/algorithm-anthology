@@ -39,6 +39,8 @@ Prefer code that a strong contestant can adapt quickly after skimming:
   accident.
 - Use assertions for preconditions that represent caller misuse; return sentinels or empty results
   for ordinary algorithmic failure when that is the section's established API.
+- Never put a required side effect inside `assert()`, since defining `NDEBUG` removes the entire
+  expression.
 - Assume nested-vector matrices and grids are rectangular; do not scan every row with assertions to
   validate their shape. Keep assertions for compatibility between separate inputs, such as matrix
   dimensions matching a vector or assignment output.

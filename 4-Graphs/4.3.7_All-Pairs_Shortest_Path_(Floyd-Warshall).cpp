@@ -9,9 +9,9 @@ every pair $(i, j)$ is relaxed by considering a path through $k$, so once all $k
 processed the matrix holds the all-pairs shortest distances.
 
 - `init_floyd(n)` initializes `dist` and `next_node` for a graph of `n` nodes numbered $[0, `n`)$.
-- `floyd_warshall()` updates the global adjacency matrix `dist` so `dist[u][v]` stores the shortest
-  path from $u$ to $v$, and updates `next_node` for path reconstruction. If the graph contains
-  negative-weighted cycles, there is no shortest path and an error will be thrown.
+- `floyd_warshall()` updates the global adjacency matrix `dist` so `dist[u][v]` stores the
+  shortest-path distance from $u$ to $v$, and updates `next_node` for path reconstruction. If the
+  graph contains negative-weight cycles, there is no shortest path and an error will be thrown.
 - `get_path(start, dest)` returns the shortest path from `start` to `dest`, or an empty vector if
   `dest` is unreachable from `start`, after the latest call to `floyd_warshall()`.
 
@@ -66,7 +66,7 @@ void floyd_warshall() {
       }
     }
   }
-  // Optional: Report negative-weighted cycles.
+  // Optional: Report negative-weight cycles.
   for (int i = 0; i < n; i++) {
     if (dist[i][i] < 0) {
       throw std::runtime_error("Negative-weight cycle found.");

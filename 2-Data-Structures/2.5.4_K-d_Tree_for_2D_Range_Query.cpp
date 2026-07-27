@@ -4,8 +4,8 @@ Maintain a static set of two-dimensional points while supporting rectangle repor
 tree recursively splits points by alternating coordinates and stores a bounding box for each
 subtree, allowing whole subtrees to be accepted or pruned during a query.
 
-This implementation uses `std::pair` to represent points, requiring `operator<` to be defined on
-the numeric template type.
+This implementation uses `std::pair` to represent points, requiring `operator<` to be defined on the
+numeric template type.
 
 Use this for static point-reporting queries when O(n) space and good average performance are more
 important than a strict worst-case guarantee. Use the 2D range tree instead when adversarial point
@@ -13,9 +13,9 @@ sets or query rectangles are expected and the extra O(n log n) space is acceptab
 
 - `RangeKDTree<T>(lo, hi)` constructs a set of `std::pair` points from the half-open
   forward-iterator range $[`lo`, `hi`)$.
-- `query(x1, y1, x2, y2, f)` calls the function `f(p)` on each point in the set that falls into the
-  rectangular region consisting of rows $[`x1`, `x2`]$ and columns $[`y1`, `y2`]$. The argument
-  `p` is the point as an `std::pair`.
+- `query(x1, y1, x2, y2, f)` calls the function `f(p)` on each point whose $x$-coordinate is in
+  $[`x1`, `x2`]$ and whose $y$-coordinate is in $[`y1`, `y2`]$. The argument `p` is the point as an
+  `std::pair`.
 
 Time Complexity:
 - O(n log n) per call to the constructor, where $n$ is the number of points.

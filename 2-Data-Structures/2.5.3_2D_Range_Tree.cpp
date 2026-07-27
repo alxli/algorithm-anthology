@@ -2,10 +2,10 @@
 
 Maintain a set of two-dimensional points while supporting queries for all points that fall inside
 given rectangular regions. This implementation uses `std::pair` to represent points, requiring
-operators `<` and `==` to be defined on the numeric template type. A balanced tree over the points
-sorted by $x$ stores at each node its subrange of points sorted by $y$, merged from its children's
-lists as in a merge sort tree. A query decomposes the $x$-range into O(log n) nodes and binary
-searches each node's list for the matching $y$-range.
+operators `<`, `<=`, and `==` to be defined on the numeric template type. A balanced tree over the
+points sorted by $x$ stores at each node its subrange of points sorted by $y$, merged from its
+children's lists as in a merge sort tree. A query decomposes the $x$-range into O(log n) nodes and
+binary searches each node's list for the matching $y$-range.
 
 Use this for static point-reporting queries when guaranteed worst-case bounds are more important
 than memory. Compared with a range k-d tree, it uses more space but gives O(log^2 n + m) query time
@@ -14,10 +14,10 @@ its pruning is more distribution-dependent.
 
 - `RangeTree<T>(lo, hi)` constructs a set of `std::pair` points from the half-open forward-iterator
   range $[`lo`, `hi`)$.
-- `query(x1, y1, x2, y2, f)` calls the function `f(i, p)` on each point in the set that falls into
-  the rectangular region consisting of rows $[`x1`, `x2`]$ and columns $[`y1`, `y2`]$. The first
-  argument to `f` is the 0-based index of the point in the original range given to the constructor.
-  The second argument is the point itself as an `std::pair`.
+- `query(x1, y1, x2, y2, f)` calls the function `f(i, p)` on each point whose $x$-coordinate is in
+  $[`x1`, `x2`]$ and whose $y$-coordinate is in $[`y1`, `y2`]$. The first argument to `f` is the
+  0-based index of the point in the original range given to the constructor. The second argument is
+  the point itself as an `std::pair`.
 
 Time Complexity:
 - O(n log n) per call to the constructor, where $n$ is the number of points.

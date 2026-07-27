@@ -1,9 +1,8 @@
 /*
 
-Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning
-tree (MST) is a subgraph which is a tree that connects all nodes with a subset of its edges such
-that their total weight is minimized. If the input graph is not connected, then this implementation
-will find the minimum spanning forest.
+For a connected, undirected, weighted graph with possibly negative weights, a minimum spanning tree
+(MST) connects all nodes using a subset of edges with minimum possible total weight. On disconnected
+input, this implementation instead finds the minimum spanning forest.
 
 Prim's algorithm grows the tree from an arbitrary start node, repeatedly adding the minimum-weight
 edge that joins a new node to the current tree, with a priority queue supplying the cheapest such

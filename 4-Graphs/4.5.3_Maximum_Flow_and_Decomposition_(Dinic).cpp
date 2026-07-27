@@ -14,7 +14,7 @@ paths.
 - `add_edge(u, v, cap)` adds a directed residual-network edge from `u` to `v` and returns its edge
   ID.
 - `edge_flow(id)` returns the flow through a previously added edge.
-- `max_flow(source, sink)` modifies the residual network and returns maximum flow.
+- `max_flow(source, sink)` modifies the residual network and returns the maximum flow.
 - `clear_flow()` resets all edge flows to zero, allowing a fresh recomputation on the same graph.
 - `min_cut(source)` returns the source side of a minimum cut after `max_flow()` has been called.
 - `decompose(source, sink)` decomposes the current flow into paths from `source` to `sink`.

@@ -12,18 +12,19 @@ uniquely decodable code for the same independent symbol model.
 - `entropy(freq)` returns empirical entropy in bits per symbol for a frequency table.
 - `entropy(s)` returns empirical entropy in bits per symbol for string `s`.
 - `expected_code_length(freq, length)` returns the average encoded bits per symbol for code lengths
-  `length[c]`.
+  `length[c]`. The two input vectors must have the same size.
 
 Time Complexity:
 - O(n + m) per call to `entropy(s)`, where $n$ is the string length and $m = 256$.
 - O(m) per call to `entropy(freq)` and `expected_code_length(freq, length)`.
 
 Space Complexity:
-- O(m) auxiliary for `byte_frequencies()`.
+- O(m) for the table returned by `byte_frequencies()` and O(m) auxiliary for `entropy(s)`.
 - O(1) auxiliary for the other operations.
 
 */
 
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <string>
@@ -62,6 +63,7 @@ double entropy(const string &s) {
 }
 
 double expected_code_length(const std::vector<int> &freq, const std::vector<int> &length) {
+  assert(freq.size() == length.size());
   int64_t total = 0;
   for (int i = 0; i < static_cast<int>(freq.size()); i++) {
     total += freq[i];
@@ -78,7 +80,6 @@ double expected_code_length(const std::vector<int> &freq, const std::vector<int>
 
 /*** Example Usage ***/
 
-#include <cassert>
 #include <cmath>
 using namespace std;
 

@@ -27,6 +27,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <queue>
 #include <vector>
 
@@ -34,6 +35,7 @@ std::vector<int> stable_marriage(
     const std::vector<std::vector<int>> &men_pref, const std::vector<std::vector<int>> &women_pref
 ) {
   int n = static_cast<int>(men_pref.size());
+  assert(static_cast<int>(women_pref.size()) == n);
   std::vector<std::vector<int>> rank(n, std::vector<int>(n));
   for (int w = 0; w < n; w++) {
     for (int i = 0; i < n; i++) {
@@ -66,7 +68,6 @@ std::vector<int> stable_marriage(
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int main() {

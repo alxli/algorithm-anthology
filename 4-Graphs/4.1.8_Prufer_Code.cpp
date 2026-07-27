@@ -8,7 +8,7 @@ deducing each removed leaf from the node degrees implied by the code. Both funct
 smallest available leaf at each step. This makes the implementation deterministic and matches the
 usual textbook convention.
 
-- `encode_prufer()` returns the prufer code for the global, bidirectionally pre-populated adjacency
+- `encode_prufer()` returns the Prufer code for the global, bidirectionally pre-populated adjacency
   list `adj`, which must form a valid tree and whose indices represent the nodes.
 - `decode_prufer()` takes a Prufer code and returns the corresponding tree edges.
 

@@ -9,13 +9,12 @@ height label on each node, repeatedly pushing excess flow to lower-labeled neigh
 (raising) a node whose excess cannot yet be pushed, until no node other than the source and sink
 holds excess.
 
-- `push_relabel(source, sink)` returns maximum flow for a global capacity matrix `cap`, whose row
-  and column indices represent the nodes.
+- `push_relabel(source, sink)` returns the maximum flow for a global capacity matrix `cap`, whose
+  row and column indices represent the nodes.
 - `min_cut(source)` returns the source side of a minimum cut after `push_relabel()` has been called.
 
-Although the push-relabel algorithm is considered one of the most efficient maximum flow algorithms,
-it cannot take advantage of the magnitude of the maximum flow being less than $n^3$ (in which case
-the Ford-Fulkerson or Edmonds-Karp algorithms may be more efficient).
+Unlike Ford-Fulkerson, the O(n^3) bound does not improve when the integral maximum flow $f$ is
+small; the matrix-based Ford-Fulkerson implementation runs in O(n^2*f).
 
 Time Complexity:
 - O(n^3) per call to `push_relabel()`, where $n$ is the number of nodes.

@@ -28,8 +28,8 @@ For undirected graphs, `has_cycle()` assumes a simple graph; parallel edges are 
 from the tree edge back to the parent.
 
 Time Complexity:
-- O(1) amortized per call to `add_edge()`, or O(max(n, m)) for $n$ calls where the maximum node
-  index passed as an argument is $m$.
+- O(1) amortized per call to `add_edge()` when no resize is required; O(r) for a call that grows the
+  graph to $r$ nodes.
 - O(max(n, m)) per call for `dfs()`, `has_cycle()`, `is_forest()`, or `is_dag()`, where $n$ is the
   number of nodes and $m$ is the number of edges.
 - O(1) per call to all other public member functions.

@@ -290,12 +290,6 @@ class BigInt {
   BigInt(const char *s) { read(strlen(s), s); }
   BigInt(const std::string &s) { read(s.size(), s.c_str()); }
 
-  BigInt &operator=(const BigInt &v) {
-    sign = v.sign;
-    digits = v.digits;
-    return *this;
-  }
-
   BigInt &operator=(int64_t v) {
     sign = v < 0 ? -1 : 1;
     digits.clear();

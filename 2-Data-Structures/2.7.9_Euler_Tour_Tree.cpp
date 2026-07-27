@@ -19,10 +19,10 @@ extension is to insert one self-loop occurrence per node and maintain aggregate 
 - `component_nodes(u)` returns the distinct nodes in `u`'s tree in unspecified order.
 
 Time Complexity:
-- O(log m) expected per call to `connected`, `link`, `cut`, and `reroot`, where $m$ is the number of
-  edges currently in the forest.
-- O(k) expected per call to `component_nodes`, where $k$ is the number of directed edge occurrences
-  in the component.
+- O(log m) expected per call to `connected()`, `link()`, `cut()`, and `reroot()`, where $m$ is the
+  number of edges currently in the forest.
+- O(k) expected per call to `component_nodes()`, where $k$ is the number of directed edge
+  occurrences in the component.
 
 Space Complexity:
 - O(n + m) for the forest.

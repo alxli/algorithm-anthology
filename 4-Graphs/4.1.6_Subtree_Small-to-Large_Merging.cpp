@@ -19,7 +19,8 @@ Summary objects must support `.size()`, and `merge(big, small)` should iterate o
 insert into `big`.
 
 Time Complexity:
-- O(n log n) expected moved items per call, where $n$ is the number of nodes.
+- O(n log n) expected per call when `merge()` does expected O(1) work per moved item, where $n$ is
+  the number of nodes.
 
 Space Complexity:
 - O(n) auxiliary stack space and O(n log n) auxiliary heap space in the worst case, since absorbed

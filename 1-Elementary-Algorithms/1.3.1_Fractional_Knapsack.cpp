@@ -66,7 +66,7 @@ int main() {
   vector<int> weight{10, 20, 30};
   vector<int> value{60, 100, 120};
   auto [best_value, fraction] = fractional_knapsack(weight, value, 50);
-  assert(abs(best_value - 240) < 1e-9);
+  assert(fabs(best_value - 240) < 1e-9);
   assert((fraction == vector<double>{1, 1, 2.0 / 3}));
   return 0;
 }

@@ -33,7 +33,7 @@ Time Complexity:
 Space Complexity:
 - O(l) for storage of the radix tree, where $l$ is the total length of string keys that are
   currently in the map.
-- O(n) auxiliary stack space for construction, destruction, `walk()`, where $n$ is the maximum
+- O(n) auxiliary stack space for `insert()`, destruction, and `walk()`, where $n$ is the maximum
   length of any string that has been inserted so far.
 - O(n) auxiliary stack space for `erase(s)`, where $n$ is the length of `s`.
 - O(1) auxiliary for all other operations.

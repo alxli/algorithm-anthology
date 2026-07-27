@@ -21,7 +21,7 @@ Time Complexity:
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
   edges.
-- O(n) auxiliary stack space for `toposort_dfs()`.
+- O(n) auxiliary stack and heap space for `toposort_dfs()`.
 - O(n) auxiliary heap space for the indegree array and queue in `toposort_kahn()`.
 
 */

@@ -16,7 +16,7 @@ algorithm-specific policy and are meant to be pasted near the top of a solution 
 - `erase_one(c, x)` erases one existing value from an associative container, asserting that it is
   present.
 - `min_priority_queue<T>` is a min-heap alias.
-- `RNG()` constructs a 64-bit Mersenne Twister seeded from the steady clock.
+- `RNG()` constructs a 64-bit Mersenne Twister seeded from `std::random_device`.
 - `RNG(seed)` constructs a reproducible 64-bit Mersenne Twister.
 - `rng.uniform_int(lo, hi)` returns a random integer in range $[`lo`, `hi`]$.
 - `rng.uniform_real(lo = 0.0, hi = 1.0)` returns a random real number in the half-open range
@@ -29,7 +29,6 @@ algorithm-specific policy and are meant to be pasted near the top of a solution 
 
 #include <algorithm>
 #include <cassert>
-#include <chrono>
 #include <cstdint>
 #include <functional>
 #include <queue>
@@ -85,7 +84,7 @@ using min_priority_queue = std::priority_queue<T, std::vector<T>, std::greater<T
 struct RNG {
   std::mt19937_64 gen;
 
-  RNG() : RNG(std::chrono::steady_clock::now().time_since_epoch().count()) {}
+  RNG() : RNG(std::random_device{}()) {}
   explicit RNG(uint64_t seed) : gen(seed) {}
 
   template<typename T>

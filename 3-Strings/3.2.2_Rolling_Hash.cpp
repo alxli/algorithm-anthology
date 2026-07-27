@@ -19,7 +19,7 @@ proof of equality when exact verification is required.
 
 By default, each sequence value is cast to `uint64_t` and mixed. For non-integer element types,
 instantiate `RollingHash<T, Hash>` and pass a custom value hasher as the final constructor or
-`hash()` argument. It must map each element to a stable nonzero value in [`1`, `HASH_MOD`).
+`hash()` argument. It must map each element to a stable nonzero value in $[1, `HASH_MOD`)$.
 
 - `RollingHash<T>()` constructs an empty hash sequence.
 - `RollingHash<T>(lo, hi)` constructs prefix hashes from the values in the half-open iterator range
@@ -184,7 +184,7 @@ int main() {
   string a = "abc", b = "def";
   uint64_t ab = RollingHash<char>::concat(
       RollingHash<char>::hash(a.begin(), a.end()), RollingHash<char>::hash(b.begin(), b.end()),
-      b.size()
+      static_cast<int>(b.size())
   );
   string c = a + b;
   assert(ab == RollingHash<char>::hash(c.begin(), c.end()));

@@ -24,7 +24,7 @@ Time Complexity:
 - O(log n) per call to `max_edge_on_path()`.
 
 Space Complexity:
-- O(n log n + m) auxiliary.
+- O(n log n) for the reconstruction tree and LCA table, plus O(m) auxiliary during construction.
 
 */
 

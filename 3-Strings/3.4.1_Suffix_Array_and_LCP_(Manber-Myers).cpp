@@ -3,8 +3,8 @@
 Given a string $s$, a suffix array stores the starting positions of the suffixes of $s$ in sorted
 order. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th
 lexicographically smallest suffix of $s$. For example, $s$ = `"cab"` has the suffixes `"cab"`,
-`"ab"`, and `"b"`. When sorted, the indices of the suffixes are `"ab"`, `"b"`, and `"cab"`, so the
-suffix array (assuming 0-based indices) is $[1, 2, 0]$.
+`"ab"`, and `"b"`. In sorted order they are `"ab"`, `"b"`, and `"cab"`, so their starting indices
+form the suffix array $[1, 2, 0]$.
 
 For a string $s$ of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the
 lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in
@@ -31,7 +31,7 @@ Time Complexity:
   of `s`.
 
 Space Complexity:
-- O(n) auxiliary for storage of the suffix and LCP arrays.
+- O(n) for storage of the suffix and LCP arrays.
 - O(n) auxiliary for the constructor.
 - O(1) auxiliary for all other operations.
 

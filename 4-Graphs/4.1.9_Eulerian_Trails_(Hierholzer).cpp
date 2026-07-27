@@ -1,10 +1,10 @@
 /*
 
-A Eulerian trail is a path in a graph which contains every edge exactly once. A Eulerian cycle or
-circuit is an Eulerian trail which begins and ends on the same node. A directed graph has a Eulerian
-trail when all nonzero-degree nodes belong to one connected part of the underlying graph, and either
-every node has equal in-degree and out-degree or exactly one node has one extra outgoing edge and
-exactly one node has one extra incoming edge.
+An Eulerian trail is a path in a graph which contains every edge exactly once. An Eulerian cycle or
+circuit is an Eulerian trail which begins and ends on the same node. A directed graph has an
+Eulerian trail when all nonzero-degree nodes belong to one connected part of the underlying graph,
+and either every node has equal in-degree and out-degree or exactly one node has one extra outgoing
+edge and exactly one node has one extra incoming edge.
 
 Hierholzer's algorithm walks unused edges until stuck, then backtracks to splice each closed detour
 into the final trail. For a directed graph known to have a trail from `start`, the core algorithm
@@ -24,8 +24,7 @@ Time Complexity:
   $n$ is the number of nodes and $m$ is the number of edges.
 
 Space Complexity:
-- O(m) auxiliary stack space and O(max(n, m)) auxiliary heap space for
-  `known_eulerian_path_directed()` and `eulerian_path_directed()`.
+- O(max(n, m)) auxiliary for `known_eulerian_path_directed()` and `eulerian_path_directed()`.
 
 */
 
@@ -102,7 +101,7 @@ std::vector<int> eulerian_path_directed(const std::vector<std::vector<int>> &adj
 
 /*
 
-The `EulerianGraph` class is the more general edge-ID variant. An undirected graph has a Eulerian
+The `EulerianGraph` class is the more general edge-ID variant. An undirected graph has an Eulerian
 trail when all nonzero-degree nodes are connected and either zero or two nodes have odd degree. This
 class stores and returns edge IDs, which supports directed graphs, undirected graphs, and
 multigraphs: parallel edges are distinct because each edge receives its own ID.
@@ -260,6 +259,7 @@ class EulerianGraph {
     if (n == 0) {
       return EulerianTrail{};
     }
+    assert(-1 <= start && start < n);
     if (m == 0) {
       int s = (start == -1 ? 0 : start);
       return EulerianTrail{s, {}, {s}};

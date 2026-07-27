@@ -1,7 +1,7 @@
 /*
 
 Given a starting node in a weighted, directed graph with possibly negative weights, visit every
-connected node and determine the minimum distance to each such node. Optionally, reconstruct the
+reachable node and determine the minimum distance to each such node. Optionally, reconstruct the
 shortest path to a destination node using the shortest-path tree from the predecessor array `pred`.
 
 Bellman-Ford relaxes every edge in the graph up to $n - 1$ times, stopping early if a pass makes no

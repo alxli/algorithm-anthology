@@ -1,9 +1,8 @@
 /*
 
-Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning
-tree (MST) is a subgraph which is a tree that connects all nodes with a subset of its edges such
-that their total weight is minimized. If the input graph is not connected, then this implementation
-will find the minimum spanning forest.
+For a connected, undirected, weighted graph with possibly negative weights, a minimum spanning tree
+(MST) connects all nodes using a subset of edges with minimum possible total weight. On disconnected
+input, this implementation instead finds the minimum spanning forest.
 
 Kruskal's algorithm scans the edges in nondecreasing weight order, adding each edge whose endpoints
 lie in different components (tracked with a disjoint-set structure) and skipping any edge that would
@@ -24,7 +23,7 @@ Time Complexity:
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
   edges.
-- O(max(n, m)) auxiliary heap space and O(log n) auxiliary stack space.
+- O(max(n, m)) auxiliary heap space and O(log m) auxiliary stack space.
 
 */
 

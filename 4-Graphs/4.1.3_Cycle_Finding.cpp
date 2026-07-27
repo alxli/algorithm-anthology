@@ -21,7 +21,7 @@ Time Complexity:
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph.
-- O(n) auxiliary stack space for the DFS, plus O(n) auxiliary heap space for the returned cycle.
+- O(n) auxiliary stack and heap space for the DFS, plus O(n) for the returned cycle.
 
 */
 
@@ -138,9 +138,9 @@ Time Complexity:
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph.
-- O(n) auxiliary stack space plus O(s) auxiliary heap space for `find_cycles()`, where $s$ is the
-  total size of the returned cycles.
-- O(k) auxiliary heap space for `cycle_nodes()`, where $k$ is the number of edges in the cycle.
+- O(n) auxiliary stack and heap space for `find_cycles()`, plus O(s) for the returned cycles, where
+  $s$ is their total size.
+- O(k) for the vector returned by `cycle_nodes()`, where $k$ is the number of edges in the cycle.
 
 */
 

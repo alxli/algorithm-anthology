@@ -10,7 +10,7 @@ independent of the capacity magnitudes.
 
 - `EdmondsKarp<T>(n)` constructs an empty flow network with nodes numbered $[0, `n`)$.
 - `add_edge(u, v, cap)` adds a directed residual-network edge from `u` to `v`.
-- `max_flow(source, sink)` modifies the residual network and returns maximum flow.
+- `max_flow(source, sink)` modifies the residual network and returns the maximum flow.
 - `clear_flow()` resets all edge flows to zero, allowing a fresh recomputation on the same graph.
 - `min_cut(source)` returns the source side of a minimum cut after `max_flow()` has been called.
 

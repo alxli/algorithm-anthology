@@ -17,7 +17,7 @@ integer index.
 - `sum(hi)` returns the sum of all values at indices $[0, `hi`]$.
 - `sum(lo, hi)` returns the sum of all values at indices $[`lo`, `hi`]$.
 - `max_prefix(c)` returns the largest boundary `hi` such that `sum(0, hi - 1)` $\leq$ `c`, assuming
-  prefix sums are nondecreasing. It may return any boundary in $[0, N]$.
+  prefix sums are nondecreasing and `c` is nonnegative. It may return any boundary in $[0, N]$.
 
 Time Complexity:
 - O(log N) expected per call to all member functions.

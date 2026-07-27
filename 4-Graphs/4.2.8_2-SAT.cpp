@@ -24,7 +24,7 @@ Time Complexity:
 - O(1) per call to `literal()`, `add_implication()`, `add_or()`, `add_true()`, `add_false()`, and
   `add()`.
 - O(max(n, m)) per call to `satisfiable()`, where $n$ is the number of variables and $m$ is the
-  number of clauses.
+  number of edges in the implication graph.
 
 Space Complexity:
 - O(max(n, m)) for the implication graph and DFS stacks.

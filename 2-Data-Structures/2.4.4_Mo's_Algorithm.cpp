@@ -1,10 +1,10 @@
 /*
 
 Mo's algorithm answers a batch of range queries offline by reordering them so that the current
-window [`cur_l`, `cur_r`] can be transformed into the next query's range with as few single-element
-insertions and deletions as possible. It applies whenever there is no fast direct formula, but
-extending or shrinking the window by one element updates the answer cheaply, as with the number of
-distinct values in a range or the sum of squares of element frequencies.
+window $[`cur_l`, `cur_r`]$ can be transformed into the next query's range with as few
+single-element insertions and deletions as possible. It applies whenever there is no fast direct
+formula, but extending or shrinking the window by one element updates the answer cheaply, as with
+the number of distinct values in a range or the sum of squares of element frequencies.
 
 The trick is the query order. Sort queries by the block of their left endpoint, where each block
 spans about $n / \sqrt{q}$ indices, breaking ties by right endpoint. The left pointer then travels

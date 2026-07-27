@@ -41,6 +41,10 @@ FIXED_RANDOM_WRAPPER_SEED_RE = re.compile(
     r"\s*\(\s*([0-9]+)[uUlL]*\s*\)"
 )
 CONTROL_BLOCK_RE = re.compile(r"^(?:if|for|while|switch|catch)\b")
+UNWRAPPED_INTERVAL_RE = re.compile(
+    r"(?:\b(?:range|window)\s+|\bvalues?\s+in\s+|^\s*in\s+)"
+    r"\[(?=(?:`[A-Za-z_][A-Za-z0-9_]*`|`?[0-9]+`?))"
+)
 
 STYLE_PATTERNS = [
     (
@@ -727,10 +731,29 @@ def scan_function_spacing(paths):
 def scan_known_style_drift(paths):
     issues = []
     for path in paths:
-        for line_no, line in enumerate(path.read_text().splitlines(), start=1):
+        lines = path.read_text().splitlines()
+        doc_lines = {
+            i + 1
+            for start, end in docstring_ranges(lines)
+            for i in range(start, end + 1)
+        }
+        for line_no, line in enumerate(lines, start=1):
             for pattern, message in STYLE_PATTERNS:
                 if pattern.search(line):
                     issues.append(Issue(path, line_no, "style-drift", message, line))
+            if line_no not in doc_lines:
+                continue
+            for match in UNWRAPPED_INTERVAL_RE.finditer(line):
+                if line[:match.start()].count("$") % 2 == 0:
+                    issues.append(
+                        Issue(
+                            path,
+                            line_no,
+                            "style-drift",
+                            "Wrap numeric interval notation in math mode.",
+                            line,
+                        )
+                    )
     return issues
 
 

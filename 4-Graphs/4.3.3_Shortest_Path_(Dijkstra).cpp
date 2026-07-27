@@ -1,7 +1,7 @@
 /*
 
 Given a starting node in a weighted, directed graph with nonnegative weights only, visit every
-connected node and determine the minimum distance to each such node. Optionally, reconstruct the
+reachable node and determine the minimum distance to each such node. Optionally, reconstruct the
 shortest path to a destination node using the shortest-path tree from the predecessor array `pred`.
 
 Dijkstra's algorithm repeatedly selects the unvisited node of smallest tentative distance using a

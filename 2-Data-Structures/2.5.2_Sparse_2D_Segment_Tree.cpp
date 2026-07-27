@@ -77,7 +77,7 @@ class SparseSegTree2D {
   T init;
 
   // Helper variables for query() and update().
-  int tgt_r1, tgt_c1, tgt_r2, tgt_c2;
+  int tgt_c1, tgt_c2;
   int64_t width;
 
   static int64_t length(int lo, int hi) { return hi - lo + 1LL; }
@@ -208,7 +208,6 @@ class SparseSegTree2D {
     }
     T value = repeat_value(init, rows);
     if (n->left != nullptr || n->right != nullptr) {
-      tgt_c1 = tgt_c2 = c;
       T left_value = (n->left != nullptr) ? query(&(n->left->root), c, c, length(lo, mid))
                                           : repeat_value(init, length(lo, mid));
       T right_value = (n->right != nullptr) ? query(&(n->right->root), c, c, length(mid + 1, hi))
@@ -252,9 +251,7 @@ class SparseSegTree2D {
   T query(int r1, int c1, int r2, int c2) {
     assert(0 <= r1 && r1 <= r2 && r2 <= R);
     assert(0 <= c1 && c1 <= c2 && c2 <= C);
-    tgt_r1 = r1;
     tgt_c1 = c1;
-    tgt_r2 = r2;
     tgt_c2 = c2;
     width = length(c1, c2);
     return query(root, r1, r2);

@@ -23,15 +23,20 @@ main performance path.
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 #include <string>
 #include <type_traits>
 
 void set_in(const std::string &name) {
-  assert(freopen(name.c_str(), "r", stdin) != nullptr);
+  FILE *result = freopen(name.c_str(), "r", stdin);
+  assert(result != nullptr);
+  (void)result;
 }
 
 void set_out(const std::string &name) {
-  assert(freopen(name.c_str(), "w", stdout) != nullptr);
+  FILE *result = freopen(name.c_str(), "w", stdout);
+  assert(result != nullptr);
+  (void)result;
 }
 
 void set_io(const std::string &iname, const std::string &oname) {
@@ -49,7 +54,7 @@ struct FastInput {
 
   char get_char() {
     if (pos == len) {
-      len = fread(buf, 1, BUF_SIZE, file);
+      len = static_cast<int>(fread(buf, 1, BUF_SIZE, file));
       pos = 0;
       if (len == 0) {
         return 0;
@@ -134,7 +139,7 @@ struct FastInput {
   typename std::enable_if<std::is_floating_point<T>::value, FastInput &>::type operator>>(T &x) {
     std::string s;
     *this >> s;
-    x = static_cast<T>(std::strtod(s.c_str(), nullptr));
+    x = static_cast<T>(std::strtold(s.c_str(), nullptr));
     return *this;
   }
 };
@@ -221,7 +226,9 @@ struct FastOutput {
   template<typename T>
   typename std::enable_if<std::is_floating_point<T>::value, FastOutput &>::type operator<<(T x) {
     char s[64];
-    std::snprintf(s, sizeof(s), "%.17g", static_cast<double>(x));
+    std::snprintf(
+        s, sizeof(s), "%.*Lg", std::numeric_limits<T>::max_digits10, static_cast<long double>(x)
+    );
     return *this << s;
   }
 };

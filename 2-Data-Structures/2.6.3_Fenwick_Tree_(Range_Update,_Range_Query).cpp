@@ -17,7 +17,8 @@ integer index.
 - `sum(hi)` returns the sum of all values at indices $[0, `hi`]$.
 - `sum(lo, hi)` returns the sum of all values at indices $[`lo`, `hi`]$.
 - `max_prefix(c)` returns the largest boundary `hi` such that `sum(0, hi - 1)` $\leq$ `c`, assuming
-  prefix sums are nondecreasing. It may return any boundary in $[0, n]$, where $n$ is `size()`.
+  prefix sums are nondecreasing and `c` is nonnegative. It may return any boundary in $[0, n]$,
+  where $n$ is `size()`.
 
 Time Complexity:
 - O(n) per call to the constructor, where $n$ is the size of the array.
