@@ -17,6 +17,19 @@ correct, more reusable, and easier to study under contest pressure.
 - Do not regenerate the PDF/TeX/book unless the user explicitly asks. For normal code/doc edits,
   compile examples and keep the source files clean.
 
+## Book Builds And Releases
+
+- Run `make -C Book pdf` to regenerate `chapter*.tex` and the canonical `Book/A3C5.pdf` using the
+  default `VERSION` and `RELEASE_DATE` in `Book/Makefile`.
+- Run `make -C Book release VERSION=v1.1 RELEASE_DATE='October 1, 2026'` for a release. This injects
+  the version and date into the title page, updates the canonical PDF, creates
+  `Book/A3C5-v1.1.pdf`, and updates the versioned PDF link in `README.md`.
+- `Book/A3C5.pdf`, versioned `Book/A3C5-v*.pdf` files, and the generated `chapter*.tex` files are
+  tracked. The canonical PDF serves the evergreen URL, while each versioned PDF preserves a stable
+  raw GitHub URL and download filename.
+- After a release build, verify the title page and commit the canonical PDF, versioned PDF, generated
+  TeX files, README link, and build metadata together.
+
 ## Coding Philosophy
 
 This is not a minified snippet collection. The style is contest-practical but deliberately readable.

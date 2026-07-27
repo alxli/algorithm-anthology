@@ -15,7 +15,7 @@ Small contest-template helpers that are useful across many algorithms. These sni
   \item \inlinecode{sort\_unique(v)} sorts a vector and removes duplicates.
   \item \inlinecode{erase\_one(c, x)} erases one existing value from an associative container, asserting that it is present.
   \item \inlinecode{min\_priority\_queue\textless{}T\textgreater{}} is a min-heap alias.
-  \item \inlinecode{RNG()} constructs a 64-bit Mersenne Twister seeded from the steady clock.
+  \item \inlinecode{RNG()} constructs a 64-bit Mersenne Twister seeded from \inlinecode{std::random\_device}.
   \item \inlinecode{RNG(seed)} constructs a reproducible 64-bit Mersenne Twister.
   \item \inlinecode{rng.uniform\_int(lo, hi)} returns a random integer in range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{rng.uniform\_real(lo = 0.0, hi = 1.0)} returns a random real number in the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
@@ -26,7 +26,6 @@ Small contest-template helpers that are useful across many algorithms. These sni
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <chrono>
 #include <cstdint>
 #include <functional>
 #include <queue>
@@ -80,7 +79,7 @@ using min_priority_queue = std::priority_queue<T, std::vector<T>, std::greater<T
 struct RNG {
   std::mt19937_64 gen;
 
-  RNG() : RNG(std::chrono::steady_clock::now().time_since_epoch().count()) {}
+  RNG() : RNG(std::random_device{}()) {}
   explicit RNG(uint64_t seed) : gen(seed) {}
 
   template<typename T>
@@ -212,15 +211,20 @@ The parser assumes valid input. Floating point input/output is provided for conv
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 #include <string>
 #include <type_traits>
 
 void set_in(const std::string &name) {
-  assert(freopen(name.c_str(), "r", stdin) != nullptr);
+  FILE *result = freopen(name.c_str(), "r", stdin);
+  assert(result != nullptr);
+  (void)result;
 }
 
 void set_out(const std::string &name) {
-  assert(freopen(name.c_str(), "w", stdout) != nullptr);
+  FILE *result = freopen(name.c_str(), "w", stdout);
+  assert(result != nullptr);
+  (void)result;
 }
 
 void set_io(const std::string &iname, const std::string &oname) {
@@ -238,7 +242,7 @@ struct FastInput {
 
   char get_char() {
     if (pos == len) {
-      len = fread(buf, 1, BUF_SIZE, file);
+      len = static_cast<int>(fread(buf, 1, BUF_SIZE, file));
       pos = 0;
       if (len == 0) {
         return 0;
@@ -323,7 +327,7 @@ struct FastInput {
   typename std::enable_if<std::is_floating_point<T>::value, FastInput &>::type operator>>(T &x) {
     std::string s;
     *this >> s;
-    x = static_cast<T>(std::strtod(s.c_str(), nullptr));
+    x = static_cast<T>(std::strtold(s.c_str(), nullptr));
     return *this;
   }
 };
@@ -410,7 +414,9 @@ struct FastOutput {
   template<typename T>
   typename std::enable_if<std::is_floating_point<T>::value, FastOutput &>::type operator<<(T x) {
     char s[64];
-    std::snprintf(s, sizeof(s), "%.17g", static_cast<double>(x));
+    std::snprintf(
+        s, sizeof(s), "%.*Lg", std::numeric_limits<T>::max_digits10, static_cast<long double>(x)
+    );
     return *this << s;
   }
 };
@@ -993,7 +999,7 @@ int main() {
 Basic multithreading can speed up independent local work such as stress tests, batch experiments, or offline preprocessing. It is rarely useful in standard contest submissions, and many judges restrict threads, so use it only when the environment allows it.
 
 \begin{compactitem}
-  \item \inlinecode{parallel\_for(n, threads, f)} runs \inlinecode{f(i)} once for each $0 \leq$ \inlinecode{i} \textless{} \inlinecode{n}, splitting the indices among at most \inlinecode{threads} worker threads.
+  \item \inlinecode{parallel\_for(n, threads, f)} runs \inlinecode{f(i)} once for each $0 \leq {\inlinecodemath{i}} < {\inlinecodemath{n}}$, splitting the indices among at most \inlinecode{threads} worker threads.
   \item \inlinecode{parallel\_cases(cases, threads, solve)} solves independent test cases in parallel and returns the outputs in the original case order.
 \end{compactitem}
 

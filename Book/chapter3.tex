@@ -757,7 +757,7 @@ Given a sequence $a_0, a_1, \ldots, a_{n-1}$ and a value hash $h(a_i)$ for each 
 
 The implementation works modulo the Mersenne prime $2^{61} - 1$, using \inlinecode{\_\_uint128\_t} for the multiplication where available and falling back to a double-and-add modular multiply otherwise. The base \inlinecode{HASH\_BASE} should be changed or chosen randomly for open-hacking environments. With a fixed base, hashing remains fast and practical, but it is still probabilistic and should not be used as proof of equality when exact verification is required.
 
-By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For non-integer element types, instantiate \inlinecode{RollingHash\textless{}T, Hash\textgreater{}} and pass a custom value hasher as the final constructor or \inlinecode{hash()} argument. It must map each element to a stable nonzero value in [\inlinecode{1}, \inlinecode{HASH\_MOD}).
+By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For non-integer element types, instantiate \inlinecode{RollingHash\textless{}T, Hash\textgreater{}} and pass a custom value hasher as the final constructor or \inlinecode{hash()} argument. It must map each element to a stable nonzero value in $[1, {\inlinecodemath{HASH\_MOD}})$.
 
 \begin{compactitem}
   \item \inlinecode{RollingHash\textless{}T\textgreater{}()} constructs an empty hash sequence.
@@ -927,7 +927,7 @@ int main() {
   string a = "abc", b = "def";
   uint64_t ab = RollingHash<char>::concat(
       RollingHash<char>::hash(a.begin(), a.end()), RollingHash<char>::hash(b.begin(), b.end()),
-      b.size()
+      static_cast<int>(b.size())
   );
   string c = a + b;
   assert(ab == RollingHash<char>::hash(c.begin(), c.end()));
@@ -1982,7 +1982,7 @@ int main() {
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Suffix Array and LCP (Manber-Myers)}
-Given a string $s$, a suffix array stores the starting positions of the suffixes of $s$ in sorted order. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of $s$. For example, $s$ = \inlinecode{"cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
+Given a string $s$, a suffix array stores the starting positions of the suffixes of $s$ in sorted order. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of $s$. For example, $s$ = \inlinecode{"cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. In sorted order they are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so their starting indices form the suffix array $[1, 2, 0]$.
 
 For a string $s$ of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in $s$. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
 
@@ -2007,7 +2007,7 @@ The original Manber-Myers doubling algorithm comparison-sorts the suffixes by th
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ auxiliary for storage of the suffix and LCP arrays.
+  \item $O(n)$ for storage of the suffix and LCP arrays.
   \item $O(n)$ auxiliary for the constructor.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
@@ -2109,7 +2109,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Suffix Array and LCP (Counting Sort)}
-Given a string $s$, a suffix array stores the starting positions of the suffixes of $s$ in sorted order. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of $s$. For example, $s$ = \inlinecode{"cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
+Given a string $s$, a suffix array stores the starting positions of the suffixes of $s$ in sorted order. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of $s$. For example, $s$ = \inlinecode{"cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. In sorted order they are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so their starting indices form the suffix array $[1, 2, 0]$.
 
 For a string $s$ of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in $s$. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
 
@@ -2134,7 +2134,7 @@ The original Manber-Myers doubling algorithm comparison-sorts the suffixes by th
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ auxiliary for storage of the suffix and LCP arrays.
+  \item $O(n)$ for storage of the suffix and LCP arrays.
   \item $O(n)$ auxiliary for the constructor.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
@@ -2247,7 +2247,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Suffix Array and LCP (DC3)}
-Given a string $s$, a suffix array stores the starting positions of the suffixes of $s$ in sorted order. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of $s$. For example, $s$ = \inlinecode{"cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
+Given a string $s$, a suffix array stores the starting positions of the suffixes of $s$ in sorted order. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of $s$. For example, $s$ = \inlinecode{"cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. In sorted order they are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so their starting indices form the suffix array $[1, 2, 0]$.
 
 For a string $s$ of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in $s$. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
 
@@ -2272,7 +2272,7 @@ The DC3/skew algorithm recursively constructs the suffix array of the suffixes s
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ auxiliary for storage of the suffix and LCP arrays.
+  \item $O(n)$ for storage of the suffix and LCP arrays.
   \item $O(n)$ auxiliary for the constructor.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
@@ -2478,7 +2478,7 @@ For a small, fixed alphabet, the \inlinecode{std::unordered\_map} children can b
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(l)$ for storage of the Trie, where $l$ is the total length of string keys that are currently in the map.
-  \item $O(n)$ auxiliary stack space for construction, destruction, \inlinecode{walk()}, where $n$ is the maximum length of any string that has been inserted so far.
+  \item $O(n)$ auxiliary stack space for destruction and \inlinecode{walk()}, where $n$ is the maximum length of any string that has been inserted so far.
   \item $O(n)$ auxiliary stack space for \inlinecode{erase(s)}, where $n$ is the length of \inlinecode{s}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
@@ -2702,7 +2702,7 @@ Maintain a map of strings to values using a compressed tree data structure. Each
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(l)$ for storage of the radix tree, where $l$ is the total length of string keys that are currently in the map.
-  \item $O(n)$ auxiliary stack space for construction, destruction, \inlinecode{walk()}, where $n$ is the maximum length of any string that has been inserted so far.
+  \item $O(n)$ auxiliary stack space for \inlinecode{insert()}, destruction, and \inlinecode{walk()}, where $n$ is the maximum length of any string that has been inserted so far.
   \item $O(n)$ auxiliary stack space for \inlinecode{erase(s)}, where $n$ is the length of \inlinecode{s}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
@@ -4590,7 +4590,7 @@ For a string with symbol probabilities $p_i$, empirical entropy is $H = -\sum_i 
   \item \inlinecode{byte\_frequencies(s)} returns a length-256 table of byte counts in string \inlinecode{s}.
   \item \inlinecode{entropy(freq)} returns empirical entropy in bits per symbol for a frequency table.
   \item \inlinecode{entropy(s)} returns empirical entropy in bits per symbol for string \inlinecode{s}.
-  \item \inlinecode{expected\_code\_length(freq, length)} returns the average encoded bits per symbol for code lengths \inlinecode{length[c]}.
+  \item \inlinecode{expected\_code\_length(freq, length)} returns the average encoded bits per symbol for code lengths \inlinecode{length[c]}. The two input vectors must have the same size.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -4603,11 +4603,12 @@ For a string with symbol probabilities $p_i$, empirical entropy is $H = -\sum_i 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(m)$ auxiliary for \inlinecode{byte\_frequencies()}.
+  \item $O(m)$ for the table returned by \inlinecode{byte\_frequencies()} and $O(m)$ auxiliary for \inlinecode{entropy(s)}.
   \item $O(1)$ auxiliary for the other operations.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <string>
@@ -4646,6 +4647,7 @@ double entropy(const string &s) {
 }
 
 double expected_code_length(const std::vector<int> &freq, const std::vector<int> &length) {
+  assert(freq.size() == length.size());
   int64_t total = 0;
   for (int i = 0; i < static_cast<int>(freq.size()); i++) {
     total += freq[i];
@@ -4663,7 +4665,6 @@ double expected_code_length(const std::vector<int> &freq, const std::vector<int>
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 #include <cmath>
 using namespace std;
 

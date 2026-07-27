@@ -25,7 +25,7 @@ For undirected graphs, \inlinecode{has\_cycle()} assumes a simple graph; paralle
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ amortized per call to \inlinecode{add\_edge()}, or $O(\max\left(n, m\right))$ for $n$ calls where the maximum node index passed as an argument is $m$.
+  \item $O(1)$ amortized per call to \inlinecode{add\_edge()} when no resize is required; $O(r)$ for a call that grows the graph to $r$ nodes.
   \item $O(\max\left(n, m\right))$ per call for \inlinecode{dfs()}, \inlinecode{has\_cycle()}, \inlinecode{is\_forest()}, or \inlinecode{is\_dag()}, where $n$ is the number of nodes and $m$ is the number of edges.
   \item $O(1)$ per call to all other public member functions.
 \end{compactitem}
@@ -187,7 +187,7 @@ The DFS version uses the fact that every outgoing dependency of a node is finish
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(n)$ auxiliary stack space for \inlinecode{toposort\_dfs()}.
+  \item $O(n)$ auxiliary stack and heap space for \inlinecode{toposort\_dfs()}.
   \item $O(n)$ auxiliary heap space for the indegree array and queue in \inlinecode{toposort\_kahn()}.
 \end{compactitem}
 
@@ -313,7 +313,7 @@ Both functions remember the DFS parent of each node. When a closing edge \inline
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph.
-  \item $O(n)$ auxiliary stack space for the DFS, plus $O(n)$ auxiliary heap space for the returned cycle.
+  \item $O(n)$ auxiliary stack and heap space for the DFS, plus $O(n)$ for the returned cycle.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -427,8 +427,8 @@ The \inlinecode{CycleFinder} class is the more general multigraph variant. Its c
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph.
-  \item $O(n)$ auxiliary stack space plus $O(s)$ auxiliary heap space for \inlinecode{find\_cycles()}, where $s$ is the total size of the returned cycles.
-  \item $O(k)$ auxiliary heap space for \inlinecode{cycle\_nodes()}, where $k$ is the number of edges in the cycle.
+  \item $O(n)$ auxiliary stack and heap space for \inlinecode{find\_cycles()}, plus $O(s)$ for the returned cycles, where $s$ is their total size.
+  \item $O(k)$ for the vector returned by \inlinecode{cycle\_nodes()}, where $k$ is the number of edges in the cycle.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -922,7 +922,7 @@ This pattern is often called DSU on tree, although it is unrelated to the disjoi
 
 Summary objects must support \inlinecode{.size()}, and \inlinecode{merge(big, small)} should iterate over \inlinecode{small} and insert into \inlinecode{big}.
 
-\textbf{Time Complexity}: $O(n \log n)$ expected moved items per call, where $n$ is the number of nodes.
+\textbf{Time Complexity}: $O(n \log n)$ expected per call when \inlinecode{merge()} does expected $O(1)$ work per moved item, where $n$ is the number of nodes.
 
 \textbf{Space Complexity}: $O(n)$ auxiliary stack space and $O(n \log n)$ auxiliary heap space in the worst case, since absorbed summaries remain stored.
 
@@ -1146,7 +1146,7 @@ int main() {
 Encode and decode labeled trees using Prufer codes. A Prufer code is a sequence of length $n - 2$ that uniquely represents a labeled tree on nodes $0, 1, \ldots, n - 1$. It is useful for counting labeled trees, generating test cases, and converting between trees and compact sequences. Encoding repeatedly removes a leaf and records its neighbor until two nodes remain; decoding reverses this, deducing each removed leaf from the node degrees implied by the code. Both functions choose the smallest available leaf at each step. This makes the implementation deterministic and matches the usual textbook convention.
 
 \begin{compactitem}
-  \item \inlinecode{encode\_prufer()} returns the prufer code for the global, bidirectionally pre-populated adjacency list \inlinecode{adj}, which must form a valid tree and whose indices represent the nodes.
+  \item \inlinecode{encode\_prufer()} returns the Prufer code for the global, bidirectionally pre-populated adjacency list \inlinecode{adj}, which must form a valid tree and whose indices represent the nodes.
   \item \inlinecode{decode\_prufer()} takes a Prufer code and returns the corresponding tree edges.
 \end{compactitem}
 
@@ -1256,7 +1256,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Eulerian Trails (Hierholzer)}
-A Eulerian trail is a path in a graph which contains every edge exactly once. A Eulerian cycle or circuit is an Eulerian trail which begins and ends on the same node. A directed graph has a Eulerian trail when all nonzero-degree nodes belong to one connected part of the underlying graph, and either every node has equal in-degree and out-degree or exactly one node has one extra outgoing edge and exactly one node has one extra incoming edge.
+An Eulerian trail is a path in a graph which contains every edge exactly once. An Eulerian cycle or circuit is an Eulerian trail which begins and ends on the same node. A directed graph has an Eulerian trail when all nonzero-degree nodes belong to one connected part of the underlying graph, and either every node has equal in-degree and out-degree or exactly one node has one extra outgoing edge and exactly one node has one extra incoming edge.
 
 Hierholzer's algorithm walks unused edges until stuck, then backtracks to splice each closed detour into the final trail. For a directed graph known to have a trail from \inlinecode{start}, the core algorithm can simply consume outgoing edges by popping them from a local copy of the adjacency list.
 
@@ -1269,7 +1269,7 @@ Parallel directed edges are supported by storing duplicate neighbors in \inlinec
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{known\_eulerian\_path\_directed()} and \inlinecode{eulerian\_path\_directed()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
-\textbf{Space Complexity}: $O(m)$ auxiliary stack space and $O(\max\left(n, m\right))$ auxiliary heap space for \inlinecode{known\_eulerian\_path\_directed()} and \inlinecode{eulerian\_path\_directed()}.
+\textbf{Space Complexity}: $O(\max\left(n, m\right))$ auxiliary for \inlinecode{known\_eulerian\_path\_directed()} and \inlinecode{eulerian\_path\_directed()}.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -1343,7 +1343,7 @@ std::vector<int> eulerian_path_directed(const std::vector<std::vector<int>> &adj
   return static_cast<int>(path.size()) == m + 1 ? path : std::vector<int>();
 }
 \end{lstlisting}
-The \inlinecode{EulerianGraph} class is the more general edge-ID variant. An undirected graph has a Eulerian trail when all nonzero-degree nodes are connected and either zero or two nodes have odd degree. This class stores and returns edge IDs, which supports directed graphs, undirected graphs, and multigraphs: parallel edges are distinct because each edge receives its own ID.
+The \inlinecode{EulerianGraph} class is the more general edge-ID variant. An undirected graph has an Eulerian trail when all nonzero-degree nodes are connected and either zero or two nodes have odd degree. This class stores and returns edge IDs, which supports directed graphs, undirected graphs, and multigraphs: parallel edges are distinct because each edge receives its own ID.
 
 \begin{compactitem}
   \item \inlinecode{EulerianGraph(n, directed)} constructs a graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$. The graph is directed if \inlinecode{directed} is true, or undirected otherwise.
@@ -1491,6 +1491,7 @@ class EulerianGraph {
     if (n == 0) {
       return EulerianTrail{};
     }
+    assert(-1 <= start && start < n);
     if (m == 0) {
       int s = (start == -1 ? 0 : start);
       return EulerianTrail{s, {}, {s}};
@@ -2581,7 +2582,7 @@ Variables are numbered $[0, n)$. A literal is represented by \inlinecode{literal
 \begin{compactitem}
   \item $O(n)$ per call to the constructor, where $n$ is the number of variables.
   \item $O(1)$ per call to \inlinecode{literal()}, \inlinecode{add\_implication()}, \inlinecode{add\_or()}, \inlinecode{add\_true()}, \inlinecode{add\_false()}, and \inlinecode{add()}.
-  \item $O(\max\left(n, m\right))$ per call to \inlinecode{satisfiable()}, where $n$ is the number of variables and $m$ is the number of clauses.
+  \item $O(\max\left(n, m\right))$ per call to \inlinecode{satisfiable()}, where $n$ is the number of variables and $m$ is the number of edges in the implication graph.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(\max\left(n, m\right))$ for the implication graph and DFS stacks.
@@ -2861,11 +2862,11 @@ Undoing unions requires a disjoint set forest with rollback (see the disjoint se
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O((T + m \log T) \log n)$ per call to \inlinecode{solve()}, where $T$ is the total number of operations (\inlinecode{add\_edge}, \inlinecode{remove\_edge}, and \inlinecode{count\_components} combined), $m$ is the number of \inlinecode{add\_edge} operations, and $n$ is the number of nodes.
+  \item $O(T \log T + m \log T \log n)$ per call to \inlinecode{solve()}, where $T$ is the total number of operations (\inlinecode{add\_edge()}, \inlinecode{remove\_edge()}, and \inlinecode{count\_components()} combined), $m$ is the number of \inlinecode{add\_edge()} operations, and $n$ is the number of nodes.
   \item $O(1)$ amortized per call to \inlinecode{add\_edge()}, \inlinecode{remove\_edge()}, and \inlinecode{count\_components()}.
 \end{compactitem}
 
-\textbf{Space Complexity}: $O(n + m \log T)$ auxiliary.
+\textbf{Space Complexity}: $O(n + T + m \log T)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -3240,7 +3241,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Shortest Path (Dijkstra)}
-Given a starting node in a weighted, directed graph with nonnegative weights only, visit every connected node and determine the minimum distance to each such node. Optionally, reconstruct the shortest path to a destination node using the shortest-path tree from the predecessor array \inlinecode{pred}.
+Given a starting node in a weighted, directed graph with nonnegative weights only, visit every reachable node and determine the minimum distance to each such node. Optionally, reconstruct the shortest path to a destination node using the shortest-path tree from the predecessor array \inlinecode{pred}.
 
 Dijkstra's algorithm repeatedly selects the unvisited node of smallest tentative distance using a priority queue and relaxes its outgoing edges. Dijkstra's algorithm requires nonnegative edge weights. Use Bellman-Ford or SPFA instead when negative edges are present. Because the weights are nonnegative, a node's distance is final the first time it is removed from the queue.
 
@@ -3343,7 +3344,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Shortest Path (Bellman-Ford)}
-Given a starting node in a weighted, directed graph with possibly negative weights, visit every connected node and determine the minimum distance to each such node. Optionally, reconstruct the shortest path to a destination node using the shortest-path tree from the predecessor array \inlinecode{pred}.
+Given a starting node in a weighted, directed graph with possibly negative weights, visit every reachable node and determine the minimum distance to each such node. Optionally, reconstruct the shortest path to a destination node using the shortest-path tree from the predecessor array \inlinecode{pred}.
 
 Bellman-Ford relaxes every edge in the graph up to $n - 1$ times, stopping early if a pass makes no changes. Since any shortest path uses at most $n - 1$ edges, all distances are correct after these passes unless a negative-weight cycle keeps reducing them, which a further pass detects. Bellman-Ford will also detect whether the graph contains a negative-weight cycle reachable from the start node, in which case the affected shortest paths are undefined and an error will be thrown. (To detect a negative cycle anywhere in the graph, add a virtual source with zero-weight edges to every node and start from it.)
 
@@ -3668,7 +3669,7 @@ Floyd-Warshall's algorithm is a dynamic program over intermediate nodes: for eac
 
 \begin{compactitem}
   \item \inlinecode{init\_floyd(n)} initializes \inlinecode{dist} and \inlinecode{next\_node} for a graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
-  \item \inlinecode{floyd\_warshall()} updates the global adjacency matrix \inlinecode{dist} so \inlinecode{dist[u][v]} stores the shortest path from $u$ to $v$, and updates \inlinecode{next\_node} for path reconstruction. If the graph contains negative-weighted cycles, there is no shortest path and an error will be thrown.
+  \item \inlinecode{floyd\_warshall()} updates the global adjacency matrix \inlinecode{dist} so \inlinecode{dist[u][v]} stores the shortest-path distance from $u$ to $v$, and updates \inlinecode{next\_node} for path reconstruction. If the graph contains negative-weight cycles, there is no shortest path and an error will be thrown.
   \item \inlinecode{get\_path(start, dest)} returns the shortest path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable from \inlinecode{start}, after the latest call to \inlinecode{floyd\_warshall()}.
 \end{compactitem}
 
@@ -3724,7 +3725,7 @@ void floyd_warshall() {
       }
     }
   }
-  // Optional: Report negative-weighted cycles.
+  // Optional: Report negative-weight cycles.
   for (int i = 0; i < n; i++) {
     if (dist[i][i] < 0) {
       throw std::runtime_error("Negative-weight cycle found.");
@@ -3916,7 +3917,7 @@ int main() {
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Minimum Spanning Tree (Prim)}
-Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning tree (MST) is a subgraph which is a tree that connects all nodes with a subset of its edges such that their total weight is minimized. If the input graph is not connected, then this implementation will find the minimum spanning forest.
+For a connected, undirected, weighted graph with possibly negative weights, a minimum spanning tree (MST) connects all nodes using a subset of edges with minimum possible total weight. On disconnected input, this implementation instead finds the minimum spanning forest.
 
 Prim's algorithm grows the tree from an arbitrary start node, repeatedly adding the minimum-weight edge that joins a new node to the current tree, with a priority queue supplying the cheapest such edge at each step.
 
@@ -4014,7 +4015,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Minimum Spanning Tree (Kruskal)}
-Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning tree (MST) is a subgraph which is a tree that connects all nodes with a subset of its edges such that their total weight is minimized. If the input graph is not connected, then this implementation will find the minimum spanning forest.
+For a connected, undirected, weighted graph with possibly negative weights, a minimum spanning tree (MST) connects all nodes using a subset of edges with minimum possible total weight. On disconnected input, this implementation instead finds the minimum spanning forest.
 
 Kruskal's algorithm scans the edges in nondecreasing weight order, adding each edge whose endpoints lie in different components (tracked with a disjoint-set structure) and skipping any edge that would form a cycle.
 
@@ -4030,7 +4031,7 @@ Multigraphs are supported; parallel edges appear as separate entries in \inlinec
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(\max\left(n, m\right))$ auxiliary heap space and $O(\log n)$ auxiliary stack space.
+  \item $O(\max\left(n, m\right))$ auxiliary heap space and $O(\log m)$ auxiliary stack space.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -4125,7 +4126,7 @@ The input graph must be connected. Parallel edges are supported and are handled 
   \item $O(\log n)$ per call to \inlinecode{max\_edge\_on\_path()}.
 \end{compactitem}
 
-\textbf{Space Complexity}: $O(n \log n + m)$ auxiliary.
+\textbf{Space Complexity}: $O(n \log n)$ for the reconstruction tree and LCA table, plus $O(m)$ auxiliary during construction.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -4371,10 +4372,10 @@ int main() {
 \subsection{Maximum Flow (Ford-Fulkerson)}
 Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink.
 
-The Ford-Fulkerson method repeatedly finds any augmenting path from source to sink in the residual graph (here by depth-first search) and pushes as much flow as the path allows, until no augmenting path remains. This algorithm should only be used on graphs with integer capacities, as there exists certain real-valued flow inputs for which the algorithm never terminates. The Edmonds-Karp algorithm is an improvement using breadth-first search, addressing this problem.
+The Ford-Fulkerson method repeatedly finds any augmenting path from source to sink in the residual graph (here by depth-first search) and pushes as much flow as the path allows, until no augmenting path remains. This algorithm should only be used on graphs with integer capacities, because some real-valued inputs can make it fail to terminate. The Edmonds-Karp algorithm instead uses breadth-first search and always terminates in polynomial time.
 
 \begin{compactitem}
-  \item \inlinecode{max\_flow(source, sink)} modifies the global residual capacity matrix \inlinecode{cap} and returns maximum flow. Nodes are numbered $[0, n)$, where $n$ is \inlinecode{cap.size()}.
+  \item \inlinecode{max\_flow(source, sink)} modifies the global residual capacity matrix \inlinecode{cap} and returns the maximum flow. Nodes are numbered $[0, n)$, where $n$ is \inlinecode{cap.size()}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n^{2} \cdot f)$ per call, where $n$ is the number of nodes and $f$ is the maximum flow.
@@ -4468,7 +4469,7 @@ Edmonds-Karp is the Ford-Fulkerson method with the augmenting path always chosen
 \begin{compactitem}
   \item \inlinecode{EdmondsKarp\textless{}T\textgreater{}(n)} constructs an empty flow network with nodes numbered $[0, {\inlinecodemath{n}})$.
   \item \inlinecode{add\_edge(u, v, cap)} adds a directed residual-network edge from \inlinecode{u} to \inlinecode{v}.
-  \item \inlinecode{max\_flow(source, sink)} modifies the residual network and returns maximum flow.
+  \item \inlinecode{max\_flow(source, sink)} modifies the residual network and returns the maximum flow.
   \item \inlinecode{clear\_flow()} resets all edge flows to zero, allowing a fresh recomputation on the same graph.
   \item \inlinecode{min\_cut(source)} returns the source side of a minimum cut after \inlinecode{max\_flow()} has been called.
 \end{compactitem}
@@ -4618,7 +4619,7 @@ Dinic's algorithm proceeds in phases. Each phase runs a breadth-first search to 
   \item \inlinecode{Dinic\textless{}T\textgreater{}(n)} constructs an empty flow network with nodes numbered $[0, {\inlinecodemath{n}})$.
   \item \inlinecode{add\_edge(u, v, cap)} adds a directed residual-network edge from \inlinecode{u} to \inlinecode{v} and returns its edge ID.
   \item \inlinecode{edge\_flow(id)} returns the flow through a previously added edge.
-  \item \inlinecode{max\_flow(source, sink)} modifies the residual network and returns maximum flow.
+  \item \inlinecode{max\_flow(source, sink)} modifies the residual network and returns the maximum flow.
   \item \inlinecode{clear\_flow()} resets all edge flows to zero, allowing a fresh recomputation on the same graph.
   \item \inlinecode{min\_cut(source)} returns the source side of a minimum cut after \inlinecode{max\_flow()} has been called.
   \item \inlinecode{decompose(source, sink)} decomposes the current flow into paths from \inlinecode{source} to \inlinecode{sink}.
@@ -4882,11 +4883,11 @@ Given a flow network with integer capacities, find the maximum flow from a given
 Rather than augmenting along whole paths, the push-relabel algorithm maintains a preflow and a height label on each node, repeatedly pushing excess flow to lower-labeled neighbors and relabeling (raising) a node whose excess cannot yet be pushed, until no node other than the source and sink holds excess.
 
 \begin{compactitem}
-  \item \inlinecode{push\_relabel(source, sink)} returns maximum flow for a global capacity matrix \inlinecode{cap}, whose row and column indices represent the nodes.
+  \item \inlinecode{push\_relabel(source, sink)} returns the maximum flow for a global capacity matrix \inlinecode{cap}, whose row and column indices represent the nodes.
   \item \inlinecode{min\_cut(source)} returns the source side of a minimum cut after \inlinecode{push\_relabel()} has been called.
 \end{compactitem}
 
-Although the push-relabel algorithm is considered one of the most efficient maximum flow algorithms, it cannot take advantage of the magnitude of the maximum flow being less than $n^3$ (in which case the Ford-Fulkerson or Edmonds-Karp algorithms may be more efficient).
+Unlike Ford-Fulkerson, the $O(n^{3})$ bound does not improve when the integral maximum flow $f$ is small; the matrix-based Ford-Fulkerson implementation runs in $O(n^{2} \cdot f)$.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -6966,6 +6967,7 @@ The Gale-Shapley algorithm produces a stable matching, and a stable matching alw
 \textbf{Space Complexity}: $O(n^{2})$ auxiliary for the precomputed rankings.
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <queue>
 #include <vector>
 
@@ -6973,6 +6975,7 @@ std::vector<int> stable_marriage(
     const std::vector<std::vector<int>> &men_pref, const std::vector<std::vector<int>> &women_pref
 ) {
   int n = static_cast<int>(men_pref.size());
+  assert(static_cast<int>(women_pref.size()) == n);
   std::vector<std::vector<int>> rank(n, std::vector<int>(n));
   for (int w = 0; w < n; w++) {
     for (int i = 0; i < n; i++) {
@@ -7006,7 +7009,6 @@ std::vector<int> stable_marriage(
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 using namespace std;
 
 int main() {
@@ -7115,6 +7117,7 @@ int64_t max_clique_weighted_rec(const std::vector<Mask> &g, int64_t curr, Mask p
 
 int64_t max_clique_weighted() {
   int n = static_cast<int>(adj.size());
+  assert(static_cast<int>(w.size()) == n);
   std::vector<Mask> g = build_mask_graph();
   return max_clique_weighted_rec(g, 0, (Mask{1} << n) - 1, 0);
 }
@@ -7300,7 +7303,7 @@ The graph must be simple: the implementation stores one color per ordered node p
   \item \inlinecode{edge\_coloring(n, edges)} returns a vector of colors, one per entry of \inlinecode{edges}, using colors in the range $[0, D]$ where $D$ is the maximum degree. Nodes are numbered $[0, {\inlinecodemath{n}})$, and \inlinecode{edges[i]} is an undirected edge \inlinecode{u}-\inlinecode{v}.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n^{3} \cdot m)$ per call in the worst case, where $n$ is the number of nodes and $m$ the number of edges; substantially faster in practice.
+\textbf{Time Complexity}: $O(n^{3} \cdot m)$ per call in the worst case, where $n$ is the number of nodes and $m$ is the number of edges; substantially faster in practice.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:

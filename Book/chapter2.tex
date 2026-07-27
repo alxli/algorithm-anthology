@@ -3837,7 +3837,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Mo's Algorithm}
-Mo's algorithm answers a batch of range queries offline by reordering them so that the current window [\inlinecode{cur\_l}, \inlinecode{cur\_r}] can be transformed into the next query's range with as few single-element insertions and deletions as possible. It applies whenever there is no fast direct formula, but extending or shrinking the window by one element updates the answer cheaply, as with the number of distinct values in a range or the sum of squares of element frequencies.
+Mo's algorithm answers a batch of range queries offline by reordering them so that the current window $[{\inlinecodemath{cur\_l}}, {\inlinecodemath{cur\_r}}]$ can be transformed into the next query's range with as few single-element insertions and deletions as possible. It applies whenever there is no fast direct formula, but extending or shrinking the window by one element updates the answer cheaply, as with the number of distinct values in a range or the sum of squares of element frequencies.
 
 The trick is the query order. Sort queries by the block of their left endpoint, where each block spans about $n / \sqrt{q}$ indices, breaking ties by right endpoint. The left pointer then travels $O(n / \sqrt{q})$ per query, for $O(n \sqrt{q})$ moves in all, while within each block the right pointer sweeps monotonically across the array, contributing $O(n)$ per block over the $\sqrt{q}$ blocks, again $O(n \sqrt{q})$. So the pointers move $O(n \sqrt{q})$ times in total. Sorting the right endpoint in alternating directions between consecutive blocks (a ``boustrophedon'' order) avoids resetting the right pointer at every block boundary.
 
@@ -5559,14 +5559,14 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Wavelet Tree}
-A wavelet tree is a static structure over an integer array with values in a known range [\inlinecode{min\_val}, \inlinecode{max\_val}]. The root splits the value range at its midpoint, recording for every prefix of the array how many of its elements belong to the lower value half, then stably partitions the array so that those elements form the left child and the rest form the right child. Recursing on each half builds a balanced tree of height $O(\log s)$, where $s$ is the size of the value range.
+A wavelet tree is a static structure over an integer array with values in a known range $[{\inlinecodemath{min\_val}}, {\inlinecodemath{max\_val}}]$. The root splits the value range at its midpoint, recording for every prefix of the array how many of its elements belong to the lower value half, then stably partitions the array so that those elements form the left child and the rest form the right child. Recursing on each half builds a balanced tree of height $O(\log s)$, where $s$ is the size of the value range.
 
 The recorded prefix counts let a query at any node translate a range of array positions into the corresponding range of positions in either child, so a single root-to-leaf descent answers order statistics and rank queries. This is strictly more powerful than a merge sort tree: besides counting values below a threshold, it reports the $k$-th smallest value of a range in $O(\log s)$ time.
 
-All position ranges are inclusive $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ with 0-based indices. If the values are large or sparse, compress them to a small contiguous range first.
+All position ranges use 0-based indices and closed intervals $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$. If the values are large or sparse, compress them to a small contiguous range first.
 
 \begin{compactitem}
-  \item \inlinecode{WaveletTree(a, min\_val, max\_val)} builds the tree over the array \inlinecode{a}, whose values must all lie in [\inlinecode{min\_val}, \inlinecode{max\_val}].
+  \item \inlinecode{WaveletTree(a, min\_val, max\_val)} builds the tree over the array \inlinecode{a}, whose values must all lie in $[{\inlinecodemath{min\_val}}, {\inlinecodemath{max\_val}}]$.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{kth\_smallest(lo, hi, k)} returns the \inlinecode{k}-th smallest value among positions $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$, where \inlinecode{k} is 1-based (so \inlinecode{k == 1} returns the minimum).
   \item \inlinecode{count\_leq(lo, hi, x)} returns the number of positions \inlinecode{i} $\in [{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ such that \inlinecode{a[i]} $\leq$ \inlinecode{x}.
@@ -6377,7 +6377,7 @@ class SparseSegTree2D {
   T init;
 
   // Helper variables for query() and update().
-  int tgt_r1, tgt_c1, tgt_r2, tgt_c2;
+  int tgt_c1, tgt_c2;
   int64_t width;
 
   static int64_t length(int lo, int hi) { return hi - lo + 1LL; }
@@ -6508,7 +6508,6 @@ class SparseSegTree2D {
     }
     T value = repeat_value(init, rows);
     if (n->left != nullptr || n->right != nullptr) {
-      tgt_c1 = tgt_c2 = c;
       T left_value = (n->left != nullptr) ? query(&(n->left->root), c, c, length(lo, mid))
                                           : repeat_value(init, length(lo, mid));
       T right_value = (n->right != nullptr) ? query(&(n->right->root), c, c, length(mid + 1, hi))
@@ -6552,9 +6551,7 @@ class SparseSegTree2D {
   T query(int r1, int c1, int r2, int c2) {
     assert(0 <= r1 && r1 <= r2 && r2 <= R);
     assert(0 <= c1 && c1 <= c2 && c2 <= C);
-    tgt_r1 = r1;
     tgt_c1 = c1;
-    tgt_r2 = r2;
     tgt_c2 = c2;
     width = length(c1, c2);
     return query(root, r1, r2);
@@ -6608,13 +6605,13 @@ Values:
 0 1 9
 \end{exampleoutput}
 \subsection{2D Range Tree}
-Maintain a set of two-dimensional points while supporting queries for all points that fall inside given rectangular regions. This implementation uses \inlinecode{std::pair} to represent points, requiring operators \inlinecode{\textless{}} and \inlinecode{==} to be defined on the numeric template type. A balanced tree over the points sorted by $x$ stores at each node its subrange of points sorted by $y$, merged from its children's lists as in a merge sort tree. A query decomposes the $x$-range into $O(\log n)$ nodes and binary searches each node's list for the matching $y$-range.
+Maintain a set of two-dimensional points while supporting queries for all points that fall inside given rectangular regions. This implementation uses \inlinecode{std::pair} to represent points, requiring operators \inlinecode{\textless{}}, \inlinecode{\textless{}=}, and \inlinecode{==} to be defined on the numeric template type. A balanced tree over the points sorted by $x$ stores at each node its subrange of points sorted by $y$, merged from its children's lists as in a merge sort tree. A query decomposes the $x$-range into $O(\log n)$ nodes and binary searches each node's list for the matching $y$-range.
 
 Use this for static point-reporting queries when guaranteed worst-case bounds are more important than memory. Compared with a range k-d tree, it uses more space but gives $O(\log^{2} n + m)$ query time regardless of point distribution; the k-d tree is lighter and often faster on typical inputs, but its pruning is more distribution-dependent.
 
 \begin{compactitem}
   \item \inlinecode{RangeTree\textless{}T\textgreater{}(lo, hi)} constructs a set of \inlinecode{std::pair} points from the half-open forward-iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
-  \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(i, p)} on each point in the set that falls into the rectangular region consisting of rows $[{\inlinecodemath{x1}}, {\inlinecodemath{x2}}]$ and columns $[{\inlinecodemath{y1}}, {\inlinecodemath{y2}}]$. The first argument to \inlinecode{f} is the 0-based index of the point in the original range given to the constructor. The second argument is the point itself as an \inlinecode{std::pair}.
+  \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(i, p)} on each point whose $x$-coordinate is in $[{\inlinecodemath{x1}}, {\inlinecodemath{x2}}]$ and whose $y$-coordinate is in $[{\inlinecodemath{y1}}, {\inlinecodemath{y2}}]$. The first argument to \inlinecode{f} is the 0-based index of the point in the original range given to the constructor. The second argument is the point itself as an \inlinecode{std::pair}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -6758,7 +6755,7 @@ Use this for static point-reporting queries when $O(n)$ space and good average p
 
 \begin{compactitem}
   \item \inlinecode{RangeKDTree\textless{}T\textgreater{}(lo, hi)} constructs a set of \inlinecode{std::pair} points from the half-open forward-iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
-  \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(p)} on each point in the set that falls into the rectangular region consisting of rows $[{\inlinecodemath{x1}}, {\inlinecodemath{x2}}]$ and columns $[{\inlinecodemath{y1}}, {\inlinecodemath{y2}}]$. The argument \inlinecode{p} is the point as an \inlinecode{std::pair}.
+  \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(p)} on each point whose $x$-coordinate is in $[{\inlinecodemath{x1}}, {\inlinecodemath{x2}}]$ and whose $y$-coordinate is in $[{\inlinecodemath{y1}}, {\inlinecodemath{y2}}]$. The argument \inlinecode{p} is the point as an \inlinecode{std::pair}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -7043,7 +7040,7 @@ When prefix sums are nondecreasing, \inlinecode{max\_prefix(c)} answers prefix-b
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{sum(hi)} returns the sum of all values at indices $[0, {\inlinecodemath{hi}}]$.
   \item \inlinecode{sum(lo, hi)} returns the sum of all values at indices $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
-  \item \inlinecode{max\_prefix(c)} returns the largest boundary \inlinecode{hi} such that \inlinecode{sum(0, hi - 1)} $\leq$ \inlinecode{c}, assuming prefix sums are nondecreasing. It may return any boundary in $[0, n]$, where $n$ is \inlinecode{size()}.
+  \item \inlinecode{max\_prefix(c)} returns the largest boundary \inlinecode{hi} such that \inlinecode{sum(0, hi - 1)} $\leq$ \inlinecode{c}, assuming prefix sums are nondecreasing and \inlinecode{c} is nonnegative. It may return any boundary in $[0, n]$, where $n$ is \inlinecode{size()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -7243,7 +7240,7 @@ The value type \inlinecode{T} must represent $0$ and support addition, subtracti
   \item \inlinecode{set(i, x)} assigns the value at index \inlinecode{i} to \inlinecode{x}.
   \item \inlinecode{sum(hi)} returns the sum of all values at indices $[0, {\inlinecodemath{hi}}]$.
   \item \inlinecode{sum(lo, hi)} returns the sum of all values at indices $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
-  \item \inlinecode{max\_prefix(c)} returns the largest boundary \inlinecode{hi} such that \inlinecode{sum(0, hi - 1)} $\leq$ \inlinecode{c}, assuming prefix sums are nondecreasing. It may return any boundary in $[0, n]$, where $n$ is \inlinecode{size()}.
+  \item \inlinecode{max\_prefix(c)} returns the largest boundary \inlinecode{hi} such that \inlinecode{sum(0, hi - 1)} $\leq$ \inlinecode{c}, assuming prefix sums are nondecreasing and \inlinecode{c} is nonnegative. It may return any boundary in $[0, n]$, where $n$ is \inlinecode{size()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -7379,7 +7376,7 @@ The value type \inlinecode{T} must represent $0$ and support addition, subtracti
   \item \inlinecode{set(i, x)} assigns the value at index \inlinecode{i} to \inlinecode{x}.
   \item \inlinecode{sum(hi)} returns the sum of all values at indices $[0, {\inlinecodemath{hi}}]$.
   \item \inlinecode{sum(lo, hi)} returns the sum of all values at indices $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
-  \item \inlinecode{max\_prefix(c)} returns the largest boundary \inlinecode{hi} such that \inlinecode{sum(0, hi - 1)} $\leq$ \inlinecode{c}, assuming prefix sums are nondecreasing. It may return any boundary in $[0, N]$.
+  \item \inlinecode{max\_prefix(c)} returns the largest boundary \inlinecode{hi} such that \inlinecode{sum(0, hi - 1)} $\leq$ \inlinecode{c}, assuming prefix sums are nondecreasing and \inlinecode{c} is nonnegative. It may return any boundary in $[0, N]$.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(\log N)$ expected per call to all member functions.
@@ -9264,8 +9261,8 @@ This version supports dynamic connectivity, \inlinecode{link}, \inlinecode{cut},
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(\log m)$ expected per call to \inlinecode{connected}, \inlinecode{link}, \inlinecode{cut}, and \inlinecode{reroot}, where $m$ is the number of edges currently in the forest.
-  \item $O(k)$ expected per call to \inlinecode{component\_nodes}, where $k$ is the number of directed edge occurrences in the component.
+  \item $O(\log m)$ expected per call to \inlinecode{connected()}, \inlinecode{link()}, \inlinecode{cut()}, and \inlinecode{reroot()}, where $m$ is the number of edges currently in the forest.
+  \item $O(k)$ expected per call to \inlinecode{component\_nodes()}, where $k$ is the number of directed edge occurrences in the component.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
