@@ -7,7 +7,9 @@ additional property that recently accessed elements are quick to access again. E
 frequently accessed keys settle near the top. A single operation may degrade to O(n), but any
 sequence of operations averages out to O(log n) amortized each.
 
-This implementation requires an ordering on the key type `K` defined by `operator<`.
+The comparator `comp` defines the key ordering: `comp(a, b)` is true when `a` precedes `b`. It
+defaults to `std::less<K>`; to customize the ordering, instantiate `SplayTree<K, V, Compare>` and
+pass the comparator to the constructor.
 
 - `SplayTree<K, V>()` constructs an empty map.
 - `size()` returns the size of the map.
@@ -19,10 +21,11 @@ This implementation requires an ordering on the key type `K` defined by `operato
   successful or `false` if the key to be removed was not found.
 - `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was
   not found.
-- `entries()` returns all key-value entries in ascending order of keys.
+- `entries()` returns all key-value entries in comparator order.
 
-The navigation routines `min()`, `max()`, `lower_bound(k)`, `upper_bound(k)`, `prev(k)`, and
-`next(k)` from the treap in 2.3.1 depend only on the BST property and may be copied here unchanged.
+The comparator-aware navigation routines `min()`, `max()`, `lower_bound(k)`, `upper_bound(k)`,
+`prev(k)`, and `next(k)` from the treap in 2.3.1 depend only on the BST property and may be adapted
+here as needed.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `empty()`.
@@ -39,10 +42,11 @@ Space Complexity:
 
 */
 
+#include <functional>
 #include <utility>
 #include <vector>
 
-template<typename K, typename V>
+template<typename K, typename V, typename Compare = std::less<K>>
 class SplayTree {
   struct Node {
     K key;
@@ -53,6 +57,7 @@ class SplayTree {
   } *root;
 
   int num_nodes;
+  Compare comp;
 
   static void rotate_left(Node *&n) {
     Node *tmp = n;
@@ -68,15 +73,15 @@ class SplayTree {
     n->right = tmp;
   }
 
-  static void splay(Node *&n, const K &k) {
+  void splay(Node *&n, const K &k) {
     if (n == nullptr) {
       return;
     }
-    if (k < n->key && n->left != nullptr) {
-      if (k < n->left->key) {
+    if (comp(k, n->key) && n->left != nullptr) {
+      if (comp(k, n->left->key)) {
         splay(n->left->left, k);
         rotate_right(n);
-      } else if (n->left->key < k) {
+      } else if (comp(n->left->key, k)) {
         splay(n->left->right, k);
         if (n->left->right != nullptr) {
           rotate_left(n->left);
@@ -85,13 +90,13 @@ class SplayTree {
       if (n->left != nullptr) {
         rotate_right(n);
       }
-    } else if (n->key < k && n->right != nullptr) {
-      if (k < n->right->key) {
+    } else if (comp(n->key, k) && n->right != nullptr) {
+      if (comp(k, n->right->key)) {
         splay(n->right->left, k);
         if (n->right->left != nullptr) {
           rotate_right(n->right);
         }
-      } else if (n->right->key < k) {
+      } else if (comp(n->right->key, k)) {
         splay(n->right->right, k);
         rotate_left(n);
       }
@@ -108,13 +113,13 @@ class SplayTree {
       return true;
     }
     splay(n, k);
-    if (k < n->key) {
+    if (comp(k, n->key)) {
       Node *tmp = new Node(k, v);
       tmp->left = n->left;
       tmp->right = n;
       n->left = nullptr;
       n = tmp;
-    } else if (n->key < k) {
+    } else if (comp(n->key, k)) {
       Node *tmp = new Node(k, v);
       tmp->left = n;
       tmp->right = n->right;
@@ -132,7 +137,7 @@ class SplayTree {
       return false;
     }
     splay(n, k);
-    if (k < n->key || n->key < k) {
+    if (comp(k, n->key) || comp(n->key, k)) {
       return false;
     }
     Node *tmp = n;
@@ -165,7 +170,8 @@ class SplayTree {
   }
 
  public:
-  SplayTree() : root(nullptr), num_nodes(0) {}
+  explicit SplayTree(Compare comp = Compare())
+      : root(nullptr), num_nodes(0), comp(std::move(comp)) {}
 
   ~SplayTree() { clean_up(root); }
   SplayTree(const SplayTree &) = delete;
@@ -180,7 +186,7 @@ class SplayTree {
     if (root == nullptr) {
       return nullptr;
     }
-    return (k < root->key || root->key < k) ? nullptr : &(root->value);
+    return (comp(k, root->key) || comp(root->key, k)) ? nullptr : &(root->value);
   }
 
   std::vector<std::pair<K, V>> entries() const {
@@ -215,5 +221,13 @@ int main() {
   assert(t.find(1) == nullptr);
   assert(t.size() == 4);
   assert((t.entries() == vector<pair<int, char>>{{2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}}));
+
+  SplayTree<int, char, greater<int>> descending;
+  for (int key : {2, 1, 3}) {
+    descending.insert(key, '0' + key);
+  }
+  assert((descending.entries() == vector<pair<int, char>>{{3, '3'}, {2, '2'}, {1, '1'}}));
+  assert(*descending.find(2) == '2');
+  assert(descending.erase(2) && descending.find(2) == nullptr);
   return 0;
 }

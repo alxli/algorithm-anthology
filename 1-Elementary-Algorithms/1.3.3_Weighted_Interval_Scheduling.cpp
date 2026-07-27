@@ -12,9 +12,8 @@ if the next interval's `start` is at least the previous interval's `finish`.
 - `select_weighted_intervals(intervals)` returns a pair (`weight`, `selected`) containing that
   maximum weight and the selected intervals as original input indices in execution order, from an
   input vector of `WeightedInterval` with fields `start`, `finish`, and `weight`. `dp[i]` stores the
-  best answer using the first `i` intervals after sorting by finish time. Every interval must
-  satisfy `start < finish`. The empty subset is allowed, so nonpositive weights need not be
-  selected.
+  best answer using the first `i` intervals after sorting by finish time. Each interval must satisfy
+  `start` < `finish`. The empty subset is allowed, so nonpositive weights need not be selected.
 
 Accumulated weights must fit in `int64_t`.
 

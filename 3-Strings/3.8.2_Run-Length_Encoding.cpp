@@ -52,9 +52,7 @@ using namespace std;
 int main() {
   string s = "aaabccccdd";
   vector<pair<char, int>> runs = run_length_encode(s);
-  assert(runs.size() == 4);
-  assert(runs[0] == (pair<char, int>{'a', 3}));
-  assert(runs[2] == (pair<char, int>{'c', 4}));
+  assert((runs == vector<pair<char, int>>{{'a', 3}, {'b', 1}, {'c', 4}, {'d', 2}}));
   assert(run_length_decode(runs) == s);
   assert(run_length_encode("").empty());
   assert(run_length_decode({}) == "");

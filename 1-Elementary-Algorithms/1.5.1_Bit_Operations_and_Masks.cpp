@@ -9,8 +9,7 @@ masks. The loop implementations below exist for education only; production code 
 matching GCC built-ins when available, or on C++20 systems the generic `constexpr` equivalents from
 the `<bit>` header, which are additionally well-defined at $0$.
 
-- `test_bit(x, i)` returns whether the `i`-th bit of `x` is set, where
-  $0 \leq `i` < `MASK_BITS`$.
+- `test_bit(x, i)` returns whether the `i`-th bit of `x` is set, where $0 \leq `i` < `MASK_BITS`$.
 - `set_bit(x, i)`, `clear_bit(x, i)`, and `toggle_bit(x, i)` return `x` with the `i`-th respectively
   forced to $1$, forced to $0$, or flipped, where $0 \leq `i` < `MASK_BITS`$.
 - `lowest_set_bit(x)` returns the value of the lowest set bit of `x` (a power of two), or $0$ if `x`

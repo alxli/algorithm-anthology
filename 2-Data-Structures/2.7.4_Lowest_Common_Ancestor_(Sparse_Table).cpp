@@ -10,9 +10,9 @@ and exit times so ancestry can be tested in O(1), records each node's depth and 
 where one node is already an ancestor of the other, then jumps `u` upward by decreasing powers of
 two until its parent is the lowest common ancestor.
 
-- `SparseTableLCA(adj)` builds the structure over a forest represented by a bidirectional adjacency
-  list `adj` of nodes numbered $[0, `n`)$, where `n` is `adj.size()`.
-- `go_up(u, k)` returns the $k$-th ancestor of node `u`, stopping at that tree's root if `k` is
+- `SparseTableLCA(adj)` builds the structure over a forest represented by the bidirectional
+  adjacency list `adj`, whose indices represent the nodes.
+- `go_up(u, k)` returns the `k`-th ancestor of node `u`, stopping at that tree's root if `k` is
   larger than `u`'s depth.
 - `lca(u, v)` returns the lowest common ancestor of nodes `u` and `v`, or $-1$ if they are in
   different trees.

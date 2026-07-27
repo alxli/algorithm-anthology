@@ -9,14 +9,13 @@ unused smaller values before the chosen one, scaled by the number of possible su
 The cycle decomposition views a permutation as a function on indices and follows each unvisited
 orbit until it returns to its start.
 
-- `next_permutation_(lo, hi)` is analogous to `std::next_permutation(lo, hi)`, taking two
-  BidirectionalIterators as a range $[`lo`, `hi`)$ for which the function tries to rearrange to the
-  next lexicographically greater permutation. The function returns true if such a permutation
-  exists, or false if the range is already in descending order, in which case it is rearranged into
-  ascending order. This implementation requires an ordering on the set of possible elements defined
-  by the `<` operator on the iterator's value type.
-- `next_permutation(a)` is analogous to `next_permutation_()`, except that it takes a vector instead
-  of a range.
+- `next_permutation2(lo, hi, comp = std::less<>())` is analogous to `std::next_permutation()`,
+  taking two BidirectionalIterators as a range $[`lo`, `hi`)$ for which the function tries to
+  rearrange to the next lexicographically greater permutation according to `comp`. The function
+  returns true if such a permutation exists, or false if the range is already in reverse comparator
+  order, in which case it is rearranged into comparator order.
+- `next_permutation(a, comp = std::less<>())` is analogous to `next_permutation2()`, except that it
+  takes a vector instead of a range.
 - `next_permutation_mask(x)` returns the next integer having the same number of 1-bits. Treating
   each 1-bit as whether to take its corresponding item generates combinations of a set of $n$ items.
 - `permutation_by_rank(n, r)` returns the permutation of the integers in the range $[0, `n`)$ which
@@ -30,25 +29,26 @@ orbit until it returns to its start.
   3rd by the 2nd, and the 2nd by the 0-th ($0 \to 3 \to 2 \to 0$).
 
 Time Complexity:
-- O(n^2) per call to `next_permutation_(lo, hi)`, where $n$ is the distance between `lo` and `hi`.
-- O(n^2) per call to `next_permutation()`, `permutation_by_rank()`, and `rank_by_permutation()`.
+- O(n) per call to `next_permutation2()` and `next_permutation()`, where $n$ is the input size.
+- O(n^2) per call to `permutation_by_rank()` and `rank_by_permutation()`.
 - O(1) per call to `next_permutation_mask()`.
 - O(n) per call to `permutation_cycles()`.
 
 Space Complexity:
-- O(1) auxiliary for `next_permutation_()` and `next_permutation()`.
+- O(1) auxiliary for `next_permutation2()` and `next_permutation()`.
 - O(n) auxiliary for `permutation_by_rank()`, `rank_by_permutation()`, and `permutation_cycles()`.
 
 */
 
 #include <algorithm>
 #include <cstdint>
+#include <functional>
 #include <numeric>
 #include <utility>
 #include <vector>
 
-template<typename It>
-bool next_permutation_(It lo, It hi) {
+template<typename It, typename Compare = std::less<>>
+bool next_permutation2(It lo, It hi, Compare comp = Compare()) {
   if (lo == hi) {
     return false;
   }
@@ -60,9 +60,9 @@ bool next_permutation_(It lo, It hi) {
   --i;
   while (true) {
     It j = i;
-    if (*--i < *j) {
+    if (comp(*--i, *j)) {
       It k = hi;
-      while (!(*i < *--k)) {
+      while (!comp(*i, *--k)) {
       }
       std::iter_swap(i, k);
       std::reverse(j, hi);
@@ -75,13 +75,13 @@ bool next_permutation_(It lo, It hi) {
   }
 }
 
-template<typename T>
-bool next_permutation(std::vector<T> &a) {
+template<typename T, typename Compare = std::less<>>
+bool next_permutation(std::vector<T> &a, Compare comp = Compare()) {
   int n = static_cast<int>(a.size());
   for (int i = n - 2; i >= 0; i--) {
-    if (a[i] < a[i + 1]) {
+    if (comp(a[i], a[i + 1])) {
       for (int j = n - 1;; j--) {
-        if (a[i] < a[j]) {
+        if (comp(a[i], a[j])) {
           std::swap(a[i++], a[j]);
           for (j = n - 1; i < j; i++, j--) {
             std::swap(a[i], a[j]);
@@ -223,6 +223,12 @@ int main() {
     } while ((lo = next_permutation_mask(lo)) != hi);
     assert(count == 10);
     cout << endl;
+  }
+  {
+    vector<int> a{3, 2, 1}, b = a;
+    assert(next_permutation(a, greater<int>()));
+    assert(next_permutation2(b.begin(), b.end(), greater<int>()));
+    assert((a == vector<int>{3, 1, 2} && b == a));
   }
   {  // Decomposition into cycles.
     vector<int> a{3, 1, 0, 2};

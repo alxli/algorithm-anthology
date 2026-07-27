@@ -90,7 +90,9 @@ STYLE_PATTERNS = [
         "Include semantically relevant default arguments in the documented signature.",
     ),
     (
-        re.compile(r"`[^`]*\bcomp = Compare\(\)"),
+        re.compile(
+            r"`(?![^`]*Compare = std::less(?:<[^>]*>)?[^`]*`)[^`]*\bcomp = Compare\(\)"
+        ),
         "Document the concrete default comparator, e.g. comp = std::less<>.",
     ),
     (
@@ -835,6 +837,15 @@ def scan_default_argument_docs(paths):
             match = code_decl_re.match(line)
             if not match:
                 continue
+            defaulted_params = [
+                param
+                for param in split_parameters(match.group(2))
+                if top_level_default_expression(param)
+            ]
+            if defaulted_params and all(
+                re.search(r"\b(?:comp|hasher)\s*=", param) for param in defaulted_params
+            ):
+                continue
             name = match.group(1)
             if name not in documented:
                 continue
@@ -1113,6 +1124,8 @@ def scan_contextual_math_style(paths):
     prose_math_name = r"(?:[a-z]|[A-Za-z][A-Za-z0-9]*_[A-Za-z0-9_]+)"
     prose_tuple_re = re.compile(r"\$\(`" + prose_math_name + r"`, `" + prose_math_name + r"`\)\$")
     prose_code_expr_re = re.compile(r"\$`[A-Za-z][A-Za-z0-9_]*`\s*[-+]")
+    inferred_size_re = re.compile(r"where `([a-z])` is `[^`]+\.size\(\)`")
+    default_policy_re = re.compile(r"<(?:[^`>]|<[^`>]*>)*(?:Compare|Hash)\s*=")
     for path in paths:
         lines = path.read_text().splitlines()
         in_doc = False
@@ -1147,6 +1160,28 @@ def scan_contextual_math_style(paths):
             prev_line = lines[index - 1] if index > 0 else ""
             next_line = lines[index + 1] if index + 1 < len(lines) else ""
             local_context = prev_line.rstrip() + " " + line + " " + next_line.lstrip()
+
+            if in_api_bullet and default_policy_re.search(local_context):
+                issues.append(
+                    Issue(
+                        path,
+                        line_no,
+                        "api-signature-style",
+                        "Move default comparator or hasher policy details out of API signatures.",
+                        line,
+                    )
+                )
+
+            if "where `" in line and inferred_size_re.search(local_context):
+                issues.append(
+                    Issue(
+                        path,
+                        line_no,
+                        "math-code-style",
+                        "Avoid introducing a code variable solely to restate a container's size.",
+                        line,
+                    )
+                )
 
             bare_bound = bare_bound_re.search(line)
             if (

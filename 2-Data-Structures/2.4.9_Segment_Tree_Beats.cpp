@@ -3,9 +3,9 @@
 Maintain a fixed-size array under the range "chmin" update `a[i] = min(a[i], t)` for all `i` in a
 range, while answering range-sum and range-maximum queries. An ordinary lazy segment tree cannot
 represent a clamp like this with a single composable tag, because clamping affects only the entries
-that currently exceed `t`. Segment tree beats (the Ji Driver tree) resolves this by storing, for
-each node, the strict maximum, the second-largest distinct value, and a count of entries equal to
-the maximum. A clamp then has three cases at each node: if `t` $\geq$ `max1`, the clamp changes
+that currently exceed `t`. Segment tree beats (a.k.a. the Ji Driver tree) resolves this by storing,
+for each node, the strict maximum, the second-largest distinct value, and a count of entries equal
+to the maximum. A clamp then has three cases at each node: if `t` $\geq$ `max1`, the clamp changes
 nothing and the recursion stops (the prune case); if `max2` < `t` < `max1`, every entry equal to
 `max1` drops to `t` and all others are untouched, so the node updates in O(1), the sum falls by
 $(`max1` - `t`) * `count`$, and `max1` becomes `t` (the break, or tag, case); otherwise (`t` $\leq$
@@ -77,7 +77,7 @@ class SegTreeBeats {
 
   // Lower the node's maximum to t. Valid only when max2 < t < max1, so exactly the cnt entries
   // equal to max1 change and the second maximum is left untouched.
-  void apply_chmin(int i, T t) {
+  void apply_chmin(int i, const T &t) {
     sum[i] -= (max1[i] - t) * static_cast<T>(cnt[i]);  // Overflow warning.
     max1[i] = t;
   }
@@ -104,7 +104,7 @@ class SegTreeBeats {
     pull(i);
   }
 
-  void chmin(int i, int lo, int hi, int tlo, int thi, T t) {
+  void chmin(int i, int lo, int hi, int tlo, int thi, const T &t) {
     if (thi < lo || hi < tlo || max1[i] <= t) {
       return;  // Prune: outside the range, or every entry is already at most t.
     }

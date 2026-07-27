@@ -6,8 +6,8 @@ centroids creates a decomposition tree of height O(log n), which is useful for q
 distances to marked nodes, nearest special node, and other "path through a centroid" problems.
 
 - `CentroidDecomposition(adj)` builds the centroid decomposition of the tree given by a
-  bidirectional adjacency list `adj`, which must form a valid tree with `n` nodes numbered
-  $[0, `n`)$, where `n` is `adj.size()`.
+  bidirectional adjacency list `adj`, which must form a valid tree and whose indices represent the
+  nodes.
 - `parent(u)` returns the parent of node `u` in the centroid tree, or $-1$ if `u` is the root
   centroid.
 
@@ -136,6 +136,5 @@ int main() {
   assert(nearest_marked(2) == 2);
   assert(nearest_marked(4) == 3);
   assert(nearest_marked(5) == 1);
-
   return 0;
 }

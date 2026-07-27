@@ -7,9 +7,9 @@ candidate lengths.
 
 Given a sequence $a_0, a_1, \ldots, a_{n-1}$ and a value hash $h(a_i)$ for each element, the hash is
 the polynomial $H(a) = \sum_{i=0}^{n-1} h(a_i) B^{n-1-i} \pmod M$, where $B$ is `HASH_BASE` and $M$
-is `HASH_MOD`. Equivalently, it is built left-to-right by the recurrence
-`pref[i + 1] = pref[i] * HASH_BASE + h(a[i])`. A subsequence hash for $[`l`, `r`)$ is obtained by
-subtracting away the prefix before $l$: `pref[r] - pref[l] * pow(HASH_BASE, r - l)`.
+is `HASH_MOD`. Let $p(i)$ be the hash of the first $i$ values. It is built left-to-right by the
+prefix hash recurrence $p(0) = 0$ and $p(i + 1) = p(i) B + h(a_i) \pmod M$. The hash of a half-open
+subsequence $[l, r)$ is then computed as $p(r) - p(l) B^{r-l} \pmod M$.
 
 The implementation works modulo the Mersenne prime $2^{61} - 1$, using `__uint128_t` for the
 multiplication where available and falling back to a double-and-add modular multiply otherwise. The
@@ -17,18 +17,17 @@ base `HASH_BASE` should be changed or chosen randomly for open-hacking environme
 base, hashing remains fast and practical, but it is still probabilistic and should not be used as
 proof of equality when exact verification is required.
 
-By default, each sequence value is cast to `uint64_t` and mixed. For non-integer element types, pass
-a custom value hasher that maps each element to a stable nonzero value in [`1`, `HASH_MOD`).
+By default, each sequence value is cast to `uint64_t` and mixed. For non-integer element types,
+instantiate `RollingHash<T, Hash>` and pass a custom value hasher as the final constructor or
+`hash()` argument. It must map each element to a stable nonzero value in [`1`, `HASH_MOD`).
 
-- `RollingHash<T, Hash = ValueHasher<T>>(hasher = Hash())` constructs an empty hash sequence using
-  `hasher` to map values before mixing.
-- `RollingHash<T, Hash = ValueHasher<T>>(lo, hi, hasher = Hash())` constructs prefix hashes from the
-  values in the half-open iterator range $[`lo`, `hi`)$.
-- `RollingHash<T, Hash = ValueHasher<T>>(v, hasher = Hash())` constructs prefix hashes for vector
-  `v`.
+- `RollingHash<T>()` constructs an empty hash sequence.
+- `RollingHash<T>(lo, hi)` constructs prefix hashes from the values in the half-open iterator range
+  $[`lo`, `hi`)$.
+- `RollingHash<T>(v)` constructs prefix hashes for vector `v`.
 - `get(lo, hi)` returns the hash of the half-open subsequence $[`lo`, `hi`)$.
-- `hash(lo, hi, hasher = Hash())` returns the hash of the half-open iterator range $[`lo`, `hi`)$.
-- `hash(v, hasher = Hash())` returns the hash of vector `v`.
+- `hash(lo, hi)` returns the hash of the half-open iterator range $[`lo`, `hi`)$.
+- `hash(v)` returns the hash of vector `v`.
 - `concat(left, right, right_len)` returns the hash of the concatenation of a sequence with hash
   `left` and a sequence with hash `right` and length `right_len`.
 

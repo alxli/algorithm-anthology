@@ -11,8 +11,8 @@ the current prefix sum is $s$, every earlier prefix sum equal to $s - t$ identif
 sum $t$. Recording frequencies rather than only whether a prefix exists counts duplicate sums
 correctly.
 
-- `prefix_sums(a)` returns the prefix sum array `pref` with `pref[0]` $= 0$ and `pref[i + 1]` equal
-  to the sum of `a[0]` through `a[i]`.
+- `prefix_sums(a)` returns the prefix sum array `pref` of length $n + 1$, with `pref[0] = 0` and
+  `pref[i + 1]` equal to the sum of `a[0]` through `a[i]`.
 - `range_sum(pref, lo, hi)` returns the sum of range $[`lo`, `hi`]$.
 - `prefix_sums_2d(a)` returns a two-dimensional prefix sum table for matrix `a`.
 - `rectangle_sum(pref, r1, c1, r2, c2)` returns the sum of the rectangle with rows $[`r1`, `r2`]$
@@ -38,6 +38,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cstdint>
 #include <unordered_map>
 #include <vector>
@@ -51,6 +52,7 @@ std::vector<int64_t> prefix_sums(const std::vector<int> &a) {
 }
 
 int64_t range_sum(const std::vector<int64_t> &pref, int lo, int hi) {
+  assert(0 <= lo && lo <= hi && hi < static_cast<int>(pref.size()) - 1);
   return pref[hi + 1] - pref[lo];
 }
 
@@ -69,6 +71,11 @@ std::vector<std::vector<int64_t>> prefix_sums_2d(const std::vector<std::vector<i
 int64_t rectangle_sum(
     const std::vector<std::vector<int64_t>> &pref, int r1, int c1, int r2, int c2
 ) {
+  assert(
+      !pref.empty() && !pref[0].empty() && 0 <= r1 && r1 <= r2 &&
+      r2 < static_cast<int>(pref.size()) - 1 && 0 <= c1 && c1 <= c2 &&
+      c2 < static_cast<int>(pref[0].size()) - 1
+  );
   return pref[r2 + 1][c2 + 1] - pref[r1][c2 + 1] - pref[r2 + 1][c1] + pref[r1][c1];
 }
 
@@ -88,7 +95,6 @@ int64_t count_subarrays_with_sum(const std::vector<int> &a, int64_t target) {
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int main() {

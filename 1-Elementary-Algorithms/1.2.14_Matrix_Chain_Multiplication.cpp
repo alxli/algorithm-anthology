@@ -1,12 +1,17 @@
 /*
 
-Solves matrix-chain multiplication as a canonical example of interval dynamic programming. Matrix
-multiplication is associative, but multiplying an $a$-by-$b$ matrix with a $b$-by-$c$ matrix costs
-$abc$ scalar multiplications, so the choice of parenthesization can greatly affect the total cost.
+Given a fixed-order chain of compatible matrices, finds a parenthesization that minimizes the number
+of scalar multiplications needed to compute their product. The algorithm examines only the matrix
+dimensions; it does not multiply matrix entries. Matrix multiplication is associative, but
+multiplying an $a$-by-$b$ matrix with a $b$-by-$c$ matrix costs $abc$ scalar multiplications, so
+different parenthesizations can have very different costs. This is a canonical example of interval
+dynamic programming.
 
-For a chain of matrices, $dp(l,r)$ is the minimum cost of multiplying matrices $l$ through $r$.
-Trying every final split $k$ gives the recurrence
-$dp(l,r) = \min_{l \le k < r}(dp(l,k) + dp(k+1,r) + d_l d_{k+1} d_{r+1})$. Processing intervals in
+Write $d_i$ for `dimensions[i]`, so matrix $i$ has $d_i$ rows and $d_{i+1}$ columns. For a chain of
+matrices, $dp(l, r)$ is the minimum cost of multiplying matrices $l$ through $r$. Trying every final
+split $k$ gives the recurrence
+$dp(l, r) = \min_{l \le k < r}(dp(l, k) + dp(k + 1, r) + d_l d_{k+1} d_{r+1})$. The final product
+multiplies a $d_l$-by-$d_{k+1}$ matrix with a $d_{k+1}$-by-$d_{r+1}$ matrix. Processing intervals in
 increasing order of length ensures that both subintervals have already been solved. The same pattern
 applies whenever a contiguous interval is formed by combining two smaller intervals.
 
@@ -14,10 +19,11 @@ applies whenever a contiguous interval is formed by combining two smaller interv
   minimum number of scalar multiplications and one optimal parenthesization. Matrix `i` has
   dimensions `dimensions[i]` by `dimensions[i + 1]`; all dimensions must be positive.
 
-The minimum cost and all intermediate products must fit in `int64_t`.
+Overflow warning: The minimum cost and all intermediate products must fit in `int64_t`.
 
 Time Complexity:
-- O(n^3) per call, where $n$ is the number of matrices.
+- O(n^3) per call, where $n$ is the number of matrices. The dimension values affect the returned
+  cost but not the running time.
 
 Space Complexity:
 - O(n^2) auxiliary for the dynamic programming and split tables.

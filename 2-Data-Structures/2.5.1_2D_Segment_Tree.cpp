@@ -20,7 +20,7 @@ dense storage.
 - `SegTree2D<T>(rows, cols, value = T())` constructs a `rows` by `cols` array with all entries
   initialized to `value`.
 - `SegTree2D<T>(a)` constructs the tree from the matrix `a`.
-- `size_rows()` and `size_cols()` return the dimensions of the array.
+- `num_rows()` and `num_cols()` return the dimensions of the array.
 - `update(r, c, d)` applies delta `d` to the entry at index (`r`, `c`).
 - `at(r, c)` returns the value at index (`r`, `c`).
 - `query(r1, c1, r2, c2)` returns the aggregate over the rectangle with rows in $[`r1`, `r2`]$ and
@@ -29,7 +29,7 @@ dense storage.
 Time Complexity:
 - O(R*C) per call to either constructor, where $R$ and $C$ are the matrix dimensions.
 - O(log(R)*log(C)) per call to `update()` and `query()`.
-- O(1) per call to `size_rows()`, `size_cols()`, and `at()`.
+- O(1) per call to `num_rows()`, `num_cols()`, and `at()`.
 
 Space Complexity:
 - O(R*C) for storage of the segment tree.
@@ -95,8 +95,8 @@ class SegTree2D {
     build([&](int r, int c) { return a[r][c]; });
   }
 
-  int size_rows() const { return rows; }
-  int size_cols() const { return cols; }
+  int num_rows() const { return rows; }
+  int num_cols() const { return cols; }
 
   T at(int r, int c) const {
     assert(0 <= r && r < rows && 0 <= c && c < cols);
@@ -145,7 +145,7 @@ int main() {
   tree.update(0, 1, 8);
   tree.update(1, 2, 3);
   tree.update(2, 0, 5);
-  assert(tree.size_rows() == 3 && tree.size_cols() == 4);
+  assert(tree.num_rows() == 3 && tree.num_cols() == 4);
   assert(tree.at(0, 1) == 8);
   assert(tree.query(0, 0, 1, 3) == 3);
   assert(tree.query(2, 0, 2, 3) == 5);

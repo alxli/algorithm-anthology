@@ -6,7 +6,11 @@ must be undone.
 
 Path compression is intentionally not used, because it is hard to undo. Union by size keeps tree
 height logarithmic, and every successful union records enough information to restore the previous
-state.
+state. Specifically, a union attaches the smaller root below the larger one and records the attached
+root, its new parent, and that parent's old size. A snapshot is just the current number of history
+records. Rolling back pops records until reaching that position, detaching each child, restoring the
+parent size, and increasing the set count. Unions of elements already in the same set change nothing
+and therefore add no history record.
 
 - `RollbackDSU(n)` constructs `n` singleton sets over elements $[0, `n`)$.
 - `sets()` returns the current number of disjoint sets.

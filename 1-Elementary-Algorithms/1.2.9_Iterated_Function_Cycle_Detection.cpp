@@ -6,8 +6,8 @@ value, position, and length of the cycle reached by repeatedly applying $f$. For
 must eventually repeat some value. If $x_i = x_j$ for $i < j$, then the sequence from $x_i$ to
 $x_{j - 1}$ repeats forever. This is useful for detecting cycles in functional graphs (see 4.2.9),
 pseudo-random generators, Pollard rho style algorithms, degenerate linked lists, and arrays where
-each index points to the next index. For example, if an array `nums` of size $n + 1$ contains only
-values in $[1, n]$, with exactly one value occurring more than once, then $f(i)$ = `nums[i]` forms a
+each index points to the next index. For example, if an array $a_0, \ldots, a_{n+1}$ contains only
+values in $[1, n]$, with exactly one value occurring more than once, then $f(i) = a_i$ forms a
 functional graph; the duplicate value is the entry point of the cycle reached from $0$.
 
 Floyd's cycle-finding algorithm, a.k.a. the "tortoise and the hare algorithm", is a space-efficient
@@ -128,8 +128,8 @@ void verify(int x0, int start, int length) {
 // Given n + 1 integers within [1, n], where one value in [1, n] is present 2 or more times (but
 // other values in [1, n] are present at most once), find the duplicate without modifying the array.
 // Interpret each value as a pointer to the next index; the duplicate is the cycle entry.
-int find_duplicate_integer(const vector<int> &nums) {
-  return get<0>(find_cycle_floyd([&](int i) { return nums[i]; }, 0));
+int find_duplicate_integer(const vector<int> &a) {
+  return get<0>(find_cycle_floyd([&](int i) { return a[i]; }, 0));
 }
 
 int main() {

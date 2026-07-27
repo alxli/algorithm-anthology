@@ -20,21 +20,19 @@ Both `gap_cost` and `sub_cost` must be nonnegative.
   before following the path backwards to construct the answer. For `gap_cost = sub_cost = 1`,
   `dp[n][m]` will be the Levenshtein edit distance, where $n$ and $m$ are the lengths of `s1` and
   `s2`, respectively.
-- `hirschberg_align_sequences(s1, s2, gap_cost, sub_cost)` returns the sequence alignment of strings
-  `s1` and `s2` using the more memory efficient Hirschberg's algorithm.
+- `hirschberg_align(s1, s2, gap_cost, sub_cost)` returns the sequence alignment of strings `s1` and
+  `s2` using the more memory efficient Hirschberg's algorithm.
 
 Time Complexity:
 - O(n*m) per call to `edit_distance(s1, s2)`, `align_sequences(s1, s2)`, and
-  `hirschberg_align_sequences(s1, s2)`, where $n$ and $m$ are the lengths of `s1` and `s2`,
-  respectively.
+  `hirschberg_align(s1, s2)`, where $n$ and $m$ are the lengths of `s1` and `s2`, respectively.
 
 Space Complexity:
 - O(min(n, m)) auxiliary heap space for `edit_distance()`.
 - O(n*m) auxiliary heap space for `align_sequences(s1, s2)`, where $n$ and $m$ are the lengths of
   `s1` and `s2`, respectively.
 - O(log(max(n, m))) auxiliary stack space and O(min(n, m)) auxiliary heap space for
-  `hirschberg_align_sequences(s1, s2)`, where $n$ and $m$ are the lengths of `s1` and `s2`,
-  respectively.
+  `hirschberg_align(s1, s2)`, where $n$ and $m$ are the lengths of `s1` and `s2`, respectively.
 
 */
 
@@ -171,11 +169,11 @@ void hirschberg_rec(
   hirschberg_rec(mid1, hi1, mid2, hi2, res1, res2, gap_cost, sub_cost);
 }
 
-std::pair<string, string> hirschberg_align_sequences(
+std::pair<string, string> hirschberg_align(
     const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1
 ) {
   if (s1.size() < s2.size()) {
-    auto res = hirschberg_align_sequences(s2, s1, gap_cost, sub_cost);
+    auto res = hirschberg_align(s2, s1, gap_cost, sub_cost);
     return {res.second, res.first};
   }
   string res1, res2;
@@ -200,14 +198,14 @@ int main() {
 
   auto alignment = align_sequences("AGGGCT", "AGGCA", 2, 3);
   assert(alignment == (std::pair<string, string>{"AGGGCT", "A_GGCA"}));
-  assert(hirschberg_align_sequences("AGGGCT", "AGGCA", 2, 3) == alignment);
+  assert(hirschberg_align("AGGGCT", "AGGCA", 2, 3) == alignment);
 
-  assert((hirschberg_align_sequences("ab", "zabz") == std::pair<string, string>{"_ab_", "zabz"}));
+  assert((hirschberg_align("ab", "zabz") == std::pair<string, string>{"_ab_", "zabz"}));
   assert(
-      (hirschberg_align_sequences("a", "bbbbbbbbbb", 1, 5) ==
+      (hirschberg_align("a", "bbbbbbbbbb", 1, 5) ==
        std::pair<string, string>{"__________a", "bbbbbbbbbb_"})
   );
-  assert((hirschberg_align_sequences("aa", "ba", 1, 2) == std::pair<string, string>{"a_a", "_ba"}));
+  assert((hirschberg_align("aa", "ba", 1, 2) == std::pair<string, string>{"a_a", "_ba"}));
 
   std::cout << "Aligned strings:" << std::endl;
   std::cout << alignment.first << std::endl << alignment.second << std::endl;

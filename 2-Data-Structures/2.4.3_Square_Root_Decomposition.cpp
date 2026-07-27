@@ -30,7 +30,7 @@ The supported operations are identical to those of the point-update segment tree
 Time Complexity:
 - O(n) per call to both constructors, where $n$ is the size of the array.
 - O(1) per call to `size()` and `at()`.
-- O(sqrt(n)) per call to `update()` and `query()`.
+- O(sqrt(n)) per call to `query()` and `update()`.
 
 Space Complexity:
 - O(n) for storage of the array elements.

@@ -2,15 +2,18 @@
 
 Maintain an unordered map: a collection of key-value pairs in which each key appears at most once.
 Keys are hashed into buckets, and this implementation resolves collisions by chaining the entries in
-each bucket into a linked list. It requires `operator==` on the key type and a hash functor.
+each bucket into a linked list. The hash and key-equality policies follow the conventions of
+`std::unordered_map`.
 
 Compared with the open-addressing version (2.3.8), chaining keeps each entry at a stable address: a
 rehash never moves existing nodes, so pointers from `find()` and references from `operator[]` stay
 valid, and load factors above 1 are tolerated gracefully. The costs are a separate allocation per
 entry and cache-unfriendly pointer chasing during traversal.
 
-- `ChainingHashMap<K, V, Hash>(buckets = 128)` constructs an empty map with the positive number of
-  buckets given by `buckets`.
+- `ChainingHashMap<K, V>(buckets = 128)` constructs an empty map with the positive number of buckets
+  given by `buckets`, using `std::hash<K>` and `std::equal_to<K>`.
+- `ChainingHashMap<K, V, Hash, KeyEqual>(buckets, hash, equal)` instead stores the supplied hash and
+  equality policies.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if a new
@@ -51,12 +54,14 @@ Space Complexity:
 */
 
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <list>
 #include <utility>
 #include <vector>
 
-template<typename K, typename V, typename Hash>
+template<typename K, typename V, typename Hash = std::hash<K>, typename KeyEqual = std::equal_to<K>>
 class ChainingHashMap {
   struct HashNode {
     K key;
@@ -66,22 +71,29 @@ class ChainingHashMap {
 
   std::vector<std::list<HashNode>> table;
   int table_size, num_entries;
+  Hash hash;
+  KeyEqual equal;
+
+  int bucket(const K &k) const {
+    return static_cast<int>(hash(k) % static_cast<std::size_t>(table_size));
+  }
 
   void grow_and_rehash() {
     auto old = std::move(table);
     table_size = 2 * table_size;
     table.assign(table_size, std::list<HashNode>());
-    for (auto &bucket : old) {
-      while (!bucket.empty()) {
-        auto it = bucket.begin();
-        uint32_t i = Hash()(it->key) % table_size;
-        table[i].splice(table[i].end(), bucket, it);
+    for (auto &chain : old) {
+      while (!chain.empty()) {
+        auto it = chain.begin();
+        int i = bucket(it->key);
+        table[i].splice(table[i].end(), chain, it);
       }
     }
   }
 
  public:
-  explicit ChainingHashMap(int buckets = 128) : table_size(buckets), num_entries(0) {
+  explicit ChainingHashMap(int buckets = 128, Hash hash = Hash(), KeyEqual equal = KeyEqual())
+      : table_size(buckets), num_entries(0), hash(std::move(hash)), equal(std::move(equal)) {
     assert(buckets > 0);
     table.resize(buckets);
   }
@@ -96,16 +108,16 @@ class ChainingHashMap {
     if (num_entries >= table_size) {
       grow_and_rehash();
     }
-    uint32_t i = Hash()(k) % table_size;
+    int i = bucket(k);
     table[i].emplace_back(k, v);
     num_entries++;
     return true;
   }
 
   bool erase(const K &k) {
-    uint32_t i = Hash()(k) % table_size;
+    int i = bucket(k);
     auto it = table[i].begin();
-    while (it != table[i].end() && !(it->key == k)) {
+    while (it != table[i].end() && !equal(it->key, k)) {
       ++it;
     }
     if (it == table[i].end()) {
@@ -117,9 +129,9 @@ class ChainingHashMap {
   }
 
   V *find(const K &k) {
-    uint32_t i = Hash()(k) % table_size;
+    int i = bucket(k);
     auto it = table[i].begin();
-    while (it != table[i].end() && !(it->key == k)) {
+    while (it != table[i].end() && !equal(it->key, k)) {
       ++it;
     }
     if (it == table[i].end()) {
@@ -135,7 +147,7 @@ class ChainingHashMap {
     if (num_entries >= table_size) {
       grow_and_rehash();
     }
-    uint32_t i = Hash()(k) % table_size;
+    int i = bucket(k);
     table[i].emplace_back(k, V());
     num_entries++;
     return table[i].back().value;
@@ -169,18 +181,18 @@ struct Hasher {
       std::chrono::steady_clock::now().time_since_epoch().count();
 
   // Signed -> unsigned delegates.
-  uint32_t operator()(int k) { return Hasher()(static_cast<uint32_t>(k)); }
-  uint32_t operator()(int64_t k) { return Hasher()(static_cast<uint64_t>(k)); }
+  uint32_t operator()(int k) const { return Hasher()(static_cast<uint32_t>(k)); }
+  uint32_t operator()(int64_t k) const { return Hasher()(static_cast<uint64_t>(k)); }
 
   // Knuth's multiplicative method. Fast, but affine: an additive RAND_SEED only shifts all buckets
   // uniformly and won't stop crafted collisions (unlike the non-linear hashers below). To harden
   // it, randomize the odd multiplier and take the high bits instead.
-  uint32_t operator()(uint32_t k) {
+  uint32_t operator()(uint32_t k) const {
     return k * 2654435761u;  // Or just return k.
   }
 
   // SplitMix64 mixer (see 3.2.1's mix64).
-  uint32_t operator()(uint64_t k) {
+  uint32_t operator()(uint64_t k) const {
     k += RAND_SEED;
     k = (k ^ (k >> 30)) * 0xbf58476d1ce4e5b9ULL;
     k = (k ^ (k >> 27)) * 0x94d049bb133111ebULL;
@@ -188,7 +200,7 @@ struct Hasher {
   }
 
   // Jenkins's one-at-a-time hash.
-  uint32_t operator()(const std::string &k) {
+  uint32_t operator()(const std::string &k) const {
     uint32_t hash = RAND_SEED;
     for (char c : k) {
       hash += ((hash + static_cast<unsigned char>(c)) << 10);
@@ -198,6 +210,16 @@ struct Hasher {
     hash ^= (hash >> 11);
     return hash + (hash << 15);
   }
+};
+
+struct AbsHash {
+  int salt;
+  explicit AbsHash(int salt = 0) : salt(salt) {}
+  size_t operator()(int x) const { return (x < 0 ? -static_cast<int64_t>(x) : x) + salt; }
+};
+
+struct AbsEqual {
+  bool operator()(int a, int b) const { return AbsHash()(a) == AbsHash()(b); }
 };
 
 int main() {
@@ -230,5 +252,13 @@ int main() {
   char *ptr = stable.find("x");
   stable["y"] = 'y';  // Rehashes without relocating the existing list node.
   assert(ptr == stable.find("x") && *ptr == 'x');
+
+  ChainingHashMap<string, int> defaults;
+  defaults["answer"] = 42;
+  assert(*defaults.find("answer") == 42);
+
+  ChainingHashMap<int, char, AbsHash, AbsEqual> absolute(128, AbsHash(7), AbsEqual());
+  assert(absolute.insert(-2, 'x'));
+  assert(!absolute.insert(2, 'y') && *absolute.find(2) == 'x');
   return 0;
 }

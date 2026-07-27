@@ -6,21 +6,26 @@ relative ordering of elements. That is, if $a$ is the array of original values a
 of compressed values, then every pair of indices $i, j$ in $[0, n)$ shall satisfy $a[i] < a[j]$ if
 and only if $b[i] < b[j]$.
 
-All implementations below take ranges as ForwardIterators and require `operator<` on the value type.
-The two `compress()` functions rewrite a range in place and then discard the mapping.
+All implementations below take ranges as ForwardIterators. The comparator `comp` defines the value
+ordering: `comp(a, b)` is true when `a` precedes `b`. The two `compress()` functions rewrite a range
+in place and then discard the mapping.
 
-- `compress1(lo, hi)` performs the compression by sorting the array, removing duplicates, and binary
-  searching for the position of each original value.
-- `compress2(lo, hi)` achieves the same result by inserting all values into an `std::map`, which
-  automatically removes duplicate values and supports efficient lookups of the compressed values.
+- `compress1(lo, hi, comp = std::less<>())` performs the compression by sorting the array, removing
+  duplicates, and binary searching for the position of each original value.
+- `compress2(lo, hi, comp = std::less<>())` achieves the same result by inserting all values into an
+  `std::map`, which automatically removes duplicate values and supports efficient lookups of the
+  compressed values.
 
 `CoordinateCompressor` is a class version that retains the sorted table of distinct values so that
 arbitrary values can be mapped to and from compressed ranks long after construction (e.g. for
-offline queries arriving separately from the array being compressed).
+offline queries arriving separately from the array being compressed). It uses `std::less<T>` by
+default; to customize the ordering, instantiate `CoordinateCompressor<T, Compare>` and pass the
+comparator to either constructor.
 
+- `CoordinateCompressor<T>()` constructs an empty compressor. Register values with `add(x)`, then
+  call `build()` once before the first query.
 - `CoordinateCompressor<T>(lo, hi)` constructs a compressor from the half-open iterator range
-  $[`lo`, `hi`)$. Alternatively, use the default constructor and register values with `add(x)`, then
-  call `build()` once after all values are registered and before the first query.
+  $[`lo`, `hi`)$.
 - `size()` returns the number of distinct registered values $k$.
 - `value(r)` returns the original value with rank `r`, inverting `rank()`.
 - `rank(x)` returns the compressed value (rank) of `x` in $[0, k)$. `x` must have been registered.
@@ -32,7 +37,7 @@ Time Complexity:
 - O(1) amortized per call to `add()`, and O(m log m) per call to `build()`, where $m$ is the total
   number of values registered.
 - O(log k) per call to `rank()` and `contains()`, where $k$ is the number of distinct values.
-- O(1) per call to `value()` and `size()`.
+- O(1) per call to `size()` and `value()`.
 
 Space Complexity:
 - O(n) auxiliary for `compress1()` and `compress2()`.
@@ -42,25 +47,31 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
+#include <functional>
 #include <iterator>
 #include <map>
 #include <vector>
 
-template<typename It>
-void compress1(It lo, It hi) {
+template<typename It, typename Compare = std::less<>>
+void compress1(It lo, It hi, Compare comp = Compare()) {
   using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> v(lo, hi);
-  std::sort(v.begin(), v.end());
-  v.resize(std::unique(v.begin(), v.end()) - v.begin());
+  std::sort(v.begin(), v.end(), comp);
+  v.resize(
+      std::unique(
+          v.begin(), v.end(), [&](const T &a, const T &b) { return !comp(a, b) && !comp(b, a); }
+      ) -
+      v.begin()
+  );
   for (It it = lo; it != hi; ++it) {
-    *it = static_cast<int>(std::lower_bound(v.begin(), v.end(), *it) - v.begin());
+    *it = static_cast<int>(std::lower_bound(v.begin(), v.end(), *it, comp) - v.begin());
   }
 }
 
-template<typename It>
-void compress2(It lo, It hi) {
+template<typename It, typename Compare = std::less<>>
+void compress2(It lo, It hi, Compare comp = Compare()) {
   using T = typename std::iterator_traits<It>::value_type;
-  std::map<T, int> m;
+  std::map<T, int, Compare> m(comp);
   for (It it = lo; it != hi; ++it) {
     m[*it] = 0;
   }
@@ -73,15 +84,17 @@ void compress2(It lo, It hi) {
   }
 }
 
-template<typename T>
+template<typename T, typename Compare = std::less<T>>
 class CoordinateCompressor {
+  Compare comp;
   std::vector<T> values;
 
  public:
-  CoordinateCompressor() {}
+  explicit CoordinateCompressor(Compare comp = Compare()) : comp(std::move(comp)) {}
 
   template<typename It>
-  CoordinateCompressor(It lo, It hi) : values(lo, hi) {
+  CoordinateCompressor(It lo, It hi, Compare comp = Compare())
+      : comp(std::move(comp)), values(lo, hi) {
     build();
   }
 
@@ -90,17 +103,26 @@ class CoordinateCompressor {
   void add(const T &x) { values.push_back(x); }
 
   void build() {
-    std::sort(values.begin(), values.end());
-    values.resize(std::unique(values.begin(), values.end()) - values.begin());
+    std::sort(values.begin(), values.end(), comp);
+    values.resize(
+        std::unique(
+            values.begin(), values.end(),
+            [&](const T &a, const T &b) { return !comp(a, b) && !comp(b, a); }
+        ) -
+        values.begin()
+    );
   }
 
   int rank(const T &x) const {
-    int r = static_cast<int>(std::lower_bound(values.begin(), values.end(), x) - values.begin());
-    assert(r < size() && !(x < values[r]));  // x must be registered.
+    int r =
+        static_cast<int>(std::lower_bound(values.begin(), values.end(), x, comp) - values.begin());
+    assert(r < size() && !comp(x, values[r]));  // x must be registered.
     return r;
   }
 
-  bool contains(const T &x) const { return std::binary_search(values.begin(), values.end(), x); }
+  bool contains(const T &x) const {
+    return std::binary_search(values.begin(), values.end(), x, comp);
+  }
 };
 
 /*** Example Usage ***/
@@ -142,6 +164,14 @@ int main() {
     assert(cc.size() == 2);
     assert(cc.rank(0.5) == 1);
     assert(cc.value(0) == -1.0);
+  }
+  {
+    vector<int> a{10, 30, 20, 10};
+    CoordinateCompressor<int, greater<int>> cc(a.begin(), a.end());
+    assert(cc.rank(30) == 0 && cc.rank(10) == 2);
+    assert(cc.value(1) == 20);
+    compress1(a.begin(), a.end(), greater<int>());
+    assert((a == vector<int>{2, 0, 1, 2}));
   }
   return 0;
 }

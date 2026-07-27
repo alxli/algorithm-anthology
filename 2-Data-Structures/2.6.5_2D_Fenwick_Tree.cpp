@@ -4,6 +4,8 @@ Maintain a two-dimensional numerical array while supporting point increments and
 queries. This is the two-dimensional form of the standard Fenwick tree: each internal entry stores a
 rectangular block sum, and a prefix query combines O(log(R)*log(C)) disjoint blocks.
 
+The value type `T` must represent $0$ and support addition and subtraction.
+
 Choose among the three 2D Fenwick trees by coordinate range and update style. Use this dense version
 when the rows and columns are small enough to allocate the full grid: it has the simplest code and
 the best constants, supporting point updates and rectangle sums. Use the sparse 2D Fenwick tree
@@ -16,7 +18,7 @@ segment tree instead, since Fenwick-tree algebra relies on addition and subtract
 
 - `Fenwick2D<T>(rows, cols)` constructs a `rows` by `cols` array with 0-based indices, with all
   values initialized to $0$.
-- `size_rows()` and `size_cols()` return the number of rows and columns.
+- `num_rows()` and `num_cols()` return the number of rows and columns.
 - `add(r, c, x)` adds `x` to the value at index (`r`, `c`).
 - `set(r, c, x)` assigns `x` to the value at index (`r`, `c`).
 - `at(r, c)` returns the value at index (`r`, `c`).
@@ -26,7 +28,7 @@ segment tree instead, since Fenwick-tree algebra relies on addition and subtract
 
 Time Complexity:
 - O(R*C) per call to the constructor, where $R$ and $C$ are the number of rows and columns.
-- O(1) per call to `size_rows()` and `size_cols()`.
+- O(1) per call to `num_rows()` and `num_cols()`.
 - O(log(R)*log(C)) per call to all other operations.
 
 Space Complexity:
@@ -47,8 +49,8 @@ class Fenwick2D {
   Fenwick2D(int rows, int cols)
       : rows(rows), cols(cols), tree(rows + 1, std::vector<T>(cols + 1)) {}
 
-  int size_rows() const { return rows; }
-  int size_cols() const { return cols; }
+  int num_rows() const { return rows; }
+  int num_cols() const { return cols; }
 
   void add(int r, int c, const T &x) {
     assert(0 <= r && r < rows && 0 <= c && c < cols);

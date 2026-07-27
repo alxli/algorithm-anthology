@@ -9,9 +9,9 @@ The longest palindromic subsequence (LPS) is a maximum-length subsequence that r
 forward and backward. The minimum number of insertions needed to make a string a palindrome is the
 number of characters outside an LPS, so it equals $n$ minus the LPS length.
 
-- `longest_palindromic_subsequence(s)` returns one longest palindromic subsequence of `s`.
+- `longest_palindromic_subsequence(s)` returns one longest palindromic subsequence of string `s`.
 - `min_insertions_palindrome(s)` returns the minimum number of characters that must be inserted
-  anywhere in `s` to make it a palindrome.
+  anywhere in string `s` to make it a palindrome.
 
 Time Complexity:
 - O(n^2) per call to `longest_palindromic_subsequence(s)` and `min_insertions_palindrome(s)`, where

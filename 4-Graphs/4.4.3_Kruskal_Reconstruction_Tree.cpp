@@ -11,9 +11,9 @@ turns bottleneck path queries into ordinary LCA queries on the reconstruction tr
 
 - `KruskalReconstructionTree(n, edges)` builds the tree from weighted edges stored as (`weight`,
   `u`, `v`).
+- `root()` returns the reconstruction-tree root.
 - `max_edge_on_path(u, v)` returns the maximum edge weight on the MST path between original nodes
   `u` and `v`.
-- `root()` returns the reconstruction-tree root.
 
 The input graph must be connected. Parallel edges are supported and are handled naturally by
 Kruskal's algorithm.

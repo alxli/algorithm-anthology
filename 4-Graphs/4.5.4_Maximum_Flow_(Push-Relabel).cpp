@@ -9,8 +9,8 @@ height label on each node, repeatedly pushing excess flow to lower-labeled neigh
 (raising) a node whose excess cannot yet be pushed, until no node other than the source and sink
 holds excess.
 
-- `push_relabel(source, sink)` returns maximum flow for a global capacity matrix `cap` whose nodes
-  are numbered $[0, `n`)$, where `n` is `cap.size()`.
+- `push_relabel(source, sink)` returns maximum flow for a global capacity matrix `cap`, whose row
+  and column indices represent the nodes.
 - `min_cut(source)` returns the source side of a minimum cut after `push_relabel()` has been called.
 
 Although the push-relabel algorithm is considered one of the most efficient maximum flow algorithms,

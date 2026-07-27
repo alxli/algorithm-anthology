@@ -1,14 +1,12 @@
 /*
 
-These functions are equivalent to `std::rotate()`, taking three iterators `lo`, `mid`, and `hi`
-(`lo` $\leq$ `mid` $\leq$ `hi`) to perform a left rotation on the range $[`lo`, `hi`)$. After the
-function call, $[`lo`, `hi`)$ will consist of the concatenation of elements originally in
-$[`mid`, `hi`)$ + $[`lo`, `mid`)$. That is, the range $[`lo`, `hi`)$ will be rearranged in such a
-way that the element at `mid` becomes the first element of the new range, and the element before
-`mid` becomes the last element, all while preserving the relative ordering of elements within the
-two rotated subarrays.
+Rotates the half-open iterator range $[`lo`, `hi`)$ left around the split point `mid`, where
+$`lo` \leq `mid` \leq `hi`$. Writing the adjacent subranges $[`lo`, `mid`)$ and $[`mid`, `hi`)$ as
+`A` and `B`, respectively, the operation transforms `A B` into `B A` while preserving the relative
+order within each subrange. The standard library function `std::rotate(lo, mid, hi)` performs the
+same rearrangement.
 
-All three versions below achieve the same result using in-place algorithms.
+All three versions below operate in place, using different algorithms and iterator capabilities.
 
 - `rotate1(lo, mid, hi)` requires ForwardIterators and repeatedly swaps the next elements of the two
   unfinished subranges. When the right iterator reaches `hi`, it wraps to the current `mid`; when

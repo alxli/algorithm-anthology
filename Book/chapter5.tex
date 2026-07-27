@@ -191,7 +191,7 @@ Given a unimodal function $f$, find the position of its global minimum or maximu
 
 Ternary search splits the interval into thirds. It is the simplest to reason about, but it recomputes both probe points each step, spending two function evaluations per iteration while the interval shrinks to two-thirds.
 
-Golden-section search places the probes at the golden ratio so that one probe is reused as an interior point of the next, smaller interval. It therefore performs only one new evaluation per iteration while shrinking the interval by a factor of $1/\varphi$ (about 0.618), and reaches a given accuracy in roughly $2.4$ times fewer evaluations than ternary search. Prefer it when the function is expensive to evaluate.
+Golden-section search places the probes at the golden ratio so that one probe is reused as an interior point of the next, smaller interval. It therefore performs only one new evaluation per iteration while shrinking the interval by a factor of $1/\varphi$ (about $0.618$), and reaches a given accuracy in roughly $2.4$ times fewer evaluations than ternary search. Prefer it when the function is expensive to evaluate.
 
 The discrete version operates on an integer domain, narrowing by thirds until at most three candidates remain and then scanning them. It returns the index of the optimum rather than a real coordinate. As with ternary search on reals, the function must be strictly unimodal.
 

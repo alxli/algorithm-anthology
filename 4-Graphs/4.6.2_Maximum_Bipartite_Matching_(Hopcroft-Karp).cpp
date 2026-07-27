@@ -10,8 +10,8 @@ of node-disjoint shortest augmenting paths to flip at once, for O(m*sqrt(n_1 + n
 overall.
 
 - `bipartite_matching_hk(n2)` populates `match_left` and `match_right`, then returns maximum
-  matching size for a global, pre-populated adjacency list `adj` whose left-side nodes are numbered
-  $[0, `n`)$ and whose right-side neighbors are numbered $[0, `n2`)$, where `n` is `adj.size()`.
+  matching size for a global, pre-populated adjacency list `adj`, whose indices represent left-side
+  nodes and whose entries contain right-side neighbors numbered $[0, `n2`)$.
 
 Time Complexity:
 - O(m*sqrt(n_1 + n_2)) per call, where $m$ is the number of edges.

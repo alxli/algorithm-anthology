@@ -34,8 +34,8 @@ Common number theory operations relating to modular arithmetic.
   when the product of the moduli is too large to fit in `int64_t`.
 
 Time Complexity:
-- O(log(a + b)) per call to `gcd(a, b)`, `lcm(a, b)`, `extended_euclid(a, b)`, `mod_inverse(a, b)`,
-  `diophantine(a, b, c, ...)`, and `crt(...)`.
+- O(log(a + b)) per call to `gcd(a, b)`, `lcm(a, b)`, `extended_euclid(a, b)`,
+  `diophantine(a, b, c, ...)`, `mod_inverse(a, b)`, and `crt(...)`.
 - O(1) per call to `mod()`.
 - O(p) per call to `generate_inverse()`.
 - O(n^2) per call to `garner_restore()` and `garner_restore_mod()`.

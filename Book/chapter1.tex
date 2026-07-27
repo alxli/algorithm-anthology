@@ -337,8 +337,7 @@ int main() {
   cout << "Sorting five million integers..." << endl;
   cout.precision(3);
 
-  // Each sort is wrapped in a lambda so its name resolves at the call site (the bare names are
-  // function templates, not values), then timed on a fresh copy of the same unsorted data.
+  // Lambdas resolve each function template once benchmark() supplies the iterator types.
   auto benchmark = [&](const string &name, auto sort) {
     vector<int> v = data;
     clock_t start = clock();
@@ -369,13 +368,13 @@ combsort():   0.365s
 radix_sort(): 0.016s
 \end{exampleoutput}
 \subsection{Partitioning and Selection}
-Partition a range around a pivot, or select the element with a given sorted rank without fully sorting the range. Three-way partitioning, also known as the Dutch National Flag algorithm, rearranges the elements into consecutive groups less than, equal to, and greater than the pivot. A single pass maintains, in order, $[{\inlinecodemath{lo}}, {\inlinecodemath{lt}})$ less than the pivot, $[{\inlinecodemath{lt}}, {\inlinecodemath{mid}})$ equal to it, $[{\inlinecodemath{mid}}, {\inlinecodemath{gt}})$ unclassified, and $[{\inlinecodemath{gt}}, {\inlinecodemath{hi}})$ greater than it. A less-than element is swapped with \inlinecode{*lt} and advances both \inlinecode{lt} and \inlinecode{mid}; an equal element advances only \inlinecode{mid}; and a greater-than element is swapped with \inlinecode{*--gt} without advancing \inlinecode{mid}, since the incoming element is still unclassified.
+Partition a range around a pivot, or select the element with a given sorted rank without fully sorting the range. The comparator \inlinecode{comp} defines the ordering and defaults to \inlinecode{std::less\textless{}\textgreater{}}. Three-way partitioning, also known as the Dutch National Flag algorithm, rearranges the elements into consecutive groups that precede, are equivalent to, and follow the pivot. A single pass maintains those three regions around an unclassified middle region. An element that precedes the pivot is swapped with \inlinecode{*lt} and advances both \inlinecode{lt} and \inlinecode{mid}; an equivalent element advances only \inlinecode{mid}; and a following element is swapped with \inlinecode{*--gt} without advancing \inlinecode{mid}, since the incoming element is still unclassified.
 
-Quickselect repeatedly applies this partition and continues only into the group containing the desired rank. This is the same task as \inlinecode{std::nth\_element()}: after the call, \inlinecode{*nth} is the value that would appear there in sorted order, all earlier positions contain values no larger than it, and all later positions contain values no smaller than it. Choosing pivots uniformly at random gives expected linear time, while the three-way split avoids unnecessary work on duplicate-heavy inputs.
+Quickselect repeatedly applies this partition and continues only into the group containing the desired rank. This is the same task as \inlinecode{std::nth\_element()}: after the call, \inlinecode{*nth} is the value that would appear there in comparator order, no earlier value follows it, and no later value precedes it. Choosing pivots uniformly at random gives expected linear time, while the three-way split avoids unnecessary work on duplicate-heavy inputs.
 
 \begin{compactitem}
-  \item \inlinecode{partition\_three\_way(lo, hi, pivot)} rearranges $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ in-place and returns a pair of iterators (\inlinecode{mid1}, \inlinecode{mid2}), where $[{\inlinecodemath{lo}}, {\inlinecodemath{mid1}})$ is less than \inlinecode{pivot}, $[{\inlinecodemath{mid1}}, {\inlinecodemath{mid2}})$ is equal to \inlinecode{pivot}, and $[{\inlinecodemath{mid2}}, {\inlinecodemath{hi}})$ is greater than \inlinecode{pivot}.
-  \item \inlinecode{nth\_element2(lo, nth, hi)} rearranges $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ in-place around the 0-based rank represented by iterator \inlinecode{nth}. This requires random-access iterators and \inlinecode{operator\textless{}} on the value type.
+  \item \inlinecode{partition\_three\_way(lo, hi, pivot, comp = std::less\textless{}\textgreater{}())} rearranges $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ in-place and returns a pair of iterators (\inlinecode{mid1}, \inlinecode{mid2}). The three resulting ranges contain elements that precede, are equivalent to, and follow \inlinecode{pivot} according to \inlinecode{comp}, respectively.
+  \item \inlinecode{nth\_element2(lo, nth, hi, comp = std::less\textless{}\textgreater{}())} rearranges $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ in-place around the 0-based rank represented by iterator \inlinecode{nth} according to \inlinecode{comp}. This requires random-access iterators.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -389,16 +388,17 @@ Quickselect repeatedly applies this partition and continues only into the group 
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <functional>
 #include <random>
 #include <utility>
 
-template<typename It, typename T>
-std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot) {
+template<typename It, typename T, typename Compare = std::less<>>
+std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot, Compare comp = Compare()) {
   It lt = lo, mid = lo, gt = hi;
   while (mid != gt) {
-    if (*mid < pivot) {
+    if (comp(*mid, pivot)) {
       std::iter_swap(lt++, mid++);
-    } else if (pivot < *mid) {
+    } else if (comp(pivot, *mid)) {
       std::iter_swap(mid, --gt);
     } else {
       ++mid;
@@ -407,13 +407,13 @@ std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot) {
   return {lt, gt};
 }
 
-template<typename It>
-void nth_element2(It lo, It nth, It hi) {
+template<typename It, typename Compare = std::less<>>
+void nth_element2(It lo, It nth, It hi, Compare comp = Compare()) {
   static std::mt19937 rng(std::random_device{}());
   while (hi - lo > 1) {
     std::uniform_int_distribution<int> dist(0, hi - lo - 1);
     auto pivot = *(lo + dist(rng));
-    auto [lt, gt] = partition_three_way(lo, hi, pivot);
+    auto [lt, gt] = partition_three_way(lo, hi, pivot, comp);
     if (nth < lt) {
       hi = lt;
     } else if (nth >= gt) {
@@ -461,13 +461,17 @@ int main() {
   for (int i = n / 2 + 1; i < n; i++) {
     assert(a[i] >= a[n / 2]);
   }
+
+  vector<int> descending{1, 4, 2, 3};
+  nth_element2(descending.begin(), descending.begin() + 1, descending.end(), greater<int>());
+  assert(descending[1] == 3);
   return 0;
 }
 \end{lstlisting}
 \subsection{Array Rotation}
-These functions are equivalent to \inlinecode{std::rotate()}, taking three iterators \inlinecode{lo}, \inlinecode{mid}, and \inlinecode{hi} (\inlinecode{lo} $\leq$ \inlinecode{mid} $\leq$ \inlinecode{hi}) to perform a left rotation on the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$. After the function call, $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ will consist of the concatenation of elements originally in $[{\inlinecodemath{mid}}, {\inlinecodemath{hi}})$ + $[{\inlinecodemath{lo}}, {\inlinecodemath{mid}})$. That is, the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ will be rearranged in such a way that the element at \inlinecode{mid} becomes the first element of the new range, and the element before \inlinecode{mid} becomes the last element, all while preserving the relative ordering of elements within the two rotated subarrays.
+Rotates the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ left around the split point \inlinecode{mid}, where ${\inlinecodemath{lo}} \leq {\inlinecodemath{mid}} \leq {\inlinecodemath{hi}}$. Writing the adjacent subranges $[{\inlinecodemath{lo}}, {\inlinecodemath{mid}})$ and $[{\inlinecodemath{mid}}, {\inlinecodemath{hi}})$ as \inlinecode{A} and \inlinecode{B}, respectively, the operation transforms \inlinecode{A B} into \inlinecode{B A} while preserving the relative order within each subrange. The standard library function \inlinecode{std::rotate(lo, mid, hi)} performs the same rearrangement.
 
-All three versions below achieve the same result using in-place algorithms.
+All three versions below operate in place, using different algorithms and iterator capabilities.
 
 \begin{compactitem}
   \item \inlinecode{rotate1(lo, mid, hi)} requires ForwardIterators and repeatedly swaps the next elements of the two unfinished subranges. When the right iterator reaches \inlinecode{hi}, it wraps to the current \inlinecode{mid}; when the left iterator reaches \inlinecode{mid}, that boundary advances to the right iterator.
@@ -581,17 +585,18 @@ int main() {
 \subsection{Coordinate Compression}
 Given a range of $n$ numerical elements, reassign each element to an integer in the domain $[0, k)$, where $k$ is the number of distinct elements in the original range, while preserving the initial relative ordering of elements. That is, if $a$ is the array of original values and $b$ is the array of compressed values, then every pair of indices $i, j$ in $[0, n)$ shall satisfy $a[i] < a[j]$ if and only if $b[i] < b[j]$.
 
-All implementations below take ranges as ForwardIterators and require \inlinecode{operator\textless{}} on the value type. The two \inlinecode{compress()} functions rewrite a range in place and then discard the mapping.
+All implementations below take ranges as ForwardIterators. The comparator \inlinecode{comp} defines the value ordering: \inlinecode{comp(a, b)} is true when \inlinecode{a} precedes \inlinecode{b}. The two \inlinecode{compress()} functions rewrite a range in place and then discard the mapping.
 
 \begin{compactitem}
-  \item \inlinecode{compress1(lo, hi)} performs the compression by sorting the array, removing duplicates, and binary searching for the position of each original value.
-  \item \inlinecode{compress2(lo, hi)} achieves the same result by inserting all values into an \inlinecode{std::map}, which automatically removes duplicate values and supports efficient lookups of the compressed values.
+  \item \inlinecode{compress1(lo, hi, comp = std::less\textless{}\textgreater{}())} performs the compression by sorting the array, removing duplicates, and binary searching for the position of each original value.
+  \item \inlinecode{compress2(lo, hi, comp = std::less\textless{}\textgreater{}())} achieves the same result by inserting all values into an \inlinecode{std::map}, which automatically removes duplicate values and supports efficient lookups of the compressed values.
 \end{compactitem}
 
-\inlinecode{CoordinateCompressor} is a class version that retains the sorted table of distinct values so that arbitrary values can be mapped to and from compressed ranks long after construction (e.g. for offline queries arriving separately from the array being compressed).
+\inlinecode{CoordinateCompressor} is a class version that retains the sorted table of distinct values so that arbitrary values can be mapped to and from compressed ranks long after construction (e.g. for offline queries arriving separately from the array being compressed). It uses \inlinecode{std::less\textless{}T\textgreater{}} by default; to customize the ordering, instantiate \inlinecode{CoordinateCompressor\textless{}T, Compare\textgreater{}} and pass the comparator to either constructor.
 
 \begin{compactitem}
-  \item \inlinecode{CoordinateCompressor\textless{}T\textgreater{}(lo, hi)} constructs a compressor from the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$. Alternatively, use the default constructor and register values with \inlinecode{add(x)}, then call \inlinecode{build()} once after all values are registered and before the first query.
+  \item \inlinecode{CoordinateCompressor\textless{}T\textgreater{}()} constructs an empty compressor. Register values with \inlinecode{add(x)}, then call \inlinecode{build()} once before the first query.
+  \item \inlinecode{CoordinateCompressor\textless{}T\textgreater{}(lo, hi)} constructs a compressor from the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the number of distinct registered values $k$.
   \item \inlinecode{value(r)} returns the original value with rank \inlinecode{r}, inverting \inlinecode{rank()}.
   \item \inlinecode{rank(x)} returns the compressed value (rank) of \inlinecode{x} in $[0, k)$. \inlinecode{x} must have been registered.
@@ -604,7 +609,7 @@ All implementations below take ranges as ForwardIterators and require \inlinecod
   \item $O(n \log n)$ per call to \inlinecode{compress1(lo, hi)}, \inlinecode{compress2(lo, hi)}, and \inlinecode{CoordinateCompressor(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
   \item $O(1)$ amortized per call to \inlinecode{add()}, and $O(m \log m)$ per call to \inlinecode{build()}, where $m$ is the total number of values registered.
   \item $O(\log k)$ per call to \inlinecode{rank()} and \inlinecode{contains()}, where $k$ is the number of distinct values.
-  \item $O(1)$ per call to \inlinecode{value()} and \inlinecode{size()}.
+  \item $O(1)$ per call to \inlinecode{size()} and \inlinecode{value()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -617,25 +622,31 @@ All implementations below take ranges as ForwardIterators and require \inlinecod
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
+#include <functional>
 #include <iterator>
 #include <map>
 #include <vector>
 
-template<typename It>
-void compress1(It lo, It hi) {
+template<typename It, typename Compare = std::less<>>
+void compress1(It lo, It hi, Compare comp = Compare()) {
   using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> v(lo, hi);
-  std::sort(v.begin(), v.end());
-  v.resize(std::unique(v.begin(), v.end()) - v.begin());
+  std::sort(v.begin(), v.end(), comp);
+  v.resize(
+      std::unique(
+          v.begin(), v.end(), [&](const T &a, const T &b) { return !comp(a, b) && !comp(b, a); }
+      ) -
+      v.begin()
+  );
   for (It it = lo; it != hi; ++it) {
-    *it = static_cast<int>(std::lower_bound(v.begin(), v.end(), *it) - v.begin());
+    *it = static_cast<int>(std::lower_bound(v.begin(), v.end(), *it, comp) - v.begin());
   }
 }
 
-template<typename It>
-void compress2(It lo, It hi) {
+template<typename It, typename Compare = std::less<>>
+void compress2(It lo, It hi, Compare comp = Compare()) {
   using T = typename std::iterator_traits<It>::value_type;
-  std::map<T, int> m;
+  std::map<T, int, Compare> m(comp);
   for (It it = lo; it != hi; ++it) {
     m[*it] = 0;
   }
@@ -648,15 +659,17 @@ void compress2(It lo, It hi) {
   }
 }
 
-template<typename T>
+template<typename T, typename Compare = std::less<T>>
 class CoordinateCompressor {
+  Compare comp;
   std::vector<T> values;
 
  public:
-  CoordinateCompressor() {}
+  explicit CoordinateCompressor(Compare comp = Compare()) : comp(std::move(comp)) {}
 
   template<typename It>
-  CoordinateCompressor(It lo, It hi) : values(lo, hi) {
+  CoordinateCompressor(It lo, It hi, Compare comp = Compare())
+      : comp(std::move(comp)), values(lo, hi) {
     build();
   }
 
@@ -665,17 +678,26 @@ class CoordinateCompressor {
   void add(const T &x) { values.push_back(x); }
 
   void build() {
-    std::sort(values.begin(), values.end());
-    values.resize(std::unique(values.begin(), values.end()) - values.begin());
+    std::sort(values.begin(), values.end(), comp);
+    values.resize(
+        std::unique(
+            values.begin(), values.end(),
+            [&](const T &a, const T &b) { return !comp(a, b) && !comp(b, a); }
+        ) -
+        values.begin()
+    );
   }
 
   int rank(const T &x) const {
-    int r = static_cast<int>(std::lower_bound(values.begin(), values.end(), x) - values.begin());
-    assert(r < size() && !(x < values[r]));  // x must be registered.
+    int r =
+        static_cast<int>(std::lower_bound(values.begin(), values.end(), x, comp) - values.begin());
+    assert(r < size() && !comp(x, values[r]));  // x must be registered.
     return r;
   }
 
-  bool contains(const T &x) const { return std::binary_search(values.begin(), values.end(), x); }
+  bool contains(const T &x) const {
+    return std::binary_search(values.begin(), values.end(), x, comp);
+  }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -718,6 +740,14 @@ int main() {
     assert(cc.size() == 2);
     assert(cc.rank(0.5) == 1);
     assert(cc.value(0) == -1.0);
+  }
+  {
+    vector<int> a{10, 30, 20, 10};
+    CoordinateCompressor<int, greater<int>> cc(a.begin(), a.end());
+    assert(cc.rank(30) == 0 && cc.rank(10) == 2);
+    assert(cc.value(1) == 20);
+    compress1(a.begin(), a.end(), greater<int>());
+    assert((a == vector<int>{2, 0, 1, 2}));
   }
   return 0;
 }
@@ -838,7 +868,7 @@ Precomputes prefix sums so range-sum queries can be answered in constant time. T
 Prefix sums can also be combined with a frequency table to count subarrays having a target sum. When the current prefix sum is $s$, every earlier prefix sum equal to $s - t$ identifies a subarray with sum $t$. Recording frequencies rather than only whether a prefix exists counts duplicate sums correctly.
 
 \begin{compactitem}
-  \item \inlinecode{prefix\_sums(a)} returns the prefix sum array \inlinecode{pref} with \inlinecode{pref[0]} $= 0$ and \inlinecode{pref[i + 1]} equal to the sum of \inlinecode{a[0]} through \inlinecode{a[i]}.
+  \item \inlinecode{prefix\_sums(a)} returns the prefix sum array \inlinecode{pref} of length $n + 1$, with \inlinecode{pref[0] = 0} and \inlinecode{pref[i + 1]} equal to the sum of \inlinecode{a[0]} through \inlinecode{a[i]}.
   \item \inlinecode{range\_sum(pref, lo, hi)} returns the sum of range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{prefix\_sums\_2d(a)} returns a two-dimensional prefix sum table for matrix \inlinecode{a}.
   \item \inlinecode{rectangle\_sum(pref, r1, c1, r2, c2)} returns the sum of the rectangle with rows $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
@@ -866,6 +896,7 @@ All prefix sums, target differences, inclusion-exclusion results, and returned c
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <cstdint>
 #include <unordered_map>
 #include <vector>
@@ -879,6 +910,7 @@ std::vector<int64_t> prefix_sums(const std::vector<int> &a) {
 }
 
 int64_t range_sum(const std::vector<int64_t> &pref, int lo, int hi) {
+  assert(0 <= lo && lo <= hi && hi < static_cast<int>(pref.size()) - 1);
   return pref[hi + 1] - pref[lo];
 }
 
@@ -897,6 +929,11 @@ std::vector<std::vector<int64_t>> prefix_sums_2d(const std::vector<std::vector<i
 int64_t rectangle_sum(
     const std::vector<std::vector<int64_t>> &pref, int r1, int c1, int r2, int c2
 ) {
+  assert(
+      !pref.empty() && !pref[0].empty() && 0 <= r1 && r1 <= r2 &&
+      r2 < static_cast<int>(pref.size()) - 1 && 0 <= c1 && c1 <= c2 &&
+      c2 < static_cast<int>(pref[0].size()) - 1
+  );
   return pref[r2 + 1][c2 + 1] - pref[r1][c2 + 1] - pref[r2 + 1][c1] + pref[r1][c1];
 }
 
@@ -917,7 +954,6 @@ int64_t count_subarrays_with_sum(const std::vector<int> &a, int64_t target) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 using namespace std;
 
 int main() {
@@ -1227,7 +1263,7 @@ A monotone queue can be used to maintain the minimum or maximum value in an onli
 The queue stores candidate (\inlinecode{index}, \inlinecode{value}) pairs in monotone order. Expired indices are removed from the front, and dominated values are removed from the back before inserting a new candidate.
 
 \begin{compactitem}
-  \item \inlinecode{MonotoneQueue\textless{}T, Compare = std::less\textless{}T\textgreater{}\textgreater{}()} constructs an empty queue for minimum queries by default. Use \inlinecode{std::greater\textless{}T\textgreater{}} for maximum queries.
+  \item \inlinecode{MonotoneQueue\textless{}T\textgreater{}()} constructs an empty queue for minimum queries. Instantiate \inlinecode{MonotoneQueue\textless{}T, std::greater\textless{}T\textgreater{}\textgreater{}} for maximum queries.
   \item \inlinecode{push(index, value)} inserts candidate \inlinecode{value} at position \inlinecode{index}, removing dominated candidates from the back.
   \item \inlinecode{expire(first\_valid)} removes candidates with index less than \inlinecode{first\_valid}.
   \item \inlinecode{top()} returns the best active (\inlinecode{index}, \inlinecode{value}) pair. The queue must be nonempty.
@@ -1812,10 +1848,10 @@ Maximal sum submatrix:
 -1 8
 \end{exampleoutput}
 \subsection{Longest Increasing Subsequence}
-Given a range of elements, determine a longest subsequence where all elements are in strictly increasing order. The subsequence is not necessarily contiguous or unique, so only one such answer will be found. The answer is computed by scanning left to right while maintaining, for each length, the smallest possible tail value of an increasing subsequence of that length. Each element extends or improves one of these tails, located in $O(\log n)$ by binary search; predecessor links then reconstruct the subsequence. This implementation requires random-access iterators and \inlinecode{operator\textless{}} on the value type.
+Given a range of elements, determine a longest subsequence where all elements are in strictly increasing order. The subsequence is not necessarily contiguous or unique, so only one such answer will be found. The answer is computed by scanning left to right while maintaining, for each length, the smallest possible tail value of an increasing subsequence of that length. Each element extends or improves one of these tails, located in $O(\log n)$ by binary search; predecessor links then reconstruct the subsequence. The comparator \inlinecode{comp} defines the ordering and defaults to \inlinecode{std::less\textless{}\textgreater{}}. This implementation requires random-access iterators.
 
 \begin{compactitem}
-  \item \inlinecode{longest\_increasing\_subsequence(lo, hi)} returns the indices relative to \inlinecode{lo} of one longest strictly increasing subsequence of $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, in order.
+  \item \inlinecode{longest\_increasing\_subsequence(lo, hi, comp = std::less\textless{}\textgreater{}())} returns the indices relative to \inlinecode{lo} of one longest strictly increasing subsequence of $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ according to \inlinecode{comp}, in order.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
@@ -1824,10 +1860,11 @@ Given a range of elements, determine a longest subsequence where all elements ar
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <functional>
 #include <vector>
 
-template<typename It>
-std::vector<int> longest_increasing_subsequence(It lo, It hi) {
+template<typename It, typename Compare = std::less<>>
+std::vector<int> longest_increasing_subsequence(It lo, It hi, Compare comp = Compare()) {
   int n = static_cast<int>(hi - lo);
   if (n == 0) {
     return {};
@@ -1837,11 +1874,12 @@ std::vector<int> longest_increasing_subsequence(It lo, It hi) {
   // tail[i] = index (into [lo, hi)) of the last element of the best known LIS of length i + 1.
   std::vector<int> prev(n), tail(n);
   for (int i = 0; i < n; i++) {
-    // Find the tail to extend or improve. Comparing by value through the stored indices keeps
-    // tail index-based for reconstruction; swap < for <= to allow a non-decreasing result.
+    // Find the tail to extend or improve. Comparing by value through the stored indices keeps tail
+    // index-based for reconstruction; use an upper-bound search to allow a non-decreasing result.
     int pos = static_cast<int>(
         std::lower_bound(
-            tail.begin(), tail.begin() + len, i, [&](int t, int x) { return *(lo + t) < *(lo + x); }
+            tail.begin(), tail.begin() + len, i,
+            [&](int t, int x) { return comp(*(lo + t), *(lo + x)); }
         ) -
         tail.begin()
     );
@@ -1868,6 +1906,11 @@ int main() {
   vector<int> a{-2, -5, 1, 9, 10, 8, 11, 10, 13, 11};
   vector<int> res = longest_increasing_subsequence(a.begin(), a.end());
   assert((res == vector<int>{1, 2, 3, 4, 6, 8}));
+
+  vector<int> b{1, 4, 3, 2};
+  assert(
+      (longest_increasing_subsequence(b.begin(), b.end(), greater<int>()) == vector<int>{1, 2, 3})
+  );
   return 0;
 }
 \end{lstlisting}
@@ -1995,7 +2038,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Iterated Function Cycle Detection}
-Given a function $f$ mapping a finite set to itself and a starting value $x_0$, return the entry value, position, and length of the cycle reached by repeatedly applying $f$. Formally, the sequence $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$ must eventually repeat some value. If $x_i = x_j$ for $i < j$, then the sequence from $x_i$ to $x_{j - 1}$ repeats forever. This is useful for detecting cycles in functional graphs (see 4.2.9), pseudo-random generators, Pollard rho style algorithms, degenerate linked lists, and arrays where each index points to the next index. For example, if an array \inlinecode{nums} of size $n + 1$ contains only values in $[1, n]$, with exactly one value occurring more than once, then $f(i)$ = \inlinecode{nums[i]} forms a functional graph; the duplicate value is the entry point of the cycle reached from $0$.
+Given a function $f$ mapping a finite set to itself and a starting value $x_0$, return the entry value, position, and length of the cycle reached by repeatedly applying $f$. Formally, the sequence $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$ must eventually repeat some value. If $x_i = x_j$ for $i < j$, then the sequence from $x_i$ to $x_{j - 1}$ repeats forever. This is useful for detecting cycles in functional graphs (see 4.2.9), pseudo-random generators, Pollard rho style algorithms, degenerate linked lists, and arrays where each index points to the next index. For example, if an array $a_0, \ldots, a_{n+1}$ contains only values in $[1, n]$, with exactly one value occurring more than once, then $f(i) = a_i$ forms a functional graph; the duplicate value is the entry point of the cycle reached from $0$.
 
 Floyd's cycle-finding algorithm, a.k.a. the ``tortoise and the hare algorithm'', is a space-efficient default choice: it moves two pointers through the sequence at different speeds, finds a meeting point inside the cycle, then locates the cycle start. Brent's algorithm is a compact variant that usually calls $f$ fewer times by only resetting the tortoise at powers of two; prefer it when evaluating $f$ is expensive and constant factors matter. In the detection phase, Brent advances one pointer with one call to $f$ per step, while Floyd advances the tortoise once and the hare twice, using three calls to $f$ per step.
 
@@ -2102,8 +2145,8 @@ void verify(int x0, int start, int length) {
 // Given n + 1 integers within [1, n], where one value in [1, n] is present 2 or more times (but
 // other values in [1, n] are present at most once), find the duplicate without modifying the array.
 // Interpret each value as a pointer to the next index; the duplicate is the cycle entry.
-int find_duplicate_integer(const vector<int> &nums) {
-  return get<0>(find_cycle_floyd([&](int i) { return nums[i]; }, 0));
+int find_duplicate_integer(const vector<int> &a) {
+  return get<0>(find_cycle_floyd([&](int i) { return a[i]; }, 0));
 }
 
 int main() {
@@ -2576,18 +2619,18 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Interval Dynamic Programming}
-Solves matrix-chain multiplication as a canonical example of interval dynamic programming. Matrix multiplication is associative, but multiplying an $a$-by-$b$ matrix with a $b$-by-$c$ matrix costs $abc$ scalar multiplications, so the choice of parenthesization can greatly affect the total cost.
+\subsection{Matrix Chain Multiplication}
+Given a fixed-order chain of compatible matrices, finds a parenthesization that minimizes the number of scalar multiplications needed to compute their product. The algorithm examines only the matrix dimensions; it does not multiply matrix entries. Matrix multiplication is associative, but multiplying an $a$-by-$b$ matrix with a $b$-by-$c$ matrix costs $abc$ scalar multiplications, so different parenthesizations can have very different costs. This is a canonical example of interval dynamic programming.
 
-For a chain of matrices, $dp(l,r)$ is the minimum cost of multiplying matrices $l$ through $r$. Trying every final split $k$ gives the recurrence $dp(l,r) = \min_{l \le k < r}(dp(l,k) + dp(k+1,r) + d_l d_{k+1} d_{r+1})$. Processing intervals in increasing order of length ensures that both subintervals have already been solved. The same pattern applies whenever a contiguous interval is formed by combining two smaller intervals.
+Write $d_i$ for \inlinecode{dimensions[i]}, so matrix $i$ has $d_i$ rows and $d_{i+1}$ columns. For a chain of matrices, $dp(l, r)$ is the minimum cost of multiplying matrices $l$ through $r$. Trying every final split $k$ gives the recurrence $dp(l, r) = \min_{l \le k < r}(dp(l, k) + dp(k + 1, r) + d_l d_{k+1} d_{r+1})$. The final product multiplies a $d_l$-by-$d_{k+1}$ matrix with a $d_{k+1}$-by-$d_{r+1}$ matrix. Processing intervals in increasing order of length ensures that both subintervals have already been solved. The same pattern applies whenever a contiguous interval is formed by combining two smaller intervals.
 
 \begin{compactitem}
   \item \inlinecode{matrix\_chain\_order(dimensions)} returns a pair (\inlinecode{operations}, \inlinecode{parenthesization}) containing the minimum number of scalar multiplications and one optimal parenthesization. Matrix \inlinecode{i} has dimensions \inlinecode{dimensions[i]} by \inlinecode{dimensions[i + 1]}; all dimensions must be positive.
 \end{compactitem}
 
-The minimum cost and all intermediate products must fit in \inlinecode{int64\_t}.
+Overflow warning: The minimum cost and all intermediate products must fit in \inlinecode{int64\_t}.
 
-\textbf{Time Complexity}: $O(n^{3})$ per call, where $n$ is the number of matrices.
+\textbf{Time Complexity}: $O(n^{3})$ per call, where $n$ is the number of matrices. The dimension values affect the returned cost but not the running time.
 
 \textbf{Space Complexity}: $O(n^{2})$ auxiliary for the dynamic programming and split tables.
 
@@ -2790,7 +2833,7 @@ Selects a maximum-weight subset of non-overlapping intervals using dynamic progr
 Intervals are represented as half-open ranges $[{\inlinecodemath{start}}, {\inlinecodemath{finish}})$, so two intervals are compatible if the next interval's \inlinecode{start} is at least the previous interval's \inlinecode{finish}.
 
 \begin{compactitem}
-  \item \inlinecode{select\_weighted\_intervals(intervals)} returns a pair (\inlinecode{weight}, \inlinecode{selected}) containing that maximum weight and the selected intervals as original input indices in execution order, from an input vector of \inlinecode{WeightedInterval} with fields \inlinecode{start}, \inlinecode{finish}, and \inlinecode{weight}. \inlinecode{dp[i]} stores the best answer using the first \inlinecode{i} intervals after sorting by finish time. Every interval must satisfy \inlinecode{start \textless{} finish}. The empty subset is allowed, so nonpositive weights need not be selected.
+  \item \inlinecode{select\_weighted\_intervals(intervals)} returns a pair (\inlinecode{weight}, \inlinecode{selected}) containing that maximum weight and the selected intervals as original input indices in execution order, from an input vector of \inlinecode{WeightedInterval} with fields \inlinecode{start}, \inlinecode{finish}, and \inlinecode{weight}. \inlinecode{dp[i]} stores the best answer using the first \inlinecode{i} intervals after sorting by finish time. Each interval must satisfy \inlinecode{start} \textless{} \inlinecode{finish}. The empty subset is allowed, so nonpositive weights need not be selected.
 \end{compactitem}
 
 Accumulated weights must fit in \inlinecode{int64\_t}.
@@ -2884,7 +2927,7 @@ The greedy algorithm sorts intervals by start time and reuses the group whose cu
 Intervals are treated as half-open ranges $[{\inlinecodemath{start}}, {\inlinecodemath{finish}})$, so one interval may reuse a room that another interval vacates at the same time.
 
 \begin{compactitem}
-  \item \inlinecode{partition\_intervals(intervals)} returns a pair (\inlinecode{rooms}, \inlinecode{room}), where \inlinecode{rooms} is the minimum number of rooms and \inlinecode{room[i]} is the assigned room for input interval \inlinecode{i}. Each \inlinecode{PartitionInterval} has fields \inlinecode{start} and \inlinecode{finish}, which must satisfy \inlinecode{start \textless{} finish}.
+  \item \inlinecode{partition\_intervals(intervals)} returns a pair (\inlinecode{rooms}, \inlinecode{room}), where \inlinecode{rooms} is the minimum number of rooms and \inlinecode{room[i]} is the assigned room for input interval \inlinecode{i}. Each \inlinecode{Interval} has fields \inlinecode{start} and \inlinecode{finish}, which must satisfy \inlinecode{start} \textless{} \inlinecode{finish}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting and priority queue operations.
@@ -2900,13 +2943,11 @@ Intervals are treated as half-open ranges $[{\inlinecodemath{start}}, {\inlineco
 #include <utility>
 #include <vector>
 
-struct PartitionInterval {
+struct Interval {
   int start, finish;
 };
 
-std::pair<int, std::vector<int>> partition_intervals(
-    const std::vector<PartitionInterval> &intervals
-) {
+std::pair<int, std::vector<int>> partition_intervals(const std::vector<Interval> &intervals) {
   int n = static_cast<int>(intervals.size());
   std::vector<int> order(n);
   std::iota(order.begin(), order.end(), 0);
@@ -2941,14 +2982,14 @@ std::pair<int, std::vector<int>> partition_intervals(
 using namespace std;
 
 int main() {
-  vector<PartitionInterval> intervals{{0, 30}, {5, 10}, {15, 20}};
+  vector<Interval> intervals{{0, 30}, {5, 10}, {15, 20}};
   auto [rooms, room] = partition_intervals(intervals);
   // The long interval overlaps both short intervals, but the short intervals can share a room.
   assert(rooms == 2);
   assert(room[1] == room[2]);
   assert(room[0] != room[1]);
 
-  vector<PartitionInterval> touching{{0, 2}, {2, 4}, {4, 5}};
+  vector<Interval> touching{{0, 2}, {2, 4}, {4, 5}};
   auto [touching_rooms, touching_room] = partition_intervals(touching);
   assert(touching_rooms == 1 && *max_element(touching_room.begin(), touching_room.end()) == 0);
   assert(partition_intervals({}).first == 0);
@@ -4005,7 +4046,7 @@ The \inlinecode{k}-th Gray code is obtained from the ordinary binary value \inli
 
 \begin{compactitem}
   \item \inlinecode{gray\_code(k)} returns the \inlinecode{k}-th mask in Gray code order.
-  \item \inlinecode{inverse\_gray\_code(g)} returns the rank \inlinecode{k} such that \inlinecode{gray\_code(k) == g}.
+  \item \inlinecode{inverse\_gray\_code(g)} returns the rank \inlinecode{k} such that \inlinecode{gray\_code(k)} equals \inlinecode{g}.
   \item \inlinecode{gray\_sequence(n)} returns all $2^n$ masks in Gray code order; consecutive entries (and the last with the first when \inlinecode{n \textgreater{} 0}) differ in exactly one bit, where $0 \leq {\inlinecodemath{n}} < {\inlinecodemath{MASK\_BITS}}$.
 \end{compactitem}
 

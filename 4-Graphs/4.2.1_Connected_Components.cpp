@@ -5,9 +5,9 @@ each component. This is the standard graph reachability primitive behind many la
 one depth-first search from every unseen node, and all nodes visited by that search belong to the
 same component. For directed graphs, use a strongly connected components algorithm instead.
 
-- `connected_components()` populates `comp_id[]` (component ID for each node) and `components[]`
-  (nodes for each component ID) given a global, bidirectionally pre-populated adjacency list `adj`
-  which must consist of nodes numbered $[0, `n`)$, where `n` is `adj.size()`.
+- `connected_components()` populates the global arrays `comp_id[]` (component ID for each node) and
+  `components[]` (nodes for each component ID) given a global, bidirectionally pre-populated
+  adjacency list `adj` whose indices represent the nodes.
 
 Time Complexity:
 - O(max(n, m)) per call, where $n$ is the number of nodes and $m$ is the number of edges.

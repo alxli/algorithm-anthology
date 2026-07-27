@@ -130,9 +130,10 @@ class MinCostMaxFlow {
     C cost = 0;
     std::vector<C> dist(nodes);
     std::vector<int> parent_edge(nodes);
+    using qnode = std::pair<C, int>;  // (distance, node)
     while (flow < target_flow) {
+      std::priority_queue<qnode, std::vector<qnode>, std::greater<>> pq;
       dist.assign(nodes, INF_COST);
-      std::priority_queue<std::pair<C, int>, std::vector<std::pair<C, int>>, std::greater<>> pq;
       dist[source] = 0;
       pq.push({0, source});
       while (!pq.empty()) {

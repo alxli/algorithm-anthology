@@ -93,10 +93,9 @@ bool is_number(const string &s) {
   int i = (s.empty() || (s[0] != '-' && s[0] != '+')) ? 0 : 1;
   bool seen_digit = false, seen_dot = false;
   for (; i < static_cast<int>(s.size()); i++) {
-    unsigned char c = s[i];
-    if (isdigit(c)) {
+    if (isdigit(static_cast<unsigned char>(s[i]))) {
       seen_digit = true;
-    } else if (c == '.' && !seen_dot) {
+    } else if (s[i] == '.' && !seen_dot) {
       seen_dot = true;
     } else {
       break;
@@ -134,8 +133,8 @@ Case Conversion:
 string to_upper(const string &s) {
   string res;
   res.reserve(s.size());
-  for (char c : s) {
-    res.push_back(static_cast<char>(toupper(static_cast<unsigned char>(c))));
+  for (unsigned char c : s) {
+    res.push_back(static_cast<char>(toupper(c)));
   }
   return res;
 }
@@ -143,19 +142,17 @@ string to_upper(const string &s) {
 string to_lower(const string &s) {
   string res;
   res.reserve(s.size());
-  for (char c : s) {
-    res.push_back(static_cast<char>(tolower(static_cast<unsigned char>(c))));
+  for (unsigned char c : s) {
+    res.push_back(static_cast<char>(tolower(c)));
   }
   return res;
 }
 
 string to_title(const string &s) {
   string res;
-  auto lower = [](unsigned char c) { return static_cast<char>(tolower(c)); };
-  auto upper = [](unsigned char c) { return static_cast<char>(toupper(c)); };
-  char prev = '\0';
-  for (char c : s) {
-    res.push_back(isalpha(static_cast<unsigned char>(prev)) ? lower(c) : upper(c));
+  unsigned char prev = '\0';
+  for (unsigned char c : s) {
+    res.push_back(isalpha(prev) ? static_cast<char>(tolower(c)) : static_cast<char>(toupper(c)));
     prev = res.back();
   }
   return res;
@@ -750,26 +747,25 @@ int main() {
   unordered_map<Triple, int, GenericHasher<Triple>> grid;
   grid[Triple(1, 'a', 3.14)] = 6;
   assert(grid[Triple(1, 'a', 3.14)] == 6);
-
   return 0;
 }
 \end{lstlisting}
 \subsection{Rolling Hash}
 Computes polynomial rolling hashes for sequences of an arbitrary hashable type \inlinecode{T}, supporting $O(1)$ contiguous subsequence hash queries after preprocessing. This is useful for probabilistic string matching, substring equality checks, repeated subarray detection, and binary-searching over candidate lengths.
 
-Given a sequence $a_0, a_1, \ldots, a_{n-1}$ and a value hash $h(a_i)$ for each element, the hash is the polynomial $H(a) = \sum_{i=0}^{n-1} h(a_i) B^{n-1-i} \pmod M$, where $B$ is \inlinecode{HASH\_BASE} and $M$ is \inlinecode{HASH\_MOD}. Equivalently, it is built left-to-right by the recurrence \inlinecode{pref[i + 1] = pref[i] * HASH\_BASE + h(a[i])}. A subsequence hash for $[{\inlinecodemath{l}}, {\inlinecodemath{r}})$ is obtained by subtracting away the prefix before $l$: \inlinecode{pref[r] - pref[l] * pow(HASH\_BASE, r - l)}.
+Given a sequence $a_0, a_1, \ldots, a_{n-1}$ and a value hash $h(a_i)$ for each element, the hash is the polynomial $H(a) = \sum_{i=0}^{n-1} h(a_i) B^{n-1-i} \pmod M$, where $B$ is \inlinecode{HASH\_BASE} and $M$ is \inlinecode{HASH\_MOD}. Let $p(i)$ be the hash of the first $i$ values. It is built left-to-right by the prefix hash recurrence $p(0) = 0$ and $p(i + 1) = p(i) B + h(a_i) \pmod M$. The hash of a half-open subsequence $[l, r)$ is then computed as $p(r) - p(l) B^{r-l} \pmod M$.
 
 The implementation works modulo the Mersenne prime $2^{61} - 1$, using \inlinecode{\_\_uint128\_t} for the multiplication where available and falling back to a double-and-add modular multiply otherwise. The base \inlinecode{HASH\_BASE} should be changed or chosen randomly for open-hacking environments. With a fixed base, hashing remains fast and practical, but it is still probabilistic and should not be used as proof of equality when exact verification is required.
 
-By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For non-integer element types, pass a custom value hasher that maps each element to a stable nonzero value in [\inlinecode{1}, \inlinecode{HASH\_MOD}).
+By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For non-integer element types, instantiate \inlinecode{RollingHash\textless{}T, Hash\textgreater{}} and pass a custom value hasher as the final constructor or \inlinecode{hash()} argument. It must map each element to a stable nonzero value in [\inlinecode{1}, \inlinecode{HASH\_MOD}).
 
 \begin{compactitem}
-  \item \inlinecode{RollingHash\textless{}T, Hash = ValueHasher\textless{}T\textgreater{}\textgreater{}(hasher = Hash())} constructs an empty hash sequence using \inlinecode{hasher} to map values before mixing.
-  \item \inlinecode{RollingHash\textless{}T, Hash = ValueHasher\textless{}T\textgreater{}\textgreater{}(lo, hi, hasher = Hash())} constructs prefix hashes from the values in the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
-  \item \inlinecode{RollingHash\textless{}T, Hash = ValueHasher\textless{}T\textgreater{}\textgreater{}(v, hasher = Hash())} constructs prefix hashes for vector \inlinecode{v}.
+  \item \inlinecode{RollingHash\textless{}T\textgreater{}()} constructs an empty hash sequence.
+  \item \inlinecode{RollingHash\textless{}T\textgreater{}(lo, hi)} constructs prefix hashes from the values in the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
+  \item \inlinecode{RollingHash\textless{}T\textgreater{}(v)} constructs prefix hashes for vector \inlinecode{v}.
   \item \inlinecode{get(lo, hi)} returns the hash of the half-open subsequence $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
-  \item \inlinecode{hash(lo, hi, hasher = Hash())} returns the hash of the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
-  \item \inlinecode{hash(v, hasher = Hash())} returns the hash of vector \inlinecode{v}.
+  \item \inlinecode{hash(lo, hi)} returns the hash of the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
+  \item \inlinecode{hash(v)} returns the hash of vector \inlinecode{v}.
   \item \inlinecode{concat(left, right, right\_len)} returns the hash of the concatenation of a sequence with hash \inlinecode{left} and a sequence with hash \inlinecode{right} and length \inlinecode{right\_len}.
 \end{compactitem}
 
@@ -970,13 +966,15 @@ Only \inlinecode{pop\_back()} needs a modular inverse of the base, which is prec
 
 The hasher's output must be nonnegative. As with any polynomial hash, comparing sequences of different lengths is only safe when digits are positive (for example, map an alphabet to $[1, B)$) so that a leading zero cannot make a shorter sequence collide with a longer one.
 
+The element type defaults to \inlinecode{int}, and integer-like values use \inlinecode{IdentityDigit\textless{}T\textgreater{}}. To customize the mapping, instantiate \inlinecode{HashDeque\textless{}T, Hash\textgreater{}} and pass the hasher to the constructor.
+
 \begin{compactitem}
-  \item \inlinecode{HashDeque\textless{}T = int, Hash = IdentityDigit\textless{}T\textgreater{}\textgreater{}(hasher = Hash())} constructs an empty deque whose \inlinecode{hasher} maps each element to its nonnegative integer digit. For integer-like \inlinecode{T} the default hasher casts the element to \inlinecode{uint64\_t}, so \inlinecode{HashDeque\textless{}char\textgreater{}} and \inlinecode{HashDeque\textless{}int\textgreater{}} work with no hasher supplied.
+  \item \inlinecode{HashDeque\textless{}T\textgreater{}()} constructs an empty deque. \inlinecode{HashDeque\textless{}char\textgreater{}} and \inlinecode{HashDeque\textless{}int\textgreater{}} need no custom hasher.
   \item \inlinecode{size()} returns the number of elements, and \inlinecode{empty()} whether there are none.
   \item \inlinecode{push\_back(x)} and \inlinecode{push\_front(x)} append \inlinecode{x} at the back or front.
   \item \inlinecode{pop\_back()} and \inlinecode{pop\_front()} remove the back or front element; the deque must be nonempty.
   \item \inlinecode{hash()} returns the pair of hashes of the current sequence.
-  \item \inlinecode{a == b} (and \inlinecode{a != b}) compares the lengths and hash pairs of two deques. Equal sequences always compare equal; equality indicates equal sequences with high probability.
+  \item Operators \inlinecode{==} and \inlinecode{!=} compare whether two deques are equal using the lengths and hash pairs. Equal sequences always compare equal; equality indicates equal sequences with high probability.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(1)$ per call to every operation, plus one hasher evaluation per \inlinecode{push\_back()} / \inlinecode{push\_front()}.
@@ -1694,7 +1692,6 @@ int main() {
   vector<pair<string, int>> none;
   ac.find_all_in("zzzz", [&](const string &needle, int pos) { none.push_back({needle, pos}); });
   assert(none.empty());
-
   return 0;
 }
 \end{lstlisting}
@@ -3224,6 +3221,8 @@ Maintains a compact deterministic automaton representing all substrings of a str
 
 Each state represents an equivalence class of substrings with the same set of ending positions. The value \inlinecode{st[v].len} is the maximum length represented by state \inlinecode{v}, while \inlinecode{st[v].link} points to the state representing the longest proper suffix of that class.
 
+More precisely, state \inlinecode{v} contributes one distinct substring for each length greater than \inlinecode{st[st[v].link].len} and at most \inlinecode{st[v].len}. When a character is appended, \inlinecode{extend()} creates a state for the new full string and walks suffix links from the previous \inlinecode{last}, adding missing transitions to it. If an existing transition leads to a state whose maximum length is too large, a shorter clone of that state is inserted and the affected transitions and suffix links are redirected to it, splitting the ending-position classes without changing the recognized substrings. Summing these length ranges gives the number of distinct substrings. Membership queries follow transitions, while longest common substring queries retreat through suffix links when a match fails.
+
 \begin{compactitem}
   \item \inlinecode{SuffixAutomaton()} constructs an empty automaton.
   \item \inlinecode{SuffixAutomaton(s)} constructs the automaton for string \inlinecode{s}.
@@ -3395,6 +3394,8 @@ Maintains all distinct palindromic substrings of a string online using an Eertre
 
 The structure has two roots: one of length $-1$, which simplifies boundary cases, and one of length $0$, representing the empty palindrome. After each appended character, \inlinecode{last} points to the node for the longest palindromic suffix of the current string.
 
+To append a character, \inlinecode{add()} follows suffix links from \inlinecode{last} until finding the longest suffix palindrome that can be enclosed by the new character. If the corresponding transition already exists, that node becomes \inlinecode{last}; otherwise, a node two characters longer is created and linked to its longest proper palindromic suffix, found by the same search. Exactly one distinct palindrome can be created at each position, so the number of non-root nodes is the distinct count. Each node first counts the times it is the longest palindromic suffix; propagating those counts through suffix links then includes occurrences where it appears as a suffix of a longer palindrome.
+
 \begin{compactitem}
   \item \inlinecode{Eertree()} constructs an empty palindromic tree.
   \item \inlinecode{Eertree(s)} constructs the tree for string \inlinecode{s}.
@@ -3542,7 +3543,7 @@ Given two strings, determine their longest common substring: a contiguous run of
   \item \inlinecode{longest\_common\_substring(s1, s2)} returns a longest common substring of \inlinecode{s1} and \inlinecode{s2} (one such substring if several are tied in length), or the empty string if they have none in common.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n \cdot m)$ per call, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+\textbf{Time Complexity}: $O(n \cdot m)$ per call, where $n$ and $m$ are the lengths of strings \inlinecode{s1} and \inlinecode{s2}, respectively.
 
 \textbf{Space Complexity}: $O(\min\left(n, m\right))$ auxiliary, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
 
@@ -3719,17 +3720,17 @@ Dynamic programming compares prefixes and chooses the cheapest last operation: a
 \begin{compactitem}
   \item \inlinecode{edit\_distance(s1, s2)} returns the Levenshtein edit distance between strings \inlinecode{s1} and \inlinecode{s2}.
   \item \inlinecode{align\_sequences(s1, s2, gap\_cost, sub\_cost)} returns a pair of aligned strings for strings \inlinecode{s1} and \inlinecode{s2}, using a classic dynamic programming approach. This implementation first computes \inlinecode{dp[i][j]} (the cost of aligning the length $i$ prefix of \inlinecode{s1} with the length $j$ prefix of \inlinecode{s2}) before following the path backwards to construct the answer. For \inlinecode{gap\_cost = sub\_cost = 1}, \inlinecode{dp[n][m]} will be the Levenshtein edit distance, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
-  \item \inlinecode{hirschberg\_align\_sequences(s1, s2, gap\_cost, sub\_cost)} returns the sequence alignment of strings \inlinecode{s1} and \inlinecode{s2} using the more memory efficient Hirschberg's algorithm.
+  \item \inlinecode{hirschberg\_align(s1, s2, gap\_cost, sub\_cost)} returns the sequence alignment of strings \inlinecode{s1} and \inlinecode{s2} using the more memory efficient Hirschberg's algorithm.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{edit\_distance(s1, s2)}, \inlinecode{align\_sequences(s1, s2)}, and \inlinecode{hirschberg\_align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+\textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{edit\_distance(s1, s2)}, \inlinecode{align\_sequences(s1, s2)}, and \inlinecode{hirschberg\_align(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\min\left(n, m\right))$ auxiliary heap space for \inlinecode{edit\_distance()}.
   \item $O(n \cdot m)$ auxiliary heap space for \inlinecode{align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
-  \item $O(\log\left(\max\left(n, m\right)\right))$ auxiliary stack space and $O(\min\left(n, m\right))$ auxiliary heap space for \inlinecode{hirschberg\_align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+  \item $O(\log\left(\max\left(n, m\right)\right))$ auxiliary stack space and $O(\min\left(n, m\right))$ auxiliary heap space for \inlinecode{hirschberg\_align(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3866,11 +3867,11 @@ void hirschberg_rec(
   hirschberg_rec(mid1, hi1, mid2, hi2, res1, res2, gap_cost, sub_cost);
 }
 
-std::pair<string, string> hirschberg_align_sequences(
+std::pair<string, string> hirschberg_align(
     const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1
 ) {
   if (s1.size() < s2.size()) {
-    auto res = hirschberg_align_sequences(s2, s1, gap_cost, sub_cost);
+    auto res = hirschberg_align(s2, s1, gap_cost, sub_cost);
     return {res.second, res.first};
   }
   string res1, res2;
@@ -3890,14 +3891,14 @@ int main() {
 
   auto alignment = align_sequences("AGGGCT", "AGGCA", 2, 3);
   assert(alignment == (std::pair<string, string>{"AGGGCT", "A_GGCA"}));
-  assert(hirschberg_align_sequences("AGGGCT", "AGGCA", 2, 3) == alignment);
+  assert(hirschberg_align("AGGGCT", "AGGCA", 2, 3) == alignment);
 
-  assert((hirschberg_align_sequences("ab", "zabz") == std::pair<string, string>{"_ab_", "zabz"}));
+  assert((hirschberg_align("ab", "zabz") == std::pair<string, string>{"_ab_", "zabz"}));
   assert(
-      (hirschberg_align_sequences("a", "bbbbbbbbbb", 1, 5) ==
+      (hirschberg_align("a", "bbbbbbbbbb", 1, 5) ==
        std::pair<string, string>{"__________a", "bbbbbbbbbb_"})
   );
-  assert((hirschberg_align_sequences("aa", "ba", 1, 2) == std::pair<string, string>{"a_a", "_ba"}));
+  assert((hirschberg_align("aa", "ba", 1, 2) == std::pair<string, string>{"a_a", "_ba"}));
 
   std::cout << "Aligned strings:" << std::endl;
   std::cout << alignment.first << std::endl << alignment.second << std::endl;
@@ -3915,8 +3916,8 @@ Solves basic palindrome dynamic programming problems on a string. The core inter
 The longest palindromic subsequence (LPS) is a maximum-length subsequence that reads the same forward and backward. The minimum number of insertions needed to make a string a palindrome is the number of characters outside an LPS, so it equals $n$ minus the LPS length.
 
 \begin{compactitem}
-  \item \inlinecode{longest\_palindromic\_subsequence(s)} returns one longest palindromic subsequence of \inlinecode{s}.
-  \item \inlinecode{min\_insertions\_palindrome(s)} returns the minimum number of characters that must be inserted anywhere in \inlinecode{s} to make it a palindrome.
+  \item \inlinecode{longest\_palindromic\_subsequence(s)} returns one longest palindromic subsequence of string \inlinecode{s}.
+  \item \inlinecode{min\_insertions\_palindrome(s)} returns the minimum number of characters that must be inserted anywhere in string \inlinecode{s} to make it a palindrome.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n^{2})$ per call to \inlinecode{longest\_palindromic\_subsequence(s)} and \inlinecode{min\_insertions\_palindrome(s)}, where $n$ is the length of \inlinecode{s}.
@@ -4738,9 +4739,7 @@ using namespace std;
 int main() {
   string s = "aaabccccdd";
   vector<pair<char, int>> runs = run_length_encode(s);
-  assert(runs.size() == 4);
-  assert(runs[0] == (pair<char, int>{'a', 3}));
-  assert(runs[2] == (pair<char, int>{'c', 4}));
+  assert((runs == vector<pair<char, int>>{{'a', 3}, {'b', 1}, {'c', 4}, {'d', 2}}));
   assert(run_length_decode(runs) == s);
   assert(run_length_encode("").empty());
   assert(run_length_decode({}) == "");

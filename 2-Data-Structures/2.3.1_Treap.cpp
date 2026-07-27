@@ -11,7 +11,9 @@ both the BST property on keys and the min-heap property on priorities (lower pri
 closer to root). Since priorities are random, this keeps the tree balanced with high probability,
 making insertions and deletions run in O(log n) on average.
 
-This implementation requires an ordering on the key type `K` defined by `operator<`.
+The comparator `comp` defines the key ordering: `comp(a, b)` is true when `a` precedes `b`. It
+defaults to `std::less<K>`; to customize the ordering, instantiate `Treap<K, V, Compare>` and pass
+the comparator to the constructor.
 
 - `Treap<K, V>()` constructs an empty map.
 - `size()` returns the size of the map.
@@ -23,10 +25,12 @@ This implementation requires an ordering on the key type `K` defined by `operato
   successful or `false` if the key to be removed was not found.
 - `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was
   not found.
-- `entries()` returns all key-value entries in ascending order of keys.
-- `min()`, `max()`, `lower_bound(k)`, `upper_bound(k)`, `prev(k)`, and `next(k)` return the matching
-  key-value entry, or `std::nullopt` if no such entry exists. These navigation routines depend only
-  on the BST property and can be copied unchanged to the other BST variants later in this chapter.
+- `entries()` returns all key-value entries in comparator order.
+- `min()` and `max()` return the first and last entries in comparator order, or `std::nullopt` if
+  the map is empty.
+- `lower_bound(k)`, `upper_bound(k)`, `prev(k)`, and `next(k)` return the matching entry according
+  to the comparator, or `std::nullopt` if no such entry exists. These navigation routines depend
+  only on the BST property and can be adapted to the other BST variants later in this chapter.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `empty()`.
@@ -45,11 +49,12 @@ Space Complexity:
 */
 
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <utility>
 #include <vector>
 
-template<typename K, typename V>
+template<typename K, typename V, typename Compare = std::less<K>>
 class Treap {
   struct Node {
     static uint32_t rand32() {
@@ -70,6 +75,7 @@ class Treap {
   } *root;
 
   int num_nodes;
+  Compare comp;
 
   static void rotate_left(Node *&n) {
     Node *tmp = n;
@@ -91,13 +97,13 @@ class Treap {
       num_nodes++;
       return true;
     }
-    if (k < n->key && insert(n->left, k, v)) {
+    if (comp(k, n->key) && insert(n->left, k, v)) {
       if (n->left->priority < n->priority) {
         rotate_right(n);
       }
       return true;
     }
-    if (n->key < k && insert(n->right, k, v)) {
+    if (comp(n->key, k) && insert(n->right, k, v)) {
       if (n->right->priority < n->priority) {
         rotate_left(n);
       }
@@ -110,9 +116,9 @@ class Treap {
     if (n == nullptr) {
       return false;
     }
-    if (k < n->key) {
+    if (comp(k, n->key)) {
       return erase(n->left, k);
-    } else if (n->key < k) {
+    } else if (comp(n->key, k)) {
       return erase(n->right, k);
     }
     if (n->left != nullptr && n->right != nullptr) {
@@ -154,7 +160,7 @@ class Treap {
   }
 
  public:
-  Treap() : root(nullptr), num_nodes(0) {}
+  explicit Treap(Compare comp = Compare()) : root(nullptr), num_nodes(0), comp(std::move(comp)) {}
 
   ~Treap() { clean_up(root); }
   Treap(const Treap &) = delete;
@@ -167,9 +173,9 @@ class Treap {
   const V *find(const K &k) const {
     Node *n = root;
     while (n != nullptr) {
-      if (k < n->key) {
+      if (comp(k, n->key)) {
         n = n->left;
-      } else if (n->key < k) {
+      } else if (comp(n->key, k)) {
         n = n->right;
       } else {
         return &(n->value);
@@ -210,7 +216,7 @@ class Treap {
   std::optional<std::pair<K, V>> lower_bound(const K &k) const {
     Node *n = root, *best = nullptr;
     while (n != nullptr) {
-      if (!(n->key < k)) {
+      if (!comp(n->key, k)) {
         best = n;
         n = n->left;
       } else {
@@ -223,7 +229,7 @@ class Treap {
   std::optional<std::pair<K, V>> upper_bound(const K &k) const {
     Node *n = root, *best = nullptr;
     while (n != nullptr) {
-      if (k < n->key) {
+      if (comp(k, n->key)) {
         best = n;
         n = n->left;
       } else {
@@ -236,7 +242,7 @@ class Treap {
   std::optional<std::pair<K, V>> prev(const K &k) const {
     Node *n = root, *best = nullptr;
     while (n != nullptr) {
-      if (n->key < k) {
+      if (comp(n->key, k)) {
         best = n;
         n = n->right;
       } else {
@@ -278,5 +284,16 @@ int main() {
   assert(!t.erase(1));
   assert(t.find(1) == nullptr);
   assert((t.entries() == vector<pair<int, char>>{{2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}}));
+
+  Treap<int, char, greater<int>> descending;
+  for (int key : {2, 1, 3}) {
+    descending.insert(key, '0' + key);
+  }
+  assert((descending.entries() == vector<pair<int, char>>{{3, '3'}, {2, '2'}, {1, '1'}}));
+  assert(descending.min()->first == 3 && descending.max()->first == 1);
+  assert(descending.lower_bound(2)->first == 2);
+  assert(descending.upper_bound(2)->first == 1);
+  assert(descending.prev(2)->first == 3 && descending.next(2)->first == 1);
+  assert(descending.erase(2) && descending.find(2) == nullptr);
   return 0;
 }

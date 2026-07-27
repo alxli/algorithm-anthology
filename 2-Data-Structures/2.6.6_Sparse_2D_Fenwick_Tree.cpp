@@ -5,6 +5,9 @@ rectangle-sum queries. This is the sparse two-dimensional analogue of range-upda
 Fenwick trees: four sparse trees store the inclusion-exclusion coefficients needed to recover any
 prefix rectangle sum.
 
+The value type `T` must represent $0$ and support addition, subtraction, and multiplication by
+integer coordinates.
+
 Choose this for huge sparse grids when the operation is additive: point or rectangle increments and
 rectangle sums. It avoids allocating the dense `R*C` table of the dense 2D Fenwick tree, and unlike
 the dense and offline variants it supports rectangle updates, not just point updates. Prefer it over

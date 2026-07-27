@@ -7,7 +7,9 @@ heights of the left and right subtrees at every node differ by at most $1$. When
 deletion breaks this invariant, it is repaired with one or two rotations at each affected node along
 the search path.
 
-This implementation requires an ordering on the key type `K` defined by `operator<`.
+The comparator `comp` defines the key ordering: `comp(a, b)` is true when `a` precedes `b`. It
+defaults to `std::less<K>`; to customize the ordering, instantiate `AVLTree<K, V, Compare>` and pass
+the comparator to the constructor.
 
 - `AVLTree<K, V>()` constructs an empty map.
 - `size()` returns the size of the map.
@@ -19,10 +21,11 @@ This implementation requires an ordering on the key type `K` defined by `operato
   successful or `false` if the key to be removed was not found.
 - `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was
   not found.
-- `entries()` returns all key-value entries in ascending order of keys.
+- `entries()` returns all key-value entries in comparator order.
 
-The navigation routines `min()`, `max()`, `lower_bound(k)`, `upper_bound(k)`, `prev(k)`, and
-`next(k)` from the treap in 2.3.1 depend only on the BST property and may be copied here unchanged.
+The comparator-aware navigation routines `min()`, `max()`, `lower_bound(k)`, `upper_bound(k)`,
+`prev(k)`, and `next(k)` from the treap in 2.3.1 depend only on the BST property and may be adapted
+here as needed.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `empty()`.
@@ -39,10 +42,11 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <functional>
 #include <utility>
 #include <vector>
 
-template<typename K, typename V>
+template<typename K, typename V, typename Compare = std::less<K>>
 class AVLTree {
   struct Node {
     K key;
@@ -54,6 +58,7 @@ class AVLTree {
   } *root;
 
   int num_nodes;
+  Compare comp;
 
   static int height(Node *n) { return (n != nullptr) ? n->height : 0; }
 
@@ -110,7 +115,7 @@ class AVLTree {
       num_nodes++;
       return true;
     }
-    if ((k < n->key && insert(n->left, k, v)) || (n->key < k && insert(n->right, k, v))) {
+    if ((comp(k, n->key) && insert(n->left, k, v)) || (comp(n->key, k) && insert(n->right, k, v))) {
       rebalance(n);
       return true;
     }
@@ -121,7 +126,7 @@ class AVLTree {
     if (n == nullptr) {
       return false;
     }
-    if (!(k < n->key || n->key < k)) {
+    if (!(comp(k, n->key) || comp(n->key, k))) {
       if (n->left != nullptr && n->right != nullptr) {
         Node *tmp = n->right;
         while (tmp->left != nullptr) {
@@ -142,7 +147,7 @@ class AVLTree {
       rebalance(n);
       return true;
     }
-    if ((k < n->key && erase(n->left, k)) || (n->key < k && erase(n->right, k))) {
+    if ((comp(k, n->key) && erase(n->left, k)) || (comp(n->key, k) && erase(n->right, k))) {
       rebalance(n);
       return true;
     }
@@ -166,7 +171,7 @@ class AVLTree {
   }
 
  public:
-  AVLTree() : root(nullptr), num_nodes(0) {}
+  explicit AVLTree(Compare comp = Compare()) : root(nullptr), num_nodes(0), comp(std::move(comp)) {}
 
   ~AVLTree() { clean_up(root); }
   AVLTree(const AVLTree &) = delete;
@@ -179,9 +184,9 @@ class AVLTree {
   const V *find(const K &k) const {
     Node *n = root;
     while (n != nullptr) {
-      if (k < n->key) {
+      if (comp(k, n->key)) {
         n = n->left;
-      } else if (n->key < k) {
+      } else if (comp(n->key, k)) {
         n = n->right;
       } else {
         return &(n->value);
@@ -233,5 +238,13 @@ int main() {
       (deep_successor.entries() ==
        vector<pair<int, int>>{{10, 10}, {22, 22}, {25, 25}, {30, 30}, {40, 40}})
   );
+
+  AVLTree<int, char, greater<int>> descending;
+  for (int key : {2, 1, 3}) {
+    descending.insert(key, '0' + key);
+  }
+  assert((descending.entries() == vector<pair<int, char>>{{3, '3'}, {2, '2'}, {1, '1'}}));
+  assert(*descending.find(2) == '2');
+  assert(descending.erase(2) && descending.find(2) == nullptr);
   return 0;
 }

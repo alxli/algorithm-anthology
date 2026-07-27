@@ -303,11 +303,17 @@ index domain with backticked `n` inside the math interval. Keep backticks inside
 the entries are code-facing return-field names or parameters, but use plain math tuples like
 `$(i, j)$` in conceptual prose. If a sentence defines a math symbol from code, such as "$n$ is
 `size()`", keep later uses of that symbol in math notation, e.g. `$[0, n]$`.
+Do not introduce a code-styled size variable solely to restate a container's size, such as
+"$[0, `n`)$, where `n` is `adj.size()`"; say that the indices of `adj` represent the nodes instead.
 When a prose sentence is explicitly explaining code-index formulas, code-style intervals such as
 $[`l`, `r`)$ may be clearer than plain math intervals.
 When an API bullet is primarily describing a mathematical object and already uses the parameters as
 math variables throughout, prefer the local mathematical style, e.g. `$[0, k)$` for
 `de_bruijn(k, n)`.
+In API bullets, show the common class instantiation rather than repeating defaulted comparator or
+hasher policies in every constructor signature. For example, write `RollingHash<T>(lo, hi)` and
+explain separately that `RollingHash<T, Hash>` accepts a custom hasher. Keep behavior-defining
+compile-time modes visible when they are central to the API.
 
 When a new repeated convention is accepted, encode it in one of two places before relying on it in
 future scans: `AGENTS.md` for human/agent judgment, or `scan_quality.py` for deterministic

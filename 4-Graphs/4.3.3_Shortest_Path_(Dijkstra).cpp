@@ -10,8 +10,8 @@ weights. Use Bellman-Ford or SPFA instead when negative edges are present. Becau
 nonnegative, a node's distance is final the first time it is removed from the queue.
 
 - `dijkstra(start)` populates `dist` and `pred` for a global, pre-populated adjacency list `adj`
-  whose nodes are numbered $[0, `n`)$, where `n` is `adj.size()`. Each edge is stored as
-  (`neighbor`, `weight`), where `weight` is nonnegative.
+  whose indices represent the nodes. Each edge is stored as (`neighbor`, `weight`), where `weight`
+  is nonnegative.
 - `get_path(dest)` returns the path from `start` to `dest`, or an empty vector if `dest` is
   unreachable, after the latest call to `dijkstra()`.
 
@@ -49,8 +49,8 @@ void dijkstra(int start) {
   dist.assign(n, INF);
   pred.assign(n, -1);
   dist[start] = 0;
-  std::priority_queue<std::pair<int64_t, int>, std::vector<std::pair<int64_t, int>>, std::greater<>>
-      pq;
+  using qnode = std::pair<int64_t, int>;  // (distance, node)
+  std::priority_queue<qnode, std::vector<qnode>, std::greater<>> pq;
   pq.emplace(0, start);
   while (!pq.empty()) {
     auto [du, u] = pq.top();

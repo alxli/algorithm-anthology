@@ -7,7 +7,9 @@ size of its subtree, using it to maintain balance and compute order statistics. 
 rotations restore the invariant that every subtree is at least as large as each of its sibling's
 child subtrees, keeping the height logarithmic.
 
-This implementation requires an ordering on the key type `K` defined by `operator<`.
+The comparator `comp` defines the key ordering: `comp(a, b)` is true when `a` precedes `b`. It
+defaults to `std::less<K>`; to customize the ordering, instantiate `SBTree<K, V, Compare>` and pass
+the comparator to the constructor.
 
 - `SBTree<K, V>()` constructs an empty map.
 - `size()` returns the size of the map.
@@ -21,15 +23,15 @@ This implementation requires an ordering on the key type `K` defined by `operato
   not found.
 - `find_by_order(k)` returns a key-value pair of the node with a key of 0-based rank `k`, which must
   lie in the range $[0, `size()`)$.
-- `order_of_key(x)` returns the number of keys strictly less than `x`. The key does not need to be
-  present in the map.
-- `entries()` returns all key-value entries in ascending order of keys.
+- `order_of_key(x)` returns the number of keys that precede `x` in comparator order. The key does
+  not need to be present in the map.
+- `entries()` returns all key-value entries in comparator order.
 
-The navigation routines `min()`, `max()`, `lower_bound(k)`, `upper_bound(k)`, `prev(k)`, and
-`next(k)` from the treap in 2.3.1 depend only on the BST property and may be copied here unchanged.
-For contest use on GNU C++ judges, PBDS ordered trees provide the same order-statistic operations
-with much less code; see 8.6. This implementation is useful when PBDS is unavailable or when
-customizing tree internals.
+The comparator-aware navigation routines `min()`, `max()`, `lower_bound(k)`, `upper_bound(k)`,
+`prev(k)`, and `next(k)` from the treap in 2.3.1 depend only on the BST property and may be adapted
+here as needed. For contest use on GNU C++ judges, PBDS ordered trees provide the same
+order-statistic operations with much less code; see 8.6. This implementation is useful when PBDS is
+unavailable or when customizing tree internals.
 
 The order-statistic API matches GNU PBDS naming and 0-based rank conventions.
 
@@ -48,10 +50,11 @@ Space Complexity:
 */
 
 #include <cassert>
+#include <functional>
 #include <utility>
 #include <vector>
 
-template<typename K, typename V>
+template<typename K, typename V, typename Compare = std::less<K>>
 class SBTree {
   struct Node {
     K key;
@@ -73,6 +76,8 @@ class SBTree {
       }
     }
   } *root;
+
+  Compare comp;
 
   static inline int size(Node *n) { return (n == nullptr) ? 0 : n->size; }
 
@@ -104,16 +109,16 @@ class SBTree {
     maintain(n, 1);
   }
 
-  static bool insert(Node *&n, const K &k, const V &v) {
+  bool insert(Node *&n, const K &k, const V &v) {
     if (n == nullptr) {
       n = new Node(k, v);
       return true;
     }
     bool found;
-    if (k < n->key) {
+    if (comp(k, n->key)) {
       found = insert(n->left, k, v);
       maintain(n, 0);
-    } else if (n->key < k) {
+    } else if (comp(n->key, k)) {
       found = insert(n->right, k, v);
       maintain(n, 1);
     } else {
@@ -123,15 +128,15 @@ class SBTree {
     return found;
   }
 
-  static bool erase(Node *&n, const K &k) {
+  bool erase(Node *&n, const K &k) {
     if (n == nullptr) {
       return false;
     }
     bool found;
-    int c = (k < n->key);
-    if (k < n->key) {
+    int c = comp(k, n->key);
+    if (comp(k, n->key)) {
       found = erase(n->left, k);
-    } else if (n->key < k) {
+    } else if (comp(n->key, k)) {
       found = erase(n->right, k);
     } else {
       if (n->right == nullptr || n->left == nullptr) {
@@ -164,13 +169,13 @@ class SBTree {
     return {n->key, n->value};
   }
 
-  static int order_of_key(Node *n, const K &x) {
+  int order_of_key(Node *n, const K &x) const {
     if (n == nullptr) {
       return 0;
     }
-    if (x < n->key) {
+    if (comp(x, n->key)) {
       return order_of_key(n->left, x);
-    } else if (n->key < x) {
+    } else if (comp(n->key, x)) {
       return order_of_key(n->right, x) + size(n->left) + 1;
     }
     return size(n->left);
@@ -193,7 +198,7 @@ class SBTree {
   }
 
  public:
-  SBTree() : root(nullptr) {}
+  explicit SBTree(Compare comp = Compare()) : root(nullptr), comp(std::move(comp)) {}
 
   ~SBTree() { clean_up(root); }
   SBTree(const SBTree &) = delete;
@@ -207,9 +212,9 @@ class SBTree {
   const V *find(const K &k) const {
     Node *n = root;
     while (n != nullptr) {
-      if (k < n->key) {
+      if (comp(k, n->key)) {
         n = n->left;
-      } else if (n->key < k) {
+      } else if (comp(n->key, k)) {
         n = n->right;
       } else {
         return &(n->value);
@@ -265,5 +270,14 @@ int main() {
   replacement.insert(3, 'c');
   assert(replacement.erase(2));
   assert(*replacement.find(3) == 'c');
+
+  SBTree<int, char, greater<int>> descending;
+  for (int key : {2, 1, 3}) {
+    descending.insert(key, '0' + key);
+  }
+  assert((descending.entries() == vector<pair<int, char>>{{3, '3'}, {2, '2'}, {1, '1'}}));
+  assert(descending.order_of_key(2) == 1);
+  assert(descending.find_by_order(0).first == 3);
+  assert(descending.erase(2) && descending.find(2) == nullptr);
   return 0;
 }

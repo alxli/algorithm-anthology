@@ -1,11 +1,14 @@
 /*
 
-Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying
-and extraction of the minimum as well as efficient merging with other instances. This implementation
-requires an ordering on the set of possible elements defined by `operator<`. A pairing heap is a
-heap-ordered multi-way tree, using a two-pass merge to self-adjust during each deletion. Unlike the
-other heaps in this section, it also supports `decrease_key()` and `erase()` via handles returned by
-`push()`, the feature pairing heaps are best known for.
+Maintains a mergeable priority queue, returning the minimum element by default. The comparator
+`comp` defines priority: `comp(a, b)` is true when `a` has higher priority than `b`, so
+`std::greater<T>` instead creates a max-priority queue. A pairing heap is a heap-ordered multi-way
+tree, using a two-pass merge to self-adjust during each deletion. Unlike the other heaps in this
+section, it also supports `improve_key()` (the usual decrease-key operation for a min-heap) and
+`erase()` via handles returned by `push()`, the feature pairing heaps are best known for.
+
+To customize the ordering, instantiate `PairingHeap<T, Compare>` and pass the comparator to either
+constructor.
 
 - `PairingHeap<T>()` constructs an empty priority queue.
 - `PairingHeap<T>(lo, hi)` constructs a priority queue from the elements in the half-open iterator
@@ -14,24 +17,23 @@ other heaps in this section, it also supports `decrease_key()` and `erase()` via
 - `empty()` returns whether the priority queue is empty.
 - `push(v)` inserts the value `v` and returns a handle to the new element. The handle remains valid
   until that element is removed by `pop()` or `erase()`.
-- `pop()` removes the minimum element from the priority queue.
-- `top()` returns the minimum element in the priority queue.
+- `pop()` removes the highest-priority element from the priority queue.
+- `top()` returns the highest-priority element in the priority queue.
 - `absorb(h)` inserts every value from the distinct heap `h` and sets `h` to the empty priority
-  queue.
-- `decrease_key(n, v)` lowers the value of the element at handle `n` to `v`, which must not be
-  greater than its current value.
+  queue. Both heaps must use equivalent comparators.
+- `improve_key(n, v)` replaces the value at handle `n` with a value `v` of equal or higher priority.
 - `erase(n)` removes the element at handle `n` from the priority queue.
 
-In practice, `decrease_key()` runs in near-constant time, making the pairing heap the usual
-practical substitute for a Fibonacci heap. When handles are not needed, the lazy-deletion idiom
-(push updated entries and skip stale ones on `pop()`, as the Dijkstra section does) is simpler and
-often faster. On GNU C++ judges, `__gnu_pbds::priority_queue` with `pairing_heap_tag` provides a
-shorter handled and meldable heap; see 8.6 for the contest wrapper.
+In practice, `improve_key()` runs in near-constant time, making the pairing heap the usual practical
+substitute for a Fibonacci heap. When handles are not needed, the lazy-deletion idiom (push updated
+entries and skip stale ones on `pop()`, as the Dijkstra section does) is simpler and often faster.
+On GNU C++ judges, `__gnu_pbds::priority_queue` with `pairing_heap_tag` provides a shorter handled
+and meldable heap; see 8.6 for the contest wrapper.
 
 Time Complexity:
-- O(1) per call to the first constructor, `size()`, `empty()`, `top()`, `push()`, and `absorb()`.
+- O(1) per call to the first constructor, `size()`, `empty()`, `push()`, `top()`, and `absorb()`.
 - O(log n) amortized per call to `pop()` and `erase()`.
-- O(log n) amortized per call to `decrease_key()`, a safe bound to budget for. The true amortized
+- O(log n) amortized per call to `improve_key()`, a safe bound to budget for. The true amortized
   cost is sub-logarithmic, though the long-conjectured O(1) bound is provably impossible.
 - O(n) per call to the second constructor on the distance between `lo` and `hi`.
 
@@ -43,8 +45,10 @@ Space Complexity:
 */
 
 #include <cassert>
+#include <functional>
+#include <utility>
 
-template<typename T>
+template<typename T, typename Compare = std::less<T>>
 class PairingHeap {
   struct Node {
     T value;
@@ -65,15 +69,16 @@ class PairingHeap {
   } *root;
 
   int num_nodes;
+  Compare comp;
 
-  static Node *merge(Node *a, Node *b) {
+  Node *merge(Node *a, Node *b) {
     if (a == nullptr) {
       return b;
     }
     if (b == nullptr) {
       return a;
     }
-    if (a->value < b->value) {
+    if (comp(a->value, b->value)) {
       a->add_child(b);
       a->prev = a->next = nullptr;
       return a;
@@ -96,7 +101,7 @@ class PairingHeap {
     n->prev = n->next = nullptr;
   }
 
-  static Node *merge_pairs(Node *n) {
+  Node *merge_pairs(Node *n) {
     if (n == nullptr || n->next == nullptr) {
       return n;
     }
@@ -114,10 +119,12 @@ class PairingHeap {
   }
 
  public:
-  PairingHeap() : root(nullptr), num_nodes(0) {}
+  explicit PairingHeap(Compare comp = Compare())
+      : root(nullptr), num_nodes(0), comp(std::move(comp)) {}
 
   template<typename It>
-  PairingHeap(It lo, It hi) : root(nullptr), num_nodes(0) {
+  PairingHeap(It lo, It hi, Compare comp = Compare())
+      : root(nullptr), num_nodes(0), comp(std::move(comp)) {
     while (lo != hi) {
       push(*(lo++));
     }
@@ -160,8 +167,8 @@ class PairingHeap {
     h.num_nodes = 0;
   }
 
-  void decrease_key(Node *n, const T &v) {
-    assert(!(n->value < v));
+  void improve_key(Node *n, const T &v) {
+    assert(!comp(n->value, v));
     n->value = v;
     if (n != root) {
       cut(n);
@@ -199,7 +206,7 @@ int main() {
   assert(h2.empty());
 
   auto handle = h.push(100);
-  h.decrease_key(handle, -5);  // 100 -> -5, the new minimum.
+  h.improve_key(handle, -5);  // 100 -> -5, the new minimum.
   assert(h.top() == -5);
   h.erase(handle);  // Remove it again, restoring the original five elements.
   assert(h.size() == 5);
@@ -210,5 +217,10 @@ int main() {
     h.pop();
   }
   assert((popped == vector<int>{-1, 0, 5, 10, 12}));
+
+  PairingHeap<int, greater<int>> max_heap;
+  auto max_handle = max_heap.push(1);
+  max_heap.improve_key(max_handle, 3);
+  assert(max_heap.top() == 3);
   return 0;
 }

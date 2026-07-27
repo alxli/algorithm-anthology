@@ -26,9 +26,9 @@ increment updates, `apply_delta(v, d, len)` would return `v + d` for min/max que
 `v + d * len` for sum queries, and `compose_deltas(old, d)` would return `old + d`.
 
 - `HeavyLight<T, VALUES_ON_EDGES = true>(adj, value)` constructs a new heavy light decomposition on
-  a forest defined by the adjacency list `adj`, with all values initialized to `value`. The
-  adjacency list must consist of only the integers $[0, `n`)$, where `n` is `adj.size()`. No
-  duplicate edges should exist. Set `VALUES_ON_EDGES` to false to store values on nodes instead.
+  a forest defined by the adjacency list `adj`, with all values initialized to `value`. Its entries
+  must be valid indices into `adj`, and no duplicate edges should exist. Set `VALUES_ON_EDGES` to
+  false to store values on nodes instead.
 - `query(u, v)` returns the result of `combine()` applied to all values on the path from node `u` to
   node `v`. The nodes must be in the same tree and, when values are on edges, must be distinct.
 - `update(u, v, d)` modifies all values on the path from node `u` to node `v` by applying the delta

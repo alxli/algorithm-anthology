@@ -7,9 +7,8 @@ Initializing the queue with several distance-$0$ sources gives multi-source BFS 
 traversal. Optionally, reconstruct a shortest path using the predecessor vector `pred`.
 
 - `bfs(starts)` populates `dist` and `pred` from every node in `starts`, assigning each node its
-  minimum distance from any start. The global, pre-populated adjacency list `adj` must consist of
-  nodes numbered $[0, `n`)$, where `n` is `adj.size()`. Pass a singleton vector for single-source
-  BFS.
+  minimum distance from any start. The global, pre-populated adjacency list `adj` uses its indices
+  as nodes and must contain only valid node indices. Pass a singleton vector for single-source BFS.
 - `get_path(dest)` returns the path from a nearest starting node to `dest`, or an empty vector if
   `dest` is unreachable, after the latest call to `bfs()`.
 

@@ -35,16 +35,17 @@ The hasher's output must be nonnegative. As with any polynomial hash, comparing 
 different lengths is only safe when digits are positive (for example, map an alphabet to $[1, B)$)
 so that a leading zero cannot make a shorter sequence collide with a longer one.
 
-- `HashDeque<T = int, Hash = IdentityDigit<T>>(hasher = Hash())` constructs an empty deque whose
-  `hasher` maps each element to its nonnegative integer digit. For integer-like `T` the default
-  hasher casts the element to `uint64_t`, so `HashDeque<char>` and `HashDeque<int>` work with no
-  hasher supplied.
+The element type defaults to `int`, and integer-like values use `IdentityDigit<T>`. To customize the
+mapping, instantiate `HashDeque<T, Hash>` and pass the hasher to the constructor.
+
+- `HashDeque<T>()` constructs an empty deque. `HashDeque<char>` and `HashDeque<int>` need no custom
+  hasher.
 - `size()` returns the number of elements, and `empty()` whether there are none.
 - `push_back(x)` and `push_front(x)` append `x` at the back or front.
 - `pop_back()` and `pop_front()` remove the back or front element; the deque must be nonempty.
 - `hash()` returns the pair of hashes of the current sequence.
-- `a == b` (and `a != b`) compares the lengths and hash pairs of two deques. Equal sequences always
-  compare equal; equality indicates equal sequences with high probability.
+- Operators `==` and `!=` compare whether two deques are equal using the lengths and hash pairs.
+  Equal sequences always compare equal; equality indicates equal sequences with high probability.
 
 Time Complexity:
 - O(1) per call to every operation, plus one hasher evaluation per `push_back()` / `push_front()`.

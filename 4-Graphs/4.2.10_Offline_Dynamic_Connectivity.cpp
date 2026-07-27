@@ -51,47 +51,47 @@ class OfflineDynamicConnectivity {
     int type, u, v;
   };
 
-  int n, comps;
+  int n, num_sets;
   std::vector<Op> ops;
-  std::vector<int> par, rnk;
-  std::vector<std::pair<int, int>> undo;  // (child root, whether its parent's rank increased)
+  std::vector<int> root, rank;
+  std::vector<std::pair<int, int>> history;  // (child root, whether its parent's rank increased)
   std::vector<std::vector<std::pair<int, int>>> seg;
   std::vector<int> answers;
 
-  int find(int x) const {
-    while (par[x] != x) {
-      x = par[x];
+  int find_root(int u) const {
+    while (root[u] != u) {
+      u = root[u];
     }
-    return x;
+    return u;
   }
 
-  void unite(int a, int b) {
-    a = find(a);
-    b = find(b);
-    if (a == b) {
-      undo.emplace_back(-1, 0);
+  void unite(int u, int v) {
+    u = find_root(u);
+    v = find_root(v);
+    if (u == v) {
+      history.emplace_back(-1, 0);
       return;
     }
-    if (rnk[a] < rnk[b]) {
-      std::swap(a, b);
+    if (rank[u] < rank[v]) {
+      std::swap(u, v);
     }
-    undo.emplace_back(b, rnk[a] == rnk[b] ? 1 : 0);
-    par[b] = a;
-    if (rnk[a] == rnk[b]) {
-      rnk[a]++;
+    history.emplace_back(v, rank[u] == rank[v] ? 1 : 0);
+    root[v] = u;
+    if (rank[u] == rank[v]) {
+      rank[u]++;
     }
-    comps--;
+    num_sets--;
   }
 
   void rollback() {
-    auto [b, raised] = undo.back();
-    undo.pop_back();
-    if (b == -1) {
+    auto [child, raised] = history.back();
+    history.pop_back();
+    if (child == -1) {
       return;
     }
-    rnk[par[b]] -= raised;
-    par[b] = b;
-    comps++;
+    rank[root[child]] -= raised;
+    root[child] = child;
+    num_sets++;
   }
 
   void add_interval(
@@ -117,7 +117,7 @@ class OfflineDynamicConnectivity {
     }
     if (lo == hi) {
       if (ops[lo].type == QUERY) {
-        answers.push_back(comps);
+        answers.push_back(num_sets);
       }
     } else {
       int mid = lo + (hi - lo) / 2;
@@ -159,11 +159,11 @@ class OfflineDynamicConnectivity {
     for (const auto &[key, start] : active) {
       add_interval(1, 0, t - 1, start, t - 1, {key.first, key.second});
     }
-    par.resize(n);
-    std::iota(par.begin(), par.end(), 0);
-    rnk.assign(n, 0);
-    comps = n;
-    undo.clear();
+    root.resize(n);
+    std::iota(root.begin(), root.end(), 0);
+    rank.assign(n, 0);
+    num_sets = n;
+    history.clear();
     dfs(1, 0, t - 1);
     return answers;
   }

@@ -1,25 +1,26 @@
 /*
 
 Partition a range around a pivot, or select the element with a given sorted rank without fully
-sorting the range. Three-way partitioning, also known as the Dutch National Flag algorithm,
-rearranges the elements into consecutive groups less than, equal to, and greater than the pivot. A
-single pass maintains, in order, $[`lo`, `lt`)$ less than the pivot, $[`lt`, `mid`)$ equal to it,
-$[`mid`, `gt`)$ unclassified, and $[`gt`, `hi`)$ greater than it. A less-than element is swapped
-with `*lt` and advances both `lt` and `mid`; an equal element advances only `mid`; and a
-greater-than element is swapped with `*--gt` without advancing `mid`, since the incoming element is
-still unclassified.
+sorting the range. The comparator `comp` defines the ordering and defaults to `std::less<>`.
+Three-way partitioning, also known as the Dutch National Flag algorithm, rearranges the elements
+into consecutive groups that precede, are equivalent to, and follow the pivot. A single pass
+maintains those three regions around an unclassified middle region. An element that precedes the
+pivot is swapped with `*lt` and advances both `lt` and `mid`; an equivalent element advances only
+`mid`; and a following element is swapped with `*--gt` without advancing `mid`, since the incoming
+element is still unclassified.
 
 Quickselect repeatedly applies this partition and continues only into the group containing the
 desired rank. This is the same task as `std::nth_element()`: after the call, `*nth` is the value
-that would appear there in sorted order, all earlier positions contain values no larger than it, and
-all later positions contain values no smaller than it. Choosing pivots uniformly at random gives
-expected linear time, while the three-way split avoids unnecessary work on duplicate-heavy inputs.
+that would appear there in comparator order, no earlier value follows it, and no later value
+precedes it. Choosing pivots uniformly at random gives expected linear time, while the three-way
+split avoids unnecessary work on duplicate-heavy inputs.
 
-- `partition_three_way(lo, hi, pivot)` rearranges $[`lo`, `hi`)$ in-place and returns a pair of
-  iterators (`mid1`, `mid2`), where $[`lo`, `mid1`)$ is less than `pivot`, $[`mid1`, `mid2`)$ is
-  equal to `pivot`, and $[`mid2`, `hi`)$ is greater than `pivot`.
-- `nth_element2(lo, nth, hi)` rearranges $[`lo`, `hi`)$ in-place around the 0-based rank represented
-  by iterator `nth`. This requires random-access iterators and `operator<` on the value type.
+- `partition_three_way(lo, hi, pivot, comp = std::less<>())` rearranges $[`lo`, `hi`)$ in-place and
+  returns a pair of iterators (`mid1`, `mid2`). The three resulting ranges contain elements that
+  precede, are equivalent to, and follow `pivot` according to `comp`, respectively.
+- `nth_element2(lo, nth, hi, comp = std::less<>())` rearranges $[`lo`, `hi`)$ in-place around the
+  0-based rank represented by iterator `nth` according to `comp`. This requires random-access
+  iterators.
 
 Time Complexity:
 - O(n) per call to `partition_three_way()`, where $n$ is the range length.
@@ -31,16 +32,17 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <functional>
 #include <random>
 #include <utility>
 
-template<typename It, typename T>
-std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot) {
+template<typename It, typename T, typename Compare = std::less<>>
+std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot, Compare comp = Compare()) {
   It lt = lo, mid = lo, gt = hi;
   while (mid != gt) {
-    if (*mid < pivot) {
+    if (comp(*mid, pivot)) {
       std::iter_swap(lt++, mid++);
-    } else if (pivot < *mid) {
+    } else if (comp(pivot, *mid)) {
       std::iter_swap(mid, --gt);
     } else {
       ++mid;
@@ -49,13 +51,13 @@ std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot) {
   return {lt, gt};
 }
 
-template<typename It>
-void nth_element2(It lo, It nth, It hi) {
+template<typename It, typename Compare = std::less<>>
+void nth_element2(It lo, It nth, It hi, Compare comp = Compare()) {
   static std::mt19937 rng(std::random_device{}());
   while (hi - lo > 1) {
     std::uniform_int_distribution<int> dist(0, hi - lo - 1);
     auto pivot = *(lo + dist(rng));
-    auto [lt, gt] = partition_three_way(lo, hi, pivot);
+    auto [lt, gt] = partition_three_way(lo, hi, pivot, comp);
     if (nth < lt) {
       hi = lt;
     } else if (nth >= gt) {
@@ -102,5 +104,9 @@ int main() {
   for (int i = n / 2 + 1; i < n; i++) {
     assert(a[i] >= a[n / 2]);
   }
+
+  vector<int> descending{1, 4, 2, 3};
+  nth_element2(descending.begin(), descending.begin() + 1, descending.end(), greater<int>());
+  assert(descending[1] == 3);
   return 0;
 }

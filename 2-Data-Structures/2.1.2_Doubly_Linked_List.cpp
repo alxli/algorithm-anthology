@@ -94,9 +94,10 @@ void splice_range(DListNode *pos, DListNode *first, DListNode *last) {
   }
   DListNode *before_first = first->prev;
   DListNode *tail = last->prev;
+  // Detach [first, last) from its current list.
   before_first->next = last;
   last->prev = before_first;
-
+  // Insert the detached range immediately before pos.
   DListNode *before_pos = pos->prev;
   before_pos->next = first;
   first->prev = before_pos;

@@ -1,12 +1,12 @@
 /*
 
-Maintain a min-priority queue, that is, a collection of elements with support for querying and
-extraction of the minimum. This implementation requires an ordering on the set of possible elements
-defined by `operator<`. A binary min-heap implements a priority queue by inserting and deleting
-nodes into a binary tree such that the parent of any node is always less than its children. The tree
-is stored implicitly in an array, where the children of the node at index $i$ live at indices
-$2i + 1$ and $2i + 2$. Insertion appends the new element and bubbles it up toward the root, while
-extraction moves the last element to the root and sifts it down.
+Maintains a priority queue, returning the minimum element by default. The comparator `comp` defines
+priority: `comp(a, b)` is true when `a` has higher priority than `b`, so `std::greater<T>` instead
+creates a max-priority queue. A binary heap stores a heap-ordered binary tree implicitly in an
+array, where the children of the node at index $i$ live at indices $2i + 1$ and $2i + 2$. Insertion
+appends the new element and bubbles it up toward the root, while extraction moves the last element
+to the root and sifts it down. To customize the ordering, instantiate `BinaryHeap<T, Compare>` and
+pass the comparator to either constructor.
 
 - `BinaryHeap<T>()` constructs an empty priority queue.
 - `BinaryHeap<T>(lo, hi)` constructs a priority queue from the elements in the half-open iterator
@@ -14,8 +14,8 @@ extraction moves the last element to the root and sifts it down.
 - `size()` returns the size of the priority queue.
 - `empty()` returns whether the priority queue is empty.
 - `push(v)` inserts the value `v` into the priority queue.
-- `pop()` removes the minimum element from the priority queue.
-- `top()` returns the minimum element in the priority queue.
+- `pop()` removes the highest-priority element from the priority queue.
+- `top()` returns the highest-priority element in the priority queue.
 
 Time Complexity:
 - O(1) per call to the first constructor, `size()`, `empty()`, and `top()`.
@@ -30,12 +30,14 @@ Space Complexity:
 */
 
 #include <cassert>
+#include <functional>
 #include <utility>
 #include <vector>
 
-template<typename T>
+template<typename T, typename Compare = std::less<T>>
 class BinaryHeap {
   std::vector<T> heap;
+  Compare comp;
 
   void sift_down(int i) {
     while (true) {
@@ -43,10 +45,10 @@ class BinaryHeap {
       if (child >= static_cast<int>(heap.size())) {
         break;
       }
-      if (child + 1 < static_cast<int>(heap.size()) && heap[child + 1] < heap[child]) {
+      if (child + 1 < static_cast<int>(heap.size()) && comp(heap[child + 1], heap[child])) {
         child++;
       }
-      if (heap[child] < heap[i]) {
+      if (comp(heap[child], heap[i])) {
         std::swap(heap[i], heap[child]);
         i = child;
       } else {
@@ -56,10 +58,10 @@ class BinaryHeap {
   }
 
  public:
-  BinaryHeap() {}
+  explicit BinaryHeap(Compare comp = Compare()) : comp(std::move(comp)) {}
 
   template<typename It>
-  BinaryHeap(It lo, It hi) : heap(lo, hi) {
+  BinaryHeap(It lo, It hi, Compare comp = Compare()) : heap(lo, hi), comp(std::move(comp)) {
     for (int i = static_cast<int>(heap.size()) / 2 - 1; i >= 0; i--) {
       sift_down(i);
     }
@@ -73,7 +75,7 @@ class BinaryHeap {
     int i = static_cast<int>(heap.size()) - 1;
     while (i > 0) {
       int parent = (i - 1) / 2;
-      if (!(heap[i] < heap[parent])) {
+      if (!comp(heap[i], heap[parent])) {
         break;
       }
       std::swap(heap[i], heap[parent]);
@@ -113,5 +115,10 @@ int main() {
   }
   assert((popped == vector<int>{-1, 0, 5, 10, 12}));
   assert(h.empty());
+
+  BinaryHeap<int, greater<int>> max_heap;
+  max_heap.push(1);
+  max_heap.push(3);
+  assert(max_heap.top() == 3);
   return 0;
 }

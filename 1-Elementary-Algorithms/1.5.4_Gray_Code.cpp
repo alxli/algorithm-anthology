@@ -12,7 +12,7 @@ is a bijection: each binary bit is the prefix XOR of the Gray bits at and above 
 computes those prefix XORs in doubling steps to recover the original rank.
 
 - `gray_code(k)` returns the `k`-th mask in Gray code order.
-- `inverse_gray_code(g)` returns the rank `k` such that `gray_code(k) == g`.
+- `inverse_gray_code(g)` returns the rank `k` such that `gray_code(k)` equals `g`.
 - `gray_sequence(n)` returns all $2^n$ masks in Gray code order; consecutive entries (and the last
   with the first when `n > 0`) differ in exactly one bit, where
   $0 \leq `n` < `MASK_BITS`$.

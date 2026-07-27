@@ -12,9 +12,8 @@ matching in general graphs, use the weighted blossom algorithm in the next secti
 The graph must be simple: self-loops and parallel edges are not supported.
 
 - `maximum_matching(adj)` returns a matching for a bidirectionally pre-populated adjacency list
-  `adj` which must consist of nodes numbered $[0, `n`)$, where `n` is `adj.size()`. The returned
-  vector `match` has `match[u] == v` and `match[v] == u` when `u` and `v` are matched, or `match[u]`
-  is $-1$ when `u` is unmatched.
+  `adj`, whose indices represent the nodes. The returned vector `match` has `match[u] == v` and
+  `match[v] == u` when `u` and `v` are matched, or `match[u]` is $-1$ when `u` is unmatched.
 
 Time Complexity:
 - O(n^3) per call, where $n$ is the number of nodes.

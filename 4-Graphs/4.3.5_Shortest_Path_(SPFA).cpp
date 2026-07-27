@@ -9,9 +9,8 @@ Dijkstra for nonnegative weights, and use SPFA mainly when negative edges are pr
 is not adversarial.
 
 - `spfa(start)` populates `dist` and `pred` for a global, pre-populated adjacency list `adj` which
-  must consist of nodes numbered $[0, `n`)$, where `n` is `adj.size()`. Each edge is stored as
-  (`neighbor`, `weight`). The function returns `false` if it detects a reachable negative cycle, and
-  returns `true` otherwise.
+  uses its indices as nodes. Each edge is stored as (`neighbor`, `weight`). The function returns
+  `false` if it detects a reachable negative cycle, and returns `true` otherwise.
 - `get_path(dest)` returns the path from `start` to `dest` after a successful call to `spfa()`, or
   an empty vector if `dest` is unreachable.
 

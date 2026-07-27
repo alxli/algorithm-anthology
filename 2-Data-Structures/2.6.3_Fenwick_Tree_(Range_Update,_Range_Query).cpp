@@ -4,6 +4,9 @@ Maintain a numerical array while supporting range increments and range-sum queri
 Fenwick trees to recover prefix sums after difference-array updates: if the difference array stores
 range additions, then the prefix sum through `hi` can be written as `hi*sum(t1, hi) - sum(t2, hi)`.
 
+The value type `T` must represent $0$ and support addition, subtraction, and multiplication by an
+integer index.
+
 - `FenwickRURQ<T>(n)` constructs an array with 0-based indices $[0, `n`)$, with all values
   initialized to $0$.
 - `size()` returns the size of the array.

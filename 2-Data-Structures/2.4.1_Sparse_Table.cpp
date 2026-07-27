@@ -2,8 +2,8 @@
 
 Given a static array, precompute a table that answers range minimum queries in constant time. More
 generally, the sparse table works for any range query whose combining operation is both associative
-and idempotent, meaning `combine(x, x) == x`. The canonical examples are "min", "max", "gcd", and
-the bitwise "and" and "or".
+and idempotent (i.e. `combine(x, x)` must equal `x`). The canonical examples are "min", "max",
+"gcd", and the bitwise "and" and "or".
 
 For each level $j$, the entry `dp[j][i]` holds the result of `combine()` over the half-open range
 $[i, i + 2^j)$, built by combining two ranges of length $2^{j-1}$. A query over $[`lo`, `hi`]$ is

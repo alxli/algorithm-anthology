@@ -1,26 +1,29 @@
 /*
 
-Build the min Cartesian tree of an array in linear time. A Cartesian tree is a binary tree whose
+Build the min-Cartesian tree of an array in linear time. A Cartesian tree is a binary tree whose
 inorder traversal is the original array order and whose heap property is determined by array values.
-For a min Cartesian tree, each parent has value less than or equal to its children. Each subtree
-therefore represents a contiguous array interval whose minimum is at the subtree root. Equal values
-are broken by position, so the earlier minimum becomes an ancestor of the later one.
+The comparator `comp` defines the value ordering and defaults to `std::less<>`, producing a
+min-Cartesian tree in which each parent precedes or is equivalent to its children. Each subtree
+therefore represents a contiguous array interval whose first value in comparator order is at the
+subtree root. Equivalent values are broken by position, so the earlier one becomes an ancestor of
+the later one.
 
-This gives a direct connection to range minimum queries: the minimum index in $[`lo`, `hi`]$ is the
-lowest common ancestor of indices `lo` and `hi`. The included search finds that node without extra
-LCA preprocessing. Starting at the root, it moves right while the current index is left of the range
-and left while it is right of the range; the first index inside the range is its minimum. This takes
-O(h) time for tree height $h$, which can be O(n) for a skewed tree. For many worst-case-fast
-queries, preprocess the tree for LCA or use the sparse table in 2.4.1 instead. The explicit tree is
-also useful for interval divide-and-conquer and tree DP; the largest-rectangle application is
-implemented directly with a monotone stack in 1.2.4.
+With the default comparator, this gives a direct connection to range minimum queries: the minimum
+index in $[`lo`, `hi`]$ is the lowest common ancestor of indices `lo` and `hi`. The included search
+finds that node without extra LCA preprocessing. Starting at the root, it moves right while the
+current index is left of the range and left while it is right of the range; the first index inside
+the range is its minimum. This takes O(h) time for tree height $h$, which can be O(n) for a skewed
+tree. For many worst-case-fast queries, preprocess the tree for LCA or use the sparse table in 2.4.1
+instead. The explicit tree is also useful for interval divide-and-conquer and tree DP; the
+largest-rectangle application is implemented directly with a monotone stack in 1.2.4.
 
-- `CartesianTree(a)` constructs the tree for array `a`.
+- `CartesianTree(a, comp = std::less<>())` constructs the tree for array `a`.
 - `size()` returns the size of the array.
 - `empty()` returns whether the array is empty.
 - `root()` returns the root index, or $-1$ if the array is empty.
 - `parent(i)`, `left(i)`, and `right(i)` return neighboring node indices, or $-1$ if absent.
-- `range_min_index(lo, hi)` returns the index of the minimum value in $[`lo`, `hi`]$.
+- `range_min_index(lo, hi)` returns the index of the first value in comparator order within
+  $[`lo`, `hi`]$.
 
 Time Complexity:
 - O(n) per call to the constructor, where $n$ is the array size.
@@ -33,6 +36,7 @@ Space Complexity:
 */
 
 #include <cassert>
+#include <functional>
 #include <vector>
 
 class CartesianTree {
@@ -40,12 +44,13 @@ class CartesianTree {
   std::vector<int> parent_, left_, right_;
 
  public:
-  explicit CartesianTree(const std::vector<int> &a)
+  template<typename T, typename Compare = std::less<>>
+  explicit CartesianTree(const std::vector<T> &a, Compare comp = Compare())
       : root_(-1), parent_(a.size(), -1), left_(a.size(), -1), right_(a.size(), -1) {
     std::vector<int> st;
     for (int i = 0, n = static_cast<int>(a.size()); i < n; i++) {
       int last = -1;
-      while (!st.empty() && a[i] < a[st.back()]) {
+      while (!st.empty() && comp(a[i], a[st.back()])) {
         last = st.back();
         st.pop_back();
       }
@@ -109,5 +114,9 @@ int main() {
   vector<int> equal{4, 2, 2, 3};
   CartesianTree equal_tree(equal);
   assert(equal_tree.range_min_index(1, 3) == 1);  // Earlier equal minima win ties.
+
+  CartesianTree max_tree(a, greater<int>());
+  assert(max_tree.root() == 4);
+  assert(max_tree.range_min_index(0, 2) == 2);  // First under greater<int>: the numeric maximum.
   return 0;
 }

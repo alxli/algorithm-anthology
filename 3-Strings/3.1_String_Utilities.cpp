@@ -98,10 +98,9 @@ bool is_number(const string &s) {
   int i = (s.empty() || (s[0] != '-' && s[0] != '+')) ? 0 : 1;
   bool seen_digit = false, seen_dot = false;
   for (; i < static_cast<int>(s.size()); i++) {
-    unsigned char c = s[i];
-    if (isdigit(c)) {
+    if (isdigit(static_cast<unsigned char>(s[i]))) {
       seen_digit = true;
-    } else if (c == '.' && !seen_dot) {
+    } else if (s[i] == '.' && !seen_dot) {
       seen_dot = true;
     } else {
       break;
@@ -141,8 +140,8 @@ Case Conversion:
 string to_upper(const string &s) {
   string res;
   res.reserve(s.size());
-  for (char c : s) {
-    res.push_back(static_cast<char>(toupper(static_cast<unsigned char>(c))));
+  for (unsigned char c : s) {
+    res.push_back(static_cast<char>(toupper(c)));
   }
   return res;
 }
@@ -150,19 +149,17 @@ string to_upper(const string &s) {
 string to_lower(const string &s) {
   string res;
   res.reserve(s.size());
-  for (char c : s) {
-    res.push_back(static_cast<char>(tolower(static_cast<unsigned char>(c))));
+  for (unsigned char c : s) {
+    res.push_back(static_cast<char>(tolower(c)));
   }
   return res;
 }
 
 string to_title(const string &s) {
   string res;
-  auto lower = [](unsigned char c) { return static_cast<char>(tolower(c)); };
-  auto upper = [](unsigned char c) { return static_cast<char>(toupper(c)); };
-  char prev = '\0';
-  for (char c : s) {
-    res.push_back(isalpha(static_cast<unsigned char>(prev)) ? lower(c) : upper(c));
+  unsigned char prev = '\0';
+  for (unsigned char c : s) {
+    res.push_back(isalpha(prev) ? static_cast<char>(tolower(c)) : static_cast<char>(toupper(c)));
     prev = res.back();
   }
   return res;

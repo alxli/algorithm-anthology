@@ -16,8 +16,8 @@ current node are popped, and the node on top becomes the parent. This implementa
 binary lifting so it is self-contained; given an existing lowest common ancestor structure, the same
 sort-and-stack logic applies directly.
 
-- `VirtualTree(adj, root)` builds the structure over a tree rooted at `root`, given a bidirectional
-  adjacency list `adj` of nodes numbered $[0, `n`)$, where `n` is `adj.size()`.
+- `VirtualTree(adj, root)` builds the structure over a tree rooted at `root`, represented by the
+  bidirectional adjacency list `adj`, whose indices represent the nodes.
 - `lca(u, v)` returns the lowest common ancestor of nodes `u` and `v`.
 - `depth_of(u)` returns the depth of `u` in the original tree (the root has depth $0$). The original
   path length of a virtual-tree edge `p`-`c` is `depth_of(c)` $-$ `depth_of(p)`.

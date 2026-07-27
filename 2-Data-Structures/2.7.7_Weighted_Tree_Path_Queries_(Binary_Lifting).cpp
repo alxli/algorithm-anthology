@@ -15,9 +15,9 @@ to orientation. For an invertible aggregate such as the sum, an alternative that
 table is to store each node's weighted depth `dw[u]` and return `dw[u] + dw[v] - 2*dw[lca]`.
 
 - `WeightedTree<W>(adj)` builds the structure over a forest given by a weighted, bidirectional
-  adjacency list `adj`, where `adj[u]` holds `{v, w}` pairs for each edge `u`-`v` of weight `w`,
-  over nodes numbered $[0, `n`)$, where `n` is `adj.size()`. Each connected component is rooted at
-  its first node reached by the constructor's outer loop.
+  adjacency list `adj`, whose indices represent the nodes and where `adj[u]` holds pairs (`v`, `w`)
+  for each edge `u`-`v` of weight `w`. Each connected component is rooted at its first node reached
+  by the constructor's outer loop.
 - `lca(u, v)` returns the lowest common ancestor of `u` and `v`, or $-1$ if they lie in different
   trees.
 - `kth_ancestor(u, k)` returns the $k$-th ancestor of `u`, stopping at that tree's root if `k`

@@ -25,15 +25,17 @@ index to a new value. Another possible update operation is "increment", in which
   `lo == hi`, then the single specified value is returned.
 - `update(i, d)` assigns the value `v` at index `i` to `apply_delta(v, d)`.
 - `max_right(lo, pred)` returns the largest boundary `hi` such that the aggregate over the half-open
-  range $[`lo`, `hi`)$ satisfies `pred`. It returns `size()` if `pred` remains true to the end.
+  range $[`lo`, `hi`)$ satisfies the monotonic predicate `pred()`. It returns `size()` if `pred()`
+  remains true to the end.
 - `min_left(hi, pred)` returns the smallest boundary `lo` such that the aggregate over the half-open
-  range $[`lo`, `hi`)$ satisfies `pred`. It returns $0$ if `pred` remains true to the beginning.
+  range $[`lo`, `hi`)$ satisfies the monotonic predicate `pred()`. It returns $0$ if `pred()`
+  remains true to the beginning.
 
-For the boundary-search functions, `pred` takes aggregate `T` values of candidate ranges. As a range
-grows, `pred` may change from true to false but never back to true; the empty range is considered
-valid. E.g. for `combine = min`, use `pred(mn) = (mn > x)` to find the first value `<= x`, or for
-`combine = sum`, use `pred(sum) = (sum <= x)` with nonnegative values to find the longest range
-within the limit `x`.
+For the boundary-search functions, `pred()` takes aggregate `T` values of candidate ranges. As a
+range grows, `pred()` may change from true to false but never back to true; the empty range is
+considered valid. E.g. for `combine = min`, use `pred(mn) = (mn > x)` to find the first value
+`<= x`, or for `combine = sum`, use `pred(sum) = (sum <= x)` with nonnegative values to find the
+longest range within the limit `x`.
 
 Both boundary searches are iterative to demonstrate how the flat-array layout can avoid recursion.
 They decompose the search range into O(log n) canonical nodes, scan those nodes in order while
@@ -43,7 +45,7 @@ recursive descent like the one in 2.4.5 is equally valid and may be easier to ad
 Time Complexity:
 - O(n) per call to both constructors, where $n$ is the size of the array.
 - O(1) per call to `size()` and `at()`.
-- O(log n) per call to `update()`, `query()`, `max_right()`, and `min_left()`.
+- O(log n) per call to `query()`, `update()`, `max_right()`, and `min_left()`.
 
 Space Complexity:
 - O(n) for storage of the array elements.

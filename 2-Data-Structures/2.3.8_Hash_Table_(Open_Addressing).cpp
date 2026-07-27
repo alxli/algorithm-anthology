@@ -2,8 +2,8 @@
 
 Maintain an unordered map: a collection of key-value pairs in which each key appears at most once.
 Keys are hashed into table slots, and this implementation resolves collisions using open addressing
-with linear probing. Deletions leave tombstones behind so that probe chains remain searchable. It
-requires `operator==` on the key type and a hash functor.
+with linear probing. Deletions leave tombstones behind so that probe chains remain searchable. The
+hash and key-equality policies follow the conventions of `std::unordered_map`.
 
 Linear probing checks slots $i$, $i + 1$, $i + 2$, ... (modulo the table size) until the desired key
 or an empty slot is found. Other probe-step schemes include quadratic probing and double hashing,
@@ -17,8 +17,10 @@ the load factor must stay well below 1, and, unlike chaining or `std::unordered_
 `find()` or reference from `operator[]` is invalidated as soon as a later insertion rehashes and
 relocates the entries.
 
-- `ProbingHashMap<K, V, Hash>(buckets = 128)` constructs an empty map with the positive number of
-  slots given by `buckets`.
+- `ProbingHashMap<K, V>(buckets = 128)` constructs an empty map with the positive number of slots
+  given by `buckets`, using `std::hash<K>` and `std::equal_to<K>`.
+- `ProbingHashMap<K, V, Hash, KeyEqual>(buckets, hash, equal)` instead stores the supplied hash and
+  equality policies.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if a new
@@ -59,12 +61,14 @@ Space Complexity:
 */
 
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <utility>
 #include <vector>
 
-template<typename K, typename V, typename Hash>
+template<typename K, typename V, typename Hash = std::hash<K>, typename KeyEqual = std::equal_to<K>>
 class ProbingHashMap {
   enum class State { EMPTY, OCCUPIED, DELETED };
 
@@ -77,9 +81,11 @@ class ProbingHashMap {
   std::vector<std::optional<HashNode>> table;
   std::vector<State> state;
   int table_size, num_entries, num_tombstones;
+  Hash hash;
+  KeyEqual equal;
 
   int bucket(const K &k) const {
-    return static_cast<int>(Hash()(k) % static_cast<uint32_t>(table_size));
+    return static_cast<int>(hash(k) % static_cast<std::size_t>(table_size));
   }
 
   int next_bucket(int i, int probes) const {
@@ -112,8 +118,12 @@ class ProbingHashMap {
   }
 
  public:
-  explicit ProbingHashMap(int buckets = 128)
-      : table_size(buckets), num_entries(0), num_tombstones(0) {
+  explicit ProbingHashMap(int buckets = 128, Hash hash = Hash(), KeyEqual equal = KeyEqual())
+      : table_size(buckets),
+        num_entries(0),
+        num_tombstones(0),
+        hash(std::move(hash)),
+        equal(std::move(equal)) {
     assert(buckets > 0);
     // Also require this when using the quadratic alternative in next_bucket():
     // assert((buckets & (buckets - 1)) == 0);
@@ -133,7 +143,7 @@ class ProbingHashMap {
     int i = bucket(k);
     for (int probes = 0; probes < table_size; probes++) {
       if (state[i] == State::OCCUPIED) {
-        if (table[i]->key == k) {
+        if (equal(table[i]->key, k)) {
           return false;
         }
       } else if (state[i] == State::DELETED) {
@@ -163,7 +173,7 @@ class ProbingHashMap {
       if (state[i] == State::EMPTY) {
         return false;
       }
-      if (state[i] == State::OCCUPIED && table[i]->key == k) {
+      if (state[i] == State::OCCUPIED && equal(table[i]->key, k)) {
         table[i].reset();
         state[i] = State::DELETED;
         num_entries--;
@@ -181,7 +191,7 @@ class ProbingHashMap {
       if (state[i] == State::EMPTY) {
         return nullptr;
       }
-      if (state[i] == State::OCCUPIED && table[i]->key == k) {
+      if (state[i] == State::OCCUPIED && equal(table[i]->key, k)) {
         return &table[i]->value;
       }
       i = next_bucket(i, probes);
@@ -245,18 +255,18 @@ struct Hasher {
       std::chrono::steady_clock::now().time_since_epoch().count();
 
   // Signed -> unsigned delegates.
-  uint32_t operator()(int k) { return Hasher()(static_cast<uint32_t>(k)); }
-  uint32_t operator()(int64_t k) { return Hasher()(static_cast<uint64_t>(k)); }
+  uint32_t operator()(int k) const { return Hasher()(static_cast<uint32_t>(k)); }
+  uint32_t operator()(int64_t k) const { return Hasher()(static_cast<uint64_t>(k)); }
 
   // Knuth's multiplicative method. Fast, but affine: an additive RAND_SEED only shifts all buckets
   // uniformly and won't stop crafted collisions (unlike the non-linear hashers below). To harden
   // it, randomize the odd multiplier and take the high bits instead.
-  uint32_t operator()(uint32_t k) {
+  uint32_t operator()(uint32_t k) const {
     return k * 2654435761u;  // Or just return k.
   }
 
   // SplitMix64 mixer (see 3.2.1's mix64).
-  uint32_t operator()(uint64_t k) {
+  uint32_t operator()(uint64_t k) const {
     k += RAND_SEED;
     k = (k ^ (k >> 30)) * 0xbf58476d1ce4e5b9ULL;
     k = (k ^ (k >> 27)) * 0x94d049bb133111ebULL;
@@ -264,7 +274,7 @@ struct Hasher {
   }
 
   // Jenkins's one-at-a-time hash.
-  uint32_t operator()(const std::string &k) {
+  uint32_t operator()(const std::string &k) const {
     uint32_t hash = RAND_SEED;
     for (char c : k) {
       hash += ((hash + static_cast<unsigned char>(c)) << 10);
@@ -274,6 +284,16 @@ struct Hasher {
     hash ^= (hash >> 11);
     return hash + (hash << 15);
   }
+};
+
+struct AbsHash {
+  int salt;
+  explicit AbsHash(int salt = 0) : salt(salt) {}
+  size_t operator()(int x) const { return (x < 0 ? -static_cast<int64_t>(x) : x) + salt; }
+};
+
+struct AbsEqual {
+  bool operator()(int a, int b) const { return AbsHash()(a) == AbsHash()(b); }
 };
 
 int main() {
@@ -306,5 +326,13 @@ int main() {
   char *ptr = duplicate.find("x");
   assert(!duplicate.insert("x", 'z'));
   assert(ptr == duplicate.find("x"));  // A rejected duplicate does not trigger a rehash.
+
+  ProbingHashMap<string, int> defaults;
+  defaults["answer"] = 42;
+  assert(*defaults.find("answer") == 42);
+
+  ProbingHashMap<int, char, AbsHash, AbsEqual> absolute(128, AbsHash(7), AbsEqual());
+  assert(absolute.insert(-2, 'x'));
+  assert(!absolute.insert(2, 'y') && *absolute.find(2) == 'x');
   return 0;
 }

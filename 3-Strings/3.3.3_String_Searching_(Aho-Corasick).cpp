@@ -149,6 +149,5 @@ int main() {
   vector<pair<string, int>> none;
   ac.find_all_in("zzzz", [&](const string &needle, int pos) { none.push_back({needle, pos}); });
   assert(none.empty());
-
   return 0;
 }

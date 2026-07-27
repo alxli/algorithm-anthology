@@ -8,6 +8,14 @@ The structure has two roots: one of length $-1$, which simplifies boundary cases
 $0$, representing the empty palindrome. After each appended character, `last` points to the node for
 the longest palindromic suffix of the current string.
 
+To append a character, `add()` follows suffix links from `last` until finding the longest suffix
+palindrome that can be enclosed by the new character. If the corresponding transition already
+exists, that node becomes `last`; otherwise, a node two characters longer is created and linked to
+its longest proper palindromic suffix, found by the same search. Exactly one distinct palindrome can
+be created at each position, so the number of non-root nodes is the distinct count. Each node first
+counts the times it is the longest palindromic suffix; propagating those counts through suffix links
+then includes occurrences where it appears as a suffix of a longer palindrome.
+
 - `Eertree()` constructs an empty palindromic tree.
 - `Eertree(s)` constructs the tree for string `s`.
 - `add(c)` appends character `c` and returns `true` if this creates a new distinct palindrome.

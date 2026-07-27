@@ -9,8 +9,8 @@ node, that node's depth; the lowest common ancestor of $u$ and $v$ in the same t
 shallowest node visited between their first occurrences in the tour, found by a range-minimum query
 over the depth sequence. This version answers those queries with a segment tree.
 
-- `SegTreeLCA(adj)` builds the structure over a forest represented by a bidirectional adjacency list
-  `adj` of nodes numbered $[0, `n`)$, where `n` is `adj.size()`.
+- `SegTreeLCA(adj)` builds the structure over a forest represented by the bidirectional adjacency
+  list `adj`, whose indices represent the nodes.
 - `lca(u, v)` returns the lowest common ancestor of nodes `u` and `v`, or $-1$ if they are in
   different trees.
 - `dist(u, v)` returns the number of edges on the path between nodes `u` and `v`, or $-1$ if they

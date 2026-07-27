@@ -53,12 +53,12 @@ void johnson_all_pairs(int n) {
   for (int i = 0; i < n; i++) {
     bool changed = false;
     for (auto [u, v, w] : edges) {
-      int64_t candidate = potential[u] + w;  // Overflow warning.
-      if (candidate < potential[v]) {
+      int64_t pv = potential[u] + w;  // Overflow warning.
+      if (pv < potential[v]) {
         if (i == n - 1) {
           throw std::runtime_error("Negative-weight cycle found.");
         }
-        potential[v] = candidate;
+        potential[v] = pv;
         changed = true;
       }
     }
@@ -73,10 +73,9 @@ void johnson_all_pairs(int n) {
   }
   dist.assign(n, std::vector<int64_t>(n, INF));
   next_node.assign(n, std::vector<int>(n, -1));
+  using qnode = std::pair<int64_t, int>;  // (distance, node)
   for (int start = 0; start < n; start++) {
-    std::priority_queue<
-        std::pair<int64_t, int>, std::vector<std::pair<int64_t, int>>, std::greater<>>
-        pq;
+    std::priority_queue<qnode, std::vector<qnode>, std::greater<>> pq;
     dist[start][start] = 0;
     next_node[start][start] = start;
     pq.emplace(0, start);
@@ -87,11 +86,11 @@ void johnson_all_pairs(int n) {
         continue;
       }
       for (auto [v, w] : adj[u]) {
-        int64_t candidate = du + w;  // Overflow warning.
-        if (candidate < dist[start][v]) {
-          dist[start][v] = candidate;
+        int64_t dv = du + w;  // Overflow warning.
+        if (dv < dist[start][v]) {
+          dist[start][v] = dv;
           next_node[start][v] = (u == start) ? v : next_node[start][u];
-          pq.emplace(candidate, v);
+          pq.emplace(dv, v);
         }
       }
     }

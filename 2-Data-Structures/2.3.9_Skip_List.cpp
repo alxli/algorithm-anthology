@@ -1,12 +1,14 @@
 /*
 
 Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible
-key appears at most once in the collection. This implementation requires `operator<` on the key
-type. A skip list maintains a linked hierarchy of sorted subsequences with each successive
-subsequence skipping over fewer elements than the previous one. Each new node joins a number of
-levels decided by repeated coin flips, and a search starts at the sparsest level, moving forward
-until the next key would overshoot and then dropping down a level, which makes operations take
-O(log n) with high probability.
+key appears at most once in the collection. The comparator `comp` defines the key ordering:
+`comp(a, b)` is true when `a` precedes `b`. A skip list maintains a linked hierarchy of sorted
+subsequences with each successive subsequence skipping over fewer elements than the previous one.
+Each new node joins a number of levels decided by repeated coin flips, and a search starts at the
+sparsest level, moving forward until the next key would overshoot and then dropping down a level,
+which makes operations take O(log n) with high probability. The comparator defaults to
+`std::less<K>`; to customize the ordering, instantiate `SkipList<K, V, Compare>` and pass the
+comparator to the constructor.
 
 - `SkipList<K, V>()` constructs an empty map.
 - `size()` returns the size of the map.
@@ -16,12 +18,12 @@ O(log n) with high probability.
   old value associated with the key is preserved).
 - `erase(k)` removes the entry with key `k` from the map, returning `true` if the removal was
   successful or `false` if the key to be removed was not found.
-- `find(k)` returns a pointer to the value associated with key `k`, or `nullptr` if the key was not
-  found.
+- `find(k)` returns a pointer to the const value associated with key `k`, or `nullptr` if the key
+  was not found.
 - `operator[k]` returns a reference to key `k`'s associated value (which may be modified), or if
   necessary, inserts and returns a new entry with the default constructed value if key `k` was not
   originally found.
-- `entries()` returns all key-value entries in ascending order of keys.
+- `entries()` returns all key-value entries in comparator order.
 
 The sentinel node requires `K` and `V` to be default constructible.
 
@@ -39,11 +41,12 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <functional>
 #include <random>
 #include <utility>
 #include <vector>
 
-template<typename K, typename V>
+template<typename K, typename V, typename Compare = std::less<K>>
 class SkipList {
   static const int MAX_LEVELS = 32;  // log2(max possible keys)
 
@@ -56,6 +59,7 @@ class SkipList {
   } *head;
 
   int num_nodes;
+  Compare comp;
 
   static int random_level() {
     static std::mt19937 rng(std::random_device{}());
@@ -78,16 +82,17 @@ class SkipList {
   Node *find_node(const K &k) const {
     Node *n = head;
     for (int i = node_level(n->next); i-- > 0;) {
-      while (n->next[i] != nullptr && n->next[i]->key < k) {
+      while (n->next[i] != nullptr && comp(n->next[i]->key, k)) {
         n = n->next[i];
       }
     }
     n = n->next[0];
-    return (n != nullptr && !(k < n->key) && !(n->key < k)) ? n : nullptr;
+    return (n != nullptr && !comp(k, n->key) && !comp(n->key, k)) ? n : nullptr;
   }
 
  public:
-  SkipList() : head(new Node(K(), V(), MAX_LEVELS)), num_nodes(0) {
+  explicit SkipList(Compare comp = Compare())
+      : head(new Node(K(), V(), MAX_LEVELS)), num_nodes(0), comp(std::move(comp)) {
     for (auto &ptr : head->next) {
       ptr = nullptr;
     }
@@ -112,13 +117,13 @@ class SkipList {
     int curr_level = node_level(update);
     Node *n = head;
     for (int i = curr_level; i-- > 0;) {
-      while (n->next[i] != nullptr && n->next[i]->key < k) {
+      while (n->next[i] != nullptr && comp(n->next[i]->key, k)) {
         n = n->next[i];
       }
       update[i] = n;
     }
     n = n->next[0];
-    if (n != nullptr && !(k < n->key) && !(n->key < k)) {
+    if (n != nullptr && !comp(k, n->key) && !comp(n->key, k)) {
       return false;
     }
     int new_level = random_level();
@@ -140,13 +145,13 @@ class SkipList {
     std::vector<Node *> update(head->next);
     Node *n = head;
     for (int i = node_level(update); i-- > 0;) {
-      while (n->next[i] != nullptr && n->next[i]->key < k) {
+      while (n->next[i] != nullptr && comp(n->next[i]->key, k)) {
         n = n->next[i];
       }
       update[i] = n;
     }
     n = n->next[0];
-    if (n != nullptr && !(k < n->key) && !(n->key < k)) {
+    if (n != nullptr && !comp(k, n->key) && !comp(n->key, k)) {
       for (int i = 0; i < static_cast<int>(n->next.size()); i++) {
         update[i]->next[i] = n->next[i];
       }
@@ -157,23 +162,18 @@ class SkipList {
     return false;
   }
 
-  V *find(const K &k) {
-    Node *n = find_node(k);
-    return n == nullptr ? nullptr : &(n->value);
-  }
-
   const V *find(const K &k) const {
     Node *n = find_node(k);
     return n == nullptr ? nullptr : &(n->value);
   }
 
   V &operator[](const K &k) {
-    V *ptr = find(k);
-    if (ptr != nullptr) {
-      return *ptr;
+    Node *n = find_node(k);
+    if (n != nullptr) {
+      return n->value;
     }
     insert(k, V());
-    return *find(k);
+    return find_node(k)->value;
   }
 
   std::vector<std::pair<K, V>> entries() const {
@@ -213,5 +213,13 @@ int main() {
   assert(l.find(1) == nullptr);
   assert(l.size() == 4);
   assert((l.entries() == vector<pair<int, char>>{{2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}}));
+
+  SkipList<int, char, greater<int>> descending;
+  for (int key : {2, 1, 3}) {
+    descending.insert(key, '0' + key);
+  }
+  assert((descending.entries() == vector<pair<int, char>>{{3, '3'}, {2, '2'}, {1, '1'}}));
+  assert(*descending.find(2) == '2');
+  assert(descending.erase(2) && descending.find(2) == nullptr);
   return 0;
 }

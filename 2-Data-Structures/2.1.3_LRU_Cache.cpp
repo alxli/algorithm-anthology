@@ -6,7 +6,8 @@ key, evicting the least recently used entry whenever an insertion would exceed c
 This implementation combines a doubly linked list (`std::list`) with a map from keys to list
 iterators. The front of the list stores the most recently used item. The operation
 `items.splice(items.begin(), items, it)` is the standard-library way to move an existing list node
-to the front in O(1) time.
+to the front in O(1) time. The key type `K` must support `operator==`, and `std::hash<K>` must be
+defined.
 
 To implement the same cache without `std::list`, use the intrusive doubly linked list operations
 from section 2.1.2. Store a `Node*` in the map instead of a list iterator, move hits to the front

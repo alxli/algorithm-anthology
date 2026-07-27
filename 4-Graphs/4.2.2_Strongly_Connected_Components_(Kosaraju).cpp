@@ -78,9 +78,9 @@ class KosarajuSCC {
       if (visited[u]) {
         continue;
       }
-      std::vector<int> component_nodes;
-      dfs_component(u, static_cast<int>(scc.size()), component_nodes);
-      scc.push_back(component_nodes);
+      std::vector<int> comp_nodes;
+      dfs_component(u, static_cast<int>(scc.size()), comp_nodes);
+      scc.push_back(comp_nodes);
     }
   }
 

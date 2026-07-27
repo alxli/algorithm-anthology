@@ -4,7 +4,7 @@ Maintain a static set of two-dimensional points while supporting nearest-neighbo
 tree recursively splits points by the coordinate with larger spread, searches the more promising
 side first, and only explores the other side when its splitting plane can still improve the answer.
 
-This implementation uses `std::pair` to represent points, requiring operator `<` and `long double`
+This implementation uses `std::pair` to represent points, requiring `operator<` and `long double`
 casting to be defined on the numeric template type.
 
 Use this for static nearest-neighbor queries on point sets in low dimensions. It is a geometric

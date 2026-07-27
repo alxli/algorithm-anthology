@@ -9,9 +9,9 @@ when they fit the problem. Use the raw-node style below when the problem stateme
 nodes, or when manual pointer manipulation is the point of the exercise.
 
 - `reverse_list(head)` reverses a singly linked list and returns the new head.
-- `merge_sorted_lists(a, b)` merges two sorted lists using a dummy node and returns the merged head.
 - `split_half(head, &second)` cuts a list into two halves, returning the first half and storing the
   second half in `second`.
+- `merge_sorted_lists(a, b)` merges two sorted lists using a dummy node and returns the merged head.
 - `splice_after(pos, before)` moves the node after `before` so it appears after `pos`.
 - `splice_range_after(pos, before_first, last)` moves the half-open range (`before_first`, `last`)
   so it appears after `pos`.
@@ -54,6 +54,21 @@ ListNode *reverse_list(ListNode *head) {
   return prev;
 }
 
+ListNode *split_half(ListNode *head, ListNode **second) {
+  if (head == nullptr || head->next == nullptr) {
+    *second = nullptr;
+    return head;
+  }
+  ListNode *slow = head, *fast = head->next;
+  while (fast != nullptr && fast->next != nullptr) {
+    slow = slow->next;
+    fast = fast->next->next;
+  }
+  *second = slow->next;
+  slow->next = nullptr;
+  return head;
+}
+
 ListNode *merge_sorted_lists(ListNode *a, ListNode *b) {
   ListNode dummy;
   ListNode *tail = &dummy;
@@ -69,21 +84,6 @@ ListNode *merge_sorted_lists(ListNode *a, ListNode *b) {
   }
   tail->next = a != nullptr ? a : b;
   return dummy.next;
-}
-
-ListNode *split_half(ListNode *head, ListNode **second) {
-  if (head == nullptr || head->next == nullptr) {
-    *second = nullptr;
-    return head;
-  }
-  ListNode *slow = head, *fast = head->next;
-  while (fast != nullptr && fast->next != nullptr) {
-    slow = slow->next;
-    fast = fast->next->next;
-  }
-  *second = slow->next;
-  slow->next = nullptr;
-  return head;
 }
 
 void splice_after(ListNode *pos, ListNode *before) {

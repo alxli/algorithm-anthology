@@ -4,8 +4,13 @@ Given a complete, weighted, directed graph, find a minimum-length Hamiltonian pa
 Hamiltonian path visits each node exactly once. A Hamiltonian cycle additionally returns to its
 starting node; this cycle version is the traveling salesman problem (TSP).
 
-Both functions use the Held-Karp subset dynamic program, where `dp[S][i]` is the shortest path
-visiting exactly the nodes in `S` and ending at node `i`.
+Both functions use the Held-Karp subset dynamic program. Let $dp(S, i)$ be the shortest path that
+visits exactly the nodes in $S$ and ends at $i$. Its final edge must come from some
+$j \in S \setminus \{i\}$, giving the recurrence
+$dp(S, i) = \min_j(dp(S \setminus \{i\}, j) + w(j, i))$. Paths initialize every singleton set;
+cycles initialize only node $0$ and consider only subsets containing it. After processing the full
+set, the algorithm chooses the best final node, including its return edge to node $0$ for a cycle.
+Reconstruction repeats the same minimization backward instead of storing a separate parent table.
 
 - `shortest_hamiltonian_path()` populates `path` and returns the minimum Hamiltonian path length for
   a global, pre-populated adjacency matrix `adj`.
@@ -13,7 +18,7 @@ visiting exactly the nodes in `S` and ending at node `i`.
   minimum Hamiltonian cycle length for a global, pre-populated adjacency matrix `adj`.
 
 Since this implementation uses bitmasks with signed 32-bit integers, the maximum number of nodes
-must be less than 31.
+must be less than $31$.
 
 Time Complexity:
 - O(2^n * n^2) per call, where $n$ is the number of nodes.

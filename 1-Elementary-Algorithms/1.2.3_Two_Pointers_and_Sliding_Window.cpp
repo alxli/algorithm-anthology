@@ -179,8 +179,8 @@ the last $w$ states, such as $dp(i) = a_i + \min_{j \in [i - w, i - 1]} dp(j)$.
 The queue stores candidate (`index`, `value`) pairs in monotone order. Expired indices are removed
 from the front, and dominated values are removed from the back before inserting a new candidate.
 
-- `MonotoneQueue<T, Compare = std::less<T>>()` constructs an empty queue for minimum queries by
-  default. Use `std::greater<T>` for maximum queries.
+- `MonotoneQueue<T>()` constructs an empty queue for minimum queries. Instantiate
+  `MonotoneQueue<T, std::greater<T>>` for maximum queries.
 - `push(index, value)` inserts candidate `value` at position `index`, removing dominated candidates
   from the back.
 - `expire(first_valid)` removes candidates with index less than `first_valid`.

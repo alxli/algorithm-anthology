@@ -9,13 +9,12 @@ number system: at each position, count how many combinations would be skipped by
 next value, then either add that count to the rank or subtract it while searching for the requested
 rank. Bitmask successors use the same order as increasing integers with a fixed popcount.
 
-- `next_combination(lo, mid, hi)` takes random-access iterators `lo`, `mid`, and `hi` as a range
-  $[`lo`, `hi`)$ of $n$ elements for which the function will rearrange such that the $k$ elements in
-  $[`lo`, `mid`)$ become the next lexicographically greater combination. The function returns true
-  if such a combination exists, or false if $[`lo`, `mid`)$ already consists of the
-  lexicographically greatest combination of the elements in $[`lo`, `hi`)$, in which case the range
-  is reset to its first combination. This implementation requires an ordering on the set of possible
-  elements defined by `operator<` on the iterator's value type.
+- `next_combination(lo, mid, hi, comp = std::less<>())` takes random-access iterators `lo`, `mid`,
+  and `hi` as a range $[`lo`, `hi`)$ of $n$ elements for which the function will rearrange such that
+  the $k$ elements in $[`lo`, `mid`)$ become the next lexicographically greater combination. The
+  function returns true if such a combination exists, or false if $[`lo`, `mid`)$ already consists
+  of the lexicographically greatest combination of the elements in $[`lo`, `hi`)$, in which case the
+  range is reset to its first combination. The comparator `comp` defines the element ordering.
 - `next_combination(n, a)` rearranges `a` to become the next lexicographically greater combination
   of distinct integers in the range $[0, `n`)$. The vector `a` must be sorted and contain distinct
   integers in the range $[0, `n`)$.
@@ -50,26 +49,27 @@ Space Complexity:
 
 #include <algorithm>
 #include <cstdint>
+#include <functional>
 #include <utility>
 #include <vector>
 
-template<typename It>
-bool next_combination(It lo, It mid, It hi) {
+template<typename It, typename Compare = std::less<>>
+bool next_combination(It lo, It mid, It hi, Compare comp = Compare()) {
   if (lo == mid || mid == hi) {
     return false;
   }
   It l = mid - 1, h = hi - 1;
   int len1 = 1, len2 = 1;
-  while (l != lo && !(*l < *h)) {
+  while (l != lo && !comp(*l, *h)) {
     --l;
     ++len1;
   }
-  if (l == lo && !(*l < *h)) {
+  if (l == lo && !comp(*l, *h)) {
     std::rotate(lo, mid, hi);
     return false;
   }
   for (; mid < h; ++len2) {
-    if (!(*l < *--h)) {
+    if (!comp(*l, *--h)) {
       ++h;
       break;
     }
@@ -238,6 +238,11 @@ int main() {
     } while (mask < limit);
     assert(count == 10);
     cout << endl;
+  }
+  {
+    string s = "4321";
+    assert(next_combination(s.begin(), s.begin() + 2, s.end(), greater<char>()));
+    assert(s.substr(0, 2) == "42");
   }
   {  // Combinations of distinct integers in [0, n).
     int n = 5, k = 3;

@@ -34,11 +34,11 @@ point-update segment tree in 2.4.5 use the same traversal here and may be adapte
 Time Complexity:
 - O(n) per call to either constructor, where $n$ is the size of the array.
 - O(1) per call to `size()` and `versions()`.
-- O(log n) per call to `at()`, `update()`, and `query()`.
+- O(log n) per call to `at()`, `query()`, and `update()`.
 
 Space Complexity:
 - O(n + q log n) for storage after $q$ updates.
-- O(log n) auxiliary stack space for construction, `at()`, `update()`, and `query()`.
+- O(log n) auxiliary stack space for construction, `at()`, `query()`, and `update()`.
 - O(1) auxiliary for `size()` and `versions()`.
 
 */

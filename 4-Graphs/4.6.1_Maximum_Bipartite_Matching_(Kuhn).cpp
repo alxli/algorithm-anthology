@@ -9,8 +9,8 @@ for an augmenting path: an alternating sequence of unmatched and matched edges t
 right node. Flipping the edges along such a path enlarges the matching by one.
 
 - `bipartite_matching(n2)` populates `match_left` and `match_right`, then returns maximum matching
-  size for a global, pre-populated adjacency list `adj` whose left-side nodes are numbered
-  $[0, `n`)$ and whose right-side neighbors are numbered $[0, `n2`)$, where `n` is `adj.size()`.
+  size for a global, pre-populated adjacency list `adj`, whose indices represent left-side nodes and
+  whose entries contain right-side neighbors numbered $[0, `n2`)$.
 
 Time Complexity:
 - O(n_1*m) per call, where $m$ is the number of edges.

@@ -8,6 +8,15 @@ Each state represents an equivalence class of substrings with the same set of en
 value `st[v].len` is the maximum length represented by state `v`, while `st[v].link` points to the
 state representing the longest proper suffix of that class.
 
+More precisely, state `v` contributes one distinct substring for each length greater than
+`st[st[v].link].len` and at most `st[v].len`. When a character is appended, `extend()` creates a
+state for the new full string and walks suffix links from the previous `last`, adding missing
+transitions to it. If an existing transition leads to a state whose maximum length is too large, a
+shorter clone of that state is inserted and the affected transitions and suffix links are redirected
+to it, splitting the ending-position classes without changing the recognized substrings. Summing
+these length ranges gives the number of distinct substrings. Membership queries follow transitions,
+while longest common substring queries retreat through suffix links when a match fails.
+
 - `SuffixAutomaton()` constructs an empty automaton.
 - `SuffixAutomaton(s)` constructs the automaton for string `s`.
 - `extend(c)` appends character `c` to the current string.

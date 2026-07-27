@@ -8,8 +8,10 @@ leaf must pass through the same number of black nodes, which together bound the 
 O(log n). Insertions and deletions repair these invariants by recoloring nodes and performing
 rotations.
 
-This implementation requires an ordering on the key type `K` defined by `operator<`. The sentinel
-node also requires `K` and `V` to be default constructible.
+The comparator `comp` defines the key ordering: `comp(a, b)` is true when `a` precedes `b`. The
+comparator defaults to `std::less<K>`; to customize the ordering, instantiate
+`RedBlackTree<K, V, Compare>` and pass the comparator to the constructor. The sentinel node also
+requires `K` and `V` to be default constructible.
 
 - `RedBlackTree<K, V>()` constructs an empty map.
 - `size()` returns the size of the map.
@@ -21,10 +23,11 @@ node also requires `K` and `V` to be default constructible.
   successful or `false` if the key to be removed was not found.
 - `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was
   not found.
-- `entries()` returns all key-value entries in ascending order of keys.
+- `entries()` returns all key-value entries in comparator order.
 
-The navigation routines `min()`, `max()`, `lower_bound(k)`, `upper_bound(k)`, `prev(k)`, and
-`next(k)` from the treap in 2.3.1 depend only on the BST property and may be copied here unchanged.
+The comparator-aware navigation routines `min()`, `max()`, `lower_bound(k)`, `upper_bound(k)`,
+`prev(k)`, and `next(k)` from the treap in 2.3.1 depend only on the BST property and may be adapted
+here as needed.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `empty()`.
@@ -41,10 +44,11 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <functional>
 #include <utility>
 #include <vector>
 
-template<typename K, typename V>
+template<typename K, typename V, typename Compare = std::less<K>>
 class RedBlackTree {
   enum Color { RED, BLACK };
   struct Node {
@@ -58,6 +62,7 @@ class RedBlackTree {
   } *root, *LEAF_NIL;
 
   int num_nodes;
+  Compare comp;
 
   void rotate_left(Node *n) {
     Node *tmp = n->right;
@@ -218,7 +223,7 @@ class RedBlackTree {
   }
 
  public:
-  RedBlackTree() : num_nodes(0) {
+  explicit RedBlackTree(Compare comp = Compare()) : num_nodes(0), comp(std::move(comp)) {
     root = LEAF_NIL = new Node(K(), V(), BLACK);
     LEAF_NIL->left = LEAF_NIL->right = LEAF_NIL;
   }
@@ -237,9 +242,9 @@ class RedBlackTree {
     Node *curr = root, *prev = LEAF_NIL;
     while (curr != LEAF_NIL) {
       prev = curr;
-      if (k < curr->key) {
+      if (comp(k, curr->key)) {
         curr = curr->left;
-      } else if (curr->key < k) {
+      } else if (comp(curr->key, k)) {
         curr = curr->right;
       } else {
         return false;
@@ -249,7 +254,7 @@ class RedBlackTree {
     n->parent = prev;
     if (prev == LEAF_NIL) {
       root = n;
-    } else if (k < prev->key) {
+    } else if (comp(k, prev->key)) {
       prev->left = n;
     } else {
       prev->right = n;
@@ -263,9 +268,9 @@ class RedBlackTree {
   bool erase(const K &k) {
     Node *n = root;
     while (n != LEAF_NIL) {
-      if (k < n->key) {
+      if (comp(k, n->key)) {
         n = n->left;
-      } else if (n->key < k) {
+      } else if (comp(n->key, k)) {
         n = n->right;
       } else {
         break;
@@ -312,9 +317,9 @@ class RedBlackTree {
   const V *find(const K &k) const {
     Node *n = root;
     while (n != LEAF_NIL) {
-      if (k < n->key) {
+      if (comp(k, n->key)) {
         n = n->left;
-      } else if (n->key < k) {
+      } else if (comp(n->key, k)) {
         n = n->right;
       } else {
         return &(n->value);
@@ -360,5 +365,13 @@ int main() {
     assert(t.erase(key));
   }
   assert(t.empty() && t.size() == 0);
+
+  RedBlackTree<int, char, greater<int>> descending;
+  for (int key : {2, 1, 3}) {
+    descending.insert(key, '0' + key);
+  }
+  assert((descending.entries() == vector<pair<int, char>>{{3, '3'}, {2, '2'}, {1, '1'}}));
+  assert(*descending.find(2) == '2');
+  assert(descending.erase(2) && descending.find(2) == nullptr);
   return 0;
 }

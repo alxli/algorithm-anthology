@@ -10,9 +10,9 @@ edge that joins a new node to the current tree, with a priority queue supplying 
 edge at each step.
 
 - `prim_mst()` populates `mst` with the edges in the minimum spanning forest and returns the total
-  MST weight for a global, bidirectionally pre-populated adjacency list `adj` which must consist of
-  nodes numbered $[0, `n`)$, where `n` is `adj.size()`. Adjacency entries are stored as (`neighbor`,
-  `weight`), while each MST edge is stored as (`from`, `to`, `weight`).
+  MST weight for a global, bidirectionally pre-populated adjacency list `adj`, whose indices
+  represent the nodes. Adjacency entries are stored as (`neighbor`, `weight`), while each MST edge
+  is stored as (`from`, `to`, `weight`).
 
 The priority queue stores candidate edges as (`weight`, `from`, `to`) and uses `std::greater` to
 make it a min-heap. To find a maximum spanning tree instead, use the default max-heap ordering.
@@ -49,8 +49,8 @@ int64_t prim_mst() {
       continue;
     }
     visit[i] = true;
-    using QueueEntry = std::tuple<int, int, int>;  // (weight, u, v)
-    std::priority_queue<QueueEntry, std::vector<QueueEntry>, std::greater<>> pq;
+    using qnode = std::tuple<int, int, int>;  // (weight, u, v)
+    std::priority_queue<qnode, std::vector<qnode>, std::greater<>> pq;
     for (auto [v, w] : adj[i]) {
       pq.emplace(w, i, v);
     }

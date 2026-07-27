@@ -4,7 +4,7 @@ Maintain a static set of two-dimensional points while supporting rectangle repor
 tree recursively splits points by alternating coordinates and stores a bounding box for each
 subtree, allowing whole subtrees to be accepted or pruned during a query.
 
-This implementation uses `std::pair` to represent points, requiring operator `<` to be defined on
+This implementation uses `std::pair` to represent points, requiring `operator<` to be defined on
 the numeric template type.
 
 Use this for static point-reporting queries when O(n) space and good average performance are more

@@ -22,7 +22,7 @@ The aggregation scheme for `rerooting_dp()` is defined by the following pieces:
 - `Data` is the return type of a normal fixed-root DFS call `dfs(u, p)`. It summarizes the component
   containing `u` after removing edge `u`-`p`, with all values measured from node `u`.
 - `identity` is the neutral value for an empty component, which for all aggregate values `a` must
-  satisfy `combine(a, identity) = combine(identity, a) = a`.
+  satisfy `combine(a, identity)` = `combine(identity, a)` = `a`.
 - `combine(a, b)` merges two independent neighbor contributions into the same node `u`, like two
   different child DFS returns.
 - `finalize(acc, u)` finalizes node `u` after all neighbor contributions have been merged. This is
@@ -199,6 +199,5 @@ int main() {
   auto lift = [](const string &a, int, int) { return a; };
   vector<string> traversal = ordered.rerooting_dp(string{}, combine, finalize, lift);
   assert(traversal[1] == "201");
-
   return 0;
 }

@@ -110,9 +110,11 @@ multigraphs: parallel edges are distinct because each edge receives its own ID.
 - `EulerianGraph(n, directed)` constructs a graph of `n` nodes numbered $[0, `n`)$. The graph is
   directed if `directed` is true, or undirected otherwise.
 - `add_edge(u, v)` adds an edge and returns its edge ID.
-- `eulerian_path(start = -1)` returns a trail using every edge exactly once, or a result with
-  `start = -1` if no such trail exists. If `start = -1`, a valid start is chosen automatically.
-- `EulerianTrail::is_cycle()` returns whether the trail begins and ends on the same node.
+- `eulerian_path(start = -1)` returns an `EulerianTrail` containing every edge exactly once, or an
+  invalid result with `start = -1` if no such trail exists. In a valid result, `start` is the first
+  node, `edges` lists edge IDs in traversal order, and `nodes` lists the visited nodes in order. If
+  the input `start = -1`, a valid start is chosen automatically. For a valid result, `is_cycle()`
+  returns whether the valid trail uses at least one edge and begins and ends on the same node.
 
 Time Complexity:
 - O(max(n, m)) per call to `eulerian_path()`, where $n$ is the number of nodes and $m$ is the number
@@ -233,8 +235,7 @@ class EulerianGraph {
  public:
   struct EulerianTrail {
     int start = -1;
-    std::vector<int> edges;
-    std::vector<int> nodes;
+    std::vector<int> edges, nodes;
 
     bool is_cycle() const {
       return start != -1 && nodes.size() > 1 && nodes.front() == nodes.back();

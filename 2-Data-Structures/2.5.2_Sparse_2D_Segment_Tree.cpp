@@ -35,11 +35,11 @@ tree in 2.6.5.
 
 Time Complexity:
 - O(1) per call to the constructor.
-- O(log(R)*log(C)) per call to `at()`, `update()`, and `query()`.
+- O(log(R)*log(C)) per call to `at()`, `query()`, and `update()`.
 
 Space Complexity:
 - O(n*log(R)*log(C)) for storage after $n$ point updates.
-- O(log(R) + log(C)) auxiliary stack space for `update()`, `query()`, and `at()`.
+- O(log(R) + log(C)) auxiliary stack space for `at()`, `query()`, and `update()`.
 
 */
 

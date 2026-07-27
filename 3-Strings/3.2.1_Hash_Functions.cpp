@@ -286,6 +286,5 @@ int main() {
   unordered_map<Triple, int, GenericHasher<Triple>> grid;
   grid[Triple(1, 'a', 3.14)] = 6;
   assert(grid[Triple(1, 'a', 3.14)] == 6);
-
   return 0;
 }

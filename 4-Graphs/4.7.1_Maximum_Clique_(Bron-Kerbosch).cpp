@@ -9,7 +9,7 @@ nodes that may still be added and the set of nodes already excluded. Choosing a 
 branching on its neighbors prunes large parts of the search, keeping it efficient on most graphs.
 
 - `max_clique()` returns the maximum clique size for a global, bidirectionally pre-populated
-  adjacency matrix `adj` which must consist of nodes numbered $[0, `n`)$, where `n` is `adj.size()`.
+  adjacency matrix `adj`, whose row and column indices represent the nodes.
 - `max_clique_weighted()` additionally uses global `w` and returns the maximum clique weight.
 
 These implementations use `Mask`, which is `uint64_t` by default, so the number of nodes must be
@@ -74,9 +74,7 @@ int max_clique() {
   return max_clique_rec(g, 0, (Mask{1} << n) - 1, 0);
 }
 
-int64_t max_clique_weighted_rec(
-    const std::vector<Mask> &g, int64_t curr, Mask pool, Mask excl
-) {
+int64_t max_clique_weighted_rec(const std::vector<Mask> &g, int64_t curr, Mask pool, Mask excl) {
   if (pool == 0) {
     return curr;
   }

@@ -389,8 +389,7 @@ int main() {
   cout << "Sorting five million integers..." << endl;
   cout.precision(3);
 
-  // Each sort is wrapped in a lambda so its name resolves at the call site (the bare names are
-  // function templates, not values), then timed on a fresh copy of the same unsorted data.
+  // Lambdas resolve each function template once benchmark() supplies the iterator types.
   auto benchmark = [&](const string &name, auto sort) {
     vector<int> v = data;
     clock_t start = clock();
