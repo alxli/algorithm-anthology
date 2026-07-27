@@ -31,6 +31,9 @@ degrees.
 The points passed to `angle()` must differ from its vertex `o`, vectors passed to `angle_between()`
 must be nonzero, and coefficient pairs passed to its line overload must represent valid lines.
 
+Overflow warning: `cross()` and `turn()` preserve the point's coordinate type, so their products may
+overflow for integral points. Use a 64-bit coordinate type for large integer coordinates.
+
 Time Complexity:
 - O(1) per operation.
 

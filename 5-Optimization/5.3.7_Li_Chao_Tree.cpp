@@ -98,7 +98,7 @@ class LiChaoTree {
   }
 
  public:
-  LiChaoTree(int64_t lo, int64_t hi) : root(nullptr), lo(lo), hi(hi) {}
+  LiChaoTree(int64_t lo, int64_t hi) : root(nullptr), lo(lo), hi(hi) { assert(lo <= hi); }
 
   ~LiChaoTree() { clean_up(root); }
   LiChaoTree(const LiChaoTree &) = delete;

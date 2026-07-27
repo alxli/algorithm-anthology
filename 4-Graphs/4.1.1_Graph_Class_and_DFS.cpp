@@ -13,11 +13,11 @@ maximum node index passed to `add_edge()` so far.
 - `Graph(directed = true)` constructs an empty graph, directed if `directed` is true and undirected
   otherwise.
 - `size()` returns the current number of nodes.
-- `operator[n]` returns a mutable or const reference to the adjacency list (`std::vector<int>`) of
-  node `n`.
+- `operator[u]` returns a mutable or const reference to the adjacency list (`std::vector<int>`) of
+  node `u`.
 - `add_edge(u, v)` adds an edge from `u` to `v`, plus the reverse edge if the graph is undirected,
   growing the node count to accommodate the larger index if necessary.
-- `dfs(start, f)` runs a depth-first search from node `start`, calling `f(n)` on each node `n` in
+- `dfs(start, f)` runs a depth-first search from node `start`, calling function `f` on each node in
   the order it is first visited.
 - `has_cycle()` returns whether the graph contains a cycle.
 - `is_directed()` returns whether the graph is directed.
@@ -50,31 +50,31 @@ class Graph {
   bool directed;
 
   template<typename Fn>
-  void dfs(int n, std::vector<char> &visit, Fn f) const {
-    f(n);
-    visit[n] = true;
-    for (int v : adj[n]) {
+  void dfs(int u, std::vector<char> &visit, Fn f) const {
+    f(u);
+    visit[u] = true;
+    for (int v : adj[u]) {
       if (!visit[v]) {
         dfs(v, visit, f);
       }
     }
   }
 
-  bool has_cycle(int n, int prev, std::vector<char> &visit, std::vector<char> &onstack) const {
-    visit[n] = true;
-    onstack[n] = true;
-    for (int v : adj[n]) {
+  bool has_cycle(int u, int prev, std::vector<char> &visit, std::vector<char> &onstack) const {
+    visit[u] = true;
+    onstack[u] = true;
+    for (int v : adj[u]) {
       if (directed && onstack[v]) {
         return true;
       }
       if (!directed && visit[v] && v != prev) {
         return true;
       }
-      if (!visit[v] && has_cycle(v, n, visit, onstack)) {
+      if (!visit[v] && has_cycle(v, u, visit, onstack)) {
         return true;
       }
     }
-    onstack[n] = false;
+    onstack[u] = false;
     return false;
   }
 
@@ -82,8 +82,8 @@ class Graph {
   Graph(bool directed = true) : directed(directed) {}
 
   int size() const { return static_cast<int>(adj.size()); }
-  std::vector<int> &operator[](int n) { return adj[n]; }
-  const std::vector<int> &operator[](int n) const { return adj[n]; }
+  std::vector<int> &operator[](int u) { return adj[u]; }
+  const std::vector<int> &operator[](int u) const { return adj[u]; }
 
   void add_edge(int u, int v) {
     int n = static_cast<int>(adj.size());

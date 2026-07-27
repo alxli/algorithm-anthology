@@ -5,12 +5,12 @@ algorithm. The points are split in half by $x$-coordinate and each half is solve
 combining step then only needs to examine points within the best distance so far of the dividing
 line, where each point in this strip is compared to a constant number of $y$-ordered neighbors.
 
-- `closest_pair(lo, hi, &res)` returns the minimum squared distance between any two points in the
-  range $[`lo`, `hi`)$, where `lo` and `hi` must be random-access iterators. The input range is
-  reordered during the computation. If `res` is non-null, one closest pair is stored there in
+- `closest_pair(lo, hi, res = nullptr)` returns the minimum squared distance between any two points
+  in the range $[`lo`, `hi`)$, where `lo` and `hi` must be random-access iterators. The input range
+  is reordered during the computation. If `res` is non-null, one closest pair is stored there in
   lexicographic order. With fewer than two points, the maximum value of the squared-distance type is
   returned and `res` is unchanged. The function is templated on the point type and works with any
-  type exposing numeric `.x` and `.y` members.
+  type exposing numeric `.x` and `.y` members and a lexicographic `operator<`.
 
 The returned distance preserves the coordinate arithmetic type. For integer-coordinate inputs, the
 result is therefore an exact squared distance provided intermediate products do not overflow. The
@@ -21,7 +21,7 @@ point types, use a 64-bit coordinate type (e.g. `PointL` from 7.1.1) when coordi
 few tens of thousands.
 
 Time Complexity:
-- O(n log^2 n) per call, where $n$ is the distance between `lo` and `hi`.
+- O(n log n) per call, where $n$ is the distance between `lo` and `hi`.
 
 Space Complexity:
 - O(n) auxiliary heap space.
@@ -42,21 +42,10 @@ auto sqdist(const Pt &a, const Pt &b) {
   return dx * dx + dy * dy;  // Overflow warning!
 }
 
-template<typename It, typename T>
-T closest_pair_rec(
-    It lo, It hi,
-    std::pair<
-        typename std::iterator_traits<It>::value_type,
-        typename std::iterator_traits<It>::value_type> *res
-) {
-  using Pt = typename std::iterator_traits<It>::value_type;
+template<typename It, typename T, typename Pt = typename std::iterator_traits<It>::value_type>
+void closest_pair_rec(It lo, It hi, std::vector<Pt> &tmp, T &best, std::pair<Pt, Pt> *res) {
   int n = hi - lo;
-  if (n < 2) {
-    return std::numeric_limits<T>::max();
-  }
-  std::sort(lo, hi, [](const Pt &a, const Pt &b) { return a.x != b.x ? a.x < b.x : a.y < b.y; });
   if (n <= 3) {
-    T best = std::numeric_limits<T>::max();
     for (It i = lo; i != hi; ++i) {
       for (It j = i + 1; j != hi; ++j) {
         T d = sqdist(*i, *j);
@@ -68,60 +57,52 @@ T closest_pair_rec(
         }
       }
     }
-    return best;
+    std::sort(lo, hi, [](const Pt &a, const Pt &b) { return a.y != b.y ? a.y < b.y : a.x < b.x; });
+    return;
   }
   It mid = lo + n / 2;
   auto midx = mid->x;
-  std::pair<Pt, Pt> lres, rres;
-  T dl = closest_pair_rec<It, T>(lo, mid, &lres);
-  T dr = closest_pair_rec<It, T>(mid, hi, &rres);
-  T best;
-  if (dl <= dr) {
-    best = dl;
-    if (res && dl != std::numeric_limits<T>::max()) {
-      *res = lres;
-    }
-  } else {
-    best = dr;
-    if (res && dr != std::numeric_limits<T>::max()) {
-      *res = rres;
-    }
-  }
-  std::sort(lo, hi, [](const Pt &a, const Pt &b) { return a.y != b.y ? a.y < b.y : a.x < b.x; });
-  std::vector<It> strip;
+  closest_pair_rec(lo, mid, tmp, best, res);
+  closest_pair_rec(mid, hi, tmp, best, res);
+  // Each half is now y-sorted, so merge them before examining the center strip.
+  auto by_y = [](const Pt &a, const Pt &b) { return a.y != b.y ? a.y < b.y : a.x < b.x; };
+  tmp.clear();
+  std::merge(lo, mid, mid, hi, std::back_inserter(tmp), by_y);
+  std::move(tmp.begin(), tmp.end(), lo);
+  tmp.clear();
   for (It it = lo; it != hi; ++it) {
     auto dx = it->x - midx;
     if (dx * dx < best) {
-      strip.push_back(it);
+      tmp.push_back(*it);
     }
   }
-  for (int i = 0; i < static_cast<int>(strip.size()); i++) {
-    for (int j = i + 1; j < static_cast<int>(strip.size()); j++) {
-      auto dy = strip[j]->y - strip[i]->y;
+  for (int i = 0; i < static_cast<int>(tmp.size()); i++) {
+    for (int j = i + 1; j < static_cast<int>(tmp.size()); j++) {
+      auto dy = tmp[j].y - tmp[i].y;
       if (dy * dy >= best) {
         break;
       }
-      T d = sqdist(*strip[i], *strip[j]);
+      T d = sqdist(tmp[i], tmp[j]);
       if (d < best) {
         best = d;
         if (res != nullptr) {
-          *res = std::minmax(*strip[i], *strip[j]);
+          *res = std::minmax(tmp[i], tmp[j]);
         }
       }
     }
   }
-  return best;
+  tmp.clear();
 }
 
-template<typename It>
-auto closest_pair(
-    It lo, It hi,
-    std::pair<
-        typename std::iterator_traits<It>::value_type,
-        typename std::iterator_traits<It>::value_type> *res = nullptr
-) {
+template<typename It, typename Pt = typename std::iterator_traits<It>::value_type>
+auto closest_pair(It lo, It hi, std::pair<Pt, Pt> *res = nullptr) {
   using T = decltype(sqdist(*lo, *lo));
-  return closest_pair_rec<It, T>(lo, hi, res);
+  T best = std::numeric_limits<T>::max();
+  std::sort(lo, hi, [](const Pt &a, const Pt &b) { return a.x != b.x ? a.x < b.x : a.y < b.y; });
+  std::vector<Pt> tmp;
+  tmp.reserve(hi - lo);
+  closest_pair_rec(lo, hi, tmp, best, res);
+  return best;
 }
 
 /*** Example Usage ***/
@@ -158,8 +139,8 @@ int main() {
   // Integer-coordinate input: exact pair selection, int squared distance returned.
   vector<PointI> iv{{0, 0}, {10, 10}, {3, 4}};
   pair<PointI, PointI> ires;
-  assert(closest_pair(iv.begin(), iv.end(), &ires) == 25);  // (0,0)-(3,4) or (3,4)-(0,0)
+  assert(closest_pair(iv.begin(), iv.end(), &ires) == 25);
   auto [i1, i2] = ires;
-  assert((i1 == PointI(0, 0) && i2 == PointI(3, 4)) || (i1 == PointI(3, 4) && i2 == PointI(0, 0)));
+  assert(i1 == PointI(0, 0) && i2 == PointI(3, 4));
   return 0;
 }

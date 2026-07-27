@@ -434,13 +434,16 @@ struct TLine {
   // Whether point p lies on the line. Exact for integer T and integer p.
   template<typename Pt>
   bool contains(const Pt &p) const {
-    return EQ(a * p.x + b * p.y + c, 0);  // Overflow warning!
+    return valid() && EQ(a * p.x + b * p.y + c, 0);  // Overflow warning!
   }
 
   // Parallel iff the normals are parallel (cross == 0); perpendicular iff normals are perpendicular
   // (dot == 0). Both exact for integer T. Overflow warning!
-  bool is_parallel(const TLine &l) const { return EQ(a * l.b, l.a * b); }
-  bool is_perpendicular(const TLine &l) const { return EQ(a * l.a, -(b * l.b)); }
+  bool is_parallel(const TLine &l) const { return valid() && l.valid() && EQ(a * l.b, l.a * b); }
+
+  bool is_perpendicular(const TLine &l) const {
+    return valid() && l.valid() && EQ(a * l.a, -(b * l.b));
+  }
 
   // Parallel/perpendicular line through point p. Exact for integer T and integer p.
   template<typename Pt, typename = if_point<Pt>>
@@ -488,6 +491,9 @@ struct PointI {
 };
 
 int main() {
+  Line invalid;
+  assert(!invalid.contains(Point(0, 0)) && !invalid.is_parallel(invalid));
+
   // Floating-point line.
   Line l(2, -5, -8);
   Line para = Line(2, -5, -8).parallel(Point(-6, -2));
@@ -538,7 +544,7 @@ This implementation stores and computes circle parameters in \inlinecode{double}
   \item \inlinecode{contains(p)} returns whether point \inlinecode{p} lies inside or on the circle.
   \item \inlinecode{on\_edge(p)} returns whether point \inlinecode{p} lies on the circle boundary.
   \item \inlinecode{incircle(a, b, c)} returns the circle inscribed in triangle \inlinecode{abc}.
-  \item \inlinecode{in\_circumcircle(a, b, c, d)} returns $1$ if \inlinecode{d} lies strictly inside the circle through \inlinecode{a}, \inlinecode{b}, and \inlinecode{c}, $0$ if it lies on the circle, or $-1$ if it lies outside. This has exact reasoning for integral points by evaluating the determinant directly without constructing a \inlinecode{Circle} or taking square roots. For integer inputs, the sign test is exact provided the chosen intermediate type does not overflow.
+  \item \inlinecode{in\_circumcircle(a, b, c, d)} returns $1$ if \inlinecode{d} lies strictly inside the circle through \inlinecode{a}, \inlinecode{b}, and \inlinecode{c}, $0$ if it lies on the circle, or $-1$ if it lies outside. This has exact reasoning for integral points by evaluating the determinant directly without constructing a \inlinecode{Circle} or taking square roots. Points \inlinecode{a}, \inlinecode{b}, and \inlinecode{c} must not be collinear. For integer inputs, the sign test is exact provided the chosen intermediate type does not overflow.
 \end{compactitem}
 
 The floating-point constructors and predicates use an absolute tolerance \inlinecode{EPS}.
@@ -778,7 +784,8 @@ bool LT(T a, U b) {
 
 template<typename Pt>
 double triangle_area(const Pt &a, const Pt &b, const Pt &c) {
-  double acx = a.x - c.x, acy = a.y - c.y, bcx = b.x - c.x, bcy = b.y - c.y;
+  double acx = static_cast<double>(a.x) - c.x, acy = static_cast<double>(a.y) - c.y;
+  double bcx = static_cast<double>(b.x) - c.x, bcy = static_cast<double>(b.y) - c.y;
   return fabs(acx * bcy - acy * bcx) / 2.0;
 }
 
@@ -1005,6 +1012,8 @@ Angle calculations in two dimensions. All operations are inherently floating-poi
 \end{compactitem}
 
 The points passed to \inlinecode{angle()} must differ from its vertex \inlinecode{o}, vectors passed to \inlinecode{angle\_between()} must be nonzero, and coefficient pairs passed to its line overload must represent valid lines.
+
+Overflow warning: \inlinecode{cross()} and \inlinecode{turn()} preserve the point's coordinate type, so their products may overflow for integral points. Use a 64-bit coordinate type for large integer coordinates.
 
 \textbf{Time Complexity}: $O(1)$ per operation.
 
@@ -1983,7 +1992,7 @@ Overflow warning: \inlinecode{cw\_comp} and \inlinecode{polygon\_area\_2x} form 
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{polygon\_area\_2x()}, \inlinecode{polygon\_area()}, and \inlinecode{polygon\_centroid()}, where $n$ is the number of points.
-  \item $O(1)$ per call to \inlinecode{cw\_comp} and the comparators.
+  \item $O(1)$ per call to \inlinecode{cw\_comp()} and the comparators.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
@@ -2058,8 +2067,8 @@ std::pair<double, double> polygon_centroid(It lo, It hi) {
   double cx = 0, cy = 0, area2 = 0;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
     double cross = static_cast<double>(j->x) * i->y - static_cast<double>(i->x) * j->y;
-    cx += (j->x + i->x) * cross;
-    cy += (j->y + i->y) * cross;
+    cx += (static_cast<double>(j->x) + i->x) * cross;
+    cy += (static_cast<double>(j->y) + i->y) * cross;
     area2 += cross;
   }
   if (EQ(area2, 0)) {
@@ -2364,7 +2373,7 @@ Given a convex polygon in counter-clockwise order, answer containment and tangen
 
 \begin{compactitem}
   \item \inlinecode{point\_in\_convex\_polygon(poly, p, edge\_is\_inside = true)} returns whether point \inlinecode{p} lies inside the convex polygon \inlinecode{poly}. The polygon must be in counter-clockwise order, with no repeated final vertex. Points on the boundary count as inside unless \inlinecode{edge\_is\_inside} is set to \inlinecode{false}.
-  \item \inlinecode{line\_convex\_polygon\_intersection(poly, a, b)} describes where the infinite directed line through \inlinecode{a} $\to$ \inlinecode{b} hits the polygon: $(-1, -1)$ for no intersection, $(i, -1)$ for touching vertex $i$, $(i, i)$ for containing side $i \to i+1$, or $(i, j)$ for crossing sides $i \to i+1$ and $j \to j+1$.
+  \item \inlinecode{line\_convex\_polygon\_intersection(poly, a, b)} describes where the infinite directed line through \inlinecode{a} $\to$ \inlinecode{b} hits the polygon: $(-1, -1)$ for no intersection, $(i, -1)$ for touching vertex $i$, $(i, i)$ for containing side $i \to i+1$, or $(i, j)$ for crossing sides $i \to i+1$ and $j \to j+1$, with side indices taken modulo the number of vertices. The polygon must have at least three vertices, and \inlinecode{a} and \inlinecode{b} must differ.
   \item \inlinecode{convex\_polygon\_tangents(poly, p)} returns the two tangent vertex indices from an outside point \inlinecode{p} as (\inlinecode{left}, \inlinecode{right}). The left tangent has all polygon vertices on or to the left of the directed line \inlinecode{p} $\to$ \inlinecode{poly[left]}; the right tangent is analogous for the right side.
 \end{compactitem}
 
@@ -2446,6 +2455,7 @@ std::pair<int, int> line_convex_polygon_intersection(
     const std::vector<Pt> &poly, const Pt &a, const Pt &b
 ) {
   int n = static_cast<int>(poly.size());
+  assert(n >= 3 && (a.x != b.x || a.y != b.y));
   std::vector<int> on, cross_edges;
   bool has_pos = false, has_neg = false;
   for (int i = 0; i < n; i++) {
@@ -2706,14 +2716,14 @@ int main() {
 Given a list of points in two dimensions, finds the closest pair using a divide-and-conquer algorithm. The points are split in half by $x$-coordinate and each half is solved recursively; the combining step then only needs to examine points within the best distance so far of the dividing line, where each point in this strip is compared to a constant number of $y$-ordered neighbors.
 
 \begin{compactitem}
-  \item \inlinecode{closest\_pair(lo, hi, \&res)} returns the minimum squared distance between any two points in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators. The input range is reordered during the computation. If \inlinecode{res} is non-null, one closest pair is stored there in lexicographic order. With fewer than two points, the maximum value of the squared-distance type is returned and \inlinecode{res} is unchanged. The function is templated on the point type and works with any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members.
+  \item \inlinecode{closest\_pair(lo, hi, res = nullptr)} returns the minimum squared distance between any two points in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators. The input range is reordered during the computation. If \inlinecode{res} is non-null, one closest pair is stored there in lexicographic order. With fewer than two points, the maximum value of the squared-distance type is returned and \inlinecode{res} is unchanged. The function is templated on the point type and works with any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members and a lexicographic \inlinecode{operator\textless{}}.
 \end{compactitem}
 
 The returned distance preserves the coordinate arithmetic type. For integer-coordinate inputs, the result is therefore an exact squared distance provided intermediate products do not overflow. The returned pair contains the original point type.
 
 Overflow warning: squared distances grow like the square of the coordinate magnitude. For integer point types, use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) when coordinates may exceed a few tens of thousands.
 
-\textbf{Time Complexity}: $O(n \log^{2} n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -2736,21 +2746,10 @@ auto sqdist(const Pt &a, const Pt &b) {
   return dx * dx + dy * dy;  // Overflow warning!
 }
 
-template<typename It, typename T>
-T closest_pair_rec(
-    It lo, It hi,
-    std::pair<
-        typename std::iterator_traits<It>::value_type,
-        typename std::iterator_traits<It>::value_type> *res
-) {
-  using Pt = typename std::iterator_traits<It>::value_type;
+template<typename It, typename T, typename Pt = typename std::iterator_traits<It>::value_type>
+void closest_pair_rec(It lo, It hi, std::vector<Pt> &tmp, T &best, std::pair<Pt, Pt> *res) {
   int n = hi - lo;
-  if (n < 2) {
-    return std::numeric_limits<T>::max();
-  }
-  std::sort(lo, hi, [](const Pt &a, const Pt &b) { return a.x != b.x ? a.x < b.x : a.y < b.y; });
   if (n <= 3) {
-    T best = std::numeric_limits<T>::max();
     for (It i = lo; i != hi; ++i) {
       for (It j = i + 1; j != hi; ++j) {
         T d = sqdist(*i, *j);
@@ -2762,60 +2761,52 @@ T closest_pair_rec(
         }
       }
     }
-    return best;
+    std::sort(lo, hi, [](const Pt &a, const Pt &b) { return a.y != b.y ? a.y < b.y : a.x < b.x; });
+    return;
   }
   It mid = lo + n / 2;
   auto midx = mid->x;
-  std::pair<Pt, Pt> lres, rres;
-  T dl = closest_pair_rec<It, T>(lo, mid, &lres);
-  T dr = closest_pair_rec<It, T>(mid, hi, &rres);
-  T best;
-  if (dl <= dr) {
-    best = dl;
-    if (res && dl != std::numeric_limits<T>::max()) {
-      *res = lres;
-    }
-  } else {
-    best = dr;
-    if (res && dr != std::numeric_limits<T>::max()) {
-      *res = rres;
-    }
-  }
-  std::sort(lo, hi, [](const Pt &a, const Pt &b) { return a.y != b.y ? a.y < b.y : a.x < b.x; });
-  std::vector<It> strip;
+  closest_pair_rec(lo, mid, tmp, best, res);
+  closest_pair_rec(mid, hi, tmp, best, res);
+  // Each half is now y-sorted, so merge them before examining the center strip.
+  auto by_y = [](const Pt &a, const Pt &b) { return a.y != b.y ? a.y < b.y : a.x < b.x; };
+  tmp.clear();
+  std::merge(lo, mid, mid, hi, std::back_inserter(tmp), by_y);
+  std::move(tmp.begin(), tmp.end(), lo);
+  tmp.clear();
   for (It it = lo; it != hi; ++it) {
     auto dx = it->x - midx;
     if (dx * dx < best) {
-      strip.push_back(it);
+      tmp.push_back(*it);
     }
   }
-  for (int i = 0; i < static_cast<int>(strip.size()); i++) {
-    for (int j = i + 1; j < static_cast<int>(strip.size()); j++) {
-      auto dy = strip[j]->y - strip[i]->y;
+  for (int i = 0; i < static_cast<int>(tmp.size()); i++) {
+    for (int j = i + 1; j < static_cast<int>(tmp.size()); j++) {
+      auto dy = tmp[j].y - tmp[i].y;
       if (dy * dy >= best) {
         break;
       }
-      T d = sqdist(*strip[i], *strip[j]);
+      T d = sqdist(tmp[i], tmp[j]);
       if (d < best) {
         best = d;
         if (res != nullptr) {
-          *res = std::minmax(*strip[i], *strip[j]);
+          *res = std::minmax(tmp[i], tmp[j]);
         }
       }
     }
   }
-  return best;
+  tmp.clear();
 }
 
-template<typename It>
-auto closest_pair(
-    It lo, It hi,
-    std::pair<
-        typename std::iterator_traits<It>::value_type,
-        typename std::iterator_traits<It>::value_type> *res = nullptr
-) {
+template<typename It, typename Pt = typename std::iterator_traits<It>::value_type>
+auto closest_pair(It lo, It hi, std::pair<Pt, Pt> *res = nullptr) {
   using T = decltype(sqdist(*lo, *lo));
-  return closest_pair_rec<It, T>(lo, hi, res);
+  T best = std::numeric_limits<T>::max();
+  std::sort(lo, hi, [](const Pt &a, const Pt &b) { return a.x != b.x ? a.x < b.x : a.y < b.y; });
+  std::vector<Pt> tmp;
+  tmp.reserve(hi - lo);
+  closest_pair_rec(lo, hi, tmp, best, res);
+  return best;
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -2853,9 +2844,9 @@ int main() {
   // Integer-coordinate input: exact pair selection, int squared distance returned.
   vector<PointI> iv{{0, 0}, {10, 10}, {3, 4}};
   pair<PointI, PointI> ires;
-  assert(closest_pair(iv.begin(), iv.end(), &ires) == 25);  // (0,0)-(3,4) or (3,4)-(0,0)
+  assert(closest_pair(iv.begin(), iv.end(), &ires) == 25);
   auto [i1, i2] = ires;
-  assert((i1 == PointI(0, 0) && i2 == PointI(3, 4)) || (i1 == PointI(3, 4) && i2 == PointI(0, 0)));
+  assert(i1 == PointI(0, 0) && i2 == PointI(3, 4));
   return 0;
 }
 \end{lstlisting}
@@ -2863,8 +2854,10 @@ int main() {
 Given a list of line segments in two dimensions, determine whether any pair of segments intersect using a sweep line algorithm. Endpoint events are processed from left to right while an ordered set maintains the segments currently crossing the sweep line, sorted by $y$; only segments that become adjacent in this set need to be tested, since any leftmost intersection must involve a pair that is adjacent just before it occurs. The input type \inlinecode{Segment\textless{}Pt\textgreater{}} is templated on the point type, so endpoints may be integer (\inlinecode{PointI}) or floating-point (\inlinecode{Point} or \inlinecode{PointD}), but must support \inlinecode{operator\textless{}} which orders points lexicographically. The cross-product sign tests in \inlinecode{seg\_intersection} are exact for integer endpoints, so intersection detection is exact.
 
 \begin{compactitem}
-  \item \inlinecode{find\_intersection(lo, hi, \&res1, \&res2, touch\_is\_intersect = true)} returns whether any pair of segments intersect given a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of segments, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators. If an intersection is found, then one such pair of segments will be stored into pointers \inlinecode{res1} and \inlinecode{res2}. The \inlinecode{touch\_is\_intersect} flag controls whether segments that meet only at an endpoint count as intersecting; set it to \inlinecode{false} to report proper crossings only, as when testing a polygon for self-intersection among edges that legitimately share endpoints.
+  \item \inlinecode{find\_intersection(lo, hi, \&res1, \&res2)} returns whether any pair of segments intersect given a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of segments, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators. If an intersection is found, then one such pair of segments will be stored into pointers \inlinecode{res1} and \inlinecode{res2}.
 \end{compactitem}
+
+This implementation counts endpoint contacts as intersections. See 7.2.3 for pairwise intersection predicates when that distinction matters.
 
 Overflow warning: \inlinecode{seg\_intersection} forms the usual quadratic cross products, but the $y$-ordering cross-multiplication (\inlinecode{ay * bdx}) is cubic in the coordinate magnitude. With 32-bit \inlinecode{int} endpoints this overflows once coordinates reach the low thousands, so use a 64-bit (\inlinecode{int64\_t}) coordinate type for any non-trivial integer inputs.
 
@@ -2880,50 +2873,21 @@ Overflow warning: \inlinecode{seg\_intersection} forms the usual quadratic cross
 #include <utility>
 #include <vector>
 
-template<typename Pt>
-bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
-  return (p.x - a.x) * (b.y - a.y) == (p.y - a.y) * (b.x - a.x) && std::min(a.x, b.x) <= p.x &&
-         p.x <= std::max(a.x, b.x) && std::min(a.y, b.y) <= p.y && p.y <= std::max(a.y, b.y);
-}
-
 // Simplified detection-only version of seg_intersection() from 7.2.3 (exact for integral Pt).
 template<typename Pt>
-int seg_intersection(
-    const Pt &a, const Pt &b, const Pt &c, const Pt &d, const bool touch_is_intersect = true
-) {
-  auto ab_x = b.x - a.x, ab_y = b.y - a.y;
-  auto ac_x = c.x - a.x, ac_y = c.y - a.y;
-  auto cd_x = d.x - c.x, cd_y = d.y - c.y;
-  auto ab2 = ab_x * ab_x + ab_y * ab_y;
-  auto cd2 = cd_x * cd_x + cd_y * cd_y;
-  if (ab2 == 0) {
-    return (touch_is_intersect && point_on_segment(a, c, d)) ? 0 : -1;
+bool seg_intersection(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
+  auto cross = [](const Pt &p, const Pt &q, const Pt &r) {
+    return (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
+  };
+  auto c1 = cross(a, b, c), c2 = cross(a, b, d);
+  auto c3 = cross(c, d, a), c4 = cross(c, d, b);
+  if (c1 == 0 && c2 == 0 && c3 == 0 && c4 == 0) {
+    Pt p = std::max(std::min(a, b), std::min(c, d));
+    Pt q = std::min(std::max(a, b), std::max(c, d));
+    return !(q < p);
   }
-  if (cd2 == 0) {
-    return (touch_is_intersect && point_on_segment(c, a, b)) ? 0 : -1;
-  }
-  auto c1 = ab_x * cd_y - ab_y * cd_x;
-  auto c2 = ac_x * ab_y - ac_y * ab_x;
-  if (c1 == 0 && c2 == 0) {
-    Pt res1 = std::max(std::min(a, b), std::min(c, d));
-    Pt res2 = std::min(std::max(a, b), std::max(c, d));
-    bool overlap = touch_is_intersect ? !(res2 < res1) : (res1 < res2);
-    if (overlap) {
-      return (res1 == res2) ? 0 : 1;
-    }
-    return -1;
-  }
-  if (c1 == 0) {
-    return -1;
-  }
-  auto t_num = ac_x * cd_y - ac_y * cd_x;
-  bool c1_pos = c1 > 0;
-  bool t_between_01 =
-      c1_pos ? (touch_is_intersect ? (0 <= t_num && t_num <= c1) : (0 < t_num && t_num < c1))
-             : (touch_is_intersect ? (c1 <= t_num && t_num <= 0) : (c1 < t_num && t_num < 0));
-  bool u_between_01 = c1_pos ? (touch_is_intersect ? (0 <= c2 && c2 <= c1) : (0 < c2 && c2 < c1))
-                             : (touch_is_intersect ? (c1 <= c2 && c2 <= 0) : (c1 < c2 && c2 < 0));
-  return (t_between_01 && u_between_01) ? 0 : -1;
+  auto straddles = [](auto x, auto y) { return (x <= 0 && 0 <= y) || (y <= 0 && 0 <= x); };
+  return straddles(c1, c2) && straddles(c3, c4);
 }
 
 // The point type Pt must support operator< (used to canonicalize endpoint order).
@@ -2935,15 +2899,13 @@ struct Segment {
 };
 
 template<typename Pt>
-bool intersects(
-    const Segment<Pt> &s1, const Segment<Pt> &s2, const bool touch_is_intersect = true
-) {
-  return seg_intersection(s1.p, s1.q, s2.p, s2.q, touch_is_intersect) >= 0;
+bool intersects(const Segment<Pt> &s1, const Segment<Pt> &s2) {
+  return seg_intersection(s1.p, s1.q, s2.p, s2.q);
 }
 
 // Seg is deduced from the output pointers (e.g. Segment<PointI>* or Segment<PointD>*).
 template<typename It, typename Seg>
-bool find_intersection(It lo, It hi, Seg *res1, Seg *res2, const bool touch_is_intersect = true) {
+bool find_intersection(It lo, It hi, Seg *res1, Seg *res2) {
   using Pt = std::decay_t<decltype(lo->p)>;
   struct Event {
     Pt p;
@@ -2958,17 +2920,17 @@ bool find_intersection(It lo, It hi, Seg *res1, Seg *res2, const bool touch_is_i
     e.push_back(Event{it->p, 1, it});
     e.push_back(Event{it->q, -1, it});
   }
-  std::sort(e.begin(), e.end(), [](const Event &a, const Event &b) {
+  std::sort(e.begin(), e.end(), [lo](const Event &a, const Event &b) {
     if (a.p.x != b.p.x) {
       return a.p.x < b.p.x;
     }
     if (a.type != b.type) {
       return b.type < a.type;
     }
-    return a.p.y < b.p.y;
+    return a.p.y != b.p.y ? a.p.y < b.p.y : a.seg - lo < b.seg - lo;
   });
   // Compare y-values at sweep coordinate x without division: y = (p.y*dx + dy*(x - p.x)) / dx.
-  // Vertical segments use their lower endpoint
+  // Vertical segments use their lower endpoint.
   auto ycmp = [](const auto &a, const auto &b, auto x) {
     // Overflow risk for integer Pt: the final cross-multiply is ~O(max_coord^3); use 64-bit
     // coordinates for non-trivial integer inputs.
@@ -3003,12 +2965,12 @@ bool find_intersection(It lo, It hi, Seg *res1, Seg *res2, const bool touch_is_i
       auto it = s.insert(seg).first;
       position[seg - lo] = it;
       auto next = it;
-      if (++next != s.end() && intersects(**next, *seg, touch_is_intersect)) {
+      if (++next != s.end() && intersects(**next, *seg)) {
         *res1 = **next;
         *res2 = *seg;
         return true;
       }
-      if (it != s.begin() && intersects(**--it, *seg, touch_is_intersect)) {
+      if (it != s.begin() && intersects(**--it, *seg)) {
         *res1 = **it;
         *res2 = *seg;
         return true;
@@ -3018,7 +2980,7 @@ bool find_intersection(It lo, It hi, Seg *res1, Seg *res2, const bool touch_is_i
       auto next = it;
       if (++next != s.end() && it != s.begin()) {
         auto prev = it;
-        if (intersects(**next, **--prev, touch_is_intersect)) {
+        if (intersects(**next, **--prev)) {
           *res1 = **next;
           *res2 = **prev;
           return true;
@@ -3078,13 +3040,12 @@ int main() {
     };
     assert(!find_intersection(disjoint.begin(), disjoint.end(), &res1, &res2));
   }
-  {  // touch_is_intersect = false reports proper crossings only, ignoring shared endpoints.
+  {  // Shared endpoints count as intersections.
     vector<Segment<PointI>> shared{
         Segment<PointI>({0, 0}, {2, 2}), Segment<PointI>({2, 2}, {4, 0})
     };
     Segment<PointI> res1, res2;
     assert(find_intersection(shared.begin(), shared.end(), &res1, &res2));
-    assert(!find_intersection(shared.begin(), shared.end(), &res1, &res2, false));
   }
   return 0;
 }
@@ -3251,7 +3212,7 @@ int64_t manhattan_mst_weight(const std::vector<Point> &p) {
   DSU dsu(static_cast<int>(p.size()));
   int64_t res = 0;
   for (auto [w, u, v] : edges) {
-    if (dsu.unite(static_cast<int>(u), static_cast<int>(v))) {
+    if (dsu.unite(u, v)) {
       res += w;
     }
   }
@@ -3289,7 +3250,7 @@ The function is templated on the input point type. Side classification is done w
 
 \textbf{Time Complexity}: $O(n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary for the returned polygon.
+\textbf{Space Complexity}: $O(n)$ for the returned polygon and $O(1)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -3413,7 +3374,7 @@ int main() {
 Given a list of directed lines, compute the convex polygon contained in every left half-plane. Half-plane intersection sorts the lines by direction, keeps only the tightest representative among parallel lines, and maintains a deque of lines whose pairwise intersections form the current boundary. Directions are ordered by half-plane and cross-product signs, without epsilon comparisons, to satisfy \inlinecode{std::sort}'s strict ordering requirement. \inlinecode{EPS} is then used outside the comparator to group parallel directions and retain only the tightest half-plane in each group.
 
 \begin{compactitem}
-  \item \inlinecode{half\_plane\_intersection(planes)} returns the polygon cut out by the half-planes in counter-clockwise order. Each half-plane is represented by \inlinecode{HalfPlane(p, q)}, meaning the closed region to the left of the directed line \inlinecode{p} $\to$ \inlinecode{q}. If the intersection is empty, the function returns an empty vector. If the true intersection is unbounded, the returned polygon is not meaningful; add explicit bounding-box half-planes when a bounded polygon is required. The two points defining each half-plane must differ.
+  \item \inlinecode{half\_plane\_intersection(planes)} returns the polygon cut out by the half-planes in counter-clockwise order. Each half-plane is represented by \inlinecode{HalfPlane(p, q)}, meaning the closed region to the left of the directed line \inlinecode{p} $\to$ \inlinecode{q}. This implementation is intended for intersections that form a bounded polygon with positive area; empty, unbounded, or degenerate inputs may return an empty vector. Add explicit bounding-box half-planes when a bounded polygon is required. The two points defining each half-plane must differ.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the number of half-planes.
@@ -3724,8 +3685,8 @@ int main() {
 Given two simple (non-self-intersecting) polygons, determine the areas of their intersection and union using a sweep line algorithm and the inclusion-exclusion principle. Every vertex and every pairwise edge intersection contributes its $x$-coordinate as a sweep boundary, so within each vertical slab between consecutive boundaries the two borders cannot cross, and the slab's overlap is accumulated exactly from trapezoid areas. The union then follows by inclusion-exclusion as the sum of the individual areas minus the intersection.
 
 \begin{compactitem}
-  \item \inlinecode{intersection\_area(lo1, hi1, lo2, hi2)} returns the intersection area of two polygons respectively specified by two ranges $[{\inlinecodemath{lo1}}, {\inlinecodemath{hi1}})$ and $[{\inlinecodemath{lo2}}, {\inlinecodemath{hi2}})$ of vertices in clockwise order, where \inlinecode{lo1}, \inlinecode{hi1}, \inlinecode{lo2}, and \inlinecode{hi2} must be random-access iterators.
-  \item \inlinecode{union\_area(lo1, hi1, lo2, hi2)} returns the union area of two polygons respectively specified by two ranges $[{\inlinecodemath{lo1}}, {\inlinecodemath{hi1}})$ and $[{\inlinecodemath{lo2}}, {\inlinecodemath{hi2}})$ of vertices in clockwise order, where \inlinecode{lo1}, \inlinecode{hi1}, \inlinecode{lo2}, and \inlinecode{hi2} must be random-access iterators.
+  \item \inlinecode{intersection\_area(lo1, hi1, lo2, hi2)} returns the intersection area of two polygons respectively specified by two ranges $[{\inlinecodemath{lo1}}, {\inlinecodemath{hi1}})$ and $[{\inlinecodemath{lo2}}, {\inlinecodemath{hi2}})$ of vertices in boundary order, where \inlinecode{lo1}, \inlinecode{hi1}, \inlinecode{lo2}, and \inlinecode{hi2} must be random-access iterators.
+  \item \inlinecode{union\_area(lo1, hi1, lo2, hi2)} returns the union area of two polygons respectively specified by two ranges $[{\inlinecodemath{lo1}}, {\inlinecodemath{hi1}})$ and $[{\inlinecodemath{lo2}}, {\inlinecodemath{hi2}})$ of vertices in boundary order, where \inlinecode{lo1}, \inlinecode{hi1}, \inlinecode{lo2}, and \inlinecode{hi2} must be random-access iterators.
 \end{compactitem}
 
 Overflow warning: the segment-intersection tests form cross products in the input point's coordinate type, which grow like the squared coordinate magnitude. For integral point types, use 64-bit coordinates (e.g. \inlinecode{PointL} from 7.1.1) if necessary.
@@ -3831,18 +3792,18 @@ template<typename PtA, typename PtB>
 int line_intersection1(
     const PtA &p1, const PtA &p2, const PtB &p3, const PtB &p4, double *outx, double *outy
 ) {
-  auto a1 = p2.y - p1.y, b1 = p1.x - p2.x;
-  auto c1 = -(p1.x * p2.y - p2.x * p1.y);
-  auto a2 = p4.y - p3.y, b2 = p3.x - p4.x;
-  auto c2 = -(p3.x * p4.y - p4.x * p3.y);
-  auto x = -(c1 * b2 - c2 * b1), y = -(a1 * c2 - a2 * c1);
-  auto det = a1 * b2 - a2 * b1;
+  double a1 = static_cast<double>(p2.y) - p1.y, b1 = static_cast<double>(p1.x) - p2.x;
+  double c1 = -(a1 * p1.x + b1 * p1.y);
+  double a2 = static_cast<double>(p4.y) - p3.y, b2 = static_cast<double>(p3.x) - p4.x;
+  double c2 = -(a2 * p3.x + b2 * p3.y);
+  double x = -(c1 * b2 - c2 * b1), y = -(a1 * c2 - a2 * c1);
+  double det = a1 * b2 - a2 * b1;
   if (EQ(det, 0)) {
     return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
   }
   if (outx != nullptr && outy != nullptr) {
-    *outx = static_cast<double>(x) / det;
-    *outy = static_cast<double>(y) / det;
+    *outx = x / det;
+    *outy = y / det;
   }
   return 0;
 }
@@ -3887,7 +3848,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
       It lo = plo[poly], hi = phi[poly];
       double area = 0;
       for (It i = lo, j = hi - 1; i != hi; j = i++) {
-        area += (j->x - i->x) * (j->y + i->y);
+        area += (static_cast<double>(j->x) - i->x) * (static_cast<double>(j->y) + i->y);
       }
       for (It j = lo, i = hi - 1; j != hi; i = j++) {
         double px, py;
@@ -3930,7 +3891,7 @@ double polygon_area(It lo, It hi) {
   }
   double area = 0;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
-    area += (j->x - i->x) * (j->y + i->y);
+    area += (static_cast<double>(j->x) - i->x) * (static_cast<double>(j->y) + i->y);
   }
   return fabs(area / 2.0);
 }
@@ -3964,7 +3925,7 @@ struct PointI {
 
 int main() {
   vector<Point> p, s;
-  // Irregular pentagon a triangle of area 1.5 overlapping quadrant 2.
+  // Irregular pentagon overlapping the square below in a triangle of area 1.5.
   p.emplace_back(1, 3);
   p.emplace_back(1, 2);
   p.emplace_back(2, 1);
@@ -4136,7 +4097,7 @@ Given a set $P$ of distinct two-dimensional points, a Delaunay triangulation of 
 This implementation produces one valid triangulation using the Guibas-Stolfi divide-and-conquer algorithm with a quad-edge data structure. The point set is split in half, each half is triangulated recursively, and the halves are stitched together from the bottom up by a sequence of cross edges, with circumcircle tests deciding each connecting edge and deleting invalidated ones.
 
 \begin{compactitem}
-  \item \inlinecode{delaunay\_triangulation(p)} sorts \inlinecode{p} lexicographically and removes duplicate points in place (so the input vector is modified), then returns the triangles of one Delaunay triangulation as a vector of counterclockwise-oriented vertex triples (\inlinecode{std::tuple}) of the input point type. If fewer than three non-collinear unique points remain, the result is empty.
+  \item \inlinecode{delaunay\_triangulation(p)} sorts \inlinecode{p} lexicographically and removes duplicate points in place (so the input vector is modified), then returns the triangles of one Delaunay triangulation as a vector of counterclockwise-oriented \inlinecode{Point\textless{}T\textgreater{}} triples (\inlinecode{std::tuple}). If fewer than three non-collinear unique points remain, the result is empty.
 \end{compactitem}
 
 The point type must provide exact lexicographic \inlinecode{operator\textless{}}; sorting and duplicate removal requires this strict ordering rather than epsilon equality. All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation.
@@ -4360,9 +4321,9 @@ std::pair<Edge<T> *, Edge<T> *> build_triangulation(
   return {ldo, rdo};
 }
 
-template<typename Pt>
-auto delaunay_triangulation(std::vector<Pt> &p) {
-  using T = decltype(Pt::x);
+template<typename T>
+auto delaunay_triangulation(std::vector<Point<T>> &p) {
+  using Pt = Point<T>;
   using Triangle = std::tuple<Pt, Pt, Pt>;
   // Rotates triangle vertices so that the lexicographically smallest comes first, preserving the
   // cyclic (counterclockwise) order, to give each triangle a canonical, comparable representation.
@@ -4503,7 +4464,7 @@ struct TPoint3 {
   TPoint3<fp_t> unit() const { return *this / norm(); }
 
   TPoint3 cross(const TPoint3 &p) const {
-    return {y * p.z - z * p.y, z * p.x - x * p.z, x * p.y - y * p.x};
+    return {y * p.z - z * p.y, z * p.x - x * p.z, x * p.y - y * p.x};  // Overflow warning!
   }
 
   TPoint3<fp_t> normal(const TPoint3 &p) const { return cross(p).unit(); }

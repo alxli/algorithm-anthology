@@ -18,7 +18,7 @@ Time Complexity:
 - O(n) per call, where $n$ is the distance between `lo` and `hi`.
 
 Space Complexity:
-- O(n) auxiliary for the returned polygon.
+- O(n) for the returned polygon and O(1) auxiliary.
 
 */
 

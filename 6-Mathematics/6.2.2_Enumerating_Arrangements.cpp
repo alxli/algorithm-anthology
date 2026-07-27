@@ -81,7 +81,7 @@ std::vector<int> arrangement_by_rank(int n, int k, int64_t r) {
     int64_t count = n_permute_k(n - 1 - i, k - 1 - i);
     int pos = r / count;
     res[i] = values[pos];
-    std::copy(values.begin() + pos + 1, values.end(), values.begin() + pos);
+    values.erase(values.begin() + pos);
     r %= count;
   }
   return res;

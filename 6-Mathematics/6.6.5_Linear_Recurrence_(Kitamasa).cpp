@@ -2,8 +2,8 @@
 
 Computes the $n$-th term of a linear recurrence modulo a prime in logarithmic time. Given a
 recurrence of order $L$, $s_i = c_0 s_{i-1} + c_1 s_{i-2} + \ldots + c_{L-1} s_{i-L}$, together with
-the first $L$ terms, the naive approach unrolls $n$ steps. Kitamasa's method instead computes $n$
-terms ahead in O(L^2 log n) by working with the characteristic polynomial. The coefficient layout
+the first $L$ terms, the naive approach unrolls $n$ steps. Kitamasa's method instead jumps directly
+to index $n$ in O(L^2 log n) by working with the characteristic polynomial. The coefficient layout
 matches the output of Berlekamp-Massey, so the two compose directly: guess the recurrence from
 sampled values, then jump to any index.
 

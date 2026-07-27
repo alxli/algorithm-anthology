@@ -48,6 +48,9 @@ int64_t powmod(int64_t b, int64_t e, int64_t m) {
 
 std::vector<int64_t> berlekamp_massey(const std::vector<int64_t> &s) {
   int n = static_cast<int>(s.size()), len = 0, m = 0;
+  if (n == 0) {
+    return {};
+  }
   std::vector<int64_t> cur(n), last(n), prev;
   cur[0] = last[0] = 1;
   int64_t inv_last_delta = 1;
@@ -88,6 +91,7 @@ std::vector<int64_t> berlekamp_massey(const std::vector<int64_t> &s) {
 using namespace std;
 
 int main() {
+  assert(berlekamp_massey({}).empty());
   // Fibonacci: s[i] = s[i-1] + s[i-2].
   vector<int64_t> fib{1, 1, 2, 3, 5, 8, 13, 21};
   assert((berlekamp_massey(fib) == vector<int64_t>{1, 1}));

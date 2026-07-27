@@ -42,7 +42,7 @@ Time Complexity:
 - O(sqrt(n)) per call to `is_prime_slow()` and `factorize_slow()`.
 - O(k*log(n)) modular multiplications per call to `is_probable_prime()` and O(log(n)) per call to
   `is_prime()`. The portable multiplication fallback adds another O(log(n)) factor.
-- O(c) per call to `cached_sieve()` when rebuilding the cache, or O(1) when the existing cache is
+- O(n) per call to `cached_sieve()` when rebuilding the cache, or O(1) when the existing cache is
   large enough.
 - O(sqrt(p)) expected modular multiplications per call to `rho_factor(n)`, where $p$ is the smallest
   prime factor of `n`. For composite `n`, this is at most O(n^{1/4}).
@@ -97,12 +97,12 @@ std::vector<std::pair<Int, int>> factorize_slow(Int n) {
   std::vector<std::pair<Int, int>> res;
   for (Int i = 2; i <= n / i; i++) {
     if (n % i == 0) {
-      int p = 0;
+      int exponent = 0;
       do {
         n /= i;
-        p++;
+        exponent++;
       } while (n % i == 0);
-      res.emplace_back(i, p);
+      res.emplace_back(i, exponent);
     }
   }
   if (n > 1) {

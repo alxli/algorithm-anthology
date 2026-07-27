@@ -161,13 +161,16 @@ struct TLine {
   // Whether point p lies on the line. Exact for integer T and integer p.
   template<typename Pt>
   bool contains(const Pt &p) const {
-    return EQ(a * p.x + b * p.y + c, 0);  // Overflow warning!
+    return valid() && EQ(a * p.x + b * p.y + c, 0);  // Overflow warning!
   }
 
   // Parallel iff the normals are parallel (cross == 0); perpendicular iff normals are perpendicular
   // (dot == 0). Both exact for integer T. Overflow warning!
-  bool is_parallel(const TLine &l) const { return EQ(a * l.b, l.a * b); }
-  bool is_perpendicular(const TLine &l) const { return EQ(a * l.a, -(b * l.b)); }
+  bool is_parallel(const TLine &l) const { return valid() && l.valid() && EQ(a * l.b, l.a * b); }
+
+  bool is_perpendicular(const TLine &l) const {
+    return valid() && l.valid() && EQ(a * l.a, -(b * l.b));
+  }
 
   // Parallel/perpendicular line through point p. Exact for integer T and integer p.
   template<typename Pt, typename = if_point<Pt>>
@@ -214,6 +217,9 @@ struct PointI {
 };
 
 int main() {
+  Line invalid;
+  assert(!invalid.contains(Point(0, 0)) && !invalid.is_parallel(invalid));
+
   // Floating-point line.
   Line l(2, -5, -8);
   Line para = Line(2, -5, -8).parallel(Point(-6, -2));

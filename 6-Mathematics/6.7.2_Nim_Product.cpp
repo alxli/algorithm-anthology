@@ -31,12 +31,13 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cstdint>
 
 uint64_t bit_prod[64][64];
 
-// Build the single-bit products 2^i (x) 2^j. Each entry depends only on entries with a smaller
-// first index, so a single ascending pass fills the table.
+// Build nim products for pairs of single-bit values. Each entry depends only on entries with a
+// smaller first index, so a single ascending pass fills the table.
 const bool nim_product_init = [] {
   for (int i = 0; i < 64; i++) {
     for (int j = 0; j < 64; j++) {
@@ -77,6 +78,7 @@ uint64_t nim_pow(uint64_t b, uint64_t e) {
 }
 
 uint64_t nim_inverse(uint64_t b) {
+  assert(b != 0);
   // The multiplicative group of the size-2^64 field has order 2^64 - 1, so b^(2^64 - 2) = b^{-1}.
   return nim_pow(b, static_cast<uint64_t>(-2));
 }

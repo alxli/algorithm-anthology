@@ -45,8 +45,8 @@ Time Complexity:
   an $m$ by $n$ matrix.
 
 Space Complexity:
-- O(1) auxiliary for `rows()`, `columns()`, `a[i][j]` access, comparison operators, and in-place
-  operations.
+- O(1) auxiliary for `rows()`, `columns()`, `a[i][j]` access, comparison and scalar compound
+  operators, `transpose_in_place()`, and `rotate_in_place()`.
 - O(n^2) auxiliary for exponentiation of an $n$ by $n$ matrix to power $p$.
 - O(n^2) auxiliary for `power_sum()` of an $n$ by $n$ matrix up to power $p$.
 - O(m*n) auxiliary for all non-in-place operations returning an $m$ by $n$ matrix, `transpose()`,
@@ -245,7 +245,7 @@ Matrix<T> operator^(Matrix<T> a, unsigned int p) {
 }
 
 template<typename T>
-Matrix<T> operator^=(Matrix<T> &a, unsigned int p) {
+Matrix<T> &operator^=(Matrix<T> &a, unsigned int p) {
   return a = a ^ p;
 }
 
@@ -259,7 +259,6 @@ Matrix<T> power_sum(const Matrix<T> &a, unsigned int p) {
   // The upper-right block of [[A, A], [0, I]]^p is A + A^2 + ... + A^p.
   Matrix<T> block = make_matrix<T>(2 * n, 2 * n);
   for (int i = 0; i < n; i++) {
-    block[i][i] = a[i][i];
     block[i + n][i + n] = 1;
     for (int j = 0; j < n; j++) {
       block[i][j] = a[i][j];

@@ -15,7 +15,8 @@ find the order of the current error term, correcting the candidate root until th
   modulo `p` internally. The modulus `p` must be an odd prime.
 
 Time Complexity:
-- O(log^2 p) per call in the worst case, from the squaring loop nested inside the exponentiations.
+- O(log^2 p + z log p) per call, where $z$ is the smallest integer at least $2$ that is a quadratic
+  non-residue modulo $p$; thus the unconditional worst-case bound is O(p log p).
 
 Space Complexity:
 - O(1) auxiliary.
@@ -72,13 +73,13 @@ int64_t mod_sqrt(int64_t a, int64_t p) {
     e++;
   }
   // Any quadratic non-residue generates the 2-power part of the group.
-  int64_t n = 2;
-  while (powmod(n, (p - 1) / 2, p) != p - 1) {
-    n++;
+  int64_t z = 2;
+  while (powmod(z, (p - 1) / 2, p) != p - 1) {
+    z++;
   }
   int64_t x = powmod(a, (s + 1) / 2, p);  // Candidate root, off by a 2-power factor.
   int64_t b = powmod(a, s, p);            // Error term, a power of two in order.
-  int64_t g = powmod(n, s, p);            // Generator of the relevant 2-group.
+  int64_t g = powmod(z, s, p);            // Generator of the relevant 2-group.
   int64_t r = e;
   while (true) {
     int64_t t = b, order = 0;

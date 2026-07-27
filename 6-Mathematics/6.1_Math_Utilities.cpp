@@ -106,8 +106,8 @@ Sign Functions:
 - `signbit_(x)` is analogous to `std::signbit()`, returning whether the sign bit of the floating
   point number is set to true. If so, then `x` is considered "negative." Note that this works as
   expected on `+0.0`, `-0.0`, `Inf`, `-Inf`, `NaN`, as well as `-NaN`. Warning: This assumes that
-  the sign bit is the leading (most significant) bit in the internal representation of the IEEE
-  floating point value.
+  the sign bit is the leading (most significant) bit in the internal IEEE representation and that
+  bytes are stored in little-endian order.
 - `copysign_(x, y)` is analogous to `std::copysign()`, returning a number with the magnitude of `x`
   but the sign of `y`.
 

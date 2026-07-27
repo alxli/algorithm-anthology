@@ -24,7 +24,7 @@ use a 64-bit coordinate type (e.g. `PointL` from 7.1.1) for large or numerous co
 Time Complexity:
 - O(n) per call to `polygon_area_2x()`, `polygon_area()`, and `polygon_centroid()`, where $n$ is the
   number of points.
-- O(1) per call to `cw_comp` and the comparators.
+- O(1) per call to `cw_comp()` and the comparators.
 
 Space Complexity:
 - O(1) auxiliary for all operations.
@@ -100,8 +100,8 @@ std::pair<double, double> polygon_centroid(It lo, It hi) {
   double cx = 0, cy = 0, area2 = 0;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
     double cross = static_cast<double>(j->x) * i->y - static_cast<double>(i->x) * j->y;
-    cx += (j->x + i->x) * cross;
-    cy += (j->y + i->y) * cross;
+    cx += (static_cast<double>(j->x) + i->x) * cross;
+    cy += (static_cast<double>(j->y) + i->y) * cross;
     area2 += cross;
   }
   if (EQ(area2, 0)) {

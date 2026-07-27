@@ -34,7 +34,7 @@ Time Complexity:
 Space Complexity:
 - O(1) auxiliary for `phi(n)`.
 - O(n) auxiliary for `phi_table(n)`.
-- O(w + sqrt(h)) auxiliary for `phi_table(lo, hi)`.
+- O(w + sqrt(`hi`)) auxiliary for `phi_table(lo, hi)`.
 
 */
 

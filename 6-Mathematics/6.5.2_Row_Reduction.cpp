@@ -17,9 +17,9 @@ systems of linear equations, LU decomposition with row partial pivoting should b
   solution, then the output pointer `x` is populated with the solution vector of length $n$.
 
 Time Complexity:
-- O(m*n*min(m, n)) per call to `row_reduce(a)` and `matrix_rank(a)`, where $m$ and $n$ are the
-  numbers of rows and columns of `a`, respectively.
-- O(m*n^2) per call to `solve_system()`, which returns immediately when $m < n$.
+- O(m*n*min(m, n)) per call to `row_reduce()` and `matrix_rank()`, where $m$ and $n$ are the numbers
+  of rows and columns of `a`, respectively.
+- O(m*n*min(m, n)) per call to `solve_system()`.
 
 Space Complexity:
 - O(1) auxiliary for `row_reduce()`.
@@ -93,9 +93,6 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
     return -1;
   }
   int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
-  if (rows < cols) {
-    return -2;
-  }
   Matrix m(a);
   for (int i = 0; i < rows; i++) {
     m[i].push_back(b[i]);
@@ -141,6 +138,8 @@ int main() {
   assert(solve_system(a, b, &x) == 0);
   assert(matrix_rank(a) == 3);
   assert(matrix_rank(vector<vector<double>>{{1, 2, 3}, {2, 4, 6}, {0, 1, 1}}) == 2);
+  assert(solve_system(vector<vector<double>>{{0, 0}}, vector<double>{1}, &x) == -1);
+  assert(solve_system(vector<vector<double>>{{1, 0}}, vector<double>{1}, &x) == -2);
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
     double sum = 0;
     for (int j = 0; j < static_cast<int>(a[i].size()); j++) {

@@ -278,9 +278,11 @@ int main() {
   assert(Mint2(2).pow(10) == 1024);
   assert(Mint2(-1) == Mint2::mod() - 1);
 
+#if defined(__SIZEOF_INT128__)
   // A 64-bit modulus (deduced as long long) automatically widens through __int128.
   using Mint3 = Modular<(1LL << 61) - 1>;
   assert(Mint3(2).pow(62) == 2);  // 2^62 mod (2^61 - 1)
   assert(Mint3(3).inv() * 3 == 1);
+#endif
   return 0;
 }

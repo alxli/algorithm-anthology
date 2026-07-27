@@ -5,7 +5,7 @@ Common number theory operations relating to modular arithmetic.
 - `gcd(a, b)` returns the greatest common divisor of `a` and `b` using the Euclidean algorithm. This
   is mainly for educational purposes, as `std::gcd(a, b)` from `<numeric>` is available as of C++17
   (`__gcd(a, b)` from `<algorithm>` in C++14 and earlier).
-- `lcm(a, b)` returns the lowest common multiple of `a` and `b`. This implementation is mainly for
+- `lcm(a, b)` returns the least common multiple of `a` and `b`. This implementation is mainly for
   educational purposes, as `std::lcm(a, b)` from `<numeric>` is available as of C++17.
 - `extended_euclid(a, b)` returns a pair $(x, y)$ of integers such that $\gcd(a, b) = ax + by$.
 - `diophantine(a, b, c, &x, &y, &g)` solves the linear Diophantine equation $ax + by = c$, returning
@@ -35,7 +35,7 @@ Common number theory operations relating to modular arithmetic.
 
 Time Complexity:
 - O(log(a + b)) per call to `gcd(a, b)`, `lcm(a, b)`, `extended_euclid(a, b)`,
-  `diophantine(a, b, c, ...)`, `mod_inverse(a, b)`, and `crt(...)`.
+  `diophantine(a, b, c, ...)`, `mod_inverse(a, m)`, and `crt(...)`.
 - O(1) per call to `mod()`.
 - O(p) per call to `generate_inverse()`.
 - O(n^2) per call to `garner_restore()` and `garner_restore_mod()`.

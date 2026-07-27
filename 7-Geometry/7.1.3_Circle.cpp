@@ -25,8 +25,8 @@ and predicates are templated on the point type `Pt` and only read `.x`/`.y`, so 
 - `in_circumcircle(a, b, c, d)` returns $1$ if `d` lies strictly inside the circle through `a`, `b`,
   and `c`, $0$ if it lies on the circle, or $-1$ if it lies outside. This has exact reasoning for
   integral points by evaluating the determinant directly without constructing a `Circle` or taking
-  square roots. For integer inputs, the sign test is exact provided the chosen intermediate type
-  does not overflow.
+  square roots. Points `a`, `b`, and `c` must not be collinear. For integer inputs, the sign test is
+  exact provided the chosen intermediate type does not overflow.
 
 The floating-point constructors and predicates use an absolute tolerance `EPS`.
 

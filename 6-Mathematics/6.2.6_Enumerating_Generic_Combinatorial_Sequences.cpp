@@ -2,7 +2,7 @@
 
 Rank, unrank, and enumerate combinatorial sequences in lexicographic order using only a prefix
 counting oracle. This is useful when the objects are too numerous to precompute, but there is a
-simple dynamic-programming formula for the number of valid completions after a fixed prefix. Child
+simple dynamic-programming formula for the number of valid completions after a fixed prefix. Derived
 classes of `AbstractEnumerator` implement `count(prefix)`, which returns how many valid full
 sequences begin with that prefix.
 

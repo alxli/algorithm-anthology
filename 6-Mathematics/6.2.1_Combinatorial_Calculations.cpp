@@ -8,7 +8,7 @@ multiplication, so the square of the chosen modulus must fit in `int64_t`.
 - `factorial(n, m = MOD)` returns $n! \bmod m$.
 - `factorial_without_p(n, p = MOD)` returns $n!$ modulo the prime $p$ after removing every factor of
   $p$ from the factorial.
-- `binomial_table(n, m = MOD)` returns the first `n + 1` rows of Pascal's triangle as a
+- `binomial_table(n, m = MOD)` returns the first $n + 1$ rows of Pascal's triangle as a
   two-dimensional vector $t$ such that $t[i][j] = \binom{i}{j} \bmod m$.
 - `permute(n, k, m = MOD)` returns $(n \mathbin{\text{permute}} k) \bmod m$.
 - `choose(n, k, p = MOD)` returns $\binom{n}{k} \bmod p$, where $p$ is prime and $n < p$.

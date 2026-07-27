@@ -30,6 +30,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <numeric>
 #include <vector>
 
@@ -101,6 +102,7 @@ std::vector<int> smawk_rec(
 
 template<typename Get>
 std::vector<int> smawk_row_minima(int rows, int cols, const Get &get) {
+  assert(rows >= 0 && cols >= 1);
   std::vector<int> row_ids(rows), col_ids(cols);
   std::iota(row_ids.begin(), row_ids.end(), 0);
   std::iota(col_ids.begin(), col_ids.end(), 0);
@@ -126,16 +128,6 @@ int main() {
   // clang-format on
   auto get = [&](int r, int c) { return m[r][c]; };
   vector<int> arg = smawk_row_minima(5, 5, get);
-
-  // Cross-check each reported column against a brute-force row scan.
-  for (int r = 0; r < 5; r++) {
-    int best = 0;
-    for (int c = 1; c < 5; c++) {
-      if (m[r][c] < m[r][best]) {
-        best = c;
-      }
-    }
-    assert(m[r][arg[r]] == m[r][best]);  // Same minimum value (smallest index on ties).
-  }
+  assert((arg == vector<int>{0, 2, 2, 2, 4}));
   return 0;
 }

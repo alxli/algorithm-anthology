@@ -4,9 +4,9 @@ Finds an $x$ for a continuous function $f$ such that $f(x) = 0$ using iterative 
 initial guess that is close to the answer. Each step follows the tangent line at the current guess
 down to its $x$-intercept, that is, $x \leftarrow x - f(x)/f'(x)$. Newton's method requires an
 explicit definition of the function's derivative while the secant method starts with two initial
-guesses and approximates the derivative using the secant slope from the previous iteration. For $n$
-iterations and a good initial guess, the methods below compute approximately $2^n$ digits of
-precision, with the secant method converging approximately $1.6$ times slower than Newton's.
+guesses and approximates the derivative using the secant slope from the previous iteration. With
+smooth functions and good initial guesses, Newton's method has quadratic convergence, while the
+secant method has convergence order approximately $1.618$.
 
 - `newton_root(f, fprime, x0, eps = 1e-15, iterations = 100)` returns a root $x$ for a function `f`
   with derivative `fprime` using an initial guess `x0` which should be relatively close to $x$.
@@ -14,8 +14,8 @@ precision, with the secant method converging approximately $1.6$ times slower th
   using two initial guesses `x0` and `x1` which should be relatively close to $x$.
 
 Time Complexity:
-- O(n) calls to `f()` per call to `newton_root()` and `secant_root()`, where $n$ is the number of
-  iterations.
+- O(n) calls to `f()` and `fprime()` per call to `newton_root()`, and O(n) calls to `f()` per call
+  to `secant_root()`, where $n$ is the number of iterations.
 
 Space Complexity:
 - O(1) auxiliary for both operations.
@@ -30,12 +30,16 @@ double newton_root(
     Fn f, Deriv fprime, double x0, const double eps = 1e-15, const int iterations = 100
 ) {
   double x = x0, error = eps + 1;
-  for (int i = 0; error > eps && i < iterations; i++) {
-    double xnew = x - f(x) / fprime(x);
+  for (int i = 0; std::isfinite(error) && error > eps && i < iterations; i++) {
+    double fx = f(x);
+    if (fx == 0) {
+      return x;
+    }
+    double xnew = x - fx / fprime(x);
     error = fabs(xnew - x);
     x = xnew;
   }
-  if (error > eps) {
+  if (!std::isfinite(error) || error > eps) {
     throw std::runtime_error("Newton's method failed to converge.");
   }
   return x;
@@ -46,15 +50,18 @@ double secant_root(
     Fn f, double x0, double x1, const double eps = 1e-15, const int iterations = 100
 ) {
   double xold = x0, fxold = f(x0), x = x1, error = eps + 1;
-  for (int i = 0; error > eps && i < iterations; i++) {
+  for (int i = 0; std::isfinite(error) && error > eps && i < iterations; i++) {
     double fx = f(x);
+    if (fx == 0) {
+      return x;
+    }
     double xnew = x - fx * ((x - xold) / (fx - fxold));
+    error = fabs(xnew - x);
     xold = x;
     fxold = fx;
-    error = fabs(xnew - x);
     x = xnew;
   }
-  if (error > eps) {
+  if (!std::isfinite(error) || error > eps) {
     throw std::runtime_error("Secant method failed to converge.");
   }
   return x;

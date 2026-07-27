@@ -94,7 +94,7 @@ int64_t manhattan_mst_weight(const std::vector<Point> &p) {
   DSU dsu(static_cast<int>(p.size()));
   int64_t res = 0;
   for (auto [w, u, v] : edges) {
-    if (dsu.unite(static_cast<int>(u), static_cast<int>(v))) {
+    if (dsu.unite(u, v)) {
       res += w;
     }
   }

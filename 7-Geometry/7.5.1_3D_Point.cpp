@@ -72,7 +72,7 @@ struct TPoint3 {
   TPoint3<fp_t> unit() const { return *this / norm(); }
 
   TPoint3 cross(const TPoint3 &p) const {
-    return {y * p.z - z * p.y, z * p.x - x * p.z, x * p.y - y * p.x};
+    return {y * p.z - z * p.y, z * p.x - x * p.z, x * p.y - y * p.x};  // Overflow warning!
   }
 
   TPoint3<fp_t> normal(const TPoint3 &p) const { return cross(p).unit(); }

@@ -9,10 +9,10 @@ group parallel directions and retain only the tightest half-plane in each group.
 
 - `half_plane_intersection(planes)` returns the polygon cut out by the half-planes in
   counter-clockwise order. Each half-plane is represented by `HalfPlane(p, q)`, meaning the closed
-  region to the left of the directed line `p` $\to$ `q`. If the intersection is empty, the function
-  returns an empty vector. If the true intersection is unbounded, the returned polygon is not
-  meaningful; add explicit bounding-box half-planes when a bounded polygon is required. The two
-  points defining each half-plane must differ.
+  region to the left of the directed line `p` $\to$ `q`. This implementation is intended for
+  intersections that form a bounded polygon with positive area; empty, unbounded, or degenerate
+  inputs may return an empty vector. Add explicit bounding-box half-planes when a bounded polygon is
+  required. The two points defining each half-plane must differ.
 
 Time Complexity:
 - O(n log n) per call, where $n$ is the number of half-planes.

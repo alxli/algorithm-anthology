@@ -12,8 +12,8 @@ with circumcircle tests deciding each connecting edge and deleting invalidated o
 
 - `delaunay_triangulation(p)` sorts `p` lexicographically and removes duplicate points in place (so
   the input vector is modified), then returns the triangles of one Delaunay triangulation as a
-  vector of counterclockwise-oriented vertex triples (`std::tuple`) of the input point type. If
-  fewer than three non-collinear unique points remain, the result is empty.
+  vector of counterclockwise-oriented `Point<T>` triples (`std::tuple`). If fewer than three
+  non-collinear unique points remain, the result is empty.
 
 The point type must provide exact lexicographic `operator<`; sorting and duplicate removal requires
 this strict ordering rather than epsilon equality. All arithmetic uses the point's own coordinate
@@ -240,9 +240,9 @@ std::pair<Edge<T> *, Edge<T> *> build_triangulation(
   return {ldo, rdo};
 }
 
-template<typename Pt>
-auto delaunay_triangulation(std::vector<Pt> &p) {
-  using T = decltype(Pt::x);
+template<typename T>
+auto delaunay_triangulation(std::vector<Point<T>> &p) {
+  using Pt = Point<T>;
   using Triangle = std::tuple<Pt, Pt, Pt>;
   // Rotates triangle vertices so that the lexicographically smallest comes first, preserving the
   // cyclic (counterclockwise) order, to give each triangle a canonical, comparable representation.

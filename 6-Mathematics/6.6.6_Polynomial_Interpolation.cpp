@@ -27,6 +27,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
@@ -52,6 +53,7 @@ int64_t inv(int64_t a) { return powmod(modnorm(a), MOD - 2, MOD); }
 
 std::vector<int64_t> interpolate(std::vector<int64_t> x, std::vector<int64_t> y) {
   int n = static_cast<int>(x.size());
+  assert(x.size() == y.size());
   for (int i = 0; i < n; i++) {
     x[i] = modnorm(x[i]);
     y[i] = modnorm(y[i]);
@@ -80,6 +82,7 @@ std::vector<int64_t> interpolate(std::vector<int64_t> x, std::vector<int64_t> y)
 
 int64_t interpolate_at(const std::vector<int64_t> &x, const std::vector<int64_t> &y, int64_t t) {
   int n = static_cast<int>(x.size());
+  assert(x.size() == y.size());
   t = modnorm(t);
   int64_t res = 0;
   for (int k = 0; k < n; k++) {

@@ -62,6 +62,9 @@ Prefer code that a strong contestant can adapt quickly after skimming:
 - Adjacent one-line function definitions may remain together. Surround every multiline function
   definition with one empty line, except where an access label or enclosing brace forms the
   boundary.
+- Preserve code between `clang-format off` and `clang-format on` markers exactly unless the task
+  specifically requires changing it. Such regions intentionally override ordinary formatting and
+  line-length rules, including the 100-column limit.
 - Use `int64_t`/`long long` for sums, weights, counts, and products that may overflow `int`.
 - Keep comments sparse and useful. Explain invariants, tricky transitions, precision choices,
   overflow risks, and non-obvious contest assumptions; do not narrate obvious assignments.

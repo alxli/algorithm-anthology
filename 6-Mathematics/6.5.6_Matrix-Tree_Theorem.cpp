@@ -18,7 +18,7 @@ counts rooted spanning arborescences.
   not affect the count. The result is $0$ when the graph is disconnected, and $1$ when `n` is $1$.
 
 Time Complexity:
-- O(n^3) per call, where $n$ is the number of nodes.
+- O(n^3 + m) per call, where $n$ is the number of nodes and $m$ is the number of edges.
 
 Space Complexity:
 - O(n^2) auxiliary.

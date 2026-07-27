@@ -155,13 +155,13 @@ int main() {
   assert(least[999983] == 999983);
   assert(least[999984] == 2);
 
-  int l = 1000000000, h = 1005000000;
+  int lo = 1000000000, hi = 1005000000;
   start = clock();
-  p = sieve(l, h);
+  p = sieve(lo, hi);
   delta = static_cast<double>((clock() - start)) / CLOCKS_PER_SEC;
-  cout << "sieve([" << l << ", " << h << "]): " << delta << "s" << endl;
+  cout << "sieve([" << lo << ", " << hi << "]): " << delta << "s" << endl;
   assert((sieve(14, 16) == vector<int>{}));
   assert((sieve(17, 19) == vector<int>{17, 19}));
-  assert(!p.empty() && p.front() >= l && p.back() <= h);
+  assert(!p.empty() && p.front() >= lo && p.back() <= hi);
   return 0;
 }

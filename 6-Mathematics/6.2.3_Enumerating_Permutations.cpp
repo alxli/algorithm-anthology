@@ -22,11 +22,9 @@ orbit until it returns to its start.
   is lexicographically ranked $r$, where $r$ is a 0-based rank in the range $[0, n!)$.
 - `rank_by_permutation(a)` returns an integer representing the 0-based rank of permutation `a`,
   which must be a permutation of the integers $[0, n)$.
-- `permutation_cycles(a)` returns the decomposition of the permutation `a` into cycles. A
-  permutation cycle is a subset of a permutation whose elements are consecutively swapped, relative
-  to a sorted set. For example, $\{3, 1, 0, 2\}$ decomposes to $\{0, 3, 2\}$ and $\{1\}$, meaning
-  that starting from the sorted order $\{0, 1, 2, 3\}$, the 0-th value is replaced by the 3rd, the
-  3rd by the 2nd, and the 2nd by the 0-th ($0 \to 3 \to 2 \to 0$).
+- `permutation_cycles(a)` returns the orbits of the index mapping `i` $\mapsto$ `a[i]`. For example,
+  $\{3, 1, 0, 2\}$ decomposes into cycles $\{0, 3, 2\}$ and $\{1\}$ because following the mapping
+  from index $0$ gives $0 \to 3 \to 2 \to 0$, while index $1$ maps to itself.
 
 Time Complexity:
 - O(n) per call to `next_permutation2()` and `next_permutation()`, where $n$ is the input size.
@@ -96,11 +94,17 @@ bool next_permutation(std::vector<T> &a, Compare comp = Compare()) {
 }
 
 int64_t next_permutation_mask(int64_t x) {
+  if (x == 0) {
+    return 0;
+  }
   int64_t s = x & -x, r = x + s;
   return r | (((x ^ r) >> 2) / s);
 }
 
 std::vector<int> permutation_by_rank(int n, int64_t r) {
+  if (n == 0) {
+    return {};
+  }
   std::vector<int64_t> factorial(n);
   std::vector<int> values(n), res(n);
   factorial[0] = 1;
@@ -111,7 +115,7 @@ std::vector<int> permutation_by_rank(int n, int64_t r) {
   for (int i = 0; i < n; i++) {
     int pos = r / factorial[n - 1 - i];
     res[i] = values[pos];
-    std::copy(values.begin() + pos + 1, values.end(), values.begin() + pos);
+    values.erase(values.begin() + pos);
     r %= factorial[n - 1 - i];
   }
   return res;
@@ -119,6 +123,9 @@ std::vector<int> permutation_by_rank(int n, int64_t r) {
 
 int64_t rank_by_permutation(const std::vector<int> &a) {
   int n = static_cast<int>(a.size());
+  if (n == 0) {
+    return 0;
+  }
   std::vector<int64_t> factorial(n);
   factorial[0] = 1;
   for (int i = 1; i < n; i++) {

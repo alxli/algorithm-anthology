@@ -57,7 +57,8 @@ bool LT(T a, U b) {
 
 template<typename Pt>
 double triangle_area(const Pt &a, const Pt &b, const Pt &c) {
-  double acx = a.x - c.x, acy = a.y - c.y, bcx = b.x - c.x, bcy = b.y - c.y;
+  double acx = static_cast<double>(a.x) - c.x, acy = static_cast<double>(a.y) - c.y;
+  double bcx = static_cast<double>(b.x) - c.x, bcy = static_cast<double>(b.y) - c.y;
   return fabs(acx * bcy - acy * bcx) / 2.0;
 }
 

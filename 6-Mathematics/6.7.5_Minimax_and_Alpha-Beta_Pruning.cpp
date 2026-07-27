@@ -9,7 +9,7 @@ affect the final answer. It is most effective when good moves are searched first
 
 The example game is "take $1$ or $2$ stones": starting with `stones` stones, players alternate
 taking $1$ or $2$ stones, and the player who takes the last stone wins. The evaluation returns $1$
-for a win for the player to move at the root and $-1$ for a loss.
+when the maximizing player wins and $-1$ when the minimizing player wins.
 
 - `minimax(stones, maximizing)` returns the exact game-tree value, where `maximizing` indicates
   whose turn it is.

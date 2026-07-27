@@ -61,10 +61,12 @@ int64_t partition_function(int a, int b) {
   if (a >= static_cast<int>(p.size())) {
     int old = static_cast<int>(p.size());
     p.resize(a + 1);
-    p[0].resize(a + 1);
-    for (int i = 1; i <= a; i++) {
+    for (int i = 0; i < old; i++) {
       p[i].resize(a + 1);
-      for (int j = old; j <= i; j++) {
+    }
+    for (int i = old; i <= a; i++) {
+      p[i].resize(a + 1);
+      for (int j = 1; j <= i; j++) {
         p[i][j] = p[i - 1][j - 1] + p[i - j][j];
       }
     }
@@ -144,6 +146,9 @@ void print_range(It lo, It hi) {
 }
 
 int main() {
+  // Exercise incremental growth of the cached dynamic-programming table.
+  assert(partition_function(3, 1) == 1);
+  assert(partition_function(8, 3) == 5);
   {
     int n = 4;
     vector<int> a(n, 1);

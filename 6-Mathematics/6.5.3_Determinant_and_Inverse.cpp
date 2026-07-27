@@ -47,13 +47,17 @@ Space Complexity:
 template<typename SquareMatrix>
 auto det_naive(const SquareMatrix &a) {
   int n = static_cast<int>(a.size());
+  using T = std::decay_t<decltype(a[0][0])>;
+  if (n == 0) {
+    return T(1);
+  }
   if (n == 1) {
     return a[0][0];
   }
   if (n == 2) {
     return a[0][0] * a[1][1] - a[0][1] * a[1][0];
   }
-  std::decay_t<decltype(a[0][0])> res = 0;
+  T res = 0;
   SquareMatrix temp(n - 1, typename SquareMatrix::value_type(n - 1));
   for (int p = 0; p < n; p++) {
     int h = 0, k = 0;
@@ -204,6 +208,7 @@ int main() {
   // Bareiss gives the determinant of an integer matrix exactly, with no rounding.
   vector<vector<int64_t>> ai{{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
   assert(det_naive(ai) == -306);  // Division-free, so also exact in the int64_t element type.
+  assert(det_naive(vector<vector<int64_t>>{}) == 1);
   assert(det_bareiss(ai) == -306);
   assert(det_bareiss({{2, 0, 0}, {0, 3, 0}, {0, 0, 5}}) == 30);
   assert(det_bareiss({{1, 2}, {2, 4}}) == 0);  // Singular.

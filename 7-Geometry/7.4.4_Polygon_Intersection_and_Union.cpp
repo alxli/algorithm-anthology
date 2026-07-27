@@ -8,10 +8,10 @@ accumulated exactly from trapezoid areas. The union then follows by inclusion-ex
 of the individual areas minus the intersection.
 
 - `intersection_area(lo1, hi1, lo2, hi2)` returns the intersection area of two polygons respectively
-  specified by two ranges $[`lo1`, `hi1`)$ and $[`lo2`, `hi2`)$ of vertices in clockwise order,
-  where `lo1`, `hi1`, `lo2`, and `hi2` must be random-access iterators.
+  specified by two ranges $[`lo1`, `hi1`)$ and $[`lo2`, `hi2`)$ of vertices in boundary order, where
+  `lo1`, `hi1`, `lo2`, and `hi2` must be random-access iterators.
 - `union_area(lo1, hi1, lo2, hi2)` returns the union area of two polygons respectively specified by
-  two ranges $[`lo1`, `hi1`)$ and $[`lo2`, `hi2`)$ of vertices in clockwise order, where `lo1`,
+  two ranges $[`lo1`, `hi1`)$ and $[`lo2`, `hi2`)$ of vertices in boundary order, where `lo1`,
   `hi1`, `lo2`, and `hi2` must be random-access iterators.
 
 Overflow warning: the segment-intersection tests form cross products in the input point's coordinate
@@ -125,18 +125,18 @@ template<typename PtA, typename PtB>
 int line_intersection1(
     const PtA &p1, const PtA &p2, const PtB &p3, const PtB &p4, double *outx, double *outy
 ) {
-  auto a1 = p2.y - p1.y, b1 = p1.x - p2.x;
-  auto c1 = -(p1.x * p2.y - p2.x * p1.y);
-  auto a2 = p4.y - p3.y, b2 = p3.x - p4.x;
-  auto c2 = -(p3.x * p4.y - p4.x * p3.y);
-  auto x = -(c1 * b2 - c2 * b1), y = -(a1 * c2 - a2 * c1);
-  auto det = a1 * b2 - a2 * b1;
+  double a1 = static_cast<double>(p2.y) - p1.y, b1 = static_cast<double>(p1.x) - p2.x;
+  double c1 = -(a1 * p1.x + b1 * p1.y);
+  double a2 = static_cast<double>(p4.y) - p3.y, b2 = static_cast<double>(p3.x) - p4.x;
+  double c2 = -(a2 * p3.x + b2 * p3.y);
+  double x = -(c1 * b2 - c2 * b1), y = -(a1 * c2 - a2 * c1);
+  double det = a1 * b2 - a2 * b1;
   if (EQ(det, 0)) {
     return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
   }
   if (outx != nullptr && outy != nullptr) {
-    *outx = static_cast<double>(x) / det;
-    *outy = static_cast<double>(y) / det;
+    *outx = x / det;
+    *outy = y / det;
   }
   return 0;
 }
@@ -181,7 +181,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
       It lo = plo[poly], hi = phi[poly];
       double area = 0;
       for (It i = lo, j = hi - 1; i != hi; j = i++) {
-        area += (j->x - i->x) * (j->y + i->y);
+        area += (static_cast<double>(j->x) - i->x) * (static_cast<double>(j->y) + i->y);
       }
       for (It j = lo, i = hi - 1; j != hi; i = j++) {
         double px, py;
@@ -224,7 +224,7 @@ double polygon_area(It lo, It hi) {
   }
   double area = 0;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
-    area += (j->x - i->x) * (j->y + i->y);
+    area += (static_cast<double>(j->x) - i->x) * (static_cast<double>(j->y) + i->y);
   }
   return fabs(area / 2.0);
 }
@@ -257,7 +257,7 @@ struct PointI {
 
 int main() {
   vector<Point> p, s;
-  // Irregular pentagon a triangle of area 1.5 overlapping quadrant 2.
+  // Irregular pentagon overlapping the square below in a triangle of area 1.5.
   p.emplace_back(1, 3);
   p.emplace_back(1, 2);
   p.emplace_back(2, 1);

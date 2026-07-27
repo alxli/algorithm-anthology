@@ -3,7 +3,7 @@
 Solves a linear programming problem using Dantzig's simplex algorithm. The canonical form of a
 linear programming problem is to maximize (or minimize) the dot product $cx$, subject to $ax \leq b$
 and $x \geq 0$, where $x$ is a vector of unknowns to be solved, $c$ is a vector of coefficients, $a$
-is a matrix of linear equation coefficients, and $b$ is a vector of boundary coefficients.
+is a matrix of constraint coefficients, and $b$ is a vector of bounds.
 
 The simplex algorithm walks between vertices of the feasible polytope, at each step pivoting to an
 adjacent vertex that improves the objective, until no improving move remains (an optimum is reached)

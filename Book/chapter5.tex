@@ -4,7 +4,7 @@
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Binary Search}
-Binary search can be generally used to find the input value corresponding to any output value of a monotonic (strictly non-increasing or strictly non-decreasing) function in $O(\log n)$ time with respect to the domain size. This is a special case of finding the exact point at which any given monotonic Boolean function changes from true to false or vice versa. Each step evaluates the midpoint of the current interval and keeps the half that still contains the transition point, halving the search space until it closes on the answer. Unlike searching through an array, discrete binary search is not restricted by available memory, making it useful for handling infinitely large search spaces such as real number intervals.
+Binary search locates a target in sorted data, or more generally the transition point of a monotonic Boolean predicate that changes from false to true or true to false at most once. Each step evaluates the midpoint of the current interval and keeps the half that still contains the transition, halving the search space until it closes on the answer. The same technique applies to non-increasing or non-decreasing numeric functions. Unlike searching through an array, discrete binary search is not restricted by available memory, making it useful for implicit domains that are too large to materialize, including broad integer or real intervals.
 
 \begin{compactitem}
   \item \inlinecode{binary\_search\_first\_true(lo, hi, pred)} takes signed integer boundaries for the search space $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ (i.e. including \inlinecode{lo}, but excluding \inlinecode{hi}) and returns the smallest integer \inlinecode{k} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ for which the predicate \inlinecode{pred(k)} tests true. If \inlinecode{pred(k)} tests false for the entire input range, then the original \inlinecode{hi} is returned. The caller must ensure \inlinecode{pred} is monotonically ascending on the input range, i.e. returning all false for some (possibly empty) prefix, followed by all true in some (possibly empty) suffix. E.g., patterns \inlinecode{01}, \inlinecode{00}, and \inlinecode{11} are allowed, but \inlinecode{10} is disallowed.
@@ -594,6 +594,7 @@ The SMAWK algorithm interleaves two steps. REDUCE discards columns that cannot h
 \textbf{Space Complexity}: $O(R + C)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <numeric>
 #include <vector>
 
@@ -665,6 +666,7 @@ std::vector<int> smawk_rec(
 
 template<typename Get>
 std::vector<int> smawk_row_minima(int rows, int cols, const Get &get) {
+  assert(rows >= 0 && cols >= 1);
   std::vector<int> row_ids(rows), col_ids(cols);
   std::iota(row_ids.begin(), row_ids.end(), 0);
   std::iota(col_ids.begin(), col_ids.end(), 0);
@@ -689,17 +691,7 @@ int main() {
   };
   auto get = [&](int r, int c) { return m[r][c]; };
   vector<int> arg = smawk_row_minima(5, 5, get);
-
-  // Cross-check each reported column against a brute-force row scan.
-  for (int r = 0; r < 5; r++) {
-    int best = 0;
-    for (int c = 1; c < 5; c++) {
-      if (m[r][c] < m[r][best]) {
-        best = c;
-      }
-    }
-    assert(m[r][arg[r]] == m[r][best]);  // Same minimum value (smallest index on ties).
-  }
+  assert((arg == vector<int>{0, 2, 2, 2, 4}));
   return 0;
 }
 \end{lstlisting}
@@ -1149,7 +1141,7 @@ class LiChaoTree {
   }
 
  public:
-  LiChaoTree(int64_t lo, int64_t hi) : root(nullptr), lo(lo), hi(hi) {}
+  LiChaoTree(int64_t lo, int64_t hi) : root(nullptr), lo(lo), hi(hi) { assert(lo <= hi); }
 
   ~LiChaoTree() { clean_up(root); }
   LiChaoTree(const LiChaoTree &) = delete;
@@ -1283,14 +1275,14 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Root Finding (Iteration)}
-Finds an $x$ for a continuous function $f$ such that $f(x) = 0$ using iterative approximation by an initial guess that is close to the answer. Each step follows the tangent line at the current guess down to its $x$-intercept, that is, $x \leftarrow x - f(x)/f'(x)$. Newton's method requires an explicit definition of the function's derivative while the secant method starts with two initial guesses and approximates the derivative using the secant slope from the previous iteration. For $n$ iterations and a good initial guess, the methods below compute approximately $2^n$ digits of precision, with the secant method converging approximately $1.6$ times slower than Newton's.
+Finds an $x$ for a continuous function $f$ such that $f(x) = 0$ using iterative approximation by an initial guess that is close to the answer. Each step follows the tangent line at the current guess down to its $x$-intercept, that is, $x \leftarrow x - f(x)/f'(x)$. Newton's method requires an explicit definition of the function's derivative while the secant method starts with two initial guesses and approximates the derivative using the secant slope from the previous iteration. With smooth functions and good initial guesses, Newton's method has quadratic convergence, while the secant method has convergence order approximately $1.618$.
 
 \begin{compactitem}
   \item \inlinecode{newton\_root(f, fprime, x0, eps = 1e-15, iterations = 100)} returns a root $x$ for a function \inlinecode{f} with derivative \inlinecode{fprime} using an initial guess \inlinecode{x0} which should be relatively close to $x$.
   \item \inlinecode{secant\_root(f, x0, x1, eps = 1e-15, iterations = 100)} returns a root $x$ for a function \inlinecode{f} using two initial guesses \inlinecode{x0} and \inlinecode{x1} which should be relatively close to $x$.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n)$ calls to \inlinecode{f()} per call to \inlinecode{newton\_root()} and \inlinecode{secant\_root()}, where $n$ is the number of iterations.
+\textbf{Time Complexity}: $O(n)$ calls to \inlinecode{f()} and \inlinecode{fprime()} per call to \inlinecode{newton\_root()}, and $O(n)$ calls to \inlinecode{f()} per call to \inlinecode{secant\_root()}, where $n$ is the number of iterations.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for both operations.
 
@@ -1303,12 +1295,16 @@ double newton_root(
     Fn f, Deriv fprime, double x0, const double eps = 1e-15, const int iterations = 100
 ) {
   double x = x0, error = eps + 1;
-  for (int i = 0; error > eps && i < iterations; i++) {
-    double xnew = x - f(x) / fprime(x);
+  for (int i = 0; std::isfinite(error) && error > eps && i < iterations; i++) {
+    double fx = f(x);
+    if (fx == 0) {
+      return x;
+    }
+    double xnew = x - fx / fprime(x);
     error = fabs(xnew - x);
     x = xnew;
   }
-  if (error > eps) {
+  if (!std::isfinite(error) || error > eps) {
     throw std::runtime_error("Newton's method failed to converge.");
   }
   return x;
@@ -1319,15 +1315,18 @@ double secant_root(
     Fn f, double x0, double x1, const double eps = 1e-15, const int iterations = 100
 ) {
   double xold = x0, fxold = f(x0), x = x1, error = eps + 1;
-  for (int i = 0; error > eps && i < iterations; i++) {
+  for (int i = 0; std::isfinite(error) && error > eps && i < iterations; i++) {
     double fx = f(x);
+    if (fx == 0) {
+      return x;
+    }
     double xnew = x - fx * ((x - xold) / (fx - fxold));
+    error = fabs(xnew - x);
     xold = x;
     fxold = fx;
-    error = fabs(xnew - x);
     x = xnew;
   }
-  if (error > eps) {
+  if (!std::isfinite(error) || error > eps) {
     throw std::runtime_error("Secant method failed to converge.");
   }
   return x;
@@ -1885,7 +1884,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Linear Programming (Simplex)}
-Solves a linear programming problem using Dantzig's simplex algorithm. The canonical form of a linear programming problem is to maximize (or minimize) the dot product $cx$, subject to $ax \leq b$ and $x \geq 0$, where $x$ is a vector of unknowns to be solved, $c$ is a vector of coefficients, $a$ is a matrix of linear equation coefficients, and $b$ is a vector of boundary coefficients.
+Solves a linear programming problem using Dantzig's simplex algorithm. The canonical form of a linear programming problem is to maximize (or minimize) the dot product $cx$, subject to $ax \leq b$ and $x \geq 0$, where $x$ is a vector of unknowns to be solved, $c$ is a vector of coefficients, $a$ is a matrix of constraint coefficients, and $b$ is a vector of bounds.
 
 The simplex algorithm walks between vertices of the feasible polytope, at each step pivoting to an adjacent vertex that improves the objective, until no improving move remains (an optimum is reached) or an unbounded improving direction is found.
 

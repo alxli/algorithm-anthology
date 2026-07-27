@@ -31,9 +31,10 @@ is a `BigInt` at any given level of evaluation.
   large, estimate each quotient limb from the top one or two limbs of the running remainder, correct
   the estimate by adding the divisor back if necessary, then unscale the remainder.
 - `a.div(v)` returns a pair consisting of the quotient and remainder when `a` is divided by `v`.
-- `v.pow(n)` returns `v` raised to the power of $n$.
+- `v.pow(n)` returns `v` raised to the nonnegative power $n$.
 - `v.sqrt()` returns the integral part of the square root of big integer `v`.
-- `v.nth_root(n)` returns the integral part of the $n$-th root of big integer `v`.
+- `v.nth_root(n)` returns the integral part of the $n$-th root of big integer `v`. Negative inputs
+  require odd $n$.
 - `rand(n)` returns a random, positive big integer with $n$ digits.
 
 `pow(n)` uses binary exponentiation. `sqrt()` uses a digit-by-digit square-root algorithm in the
@@ -401,7 +402,7 @@ class BigInt {
     return sub(a.digits, b.digits, a.sign, b.sign);
   }
 
-  void operator*=(int v) {
+  BigInt &operator*=(int v) {
     int64_t factor = v;
     if (factor < 0) {
       sign = -sign;
@@ -417,6 +418,7 @@ class BigInt {
       digits[i] = static_cast<int>((curr % BASE));
     }
     normalize();
+    return *this;
   }
 
   BigInt operator*(int v) const {
@@ -538,10 +540,11 @@ class BigInt {
   // clang-format on
 
   BigInt pow(int n) const {
+    assert(n >= 0);
     if (n == 0) {
       return BigInt(1);
     }
-    if (*this == 0 || n < 0) {
+    if (*this == 0) {
       return BigInt(0);
     }
     BigInt x(*this), res(1);
@@ -603,12 +606,14 @@ class BigInt {
     if (*this == 0) {
       return BigInt(0);
     }
+    BigInt magnitude = abs();
     if (n >= size()) {
       int p = 1;
-      while (comp(BigInt(p).pow(n)) > 0) {
+      while (magnitude.comp(BigInt(p).pow(n)) > 0) {
         p++;
       }
-      return comp(BigInt(p).pow(n)) < 0 ? p - 1 : p;
+      BigInt root = magnitude.comp(BigInt(p).pow(n)) < 0 ? p - 1 : p;
+      return sign == -1 ? -root : root;
     }
     BigInt lo(BigInt(10).pow(static_cast<int>(ceil(static_cast<double>(size()) / n)) - 1)),
         hi(lo * 10), mid;
@@ -662,6 +667,7 @@ int main() {
 
   assert(BigInt(20).pow(12345).size() == 16062);
   assert(BigInt("9812985918924981892491829").nth_root(4) == 1769906);
+  assert(BigInt(-8).nth_root(3) == -2);
   for (int i = -100; i <= 100; i++) {
     if (i >= 0) {
       assert(BigInt(i).sqrt() == static_cast<int>(sqrt(i)));
