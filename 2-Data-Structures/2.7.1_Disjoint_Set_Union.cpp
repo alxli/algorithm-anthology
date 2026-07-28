@@ -12,7 +12,7 @@ This version is simplified to work only on the fixed set of integer elements $[0
 construction. For arbitrary element types, see Sparse Disjoint Set Union.
 
 - `DSU(n)` constructs `n` singleton partitions over elements $[0, `n`)$.
-- `find_root(u)` returns the unique representative of the partition containing `u`.
+- `find(u)` returns the unique representative of the partition containing `u`.
 - `sets()` returns the current number of partitions.
 - `set_size(u)` returns the number of elements in the partition containing `u`.
 - `is_united(u, v)` returns whether elements `u` and `v` belong to the same partition.
@@ -22,13 +22,13 @@ construction. For arbitrary element types, see Sparse Disjoint Set Union.
 
 Time Complexity:
 - O(n) per call to the constructor, and O(1) per call to `sets()`.
-- O(alpha(n)) per call to `find_root()`, `set_size()`, `is_united()`, and `unite()`, where $n$ is
-  the number of elements, and $\alpha(n)$ is the extremely slow growing inverse of the Ackermann
+- O(alpha(n)) per call to `find()`, `set_size()`, `is_united()`, and `unite()`, where $n$ is the
+  number of elements, and $\alpha(n)$ is the extremely slow growing inverse of the Ackermann
   function (effectively a very small constant for all practical values of $n$).
 
 Space Complexity:
 - O(n) for storage of the disjoint set forest elements.
-- O(log n) auxiliary stack space for operations that call `find_root()`.
+- O(log n) auxiliary stack space for operations that call `find()`.
 - O(1) auxiliary for `sets()`.
 
 */
@@ -44,28 +44,23 @@ class DSU {
  public:
   explicit DSU(int n) : root(n), size(n, 1), num_sets(n) { std::iota(root.begin(), root.end(), 0); }
 
-  int find_root(int u) {
-    if (root[u] != u) {
-      root[u] = find_root(root[u]);
-    }
-    return root[u];
-  }
-
+  int find(int u) { return root[u] == u ? u : root[u] = find(root[u]); }
   int sets() const { return num_sets; }
-  int set_size(int u) { return size[find_root(u)]; }
-  bool is_united(int u, int v) { return find_root(u) == find_root(v); }
+  int set_size(int u) { return size[find(u)]; }
+  bool is_united(int u, int v) { return find(u) == find(v); }
 
   bool unite(int u, int v) {
-    int ru = find_root(u), rv = find_root(v);
-    if (ru == rv) {
+    u = find(u);
+    v = find(v);
+    if (u == v) {
       return false;
     }
     num_sets--;
-    if (size[ru] < size[rv]) {
-      std::swap(ru, rv);
+    if (size[u] < size[v]) {
+      std::swap(u, v);
     }
-    root[rv] = ru;
-    size[ru] += size[rv];
+    root[v] = u;
+    size[u] += size[v];
     return true;
   }
 };

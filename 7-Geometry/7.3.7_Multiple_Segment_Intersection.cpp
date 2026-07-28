@@ -58,7 +58,7 @@ bool seg_intersection(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
 template<typename Pt>
 struct Segment {
   Pt p, q;
-  Segment() {}
+  Segment() = default;
   Segment(const Pt &p, const Pt &q) : p(std::min(p, q)), q(std::max(p, q)) {}
 };
 

@@ -171,7 +171,7 @@ int in_circumcircle(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   W adx = (W)a.x - d.x, ady = (W)a.y - d.y;
   W bdx = (W)b.x - d.x, bdy = (W)b.y - d.y;
   W cdx = (W)c.x - d.x, cdy = (W)c.y - d.y;
-  // Overflow warning!
+  // Overflow warning.
   W det = (adx * adx + ady * ady) * (bdx * cdy - cdx * bdy) +
           (bdx * bdx + bdy * bdy) * (cdx * ady - adx * cdy) +
           (cdx * cdx + cdy * cdy) * (adx * bdy - bdx * ady);

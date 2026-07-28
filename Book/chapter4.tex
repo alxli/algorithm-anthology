@@ -76,7 +76,7 @@ class Graph {
   }
 
  public:
-  Graph(bool directed = true) : directed(directed) {}
+  explicit Graph(bool directed = true) : directed(directed) {}
 
   int size() const { return static_cast<int>(adj.size()); }
   std::vector<int> &operator[](int u) { return adj[u]; }
@@ -177,7 +177,7 @@ Given a directed acyclic graph (DAG), find one of possibly many orderings of the
 The DFS version uses the fact that every outgoing dependency of a node is finished before the node itself is appended, so reversing DFS post-order places each prerequisite before everything it can reach. Kahn's algorithm instead repeatedly removes nodes with indegree zero: these are exactly the nodes whose remaining prerequisites have all already been placed. If at some point not every node can be removed, the leftover nodes must lie on a directed cycle.
 
 \begin{compactitem}
-  \item \inlinecode{toposort\_dfs()} returns a valid topological ordering using DFS post-order, or throws if the graph contains a cycle.
+  \item \inlinecode{toposort\_dfs()} returns a valid topological ordering using DFS post-order, or an empty vector if the graph contains a cycle.
   \item \inlinecode{toposort\_kahn()} returns a valid topological ordering using indegrees and a queue, or returns an empty vector if the graph contains a cycle.
 \end{compactitem}
 
@@ -195,34 +195,35 @@ The DFS version uses the fact that every outgoing dependency of a node is finish
 #include <algorithm>
 #include <cassert>
 #include <queue>
-#include <stdexcept>
 #include <vector>
 
 std::vector<std::vector<int>> adj;
 
-void dfs(int u, std::vector<char> &visit, std::vector<char> &done, std::vector<int> &res) {
-  if (visit[u]) {
-    throw std::runtime_error("Not a directed acyclic graph.");
+bool dfs(int u, std::vector<char> &state, std::vector<int> &res) {
+  if (state[u] == 1) {
+    return false;
   }
-  if (done[u]) {
-    return;
+  if (state[u] == 2) {
+    return true;
   }
-  visit[u] = true;
+  state[u] = 1;
   for (int v : adj[u]) {
-    dfs(v, visit, done, res);
+    if (!dfs(v, state, res)) {
+      return false;
+    }
   }
-  visit[u] = false;
-  done[u] = true;
+  state[u] = 2;
   res.push_back(u);
+  return true;
 }
 
 std::vector<int> toposort_dfs() {
   int n = static_cast<int>(adj.size());
-  std::vector<char> visit(n, false), done(n, false);
+  std::vector<char> state(n);
   std::vector<int> res;
   for (int i = 0; i < n; i++) {
-    if (!done[i]) {
-      dfs(i, visit, done, res);
+    if (state[i] == 0 && !dfs(i, state, res)) {
+      return {};
     }
   }
   std::reverse(res.begin(), res.end());
@@ -253,7 +254,10 @@ std::vector<int> toposort_kahn() {
       }
     }
   }
-  return static_cast<int>(res.size()) == n ? res : std::vector<int>();
+  if (static_cast<int>(res.size()) != n) {
+    return {};
+  }
+  return res;
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -294,6 +298,11 @@ int main() {
       assert(position[u] < position[v]);
     }
   }
+  adj = {{1}, {0}};
+  dfs_res = toposort_dfs();
+  kahn = toposort_kahn();
+  assert(dfs_res.empty());
+  assert(kahn.empty());
   return 0;
 }
 \end{lstlisting}
@@ -1745,7 +1754,7 @@ class KosarajuSCC {
   }
 
  public:
-  KosarajuSCC(int n = 0) : adj(n), rev(n) {}
+  explicit KosarajuSCC(int n = 0) : adj(n), rev(n) {}
 
   void add_edge(int u, int v) {
     adj[u].push_back(v);
@@ -1888,7 +1897,7 @@ class TarjanSCC {
   }
 
  public:
-  TarjanSCC(int n = 0) : adj(n) {}
+  explicit TarjanSCC(int n = 0) : adj(n) {}
 
   void add_edge(int u, int v) { adj[u].push_back(v); }
 
@@ -2172,7 +2181,7 @@ class BiconnectedComponents {
   }
 
  public:
-  BiconnectedComponents(int n = 0) : adj(n) {}
+  explicit BiconnectedComponents(int n = 0) : adj(n) {}
 
   void add_edge(int u, int v) {
     int id = static_cast<int>(edges.size());
@@ -2323,7 +2332,7 @@ class BridgeDecomposition {
   }
 
  public:
-  BridgeDecomposition(int n = 0) : adj(n) {}
+  explicit BridgeDecomposition(int n = 0) : adj(n) {}
 
   void add_edge(int u, int v) {
     int id = static_cast<int>(edges.size());
@@ -2482,7 +2491,7 @@ class OnlineBridges {
   }
 
  public:
-  OnlineBridges(int n = 0) {
+  explicit OnlineBridges(int n = 0) {
     dsu_2ecc.resize(n);
     dsu_cc.resize(n);
     dsu_cc_size.assign(n, 1);
@@ -2618,7 +2627,7 @@ class TwoSAT {
   }
 
  public:
-  TwoSAT(int n = 0) : variables(n), adj(2 * n), rev(2 * n), solution(n, false) {}
+  explicit TwoSAT(int n = 0) : variables(n), adj(2 * n), rev(2 * n), solution(n, false) {}
 
   int literal(int variable, bool value) const { return 2 * variable + (value ? 0 : 1); }
 
@@ -2732,7 +2741,7 @@ class FunctionalGraph {
   }
 
  public:
-  FunctionalGraph(const std::vector<int> &f) {
+  explicit FunctionalGraph(const std::vector<int> &f) {
     int n = static_cast<int>(f.size()), levels = 1;
     while ((1LL << levels) < n) {
       levels++;
@@ -2890,7 +2899,7 @@ class OfflineDynamicConnectivity {
   std::vector<std::vector<std::pair<int, int>>> seg;
   std::vector<int> answers;
 
-  int find_root(int u) const {
+  int find(int u) const {
     while (root[u] != u) {
       u = root[u];
     }
@@ -2898,8 +2907,8 @@ class OfflineDynamicConnectivity {
   }
 
   void unite(int u, int v) {
-    u = find_root(u);
-    v = find_root(v);
+    u = find(u);
+    v = find(v);
     if (u == v) {
       history.emplace_back(-1, 0);
       return;
@@ -2962,7 +2971,7 @@ class OfflineDynamicConnectivity {
   }
 
  public:
-  OfflineDynamicConnectivity(int n) : n(n) {}
+  explicit OfflineDynamicConnectivity(int n) : n(n) {}
 
   void add_edge(int u, int v) { ops.push_back({ADD, std::min(u, v), std::max(u, v)}); }
   void remove_edge(int u, int v) { ops.push_back({REMOVE, std::min(u, v), std::max(u, v)}); }
@@ -3183,7 +3192,7 @@ void bfs_zero_one(const std::vector<int> &starts) {
   while (!dq.empty()) {
     int u = dq.front();
     dq.pop_front();
-    for (auto &[v, w] : adj[u]) {
+    for (auto [v, w] : adj[u]) {
       if (dist[v] > dist[u] + w) {
         dist[v] = dist[u] + w;
         pred[v] = u;
@@ -3295,7 +3304,7 @@ void dijkstra(int start) {
     if (du != dist[u]) {
       continue;
     }
-    for (auto &[v, w] : adj[u]) {
+    for (auto [v, w] : adj[u]) {
       if (dist[v] > dist[u] + w) {
         dist[v] = dist[u] + w;
         pred[v] = u;
@@ -3346,11 +3355,11 @@ int main() {
 \subsection{Shortest Path (Bellman-Ford)}
 Given a starting node in a weighted, directed graph with possibly negative weights, visit every reachable node and determine the minimum distance to each such node. Optionally, reconstruct the shortest path to a destination node using the shortest-path tree from the predecessor array \inlinecode{pred}.
 
-Bellman-Ford relaxes every edge in the graph up to $n - 1$ times, stopping early if a pass makes no changes. Since any shortest path uses at most $n - 1$ edges, all distances are correct after these passes unless a negative-weight cycle keeps reducing them, which a further pass detects. Bellman-Ford will also detect whether the graph contains a negative-weight cycle reachable from the start node, in which case the affected shortest paths are undefined and an error will be thrown. (To detect a negative cycle anywhere in the graph, add a virtual source with zero-weight edges to every node and start from it.)
+Bellman-Ford relaxes every edge in the graph up to $n - 1$ times, stopping early if a pass makes no changes. Since any shortest path uses at most $n - 1$ edges, all distances are correct after these passes unless a negative-weight cycle keeps reducing them, which a further pass detects. Bellman-Ford will also detect whether the graph contains a negative-weight cycle reachable from the start node, in which case the affected shortest paths are undefined. (To detect a negative cycle anywhere in the graph, add a virtual source with zero-weight edges to every node and start from it.)
 
 \begin{compactitem}
-  \item \inlinecode{bellman\_ford(n, start)} populates \inlinecode{dist} and \inlinecode{pred} for a global, pre-populated edge list \inlinecode{edges} whose endpoints must be numbered $[0, {\inlinecodemath{n}})$.
-  \item \inlinecode{get\_path(dest)} returns the path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable, after the latest call to \inlinecode{bellman\_ford()}.
+  \item \inlinecode{bellman\_ford(n, start)} populates \inlinecode{dist} and \inlinecode{pred} for a global, pre-populated edge list \inlinecode{edges} whose endpoints must be numbered $[0, {\inlinecodemath{n}})$, and returns whether no reachable negative-weight cycle was found.
+  \item \inlinecode{get\_path(dest)} returns the path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable, after the latest successful call to \inlinecode{bellman\_ford()}.
 \end{compactitem}
 
 For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
@@ -3373,7 +3382,6 @@ For path reconstruction, \inlinecode{pred[v]} stores the node immediately before
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cstdint>
-#include <stdexcept>
 #include <tuple>
 #include <vector>
 
@@ -3382,13 +3390,13 @@ std::vector<std::tuple<int, int, int>> edges;  // (u, v, w)
 std::vector<int64_t> dist;
 std::vector<int> pred;
 
-void bellman_ford(int n, int start) {
+bool bellman_ford(int n, int start) {
   dist.assign(n, INF);
   pred.assign(n, -1);
   dist[start] = 0;
   for (int i = 0; i < n - 1; i++) {
     bool changed = false;
-    for (auto &[u, v, w] : edges) {
+    for (auto [u, v, w] : edges) {
       // The dist[u] != INF guard avoids relaxing out of unreachable nodes: a negative edge from an
       // unreachable u would otherwise give v a bogus finite distance (INF + w < INF).
       if (dist[u] != INF && dist[v] > dist[u] + w) {
@@ -3399,12 +3407,13 @@ void bellman_ford(int n, int start) {
     }
     if (!changed) break;
   }
-  // Optional: report a negative-weight cycle reachable from the start node.
-  for (auto &[u, v, w] : edges) {
+  // Check for a negative-weight cycle reachable from the start node.
+  for (auto [u, v, w] : edges) {
     if (dist[u] != INF && dist[v] > dist[u] + w) {
-      throw std::runtime_error("Negative-weight cycle found.");
+      return false;
     }
   }
+  return true;
 }
 
 std::vector<int> get_path(int dest) {
@@ -3435,9 +3444,14 @@ int main() {
   edges.emplace_back(1, 2, 2);
   edges.emplace_back(0, 2, 5);
   int start = 0, dest = 2;
-  bellman_ford(3, start);
+  bool ok = bellman_ford(3, start);
+  assert(ok);
   assert(dist[dest] == 3);
   assert((get_path(dest) == vector<int>{0, 1, 2}));
+
+  edges = {{0, 1, -1}, {1, 0, -1}};
+  ok = bellman_ford(2, 0);
+  assert(!ok);
   return 0;
 }
 \end{lstlisting}
@@ -3492,7 +3506,7 @@ bool spfa(int start) {
     int u = q.front();
     q.pop();
     in_queue[u] = false;
-    for (auto &[v, w] : adj[u]) {
+    for (auto [v, w] : adj[u]) {
       if (dist[v] > dist[u] + w) {
         dist[v] = dist[u] + w;
         pred[v] = u;
@@ -3589,7 +3603,7 @@ std::vector<int> pred;
 
 void topological_dfs(int u, std::vector<char> &visit, std::vector<int> &order) {
   visit[u] = true;
-  for (auto &[v, w] : adj[u]) {
+  for (auto [v, w] : adj[u]) {
     if (!visit[v]) {
       topological_dfs(v, visit, order);
     }
@@ -3614,7 +3628,7 @@ void dag_shortest_path(int start) {
     if (dist[u] == INF) {
       continue;
     }
-    for (auto &[v, w] : adj[u]) {
+    for (auto [v, w] : adj[u]) {
       if (dist[u] + w < dist[v]) {
         dist[v] = dist[u] + w;
         pred[v] = u;
@@ -3669,8 +3683,8 @@ Floyd-Warshall's algorithm is a dynamic program over intermediate nodes: for eac
 
 \begin{compactitem}
   \item \inlinecode{init\_floyd(n)} initializes \inlinecode{dist} and \inlinecode{next\_node} for a graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
-  \item \inlinecode{floyd\_warshall()} updates the global adjacency matrix \inlinecode{dist} so \inlinecode{dist[u][v]} stores the shortest-path distance from $u$ to $v$, and updates \inlinecode{next\_node} for path reconstruction. If the graph contains negative-weight cycles, there is no shortest path and an error will be thrown.
-  \item \inlinecode{get\_path(start, dest)} returns the shortest path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable from \inlinecode{start}, after the latest call to \inlinecode{floyd\_warshall()}.
+  \item \inlinecode{floyd\_warshall()} updates the global adjacency matrix \inlinecode{dist} so \inlinecode{dist[u][v]} stores the shortest-path distance from $u$ to $v$, updates \inlinecode{next\_node} for path reconstruction, and returns whether the graph contains no negative-weight cycle.
+  \item \inlinecode{get\_path(start, dest)} returns the shortest path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable from \inlinecode{start}, after the latest successful call to \inlinecode{floyd\_warshall()}.
 \end{compactitem}
 
 For path reconstruction, \inlinecode{next\_node[i][j]} stores the next node to visit after \inlinecode{i} on a current shortest path from \inlinecode{i} to \inlinecode{j}. It is initialized to \inlinecode{j} for every pair and, when a shorter route \inlinecode{i} $\to$ \inlinecode{k} $\to$ \inlinecode{j} is found, becomes \inlinecode{next\_node[i][k]}. Repeatedly setting \inlinecode{i} to \inlinecode{next\_node[i][j]} therefore walks the path from source to destination. This value is meaningful only when \inlinecode{dist[i][j] != INF}.
@@ -3693,7 +3707,6 @@ For path reconstruction, \inlinecode{next\_node[i][j]} stores the next node to v
 
 \begin{lstlisting}[language=C++]
 #include <cstdint>
-#include <stdexcept>
 #include <vector>
 
 const int64_t INF = INT64_MAX / 4;
@@ -3711,7 +3724,7 @@ void init_floyd(int n) {
   }
 }
 
-void floyd_warshall() {
+bool floyd_warshall() {
   int n = static_cast<int>(dist.size());
   for (int k = 0; k < n; k++) {
     for (int i = 0; i < n; i++) {
@@ -3725,12 +3738,13 @@ void floyd_warshall() {
       }
     }
   }
-  // Optional: Report negative-weight cycles.
+  // Check for negative-weight cycles.
   for (int i = 0; i < n; i++) {
     if (dist[i][i] < 0) {
-      throw std::runtime_error("Negative-weight cycle found.");
+      return false;
     }
   }
+  return true;
 }
 
 std::vector<int> get_path(int start, int dest) {
@@ -3761,10 +3775,16 @@ int main() {
   dist[0][1] = 1;
   dist[1][2] = 2;
   dist[0][2] = 5;
-  floyd_warshall();
+  bool ok = floyd_warshall();
+  assert(ok);
   int start = 0, dest = 2;
   assert(dist[start][dest] == 3);
   assert((get_path(start, dest) == vector<int>{0, 1, 2}));
+
+  init_floyd(2);
+  dist[0][1] = dist[1][0] = -1;
+  ok = floyd_warshall();
+  assert(!ok);
   return 0;
 }
 \end{lstlisting}
@@ -3774,8 +3794,8 @@ Given a sparse, weighted directed graph with possibly negative edge weights, det
 Initializing every potential to $0$ is equivalent to adding a virtual source with zero-weight edges to all nodes. Bellman-Ford therefore detects a negative cycle anywhere in the graph, not only one reachable from a particular original node. If such a cycle exists, shortest paths are undefined.
 
 \begin{compactitem}
-  \item \inlinecode{johnson\_all\_pairs(n)} populates \inlinecode{dist} and \inlinecode{next\_node} for a global, pre-populated edge list \inlinecode{edges} whose nodes are numbered $[0, {\inlinecodemath{n}})$. Each edge is stored as (\inlinecode{u}, \inlinecode{v}, \inlinecode{weight}). Afterward, \inlinecode{dist[u][v]} is the shortest distance from $u$ to $v$, or \inlinecode{INF} if $v$ is unreachable from $u$. An error is thrown if the graph contains a negative-weight cycle.
-  \item \inlinecode{get\_path(start, dest)} returns the shortest path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable from \inlinecode{start}, after the latest call to \inlinecode{johnson\_all\_pairs()}.
+  \item \inlinecode{johnson\_all\_pairs(n)} populates \inlinecode{dist} and \inlinecode{next\_node} for a global, pre-populated edge list \inlinecode{edges} whose nodes are numbered $[0, {\inlinecodemath{n}})$. Each edge is stored as (\inlinecode{u}, \inlinecode{v}, \inlinecode{weight}). Afterward, \inlinecode{dist[u][v]} is the shortest distance from $u$ to $v$, or \inlinecode{INF} if $v$ is unreachable from $u$. The function returns whether the graph contains no negative-weight cycle.
+  \item \inlinecode{get\_path(start, dest)} returns the shortest path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable from \inlinecode{start}, after the latest successful call to \inlinecode{johnson\_all\_pairs()}.
 \end{compactitem}
 
 For path reconstruction, \inlinecode{next\_node[u][v]} stores the first node after \inlinecode{u} on a shortest path to \inlinecode{v}, or $-1$ if \inlinecode{v} is unreachable from \inlinecode{u}. Repeatedly advance \inlinecode{u} to \inlinecode{next\_node[u][v]} until it equals \inlinecode{v}.
@@ -3800,7 +3820,6 @@ All potentials, reduced weights, and path distances must fit in \inlinecode{int6
 #include <cstdint>
 #include <functional>
 #include <queue>
-#include <stdexcept>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -3810,7 +3829,7 @@ std::vector<std::tuple<int, int, int>> edges;  // (u, v, weight)
 std::vector<std::vector<int64_t>> dist;
 std::vector<std::vector<int>> next_node;
 
-void johnson_all_pairs(int n) {
+bool johnson_all_pairs(int n) {
   std::vector<int64_t> potential(n, 0);
   for (int i = 0; i < n; i++) {
     bool changed = false;
@@ -3818,7 +3837,7 @@ void johnson_all_pairs(int n) {
       int64_t pv = potential[u] + w;  // Overflow warning.
       if (pv < potential[v]) {
         if (i == n - 1) {
-          throw std::runtime_error("Negative-weight cycle found.");
+          return false;
         }
         potential[v] = pv;
         changed = true;
@@ -3862,6 +3881,7 @@ void johnson_all_pairs(int n) {
       }
     }
   }
+  return true;
 }
 
 std::vector<int> get_path(int start, int dest) {
@@ -3892,7 +3912,8 @@ int main() {
   // +---------------------+
   //         w=4
   edges = {{0, 1, 1}, {0, 2, 4}, {1, 2, -2}, {2, 3, 2}, {3, 1, 3}};
-  johnson_all_pairs(5);  // Node 4 is isolated.
+  bool ok = johnson_all_pairs(5);  // Node 4 is isolated.
+  assert(ok);
   assert((dist[0] == vector<int64_t>{0, 1, -1, 1, INF}));
   assert((dist[1] == vector<int64_t>{INF, 0, -2, 0, INF}));
   assert((dist[2] == vector<int64_t>{INF, 5, 0, 2, INF}));
@@ -3902,13 +3923,8 @@ int main() {
   assert(get_path(0, 4).empty());
 
   edges = {{0, 1, -1}, {1, 0, -1}};
-  bool threw = false;
-  try {
-    johnson_all_pairs(2);
-  } catch (const runtime_error &) {
-    threw = true;
-  }
-  assert(threw);
+  ok = johnson_all_pairs(2);
+  assert(!ok);
   return 0;
 }
 \end{lstlisting}
@@ -4045,11 +4061,8 @@ Multigraphs are supported; parallel edges appear as separate entries in \inlinec
 std::vector<std::tuple<int, int, int>> edges;  // (weight, u, v)
 std::vector<int> dsu_root, dsu_size, mst;
 
-int find_root(int u) {
-  if (dsu_root[u] != u) {
-    dsu_root[u] = find_root(dsu_root[u]);
-  }
-  return dsu_root[u];
+int find(int u) {
+  return dsu_root[u] == u ? u : dsu_root[u] = find(dsu_root[u]);
 }
 
 int64_t kruskal_mst(int n) {
@@ -4064,8 +4077,9 @@ int64_t kruskal_mst(int n) {
   dsu_size.assign(n, 1);
   std::iota(dsu_root.begin(), dsu_root.end(), 0);
   for (int id : order) {
-    auto &[w, a, b] = edges[id];
-    int u = find_root(a), v = find_root(b);
+    auto [w, u, v] = edges[id];
+    u = find(u);
+    v = find(v);
     if (u != v) {
       if (dsu_size[u] < dsu_size[v]) {
         std::swap(u, v);
@@ -4143,12 +4157,7 @@ class KruskalReconstructionTree {
   std::vector<int64_t> value;
   int timer = 0, root_node = -1;
 
-  int find_root(int u) {
-    if (dsu_root[u] != u) {
-      dsu_root[u] = find_root(dsu_root[u]);
-    }
-    return dsu_root[u];
-  }
+  int find(int u) { return dsu_root[u] == u ? u : dsu_root[u] = find(dsu_root[u]); }
 
   void dfs_lca(int u, int p) {
     tin[u] = timer++;
@@ -4194,8 +4203,9 @@ class KruskalReconstructionTree {
     std::iota(dsu_tree_root.begin(), dsu_tree_root.begin() + n, 0);
     std::sort(edges.begin(), edges.end());
     int nodes = n;
-    for (const auto &[w, a, b] : edges) {
-      int u = find_root(a), v = find_root(b);
+    for (auto [w, u, v] : edges) {
+      u = find(u);
+      v = find(v);
       if (u == v) {
         continue;
       }
@@ -4646,7 +4656,6 @@ Repeated calls to \inlinecode{max\_flow()} continue augmenting from the current 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <functional>
 #include <limits>
 #include <queue>
 #include <vector>
@@ -4703,6 +4712,29 @@ class Dinic {
       }
     }
     return 0;
+  }
+
+  bool find_path(
+      int u, int sink, std::vector<T> &rem, std::vector<char> &seen, std::vector<int> &path_nodes,
+      std::vector<int> &path_edges
+  ) const {
+    if (u == sink) {
+      return true;
+    }
+    seen[u] = true;
+    for (int id : adj[u]) {
+      const Edge &e = edges[id];
+      if (rem[id] > EPS && !seen[e.v]) {
+        path_edges.push_back(id);
+        path_nodes.push_back(e.v);
+        if (find_path(e.v, sink, rem, seen, path_nodes, path_edges)) {
+          return true;
+        }
+        path_nodes.pop_back();
+        path_edges.pop_back();
+      }
+    }
+    return false;
   }
 
  public:
@@ -4774,26 +4806,7 @@ class Dinic {
     while (true) {
       FlowPath path{std::numeric_limits<T>::max(), {source}, {}};
       std::vector<char> seen(nodes);
-      std::function<bool(int)> find_path = [&](int u) {
-        if (u == sink) {
-          return true;
-        }
-        seen[u] = true;
-        for (int id : adj[u]) {
-          const Edge &e = edges[id];
-          if (rem[id] > EPS && !seen[e.v]) {
-            path.edges.push_back(id);
-            path.nodes.push_back(e.v);
-            if (find_path(e.v)) {
-              return true;
-            }
-            path.nodes.pop_back();
-            path.edges.pop_back();
-          }
-        }
-        return false;
-      };
-      if (!find_path(source)) {
+      if (!find_path(source, sink, rem, seen, path.nodes, path.edges)) {
         break;
       }
       for (int id : path.edges) {
@@ -5366,7 +5379,7 @@ class MinCostMaxFlow {
         Edge &e = edges[id];
         e.flow += aug;
         edges[id ^ 1].flow -= aug;
-        cost += aug * e.cost;  // Overflow warning!
+        cost += aug * e.cost;  // Overflow warning.
       }
       flow += aug;
     }
@@ -5570,7 +5583,7 @@ class MinCostMaxFlow {
         Edge &e = edges[id];
         e.flow += aug;
         edges[id ^ 1].flow -= aug;
-        cost += aug * e.cost;  // Overflow warning!
+        cost += aug * e.cost;  // Overflow warning.
       }
       flow += aug;
     }
@@ -5637,7 +5650,6 @@ The algorithm starts with every node attached to node $0$, then performs $n - 1$
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <functional>
 #include <limits>
 #include <queue>
 #include <tuple>
@@ -5776,14 +5788,14 @@ T min_cut_value(int n, const std::vector<Edge<T>> &tree, int source, int sink) {
     adj[v].emplace_back(u, w);
   }
   std::vector<char> seen(n);
-  std::function<T(int, T)> dfs = [&](int u, T best) {
+  auto dfs = [&](auto &&dfs, int u, T best) -> T {
     if (u == sink) {
       return best;
     }
     seen[u] = true;
     for (auto [v, w] : adj[u]) {
       if (!seen[v]) {
-        T res = dfs(v, std::min(best, w));
+        T res = dfs(dfs, v, std::min(best, w));
         if (res != -1) {
           return res;
         }
@@ -5791,7 +5803,7 @@ T min_cut_value(int n, const std::vector<Edge<T>> &tree, int source, int sink) {
     }
     return static_cast<T>(-1);
   };
-  return dfs(source, std::numeric_limits<T>::max());
+  return dfs(dfs, source, std::numeric_limits<T>::max());
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -5872,7 +5884,7 @@ std::pair<int64_t, std::vector<int>> global_min_cut(std::vector<std::vector<int6
         }
         groups[s].insert(groups[s].end(), groups[sel].begin(), groups[sel].end());
         for (int i = 0; i < n; i++) {
-          cap[s][i] += cap[sel][i];  // Overflow warning!
+          cap[s][i] += cap[sel][i];  // Overflow warning.
           cap[i][s] = cap[s][i];
         }
         exists[sel] = false;
@@ -6463,7 +6475,7 @@ class WeightedGeneralMatching {
   int aux_clock;
 
   int64_t e_delta(const Edge &e) const {
-    return lab[e.u] + lab[e.v] - 2 * e.w;  // Overflow warning!
+    return lab[e.u] + lab[e.v] - 2 * e.w;  // Overflow warning.
   }
 
   void update_slack(int u, int x) {
@@ -6774,7 +6786,7 @@ class WeightedGeneralMatching {
     int64_t weight = 0;
     for (int u = 1; u <= n; u++) {
       if (match_[u] != 0 && match_[u] < u) {
-        weight += g[u][match_[u]].w;  // Overflow warning!
+        weight += g[u][match_[u]].w;  // Overflow warning.
       }
     }
     return weight;
@@ -6878,7 +6890,7 @@ std::pair<T, std::vector<int>> min_assignment(const std::vector<std::vector<T>> 
         if (used[j]) {
           continue;
         }
-        T cur = cost[i0 - 1][j - 1] - u[i0] - v[j];  // Overflow warning!
+        T cur = cost[i0 - 1][j - 1] - u[i0] - v[j];  // Overflow warning.
         if (cur < minv[j]) {
           minv[j] = cur;
           way[j] = j0;
@@ -6910,7 +6922,7 @@ std::pair<T, std::vector<int>> min_assignment(const std::vector<std::vector<T>> 
       assignment[p[j] - 1] = j - 1;
     }
   }
-  return {-v[0], assignment};  // Overflow warning!
+  return {-v[0], assignment};  // Overflow warning.
 }
 
 template<typename T>
@@ -6928,7 +6940,7 @@ std::pair<T, std::vector<int>> max_assignment(std::vector<std::vector<T>> value)
     }
   }
   auto [min_cost, assignment] = min_assignment(value);
-  return {max_value * static_cast<T>(value.size()) - min_cost, assignment};  // Overflow warning!
+  return {max_value * static_cast<T>(value.size()) - min_cost, assignment};  // Overflow warning.
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -7105,7 +7117,7 @@ int64_t max_clique_weighted_rec(const std::vector<Mask> &g, int64_t curr, Mask p
   Mask z = pool & ~g[pivot];
   while (z != 0) {
     int u = __builtin_ctzll(z);
-    int64_t next_weight = curr + w[u];  // Overflow warning!
+    int64_t next_weight = curr + w[u];  // Overflow warning.
     int64_t next = max_clique_weighted_rec(g, next_weight, pool & g[u], excl & g[u]);
     res = std::max(res, next);
     pool ^= Mask{1} << u;
@@ -7487,7 +7499,7 @@ int64_t shortest_hamiltonian_path() {
       if ((mask & (1 << i)) != 0) {
         for (int j = 0; j < n; j++) {
           if ((mask & (1 << j)) != 0 && dp[mask ^ (1 << i)][j] != INF) {
-            int64_t candidate = dp[mask ^ (1 << i)][j] + adj[j][i];  // Overflow warning!
+            int64_t candidate = dp[mask ^ (1 << i)][j] + adj[j][i];  // Overflow warning.
             dp[mask][i] = std::min(dp[mask][i], candidate);
           }
         }
@@ -7531,7 +7543,7 @@ int64_t shortest_hamiltonian_cycle() {
       if ((mask & (1 << i)) != 0) {
         for (int j = 0; j < n; j++) {
           if ((mask & (1 << j)) != 0 && dp[mask ^ (1 << i)][j] != INF) {
-            int64_t candidate = dp[mask ^ (1 << i)][j] + adj[j][i];  // Overflow warning!
+            int64_t candidate = dp[mask ^ (1 << i)][j] + adj[j][i];  // Overflow warning.
             dp[mask][i] = std::min(dp[mask][i], candidate);
           }
         }

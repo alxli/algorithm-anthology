@@ -10,10 +10,10 @@ integer index.
 
 - `SparseFenwick<T, N>()` constructs an array with 0-based indices $[0, `N`)$, implicitly
   initialized to $0$.
-- `at(i)` returns the value at index `i`.
 - `add(i, x)` adds `x` to the value at index `i`.
 - `add(lo, hi, x)` adds `x` to the values at all indices in $[`lo`, `hi`]$.
 - `set(i, x)` assigns the value at index `i` to `x`.
+- `at(i)` returns the value at index `i`.
 - `sum(hi)` returns the sum of all values at indices $[0, `hi`]$.
 - `sum(lo, hi)` returns the sum of all values at indices $[`lo`, `hi`]$.
 - `max_prefix(c)` returns the largest boundary `hi` such that `sum(0, hi - 1)` $\leq$ `c`, assuming
@@ -53,6 +53,8 @@ class SparseFenwick {
   }
 
  public:
+  void add(int i, const T &x) { add(i, i, x); }
+
   void add(int lo, int hi, const T &x) {
     assert(0 <= lo && lo <= hi && hi < N);
     lo++;
@@ -61,8 +63,8 @@ class SparseFenwick {
     add_helper(hi + 1, -x, -x * hi);
   }
 
-  void add(int i, const T &x) { add(i, i, x); }
   void set(int i, const T &x) { add(i, x - at(i)); }
+  T at(int i) const { return sum(i, i); }
 
   T sum(int hi) const {
     assert(-1 <= hi && hi < N);
@@ -79,8 +81,6 @@ class SparseFenwick {
     assert(0 <= lo && lo <= hi && hi < N);
     return sum(hi) - sum(lo - 1);
   }
-
-  T at(int i) const { return sum(i, i); }
 
   int max_prefix(T c) const {
     T mul = 0, add = 0;

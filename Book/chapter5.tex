@@ -512,12 +512,12 @@ To compute \inlinecode{dp\_cur[lo..hi]}, evaluate its midpoint and record its be
 #include <cstdint>
 #include <vector>
 
-const int64_t INF = (1LL << 62);
+const int64_t INF = INT64_MAX / 4;
 
 template<typename Cost>
 void compute_dp_layer(
     const std::vector<int64_t> &dp_prev, std::vector<int64_t> &dp_cur, int lo, int hi, int opt_lo,
-    int opt_hi, Cost cost
+    int opt_hi, const Cost &cost
 ) {
   if (lo > hi) {
     return;
@@ -527,7 +527,7 @@ void compute_dp_layer(
   int best_k = opt_lo;
   int upper = std::min(mid, opt_hi);
   for (int k = opt_lo; k <= upper; k++) {
-    int64_t candidate = dp_prev[k] + cost(k, mid);  // Overflow warning!
+    int64_t candidate = dp_prev[k] + cost(k, mid);  // Overflow warning.
     if (candidate < best) {
       best = candidate;
       best_k = k;
@@ -713,7 +713,7 @@ A direct implementation checks every split and takes $O(n^{3})$. Knuth optimizat
 #include <cstdint>
 #include <vector>
 
-const int64_t INF = (1LL << 62);
+const int64_t INF = INT64_MAX / 4;
 
 template<typename Cost>
 std::vector<std::vector<int64_t>> knuth_interval_dp(
@@ -736,7 +736,7 @@ std::vector<std::vector<int64_t>> knuth_interval_dp(
       int split_hi = std::min(opt[l + 1][r], r - 1);
       int64_t interval_cost = cost(l, r);
       for (int k = split_lo; k <= split_hi; k++) {
-        int64_t candidate = dp[l][k] + dp[k][r] + interval_cost;  // Overflow warning!
+        int64_t candidate = dp[l][k] + dp[k][r] + interval_cost;  // Overflow warning.
         if (candidate < dp[l][r]) {
           dp[l][r] = candidate;
           opt[l][r] = k;
@@ -815,7 +815,7 @@ int64_t lagrangian_maximize(int target_count, int64_t lo, int64_t hi, Solve solv
   int64_t penalty = lo - 1;
   auto [relaxed_score, count] = solve(penalty);
   assert(count >= target_count);
-  return relaxed_score + penalty * target_count;  // Overflow warning!
+  return relaxed_score + penalty * target_count;  // Overflow warning.
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -886,7 +886,7 @@ class SemiDynamicCHT {
         ptr = len;
       }
     }
-    // Overflow warning!
+    // Overflow warning.
     while (len > 1 && (intercepts[len - 2] - intercepts[len - 1]) * (m - slopes[len - 1]) >=
                           (intercepts[len - 1] - b) * (slopes[len - 1] - slopes[len - 2])) {
       len--;
@@ -902,7 +902,7 @@ class SemiDynamicCHT {
     if (ptr >= static_cast<int>(slopes.size())) {
       ptr = static_cast<int>(slopes.size()) - 1;
     }
-    // Overflow warning!
+    // Overflow warning.
     while (ptr + 1 < static_cast<int>(slopes.size()) &&
            slopes[ptr + 1] * x + intercepts[ptr + 1] <= slopes[ptr] * x + intercepts[ptr]) {
       ptr++;
@@ -985,7 +985,7 @@ class HullOptimizer {
     if (x->m == y->m) {
       x->xhi = (x->b > y->b) ? INT64_MAX : INT64_MIN;
     } else {
-      int64_t a = y->b - x->b, b = x->m - y->m;  // Overflow warning!
+      int64_t a = y->b - x->b, b = x->m - y->m;  // Overflow warning.
       x->xhi = a / b - ((a ^ b) < 0 && a % b);
     }
     return x->xhi >= y->xhi;
@@ -1017,7 +1017,7 @@ class HullOptimizer {
     assert(!hull.empty());
     Line q(0, 0, x, true);
     auto it = hull.lower_bound(q);
-    int64_t res = it->m * x + it->b;  // Overflow warning!
+    int64_t res = it->m * x + it->b;  // Overflow warning.
     return query_max ? res : -res;
   }
 };
@@ -1083,7 +1083,7 @@ class LiChaoTree {
   struct Line {
     int64_t m, b;
     Line(int64_t m = 0, int64_t b = INF) : m(m), b(b) {}
-    int64_t eval(int64_t x) const { return m * x + b; }  // Overflow warning!
+    int64_t eval(int64_t x) const { return m * x + b; }  // Overflow warning.
   };
 
   struct Node {

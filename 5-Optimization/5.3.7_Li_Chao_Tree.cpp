@@ -40,7 +40,7 @@ class LiChaoTree {
   struct Line {
     int64_t m, b;
     Line(int64_t m = 0, int64_t b = INF) : m(m), b(b) {}
-    int64_t eval(int64_t x) const { return m * x + b; }  // Overflow warning!
+    int64_t eval(int64_t x) const { return m * x + b; }  // Overflow warning.
   };
 
   struct Node {

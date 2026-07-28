@@ -45,7 +45,7 @@ int64_t lagrangian_maximize(int target_count, int64_t lo, int64_t hi, Solve solv
   int64_t penalty = lo - 1;
   auto [relaxed_score, count] = solve(penalty);
   assert(count >= target_count);
-  return relaxed_score + penalty * target_count;  // Overflow warning!
+  return relaxed_score + penalty * target_count;  // Overflow warning.
 }
 
 /*** Example Usage ***/

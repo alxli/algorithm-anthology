@@ -121,7 +121,7 @@ class MinCostMaxFlow {
         Edge &e = edges[id];
         e.flow += aug;
         edges[id ^ 1].flow -= aug;
-        cost += aug * e.cost;  // Overflow warning!
+        cost += aug * e.cost;  // Overflow warning.
       }
       flow += aug;
     }

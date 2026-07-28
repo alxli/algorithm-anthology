@@ -61,7 +61,7 @@ class TwoSAT {
   }
 
  public:
-  TwoSAT(int n = 0) : variables(n), adj(2 * n), rev(2 * n), solution(n, false) {}
+  explicit TwoSAT(int n = 0) : variables(n), adj(2 * n), rev(2 * n), solution(n, false) {}
 
   int literal(int variable, bool value) const { return 2 * variable + (value ? 0 : 1); }
 

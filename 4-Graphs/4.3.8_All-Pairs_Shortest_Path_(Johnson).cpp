@@ -14,9 +14,9 @@ reachable from a particular original node. If such a cycle exists, shortest path
 - `johnson_all_pairs(n)` populates `dist` and `next_node` for a global, pre-populated edge list
   `edges` whose nodes are numbered $[0, `n`)$. Each edge is stored as (`u`, `v`, `weight`).
   Afterward, `dist[u][v]` is the shortest distance from $u$ to $v$, or `INF` if $v$ is unreachable
-  from $u$. An error is thrown if the graph contains a negative-weight cycle.
+  from $u$. The function returns whether the graph contains no negative-weight cycle.
 - `get_path(start, dest)` returns the shortest path from `start` to `dest`, or an empty vector if
-  `dest` is unreachable from `start`, after the latest call to `johnson_all_pairs()`.
+  `dest` is unreachable from `start`, after the latest successful call to `johnson_all_pairs()`.
 
 For path reconstruction, `next_node[u][v]` stores the first node after `u` on a shortest path to
 `v`, or $-1$ if `v` is unreachable from `u`. Repeatedly advance `u` to `next_node[u][v]` until it
@@ -38,7 +38,6 @@ Space Complexity:
 #include <cstdint>
 #include <functional>
 #include <queue>
-#include <stdexcept>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -48,7 +47,7 @@ std::vector<std::tuple<int, int, int>> edges;  // (u, v, weight)
 std::vector<std::vector<int64_t>> dist;
 std::vector<std::vector<int>> next_node;
 
-void johnson_all_pairs(int n) {
+bool johnson_all_pairs(int n) {
   std::vector<int64_t> potential(n, 0);
   for (int i = 0; i < n; i++) {
     bool changed = false;
@@ -56,7 +55,7 @@ void johnson_all_pairs(int n) {
       int64_t pv = potential[u] + w;  // Overflow warning.
       if (pv < potential[v]) {
         if (i == n - 1) {
-          throw std::runtime_error("Negative-weight cycle found.");
+          return false;
         }
         potential[v] = pv;
         changed = true;
@@ -100,6 +99,7 @@ void johnson_all_pairs(int n) {
       }
     }
   }
+  return true;
 }
 
 std::vector<int> get_path(int start, int dest) {
@@ -129,7 +129,8 @@ int main() {
   // +---------------------+
   //         w=4
   edges = {{0, 1, 1}, {0, 2, 4}, {1, 2, -2}, {2, 3, 2}, {3, 1, 3}};
-  johnson_all_pairs(5);  // Node 4 is isolated.
+  bool ok = johnson_all_pairs(5);  // Node 4 is isolated.
+  assert(ok);
   assert((dist[0] == vector<int64_t>{0, 1, -1, 1, INF}));
   assert((dist[1] == vector<int64_t>{INF, 0, -2, 0, INF}));
   assert((dist[2] == vector<int64_t>{INF, 5, 0, 2, INF}));
@@ -139,12 +140,7 @@ int main() {
   assert(get_path(0, 4).empty());
 
   edges = {{0, 1, -1}, {1, 0, -1}};
-  bool threw = false;
-  try {
-    johnson_all_pairs(2);
-  } catch (const runtime_error &) {
-    threw = true;
-  }
-  assert(threw);
+  ok = johnson_all_pairs(2);
+  assert(!ok);
   return 0;
 }

@@ -37,11 +37,8 @@ Space Complexity:
 std::vector<std::tuple<int, int, int>> edges;  // (weight, u, v)
 std::vector<int> dsu_root, dsu_size, mst;
 
-int find_root(int u) {
-  if (dsu_root[u] != u) {
-    dsu_root[u] = find_root(dsu_root[u]);
-  }
-  return dsu_root[u];
+int find(int u) {
+  return dsu_root[u] == u ? u : dsu_root[u] = find(dsu_root[u]);
 }
 
 int64_t kruskal_mst(int n) {
@@ -56,8 +53,9 @@ int64_t kruskal_mst(int n) {
   dsu_size.assign(n, 1);
   std::iota(dsu_root.begin(), dsu_root.end(), 0);
   for (int id : order) {
-    auto &[w, a, b] = edges[id];
-    int u = find_root(a), v = find_root(b);
+    auto [w, u, v] = edges[id];
+    u = find(u);
+    v = find(v);
     if (u != v) {
       if (dsu_size[u] < dsu_size[v]) {
         std::swap(u, v);

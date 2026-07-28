@@ -45,6 +45,7 @@ Space Complexity:
 
 #include <cassert>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 template<typename T>
@@ -53,12 +54,7 @@ class SparseDSU {
   std::unordered_map<T, int> id;
   std::vector<int> root, rank;
 
-  int find_root(int u) {
-    if (root[u] != u) {
-      root[u] = find_root(root[u]);
-    }
-    return root[u];
-  }
+  int find(int u) { return root[u] == u ? u : root[u] = find(root[u]); }
 
   int get_id(const T &u) const {
     auto it = id.find(u);
@@ -81,21 +77,20 @@ class SparseDSU {
 
   int size() const { return num_elements; }
   int sets() const { return num_sets; }
-  bool is_united(const T &u, const T &v) { return find_root(get_id(u)) == find_root(get_id(v)); }
+  bool is_united(const T &u, const T &v) { return find(get_id(u)) == find(get_id(v)); }
 
   bool unite(const T &u, const T &v) {
-    int ru = find_root(get_id(u)), rv = find_root(get_id(v));
+    int ru = find(get_id(u)), rv = find(get_id(v));
     if (ru == rv) {
       return false;
     }
     num_sets--;
     if (rank[ru] < rank[rv]) {
-      root[ru] = rv;
-    } else {
-      root[rv] = ru;
-      if (rank[ru] == rank[rv]) {
-        rank[ru]++;
-      }
+      std::swap(ru, rv);
+    }
+    root[rv] = ru;
+    if (rank[ru] == rank[rv]) {
+      rank[ru]++;
     }
     return true;
   }
@@ -103,7 +98,7 @@ class SparseDSU {
   std::vector<std::vector<T>> get_all_sets() {
     std::unordered_map<int, std::vector<T>> tmp;
     for (auto &[key, val] : id) {
-      tmp[find_root(val)].push_back(key);
+      tmp[find(val)].push_back(key);
     }
     std::vector<std::vector<T>> res;
     for (auto &[key, val] : tmp) {

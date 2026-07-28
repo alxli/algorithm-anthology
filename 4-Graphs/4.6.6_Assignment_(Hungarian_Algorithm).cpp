@@ -59,7 +59,7 @@ std::pair<T, std::vector<int>> min_assignment(const std::vector<std::vector<T>> 
         if (used[j]) {
           continue;
         }
-        T cur = cost[i0 - 1][j - 1] - u[i0] - v[j];  // Overflow warning!
+        T cur = cost[i0 - 1][j - 1] - u[i0] - v[j];  // Overflow warning.
         if (cur < minv[j]) {
           minv[j] = cur;
           way[j] = j0;
@@ -91,7 +91,7 @@ std::pair<T, std::vector<int>> min_assignment(const std::vector<std::vector<T>> 
       assignment[p[j] - 1] = j - 1;
     }
   }
-  return {-v[0], assignment};  // Overflow warning!
+  return {-v[0], assignment};  // Overflow warning.
 }
 
 template<typename T>
@@ -109,7 +109,7 @@ std::pair<T, std::vector<int>> max_assignment(std::vector<std::vector<T>> value)
     }
   }
   auto [min_cost, assignment] = min_assignment(value);
-  return {max_value * static_cast<T>(value.size()) - min_cost, assignment};  // Overflow warning!
+  return {max_value * static_cast<T>(value.size()) - min_cost, assignment};  // Overflow warning.
 }
 
 /*** Example Usage ***/

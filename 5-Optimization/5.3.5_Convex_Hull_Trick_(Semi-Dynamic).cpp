@@ -58,7 +58,7 @@ class SemiDynamicCHT {
         ptr = len;
       }
     }
-    // Overflow warning!
+    // Overflow warning.
     while (len > 1 && (intercepts[len - 2] - intercepts[len - 1]) * (m - slopes[len - 1]) >=
                           (intercepts[len - 1] - b) * (slopes[len - 1] - slopes[len - 2])) {
       len--;
@@ -74,7 +74,7 @@ class SemiDynamicCHT {
     if (ptr >= static_cast<int>(slopes.size())) {
       ptr = static_cast<int>(slopes.size()) - 1;
     }
-    // Overflow warning!
+    // Overflow warning.
     while (ptr + 1 < static_cast<int>(slopes.size()) &&
            slopes[ptr + 1] * x + intercepts[ptr + 1] <= slopes[ptr] * x + intercepts[ptr]) {
       ptr++;

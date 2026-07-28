@@ -62,6 +62,7 @@ Space Complexity:
 
 #include <cassert>
 #include <cstdint>
+#include <random>
 #include <utility>
 
 template<typename T>
@@ -72,7 +73,7 @@ class ImplicitTreap {
 
   struct Node {
     static uint32_t rand32() {
-      static uint32_t x = 123456789;
+      static uint32_t x = std::random_device{}() | 1U;
       x ^= x << 13;
       x ^= x >> 17;
       x ^= x << 5;

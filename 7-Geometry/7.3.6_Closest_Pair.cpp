@@ -39,7 +39,7 @@ Space Complexity:
 template<typename Pt>
 auto sqdist(const Pt &a, const Pt &b) {
   auto dx = a.x - b.x, dy = a.y - b.y;
-  return dx * dx + dy * dy;  // Overflow warning!
+  return dx * dx + dy * dy;  // Overflow warning.
 }
 
 template<typename It, typename T, typename Pt = typename std::iterator_traits<It>::value_type>

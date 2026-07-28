@@ -66,7 +66,7 @@ struct Point {
 
 template<typename T>
 T cross(const Point<T> &a, const Point<T> &b, const Point<T> &o) {
-  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);  // Overflow warning!
+  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);  // Overflow warning.
 }
 
 template<typename T>
@@ -74,7 +74,7 @@ T incircle(const Point<T> &a, const Point<T> &b, const Point<T> &c, const Point<
   T adx = a.x - d.x, ady = a.y - d.y;
   T bdx = b.x - d.x, bdy = b.y - d.y;
   T cdx = c.x - d.x, cdy = c.y - d.y;
-  T abdet = adx * bdy - bdx * ady;  // Overflow warning!
+  T abdet = adx * bdy - bdx * ady;  // Overflow warning.
   T bcdet = bdx * cdy - cdx * bdy;
   T cadet = cdx * ady - adx * cdy;
   T alift = adx * adx + ady * ady;

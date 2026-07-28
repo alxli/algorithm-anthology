@@ -56,7 +56,7 @@ class WeightedGeneralMatching {
   int aux_clock;
 
   int64_t e_delta(const Edge &e) const {
-    return lab[e.u] + lab[e.v] - 2 * e.w;  // Overflow warning!
+    return lab[e.u] + lab[e.v] - 2 * e.w;  // Overflow warning.
   }
 
   void update_slack(int u, int x) {
@@ -367,7 +367,7 @@ class WeightedGeneralMatching {
     int64_t weight = 0;
     for (int u = 1; u <= n; u++) {
       if (match_[u] != 0 && match_[u] < u) {
-        weight += g[u][match_[u]].w;  // Overflow warning!
+        weight += g[u][match_[u]].w;  // Overflow warning.
       }
     }
     return weight;

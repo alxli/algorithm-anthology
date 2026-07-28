@@ -28,12 +28,12 @@ Space Complexity:
 #include <cstdint>
 #include <vector>
 
-const int64_t INF = (1LL << 62);
+const int64_t INF = INT64_MAX / 4;
 
 template<typename Cost>
 void compute_dp_layer(
     const std::vector<int64_t> &dp_prev, std::vector<int64_t> &dp_cur, int lo, int hi, int opt_lo,
-    int opt_hi, Cost cost
+    int opt_hi, const Cost &cost
 ) {
   if (lo > hi) {
     return;
@@ -43,7 +43,7 @@ void compute_dp_layer(
   int best_k = opt_lo;
   int upper = std::min(mid, opt_hi);
   for (int k = opt_lo; k <= upper; k++) {
-    int64_t candidate = dp_prev[k] + cost(k, mid);  // Overflow warning!
+    int64_t candidate = dp_prev[k] + cost(k, mid);  // Overflow warning.
     if (candidate < best) {
       best = candidate;
       best_k = k;

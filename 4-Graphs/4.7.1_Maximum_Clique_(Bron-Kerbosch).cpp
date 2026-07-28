@@ -83,7 +83,7 @@ int64_t max_clique_weighted_rec(const std::vector<Mask> &g, int64_t curr, Mask p
   Mask z = pool & ~g[pivot];
   while (z != 0) {
     int u = __builtin_ctzll(z);
-    int64_t next_weight = curr + w[u];  // Overflow warning!
+    int64_t next_weight = curr + w[u];  // Overflow warning.
     int64_t next = max_clique_weighted_rec(g, next_weight, pool & g[u], excl & g[u]);
     res = std::max(res, next);
     pool ^= Mask{1} << u;

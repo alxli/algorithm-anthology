@@ -54,7 +54,7 @@ class KosarajuSCC {
   }
 
  public:
-  KosarajuSCC(int n = 0) : adj(n), rev(n) {}
+  explicit KosarajuSCC(int n = 0) : adj(n), rev(n) {}
 
   void add_edge(int u, int v) {
     adj[u].push_back(v);

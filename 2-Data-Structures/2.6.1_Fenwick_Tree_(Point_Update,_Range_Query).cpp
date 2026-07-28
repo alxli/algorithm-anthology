@@ -55,6 +55,9 @@ class Fenwick {
     }
   }
 
+  void set(int i, const T &x) { add(i, x - at(i)); }
+  T at(int i) const { return sum(i, i); }
+
   T sum(int hi) const {
     assert(-1 <= hi && hi < len);
     T res = 0;
@@ -63,9 +66,6 @@ class Fenwick {
     }
     return res;
   }
-
-  void set(int i, const T &x) { add(i, x - at(i)); }
-  T at(int i) const { return sum(i, i); }
 
   T sum(int lo, int hi) const {
     assert(0 <= lo && lo <= hi && hi < len);

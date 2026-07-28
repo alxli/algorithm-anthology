@@ -111,9 +111,9 @@ struct TPoint {
 
   // --- Exact operations: return T or TPoint<T>, work for any coordinate type ---
 
-  T sqnorm() const { return x * x + y * y; }                    // Overflow warning!
-  T dot(const TPoint &p) const { return x * p.x + y * p.y; }    // Overflow warning!
-  T cross(const TPoint &p) const { return x * p.y - y * p.x; }  // Overflow warning!
+  T sqnorm() const { return x * x + y * y; }                    // Overflow warning.
+  T dot(const TPoint &p) const { return x * p.x + y * p.y; }    // Overflow warning.
+  T cross(const TPoint &p) const { return x * p.y - y * p.x; }  // Overflow warning.
 
   // --- Floating-point operations: return fp_t or TPoint<fp_t> ---
 

@@ -57,7 +57,7 @@ bool LE(T a, U b) {
 template<typename Pt>
 bool proper_seg_intersection(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   auto cross = [](const Pt &o, const Pt &p, const Pt &q) {
-    return (p.x - o.x) * (q.y - o.y) - (p.y - o.y) * (q.x - o.x);  // Overflow warning!
+    return (p.x - o.x) * (q.y - o.y) - (p.y - o.y) * (q.x - o.x);  // Overflow warning.
   };
   auto c1 = cross(a, b, c), c2 = cross(a, b, d), c3 = cross(c, d, a), c4 = cross(c, d, b);
   return ((LT(c1, 0) && LT(0, c2)) || (LT(c2, 0) && LT(0, c1))) &&
@@ -69,7 +69,7 @@ std::vector<std::tuple<Pt, Pt, Pt>> delaunay_triangulation(const std::vector<Pt>
   int n = static_cast<int>(p.size());
   std::vector<decltype(Pt::x)> z;
   for (const auto &[px, py] : p) {
-    z.emplace_back(px * px + py * py);  // Overflow warning!
+    z.emplace_back(px * px + py * py);  // Overflow warning.
   }
   std::vector<std::tuple<Pt, Pt, Pt>> res;
   std::vector<std::tuple<int, int, int>> res_idx;
@@ -79,7 +79,7 @@ std::vector<std::tuple<Pt, Pt, Pt>> delaunay_triangulation(const std::vector<Pt>
         if (j == k) {
           continue;
         }
-        // Overflow warning!
+        // Overflow warning.
         auto nx = (p[j].y - p[i].y) * (z[k] - z[i]) - (p[k].y - p[i].y) * (z[j] - z[i]);
         auto ny = (p[k].x - p[i].x) * (z[j] - z[i]) - (p[j].x - p[i].x) * (z[k] - z[i]);
         auto nz = (p[j].x - p[i].x) * (p[k].y - p[i].y) - (p[k].x - p[i].x) * (p[j].y - p[i].y);

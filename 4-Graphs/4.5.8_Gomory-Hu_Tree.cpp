@@ -28,7 +28,6 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
-#include <functional>
 #include <limits>
 #include <queue>
 #include <tuple>
@@ -167,14 +166,14 @@ T min_cut_value(int n, const std::vector<Edge<T>> &tree, int source, int sink) {
     adj[v].emplace_back(u, w);
   }
   std::vector<char> seen(n);
-  std::function<T(int, T)> dfs = [&](int u, T best) {
+  auto dfs = [&](auto &&dfs, int u, T best) -> T {
     if (u == sink) {
       return best;
     }
     seen[u] = true;
     for (auto [v, w] : adj[u]) {
       if (!seen[v]) {
-        T res = dfs(v, std::min(best, w));
+        T res = dfs(dfs, v, std::min(best, w));
         if (res != -1) {
           return res;
         }
@@ -182,7 +181,7 @@ T min_cut_value(int n, const std::vector<Edge<T>> &tree, int source, int sink) {
     }
     return static_cast<T>(-1);
   };
-  return dfs(source, std::numeric_limits<T>::max());
+  return dfs(dfs, source, std::numeric_limits<T>::max());
 }
 
 /*** Example Usage ***/

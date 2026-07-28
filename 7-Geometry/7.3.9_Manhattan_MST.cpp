@@ -39,7 +39,7 @@ std::vector<std::tuple<int64_t, int, int>> manhattan_mst_edges(std::vector<Point
   std::iota(id.begin(), id.end(), 0);
   std::vector<std::tuple<int64_t, int, int>> edges;
   for (int rot = 0; rot < 4; rot++) {
-    // Overflow warning!
+    // Overflow warning.
     std::sort(id.begin(), id.end(), [&](int i, int j) {
       return p[i].x + p[i].y < p[j].x + p[j].y;
     });
@@ -68,10 +68,10 @@ std::vector<std::tuple<int64_t, int, int>> manhattan_mst_edges(std::vector<Point
 }
 
 struct DSU {
-  std::vector<int> parent, rank;
+  std::vector<int> root, rank;
 
-  explicit DSU(int n) : parent(n), rank(n, 0) { std::iota(parent.begin(), parent.end(), 0); }
-  int find(int u) { return parent[u] == u ? u : parent[u] = find(parent[u]); }
+  explicit DSU(int n) : root(n), rank(n, 0) { std::iota(root.begin(), root.end(), 0); }
+  int find(int u) { return root[u] == u ? u : root[u] = find(root[u]); }
 
   bool unite(int u, int v) {
     u = find(u);
@@ -82,8 +82,10 @@ struct DSU {
     if (rank[u] < rank[v]) {
       std::swap(u, v);
     }
-    parent[v] = u;
-    rank[u] += rank[u] == rank[v];
+    root[v] = u;
+    if (rank[u] == rank[v]) {
+      rank[u]++;
+    }
     return true;
   }
 };

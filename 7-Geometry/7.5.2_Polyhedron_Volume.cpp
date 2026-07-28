@@ -37,7 +37,7 @@ template<typename Pt, typename F>
 double signed_polyhedron_volume(const std::vector<Pt> &p, const std::vector<F> &faces) {
   double volume = 0;
   for (const auto &[a, b, c] : faces) {
-    volume += p[a].cross(p[b]).dot(p[c]);  // Overflow warning!
+    volume += p[a].cross(p[b]).dot(p[c]);  // Overflow warning.
   }
   return volume / 6.0;
 }

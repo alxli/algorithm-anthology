@@ -51,6 +51,7 @@ Space Complexity:
 #include <cstdint>
 #include <functional>
 #include <optional>
+#include <random>
 #include <utility>
 #include <vector>
 
@@ -58,7 +59,7 @@ template<typename K, typename V, typename Compare = std::less<K>>
 class Treap {
   struct Node {
     static uint32_t rand32() {
-      static uint32_t x = 123456789;
+      static uint32_t x = std::random_device{}() | 1U;
       x ^= x << 13;
       x ^= x >> 17;
       x ^= x << 5;

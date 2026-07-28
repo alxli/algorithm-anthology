@@ -261,7 +261,7 @@ class BigInt {
     }
     for (int len = 1; len < n; len <<= 1) {
       vcd tmp(n);
-      int rstep = roots.size() / (len << 1);
+      int rstep = static_cast<int>(roots.size()) / (len << 1);
       for (int pdest = 0; pdest < n; pdest += len) {
         int p = pdest;
         for (int i = 0; i < len; i++) {
@@ -687,14 +687,14 @@ int main() {
   std::uniform_int_distribution<int> length_dist(1, 100);
   for (int i = 0; i < 20; i++) {
     int n = length_dist(rng);
-    BigInt a(BigInt::rand(n)), s(a.sqrt()), xx(s * s), yy(s + 1);
-    yy *= yy;
-    assert(xx <= a && a < yy);
+    BigInt value(BigInt::rand(n)), root(value.sqrt()), lower(root * root), upper(root + 1);
+    upper *= upper;
+    assert(lower <= value && value < upper);
     std::uniform_int_distribution<int> divisor_length_dist(1, n);
-    BigInt b(BigInt::rand(divisor_length_dist(rng)) + 1), q(a / b);
-    xx = q * b;
-    yy = b * (q + 1);
-    assert(a >= xx && a < yy);
+    BigInt divisor(BigInt::rand(divisor_length_dist(rng)) + 1), quotient(value / divisor);
+    lower = quotient * divisor;
+    upper = divisor * (quotient + 1);
+    assert(value >= lower && value < upper);
   }
   BigInt x(-6);
   assert(x.to_string() == "-6");

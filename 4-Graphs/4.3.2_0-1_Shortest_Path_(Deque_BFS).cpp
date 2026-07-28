@@ -57,7 +57,7 @@ void bfs_zero_one(const std::vector<int> &starts) {
   while (!dq.empty()) {
     int u = dq.front();
     dq.pop_front();
-    for (auto &[v, w] : adj[u]) {
+    for (auto [v, w] : adj[u]) {
       if (dist[v] > dist[u] + w) {
         dist[v] = dist[u] + w;
         pred[v] = u;

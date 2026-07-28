@@ -52,6 +52,9 @@ struct FastInput {
 
   explicit FastInput(FILE *file_ = stdin) : file(file_) {}
 
+  FastInput(const FastInput &) = delete;
+  FastInput &operator=(const FastInput &) = delete;
+
   char get_char() {
     if (pos == len) {
       len = static_cast<int>(fread(buf, 1, BUF_SIZE, file));
@@ -151,7 +154,10 @@ struct FastOutput {
   int pos = 0;
 
   explicit FastOutput(FILE *file_ = stdout) : file(file_) {}
+
   ~FastOutput() { flush(); }
+  FastOutput(const FastOutput &) = delete;
+  FastOutput &operator=(const FastOutput &) = delete;
 
   void flush() {
     if (pos) {

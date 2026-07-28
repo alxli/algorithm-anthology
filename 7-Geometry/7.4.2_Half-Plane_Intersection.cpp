@@ -56,7 +56,7 @@ struct Point {
 struct HalfPlane {
   Point p, dir;
 
-  HalfPlane() : p(), dir() {}
+  HalfPlane() = default;
   HalfPlane(Point p, Point q) : p(p), dir(q - p) {}
 
   bool out(const Point &q) const { return LT(dir.cross(q - p), 0); }

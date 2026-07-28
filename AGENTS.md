@@ -54,6 +54,9 @@ Prefer code that a strong contestant can adapt quickly after skimming:
   for ordinary algorithmic failure when that is the section's established API.
 - Never put a required side effect inside `assert()`, since defining `NDEBUG` removes the entire
   expression.
+- Mark single-argument constructors `explicit` unless implicit conversion is an intentional part of
+  a mathematical value type or another established API.
+- Delete copying for classes whose buffered or resource-owning state cannot be copied meaningfully.
 - Assume nested-vector matrices and grids are rectangular; do not scan every row with assertions to
   validate their shape. Keep assertions for compatibility between separate inputs, such as matrix
   dimensions matching a vector or assignment output.
@@ -72,6 +75,10 @@ Prefer code that a strong contestant can adapt quickly after skimming:
 - In reusable code, use `std::` qualifications rather than `using namespace std;`. Example blocks
   may use `using namespace std;` when that matches the local style.
 - Prefer `static_cast<int>(container.size())` before mixing sizes with `int` indices.
+- For read-only structured bindings of small pairs or tuples, prefer copying with `auto [...]`;
+  use `const auto &` when copying the bound object would be material.
+- Prefer a self-passing generic lambda for local recursion in C++17. Use `std::function` only when
+  type erasure or a stored recursive callable is actually needed.
 - Use `int` for ordinary sizes, indices, iterator distances, and node IDs unless the algorithm needs
   a wider type. Do not introduce iterator `difference_type` aliases merely for generic formality.
 - Adjacent one-line function definitions may remain together. Surround every multiline function

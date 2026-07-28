@@ -76,7 +76,7 @@ class BridgeDecomposition {
   }
 
  public:
-  BridgeDecomposition(int n = 0) : adj(n) {}
+  explicit BridgeDecomposition(int n = 0) : adj(n) {}
 
   void add_edge(int u, int v) {
     int id = static_cast<int>(edges.size());

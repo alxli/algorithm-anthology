@@ -40,7 +40,7 @@ const int MASK_BITS = sizeof(Mask) * CHAR_BIT;
 
 class XorBasis {
   std::array<Mask, MASK_BITS> basis{};  // basis[i] != 0 has its highest set bit at bit i.
-  int sz = 0;
+  int basis_size = 0;
 
  public:
   bool insert(Mask x) {
@@ -50,7 +50,7 @@ class XorBasis {
       }
       if (basis[i] == 0) {
         basis[i] = x;
-        sz++;
+        basis_size++;
         return true;
       }
       x ^= basis[i];
@@ -76,7 +76,7 @@ class XorBasis {
     return base;
   }
 
-  int size() const { return sz; }
+  int size() const { return basis_size; }
 };
 
 /*** Example Usage ***/

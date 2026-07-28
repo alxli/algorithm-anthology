@@ -110,7 +110,7 @@ class ArrangementEnumerator : public AbstractEnumerator {
 
 class PermutationEnumerator : public ArrangementEnumerator {
  public:
-  PermutationEnumerator(int n) : ArrangementEnumerator(n, n) {}
+  explicit PermutationEnumerator(int n) : ArrangementEnumerator(n, n) {}
 };
 
 class CombinationEnumerator : public AbstractEnumerator {
@@ -142,7 +142,7 @@ class PartitionEnumerator : public AbstractEnumerator {
   std::vector<std::vector<int64_t>> table;
 
  public:
-  PartitionEnumerator(int n)
+  explicit PartitionEnumerator(int n)
       : AbstractEnumerator(n + 1, n), table(n + 1, std::vector<int64_t>(n + 1)) {
     std::vector<std::vector<int64_t>> tmp(table);
     tmp[0][0] = 1;

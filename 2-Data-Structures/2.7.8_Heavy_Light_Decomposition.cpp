@@ -232,9 +232,8 @@ class HeavyLight {
       f(path[u], lo, hi, pathpos[u] > pathpos[v]);
     }
     for (int i = static_cast<int>(down_parts.size()) - 1; i >= 0; i--) {
-      int path, lo, hi;
-      std::tie(path, lo, hi) = down_parts[i];
-      f(path, lo, hi, false);
+      auto [down_path, down_lo, down_hi] = down_parts[i];
+      f(down_path, down_lo, down_hi, false);
     }
     return true;
   }

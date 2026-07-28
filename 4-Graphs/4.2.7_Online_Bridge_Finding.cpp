@@ -89,7 +89,7 @@ class OnlineBridges {
   }
 
  public:
-  OnlineBridges(int n = 0) {
+  explicit OnlineBridges(int n = 0) {
     dsu_2ecc.resize(n);
     dsu_cc.resize(n);
     dsu_cc_size.assign(n, 1);

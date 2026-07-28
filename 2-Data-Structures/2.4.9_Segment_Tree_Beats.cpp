@@ -104,44 +104,46 @@ class SegTreeBeats {
     pull(i);
   }
 
-  void chmin(int i, int lo, int hi, int tlo, int thi, const T &t) {
-    if (thi < lo || hi < tlo || max1[i] <= t) {
+  void chmin(int i, int lo, int hi, int tgt_lo, int tgt_hi, const T &t) {
+    if (tgt_hi < lo || hi < tgt_lo || max1[i] <= t) {
       return;  // Prune: outside the range, or every entry is already at most t.
     }
-    if (tlo <= lo && hi <= thi && (lo == hi || max2[i] < t)) {
+    if (tgt_lo <= lo && hi <= tgt_hi && (lo == hi || max2[i] < t)) {
       apply_chmin(i, t);  // Break: only the maximal entries are affected.
       return;
     }
     push(i);
     int mid = lo + (hi - lo) / 2;
-    chmin(i * 2 + 1, lo, mid, tlo, thi, t);
-    chmin(i * 2 + 2, mid + 1, hi, tlo, thi, t);
+    chmin(i * 2 + 1, lo, mid, tgt_lo, tgt_hi, t);
+    chmin(i * 2 + 2, mid + 1, hi, tgt_lo, tgt_hi, t);
     pull(i);
   }
 
-  T query_sum(int i, int lo, int hi, int tlo, int thi) {
-    if (thi < lo || hi < tlo) {
+  T query_sum(int i, int lo, int hi, int tgt_lo, int tgt_hi) {
+    if (tgt_hi < lo || hi < tgt_lo) {
       return 0;
     }
-    if (tlo <= lo && hi <= thi) {
+    if (tgt_lo <= lo && hi <= tgt_hi) {
       return sum[i];
     }
     push(i);
     int mid = lo + (hi - lo) / 2;
-    return query_sum(i * 2 + 1, lo, mid, tlo, thi) + query_sum(i * 2 + 2, mid + 1, hi, tlo, thi);
+    return query_sum(i * 2 + 1, lo, mid, tgt_lo, tgt_hi) +
+           query_sum(i * 2 + 2, mid + 1, hi, tgt_lo, tgt_hi);
   }
 
-  T query_max(int i, int lo, int hi, int tlo, int thi) {
-    if (thi < lo || hi < tlo) {
+  T query_max(int i, int lo, int hi, int tgt_lo, int tgt_hi) {
+    if (tgt_hi < lo || hi < tgt_lo) {
       return NEG_INF;
     }
-    if (tlo <= lo && hi <= thi) {
+    if (tgt_lo <= lo && hi <= tgt_hi) {
       return max1[i];
     }
     push(i);
     int mid = lo + (hi - lo) / 2;
     return std::max(
-        query_max(i * 2 + 1, lo, mid, tlo, thi), query_max(i * 2 + 2, mid + 1, hi, tlo, thi)
+        query_max(i * 2 + 1, lo, mid, tgt_lo, tgt_hi),
+        query_max(i * 2 + 2, mid + 1, hi, tgt_lo, tgt_hi)
     );
   }
 

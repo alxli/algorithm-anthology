@@ -40,6 +40,10 @@ FIXED_RANDOM_WRAPPER_SEED_RE = re.compile(
     r"(?:\bRNG|\bZobristHash<[^;()]+>)\s+[A-Za-z_][A-Za-z0-9_]*"
     r"\s*\(\s*([0-9]+)[uUlL]*\s*\)"
 )
+FIXED_XORSHIFT_STATE_RE = re.compile(
+    r"\bstatic\s+(?:std::)?uint32_t\s+[A-Za-z_][A-Za-z0-9_]*"
+    r"\s*=\s*[0-9]+[uUlL]*\s*;"
+)
 CONTROL_BLOCK_RE = re.compile(r"^(?:if|for|while|switch|catch)\b")
 UNWRAPPED_INTERVAL_RE = re.compile(
     r"(?:\b(?:range|window)\s+|\bvalues?\s+in\s+|^\s*in\s+)"
@@ -496,6 +500,16 @@ def scan_code_consistency(paths):
                         line,
                     )
                 )
+            if "Overflow warning!" in line:
+                issues.append(
+                    Issue(
+                        path,
+                        line_no,
+                        "code-consistency",
+                        "Use the standard `Overflow warning.` comment punctuation.",
+                        line,
+                    )
+                )
 
         marker = text.find("/*** Example Usage")
         if marker == -1:
@@ -518,7 +532,7 @@ def scan_code_consistency(paths):
         for offset, (line, code) in enumerate(
             zip(implementation.splitlines(), implementation_start), start=1
         ):
-            if FIXED_ENGINE_SEED_RE.search(code) or any(
+            if FIXED_ENGINE_SEED_RE.search(code) or FIXED_XORSHIFT_STATE_RE.search(code) or any(
                 re.search(rf"\b{re.escape(name)}\s*\(\s*[0-9]+[uUlL]*\s*\)", code)
                 for name in engine_members
             ):

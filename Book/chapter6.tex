@@ -1562,7 +1562,7 @@ class ArrangementEnumerator : public AbstractEnumerator {
 
 class PermutationEnumerator : public ArrangementEnumerator {
  public:
-  PermutationEnumerator(int n) : ArrangementEnumerator(n, n) {}
+  explicit PermutationEnumerator(int n) : ArrangementEnumerator(n, n) {}
 };
 
 class CombinationEnumerator : public AbstractEnumerator {
@@ -1594,7 +1594,7 @@ class PartitionEnumerator : public AbstractEnumerator {
   std::vector<std::vector<int64_t>> table;
 
  public:
-  PartitionEnumerator(int n)
+  explicit PartitionEnumerator(int n)
       : AbstractEnumerator(n + 1, n), table(n + 1, std::vector<int64_t>(n + 1)) {
     std::vector<std::vector<int64_t>> tmp(table);
     tmp[0][0] = 1;
@@ -4072,7 +4072,7 @@ class BigInt {
     }
     for (int len = 1; len < n; len <<= 1) {
       vcd tmp(n);
-      int rstep = roots.size() / (len << 1);
+      int rstep = static_cast<int>(roots.size()) / (len << 1);
       for (int pdest = 0; pdest < n; pdest += len) {
         int p = pdest;
         for (int i = 0; i < len; i++) {
@@ -4497,14 +4497,14 @@ int main() {
   std::uniform_int_distribution<int> length_dist(1, 100);
   for (int i = 0; i < 20; i++) {
     int n = length_dist(rng);
-    BigInt a(BigInt::rand(n)), s(a.sqrt()), xx(s * s), yy(s + 1);
-    yy *= yy;
-    assert(xx <= a && a < yy);
+    BigInt value(BigInt::rand(n)), root(value.sqrt()), lower(root * root), upper(root + 1);
+    upper *= upper;
+    assert(lower <= value && value < upper);
     std::uniform_int_distribution<int> divisor_length_dist(1, n);
-    BigInt b(BigInt::rand(divisor_length_dist(rng)) + 1), q(a / b);
-    xx = q * b;
-    yy = b * (q + 1);
-    assert(a >= xx && a < yy);
+    BigInt divisor(BigInt::rand(divisor_length_dist(rng)) + 1), quotient(value / divisor);
+    lower = quotient * divisor;
+    upper = divisor * (quotient + 1);
+    assert(value >= lower && value < upper);
   }
   BigInt x(-6);
   assert(x.to_string() == "-6");
@@ -5432,15 +5432,15 @@ int invert(SquareMatrix &a, double eps = 1e-10) {
       return -1;
     }
     std::swap(b[p], b[i]);
-    double z = b[i][i];
+    double pivot = b[i][i];
     for (int j = i; j < n * 2; j++) {
-      b[i][j] /= z;
+      b[i][j] /= pivot;
     }
     for (int j = 0; j < n; j++) {
       if (i != j) {
-        double z = b[j][i];
+        double factor = b[j][i];
         for (int k = 0; k < n * 2; k++) {
-          b[j][k] -= z * b[i][k];
+          b[j][k] -= factor * b[i][k];
         }
       }
     }
@@ -5949,9 +5949,9 @@ int main() {
 A sparse matrix stores only nonzero entries, which is useful when the matrix is large but most values are zero. This implementation keeps both row maps and column maps in sync: \inlinecode{row(i)} can iterate all nonzeros in row \inlinecode{i}, while \inlinecode{column(j)} can iterate all nonzeros in column \inlinecode{j}. That bidirectional storage is especially useful for sparse elimination or graph-like matrix operations, where both row updates and column pivot lookups are common.
 
 \begin{compactitem}
-  \item \inlinecode{SparseMatrix\textless{}T\textgreater{}(h, w)} constructs an \inlinecode{h} by \inlinecode{w} sparse matrix.
-  \item \inlinecode{height()} returns the number of rows.
-  \item \inlinecode{width()} returns the number of columns.
+  \item \inlinecode{SparseMatrix\textless{}T\textgreater{}(rows, cols)} constructs a \inlinecode{rows} by \inlinecode{cols} sparse matrix.
+  \item \inlinecode{num\_rows()} returns the number of rows.
+  \item \inlinecode{num\_cols()} returns the number of columns.
   \item \inlinecode{nonzeros()} returns the number of stored nonzero entries.
   \item \inlinecode{get(i, j)} returns the value at row \inlinecode{i}, column \inlinecode{j}, or $0$ if the entry is not stored.
   \item \inlinecode{set(i, j, value)} assigns an entry. Assigning zero erases it from both maps.
@@ -5979,7 +5979,7 @@ Sparse elimination chooses, in each pivot column, the available pivot row with t
   \item $O((r_i + r_j) \cdot \log d)$ per call to \inlinecode{swap\_rows(i, j)}, where $r_i$ and $r_j$ are the sizes of the two rows.
   \item $O(f \cdot \log d)$ for sparse elimination, where $f$ is the number of entry updates performed after fill-in and $d$ is a touched row or column size. In the worst case this is still cubic.
   \item $O(f \cdot \log d)$ per call to \inlinecode{det()}, \inlinecode{sparse\_rank()}, and \inlinecode{solve\_system()}.
-  \item $O(1)$ per call to \inlinecode{height()}, \inlinecode{width()}, \inlinecode{nonzeros()}, \inlinecode{row()}, and \inlinecode{column()}.
+  \item $O(1)$ per call to \inlinecode{num\_rows()}, \inlinecode{num\_cols()}, \inlinecode{nonzeros()}, \inlinecode{row()}, and \inlinecode{column()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -5988,8 +5988,8 @@ Sparse elimination chooses, in each pivot column, the available pivot row with t
   \item $O(n)$ storage.
   \item $O(1)$ auxiliary for \inlinecode{get()}, \inlinecode{set()}, \inlinecode{add()}, \inlinecode{row()}, \inlinecode{column()}, and \inlinecode{transpose()}.
   \item $O(r_i + r_j)$ auxiliary for \inlinecode{swap\_rows(i, j)}.
-  \item $O(h)$ auxiliary for \inlinecode{multiply\_vector()}.
-  \item $O(n + h)$ auxiliary for elimination, in addition to the copied matrix used by \inlinecode{det()}, \inlinecode{sparse\_rank()}, and \inlinecode{solve\_system()}.
+  \item $O(R)$ auxiliary for \inlinecode{multiply\_vector()}.
+  \item $O(n + R)$ auxiliary for elimination, in addition to the copied matrix used by \inlinecode{det()} and \inlinecode{sparse\_rank()} or the augmented matrix used by \inlinecode{solve\_system()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -6002,38 +6002,38 @@ Sparse elimination chooses, in each pivot column, the available pivot row with t
 
 template<typename T>
 class SparseMatrix {
-  int h = 0, w = 0, stored = 0;
-  std::vector<std::map<int, T>> rows, cols;
+  int rows = 0, cols = 0, stored = 0;
+  std::vector<std::map<int, T>> rvals, cvals;
 
   bool is_zero(const T &value) const { return value == T{}; }
 
  public:
-  SparseMatrix(int h_, int w_) : h(h_), w(w_), rows(h_), cols(w_) {}
+  SparseMatrix(int rows, int cols) : rows(rows), cols(cols), rvals(rows), cvals(cols) {}
 
-  int height() const { return h; }
-  int width() const { return w; }
+  int num_rows() const { return rows; }
+  int num_cols() const { return cols; }
   int nonzeros() const { return stored; }
 
   T get(int i, int j) const {
-    auto it = rows[i].find(j);
-    return it == rows[i].end() ? T{} : it->second;
+    auto it = rvals[i].find(j);
+    return it == rvals[i].end() ? T{} : it->second;
   }
 
   void set(int i, int j, const T &value) {
-    auto it = rows[i].find(j);
+    auto it = rvals[i].find(j);
     if (is_zero(value)) {
-      if (it != rows[i].end()) {
-        rows[i].erase(it);
-        cols[j].erase(i);
+      if (it != rvals[i].end()) {
+        rvals[i].erase(it);
+        cvals[j].erase(i);
         stored--;
       }
       return;
     }
-    if (it == rows[i].end()) {
+    if (it == rvals[i].end()) {
       stored++;
     }
-    rows[i][j] = value;
-    cols[j][i] = value;
+    rvals[i][j] = value;
+    cvals[j][i] = value;
   }
 
   void add(int i, int j, const T &delta) {
@@ -6043,18 +6043,18 @@ class SparseMatrix {
     set(i, j, get(i, j) + delta);
   }
 
-  const std::map<int, T> &row(int i) const { return rows[i]; }
-  const std::map<int, T> &column(int j) const { return cols[j]; }
+  const std::map<int, T> &row(int i) const { return rvals[i]; }
+  const std::map<int, T> &column(int j) const { return cvals[j]; }
 
   void swap_rows(int i, int j) {
     if (i == j) {
       return;
     }
     std::unordered_set<int> touched;
-    for (const auto &[col, value] : rows[i]) {
+    for (const auto &[col, value] : rvals[i]) {
       touched.insert(col);
     }
-    for (const auto &[col, value] : rows[j]) {
+    for (const auto &[col, value] : rvals[j]) {
       touched.insert(col);
     }
     for (int col : touched) {
@@ -6065,15 +6065,15 @@ class SparseMatrix {
   }
 
   void transpose() {
-    std::swap(h, w);
     std::swap(rows, cols);
+    std::swap(rvals, cvals);
   }
 
   std::vector<T> multiply_vector(const std::vector<T> &x) const {
-    assert(static_cast<int>(x.size()) == w);
-    std::vector<T> res(h);
-    for (int i = 0; i < h; i++) {
-      for (const auto &[j, value] : rows[i]) {
+    assert(static_cast<int>(x.size()) == cols);
+    std::vector<T> res(rows);
+    for (int i = 0; i < rows; i++) {
+      for (const auto &[j, value] : rvals[i]) {
         res[i] += value * x[j];
       }
     }
@@ -6083,9 +6083,9 @@ class SparseMatrix {
 
 template<typename T>
 int row_reduce(SparseMatrix<T> &a, int limit) {
-  assert(0 <= limit && limit <= a.width());
+  assert(0 <= limit && limit <= a.num_cols());
   int r = 0;
-  for (int c = 0; c < limit && r < a.height(); c++) {
+  for (int c = 0; c < limit && r < a.num_rows(); c++) {
     int pivot = -1;
     for (const auto &[i, value] : a.column(c)) {
       if (i >= r && (pivot == -1 || a.row(i).size() < a.row(pivot).size())) {
@@ -6120,8 +6120,8 @@ int row_reduce(SparseMatrix<T> &a, int limit) {
 
 template<typename T>
 T det(SparseMatrix<T> a) {
-  assert(a.height() == a.width());
-  int swaps = 0, r = 0, n = a.height();
+  assert(a.num_rows() == a.num_cols());
+  int swaps = 0, r = 0, n = a.num_rows();
   T det = 1;
   for (int c = 0; c < n && r < n; c++) {
     int pivot = -1;
@@ -6163,49 +6163,49 @@ T det(SparseMatrix<T> a) {
 
 template<typename T>
 int sparse_rank(SparseMatrix<T> a) {
-  return row_reduce(a, a.width());
+  return row_reduce(a, a.num_cols());
 }
 
 template<typename T>
-int solve_system(SparseMatrix<T> a, const std::vector<T> &b, std::vector<T> *x) {
-  if (x == nullptr || a.height() != static_cast<int>(b.size())) {
+int solve_system(const SparseMatrix<T> &a, const std::vector<T> &b, std::vector<T> *x) {
+  if (x == nullptr || a.num_rows() != static_cast<int>(b.size())) {
     return -1;
   }
-  int h = a.height(), w = a.width();
-  SparseMatrix<T> aug(h, w + 1);
-  for (int i = 0; i < h; i++) {
+  int rows = a.num_rows(), cols = a.num_cols();
+  SparseMatrix<T> aug(rows, cols + 1);
+  for (int i = 0; i < rows; i++) {
     for (const auto &[j, value] : a.row(i)) {
       aug.set(i, j, value);
     }
-    aug.set(i, w, b[i]);
+    aug.set(i, cols, b[i]);
   }
-  row_reduce(aug, w);
+  row_reduce(aug, cols);
   std::vector<int> pivot_col;
-  for (int i = 0; i < h; i++) {
+  for (int i = 0; i < rows; i++) {
     int lead = -1;
     for (const auto &[j, value] : aug.row(i)) {
-      if (j < w) {
+      if (j < cols) {
         lead = j;
         break;
       }
     }
     if (lead == -1) {
-      if (aug.get(i, w) != T{}) {
+      if (aug.get(i, cols) != T{}) {
         return -1;
       }
     } else {
       pivot_col.push_back(lead);
     }
   }
-  if (static_cast<int>(pivot_col.size()) < w) {
+  if (static_cast<int>(pivot_col.size()) < cols) {
     return -2;
   }
-  x->assign(w, T{});
+  x->assign(cols, T{});
   for (int row = static_cast<int>(pivot_col.size()) - 1; row >= 0; row--) {
     int c = pivot_col[row];
-    T rhs = aug.get(row, w);
+    T rhs = aug.get(row, cols);
     for (const auto &[j, value] : aug.row(row)) {
-      if (j > c && j < w) {
+      if (j > c && j < cols) {
         rhs -= value * (*x)[j];
       }
     }
@@ -6227,7 +6227,7 @@ int main() {
   a.add(0, 1, -2);
   a.add(1, 2, 4);
 
-  assert(a.height() == 3 && a.width() == 4);
+  assert(a.num_rows() == 3 && a.num_cols() == 4);
   assert(a.nonzeros() == 3);
   assert(a.get(0, 1) == 3);
   assert(a.get(0, 0) == 0);
@@ -6244,7 +6244,7 @@ int main() {
   assert(a.column(1).empty());
 
   a.transpose();
-  assert(a.height() == 4 && a.width() == 3);
+  assert(a.num_rows() == 4 && a.num_cols() == 3);
   assert(a.get(3, 2) == 7);
   assert(a.get(2, 1) == 4);
 
@@ -6269,7 +6269,7 @@ int main() {
   sys.set(2, 2, 2);
   vector<double> rhs{3, 1, -2}, sol;
   assert(solve_system(sys, rhs, &sol) == 0);
-  for (int i = 0; i < sys.height(); i++) {
+  for (int i = 0; i < sys.num_rows(); i++) {
     double sum = 0;
     for (const auto &[j, value] : sys.row(i)) {
       sum += value * sol[j];
@@ -6370,7 +6370,7 @@ std::vector<int64_t> convolve(std::vector<int64_t> a, std::vector<int64_t> b) {
   if (a.empty() || b.empty()) {
     return {};
   }
-  int result_size = a.size() + b.size() - 1;
+  int result_size = static_cast<int>(a.size() + b.size()) - 1;
   if (std::min(a.size(), b.size()) < NAIVE_CUTOFF) {
     std::vector<int64_t> res(result_size);
     for (int i = 0; i < static_cast<int>(a.size()); i++) {
@@ -6490,7 +6490,7 @@ std::vector<int64_t> convolve(const std::vector<int64_t> &a, const std::vector<i
   if (a.empty() || b.empty()) {
     return {};
   }
-  int result_size = a.size() + b.size() - 1;
+  int result_size = static_cast<int>(a.size() + b.size() - 1);
   if (std::min(a.size(), b.size()) < NAIVE_CUTOFF) {
     std::vector<int64_t> res(result_size);
     for (int i = 0; i < static_cast<int>(a.size()); i++) {
@@ -6662,7 +6662,7 @@ Poly multiply(Poly a, Poly b) {
   if (a.empty() || b.empty()) {
     return {};
   }
-  int result_size = a.size() + b.size() - 1;
+  int result_size = static_cast<int>(a.size() + b.size() - 1);
   if (std::min(a.size(), b.size()) < NAIVE_CUTOFF) {
     Poly res(result_size);
     for (int i = 0; i < static_cast<int>(a.size()); i++) {

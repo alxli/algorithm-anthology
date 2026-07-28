@@ -68,7 +68,7 @@ std::pair<int64_t, std::vector<int>> global_min_cut(std::vector<std::vector<int6
         }
         groups[s].insert(groups[s].end(), groups[sel].begin(), groups[sel].end());
         for (int i = 0; i < n; i++) {
-          cap[s][i] += cap[sel][i];  // Overflow warning!
+          cap[s][i] += cap[sel][i];  // Overflow warning.
           cap[i][s] = cap[s][i];
         }
         exists[sel] = false;

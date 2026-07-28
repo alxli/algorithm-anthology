@@ -115,7 +115,7 @@ void heapsort(It lo, It hi, Compare comp = Compare()) {
   }
   using T = typename std::iterator_traits<It>::value_type;
   T tmp = *lo;
-  It i = lo + (hi - lo) / 2, j = hi, parent, child;
+  It i = lo + (hi - lo) / 2, j = hi, parent;
   while (true) {
     if (i <= lo) {
       if (--j == lo) {
@@ -127,8 +127,8 @@ void heapsort(It lo, It hi, Compare comp = Compare()) {
       tmp = *(--i);
     }
     parent = i;
-    child = lo + 2 * (i - lo) + 1;
-    while (child < j) {
+    while (2 * (parent - lo) + 1 < j - lo) {
+      It child = lo + 2 * (parent - lo) + 1;
       if (child + 1 < j && comp(*child, *(child + 1))) {
         child++;
       }
@@ -137,7 +137,6 @@ void heapsort(It lo, It hi, Compare comp = Compare()) {
       }
       *parent = *child;
       parent = child;
-      child = lo + 2 * (parent - lo) + 1;
     }
     *parent = tmp;
   }
@@ -1678,7 +1677,7 @@ template<typename It>
 auto max_subarray_sum(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
   if (lo == hi) {
-    return std::make_tuple(T(), 0, -1);
+    return std::tuple{T(), 0, -1};
   }
   int curr_begin = 0, begin = 0, end = -1;
   T sum = 0, max_sum = 0;
@@ -1693,7 +1692,7 @@ auto max_subarray_sum(It lo, It hi) {
       end = it - lo;
     }
   }
-  return std::make_tuple(max_sum, begin, end);
+  return std::tuple{max_sum, begin, end};
 }
 
 template<typename It>
@@ -1701,7 +1700,7 @@ auto max_circular_subarray_sum(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
   auto [max_sum, begin, end] = max_subarray_sum(lo, hi);
   if (lo == hi) {
-    return std::make_tuple(max_sum, begin, end);
+    return std::tuple{max_sum, begin, end};
   }
   int curr_begin = 0, min_begin = 0, min_end = -1;
   T total = 0, min_sum = 0, curr_sum = 0;
@@ -1724,14 +1723,14 @@ auto max_circular_subarray_sum(It lo, It hi) {
     begin = (min_end + 1) % n;
     end = (min_begin + n - 1) % n;
   }
-  return std::make_tuple(max_sum, begin, end);
+  return std::tuple{max_sum, begin, end};
 }
 
 template<typename It>
 auto max_product_subarray(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
   if (lo == hi) {
-    return std::make_tuple(T(), 0, -1);
+    return std::tuple{T(), 0, -1};
   }
   T max_ending = *lo, min_ending = *lo, best = *lo;
   int max_begin = 0, min_begin = 0, begin = 0, end = 0;
@@ -1761,7 +1760,7 @@ auto max_product_subarray(It lo, It hi) {
       end = i;
     }
   }
-  return std::make_tuple(best, begin, end);
+  return std::tuple{best, begin, end};
 }
 
 template<typename T>
@@ -2999,7 +2998,7 @@ int main() {
 \subsection{Deadline Scheduling}
 Schedules unit-time jobs with deadlines and profits to maximize total profit. Each job takes one time slot and must be scheduled at or before its deadline. The greedy algorithm processes jobs in decreasing profit order and places each chosen job in the latest available slot before its deadline.
 
-The latest-slot choice is safe because it uses the current high-profit job while leaving earlier slots available for jobs with tighter deadlines. A disjoint-set forest over time slots makes this efficient: \inlinecode{find\_root(t)} returns the latest still-free slot at or before \inlinecode{t}, and occupying slot \inlinecode{t} links it to the next candidate slot \inlinecode{t - 1}.
+The latest-slot choice is safe because it uses the current high-profit job while leaving earlier slots available for jobs with tighter deadlines. A disjoint-set forest over time slots makes this efficient: \inlinecode{find(t)} returns the latest still-free slot at or before \inlinecode{t}, and occupying slot \inlinecode{t} links it to the next candidate slot \inlinecode{t - 1}.
 
 \begin{compactitem}
   \item \inlinecode{select\_deadline\_jobs(jobs)} returns a pair (\inlinecode{profit}, \inlinecode{slot}) containing that maximum profit and \inlinecode{slot[i]}, the assigned time slot of input job \inlinecode{i}, or $-1$ if that job is not selected, for a vector of \inlinecode{Job} with fields \inlinecode{deadline} and \inlinecode{profit}. Deadlines are positive integers, and assigned slots are numbered starting from $1$. Jobs with nonpositive profit are not selected.
@@ -3030,14 +3029,8 @@ class SlotDSU {
  public:
   explicit SlotDSU(int n) : root(n + 1) { std::iota(root.begin(), root.end(), 0); }
 
-  int find_root(int u) {
-    if (root[u] != u) {
-      root[u] = find_root(root[u]);
-    }
-    return root[u];
-  }
-
-  void occupy(int u) { root[u] = find_root(u - 1); }
+  int find(int u) { return root[u] == u ? u : root[u] = find(root[u]); }
+  void occupy(int u) { root[u] = find(u - 1); }
 };
 
 std::pair<int64_t, std::vector<int>> select_deadline_jobs(const std::vector<Job> &jobs) {
@@ -3063,7 +3056,7 @@ std::pair<int64_t, std::vector<int>> select_deadline_jobs(const std::vector<Job>
     if (jobs[i].profit <= 0) {
       continue;
     }
-    int slot = slots.find_root(std::min(jobs[i].deadline, max_deadline));
+    int slot = slots.find(std::min(jobs[i].deadline, max_deadline));
     if (slot > 0) {
       res += jobs[i].profit;  // Overflow warning.
       assigned[i] = slot;
@@ -4157,7 +4150,7 @@ const int MASK_BITS = sizeof(Mask) * CHAR_BIT;
 
 class XorBasis {
   std::array<Mask, MASK_BITS> basis{};  // basis[i] != 0 has its highest set bit at bit i.
-  int sz = 0;
+  int basis_size = 0;
 
  public:
   bool insert(Mask x) {
@@ -4167,7 +4160,7 @@ class XorBasis {
       }
       if (basis[i] == 0) {
         basis[i] = x;
-        sz++;
+        basis_size++;
         return true;
       }
       x ^= basis[i];
@@ -4193,7 +4186,7 @@ class XorBasis {
     return base;
   }
 
-  int size() const { return sz; }
+  int size() const { return basis_size; }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -4441,6 +4434,7 @@ The in-place transforms require a nonempty array whose length is a power of two.
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 template<typename T>
@@ -4520,17 +4514,17 @@ std::vector<T> bitwise_convolve(std::vector<T> a, std::vector<T> b, Transform tr
 
 template<typename T>
 std::vector<T> xor_convolve(std::vector<T> a, std::vector<T> b) {
-  return bitwise_convolve(a, b, xor_transform<T>);
+  return bitwise_convolve(std::move(a), std::move(b), xor_transform<T>);
 }
 
 template<typename T>
 std::vector<T> or_convolve(std::vector<T> a, std::vector<T> b) {
-  return bitwise_convolve(a, b, or_transform<T>);
+  return bitwise_convolve(std::move(a), std::move(b), or_transform<T>);
 }
 
 template<typename T>
 std::vector<T> and_convolve(std::vector<T> a, std::vector<T> b) {
-  return bitwise_convolve(a, b, and_transform<T>);
+  return bitwise_convolve(std::move(a), std::move(b), and_transform<T>);
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}

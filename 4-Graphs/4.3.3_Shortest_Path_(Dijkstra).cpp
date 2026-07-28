@@ -58,7 +58,7 @@ void dijkstra(int start) {
     if (du != dist[u]) {
       continue;
     }
-    for (auto &[v, w] : adj[u]) {
+    for (auto [v, w] : adj[u]) {
       if (dist[v] > dist[u] + w) {
         dist[v] = dist[u] + w;
         pred[v] = u;

@@ -58,7 +58,7 @@ class OfflineDynamicConnectivity {
   std::vector<std::vector<std::pair<int, int>>> seg;
   std::vector<int> answers;
 
-  int find_root(int u) const {
+  int find(int u) const {
     while (root[u] != u) {
       u = root[u];
     }
@@ -66,8 +66,8 @@ class OfflineDynamicConnectivity {
   }
 
   void unite(int u, int v) {
-    u = find_root(u);
-    v = find_root(v);
+    u = find(u);
+    v = find(v);
     if (u == v) {
       history.emplace_back(-1, 0);
       return;
@@ -130,7 +130,7 @@ class OfflineDynamicConnectivity {
   }
 
  public:
-  OfflineDynamicConnectivity(int n) : n(n) {}
+  explicit OfflineDynamicConnectivity(int n) : n(n) {}
 
   void add_edge(int u, int v) { ops.push_back({ADD, std::min(u, v), std::max(u, v)}); }
   void remove_edge(int u, int v) { ops.push_back({REMOVE, std::min(u, v), std::max(u, v)}); }

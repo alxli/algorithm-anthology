@@ -129,7 +129,7 @@ Poly multiply(Poly a, Poly b) {
   if (a.empty() || b.empty()) {
     return {};
   }
-  int result_size = a.size() + b.size() - 1;
+  int result_size = static_cast<int>(a.size() + b.size() - 1);
   if (std::min(a.size(), b.size()) < NAIVE_CUTOFF) {
     Poly res(result_size);
     for (int i = 0; i < static_cast<int>(a.size()); i++) {

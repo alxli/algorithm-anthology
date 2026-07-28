@@ -107,9 +107,9 @@ struct TPoint {
 
   // --- Exact operations: return T or TPoint<T>, work for any coordinate type ---
 
-  T sqnorm() const { return x * x + y * y; }                    // Overflow warning!
-  T dot(const TPoint &p) const { return x * p.x + y * p.y; }    // Overflow warning!
-  T cross(const TPoint &p) const { return x * p.y - y * p.x; }  // Overflow warning!
+  T sqnorm() const { return x * x + y * y; }                    // Overflow warning.
+  T dot(const TPoint &p) const { return x * p.x + y * p.y; }    // Overflow warning.
+  T cross(const TPoint &p) const { return x * p.y - y * p.x; }  // Overflow warning.
 
   // --- Floating-point operations: return fp_t or TPoint<fp_t> ---
 
@@ -391,7 +391,7 @@ struct TLine {
 
   // Line through two points. Coefficients are exact (type T) for integer points.
   template<typename Pt, typename = if_point<Pt>>
-  // Overflow warning!
+  // Overflow warning.
   TLine(const Pt &p, const Pt &q) : a(q.y - p.y), b(p.x - q.x), c(-(a * p.x + b * p.y)) {
     if constexpr (CANONICALIZE) canonicalize();
   }
@@ -434,11 +434,11 @@ struct TLine {
   // Whether point p lies on the line. Exact for integer T and integer p.
   template<typename Pt>
   bool contains(const Pt &p) const {
-    return valid() && EQ(a * p.x + b * p.y + c, 0);  // Overflow warning!
+    return valid() && EQ(a * p.x + b * p.y + c, 0);  // Overflow warning.
   }
 
   // Parallel iff the normals are parallel (cross == 0); perpendicular iff normals are perpendicular
-  // (dot == 0). Both exact for integer T. Overflow warning!
+  // (dot == 0). Both exact for integer T. Overflow warning.
   bool is_parallel(const TLine &l) const { return valid() && l.valid() && EQ(a * l.b, l.a * b); }
 
   bool is_perpendicular(const TLine &l) const {
@@ -448,12 +448,12 @@ struct TLine {
   // Parallel/perpendicular line through point p. Exact for integer T and integer p.
   template<typename Pt, typename = if_point<Pt>>
   TLine parallel(const Pt &p) const {
-    return TLine(a, b, -(a * p.x + b * p.y));  // Overflow warning!
+    return TLine(a, b, -(a * p.x + b * p.y));  // Overflow warning.
   }
 
   template<typename Pt, typename = if_point<Pt>>
   TLine perpendicular(const Pt &p) const {
-    return TLine(-b, a, b * p.x - a * p.y);  // Overflow warning!
+    return TLine(-b, a, b * p.x - a * p.y);  // Overflow warning.
   }
 
   friend std::ostream &operator<<(std::ostream &out, const TLine &l) {
@@ -690,7 +690,7 @@ int in_circumcircle(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   W adx = (W)a.x - d.x, ady = (W)a.y - d.y;
   W bdx = (W)b.x - d.x, bdy = (W)b.y - d.y;
   W cdx = (W)c.x - d.x, cdy = (W)c.y - d.y;
-  // Overflow warning!
+  // Overflow warning.
   W det = (adx * adx + ady * ady) * (bdx * cdy - cdx * bdy) +
           (bdx * bdx + bdy * bdy) * (cdx * ady - adx * cdy) +
           (cdx * cdx + cdy * cdy) * (adx * bdy - bdx * ady);
@@ -1178,7 +1178,7 @@ template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
 template<typename Pt>
 auto sqdist(const Pt &a, const Pt &b) {
   auto dx = b.x - a.x, dy = b.y - a.y;
-  return dx * dx + dy * dy;  // Overflow warning!
+  return dx * dx + dy * dy;  // Overflow warning.
 }
 
 template<typename Pt>
@@ -1198,7 +1198,7 @@ double line_dist(const Pt &p, const Pt &a, const Pt &b) {
     return dist(p, a);
   }
   auto n = sqdist(a, b);
-  auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);  // Overflow warning!
+  auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);  // Overflow warning.
   double u = static_cast<double>(d) / n;
   double dx = a.x + u * (b.x - a.x) - p.x, dy = a.y + u * (b.y - a.y) - p.y;
   return sqrt(dx * dx + dy * dy);
@@ -1222,7 +1222,7 @@ double seg_dist(const Pt &p, const Pt &a, const Pt &b) {
     return dist(p, a);
   }
   auto n = sqdist(a, b);
-  auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);  // Overflow warning!
+  auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);  // Overflow warning.
   if (LE(d, 0) || EQ(n, 0)) {
     return dist(p, a);
   }
@@ -1245,7 +1245,7 @@ double seg_dist(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   auto ab_x = b.x - a.x, ab_y = b.y - a.y;
   auto ac_x = c.x - a.x, ac_y = c.y - a.y;
   auto cd_x = d.x - c.x, cd_y = d.y - c.y;
-  auto c1 = ab_x * cd_y - ab_y * cd_x;  // Overflow warning!
+  auto c1 = ab_x * cd_y - ab_y * cd_x;  // Overflow warning.
   auto c2 = ac_x * ab_y - ac_y * ab_x;
   if (EQ(c1, 0) && EQ(c2, 0)) {
     auto less = [](const Pt &u, const Pt &v) { return u.x != v.x ? u.x < v.x : u.y < v.y; };
@@ -1279,7 +1279,7 @@ Pt closest_point(const Pt &a, const Pt &b, const Pt &p) {
     return res;
   }
   auto n = sqdist(a, b);
-  auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);  // Overflow warning!
+  auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);  // Overflow warning.
   double t = static_cast<double>(d) / n;
   if (t <= 0) {
     res.x = a.x;
@@ -2033,9 +2033,9 @@ bool cw_comp(const Pt &a, const Pt &b, const Pt &c) {
   }
   auto acx = a.x - c.x, acy = a.y - c.y;
   auto bcx = b.x - c.x, bcy = b.y - c.y;
-  auto det = acx * bcy - acy * bcx;  // Overflow warning!
+  auto det = acx * bcy - acy * bcx;  // Overflow warning.
   if (det == 0) {
-    auto acnorm = acx * acx + acy * acy;  // Overflow warning!
+    auto acnorm = acx * acx + acy * acy;  // Overflow warning.
     auto bcnorm = bcx * bcx + bcy * bcy;
     return acnorm > bcnorm;
   }
@@ -2051,7 +2051,7 @@ auto polygon_area_2x(It lo, It hi) {
   }
   T area = 0;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
-    area += static_cast<T>(j->x - i->x) * static_cast<T>(j->y + i->y);  // Overflow warning!
+    area += static_cast<T>(j->x - i->x) * static_cast<T>(j->y + i->y);  // Overflow warning.
   }
   return area < T(0) ? -area : area;
 }
@@ -2743,7 +2743,7 @@ Overflow warning: squared distances grow like the square of the coordinate magni
 template<typename Pt>
 auto sqdist(const Pt &a, const Pt &b) {
   auto dx = a.x - b.x, dy = a.y - b.y;
-  return dx * dx + dy * dy;  // Overflow warning!
+  return dx * dx + dy * dy;  // Overflow warning.
 }
 
 template<typename It, typename T, typename Pt = typename std::iterator_traits<It>::value_type>
@@ -2894,7 +2894,7 @@ bool seg_intersection(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
 template<typename Pt>
 struct Segment {
   Pt p, q;
-  Segment() {}
+  Segment() = default;
   Segment(const Pt &p, const Pt &q) : p(std::min(p, q)), q(std::max(p, q)) {}
 };
 
@@ -3088,7 +3088,7 @@ int max_collinear_points(const std::vector<Point> &p) {
       if (i == j) {
         continue;
       }
-      int64_t dx = p[j].x - p[i].x, dy = p[j].y - p[i].y;  // Overflow warning!
+      int64_t dx = p[j].x - p[i].x, dy = p[j].y - p[i].y;  // Overflow warning.
       if (dx == 0 && dy == 0) {
         duplicates++;
         continue;
@@ -3157,7 +3157,7 @@ std::vector<std::tuple<int64_t, int, int>> manhattan_mst_edges(std::vector<Point
   std::iota(id.begin(), id.end(), 0);
   std::vector<std::tuple<int64_t, int, int>> edges;
   for (int rot = 0; rot < 4; rot++) {
-    // Overflow warning!
+    // Overflow warning.
     std::sort(id.begin(), id.end(), [&](int i, int j) {
       return p[i].x + p[i].y < p[j].x + p[j].y;
     });
@@ -3186,10 +3186,10 @@ std::vector<std::tuple<int64_t, int, int>> manhattan_mst_edges(std::vector<Point
 }
 
 struct DSU {
-  std::vector<int> parent, rank;
+  std::vector<int> root, rank;
 
-  explicit DSU(int n) : parent(n), rank(n, 0) { std::iota(parent.begin(), parent.end(), 0); }
-  int find(int u) { return parent[u] == u ? u : parent[u] = find(parent[u]); }
+  explicit DSU(int n) : root(n), rank(n, 0) { std::iota(root.begin(), root.end(), 0); }
+  int find(int u) { return root[u] == u ? u : root[u] = find(root[u]); }
 
   bool unite(int u, int v) {
     u = find(u);
@@ -3200,8 +3200,10 @@ struct DSU {
     if (rank[u] < rank[v]) {
       std::swap(u, v);
     }
-    parent[v] = u;
-    rank[u] += rank[u] == rank[v];
+    root[v] = u;
+    if (rank[u] == rank[v]) {
+      rank[u]++;
+    }
     return true;
   }
 };
@@ -3416,7 +3418,7 @@ struct Point {
 struct HalfPlane {
   Point p, dir;
 
-  HalfPlane() : p(), dir() {}
+  HalfPlane() = default;
   HalfPlane(Point p, Point q) : p(p), dir(q - p) {}
 
   bool out(const Point &q) const { return LT(dir.cross(q - p), 0); }
@@ -3994,7 +3996,7 @@ bool LE(T a, U b) {
 template<typename Pt>
 bool proper_seg_intersection(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   auto cross = [](const Pt &o, const Pt &p, const Pt &q) {
-    return (p.x - o.x) * (q.y - o.y) - (p.y - o.y) * (q.x - o.x);  // Overflow warning!
+    return (p.x - o.x) * (q.y - o.y) - (p.y - o.y) * (q.x - o.x);  // Overflow warning.
   };
   auto c1 = cross(a, b, c), c2 = cross(a, b, d), c3 = cross(c, d, a), c4 = cross(c, d, b);
   return ((LT(c1, 0) && LT(0, c2)) || (LT(c2, 0) && LT(0, c1))) &&
@@ -4006,7 +4008,7 @@ std::vector<std::tuple<Pt, Pt, Pt>> delaunay_triangulation(const std::vector<Pt>
   int n = static_cast<int>(p.size());
   std::vector<decltype(Pt::x)> z;
   for (const auto &[px, py] : p) {
-    z.emplace_back(px * px + py * py);  // Overflow warning!
+    z.emplace_back(px * px + py * py);  // Overflow warning.
   }
   std::vector<std::tuple<Pt, Pt, Pt>> res;
   std::vector<std::tuple<int, int, int>> res_idx;
@@ -4016,7 +4018,7 @@ std::vector<std::tuple<Pt, Pt, Pt>> delaunay_triangulation(const std::vector<Pt>
         if (j == k) {
           continue;
         }
-        // Overflow warning!
+        // Overflow warning.
         auto nx = (p[j].y - p[i].y) * (z[k] - z[i]) - (p[k].y - p[i].y) * (z[j] - z[i]);
         auto ny = (p[k].x - p[i].x) * (z[j] - z[i]) - (p[j].x - p[i].x) * (z[k] - z[i]);
         auto nz = (p[j].x - p[i].x) * (p[k].y - p[i].y) - (p[k].x - p[i].x) * (p[j].y - p[i].y);
@@ -4147,7 +4149,7 @@ struct Point {
 
 template<typename T>
 T cross(const Point<T> &a, const Point<T> &b, const Point<T> &o) {
-  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);  // Overflow warning!
+  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);  // Overflow warning.
 }
 
 template<typename T>
@@ -4155,7 +4157,7 @@ T incircle(const Point<T> &a, const Point<T> &b, const Point<T> &c, const Point<
   T adx = a.x - d.x, ady = a.y - d.y;
   T bdx = b.x - d.x, bdy = b.y - d.y;
   T cdx = c.x - d.x, cdy = c.y - d.y;
-  T abdet = adx * bdy - bdx * ady;  // Overflow warning!
+  T abdet = adx * bdy - bdx * ady;  // Overflow warning.
   T bcdet = bdx * cdy - cdx * bdy;
   T cadet = cdx * ady - adx * cdy;
   T alift = adx * adx + ady * ady;
@@ -4453,8 +4455,8 @@ struct TPoint3 {
   TPoint3 operator-(const TPoint3 &p) const { return {x - p.x, y - p.y, z - p.z}; }
   TPoint3 operator*(T k) const { return {x * k, y * k, z * k}; }
   TPoint3<fp_t> operator/(fp_t k) const { return {(fp_t)x / k, (fp_t)y / k, (fp_t)z / k}; }
-  T dot(const TPoint3 &p) const { return x * p.x + y * p.y + z * p.z; }  // Overflow warning!
-  T sqnorm() const { return x * x + y * y + z * z; }                     // Overflow warning!
+  T dot(const TPoint3 &p) const { return x * p.x + y * p.y + z * p.z; }  // Overflow warning.
+  T sqnorm() const { return x * x + y * y + z * z; }                     // Overflow warning.
 
   fp_t norm() const {
     return hypot(hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)), static_cast<fp_t>(z));
@@ -4464,7 +4466,7 @@ struct TPoint3 {
   TPoint3<fp_t> unit() const { return *this / norm(); }
 
   TPoint3 cross(const TPoint3 &p) const {
-    return {y * p.z - z * p.y, z * p.x - x * p.z, x * p.y - y * p.x};  // Overflow warning!
+    return {y * p.z - z * p.y, z * p.x - x * p.z, x * p.y - y * p.x};  // Overflow warning.
   }
 
   TPoint3<fp_t> normal(const TPoint3 &p) const { return cross(p).unit(); }
@@ -4532,7 +4534,7 @@ template<typename Pt, typename F>
 double signed_polyhedron_volume(const std::vector<Pt> &p, const std::vector<F> &faces) {
   double volume = 0;
   for (const auto &[a, b, c] : faces) {
-    volume += p[a].cross(p[b]).dot(p[c]);  // Overflow warning!
+    volume += p[a].cross(p[b]).dot(p[c]);  // Overflow warning.
   }
   return volume / 6.0;
 }

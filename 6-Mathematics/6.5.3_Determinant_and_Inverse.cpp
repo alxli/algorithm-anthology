@@ -173,15 +173,15 @@ int invert(SquareMatrix &a, double eps = 1e-10) {
       return -1;
     }
     std::swap(b[p], b[i]);
-    double z = b[i][i];
+    double pivot = b[i][i];
     for (int j = i; j < n * 2; j++) {
-      b[i][j] /= z;
+      b[i][j] /= pivot;
     }
     for (int j = 0; j < n; j++) {
       if (i != j) {
-        double z = b[j][i];
+        double factor = b[j][i];
         for (int k = 0; k < n * 2; k++) {
-          b[j][k] -= z * b[i][k];
+          b[j][k] -= factor * b[i][k];
         }
       }
     }

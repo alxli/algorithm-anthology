@@ -60,7 +60,7 @@ template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
 template<typename Pt>
 auto sqdist(const Pt &a, const Pt &b) {
   auto dx = b.x - a.x, dy = b.y - a.y;
-  return dx * dx + dy * dy;  // Overflow warning!
+  return dx * dx + dy * dy;  // Overflow warning.
 }
 
 template<typename Pt>
@@ -80,7 +80,7 @@ double line_dist(const Pt &p, const Pt &a, const Pt &b) {
     return dist(p, a);
   }
   auto n = sqdist(a, b);
-  auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);  // Overflow warning!
+  auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);  // Overflow warning.
   double u = static_cast<double>(d) / n;
   double dx = a.x + u * (b.x - a.x) - p.x, dy = a.y + u * (b.y - a.y) - p.y;
   return sqrt(dx * dx + dy * dy);
@@ -104,7 +104,7 @@ double seg_dist(const Pt &p, const Pt &a, const Pt &b) {
     return dist(p, a);
   }
   auto n = sqdist(a, b);
-  auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);  // Overflow warning!
+  auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);  // Overflow warning.
   if (LE(d, 0) || EQ(n, 0)) {
     return dist(p, a);
   }
@@ -127,7 +127,7 @@ double seg_dist(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   auto ab_x = b.x - a.x, ab_y = b.y - a.y;
   auto ac_x = c.x - a.x, ac_y = c.y - a.y;
   auto cd_x = d.x - c.x, cd_y = d.y - c.y;
-  auto c1 = ab_x * cd_y - ab_y * cd_x;  // Overflow warning!
+  auto c1 = ab_x * cd_y - ab_y * cd_x;  // Overflow warning.
   auto c2 = ac_x * ab_y - ac_y * ab_x;
   if (EQ(c1, 0) && EQ(c2, 0)) {
     auto less = [](const Pt &u, const Pt &v) { return u.x != v.x ? u.x < v.x : u.y < v.y; };
@@ -161,7 +161,7 @@ Pt closest_point(const Pt &a, const Pt &b, const Pt &p) {
     return res;
   }
   auto n = sqdist(a, b);
-  auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);  // Overflow warning!
+  auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);  // Overflow warning.
   double t = static_cast<double>(d) / n;
   if (t <= 0) {
     res.x = a.x;

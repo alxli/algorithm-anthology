@@ -4479,7 +4479,7 @@ class ShuntingYardParser {
     std::stack<std::pair<string, bool>> op_stack;
     op_stack.emplace("(", false);
     StrIt prev = hi;
-    do {
+    while (true) {
       string curr = (lo == hi) ? ")" : *lo;
       if (is_operand(curr)) {
         vals.push(eval_operand(curr));
@@ -4524,8 +4524,11 @@ class ShuntingYardParser {
           op_stack.emplace(*lo, false);
         }
       }
-      prev = lo;
-    } while (lo++ != hi);
+      if (lo == hi) {
+        break;
+      }
+      prev = lo++;
+    }
     return vals.top();
   }
 

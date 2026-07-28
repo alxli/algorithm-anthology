@@ -60,7 +60,7 @@ class HullOptimizer {
     if (x->m == y->m) {
       x->xhi = (x->b > y->b) ? INT64_MAX : INT64_MIN;
     } else {
-      int64_t a = y->b - x->b, b = x->m - y->m;  // Overflow warning!
+      int64_t a = y->b - x->b, b = x->m - y->m;  // Overflow warning.
       x->xhi = a / b - ((a ^ b) < 0 && a % b);
     }
     return x->xhi >= y->xhi;
@@ -92,7 +92,7 @@ class HullOptimizer {
     assert(!hull.empty());
     Line q(0, 0, x, true);
     auto it = hull.lower_bound(q);
-    int64_t res = it->m * x + it->b;  // Overflow warning!
+    int64_t res = it->m * x + it->b;  // Overflow warning.
     return query_max ? res : -res;
   }
 };

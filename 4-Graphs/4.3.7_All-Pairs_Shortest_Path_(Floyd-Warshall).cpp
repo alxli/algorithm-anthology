@@ -10,10 +10,10 @@ processed the matrix holds the all-pairs shortest distances.
 
 - `init_floyd(n)` initializes `dist` and `next_node` for a graph of `n` nodes numbered $[0, `n`)$.
 - `floyd_warshall()` updates the global adjacency matrix `dist` so `dist[u][v]` stores the
-  shortest-path distance from $u$ to $v$, and updates `next_node` for path reconstruction. If the
-  graph contains negative-weight cycles, there is no shortest path and an error will be thrown.
+  shortest-path distance from $u$ to $v$, updates `next_node` for path reconstruction, and returns
+  whether the graph contains no negative-weight cycle.
 - `get_path(start, dest)` returns the shortest path from `start` to `dest`, or an empty vector if
-  `dest` is unreachable from `start`, after the latest call to `floyd_warshall()`.
+  `dest` is unreachable from `start`, after the latest successful call to `floyd_warshall()`.
 
 For path reconstruction, `next_node[i][j]` stores the next node to visit after `i` on a current
 shortest path from `i` to `j`. It is initialized to `j` for every pair and, when a shorter route `i`
@@ -34,7 +34,6 @@ Space Complexity:
 */
 
 #include <cstdint>
-#include <stdexcept>
 #include <vector>
 
 const int64_t INF = INT64_MAX / 4;
@@ -52,7 +51,7 @@ void init_floyd(int n) {
   }
 }
 
-void floyd_warshall() {
+bool floyd_warshall() {
   int n = static_cast<int>(dist.size());
   for (int k = 0; k < n; k++) {
     for (int i = 0; i < n; i++) {
@@ -66,12 +65,13 @@ void floyd_warshall() {
       }
     }
   }
-  // Optional: Report negative-weight cycles.
+  // Check for negative-weight cycles.
   for (int i = 0; i < n; i++) {
     if (dist[i][i] < 0) {
-      throw std::runtime_error("Negative-weight cycle found.");
+      return false;
     }
   }
+  return true;
 }
 
 std::vector<int> get_path(int start, int dest) {
@@ -101,9 +101,15 @@ int main() {
   dist[0][1] = 1;
   dist[1][2] = 2;
   dist[0][2] = 5;
-  floyd_warshall();
+  bool ok = floyd_warshall();
+  assert(ok);
   int start = 0, dest = 2;
   assert(dist[start][dest] == 3);
   assert((get_path(start, dest) == vector<int>{0, 1, 2}));
+
+  init_floyd(2);
+  dist[0][1] = dist[1][0] = -1;
+  ok = floyd_warshall();
+  assert(!ok);
   return 0;
 }

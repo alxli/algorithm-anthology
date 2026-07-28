@@ -29,7 +29,7 @@ Space Complexity:
 #include <cstdint>
 #include <vector>
 
-const int64_t INF = (1LL << 62);
+const int64_t INF = INT64_MAX / 4;
 
 template<typename Cost>
 std::vector<std::vector<int64_t>> knuth_interval_dp(
@@ -52,7 +52,7 @@ std::vector<std::vector<int64_t>> knuth_interval_dp(
       int split_hi = std::min(opt[l + 1][r], r - 1);
       int64_t interval_cost = cost(l, r);
       for (int k = split_lo; k <= split_hi; k++) {
-        int64_t candidate = dp[l][k] + dp[k][r] + interval_cost;  // Overflow warning!
+        int64_t candidate = dp[l][k] + dp[k][r] + interval_cost;  // Overflow warning.
         if (candidate < dp[l][r]) {
           dp[l][r] = candidate;
           opt[l][r] = k;

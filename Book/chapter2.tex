@@ -1088,6 +1088,7 @@ The comparator \inlinecode{comp} defines the key ordering: \inlinecode{comp(a, b
 #include <cstdint>
 #include <functional>
 #include <optional>
+#include <random>
 #include <utility>
 #include <vector>
 
@@ -1095,7 +1096,7 @@ template<typename K, typename V, typename Compare = std::less<K>>
 class Treap {
   struct Node {
     static uint32_t rand32() {
-      static uint32_t x = 123456789;
+      static uint32_t x = std::random_device{}() | 1U;
       x ^= x << 13;
       x ^= x >> 17;
       x ^= x << 5;
@@ -2486,6 +2487,7 @@ This implementation uses \inlinecode{std::pair} to represent intervals and requi
 \begin{lstlisting}[language=C++]
 #include <cassert>
 #include <cstdint>
+#include <random>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -2496,7 +2498,7 @@ class IntervalTreap {
 
   struct Node {
     static uint32_t rand32() {
-      static uint32_t x = 123456789;
+      static uint32_t x = std::random_device{}() | 1U;
       x ^= x << 13;
       x ^= x >> 17;
       x ^= x << 5;
@@ -4903,44 +4905,46 @@ class SegTreeBeats {
     pull(i);
   }
 
-  void chmin(int i, int lo, int hi, int tlo, int thi, const T &t) {
-    if (thi < lo || hi < tlo || max1[i] <= t) {
+  void chmin(int i, int lo, int hi, int tgt_lo, int tgt_hi, const T &t) {
+    if (tgt_hi < lo || hi < tgt_lo || max1[i] <= t) {
       return;  // Prune: outside the range, or every entry is already at most t.
     }
-    if (tlo <= lo && hi <= thi && (lo == hi || max2[i] < t)) {
+    if (tgt_lo <= lo && hi <= tgt_hi && (lo == hi || max2[i] < t)) {
       apply_chmin(i, t);  // Break: only the maximal entries are affected.
       return;
     }
     push(i);
     int mid = lo + (hi - lo) / 2;
-    chmin(i * 2 + 1, lo, mid, tlo, thi, t);
-    chmin(i * 2 + 2, mid + 1, hi, tlo, thi, t);
+    chmin(i * 2 + 1, lo, mid, tgt_lo, tgt_hi, t);
+    chmin(i * 2 + 2, mid + 1, hi, tgt_lo, tgt_hi, t);
     pull(i);
   }
 
-  T query_sum(int i, int lo, int hi, int tlo, int thi) {
-    if (thi < lo || hi < tlo) {
+  T query_sum(int i, int lo, int hi, int tgt_lo, int tgt_hi) {
+    if (tgt_hi < lo || hi < tgt_lo) {
       return 0;
     }
-    if (tlo <= lo && hi <= thi) {
+    if (tgt_lo <= lo && hi <= tgt_hi) {
       return sum[i];
     }
     push(i);
     int mid = lo + (hi - lo) / 2;
-    return query_sum(i * 2 + 1, lo, mid, tlo, thi) + query_sum(i * 2 + 2, mid + 1, hi, tlo, thi);
+    return query_sum(i * 2 + 1, lo, mid, tgt_lo, tgt_hi) +
+           query_sum(i * 2 + 2, mid + 1, hi, tgt_lo, tgt_hi);
   }
 
-  T query_max(int i, int lo, int hi, int tlo, int thi) {
-    if (thi < lo || hi < tlo) {
+  T query_max(int i, int lo, int hi, int tgt_lo, int tgt_hi) {
+    if (tgt_hi < lo || hi < tgt_lo) {
       return NEG_INF;
     }
-    if (tlo <= lo && hi <= thi) {
+    if (tgt_lo <= lo && hi <= tgt_hi) {
       return max1[i];
     }
     push(i);
     int mid = lo + (hi - lo) / 2;
     return std::max(
-        query_max(i * 2 + 1, lo, mid, tlo, thi), query_max(i * 2 + 2, mid + 1, hi, tlo, thi)
+        query_max(i * 2 + 1, lo, mid, tgt_lo, tgt_hi),
+        query_max(i * 2 + 2, mid + 1, hi, tgt_lo, tgt_hi)
     );
   }
 
@@ -5516,7 +5520,7 @@ class MergeSortTree {
   }
 
  public:
-  MergeSortTree(const std::vector<T> &a) : len(a.size()), tree(4 * a.size()) {
+  explicit MergeSortTree(const std::vector<T> &a) : len(a.size()), tree(4 * a.size()) {
     assert(len > 0);
     build(1, 0, len - 1, a);
   }
@@ -5855,6 +5859,7 @@ The query and update operations match those of the point- and range-update segme
 \begin{lstlisting}[language=C++]
 #include <cassert>
 #include <cstdint>
+#include <random>
 #include <utility>
 
 template<typename T>
@@ -5865,7 +5870,7 @@ class ImplicitTreap {
 
   struct Node {
     static uint32_t rand32() {
-      static uint32_t x = 123456789;
+      static uint32_t x = std::random_device{}() | 1U;
       x ^= x << 13;
       x ^= x >> 17;
       x ^= x << 5;
@@ -7079,6 +7084,9 @@ class Fenwick {
     }
   }
 
+  void set(int i, const T &x) { add(i, x - at(i)); }
+  T at(int i) const { return sum(i, i); }
+
   T sum(int hi) const {
     assert(-1 <= hi && hi < len);
     T res = 0;
@@ -7087,9 +7095,6 @@ class Fenwick {
     }
     return res;
   }
-
-  void set(int i, const T &x) { add(i, x - at(i)); }
-  T at(int i) const { return sum(i, i); }
 
   T sum(int lo, int hi) const {
     assert(0 <= lo && lo <= hi && hi < len);
@@ -7146,9 +7151,9 @@ The value type \inlinecode{T} must represent $0$ and support addition and subtra
 \begin{compactitem}
   \item \inlinecode{FenwickRUPQ\textless{}T\textgreater{}(n)} constructs an array with 0-based indices $[0, {\inlinecodemath{n}})$, with all values initialized to $0$.
   \item \inlinecode{size()} returns the size of the array.
-  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{add(i, x)} adds \inlinecode{x} to the value at index \inlinecode{i}.
   \item \inlinecode{add(lo, hi, x)} adds \inlinecode{x} to the values at all indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
+  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -7186,15 +7191,6 @@ class FenwickRUPQ {
 
   int size() const { return len; }
 
-  T at(int i) const {
-    assert(0 <= i && i < len);
-    T res = 0;
-    for (i++; i > 0; i -= i & -i) {
-      res += tree[i];
-    }
-    return res;
-  }
-
   void add(int i, const T &x) {
     assert(0 <= i && i < len);
     add_helper(i, x);
@@ -7204,6 +7200,15 @@ class FenwickRUPQ {
     assert(0 <= lo && lo <= hi && hi < len);
     add_helper(lo, x);
     add_helper(hi + 1, -x);
+  }
+
+  T at(int i) const {
+    assert(0 <= i && i < len);
+    T res = 0;
+    for (i++; i > 0; i -= i & -i) {
+      res += tree[i];
+    }
+    return res;
   }
 };
 \end{lstlisting}
@@ -7234,10 +7239,10 @@ The value type \inlinecode{T} must represent $0$ and support addition, subtracti
 \begin{compactitem}
   \item \inlinecode{FenwickRURQ\textless{}T\textgreater{}(n)} constructs an array with 0-based indices $[0, {\inlinecodemath{n}})$, with all values initialized to $0$.
   \item \inlinecode{size()} returns the size of the array.
-  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{add(i, x)} increments the value at index \inlinecode{i} by \inlinecode{x}.
   \item \inlinecode{add(lo, hi, x)} adds \inlinecode{x} to the values at all indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{set(i, x)} assigns the value at index \inlinecode{i} to \inlinecode{x}.
+  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{sum(hi)} returns the sum of all values at indices $[0, {\inlinecodemath{hi}}]$.
   \item \inlinecode{sum(lo, hi)} returns the sum of all values at indices $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{max\_prefix(c)} returns the largest boundary \inlinecode{hi} such that \inlinecode{sum(0, hi - 1)} $\leq$ \inlinecode{c}, assuming prefix sums are nondecreasing and \inlinecode{c} is nonnegative. It may return any boundary in $[0, n]$, where $n$ is \inlinecode{size()}.
@@ -7288,6 +7293,8 @@ class FenwickRURQ {
 
   int size() const { return len; }
 
+  void add(int i, const T &x) { add(i, i, x); }
+
   void add(int lo, int hi, const T &x) {
     assert(0 <= lo && lo <= hi && hi < len);
     lo++;
@@ -7298,8 +7305,8 @@ class FenwickRURQ {
     add(t2, hi + 1, -x * hi);
   }
 
-  void add(int i, const T &x) { add(i, i, x); }
   void set(int i, const T &x) { add(i, x - at(i)); }
+  T at(int i) const { return sum(i, i); }
 
   T sum(int hi) const {
     assert(-1 <= hi && hi < len);
@@ -7311,8 +7318,6 @@ class FenwickRURQ {
     assert(0 <= lo && lo <= hi && hi < len);
     return sum(hi) - sum(lo - 1);
   }
-
-  T at(int i) const { return sum(i, i); }
 
   int max_prefix(T c) const {
     T s1 = 0, s2 = 0;
@@ -7370,10 +7375,10 @@ The value type \inlinecode{T} must represent $0$ and support addition, subtracti
 
 \begin{compactitem}
   \item \inlinecode{SparseFenwick\textless{}T, N\textgreater{}()} constructs an array with 0-based indices $[0, {\inlinecodemath{N}})$, implicitly initialized to $0$.
-  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{add(i, x)} adds \inlinecode{x} to the value at index \inlinecode{i}.
   \item \inlinecode{add(lo, hi, x)} adds \inlinecode{x} to the values at all indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{set(i, x)} assigns the value at index \inlinecode{i} to \inlinecode{x}.
+  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{sum(hi)} returns the sum of all values at indices $[0, {\inlinecodemath{hi}}]$.
   \item \inlinecode{sum(lo, hi)} returns the sum of all values at indices $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{max\_prefix(c)} returns the largest boundary \inlinecode{hi} such that \inlinecode{sum(0, hi - 1)} $\leq$ \inlinecode{c}, assuming prefix sums are nondecreasing and \inlinecode{c} is nonnegative. It may return any boundary in $[0, N]$.
@@ -7414,6 +7419,8 @@ class SparseFenwick {
   }
 
  public:
+  void add(int i, const T &x) { add(i, i, x); }
+
   void add(int lo, int hi, const T &x) {
     assert(0 <= lo && lo <= hi && hi < N);
     lo++;
@@ -7422,8 +7429,8 @@ class SparseFenwick {
     add_helper(hi + 1, -x, -x * hi);
   }
 
-  void add(int i, const T &x) { add(i, i, x); }
   void set(int i, const T &x) { add(i, x - at(i)); }
+  T at(int i) const { return sum(i, i); }
 
   T sum(int hi) const {
     assert(-1 <= hi && hi < N);
@@ -7440,8 +7447,6 @@ class SparseFenwick {
     assert(0 <= lo && lo <= hi && hi < N);
     return sum(hi) - sum(lo - 1);
   }
-
-  T at(int i) const { return sum(i, i); }
 
   int max_prefix(T c) const {
     T mul = 0, add = 0;
@@ -7555,6 +7560,9 @@ class Fenwick2D {
     }
   }
 
+  void set(int r, int c, const T &x) { add(r, c, x - at(r, c)); }
+  T at(int r, int c) const { return sum(r, c, r, c); }
+
   T sum(int r, int c) const {
     assert(-1 <= r && r < rows && -1 <= c && c < cols);
     T res = 0;
@@ -7571,9 +7579,6 @@ class Fenwick2D {
     assert(0 <= c1 && c1 <= c2 && c2 < cols);
     return sum(r2, c2) - sum(r1 - 1, c2) - sum(r2, c1 - 1) + sum(r1 - 1, c1 - 1);
   }
-
-  T at(int r, int c) const { return sum(r, c, r, c); }
-  void set(int r, int c, const T &x) { add(r, c, x - at(r, c)); }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -7661,6 +7666,8 @@ class SparseFenwick2D {
   }
 
  public:
+  void add(int r, int c, const T &x) { add(r, c, r, c, x); }
+
   void add(int r1, int c1, int r2, int c2, const T &x) {
     assert(0 <= r1 && r1 <= r2 && r2 < R);
     assert(0 <= c1 && c1 <= c2 && c2 < C);
@@ -7670,8 +7677,8 @@ class SparseFenwick2D {
     add_helper(r1, c1, x);
   }
 
-  void add(int r, int c, const T &x) { add(r, c, r, c, x); }
   void set(int r, int c, const T &x) { add(r, c, x - at(r, c)); }
+  T at(int r, int c) const { return sum(r, c, r, c); }
 
   T sum(int r, int c) const {
     assert(-1 <= r && r < R && -1 <= c && c < C);
@@ -7694,8 +7701,6 @@ class SparseFenwick2D {
     assert(0 <= c1 && c1 <= c2 && c2 < C);
     return sum(r2, c2) + sum(r1 - 1, c1 - 1) - sum(r1 - 1, c2) - sum(r2, c1 - 1);
   }
-
-  T at(int r, int c) const { return sum(r, c, r, c); }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -7748,9 +7753,9 @@ Usage is two-phase. First declare every cell that will be updated with \inlineco
   \item \inlinecode{build()} finalizes the coordinate compression. Call exactly once, after all \inlinecode{reserve()} calls.
   \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}), which must have been reserved.
   \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}), which must have been reserved.
+  \item \inlinecode{at(r, c)} returns the value at index (\inlinecode{r}, \inlinecode{c}).
   \item \inlinecode{sum(r, c)} returns the sum of the rectangle with rows $[0, {\inlinecodemath{r}}]$ and columns $[0, {\inlinecodemath{c}}]$.
   \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with rows $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
-  \item \inlinecode{at(r, c)} returns the value at index (\inlinecode{r}, \inlinecode{c}).
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -7843,6 +7848,9 @@ class OfflineFenwick2D {
     }
   }
 
+  void set(int r, int c, const T &x) { add(r, c, x - at(r, c)); }
+  T at(int r, int c) const { return sum(r, c, r, c); }
+
   T sum(int r, int c) const {
     assert(built);
     T res = T();
@@ -7858,9 +7866,6 @@ class OfflineFenwick2D {
     assert(r1 <= r2 && c1 <= c2);
     return sum(r2, c2) - sum(r1 - 1, c2) - sum(r2, c1 - 1) + sum(r1 - 1, c1 - 1);
   }
-
-  T at(int r, int c) const { return sum(r, c, r, c); }
-  void set(int r, int c, const T &x) { add(r, c, x - at(r, c)); }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -7904,7 +7909,7 @@ This version is simplified to work only on the fixed set of integer elements $[0
 
 \begin{compactitem}
   \item \inlinecode{DSU(n)} constructs \inlinecode{n} singleton partitions over elements $[0, {\inlinecodemath{n}})$.
-  \item \inlinecode{find\_root(u)} returns the unique representative of the partition containing \inlinecode{u}.
+  \item \inlinecode{find(u)} returns the unique representative of the partition containing \inlinecode{u}.
   \item \inlinecode{sets()} returns the current number of partitions.
   \item \inlinecode{set\_size(u)} returns the number of elements in the partition containing \inlinecode{u}.
   \item \inlinecode{is\_united(u, v)} returns whether elements \inlinecode{u} and \inlinecode{v} belong to the same partition.
@@ -7915,14 +7920,14 @@ This version is simplified to work only on the fixed set of integer elements $[0
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to the constructor, and $O(1)$ per call to \inlinecode{sets()}.
-  \item $O(\alpha\left(n\right))$ per call to \inlinecode{find\_root()}, \inlinecode{set\_size()}, \inlinecode{is\_united()}, and \inlinecode{unite()}, where $n$ is the number of elements, and $\alpha(n)$ is the extremely slow growing inverse of the Ackermann function (effectively a very small constant for all practical values of $n$).
+  \item $O(\alpha\left(n\right))$ per call to \inlinecode{find()}, \inlinecode{set\_size()}, \inlinecode{is\_united()}, and \inlinecode{unite()}, where $n$ is the number of elements, and $\alpha(n)$ is the extremely slow growing inverse of the Ackermann function (effectively a very small constant for all practical values of $n$).
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the disjoint set forest elements.
-  \item $O(\log n)$ auxiliary stack space for operations that call \inlinecode{find\_root()}.
+  \item $O(\log n)$ auxiliary stack space for operations that call \inlinecode{find()}.
   \item $O(1)$ auxiliary for \inlinecode{sets()}.
 \end{compactitem}
 
@@ -7938,28 +7943,23 @@ class DSU {
  public:
   explicit DSU(int n) : root(n), size(n, 1), num_sets(n) { std::iota(root.begin(), root.end(), 0); }
 
-  int find_root(int u) {
-    if (root[u] != u) {
-      root[u] = find_root(root[u]);
-    }
-    return root[u];
-  }
-
+  int find(int u) { return root[u] == u ? u : root[u] = find(root[u]); }
   int sets() const { return num_sets; }
-  int set_size(int u) { return size[find_root(u)]; }
-  bool is_united(int u, int v) { return find_root(u) == find_root(v); }
+  int set_size(int u) { return size[find(u)]; }
+  bool is_united(int u, int v) { return find(u) == find(v); }
 
   bool unite(int u, int v) {
-    int ru = find_root(u), rv = find_root(v);
-    if (ru == rv) {
+    u = find(u);
+    v = find(v);
+    if (u == v) {
       return false;
     }
     num_sets--;
-    if (size[ru] < size[rv]) {
-      std::swap(ru, rv);
+    if (size[u] < size[v]) {
+      std::swap(u, v);
     }
-    root[rv] = ru;
-    size[ru] += size[rv];
+    root[v] = u;
+    size[u] += size[v];
     return true;
   }
 };
@@ -8025,6 +8025,7 @@ A precondition to the last three operations is that \inlinecode{make\_set()} mus
 \begin{lstlisting}[language=C++]
 #include <cassert>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 template<typename T>
@@ -8033,12 +8034,7 @@ class SparseDSU {
   std::unordered_map<T, int> id;
   std::vector<int> root, rank;
 
-  int find_root(int u) {
-    if (root[u] != u) {
-      root[u] = find_root(root[u]);
-    }
-    return root[u];
-  }
+  int find(int u) { return root[u] == u ? u : root[u] = find(root[u]); }
 
   int get_id(const T &u) const {
     auto it = id.find(u);
@@ -8061,21 +8057,20 @@ class SparseDSU {
 
   int size() const { return num_elements; }
   int sets() const { return num_sets; }
-  bool is_united(const T &u, const T &v) { return find_root(get_id(u)) == find_root(get_id(v)); }
+  bool is_united(const T &u, const T &v) { return find(get_id(u)) == find(get_id(v)); }
 
   bool unite(const T &u, const T &v) {
-    int ru = find_root(get_id(u)), rv = find_root(get_id(v));
+    int ru = find(get_id(u)), rv = find(get_id(v));
     if (ru == rv) {
       return false;
     }
     num_sets--;
     if (rank[ru] < rank[rv]) {
-      root[ru] = rv;
-    } else {
-      root[rv] = ru;
-      if (rank[ru] == rank[rv]) {
-        rank[ru]++;
-      }
+      std::swap(ru, rv);
+    }
+    root[rv] = ru;
+    if (rank[ru] == rank[rv]) {
+      rank[ru]++;
     }
     return true;
   }
@@ -8083,7 +8078,7 @@ class SparseDSU {
   std::vector<std::vector<T>> get_all_sets() {
     std::unordered_map<int, std::vector<T>> tmp;
     for (auto &[key, val] : id) {
-      tmp[find_root(val)].push_back(key);
+      tmp[find(val)].push_back(key);
     }
     std::vector<std::vector<T>> res;
     for (auto &[key, val] : tmp) {
@@ -8128,8 +8123,8 @@ Path compression is intentionally not used, because it is hard to undo. Union by
 
 \begin{compactitem}
   \item \inlinecode{RollbackDSU(n)} constructs \inlinecode{n} singleton sets over elements $[0, {\inlinecodemath{n}})$.
+  \item \inlinecode{find(u)} returns the representative of the set containing \inlinecode{u}.
   \item \inlinecode{sets()} returns the current number of disjoint sets.
-  \item \inlinecode{find\_root(u)} returns the representative of the set containing \inlinecode{u}.
   \item \inlinecode{is\_united(u, v)} returns whether \inlinecode{u} and \inlinecode{v} are in the same set.
   \item \inlinecode{unite(u, v)} merges two sets and returns whether a merge occurred.
   \item \inlinecode{snapshot()} returns a token representing the current history size.
@@ -8141,7 +8136,7 @@ Path compression is intentionally not used, because it is hard to undo. Union by
 \begin{compactitem}
   \item $O(n)$ per call to the constructor.
   \item $O(1)$ per call to \inlinecode{sets()}.
-  \item $O(\log n)$ worst-case per call to \inlinecode{find\_root()}, \inlinecode{is\_united()}, and \inlinecode{unite()}.
+  \item $O(\log n)$ worst-case per call to \inlinecode{find()}, \inlinecode{is\_united()}, and \inlinecode{unite()}.
   \item $O(1)$ per undone union during \inlinecode{rollback()}.
 \end{compactitem}
 
@@ -8170,7 +8165,7 @@ class RollbackDSU {
     std::iota(root.begin(), root.end(), 0);
   }
 
-  int find_root(int u) const {
+  int find(int u) const {
     assert(0 <= u && u < static_cast<int>(root.size()));
     while (root[u] != u) {
       u = root[u];
@@ -8179,20 +8174,20 @@ class RollbackDSU {
   }
 
   int sets() const { return num_sets; }
-  bool is_united(int u, int v) const { return find_root(u) == find_root(v); }
+  bool is_united(int u, int v) const { return find(u) == find(v); }
 
   bool unite(int u, int v) {
-    u = find_root(u);
-    v = find_root(v);
+    u = find(u);
+    v = find(v);
     if (u == v) {
       return false;
     }
-    if (size[u] > size[v]) {
+    if (size[u] < size[v]) {
       std::swap(u, v);
     }
-    history.emplace_back(u, v, size[v]);
-    root[u] = v;
-    size[v] += size[u];
+    history.emplace_back(v, u, size[u]);
+    root[v] = u;
+    size[u] += size[v];
     num_sets--;
     return true;
   }
@@ -9137,9 +9132,8 @@ class HeavyLight {
       f(path[u], lo, hi, pathpos[u] > pathpos[v]);
     }
     for (int i = static_cast<int>(down_parts.size()) - 1; i >= 0; i--) {
-      int path, lo, hi;
-      std::tie(path, lo, hi) = down_parts[i];
-      f(path, lo, hi, false);
+      auto [down_path, down_lo, down_hi] = down_parts[i];
+      f(down_path, down_lo, down_hi, false);
     }
     return true;
   }

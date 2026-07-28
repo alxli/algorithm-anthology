@@ -118,7 +118,7 @@ struct TLine {
 
   // Line through two points. Coefficients are exact (type T) for integer points.
   template<typename Pt, typename = if_point<Pt>>
-  // Overflow warning!
+  // Overflow warning.
   TLine(const Pt &p, const Pt &q) : a(q.y - p.y), b(p.x - q.x), c(-(a * p.x + b * p.y)) {
     if constexpr (CANONICALIZE) canonicalize();
   }
@@ -161,11 +161,11 @@ struct TLine {
   // Whether point p lies on the line. Exact for integer T and integer p.
   template<typename Pt>
   bool contains(const Pt &p) const {
-    return valid() && EQ(a * p.x + b * p.y + c, 0);  // Overflow warning!
+    return valid() && EQ(a * p.x + b * p.y + c, 0);  // Overflow warning.
   }
 
   // Parallel iff the normals are parallel (cross == 0); perpendicular iff normals are perpendicular
-  // (dot == 0). Both exact for integer T. Overflow warning!
+  // (dot == 0). Both exact for integer T. Overflow warning.
   bool is_parallel(const TLine &l) const { return valid() && l.valid() && EQ(a * l.b, l.a * b); }
 
   bool is_perpendicular(const TLine &l) const {
@@ -175,12 +175,12 @@ struct TLine {
   // Parallel/perpendicular line through point p. Exact for integer T and integer p.
   template<typename Pt, typename = if_point<Pt>>
   TLine parallel(const Pt &p) const {
-    return TLine(a, b, -(a * p.x + b * p.y));  // Overflow warning!
+    return TLine(a, b, -(a * p.x + b * p.y));  // Overflow warning.
   }
 
   template<typename Pt, typename = if_point<Pt>>
   TLine perpendicular(const Pt &p) const {
-    return TLine(-b, a, b * p.x - a * p.y);  // Overflow warning!
+    return TLine(-b, a, b * p.x - a * p.y);  // Overflow warning.
   }
 
   friend std::ostream &operator<<(std::ostream &out, const TLine &l) {

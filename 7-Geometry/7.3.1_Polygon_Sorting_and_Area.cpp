@@ -66,9 +66,9 @@ bool cw_comp(const Pt &a, const Pt &b, const Pt &c) {
   }
   auto acx = a.x - c.x, acy = a.y - c.y;
   auto bcx = b.x - c.x, bcy = b.y - c.y;
-  auto det = acx * bcy - acy * bcx;  // Overflow warning!
+  auto det = acx * bcy - acy * bcx;  // Overflow warning.
   if (det == 0) {
-    auto acnorm = acx * acx + acy * acy;  // Overflow warning!
+    auto acnorm = acx * acx + acy * acy;  // Overflow warning.
     auto bcnorm = bcx * bcx + bcy * bcy;
     return acnorm > bcnorm;
   }
@@ -84,7 +84,7 @@ auto polygon_area_2x(It lo, It hi) {
   }
   T area = 0;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
-    area += static_cast<T>(j->x - i->x) * static_cast<T>(j->y + i->y);  // Overflow warning!
+    area += static_cast<T>(j->x - i->x) * static_cast<T>(j->y + i->y);  // Overflow warning.
   }
   return area < T(0) ? -area : area;
 }

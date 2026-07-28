@@ -55,7 +55,7 @@ class FunctionalGraph {
   }
 
  public:
-  FunctionalGraph(const std::vector<int> &f) {
+  explicit FunctionalGraph(const std::vector<int> &f) {
     int n = static_cast<int>(f.size()), levels = 1;
     while ((1LL << levels) < n) {
       levels++;

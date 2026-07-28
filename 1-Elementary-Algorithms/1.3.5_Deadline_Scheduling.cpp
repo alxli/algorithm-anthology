@@ -6,8 +6,8 @@ decreasing profit order and places each chosen job in the latest available slot 
 
 The latest-slot choice is safe because it uses the current high-profit job while leaving earlier
 slots available for jobs with tighter deadlines. A disjoint-set forest over time slots makes this
-efficient: `find_root(t)` returns the latest still-free slot at or before `t`, and occupying slot
-`t` links it to the next candidate slot `t - 1`.
+efficient: `find(t)` returns the latest still-free slot at or before `t`, and occupying slot `t`
+links it to the next candidate slot `t - 1`.
 
 - `select_deadline_jobs(jobs)` returns a pair (`profit`, `slot`) containing that maximum profit and
   `slot[i]`, the assigned time slot of input job `i`, or $-1$ if that job is not selected, for a
@@ -42,14 +42,8 @@ class SlotDSU {
  public:
   explicit SlotDSU(int n) : root(n + 1) { std::iota(root.begin(), root.end(), 0); }
 
-  int find_root(int u) {
-    if (root[u] != u) {
-      root[u] = find_root(root[u]);
-    }
-    return root[u];
-  }
-
-  void occupy(int u) { root[u] = find_root(u - 1); }
+  int find(int u) { return root[u] == u ? u : root[u] = find(root[u]); }
+  void occupy(int u) { root[u] = find(u - 1); }
 };
 
 std::pair<int64_t, std::vector<int>> select_deadline_jobs(const std::vector<Job> &jobs) {
@@ -75,7 +69,7 @@ std::pair<int64_t, std::vector<int>> select_deadline_jobs(const std::vector<Job>
     if (jobs[i].profit <= 0) {
       continue;
     }
-    int slot = slots.find_root(std::min(jobs[i].deadline, max_deadline));
+    int slot = slots.find(std::min(jobs[i].deadline, max_deadline));
     if (slot > 0) {
       res += jobs[i].profit;  // Overflow warning.
       assigned[i] = slot;

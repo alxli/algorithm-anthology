@@ -66,7 +66,7 @@ class TarjanSCC {
   }
 
  public:
-  TarjanSCC(int n = 0) : adj(n) {}
+  explicit TarjanSCC(int n = 0) : adj(n) {}
 
   void add_edge(int u, int v) { adj[u].push_back(v); }
 

@@ -64,7 +64,7 @@ class MergeSortTree {
   }
 
  public:
-  MergeSortTree(const std::vector<T> &a) : len(a.size()), tree(4 * a.size()) {
+  explicit MergeSortTree(const std::vector<T> &a) : len(a.size()), tree(4 * a.size()) {
     assert(len > 0);
     build(1, 0, len - 1, a);
   }

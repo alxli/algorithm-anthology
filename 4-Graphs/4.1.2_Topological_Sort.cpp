@@ -9,8 +9,8 @@ reach. Kahn's algorithm instead repeatedly removes nodes with indegree zero: the
 nodes whose remaining prerequisites have all already been placed. If at some point not every node
 can be removed, the leftover nodes must lie on a directed cycle.
 
-- `toposort_dfs()` returns a valid topological ordering using DFS post-order, or throws if the graph
-  contains a cycle.
+- `toposort_dfs()` returns a valid topological ordering using DFS post-order, or an empty vector if
+  the graph contains a cycle.
 - `toposort_kahn()` returns a valid topological ordering using indegrees and a queue, or returns an
   empty vector if the graph contains a cycle.
 
@@ -29,34 +29,35 @@ Space Complexity:
 #include <algorithm>
 #include <cassert>
 #include <queue>
-#include <stdexcept>
 #include <vector>
 
 std::vector<std::vector<int>> adj;
 
-void dfs(int u, std::vector<char> &visit, std::vector<char> &done, std::vector<int> &res) {
-  if (visit[u]) {
-    throw std::runtime_error("Not a directed acyclic graph.");
+bool dfs(int u, std::vector<char> &state, std::vector<int> &res) {
+  if (state[u] == 1) {
+    return false;
   }
-  if (done[u]) {
-    return;
+  if (state[u] == 2) {
+    return true;
   }
-  visit[u] = true;
+  state[u] = 1;
   for (int v : adj[u]) {
-    dfs(v, visit, done, res);
+    if (!dfs(v, state, res)) {
+      return false;
+    }
   }
-  visit[u] = false;
-  done[u] = true;
+  state[u] = 2;
   res.push_back(u);
+  return true;
 }
 
 std::vector<int> toposort_dfs() {
   int n = static_cast<int>(adj.size());
-  std::vector<char> visit(n, false), done(n, false);
+  std::vector<char> state(n);
   std::vector<int> res;
   for (int i = 0; i < n; i++) {
-    if (!done[i]) {
-      dfs(i, visit, done, res);
+    if (state[i] == 0 && !dfs(i, state, res)) {
+      return {};
     }
   }
   std::reverse(res.begin(), res.end());
@@ -87,7 +88,10 @@ std::vector<int> toposort_kahn() {
       }
     }
   }
-  return static_cast<int>(res.size()) == n ? res : std::vector<int>();
+  if (static_cast<int>(res.size()) != n) {
+    return {};
+  }
+  return res;
 }
 
 /*** Example Usage ***/
@@ -127,5 +131,10 @@ int main() {
       assert(position[u] < position[v]);
     }
   }
+  adj = {{1}, {0}};
+  dfs_res = toposort_dfs();
+  kahn = toposort_kahn();
+  assert(dfs_res.empty());
+  assert(kahn.empty());
   return 0;
 }

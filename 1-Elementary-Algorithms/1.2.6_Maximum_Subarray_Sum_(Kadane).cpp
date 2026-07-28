@@ -52,7 +52,7 @@ template<typename It>
 auto max_subarray_sum(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
   if (lo == hi) {
-    return std::make_tuple(T(), 0, -1);
+    return std::tuple{T(), 0, -1};
   }
   int curr_begin = 0, begin = 0, end = -1;
   T sum = 0, max_sum = 0;
@@ -67,7 +67,7 @@ auto max_subarray_sum(It lo, It hi) {
       end = it - lo;
     }
   }
-  return std::make_tuple(max_sum, begin, end);
+  return std::tuple{max_sum, begin, end};
 }
 
 template<typename It>
@@ -75,7 +75,7 @@ auto max_circular_subarray_sum(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
   auto [max_sum, begin, end] = max_subarray_sum(lo, hi);
   if (lo == hi) {
-    return std::make_tuple(max_sum, begin, end);
+    return std::tuple{max_sum, begin, end};
   }
   int curr_begin = 0, min_begin = 0, min_end = -1;
   T total = 0, min_sum = 0, curr_sum = 0;
@@ -98,14 +98,14 @@ auto max_circular_subarray_sum(It lo, It hi) {
     begin = (min_end + 1) % n;
     end = (min_begin + n - 1) % n;
   }
-  return std::make_tuple(max_sum, begin, end);
+  return std::tuple{max_sum, begin, end};
 }
 
 template<typename It>
 auto max_product_subarray(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
   if (lo == hi) {
-    return std::make_tuple(T(), 0, -1);
+    return std::tuple{T(), 0, -1};
   }
   T max_ending = *lo, min_ending = *lo, best = *lo;
   int max_begin = 0, min_begin = 0, begin = 0, end = 0;
@@ -135,7 +135,7 @@ auto max_product_subarray(It lo, It hi) {
       end = i;
     }
   }
-  return std::make_tuple(best, begin, end);
+  return std::tuple{best, begin, end};
 }
 
 template<typename T>

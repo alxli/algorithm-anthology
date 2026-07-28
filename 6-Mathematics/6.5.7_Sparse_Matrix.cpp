@@ -6,9 +6,9 @@ iterate all nonzeros in row `i`, while `column(j)` can iterate all nonzeros in c
 bidirectional storage is especially useful for sparse elimination or graph-like matrix operations,
 where both row updates and column pivot lookups are common.
 
-- `SparseMatrix<T>(h, w)` constructs an `h` by `w` sparse matrix.
-- `height()` returns the number of rows.
-- `width()` returns the number of columns.
+- `SparseMatrix<T>(rows, cols)` constructs a `rows` by `cols` sparse matrix.
+- `num_rows()` returns the number of rows.
+- `num_cols()` returns the number of columns.
 - `nonzeros()` returns the number of stored nonzero entries.
 - `get(i, j)` returns the value at row `i`, column `j`, or $0$ if the entry is not stored.
 - `set(i, j, value)` assigns an entry. Assigning zero erases it from both maps.
@@ -44,15 +44,15 @@ Time Complexity:
 - O(f * log d) for sparse elimination, where $f$ is the number of entry updates performed after
   fill-in and $d$ is a touched row or column size. In the worst case this is still cubic.
 - O(f * log d) per call to `det()`, `sparse_rank()`, and `solve_system()`.
-- O(1) per call to `height()`, `width()`, `nonzeros()`, `row()`, and `column()`.
+- O(1) per call to `num_rows()`, `num_cols()`, `nonzeros()`, `row()`, and `column()`.
 
 Space Complexity:
 - O(n) storage.
 - O(1) auxiliary for `get()`, `set()`, `add()`, `row()`, `column()`, and `transpose()`.
 - O(r_i + r_j) auxiliary for `swap_rows(i, j)`.
-- O(h) auxiliary for `multiply_vector()`.
-- O(n + h) auxiliary for elimination, in addition to the copied matrix used by `det()`,
-  `sparse_rank()`, and `solve_system()`.
+- O(R) auxiliary for `multiply_vector()`.
+- O(n + R) auxiliary for elimination, in addition to the copied matrix used by `det()` and
+  `sparse_rank()` or the augmented matrix used by `solve_system()`.
 
 */
 
@@ -65,38 +65,38 @@ Space Complexity:
 
 template<typename T>
 class SparseMatrix {
-  int h = 0, w = 0, stored = 0;
-  std::vector<std::map<int, T>> rows, cols;
+  int rows = 0, cols = 0, stored = 0;
+  std::vector<std::map<int, T>> rvals, cvals;
 
   bool is_zero(const T &value) const { return value == T{}; }
 
  public:
-  SparseMatrix(int h_, int w_) : h(h_), w(w_), rows(h_), cols(w_) {}
+  SparseMatrix(int rows, int cols) : rows(rows), cols(cols), rvals(rows), cvals(cols) {}
 
-  int height() const { return h; }
-  int width() const { return w; }
+  int num_rows() const { return rows; }
+  int num_cols() const { return cols; }
   int nonzeros() const { return stored; }
 
   T get(int i, int j) const {
-    auto it = rows[i].find(j);
-    return it == rows[i].end() ? T{} : it->second;
+    auto it = rvals[i].find(j);
+    return it == rvals[i].end() ? T{} : it->second;
   }
 
   void set(int i, int j, const T &value) {
-    auto it = rows[i].find(j);
+    auto it = rvals[i].find(j);
     if (is_zero(value)) {
-      if (it != rows[i].end()) {
-        rows[i].erase(it);
-        cols[j].erase(i);
+      if (it != rvals[i].end()) {
+        rvals[i].erase(it);
+        cvals[j].erase(i);
         stored--;
       }
       return;
     }
-    if (it == rows[i].end()) {
+    if (it == rvals[i].end()) {
       stored++;
     }
-    rows[i][j] = value;
-    cols[j][i] = value;
+    rvals[i][j] = value;
+    cvals[j][i] = value;
   }
 
   void add(int i, int j, const T &delta) {
@@ -106,18 +106,18 @@ class SparseMatrix {
     set(i, j, get(i, j) + delta);
   }
 
-  const std::map<int, T> &row(int i) const { return rows[i]; }
-  const std::map<int, T> &column(int j) const { return cols[j]; }
+  const std::map<int, T> &row(int i) const { return rvals[i]; }
+  const std::map<int, T> &column(int j) const { return cvals[j]; }
 
   void swap_rows(int i, int j) {
     if (i == j) {
       return;
     }
     std::unordered_set<int> touched;
-    for (const auto &[col, value] : rows[i]) {
+    for (const auto &[col, value] : rvals[i]) {
       touched.insert(col);
     }
-    for (const auto &[col, value] : rows[j]) {
+    for (const auto &[col, value] : rvals[j]) {
       touched.insert(col);
     }
     for (int col : touched) {
@@ -128,15 +128,15 @@ class SparseMatrix {
   }
 
   void transpose() {
-    std::swap(h, w);
     std::swap(rows, cols);
+    std::swap(rvals, cvals);
   }
 
   std::vector<T> multiply_vector(const std::vector<T> &x) const {
-    assert(static_cast<int>(x.size()) == w);
-    std::vector<T> res(h);
-    for (int i = 0; i < h; i++) {
-      for (const auto &[j, value] : rows[i]) {
+    assert(static_cast<int>(x.size()) == cols);
+    std::vector<T> res(rows);
+    for (int i = 0; i < rows; i++) {
+      for (const auto &[j, value] : rvals[i]) {
         res[i] += value * x[j];
       }
     }
@@ -146,9 +146,9 @@ class SparseMatrix {
 
 template<typename T>
 int row_reduce(SparseMatrix<T> &a, int limit) {
-  assert(0 <= limit && limit <= a.width());
+  assert(0 <= limit && limit <= a.num_cols());
   int r = 0;
-  for (int c = 0; c < limit && r < a.height(); c++) {
+  for (int c = 0; c < limit && r < a.num_rows(); c++) {
     int pivot = -1;
     for (const auto &[i, value] : a.column(c)) {
       if (i >= r && (pivot == -1 || a.row(i).size() < a.row(pivot).size())) {
@@ -183,8 +183,8 @@ int row_reduce(SparseMatrix<T> &a, int limit) {
 
 template<typename T>
 T det(SparseMatrix<T> a) {
-  assert(a.height() == a.width());
-  int swaps = 0, r = 0, n = a.height();
+  assert(a.num_rows() == a.num_cols());
+  int swaps = 0, r = 0, n = a.num_rows();
   T det = 1;
   for (int c = 0; c < n && r < n; c++) {
     int pivot = -1;
@@ -226,49 +226,49 @@ T det(SparseMatrix<T> a) {
 
 template<typename T>
 int sparse_rank(SparseMatrix<T> a) {
-  return row_reduce(a, a.width());
+  return row_reduce(a, a.num_cols());
 }
 
 template<typename T>
-int solve_system(SparseMatrix<T> a, const std::vector<T> &b, std::vector<T> *x) {
-  if (x == nullptr || a.height() != static_cast<int>(b.size())) {
+int solve_system(const SparseMatrix<T> &a, const std::vector<T> &b, std::vector<T> *x) {
+  if (x == nullptr || a.num_rows() != static_cast<int>(b.size())) {
     return -1;
   }
-  int h = a.height(), w = a.width();
-  SparseMatrix<T> aug(h, w + 1);
-  for (int i = 0; i < h; i++) {
+  int rows = a.num_rows(), cols = a.num_cols();
+  SparseMatrix<T> aug(rows, cols + 1);
+  for (int i = 0; i < rows; i++) {
     for (const auto &[j, value] : a.row(i)) {
       aug.set(i, j, value);
     }
-    aug.set(i, w, b[i]);
+    aug.set(i, cols, b[i]);
   }
-  row_reduce(aug, w);
+  row_reduce(aug, cols);
   std::vector<int> pivot_col;
-  for (int i = 0; i < h; i++) {
+  for (int i = 0; i < rows; i++) {
     int lead = -1;
     for (const auto &[j, value] : aug.row(i)) {
-      if (j < w) {
+      if (j < cols) {
         lead = j;
         break;
       }
     }
     if (lead == -1) {
-      if (aug.get(i, w) != T{}) {
+      if (aug.get(i, cols) != T{}) {
         return -1;
       }
     } else {
       pivot_col.push_back(lead);
     }
   }
-  if (static_cast<int>(pivot_col.size()) < w) {
+  if (static_cast<int>(pivot_col.size()) < cols) {
     return -2;
   }
-  x->assign(w, T{});
+  x->assign(cols, T{});
   for (int row = static_cast<int>(pivot_col.size()) - 1; row >= 0; row--) {
     int c = pivot_col[row];
-    T rhs = aug.get(row, w);
+    T rhs = aug.get(row, cols);
     for (const auto &[j, value] : aug.row(row)) {
-      if (j > c && j < w) {
+      if (j > c && j < cols) {
         rhs -= value * (*x)[j];
       }
     }
@@ -289,7 +289,7 @@ int main() {
   a.add(0, 1, -2);
   a.add(1, 2, 4);
 
-  assert(a.height() == 3 && a.width() == 4);
+  assert(a.num_rows() == 3 && a.num_cols() == 4);
   assert(a.nonzeros() == 3);
   assert(a.get(0, 1) == 3);
   assert(a.get(0, 0) == 0);
@@ -306,7 +306,7 @@ int main() {
   assert(a.column(1).empty());
 
   a.transpose();
-  assert(a.height() == 4 && a.width() == 3);
+  assert(a.num_rows() == 4 && a.num_cols() == 3);
   assert(a.get(3, 2) == 7);
   assert(a.get(2, 1) == 4);
 
@@ -331,7 +331,7 @@ int main() {
   sys.set(2, 2, 2);
   vector<double> rhs{3, 1, -2}, sol;
   assert(solve_system(sys, rhs, &sol) == 0);
-  for (int i = 0; i < sys.height(); i++) {
+  for (int i = 0; i < sys.num_rows(); i++) {
     double sum = 0;
     for (const auto &[j, value] : sys.row(i)) {
       sum += value * sol[j];

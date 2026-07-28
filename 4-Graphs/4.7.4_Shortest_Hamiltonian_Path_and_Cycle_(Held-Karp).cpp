@@ -52,7 +52,7 @@ int64_t shortest_hamiltonian_path() {
       if ((mask & (1 << i)) != 0) {
         for (int j = 0; j < n; j++) {
           if ((mask & (1 << j)) != 0 && dp[mask ^ (1 << i)][j] != INF) {
-            int64_t candidate = dp[mask ^ (1 << i)][j] + adj[j][i];  // Overflow warning!
+            int64_t candidate = dp[mask ^ (1 << i)][j] + adj[j][i];  // Overflow warning.
             dp[mask][i] = std::min(dp[mask][i], candidate);
           }
         }
@@ -96,7 +96,7 @@ int64_t shortest_hamiltonian_cycle() {
       if ((mask & (1 << i)) != 0) {
         for (int j = 0; j < n; j++) {
           if ((mask & (1 << j)) != 0 && dp[mask ^ (1 << i)][j] != INF) {
-            int64_t candidate = dp[mask ^ (1 << i)][j] + adj[j][i];  // Overflow warning!
+            int64_t candidate = dp[mask ^ (1 << i)][j] + adj[j][i];  // Overflow warning.
             dp[mask][i] = std::min(dp[mask][i], candidate);
           }
         }

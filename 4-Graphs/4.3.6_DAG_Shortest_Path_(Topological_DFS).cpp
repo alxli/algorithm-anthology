@@ -42,7 +42,7 @@ std::vector<int> pred;
 
 void topological_dfs(int u, std::vector<char> &visit, std::vector<int> &order) {
   visit[u] = true;
-  for (auto &[v, w] : adj[u]) {
+  for (auto [v, w] : adj[u]) {
     if (!visit[v]) {
       topological_dfs(v, visit, order);
     }
@@ -67,7 +67,7 @@ void dag_shortest_path(int start) {
     if (dist[u] == INF) {
       continue;
     }
-    for (auto &[v, w] : adj[u]) {
+    for (auto [v, w] : adj[u]) {
       if (dist[u] + w < dist[v]) {
         dist[v] = dist[u] + w;
         pred[v] = u;

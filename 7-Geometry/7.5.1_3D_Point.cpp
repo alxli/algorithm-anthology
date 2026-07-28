@@ -61,8 +61,8 @@ struct TPoint3 {
   TPoint3 operator-(const TPoint3 &p) const { return {x - p.x, y - p.y, z - p.z}; }
   TPoint3 operator*(T k) const { return {x * k, y * k, z * k}; }
   TPoint3<fp_t> operator/(fp_t k) const { return {(fp_t)x / k, (fp_t)y / k, (fp_t)z / k}; }
-  T dot(const TPoint3 &p) const { return x * p.x + y * p.y + z * p.z; }  // Overflow warning!
-  T sqnorm() const { return x * x + y * y + z * z; }                     // Overflow warning!
+  T dot(const TPoint3 &p) const { return x * p.x + y * p.y + z * p.z; }  // Overflow warning.
+  T sqnorm() const { return x * x + y * y + z * z; }                     // Overflow warning.
 
   fp_t norm() const {
     return hypot(hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)), static_cast<fp_t>(z));
@@ -72,7 +72,7 @@ struct TPoint3 {
   TPoint3<fp_t> unit() const { return *this / norm(); }
 
   TPoint3 cross(const TPoint3 &p) const {
-    return {y * p.z - z * p.y, z * p.x - x * p.z, x * p.y - y * p.x};  // Overflow warning!
+    return {y * p.z - z * p.y, z * p.x - x * p.z, x * p.y - y * p.x};  // Overflow warning.
   }
 
   TPoint3<fp_t> normal(const TPoint3 &p) const { return cross(p).unit(); }

@@ -42,7 +42,7 @@ int max_collinear_points(const std::vector<Point> &p) {
       if (i == j) {
         continue;
       }
-      int64_t dx = p[j].x - p[i].x, dy = p[j].y - p[i].y;  // Overflow warning!
+      int64_t dx = p[j].x - p[i].x, dy = p[j].y - p[i].y;  // Overflow warning.
       if (dx == 0 && dy == 0) {
         duplicates++;
         continue;

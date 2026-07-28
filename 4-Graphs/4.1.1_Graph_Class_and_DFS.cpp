@@ -79,7 +79,7 @@ class Graph {
   }
 
  public:
-  Graph(bool directed = true) : directed(directed) {}
+  explicit Graph(bool directed = true) : directed(directed) {}
 
   int size() const { return static_cast<int>(adj.size()); }
   std::vector<int> &operator[](int u) { return adj[u]; }

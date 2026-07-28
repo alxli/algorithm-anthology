@@ -61,6 +61,9 @@ class Fenwick2D {
     }
   }
 
+  void set(int r, int c, const T &x) { add(r, c, x - at(r, c)); }
+  T at(int r, int c) const { return sum(r, c, r, c); }
+
   T sum(int r, int c) const {
     assert(-1 <= r && r < rows && -1 <= c && c < cols);
     T res = 0;
@@ -77,9 +80,6 @@ class Fenwick2D {
     assert(0 <= c1 && c1 <= c2 && c2 < cols);
     return sum(r2, c2) - sum(r1 - 1, c2) - sum(r2, c1 - 1) + sum(r1 - 1, c1 - 1);
   }
-
-  T at(int r, int c) const { return sum(r, c, r, c); }
-  void set(int r, int c, const T &x) { add(r, c, x - at(r, c)); }
 };
 
 /*** Example Usage ***/

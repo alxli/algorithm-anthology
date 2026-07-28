@@ -136,7 +136,7 @@ void heapsort(It lo, It hi, Compare comp = Compare()) {
   }
   using T = typename std::iterator_traits<It>::value_type;
   T tmp = *lo;
-  It i = lo + (hi - lo) / 2, j = hi, parent, child;
+  It i = lo + (hi - lo) / 2, j = hi, parent;
   while (true) {
     if (i <= lo) {
       if (--j == lo) {
@@ -148,8 +148,8 @@ void heapsort(It lo, It hi, Compare comp = Compare()) {
       tmp = *(--i);
     }
     parent = i;
-    child = lo + 2 * (i - lo) + 1;
-    while (child < j) {
+    while (2 * (parent - lo) + 1 < j - lo) {
+      It child = lo + 2 * (parent - lo) + 1;
       if (child + 1 < j && comp(*child, *(child + 1))) {
         child++;
       }
@@ -158,7 +158,6 @@ void heapsort(It lo, It hi, Compare comp = Compare()) {
       }
       *parent = *child;
       parent = child;
-      child = lo + 2 * (parent - lo) + 1;
     }
     *parent = tmp;
   }

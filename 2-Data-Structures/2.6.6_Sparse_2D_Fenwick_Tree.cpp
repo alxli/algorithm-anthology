@@ -75,6 +75,8 @@ class SparseFenwick2D {
   }
 
  public:
+  void add(int r, int c, const T &x) { add(r, c, r, c, x); }
+
   void add(int r1, int c1, int r2, int c2, const T &x) {
     assert(0 <= r1 && r1 <= r2 && r2 < R);
     assert(0 <= c1 && c1 <= c2 && c2 < C);
@@ -84,8 +86,8 @@ class SparseFenwick2D {
     add_helper(r1, c1, x);
   }
 
-  void add(int r, int c, const T &x) { add(r, c, r, c, x); }
   void set(int r, int c, const T &x) { add(r, c, x - at(r, c)); }
+  T at(int r, int c) const { return sum(r, c, r, c); }
 
   T sum(int r, int c) const {
     assert(-1 <= r && r < R && -1 <= c && c < C);
@@ -108,8 +110,6 @@ class SparseFenwick2D {
     assert(0 <= c1 && c1 <= c2 && c2 < C);
     return sum(r2, c2) + sum(r1 - 1, c1 - 1) - sum(r1 - 1, c2) - sum(r2, c1 - 1);
   }
-
-  T at(int r, int c) const { return sum(r, c, r, c); }
 };
 
 /*** Example Usage and Output:

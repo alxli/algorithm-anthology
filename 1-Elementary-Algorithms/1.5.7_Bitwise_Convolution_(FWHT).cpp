@@ -39,6 +39,7 @@ Space Complexity:
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 template<typename T>
@@ -118,17 +119,17 @@ std::vector<T> bitwise_convolve(std::vector<T> a, std::vector<T> b, Transform tr
 
 template<typename T>
 std::vector<T> xor_convolve(std::vector<T> a, std::vector<T> b) {
-  return bitwise_convolve(a, b, xor_transform<T>);
+  return bitwise_convolve(std::move(a), std::move(b), xor_transform<T>);
 }
 
 template<typename T>
 std::vector<T> or_convolve(std::vector<T> a, std::vector<T> b) {
-  return bitwise_convolve(a, b, or_transform<T>);
+  return bitwise_convolve(std::move(a), std::move(b), or_transform<T>);
 }
 
 template<typename T>
 std::vector<T> and_convolve(std::vector<T> a, std::vector<T> b) {
-  return bitwise_convolve(a, b, and_transform<T>);
+  return bitwise_convolve(std::move(a), std::move(b), and_transform<T>);
 }
 
 /*** Example Usage ***/

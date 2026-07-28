@@ -13,8 +13,8 @@ parent size, and increasing the set count. Unions of elements already in the sam
 and therefore add no history record.
 
 - `RollbackDSU(n)` constructs `n` singleton sets over elements $[0, `n`)$.
+- `find(u)` returns the representative of the set containing `u`.
 - `sets()` returns the current number of disjoint sets.
-- `find_root(u)` returns the representative of the set containing `u`.
 - `is_united(u, v)` returns whether `u` and `v` are in the same set.
 - `unite(u, v)` merges two sets and returns whether a merge occurred.
 - `snapshot()` returns a token representing the current history size.
@@ -23,7 +23,7 @@ and therefore add no history record.
 Time Complexity:
 - O(n) per call to the constructor.
 - O(1) per call to `sets()`.
-- O(log n) worst-case per call to `find_root()`, `is_united()`, and `unite()`.
+- O(log n) worst-case per call to `find()`, `is_united()`, and `unite()`.
 - O(1) per undone union during `rollback()`.
 
 Space Complexity:
@@ -53,7 +53,7 @@ class RollbackDSU {
     std::iota(root.begin(), root.end(), 0);
   }
 
-  int find_root(int u) const {
+  int find(int u) const {
     assert(0 <= u && u < static_cast<int>(root.size()));
     while (root[u] != u) {
       u = root[u];
@@ -62,20 +62,20 @@ class RollbackDSU {
   }
 
   int sets() const { return num_sets; }
-  bool is_united(int u, int v) const { return find_root(u) == find_root(v); }
+  bool is_united(int u, int v) const { return find(u) == find(v); }
 
   bool unite(int u, int v) {
-    u = find_root(u);
-    v = find_root(v);
+    u = find(u);
+    v = find(v);
     if (u == v) {
       return false;
     }
-    if (size[u] > size[v]) {
+    if (size[u] < size[v]) {
       std::swap(u, v);
     }
-    history.emplace_back(u, v, size[v]);
-    root[u] = v;
-    size[v] += size[u];
+    history.emplace_back(v, u, size[u]);
+    root[v] = u;
+    size[u] += size[v];
     num_sets--;
     return true;
   }

@@ -42,12 +42,7 @@ class KruskalReconstructionTree {
   std::vector<int64_t> value;
   int timer = 0, root_node = -1;
 
-  int find_root(int u) {
-    if (dsu_root[u] != u) {
-      dsu_root[u] = find_root(dsu_root[u]);
-    }
-    return dsu_root[u];
-  }
+  int find(int u) { return dsu_root[u] == u ? u : dsu_root[u] = find(dsu_root[u]); }
 
   void dfs_lca(int u, int p) {
     tin[u] = timer++;
@@ -93,8 +88,9 @@ class KruskalReconstructionTree {
     std::iota(dsu_tree_root.begin(), dsu_tree_root.begin() + n, 0);
     std::sort(edges.begin(), edges.end());
     int nodes = n;
-    for (const auto &[w, a, b] : edges) {
-      int u = find_root(a), v = find_root(b);
+    for (auto [w, u, v] : edges) {
+      u = find(u);
+      v = find(v);
       if (u == v) {
         continue;
       }

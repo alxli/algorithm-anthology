@@ -9,9 +9,9 @@ The value type `T` must represent $0$ and support addition and subtraction.
 - `FenwickRUPQ<T>(n)` constructs an array with 0-based indices $[0, `n`)$, with all values
   initialized to $0$.
 - `size()` returns the size of the array.
-- `at(i)` returns the value at index `i`.
 - `add(i, x)` adds `x` to the value at index `i`.
 - `add(lo, hi, x)` adds `x` to the values at all indices in $[`lo`, `hi`]$.
+- `at(i)` returns the value at index `i`.
 
 Time Complexity:
 - O(n) per call to the constructor, where $n$ is the size of the array.
@@ -43,15 +43,6 @@ class FenwickRUPQ {
 
   int size() const { return len; }
 
-  T at(int i) const {
-    assert(0 <= i && i < len);
-    T res = 0;
-    for (i++; i > 0; i -= i & -i) {
-      res += tree[i];
-    }
-    return res;
-  }
-
   void add(int i, const T &x) {
     assert(0 <= i && i < len);
     add_helper(i, x);
@@ -61,6 +52,15 @@ class FenwickRUPQ {
     assert(0 <= lo && lo <= hi && hi < len);
     add_helper(lo, x);
     add_helper(hi + 1, -x);
+  }
+
+  T at(int i) const {
+    assert(0 <= i && i < len);
+    T res = 0;
+    for (i++; i > 0; i -= i & -i) {
+      res += tree[i];
+    }
+    return res;
   }
 };
 
