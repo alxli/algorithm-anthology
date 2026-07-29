@@ -11,7 +11,8 @@ algorithm-specific policy and are meant to be pasted near the top of a solution 
 - `clmp(x, a, b)` returns `x` clamped into the interval $[`a`, `b`]$. This is not needed on C++17
   and later, where `std::clamp()` is available.
 - `floor_div(a, b)` and `ceil_div(a, b)` divide signed integers with mathematical rounding toward
-  negative or positive infinity. Requires `b != 0`.
+  negative or positive infinity. Requires `b != 0` and a quotient representable by the result type;
+  in particular, the minimum value cannot be divided by $-1$.
 - `sort_unique(v)` sorts a vector and removes duplicates.
 - `erase_one(c, x)` erases one existing value from an associative container, asserting that it is
   present.

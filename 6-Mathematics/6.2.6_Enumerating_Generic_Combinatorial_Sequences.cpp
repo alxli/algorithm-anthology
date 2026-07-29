@@ -20,11 +20,13 @@ own conventional constructor names, such as `n` and `k` for combinations.
   lexicographically increasing order, where `lo` and `hi` are two random-access iterators to a range
   $[`lo`, `hi`)$ of integers.
 
+All exact counts and ranks must fit in `int64_t`.
+
 Time Complexity:
 - O(A*L) calls to `count()` per call to `to_rank()` and `from_rank()`.
 - O(T*A*L) calls to `count()` per call to `enumerate()`, excluding the cost of the callback `f`.
-- O(A^2) constructor time for `CombinationEnumerator` and O(L^2) constructor time for
-  `PartitionEnumerator` to build their tables.
+- O(A*(min(L, A - L) + 1)) constructor time for `CombinationEnumerator` and O(L^2) constructor time
+  for `PartitionEnumerator` to build their tables.
 - The actual running time multiplies these bounds by the subclass cost of `count()`. In the
   implementations below, `CombinationEnumerator::count()` is O(1), while
   `ArrangementEnumerator::count()` and `PartitionEnumerator::count()` are O(L).
@@ -32,11 +34,12 @@ Time Complexity:
 Space Complexity:
 - O(L) auxiliary for `to_rank()`, `from_rank()`, and `enumerate()`, excluding output storage.
 - O(1) object storage for `ArrangementEnumerator` and `PermutationEnumerator`.
-- O(A^2) object storage for `CombinationEnumerator` and O(L^2) object storage for
+- O(A*(min(L, A - L) + 1)) object storage for `CombinationEnumerator` and O(L^2) object storage for
   `PartitionEnumerator` tables.
 
 */
 
+#include <algorithm>
 #include <cstdint>
 #include <vector>
 
@@ -116,12 +119,17 @@ class PermutationEnumerator : public ArrangementEnumerator {
 class CombinationEnumerator : public AbstractEnumerator {
   std::vector<std::vector<int64_t>> table;
 
+  int64_t combinations(int n, int k) const {
+    return (k < 0 || k > n) ? 0 : table[n][std::min(k, n - k)];
+  }
+
  public:
   CombinationEnumerator(int n, int k)
-      : AbstractEnumerator(n, k), table(n + 1, std::vector<int64_t>(n + 1)) {
+      : AbstractEnumerator(n, k), table(n + 1, std::vector<int64_t>(std::min(k, n - k) + 1)) {
+    int max_col = static_cast<int>(table[0].size()) - 1;
     for (int i = 0; i <= n; i++) {
-      for (int j = 0; j <= i; j++) {
-        table[i][j] = (j == 0) ? 1 : table[i - 1][j - 1] + table[i - 1][j];
+      for (int j = 0; j <= std::min(i, max_col); j++) {
+        table[i][j] = (j == 0) ? 1 : table[i - 1][j - 1] + table[i - 1][j];  // Overflow warning.
       }
     }
   }
@@ -132,9 +140,9 @@ class CombinationEnumerator : public AbstractEnumerator {
       return 0;
     }
     if (n == 0) {
-      return table[range][length - n];
+      return combinations(range, length);
     }
-    return table[range - prefix[n - 1] - 1][length - n];
+    return combinations(range - prefix[n - 1] - 1, length - n);
   }
 };
 
@@ -242,6 +250,12 @@ int main() {
     assert(count == 4);
     assert((comb.from_rank(3) == vector<int>{1, 2, 3}));
     assert(comb.to_rank(vector<int>{1, 2, 3}) == 3);
+    CombinationEnumerator narrow(67, 1);
+    assert(narrow.total_count() == 67);
+    CombinationEnumerator full(67, 67);
+    assert(full.total_count() == 1);
+    CombinationEnumerator central(66, 33);
+    assert(central.total_count() == 7219428434016265740LL);
     cout << endl;
   }
   {

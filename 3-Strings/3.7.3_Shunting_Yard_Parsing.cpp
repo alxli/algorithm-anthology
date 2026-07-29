@@ -17,10 +17,8 @@ as a valid operand (since the `-` sign may conflict with the identical binary op
 specify nonnegative numbers as operands alongside the unary operator `-`.
 
 Operators may be non-empty strings of any length, but should not contain any parentheses or shared
-characters with the string representations of operands. Ideally, operators should not be prefixes or
-suffixes of one another, else the tokenization process may be ambiguous. For example, if `++` and
-`+` are both operators, then `++` may be split into either [`"+"`, `"+"`] or [`"++"`] depending on
-the lexicographical ordering of conflicting operators.
+characters with the string representations of operands. When multiple operators match at the same
+position, the longest one is chosen, so `<=` remains one token when `<` is also an operator.
 
 - `ShuntingYardParser(unary_ops, binary_ops)` initializes a parser with operators specified by hash
   tables `unary_ops` (of operator to unary function object) and `binary_ops` (of operator to pair of
@@ -28,15 +26,15 @@ the lexicographical ordering of conflicting operators.
   starting at $0$ (lowest precedence, evaluated last).
 - `split(s)` returns a vector of tokens for the expression `s`, split on the given operators during
   construction. Each parenthesis, operator, and operand satisfying `is_operand()` will be split into
-  a separate token. The algorithm is naive, matching operators lazily in the case of overlapping
-  operators as mentioned above. Under these circumstances, the parse may not always succeed.
+  a separate token.
 - `eval(lo, hi)` returns the evaluation of a range $[`lo`, `hi`)$ of already split-up expression
   tokens, where `lo` and `hi` must be random-access iterators.
 - `eval(s)` returns the evaluation of expression `s`, after first calling `split(s)` to obtain the
   tokens.
 
 Time Complexity:
-- O(m) per call to the constructor, where $m$ is the total number of operators.
+- O(m*k*log m) per call to the constructor, where $m$ is the total number of operators and $k$ is
+  their maximum length.
 - O(n*m*k) per call to `split(s)`, where $n$ is the length of `s`, $m$ is the total number of
   operators defined for the parser instance, and $k$ is the maximum length for any operator
   representation.
@@ -54,7 +52,6 @@ Space Complexity:
 #include <algorithm>
 #include <cctype>
 #include <functional>
-#include <set>
 #include <sstream>
 #include <stack>
 #include <stdexcept>
@@ -79,7 +76,7 @@ class ShuntingYardParser {
   using BinaryOpMap = std::unordered_map<string, BinaryRule>;
   UnaryOpMap unary_ops;
   BinaryOpMap binary_ops;
-  std::set<string> op_tokens;
+  std::vector<string> op_tokens;
 
   static Operand eval_operand(const string &s) {
     Operand res;
@@ -113,11 +110,15 @@ class ShuntingYardParser {
   ShuntingYardParser(const UnaryOpMap &unary_ops, const BinaryOpMap &binary_ops)
       : unary_ops(unary_ops), binary_ops(binary_ops) {
     for (const auto &[op, fn] : unary_ops) {
-      op_tokens.insert(op);
+      op_tokens.push_back(op);
     }
     for (const auto &[op, fn_prec] : binary_ops) {
-      op_tokens.insert(op);
+      op_tokens.push_back(op);
     }
+    std::sort(op_tokens.begin(), op_tokens.end(), [](const string &a, const string &b) {
+      return a.size() != b.size() ? a.size() > b.size() : a < b;
+    });
+    op_tokens.erase(std::unique(op_tokens.begin(), op_tokens.end()), op_tokens.end());
   }
 
   std::vector<string> split(const string &s) const {
@@ -138,7 +139,7 @@ class ShuntingYardParser {
         string found_op;
         for (int j = i; j < next_paren && found == next_paren; j++) {
           for (const auto &op : op_tokens) {
-            if (s.substr(j, op.size()) == op) {
+            if (s.compare(j, op.size(), op) == 0) {
               found = j;
               found_op = op;
               break;
@@ -250,15 +251,18 @@ int main() {
   unary_ops["-"] = [](double x) { return -x; };
 
   unordered_map<string, BinaryRule> binary_ops;
-  binary_ops["+"] = {[](double a, double b) { return a + b; }, 0};
-  binary_ops["-"] = {[](double a, double b) { return a - b; }, 0};
-  binary_ops["*"] = {[](double a, double b) { return a * b; }, 1};
-  binary_ops["/"] = {[](double a, double b) { return a / b; }, 1};
-  binary_ops["^"] = {[](double a, double b) { return std::pow(a, b); }, 2};
+  binary_ops["+"] = {[](double a, double b) { return a + b; }, 1};
+  binary_ops["-"] = {[](double a, double b) { return a - b; }, 1};
+  binary_ops["*"] = {[](double a, double b) { return a * b; }, 2};
+  binary_ops["/"] = {[](double a, double b) { return a / b; }, 2};
+  binary_ops["^"] = {[](double a, double b) { return std::pow(a, b); }, 3};
+  binary_ops["<"] = {[](double a, double b) { return a < b; }, 0};
+  binary_ops["<="] = {[](double a, double b) { return a <= b; }, 0};
 
   ShuntingYardParser p(unary_ops, binary_ops);
   assert(EQ(p.eval("-+-((--(-+1)))"), -1));
   assert(EQ(p.eval("5*(3+3)-2-2"), 26));
+  assert(EQ(p.eval("1<=1"), 1));  // Prefer the longest operator token at a shared prefix.
   assert(EQ(p.eval("1+2*3*4+3*(+2)-100"), -69));
   assert(EQ(p.eval("3*3*3*3*3*3-2*2*2*2*2*2*2*2"), 473));
   assert(EQ(p.eval("3.14 + 3 * (7.7/9.8^32.9  )"), 3.14));

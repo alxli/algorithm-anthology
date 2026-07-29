@@ -6667,11 +6667,8 @@ class RangeTree {
     );
   }
 
-  // Helper variables for query().
-  T x1, y1, x2, y2;
-
   template<typename Fn>
-  void query(int n, int lo, int hi, Fn &f) {
+  void query(int n, int lo, int hi, const T &x1, const T &y1, const T &x2, const T &y2, Fn &f) {
     if (points[hi].value.first < x1 || x2 < points[lo].value.first) {
       return;
     }
@@ -6688,8 +6685,8 @@ class RangeTree {
       }
     } else if (lo != hi) {
       int mid = lo + (hi - lo) / 2;
-      query(n * 2 + 1, lo, mid, f);
-      query(n * 2 + 2, mid + 1, hi, f);
+      query(n * 2 + 1, lo, mid, x1, y1, x2, y2, f);
+      query(n * 2 + 2, mid + 1, hi, x1, y1, x2, y2, f);
     }
   }
 
@@ -6713,11 +6710,7 @@ class RangeTree {
   template<typename Fn>
   void query(const T &x1, const T &y1, const T &x2, const T &y2, Fn f) {
     assert(!(x2 < x1) && !(y2 < y1));
-    this->x1 = x1;
-    this->y1 = y1;
-    this->x2 = x2;
-    this->y2 = y2;
-    query(0, 0, static_cast<int>(points.size()) - 1, f);
+    query(0, 0, static_cast<int>(points.size()) - 1, x1, y1, x2, y2, f);
   }
 };
 \end{lstlisting}
@@ -6814,11 +6807,8 @@ class RangeKDTree {
     build(mid + 1, hi, !div_x);
   }
 
-  // Helper variables for query().
-  T x1, y1, x2, y2;
-
   template<typename Fn>
-  void query(int lo, int hi, Fn &f) {
+  void query(int lo, int hi, const T &x1, const T &y1, const T &x2, const T &y2, Fn &f) {
     if (lo >= hi) {
       return;
     }
@@ -6834,8 +6824,8 @@ class RangeKDTree {
       }
       return;
     }
-    query(lo, mid, f);
-    query(mid + 1, hi, f);
+    query(lo, mid, x1, y1, x2, y2, f);
+    query(mid + 1, hi, x1, y1, x2, y2, f);
     if (tree[mid].first < x1 || x2 < tree[mid].first || tree[mid].second < y1 ||
         y2 < tree[mid].second) {
       return;
@@ -6857,11 +6847,7 @@ class RangeKDTree {
   template<typename Fn>
   void query(const T &x1, const T &y1, const T &x2, const T &y2, Fn f) {
     assert(!(x2 < x1) && !(y2 < y1));
-    this->x1 = x1;
-    this->y1 = y1;
-    this->x2 = x2;
-    this->y2 = y2;
-    query(0, static_cast<int>(tree.size()), f);
+    query(0, static_cast<int>(tree.size()), x1, y1, x2, y2, f);
   }
 };
 \end{lstlisting}
@@ -7745,14 +7731,14 @@ The value type \inlinecode{T} must represent $0$ and support addition and subtra
 
 The outer dimension is an ordinary Fenwick tree over the sorted distinct update rows. Each outer node owns an inner Fenwick tree over only those columns that reach it along an update path, again stored in a sorted vector. A prefix query maps its row argument to the number of update rows at or below it, walks the outer tree, and within each visited node maps its column argument to a rank by binary search. Compared with the online sparse 2D Fenwick tree backed by hash tables, this is deterministic and has markedly better constants, at the cost of requiring all update locations up front. Prefer the dense 2D Fenwick tree when the coordinates are small enough to allocate directly, and the sparse 2D Fenwick tree when update locations are not known ahead of time or rectangle updates are needed.
 
-Usage is two-phase. First declare every cell that will be updated with \inlinecode{reserve()}; then call \inlinecode{build()} once; then issue \inlinecode{add()} updates and \inlinecode{sum()} / \inlinecode{at()} queries freely. Updates may only target reserved cells, but queries may use any coordinates.
+Usage is two-phase. First declare every cell that will be updated with \inlinecode{register\_point()}; then call \inlinecode{build()} once; then issue \inlinecode{add()} updates and \inlinecode{sum()} / \inlinecode{at()} queries freely. Updates may only target registered cells, but queries may use any coordinates.
 
 \begin{compactitem}
   \item \inlinecode{OfflineFenwick2D\textless{}T\textgreater{}()} constructs an empty structure in the declaration phase.
-  \item \inlinecode{reserve(r, c)} declares that the cell (\inlinecode{r}, \inlinecode{c}) may later be updated. Call before \inlinecode{build()}.
-  \item \inlinecode{build()} finalizes the coordinate compression. Call exactly once, after all \inlinecode{reserve()} calls.
-  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}), which must have been reserved.
-  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}), which must have been reserved.
+  \item \inlinecode{register\_point(r, c)} declares that the cell (\inlinecode{r}, \inlinecode{c}) may later be updated. Call before \inlinecode{build()}.
+  \item \inlinecode{build()} finalizes the coordinate compression. Call exactly once, after all \inlinecode{register\_point()} calls.
+  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}), which must have been registered.
+  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}), which must have been registered.
   \item \inlinecode{at(r, c)} returns the value at index (\inlinecode{r}, \inlinecode{c}).
   \item \inlinecode{sum(r, c)} returns the sum of the rectangle with rows $[0, {\inlinecodemath{r}}]$ and columns $[0, {\inlinecodemath{c}}]$.
   \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with rows $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
@@ -7761,7 +7747,7 @@ Usage is two-phase. First declare every cell that will be updated with \inlineco
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \log^{2} n)$ per call to \inlinecode{build()}, where $n$ is the number of reserved cells.
+  \item $O(n \log^{2} n)$ per call to \inlinecode{build()}, where $n$ is the number of registered cells.
   \item $O(\log^{2} n)$ per call to \inlinecode{add()}, \inlinecode{set()}, \inlinecode{sum()}, and \inlinecode{at()}.
 \end{compactitem}
 
@@ -7783,7 +7769,7 @@ class OfflineFenwick2D {
   std::vector<int> xs;                       // Sorted distinct update rows.
   std::vector<std::vector<int>> ys;          // ys[p]: sorted distinct columns at outer node p.
   std::vector<std::vector<T>> tree;          // tree[p]: 1-indexed inner Fenwick over ys[p].
-  std::vector<std::pair<int, int>> pending;  // Reserved (row, column) cells.
+  std::vector<std::pair<int, int>> pending;  // Registered (row, column) cells.
   bool built = false;
 
   // Number of update rows at most r; the outer Fenwick prefix bound for a query at row r.
@@ -7801,14 +7787,14 @@ class OfflineFenwick2D {
     return static_cast<int>(std::upper_bound(ys[p].begin(), ys[p].end(), c) - ys[p].begin());
   }
 
-  bool is_reserved(int r, int c) const {
+  bool is_registered(int r, int c) const {
     int p = row_pos(r);
     return p < static_cast<int>(tree.size()) && p > 0 && xs[p - 1] == r &&
            std::binary_search(ys[p].begin(), ys[p].end(), c);
   }
 
  public:
-  void reserve(int r, int c) {
+  void register_point(int r, int c) {
     assert(!built);
     pending.emplace_back(r, c);
   }
@@ -7839,8 +7825,7 @@ class OfflineFenwick2D {
   }
 
   void add(int r, int c, const T &x) {
-    assert(built);
-    assert(is_reserved(r, c));
+    assert(built && is_registered(r, c));
     for (int i = row_pos(r); i < static_cast<int>(tree.size()); i += i & -i) {
       for (int j = col_rank(i, c); j <= static_cast<int>(ys[i].size()); j += j & -j) {
         tree[i][j] += x;
@@ -7877,11 +7862,11 @@ using namespace std;
 int main() {
   OfflineFenwick2D<int> t;
   // Declare every cell that will be updated, then finalize.
-  t.reserve(0, 0);
-  t.reserve(0, 1000000);
-  t.reserve(1000000, 0);
-  t.reserve(1000000, 1000000);
-  t.reserve(500000, 500000);
+  t.register_point(0, 0);
+  t.register_point(0, 1000000);
+  t.register_point(1000000, 0);
+  t.register_point(1000000, 1000000);
+  t.register_point(500000, 500000);
   t.build();
 
   t.set(0, 0, 5);
@@ -8987,89 +8972,91 @@ class HeavyLight {
     return paths++;
   }
 
-  void build_paths(int u, int path) {
-    this->path[u] = path;
-    pathpos[u] = pathlen[path]++;
+  void build_paths(int u, int path_id) {
+    path[u] = path_id;
+    pathpos[u] = pathlen[path_id]++;
     for (int v : adj[u]) {
       if (v != parent[u]) {
-        build_paths(v, (2 * size[v] >= size[u]) ? path : new_path(v));
+        build_paths(v, (2 * size[v] >= size[u]) ? path_id : new_path(v));
       }
     }
   }
 
-  inline T applied_value(int path, int i) {
-    return pending[path][i] ? apply_delta(value[path][i], delta[path][i], len[path][i])
-                            : value[path][i];
+  inline T applied_value(int path_id, int i) {
+    return pending[path_id][i] ? apply_delta(value[path_id][i], delta[path_id][i], len[path_id][i])
+                               : value[path_id][i];
   }
 
-  void push_delta(int path, int i) {
+  void push_delta(int path_id, int i) {
     int d = 0;
     while ((i >> d) > 0) {
       d++;
     }
     for (d -= 2; d >= 0; d--) {
       int l = (i >> d), r = (l ^ 1), n = l / 2;
-      if (pending[path][n]) {
-        value[path][n] = applied_value(path, n);
-        delta[path][l] =
-            pending[path][l] ? compose_deltas(delta[path][l], delta[path][n]) : delta[path][n];
-        delta[path][r] =
-            pending[path][r] ? compose_deltas(delta[path][r], delta[path][n]) : delta[path][n];
-        pending[path][l] = pending[path][r] = true;
-        pending[path][n] = false;
+      if (pending[path_id][n]) {
+        value[path_id][n] = applied_value(path_id, n);
+        delta[path_id][l] = pending[path_id][l]
+                                ? compose_deltas(delta[path_id][l], delta[path_id][n])
+                                : delta[path_id][n];
+        delta[path_id][r] = pending[path_id][r]
+                                ? compose_deltas(delta[path_id][r], delta[path_id][n])
+                                : delta[path_id][n];
+        pending[path_id][l] = pending[path_id][r] = true;
+        pending[path_id][n] = false;
       }
     }
   }
 
-  bool query(int path, int u, int v, T *res) {
-    push_delta(path, u += static_cast<int>(value[path].size()) / 2);
-    push_delta(path, v += static_cast<int>(value[path].size()) / 2);
+  bool query(int path_id, int u, int v, T *res) {
+    push_delta(path_id, u += static_cast<int>(value[path_id].size()) / 2);
+    push_delta(path_id, v += static_cast<int>(value[path_id].size()) / 2);
     bool found = false;
     for (; u <= v; u = (u + 1) / 2, v = (v - 1) / 2) {
       if ((u & 1) != 0) {
-        T value = applied_value(path, u);
-        *res = found ? combine(*res, value) : value;
+        T part_value = applied_value(path_id, u);
+        *res = found ? combine(*res, part_value) : part_value;
         found = true;
       }
       if ((v & 1) == 0) {
-        T value = applied_value(path, v);
-        *res = found ? combine(*res, value) : value;
+        T part_value = applied_value(path_id, v);
+        *res = found ? combine(*res, part_value) : part_value;
         found = true;
       }
     }
     return found;
   }
 
-  void update(int path, int u, int v, const T &d) {
-    push_delta(path, u += static_cast<int>(value[path].size()) / 2);
-    push_delta(path, v += static_cast<int>(value[path].size()) / 2);
+  void update(int path_id, int u, int v, const T &d) {
+    push_delta(path_id, u += static_cast<int>(value[path_id].size()) / 2);
+    push_delta(path_id, v += static_cast<int>(value[path_id].size()) / 2);
     int tu = -1, tv = -1;
     for (; u <= v; u = (u + 1) / 2, v = (v - 1) / 2) {
       if ((u & 1) != 0) {
-        delta[path][u] = pending[path][u] ? compose_deltas(delta[path][u], d) : d;
-        pending[path][u] = true;
+        delta[path_id][u] = pending[path_id][u] ? compose_deltas(delta[path_id][u], d) : d;
+        pending[path_id][u] = true;
         if (tu == -1) {
           tu = u;
         }
       }
       if ((v & 1) == 0) {
-        delta[path][v] = pending[path][v] ? compose_deltas(delta[path][v], d) : d;
-        pending[path][v] = true;
+        delta[path_id][v] = pending[path_id][v] ? compose_deltas(delta[path_id][v], d) : d;
+        pending[path_id][v] = true;
         if (tv == -1) {
           tv = v;
         }
       }
     }
     for (int i = tu; i > 1; i /= 2) {
-      value[path][i / 2] = combine(applied_value(path, i), applied_value(path, i ^ 1));
+      value[path_id][i / 2] = combine(applied_value(path_id, i), applied_value(path_id, i ^ 1));
     }
     for (int i = tv; i > 1; i /= 2) {
-      value[path][i / 2] = combine(applied_value(path, i), applied_value(path, i ^ 1));
+      value[path_id][i / 2] = combine(applied_value(path_id, i), applied_value(path_id, i ^ 1));
     }
   }
 
-  inline bool is_ancestor(int parent, int child) {
-    return (tin[parent] <= tin[child]) && (tout[child] <= tout[parent]);
+  inline bool is_ancestor(int ancestor, int node) {
+    return (tin[ancestor] <= tin[node]) && (tout[node] <= tout[ancestor]);
   }
 
  public:
@@ -9144,10 +9131,10 @@ class HeavyLight {
     assert(root[u] == root[v]);
     assert(!VALUES_ON_EDGES || u != v);
     bool found = false;
-    T res = T(), value;
-    for_each_path(u, v, !VALUES_ON_EDGES, [&](int path, int lo, int hi, bool) {
-      if (query(path, lo, hi, &value)) {
-        res = found ? combine(res, value) : value;
+    T res = T(), part_value;
+    for_each_path(u, v, !VALUES_ON_EDGES, [&](int path_id, int lo, int hi, bool) {
+      if (query(path_id, lo, hi, &part_value)) {
+        res = found ? combine(res, part_value) : part_value;
         found = true;
       }
     });
@@ -9162,8 +9149,8 @@ class HeavyLight {
     if (VALUES_ON_EDGES && u == v) {
       return;
     }
-    for_each_path(u, v, !VALUES_ON_EDGES, [&](int path, int lo, int hi, bool) {
-      update(path, lo, hi, d);
+    for_each_path(u, v, !VALUES_ON_EDGES, [&](int path_id, int lo, int hi, bool) {
+      update(path_id, lo, hi, d);
     });
   }
 };
@@ -9526,18 +9513,18 @@ The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{c
   \item \inlinecode{LinkCut\textless{}T\textgreater{}()} constructs an empty forest.
   \item \inlinecode{size()} returns the number of nodes in the forest.
   \item \inlinecode{trees()} returns the number of trees in the forest.
-  \item \inlinecode{add\_node(i, value = T())} adds a new single-node tree to the forest, labeled with the integer \inlinecode{i} and with value initialized to \inlinecode{value}.
-  \item \inlinecode{is\_connected(a, b)} returns whether nodes \inlinecode{a} and \inlinecode{b} are connected.
-  \item \inlinecode{link(a, b)} adds an edge between the nodes \inlinecode{a} and \inlinecode{b}, both of which must exist and not be connected.
-  \item \inlinecode{cut(a, b)} removes the edge between the nodes \inlinecode{a} and \inlinecode{b}, both of which must exist and be connected.
-  \item \inlinecode{query(a, b)} returns the result of \inlinecode{combine()} applied to all values on the path from the node \inlinecode{a} to node \inlinecode{b}.
-  \item \inlinecode{update(a, b, d)} modifies all the values on the path from node \inlinecode{a} to node \inlinecode{b} by applying the delta \inlinecode{d}.
-  \item \inlinecode{reroot(i)} makes node \inlinecode{i} the root of its tree.
-  \item \inlinecode{find\_root(i)} returns the label of the root of the tree containing node \inlinecode{i}.
-  \item \inlinecode{lca(a, b)} returns the lowest common ancestor of \inlinecode{a} and \inlinecode{b} relative to the tree's current root.
+  \item \inlinecode{add\_node(u, value = T())} adds a new single-node tree to the forest, labeled with the integer \inlinecode{u} and with value initialized to \inlinecode{value}.
+  \item \inlinecode{connected(u, v)} returns whether nodes \inlinecode{u} and \inlinecode{v} are connected.
+  \item \inlinecode{link(u, v)} adds an edge between the nodes \inlinecode{u} and \inlinecode{v}, both of which must exist and not be connected.
+  \item \inlinecode{cut(u, v)} removes the edge between the nodes \inlinecode{u} and \inlinecode{v}, both of which must exist and be connected.
+  \item \inlinecode{query(u, v)} returns the result of \inlinecode{combine()} applied to all values on the path from node \inlinecode{u} to node \inlinecode{v}.
+  \item \inlinecode{update(u, v, d)} modifies all the values on the path from node \inlinecode{u} to node \inlinecode{v} by applying the delta \inlinecode{d}.
+  \item \inlinecode{reroot(u)} makes node \inlinecode{u} the root of its tree.
+  \item \inlinecode{find\_root(u)} returns the label of the root of the tree containing node \inlinecode{u}.
+  \item \inlinecode{lca(u, v)} returns the lowest common ancestor of \inlinecode{u} and \inlinecode{v} relative to the tree's current root.
 \end{compactitem}
 
-The forest is unrooted: a tree's root is whichever node was most recently established as such. \inlinecode{reroot(i)} sets it explicitly, while \inlinecode{link}, \inlinecode{query}, and \inlinecode{update} reroot implicitly (the latter two at their first argument). \inlinecode{find\_root(i)} and \inlinecode{lca(a, b)} are therefore relative to the current root, so call \inlinecode{reroot(r)} first whenever a specific root \inlinecode{r} is intended.
+The forest is unrooted: a tree's root is whichever node was most recently established as such. \inlinecode{reroot(u)} sets it explicitly, while \inlinecode{link}, \inlinecode{query}, and \inlinecode{update} reroot implicitly (the latter two at their first argument). \inlinecode{find\_root(u)} and \inlinecode{lca(u, v)} are therefore relative to the current root, so call \inlinecode{reroot(r)} first whenever a specific root \inlinecode{r} is intended.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -9697,15 +9684,10 @@ class LinkCut {
     return prev;
   }
 
-  // Helper variables.
-  Node *u, *v;
-
-  void get_uv(int a, int b) {
-    auto it1 = nodes.find(a);
-    auto it2 = nodes.find(b);
-    assert(it1 != nodes.end() && it2 != nodes.end());
-    u = it1->second;
-    v = it2->second;
+  Node *find_node(int u) const {
+    auto it = nodes.find(u);
+    assert(it != nodes.end());
+    return it->second;
   }
 
  public:
@@ -9722,75 +9704,72 @@ class LinkCut {
   int size() const { return static_cast<int>(nodes.size()); }
   int trees() const { return num_trees; }
 
-  void add_node(int i, const T &value = T()) {
-    assert(nodes.find(i) == nodes.end());
-    Node *n = new Node(i, value);
+  void add_node(int u, const T &value = T()) {
+    assert(nodes.find(u) == nodes.end());
+    Node *n = new Node(u, value);
     expose(n);
     n->rev = !n->rev;
-    nodes[i] = n;
+    nodes[u] = n;
     num_trees++;
   }
 
-  bool is_connected(int a, int b) {
-    get_uv(a, b);
-    if (a == b) {
+  bool connected(int u, int v) {
+    Node *nu = find_node(u), *nv = find_node(v);
+    if (u == v) {
       return true;
     }
-    expose(u);
-    expose(v);
-    return u->parent != nullptr;
+    expose(nu);
+    expose(nv);
+    return nu->parent != nullptr;
   }
 
-  void link(int a, int b) {
-    assert(!is_connected(a, b));
-    get_uv(a, b);
-    expose(u);
-    u->rev = !u->rev;
-    u->parent = v;
+  void link(int u, int v) {
+    assert(!connected(u, v));
+    Node *nu = find_node(u), *nv = find_node(v);
+    expose(nu);
+    nu->rev = !nu->rev;
+    nu->parent = nv;
     num_trees--;
   }
 
-  void cut(int a, int b) {
-    get_uv(a, b);
-    expose(u);
-    u->rev = !u->rev;
-    expose(v);
-    assert(v->left == u && u->right == nullptr);
-    v->left->parent = nullptr;
-    v->left = nullptr;
+  void cut(int u, int v) {
+    Node *nu = find_node(u), *nv = find_node(v);
+    expose(nu);
+    nu->rev = !nu->rev;
+    expose(nv);
+    assert(nv->left == nu && nu->right == nullptr);
+    nv->left->parent = nullptr;
+    nv->left = nullptr;
     num_trees++;
   }
 
-  T query(int a, int b) {
-    assert(is_connected(a, b));
-    get_uv(a, b);
-    expose(u);
-    u->rev = !u->rev;
-    expose(v);
-    return v->get_subtree_value();
+  T query(int u, int v) {
+    assert(connected(u, v));
+    Node *nu = find_node(u), *nv = find_node(v);
+    expose(nu);
+    nu->rev = !nu->rev;
+    expose(nv);
+    return nv->get_subtree_value();
   }
 
-  void update(int a, int b, const T &d) {
-    assert(is_connected(a, b));
-    get_uv(a, b);
-    expose(u);
-    u->rev = !u->rev;
-    expose(v);
-    v->delta = v->pending ? compose_deltas(v->delta, d) : d;
-    v->pending = true;
+  void update(int u, int v, const T &d) {
+    assert(connected(u, v));
+    Node *nu = find_node(u), *nv = find_node(v);
+    expose(nu);
+    nu->rev = !nu->rev;
+    expose(nv);
+    nv->delta = nv->pending ? compose_deltas(nv->delta, d) : d;
+    nv->pending = true;
   }
 
-  void reroot(int i) {
-    auto it = nodes.find(i);
-    assert(it != nodes.end());
-    expose(it->second);
-    it->second->rev = !it->second->rev;
+  void reroot(int u) {
+    Node *n = find_node(u);
+    expose(n);
+    n->rev = !n->rev;
   }
 
-  int find_root(int i) {
-    auto it = nodes.find(i);
-    assert(it != nodes.end());
-    Node *n = it->second;
+  int find_root(int u) {
+    Node *n = find_node(u);
     expose(n);
     while (n->left != nullptr) {  // The leftmost node of the exposed path is the tree's root.
       n = n->left;
@@ -9800,16 +9779,17 @@ class LinkCut {
     return n->id;
   }
 
-  int lca(int a, int b) {
-    get_uv(a, b);
-    if (a == b) {
-      return a;
+  int lca(int u, int v) {
+    Node *nu = find_node(u), *nv = find_node(v);
+    if (u == v) {
+      return u;
     }
-    expose(u);
-    expose(v);
-    assert(u->parent != nullptr);
-    splay(u);  // u->parent is now the node where u's path rejoins v's exposed path, i.e. the LCA.
-    return u->parent != nullptr ? u->parent->id : u->id;
+    expose(nu);
+    expose(nv);
+    assert(nu->parent != nullptr);
+    splay(nu);
+    // nu->parent is now where nu's path rejoins nv's exposed path, i.e. their LCA.
+    return nu->parent != nullptr ? nu->parent->id : nu->id;
   }
 };
 \end{lstlisting}
@@ -9866,9 +9846,9 @@ int main() {
   //                      +---------4
   //                              v=100
   assert(lcf.trees() == 2);
-  assert(!lcf.is_connected(1, 2));
-  assert(!lcf.is_connected(0, 4));
-  assert(lcf.is_connected(2, 3));
+  assert(!lcf.connected(1, 2));
+  assert(!lcf.connected(0, 4));
+  assert(lcf.connected(2, 3));
   return 0;
 }
 \end{lstlisting}
@@ -10029,7 +10009,7 @@ class TopTree {
       parent->pull();
     }
 
-    void rotate_2(int child_dir) {
+    void rotate2(int child_dir) {
       assert(!is_graph_node);
       assert(!root_of_auxiliary_tree());
       assert(c[child_dir] != nullptr);
@@ -10065,7 +10045,7 @@ class TopTree {
       }
     }
 
-    void splay_2(int child_dir) {
+    void splay2(int child_dir) {
       assert(!is_graph_node && is_path);
       assert(c[child_dir] != nullptr && !c[child_dir]->is_graph_node);
       while (!root_of_auxiliary_tree()) {
@@ -10073,17 +10053,17 @@ class TopTree {
           if (p->dir() == dir()) {
             p->rotate();
           } else {
-            rotate_2(child_dir);
+            rotate2(child_dir);
           }
         }
-        rotate_2(child_dir);
+        rotate2(child_dir);
       }
     }
 
-    void splay_2() {
+    void splay2() {
       assert(!is_graph_node && is_path);
       assert(!root_of_auxiliary_tree());
-      p->splay_2(dir());
+      p->splay2(dir());
     }
 
     void splay_graph_node() {
@@ -10100,7 +10080,7 @@ class TopTree {
         p->rotate();
       }
       assert(dir() == 0);
-      p->splay_2();
+      p->splay2();
       assert(dir() == 0);
       assert(p->dir() == 1);
       assert(p->p->root_of_auxiliary_tree());

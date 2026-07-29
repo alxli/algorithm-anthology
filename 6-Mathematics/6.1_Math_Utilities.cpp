@@ -62,7 +62,9 @@ Epsilon Comparisons:
   exact comparison when `ref` is $0$, since the tolerance collapses to $0$; use `EQ` near zero.
 - `rEQ_sym(x, y)` is the symmetric (commutative) variant: tolerance scales with
   $\max(|`x`|, |`y`|)$, so the result is the same regardless of argument order. Still degenerates
-  near zero when both arguments are close to $0$.
+  near zero when both arguments are close to $0$. For both relative comparisons, exactly equal
+  infinities compare equal, while unequal infinities and comparisons between finite and non-finite
+  values compare unequal.
 
 */
 
@@ -89,12 +91,22 @@ template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool rEQ(T ref, U val) {
-  return C(ref) == C(val) || fabs(C(ref) - C(val)) <= EPS * fabs(C(ref));
+  C x = C(ref), y = C(val);
+  if (x == y) return true;
+  if constexpr (std::is_floating_point_v<C>) {
+    if (!std::isfinite(x) || !std::isfinite(y)) return false;
+  }
+  return fabs(x - y) <= EPS * fabs(x);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool rEQ_sym(T x, U y) {
-  return C(x) == C(y) || fabs(C(x) - C(y)) <= EPS * std::max(fabs(C(x)), fabs(C(y)));
+  C a = C(x), b = C(y);
+  if (a == b) return true;
+  if constexpr (std::is_floating_point_v<C>) {
+    if (!std::isfinite(a) || !std::isfinite(b)) return false;
+  }
+  return fabs(a - b) <= EPS * std::max(fabs(a), fabs(b));
 }
 
 /*
@@ -147,8 +159,8 @@ Rounding Functions:
 - `round_half_alternate0(x)` returns `x` rounded, where ties are broken by alternating symmetric
   rounds towards and away from zero.
 - `round_half_random(x)` returns `x` rounded, where ties are broken randomly.
-- `round_n_places(x, n, f)` returns `x` rounded to `n` digits after the decimal, using the specified
-  rounding function `f(x)`.
+- `round_n_places(x, n, round)` returns `x` rounded to `n` digits after the decimal, using the
+  specified rounding function `round(x)`.
 
 */
 
@@ -201,26 +213,38 @@ Double round_half_even(const Double &x, const Double &eps = 1e-9) {
 
 template<typename Double>
 Double round_half_alternate(const Double &x) {
-  static bool up = true;
-  return (up = !up) ? round_half_up(x) : round_half_down(x);
+  Double up = round_half_up(x), down = round_half_down(x);
+  if (up == down) {
+    return up;
+  }
+  static bool round_up = false;
+  return (round_up = !round_up) ? up : down;
 }
 
 template<typename Double>
 Double round_half_alternate0(const Double &x) {
-  static bool up = true;
-  return (up = !up) ? round_half_from0(x) : round_half_to0(x);
+  Double away = round_half_from0(x), toward = round_half_to0(x);
+  if (away == toward) {
+    return away;
+  }
+  static bool round_away = false;
+  return (round_away = !round_away) ? away : toward;
 }
 
 template<typename Double>
 Double round_half_random(const Double &x) {
+  Double away = round_half_from0(x), toward = round_half_to0(x);
+  if (away == toward) {
+    return away;
+  }
   static std::mt19937 rng(std::random_device{}());
-  return (rng() % 2 == 0) ? round_half_from0(x) : round_half_to0(x);
+  return (rng() % 2 == 0) ? away : toward;
 }
 
 template<typename Double, typename RoundFn>
-Double round_n_places(const Double &x, unsigned int n, RoundFn f) {
+Double round_n_places(const Double &x, unsigned int n, RoundFn round) {
   Double scale = pow(10, n);
-  return f(x * scale) / scale;
+  return round(x * scale) / scale;
 }
 
 /*
@@ -356,6 +380,7 @@ using namespace std;
 int main() {
   assert(EQ(M_PI, 3.14159265359));
   assert(EQ(M_INF, M_INF) && rEQ(M_INF, M_INF) && rEQ_sym(M_INF, M_INF));
+  assert(!rEQ(M_INF, 0.0) && !rEQ_sym(M_INF, -M_INF));
   assert(EQ(M_E, 2.718281828459));
   assert(EQ(M_PHI, 1.61803398875));
 
@@ -383,8 +408,14 @@ int main() {
   assert(EQ(round_half_to0(-1.5), -1) && EQ(round_half_from0(-1.5), -2));
   assert(EQ(round_half_even(+1.5), +2) && EQ(round_half_even(-1.5), -2));
   assert(EQ(round_half_even(3.1), 3) && EQ(round_half_even(3.4), 3));  // non-ties round normally
-  assert(NE(round_half_alternate(+1.5), round_half_alternate(+1.5)));
-  assert(NE(round_half_alternate0(-1.5), round_half_alternate0(-1.5)));
+  double alt1 = round_half_alternate(+1.5);
+  assert(EQ(round_half_alternate(+1.2), +1));  // Non-ties do not consume an alternating turn.
+  double alt2 = round_half_alternate(+1.5);
+  assert(NE(alt1, alt2));
+  double alt01 = round_half_alternate0(-1.5);
+  assert(EQ(round_half_alternate0(-1.2), -1));
+  double alt02 = round_half_alternate0(-1.5);
+  assert(NE(alt01, alt02));
   assert(EQ(round_n_places(-1.23456, 3, round_half_to0<double>), -1.235));
 
   assert(addmod(7, 8, 10) == 5 && submod(2, 5, 10) == 7);

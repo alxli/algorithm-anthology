@@ -11,14 +11,14 @@ plain XOR only records element parity; use a summed hash or pair it with counts 
 matters.
 
 - `ZobristHash<T>(seed = 0)` constructs a token generator with initial value `seed`.
-- `get(x)` returns the stable token assigned to key `x`, creating it if needed.
+- `token(x)` returns the stable token assigned to key `x`, creating it if needed.
 - `toggle(h, x)` returns the hash obtained by inserting `x` into set hash `h` if absent, or removing
   `x` from `h` if present.
 - `distinct_prefix_hashes(lo, hi)` returns `n + 1` hashes. Element `i` hashes the first `i` values
   in $[`lo`, `hi`)$ with each distinct key contributing only on its first occurrence.
 
 Time Complexity:
-- O(1) expected per call to `get()` and `toggle()`.
+- O(1) expected per call to `token()` and `toggle()`.
 - O(n) expected per call to `distinct_prefix_hashes(lo, hi)`, where $n$ is the distance between `lo`
   and `hi`.
 
@@ -35,7 +35,7 @@ Space Complexity:
 
 template<typename T>
 class ZobristHash {
-  std::unordered_map<T, uint64_t> token;
+  std::unordered_map<T, uint64_t> tokens;
   uint64_t state;
 
   // SplitMix64 mixer.
@@ -49,16 +49,16 @@ class ZobristHash {
  public:
   explicit ZobristHash(uint64_t seed = 0) : state(seed) {}
 
-  uint64_t get(const T &x) {
-    if (auto it = token.find(x); it != token.end()) {
+  uint64_t token(const T &x) {
+    if (auto it = tokens.find(x); it != tokens.end()) {
       return it->second;
     }
     state = mix64(state);
-    token[x] = state;
+    tokens[x] = state;
     return state;
   }
 
-  uint64_t toggle(uint64_t h, const T &x) { return h ^ get(x); }
+  uint64_t toggle(uint64_t h, const T &x) { return h ^ token(x); }
 
   template<typename It>
   std::vector<uint64_t> distinct_prefix_hashes(It lo, It hi) {
@@ -67,7 +67,7 @@ class ZobristHash {
     uint64_t h = 0;
     for (It it = lo; it != hi; ++it) {
       if (seen.insert(*it).second) {
-        h ^= get(*it);
+        h ^= token(*it);
       }
       res.push_back(h);
     }

@@ -16,8 +16,8 @@ characters for increasing $k$: each round orders suffixes by their pair of ranks
 round, so a comparison costs O(1) and the full order emerges after O(log n) rounds.
 
 - `SuffixArrayManberMyers(s)` constructs a suffix array from string `s`.
-- `get_sa()` returns the constructed suffix array.
-- `get_lcp()` returns the corresponding LCP array for the suffix array.
+- `suffix_array()` returns the constructed suffix array.
+- `lcp_array()` returns the corresponding LCP array for the suffix array.
 - `find(needle)` returns one position that `needle` occurs in `s` (not necessarily the first), or
   `std::string::npos` if it cannot be found. For a `needle` of length $m$, this implementation uses
   an O(m log n) binary search, but can be optimized to O(m + log n) by first computing the LCP-LR
@@ -25,8 +25,8 @@ round, so a comparison costs O(1) and the full order emerges after O(log n) roun
 
 Time Complexity:
 - O(n log^2 n) per call to the constructor, where $n$ is the length of `s`.
-- O(1) per call to `get_sa()`.
-- O(n) per call to `get_lcp()`, where $n$ is the length of `s`.
+- O(1) per call to `suffix_array()`.
+- O(n) per call to `lcp_array()`, where $n$ is the length of `s`.
 - O(m log n) per call to `find(needle)`, where $m$ is the length of `needle` and $n$ is the length
   of `s`.
 
@@ -68,9 +68,9 @@ class SuffixArrayManberMyers {
     }
   }
 
-  const std::vector<int> &get_sa() const { return sa; }
+  const std::vector<int> &suffix_array() const { return sa; }
 
-  std::vector<int> get_lcp() const {
+  std::vector<int> lcp_array() const {
     int n = static_cast<int>(s.size());
     if (n == 0) {
       return {};
@@ -121,7 +121,7 @@ using namespace std;
 
 int main() {
   SuffixArrayManberMyers sa("banana");
-  vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
+  vector<int> sarr = sa.suffix_array(), lcp = sa.lcp_array();
   vector<int> sarr_expected{5, 3, 1, 0, 4, 2};
   vector<int> lcp_expected{1, 3, 0, 0, 2};
   assert(sarr == sarr_expected);

@@ -4,7 +4,8 @@ Evaluate an expression according to the order of operations (parentheses, unary 
 signs, multiplication/division, addition/subtraction). The following is a minimalistic recursive
 descent implementation using iterators. Each precedence level is parsed by its own function that
 obtains operands by calling the next-tighter level, so the call structure itself enforces the order
-of operations.
+of operations. Literals are nonnegative decimal integers, division truncates toward zero, and the
+input must not contain whitespace.
 
 - `eval(s)` returns an evaluation of the arithmetic expression `s`.
 

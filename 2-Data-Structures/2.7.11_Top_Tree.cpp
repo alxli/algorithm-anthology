@@ -165,7 +165,7 @@ class TopTree {
       parent->pull();
     }
 
-    void rotate_2(int child_dir) {
+    void rotate2(int child_dir) {
       assert(!is_graph_node);
       assert(!root_of_auxiliary_tree());
       assert(c[child_dir] != nullptr);
@@ -201,7 +201,7 @@ class TopTree {
       }
     }
 
-    void splay_2(int child_dir) {
+    void splay2(int child_dir) {
       assert(!is_graph_node && is_path);
       assert(c[child_dir] != nullptr && !c[child_dir]->is_graph_node);
       while (!root_of_auxiliary_tree()) {
@@ -209,17 +209,17 @@ class TopTree {
           if (p->dir() == dir()) {
             p->rotate();
           } else {
-            rotate_2(child_dir);
+            rotate2(child_dir);
           }
         }
-        rotate_2(child_dir);
+        rotate2(child_dir);
       }
     }
 
-    void splay_2() {
+    void splay2() {
       assert(!is_graph_node && is_path);
       assert(!root_of_auxiliary_tree());
-      p->splay_2(dir());
+      p->splay2(dir());
     }
 
     void splay_graph_node() {
@@ -236,7 +236,7 @@ class TopTree {
         p->rotate();
       }
       assert(dir() == 0);
-      p->splay_2();
+      p->splay2();
       assert(dir() == 0);
       assert(p->dir() == 1);
       assert(p->p->root_of_auxiliary_tree());

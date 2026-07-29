@@ -381,9 +381,9 @@ int main() {
   cout << "------" << endl;
 
   std::mt19937 rng(1234567);  // Fixed seed for reproducibility.
-  vector<int> data;
-  for (int i = 0; i < 5000000; i++) {
-    data.push_back(static_cast<int>(rng()));
+  vector<int> data(5000000);
+  for (int &x : data) {
+    x = static_cast<int>(rng());
   }
   cout << "Sorting five million integers..." << endl;
   cout.precision(3);

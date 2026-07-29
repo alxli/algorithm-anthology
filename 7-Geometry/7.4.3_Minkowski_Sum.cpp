@@ -70,7 +70,7 @@ std::vector<Point> normalize(std::vector<Point> p) {
   return p;
 }
 
-std::vector<Point> remove_collinear(std::vector<Point> p) {
+std::vector<Point> remove_collinear(const std::vector<Point> &p) {
   std::vector<Point> res;
   for (const Point &q : p) {
     while (res.size() >= 2 && EQ((res.back() - res[res.size() - 2]).cross(q - res.back()), 0)) {

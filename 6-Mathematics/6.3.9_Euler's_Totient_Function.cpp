@@ -28,8 +28,7 @@ than $\sqrt{`hi`}$ (a number at most `hi` can have at most one such factor).
 Time Complexity:
 - O(sqrt(n)) per call to `phi(n)`.
 - O(n log log n) per call to `phi_table(n)`.
-- O(sqrt(`hi`)*log(log(`hi`)) + w*log(log(`hi`))) per call to `phi_table(lo, hi)`, where
-  $w = `hi` - `lo` + 1$.
+- O((w + sqrt(`hi`))*log(log(`hi`))) per call to `phi_table(lo, hi)`, where $w = `hi` - `lo` + 1$.
 
 Space Complexity:
 - O(1) auxiliary for `phi(n)`.

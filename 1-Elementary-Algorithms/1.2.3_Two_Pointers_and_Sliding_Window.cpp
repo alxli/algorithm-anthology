@@ -27,28 +27,28 @@ dynamic programming recurrence.
   such pair exists. The input array must be sorted.
 - `three_sum(a, target)` returns three original indices whose values sum to `target`, or
   $(-1, -1, -1)$ if none exist.
-- `min_length_at_least(a, target)` returns a tuple (`length`, `lo`, `hi`), the minimum length and
+- `min_subarray_at_least(a, target)` returns a tuple (`length`, `lo`, `hi`), the minimum length and
   inclusive endpoints of a contiguous subarray with sum at least `target`, or length $-1$ if none
   exists. Values in `a` must be nonnegative. If `target` is nonpositive, it returns the empty
   subarray.
-- `longest_at_most_k_distinct(a, k)` returns a tuple (`length`, `lo`, `hi`), the maximum length and
-  inclusive endpoints of a contiguous subarray containing at most `k` distinct values. If `k` is
-  nonpositive, it returns the empty subarray.
+- `max_subarray_at_most_k_distinct(a, k)` returns a tuple (`length`, `lo`, `hi`), the maximum length
+  and inclusive endpoints of a contiguous subarray containing at most `k` distinct values. If
+  `k` is nonpositive, it returns the empty subarray.
 - `sliding_window_extrema(a, k, comp = std::less<>)` returns the extreme value in each window of
   length `k`. With the default `less<>` comparator it returns minimums; passing `greater<>` returns
   maximums.
 
 Time Complexity:
-- O(n) per call to `two_sum_sorted()` and `min_length_at_least()`, where $n$ is the array size.
+- O(n) per call to `two_sum_sorted()` and `min_subarray_at_least()`, where $n$ is the array size.
 - O(n^2) per call to `three_sum()`.
-- O(n) expected per call to `longest_at_most_k_distinct()`.
+- O(n) expected per call to `max_subarray_at_most_k_distinct()`.
 - O(n) per call to `sliding_window_extrema()`.
 
 Space Complexity:
 - O(1) auxiliary for `two_sum_sorted(a, target)`.
 - O(n) auxiliary for `three_sum(a, target)`.
-- O(1) auxiliary for `min_length_at_least(a, target)`.
-- O(k) auxiliary for `longest_at_most_k_distinct(a, k)`.
+- O(1) auxiliary for `min_subarray_at_least(a, target)`.
+- O(k) auxiliary for `max_subarray_at_most_k_distinct(a, k)`.
 - O(k) auxiliary and O(n) for the result of `sliding_window_extrema()`.
 
 */
@@ -102,7 +102,7 @@ std::array<int, 3> three_sum(const std::vector<int> &a, int64_t target) {
   return {-1, -1, -1};
 }
 
-std::tuple<int, int, int> min_length_at_least(const std::vector<int> &a, int64_t target) {
+std::tuple<int, int, int> min_subarray_at_least(const std::vector<int> &a, int64_t target) {
   if (target <= 0) {
     return {0, 0, -1};
   }
@@ -125,7 +125,7 @@ std::tuple<int, int, int> min_length_at_least(const std::vector<int> &a, int64_t
   return {best, best_lo, best_hi};
 }
 
-std::tuple<int, int, int> longest_at_most_k_distinct(const std::vector<int> &a, int k) {
+std::tuple<int, int, int> max_subarray_at_most_k_distinct(const std::vector<int> &a, int k) {
   if (k <= 0) {
     return {0, 0, -1};
   }
@@ -240,15 +240,15 @@ int main() {
   assert((three_sum(d, 30) == array<int, 3>{-1, -1, -1}));
 
   vector<int> a{2, 3, 1, 2, 4, 3};
-  auto [length, lo, hi] = min_length_at_least(a, 7);
+  auto [length, lo, hi] = min_subarray_at_least(a, 7);
   assert(length == 2);
   assert(lo == 4 && hi == 5);  // [4, 3].
-  auto [empty_length, empty_lo, empty_hi] = min_length_at_least(a, 0);
+  auto [empty_length, empty_lo, empty_hi] = min_subarray_at_least(a, 0);
   assert(empty_length == 0);
   assert(empty_lo == 0 && empty_hi == -1);
 
   vector<int> b{1, 2, 1, 3, 4, 3, 5};
-  auto [longest, longest_lo, longest_hi] = longest_at_most_k_distinct(b, 2);
+  auto [longest, longest_lo, longest_hi] = max_subarray_at_most_k_distinct(b, 2);
   assert(longest == 3);
   assert(longest_lo == 0 && longest_hi == 2);  // [1, 2, 1].
 

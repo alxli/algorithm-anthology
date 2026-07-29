@@ -32,6 +32,7 @@ C_RAND_RE = re.compile(
 )
 QUALIFIED_FABS_RE = re.compile(r"\bstd::fabs\b")
 CAST_EPS_RE = re.compile(r"\bstatic_cast<C>\(EPS\)")
+LEGACY_BOUNDARY_FLAG_RE = re.compile(r"\b(?:edge_is_inside|touch_is_intersect)\b")
 FIXED_ENGINE_SEED_RE = re.compile(
     r"(?:std::)?(?:mt19937|mt19937_64)\s+[A-Za-z_][A-Za-z0-9_]*"
     r"\s*\(\s*([0-9]+)[uUlL]*\s*\)"
@@ -497,6 +498,16 @@ def scan_code_consistency(paths):
                         line_no,
                         "code-consistency",
                         "Use EPS directly; floating-point comparisons convert it implicitly.",
+                        line,
+                    )
+                )
+            if LEGACY_BOUNDARY_FLAG_RE.search(line):
+                issues.append(
+                    Issue(
+                        path,
+                        line_no,
+                        "code-consistency",
+                        "Use include_boundary consistently for geometry boundary flags.",
                         line,
                     )
                 )

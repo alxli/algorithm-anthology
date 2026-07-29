@@ -4,11 +4,11 @@ Given a set of strings (needles) and subsequent queries of texts (haystacks) to 
 determine all positions in which needles occur within the given haystacks in linear time using the
 Aho-Corasick algorithm. The needles are arranged in a trie whose nodes carry failure links to the
 longest proper suffix that is also a trie node. Scanning the haystack once while following
-transitions and failure links then reports every match through each node's output set.
+transitions and failure links then reports every match through each node's output list.
 
 This implementation stores transitions in hash tables, which keeps lookups expected constant time
-without assuming a fixed alphabet size. The output tables are stored as ordered sets so matches
-ending at the same position are reported in deterministic needle order.
+without assuming a fixed alphabet size. Output lists store both needles ending at each trie node and
+needles inherited through its failure link.
 
 - `AhoCorasick(needles)` constructs the finite-state automaton for a set of needle strings that are
   to be searched for subsequently in haystack queries. Empty needles are ignored.
@@ -18,8 +18,8 @@ ending at the same position are reported in deterministic needle order.
   increasing order of their ending positions within the `haystack`.
 
 Time Complexity:
-- O(L + z log m) expected per call to the constructor, where $L$ is the total length of the $m$
-  needles and $z$ is the total number of inherited output entries.
+- O(L + z) expected per call to the constructor, where $L$ is the total needle length and $z$ is the
+  total number of inherited output entries.
 - O(n + z) expected per call to `find_all_in(haystack, report_match)`, where $n$ is the length of
   `haystack` and $z$ is the number of matches.
 
@@ -30,7 +30,6 @@ Space Complexity:
 */
 
 #include <queue>
-#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -40,7 +39,7 @@ class AhoCorasick {
   std::vector<string> needles;
   std::vector<int> fail;
   std::vector<std::unordered_map<char, int>> adj;
-  std::vector<std::set<int>> out;
+  std::vector<std::vector<int>> out;
 
   int next_state(int curr, char c) const {
     int next = curr;
@@ -77,7 +76,7 @@ class AhoCorasick {
           curr = adj[curr][c] = states++;
         }
       }
-      out[curr].insert(i);
+      out[curr].push_back(i);
     }
     std::queue<int> q;
     for (auto &[c, v] : adj[0]) {
@@ -97,7 +96,7 @@ class AhoCorasick {
         auto fit = adj[f].find(c);
         f = (fit != adj[f].end()) ? fit->second : 0;
         fail[v] = f;
-        out[v].insert(out[f].begin(), out[f].end());
+        out[v].insert(out[v].end(), out[f].begin(), out[f].end());
         q.push(v);
       }
     }

@@ -25,8 +25,7 @@ O(n) running time.
 
 Time Complexity:
 - O(n log log n) per call to `sieve(n)`.
-- O(sqrt(`hi`)*log(log(`hi`)) + w*log(log(`hi`))) per call to `sieve(lo, hi)`, where
-  $w = `hi` - `lo` + 1$.
+- O((w + sqrt(`hi`))*log(log(`hi`))) per call to `sieve(lo, hi)`, where $w = `hi` - `lo` + 1$.
 - O(n) per call to `linear_sieve()`.
 
 Space Complexity:

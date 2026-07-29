@@ -16,12 +16,12 @@ no precision is lost and cross products are never multiplied together.
 - `triangle_area_altitudes(h1, h2, h3)` returns the area of a triangle with altitudes `h1`, `h2`,
   and `h3`. An altitude of a triangle is the shortest line between a vertex and the infinite line
   that is extended from its opposite edge.
-- `same_side(p1, p2, a, b, edge_is_inside = true)` returns whether points `p1` and `p2` lie on the
+- `same_side(p1, p2, a, b, include_boundary = true)` returns whether points `p1` and `p2` lie on the
   same side of the line containing points `a` and `b`. If one or both points lie exactly on the
-  line, then the result will depend on `edge_is_inside`.
-- `point_in_triangle(p, a, b, c, edge_is_inside = true)` returns whether point `p` lies within the
+  line, then the result will depend on `include_boundary`.
+- `point_in_triangle(p, a, b, c, include_boundary = true)` returns whether point `p` lies within the
   triangle with vertices `a`, `b`, and `c`. If the point lies on or close to an edge (by roughly
-  `EPS`), then the result will depend on `edge_is_inside`.
+  `EPS`), then the result will depend on `include_boundary`.
 
 Use an integral point type for integer coordinates, and a floating-point type for fractional
 coordinates.
@@ -81,22 +81,22 @@ double triangle_area_altitudes(double h1, double h2, double h3) {
 }
 
 template<typename Pt>
-bool same_side(const Pt &p1, const Pt &p2, const Pt &a, const Pt &b, bool edge_is_inside = true) {
+bool same_side(const Pt &p1, const Pt &p2, const Pt &a, const Pt &b, bool include_boundary = true) {
   // Cross products in the point's native coordinate type (exact for integer points).
   auto c1 = (b.x - a.x) * (p1.y - a.y) - (b.y - a.y) * (p1.x - a.x);
   auto c2 = (b.x - a.x) * (p2.y - a.y) - (b.y - a.y) * (p2.x - a.x);
   // Compare the signs, not the product c1 * c2, to avoid integer overflow.
   int s1 = LT(0, c1) ? 1 : (LT(c1, 0) ? -1 : 0);
   int s2 = LT(0, c2) ? 1 : (LT(c2, 0) ? -1 : 0);
-  return edge_is_inside ? (s1 * s2 >= 0) : (s1 * s2 > 0);
+  return include_boundary ? (s1 * s2 >= 0) : (s1 * s2 > 0);
 }
 
 template<typename Pt>
 bool point_in_triangle(
-    const Pt &p, const Pt &a, const Pt &b, const Pt &c, bool edge_is_inside = true
+    const Pt &p, const Pt &a, const Pt &b, const Pt &c, bool include_boundary = true
 ) {
-  return same_side(p, a, b, c, edge_is_inside) && same_side(p, b, a, c, edge_is_inside) &&
-         same_side(p, c, a, b, edge_is_inside);
+  return same_side(p, a, b, c, include_boundary) && same_side(p, b, a, c, include_boundary) &&
+         same_side(p, c, a, b, include_boundary);
 }
 
 /*** Example Usage ***/

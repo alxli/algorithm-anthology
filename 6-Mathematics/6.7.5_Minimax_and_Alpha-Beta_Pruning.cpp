@@ -33,46 +33,33 @@ int minimax(int stones, bool maximizing) {
   if (stones == 0) {
     return maximizing ? -1 : 1;
   }
-  if (maximizing) {
-    int best = -2;
-    for (int take = 1; take <= 2 && take <= stones; take++) {
-      best = std::max(best, minimax(stones - take, false));
-    }
-    return best;
-  } else {
-    int best = 2;
-    for (int take = 1; take <= 2 && take <= stones; take++) {
-      best = std::min(best, minimax(stones - take, true));
-    }
-    return best;
+  int best = maximizing ? -2 : 2;
+  for (int take = 1; take <= 2 && take <= stones; take++) {
+    int child = minimax(stones - take, !maximizing);
+    best = maximizing ? std::max(best, child) : std::min(best, child);
   }
+  return best;
 }
 
 int alpha_beta(int stones, bool maximizing, int alpha = -2, int beta = 2) {
   if (stones == 0) {
     return maximizing ? -1 : 1;
   }
-  if (maximizing) {
-    int value = -2;
-    for (int take = 1; take <= 2 && take <= stones; take++) {
-      value = std::max(value, alpha_beta(stones - take, false, alpha, beta));
+  int value = maximizing ? -2 : 2;
+  for (int take = 1; take <= 2 && take <= stones; take++) {
+    int child = alpha_beta(stones - take, !maximizing, alpha, beta);
+    if (maximizing) {
+      value = std::max(value, child);
       alpha = std::max(alpha, value);
-      if (alpha >= beta) {
-        break;
-      }
-    }
-    return value;
-  } else {
-    int value = 2;
-    for (int take = 1; take <= 2 && take <= stones; take++) {
-      value = std::min(value, alpha_beta(stones - take, true, alpha, beta));
+    } else {
+      value = std::min(value, child);
       beta = std::min(beta, value);
-      if (alpha >= beta) {
-        break;
-      }
     }
-    return value;
+    if (alpha >= beta) {
+      break;
+    }
   }
+  return value;
 }
 
 int best_take(int stones) {

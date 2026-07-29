@@ -18,22 +18,24 @@ front. Prefer the dense 2D Fenwick tree when the coordinates are small enough to
 and the sparse 2D Fenwick tree when update locations are not known ahead of time or rectangle
 updates are needed.
 
-Usage is two-phase. First declare every cell that will be updated with `reserve()`; then call
+Usage is two-phase. First declare every cell that will be updated with `register_point()`; then call
 `build()` once; then issue `add()` updates and `sum()` / `at()` queries freely. Updates may only
-target reserved cells, but queries may use any coordinates.
+target registered cells, but queries may use any coordinates.
 
 - `OfflineFenwick2D<T>()` constructs an empty structure in the declaration phase.
-- `reserve(r, c)` declares that the cell (`r`, `c`) may later be updated. Call before `build()`.
-- `build()` finalizes the coordinate compression. Call exactly once, after all `reserve()` calls.
-- `add(r, c, x)` adds `x` to the value at index (`r`, `c`), which must have been reserved.
-- `set(r, c, x)` assigns `x` to the value at index (`r`, `c`), which must have been reserved.
+- `register_point(r, c)` declares that the cell (`r`, `c`) may later be updated. Call before
+  `build()`.
+- `build()` finalizes the coordinate compression. Call exactly once, after all `register_point()`
+  calls.
+- `add(r, c, x)` adds `x` to the value at index (`r`, `c`), which must have been registered.
+- `set(r, c, x)` assigns `x` to the value at index (`r`, `c`), which must have been registered.
 - `at(r, c)` returns the value at index (`r`, `c`).
 - `sum(r, c)` returns the sum of the rectangle with rows $[0, `r`]$ and columns $[0, `c`]$.
 - `sum(r1, c1, r2, c2)` returns the sum of the rectangle with rows $[`r1`, `r2`]$ and columns
   $[`c1`, `c2`]$.
 
 Time Complexity:
-- O(n log^2 n) per call to `build()`, where $n$ is the number of reserved cells.
+- O(n log^2 n) per call to `build()`, where $n$ is the number of registered cells.
 - O(log^2 n) per call to `add()`, `set()`, `sum()`, and `at()`.
 
 Space Complexity:
@@ -52,7 +54,7 @@ class OfflineFenwick2D {
   std::vector<int> xs;                       // Sorted distinct update rows.
   std::vector<std::vector<int>> ys;          // ys[p]: sorted distinct columns at outer node p.
   std::vector<std::vector<T>> tree;          // tree[p]: 1-indexed inner Fenwick over ys[p].
-  std::vector<std::pair<int, int>> pending;  // Reserved (row, column) cells.
+  std::vector<std::pair<int, int>> pending;  // Registered (row, column) cells.
   bool built = false;
 
   // Number of update rows at most r; the outer Fenwick prefix bound for a query at row r.
@@ -70,14 +72,14 @@ class OfflineFenwick2D {
     return static_cast<int>(std::upper_bound(ys[p].begin(), ys[p].end(), c) - ys[p].begin());
   }
 
-  bool is_reserved(int r, int c) const {
+  bool is_registered(int r, int c) const {
     int p = row_pos(r);
     return p < static_cast<int>(tree.size()) && p > 0 && xs[p - 1] == r &&
            std::binary_search(ys[p].begin(), ys[p].end(), c);
   }
 
  public:
-  void reserve(int r, int c) {
+  void register_point(int r, int c) {
     assert(!built);
     pending.emplace_back(r, c);
   }
@@ -108,8 +110,7 @@ class OfflineFenwick2D {
   }
 
   void add(int r, int c, const T &x) {
-    assert(built);
-    assert(is_reserved(r, c));
+    assert(built && is_registered(r, c));
     for (int i = row_pos(r); i < static_cast<int>(tree.size()); i += i & -i) {
       for (int j = col_rank(i, c); j <= static_cast<int>(ys[i].size()); j += j & -j) {
         tree[i][j] += x;
@@ -145,11 +146,11 @@ using namespace std;
 int main() {
   OfflineFenwick2D<int> t;
   // Declare every cell that will be updated, then finalize.
-  t.reserve(0, 0);
-  t.reserve(0, 1000000);
-  t.reserve(1000000, 0);
-  t.reserve(1000000, 1000000);
-  t.reserve(500000, 500000);
+  t.register_point(0, 0);
+  t.register_point(0, 1000000);
+  t.register_point(1000000, 0);
+  t.register_point(1000000, 1000000);
+  t.register_point(500000, 500000);
   t.build();
 
   t.set(0, 0, 5);

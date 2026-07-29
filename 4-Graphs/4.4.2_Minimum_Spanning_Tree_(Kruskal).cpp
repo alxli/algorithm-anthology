@@ -48,10 +48,10 @@ int64_t kruskal_mst(int n) {
   std::sort(order.begin(), order.end(), [](int a, int b) {
     return std::get<0>(edges[a]) < std::get<0>(edges[b]);
   });
-  int64_t total_dist = 0;
   dsu_root.assign(n, 0);
   dsu_size.assign(n, 1);
   std::iota(dsu_root.begin(), dsu_root.end(), 0);
+  int64_t total_weight = 0;
   for (int id : order) {
     auto [w, u, v] = edges[id];
     u = find(u);
@@ -63,10 +63,10 @@ int64_t kruskal_mst(int n) {
       dsu_root[v] = u;
       dsu_size[u] += dsu_size[v];
       mst.push_back(id);
-      total_dist += w;
+      total_weight += w;
     }
   }
-  return total_dist;
+  return total_weight;
 }
 
 /*** Example Usage ***/

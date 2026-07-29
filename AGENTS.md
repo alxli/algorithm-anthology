@@ -88,6 +88,10 @@ Prefer code that a strong contestant can adapt quickly after skimming:
   specifically requires changing it. Such regions intentionally override ordinary formatting and
   line-length rules, including the 100-column limit.
 - Use `int64_t`/`long long` for sums, weights, counts, and products that may overflow `int`.
+- Use unsigned types for bit masks whose highest bit may be used; signed shifts, negation, and
+  successor-mask arithmetic can otherwise invoke undefined behavior.
+- Check intermediate arithmetic as well as the final mathematical result for overflow. Rearrange or
+  reduce products before division when an intermediate can exceed the result type.
 - Keep comments sparse and useful. Explain invariants, tricky transitions, precision choices,
   overflow risks, and non-obvious contest assumptions; do not narrate obvious assignments.
 
@@ -97,7 +101,7 @@ Prefer code that a strong contestant can adapt quickly after skimming:
 - Classes and structs use `CamelCase`.
 - Template type parameters are conventional short names such as `T`, `U`, `C`, `Fn`, `Compare`.
 - Runtime function parameters are lowercase, even when `const` and defaulted:
-  `eps`, `iterations`, `maximize`, `edge_is_inside`, `touch_is_intersect`.
+  `eps`, `iterations`, `maximize`, `include_boundary`.
 - Prefer `lo` and `hi` for generic iterator, search, and numeric range bounds. Use more specific
   names such as `tgt_lo`/`tgt_hi` when two ranges coexist. Preserve established domain terms where
   they carry meaning, including scheduling `start`/`finish`, graph `start`, matrix `r`/`c`,
@@ -236,6 +240,8 @@ sections elsewhere, include both `Time Complexity:` and `Space Complexity:`.
   `static_cast<C>(EPS)`; the floating-point expression converts it implicitly.
 - Floating-point tolerance constants are usually named `EPS` and kept as uppercase constants.
 - Runtime tolerance parameters are lowercase `eps`.
+- Use `include_boundary` for geometry flags that control whether boundary points or boundary-only
+  contact count; use the same name for containment and intersection APIs.
 - Geometry `operator==` and `operator<` should remain exact so points and lines work predictably in
   standard containers; use `EQ()` overloads for approximate geometric equality.
 - For templated numeric geometry, exact operations should preserve the coordinate type when

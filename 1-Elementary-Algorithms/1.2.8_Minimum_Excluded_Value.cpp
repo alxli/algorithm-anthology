@@ -13,13 +13,13 @@ currently missing candidates.
 - `DynamicMex()` maintains the MEX of a multiset of nonnegative integers.
 - `add(x)` inserts one copy of value `x` if `x` $\geq 0$.
 - `remove(x)` removes one copy of value `x` if present.
-- `get()` returns the current MEX.
+- `mex()` returns the current MEX.
 
 Time Complexity:
 - O(n) per call to `mex(lo, hi)`, where $n$ is the number of values.
 - O(log n) expected per call to `add(x)` and `remove(x)` for `DynamicMex`, and O(n) in the
   collision-heavy worst case for the hash table.
-- O(1) per call to `get()` for `DynamicMex`.
+- O(1) per call to `mex()` for `DynamicMex`.
 
 Space Complexity:
 - O(n) auxiliary for `mex(lo, hi)`.
@@ -86,7 +86,7 @@ class DynamicMex {
     }
   }
 
-  int get() const { return *missing.begin(); }
+  int mex() const { return *missing.begin(); }
 };
 
 /*** Example Usage ***/
@@ -105,14 +105,14 @@ int main() {
   m.add(1);
   m.add(1);
   m.add(3);
-  assert(m.get() == 2);
+  assert(m.mex() == 2);
   m.add(2);
-  assert(m.get() == 4);
+  assert(m.mex() == 4);
   m.remove(1);
-  assert(m.get() == 4);  // One copy of 1 remains.
+  assert(m.mex() == 4);  // One copy of 1 remains.
   m.remove(1);
-  assert(m.get() == 1);
+  assert(m.mex() == 1);
   m.remove(100);
-  assert(m.get() == 1);
+  assert(m.mex() == 1);
   return 0;
 }

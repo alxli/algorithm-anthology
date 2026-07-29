@@ -87,89 +87,91 @@ class HeavyLight {
     return paths++;
   }
 
-  void build_paths(int u, int path) {
-    this->path[u] = path;
-    pathpos[u] = pathlen[path]++;
+  void build_paths(int u, int path_id) {
+    path[u] = path_id;
+    pathpos[u] = pathlen[path_id]++;
     for (int v : adj[u]) {
       if (v != parent[u]) {
-        build_paths(v, (2 * size[v] >= size[u]) ? path : new_path(v));
+        build_paths(v, (2 * size[v] >= size[u]) ? path_id : new_path(v));
       }
     }
   }
 
-  inline T applied_value(int path, int i) {
-    return pending[path][i] ? apply_delta(value[path][i], delta[path][i], len[path][i])
-                            : value[path][i];
+  inline T applied_value(int path_id, int i) {
+    return pending[path_id][i] ? apply_delta(value[path_id][i], delta[path_id][i], len[path_id][i])
+                               : value[path_id][i];
   }
 
-  void push_delta(int path, int i) {
+  void push_delta(int path_id, int i) {
     int d = 0;
     while ((i >> d) > 0) {
       d++;
     }
     for (d -= 2; d >= 0; d--) {
       int l = (i >> d), r = (l ^ 1), n = l / 2;
-      if (pending[path][n]) {
-        value[path][n] = applied_value(path, n);
-        delta[path][l] =
-            pending[path][l] ? compose_deltas(delta[path][l], delta[path][n]) : delta[path][n];
-        delta[path][r] =
-            pending[path][r] ? compose_deltas(delta[path][r], delta[path][n]) : delta[path][n];
-        pending[path][l] = pending[path][r] = true;
-        pending[path][n] = false;
+      if (pending[path_id][n]) {
+        value[path_id][n] = applied_value(path_id, n);
+        delta[path_id][l] = pending[path_id][l]
+                                ? compose_deltas(delta[path_id][l], delta[path_id][n])
+                                : delta[path_id][n];
+        delta[path_id][r] = pending[path_id][r]
+                                ? compose_deltas(delta[path_id][r], delta[path_id][n])
+                                : delta[path_id][n];
+        pending[path_id][l] = pending[path_id][r] = true;
+        pending[path_id][n] = false;
       }
     }
   }
 
-  bool query(int path, int u, int v, T *res) {
-    push_delta(path, u += static_cast<int>(value[path].size()) / 2);
-    push_delta(path, v += static_cast<int>(value[path].size()) / 2);
+  bool query(int path_id, int u, int v, T *res) {
+    push_delta(path_id, u += static_cast<int>(value[path_id].size()) / 2);
+    push_delta(path_id, v += static_cast<int>(value[path_id].size()) / 2);
     bool found = false;
     for (; u <= v; u = (u + 1) / 2, v = (v - 1) / 2) {
       if ((u & 1) != 0) {
-        T value = applied_value(path, u);
-        *res = found ? combine(*res, value) : value;
+        T part_value = applied_value(path_id, u);
+        *res = found ? combine(*res, part_value) : part_value;
         found = true;
       }
       if ((v & 1) == 0) {
-        T value = applied_value(path, v);
-        *res = found ? combine(*res, value) : value;
+        T part_value = applied_value(path_id, v);
+        *res = found ? combine(*res, part_value) : part_value;
         found = true;
       }
     }
     return found;
   }
 
-  void update(int path, int u, int v, const T &d) {
-    push_delta(path, u += static_cast<int>(value[path].size()) / 2);
-    push_delta(path, v += static_cast<int>(value[path].size()) / 2);
+  void update(int path_id, int u, int v, const T &d) {
+    push_delta(path_id, u += static_cast<int>(value[path_id].size()) / 2);
+    push_delta(path_id, v += static_cast<int>(value[path_id].size()) / 2);
     int tu = -1, tv = -1;
     for (; u <= v; u = (u + 1) / 2, v = (v - 1) / 2) {
       if ((u & 1) != 0) {
-        delta[path][u] = pending[path][u] ? compose_deltas(delta[path][u], d) : d;
-        pending[path][u] = true;
+        delta[path_id][u] = pending[path_id][u] ? compose_deltas(delta[path_id][u], d) : d;
+        pending[path_id][u] = true;
         if (tu == -1) {
           tu = u;
         }
       }
       if ((v & 1) == 0) {
-        delta[path][v] = pending[path][v] ? compose_deltas(delta[path][v], d) : d;
-        pending[path][v] = true;
+        delta[path_id][v] = pending[path_id][v] ? compose_deltas(delta[path_id][v], d) : d;
+        pending[path_id][v] = true;
         if (tv == -1) {
           tv = v;
         }
       }
     }
     for (int i = tu; i > 1; i /= 2) {
-      value[path][i / 2] = combine(applied_value(path, i), applied_value(path, i ^ 1));
+      value[path_id][i / 2] = combine(applied_value(path_id, i), applied_value(path_id, i ^ 1));
     }
     for (int i = tv; i > 1; i /= 2) {
-      value[path][i / 2] = combine(applied_value(path, i), applied_value(path, i ^ 1));
+      value[path_id][i / 2] = combine(applied_value(path_id, i), applied_value(path_id, i ^ 1));
     }
   }
 
-  inline bool is_ancestor(int parent, int child) {
-    return (tin[parent] <= tin[child]) && (tout[child] <= tout[parent]);
+  inline bool is_ancestor(int ancestor, int node) {
+    return (tin[ancestor] <= tin[node]) && (tout[node] <= tout[ancestor]);
   }
 
  public:
@@ -244,10 +246,10 @@ class HeavyLight {
     assert(root[u] == root[v]);
     assert(!VALUES_ON_EDGES || u != v);
     bool found = false;
-    T res = T(), value;
-    for_each_path(u, v, !VALUES_ON_EDGES, [&](int path, int lo, int hi, bool) {
-      if (query(path, lo, hi, &value)) {
-        res = found ? combine(res, value) : value;
+    T res = T(), part_value;
+    for_each_path(u, v, !VALUES_ON_EDGES, [&](int path_id, int lo, int hi, bool) {
+      if (query(path_id, lo, hi, &part_value)) {
+        res = found ? combine(res, part_value) : part_value;
         found = true;
       }
     });
@@ -262,8 +264,8 @@ class HeavyLight {
     if (VALUES_ON_EDGES && u == v) {
       return;
     }
-    for_each_path(u, v, !VALUES_ON_EDGES, [&](int path, int lo, int hi, bool) {
-      update(path, lo, hi, d);
+    for_each_path(u, v, !VALUES_ON_EDGES, [&](int path_id, int lo, int hi, bool) {
+      update(path_id, lo, hi, d);
     });
   }
 };

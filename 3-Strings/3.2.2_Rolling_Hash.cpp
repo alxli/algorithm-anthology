@@ -25,15 +25,15 @@ instantiate `RollingHash<T, Hash>` and pass a custom value hasher as the final c
 - `RollingHash<T>(lo, hi)` constructs prefix hashes from the values in the half-open iterator range
   $[`lo`, `hi`)$.
 - `RollingHash<T>(v)` constructs prefix hashes for vector `v`.
-- `get(lo, hi)` returns the hash of the half-open subsequence $[`lo`, `hi`)$.
-- `hash(lo, hi)` returns the hash of the half-open iterator range $[`lo`, `hi`)$.
-- `hash(v)` returns the hash of vector `v`.
+- `h.hash(lo, hi)` returns the hash of the half-open subsequence $[`lo`, `hi`)$.
+- `RollingHash<T>::hash(lo, hi)` returns the hash of the half-open iterator range $[`lo`, `hi`)$.
+- `RollingHash<T>::hash(v)` returns the hash of vector `v`.
 - `concat(left, right, right_len)` returns the hash of the concatenation of a sequence with hash
   `left` and a sequence with hash `right` and length `right_len`.
 
 Time Complexity:
-- O(n) per call to the constructor or `hash()`, where $n$ is the sequence length.
-- O(1) per call to `get()` and `concat()`.
+- O(n) per call to the constructor or static `hash()`, where $n$ is the sequence length.
+- O(1) per call to the member `hash()` and `concat()`.
 
 Space Complexity:
 - O(n) for storage of prefix hashes and powers, where $n$ is the maximum sequence length processed
@@ -133,7 +133,7 @@ class RollingHash {
 
   int size() const { return static_cast<int>(pref.size()) - 1; }
 
-  uint64_t get(int lo, int hi) const {
+  uint64_t hash(int lo, int hi) const {
     assert(0 <= lo && lo <= hi && hi <= size());
     return hash_sub(pref[hi], hash_mul(pref[lo], pow_base[hi - lo]));
   }
@@ -141,12 +141,12 @@ class RollingHash {
   template<typename It>
   static uint64_t hash(It lo, It hi, const Hash &hasher = Hash()) {
     RollingHash<T, Hash> h(lo, hi, hasher);
-    return h.get(0, h.size());
+    return h.hash(0, h.size());
   }
 
   static uint64_t hash(const std::vector<T> &v, const Hash &hasher = Hash()) {
     RollingHash<T, Hash> h(v, hasher);
-    return h.get(0, h.size());
+    return h.hash(0, h.size());
   }
 
   static uint64_t concat(uint64_t left, uint64_t right, int right_len) {
@@ -178,8 +178,8 @@ struct PointHasher {
 int main() {
   string s = "abracadabra";
   RollingHash<char> hs(s.begin(), s.end());
-  assert(hs.get(0, 4) == hs.get(7, 11));  // "abra" == "abra"
-  assert(hs.get(0, 4) != hs.get(3, 7));   // "abra" != "acad"
+  assert(hs.hash(0, 4) == hs.hash(7, 11));  // "abra" == "abra"
+  assert(hs.hash(0, 4) != hs.hash(3, 7));   // "abra" != "acad"
 
   string a = "abc", b = "def";
   uint64_t ab = RollingHash<char>::concat(
@@ -196,11 +196,11 @@ int main() {
   v.push_back(1);
   v.push_back(2);
   RollingHash<int> hv(v);
-  assert(hv.get(0, 2) == hv.get(3, 5));  // Both ranges are [1, 2].
-  assert(hv.get(0, 3) == RollingHash<int>::hash(v.begin(), v.begin() + 3));
+  assert(hv.hash(0, 2) == hv.hash(3, 5));  // Both ranges are [1, 2].
+  assert(hv.hash(0, 3) == RollingHash<int>::hash(v.begin(), v.begin() + 3));
 
   vector<PointI> poly{{1, 2}, {3, 4}};
   RollingHash<PointI, PointHasher> hp(poly);
-  assert((hp.get(0, 2) == RollingHash<PointI, PointHasher>::hash(poly)));
+  assert((hp.hash(0, 2) == RollingHash<PointI, PointHasher>::hash(poly)));
   return 0;
 }

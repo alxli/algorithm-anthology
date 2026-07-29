@@ -25,24 +25,24 @@ queries, and `compose_deltas(old, d)` would return `old + d`.
 - `LinkCut<T>()` constructs an empty forest.
 - `size()` returns the number of nodes in the forest.
 - `trees()` returns the number of trees in the forest.
-- `add_node(i, value = T())` adds a new single-node tree to the forest, labeled with the integer `i`
+- `add_node(u, value = T())` adds a new single-node tree to the forest, labeled with the integer `u`
   and with value initialized to `value`.
-- `is_connected(a, b)` returns whether nodes `a` and `b` are connected.
-- `link(a, b)` adds an edge between the nodes `a` and `b`, both of which must exist and not be
+- `connected(u, v)` returns whether nodes `u` and `v` are connected.
+- `link(u, v)` adds an edge between the nodes `u` and `v`, both of which must exist and not be
   connected.
-- `cut(a, b)` removes the edge between the nodes `a` and `b`, both of which must exist and be
+- `cut(u, v)` removes the edge between the nodes `u` and `v`, both of which must exist and be
   connected.
-- `query(a, b)` returns the result of `combine()` applied to all values on the path from the node
-  `a` to node `b`.
-- `update(a, b, d)` modifies all the values on the path from node `a` to node `b` by applying the
+- `query(u, v)` returns the result of `combine()` applied to all values on the path from node `u` to
+  node `v`.
+- `update(u, v, d)` modifies all the values on the path from node `u` to node `v` by applying the
   delta `d`.
-- `reroot(i)` makes node `i` the root of its tree.
-- `find_root(i)` returns the label of the root of the tree containing node `i`.
-- `lca(a, b)` returns the lowest common ancestor of `a` and `b` relative to the tree's current root.
+- `reroot(u)` makes node `u` the root of its tree.
+- `find_root(u)` returns the label of the root of the tree containing node `u`.
+- `lca(u, v)` returns the lowest common ancestor of `u` and `v` relative to the tree's current root.
 
 The forest is unrooted: a tree's root is whichever node was most recently established as such.
-`reroot(i)` sets it explicitly, while `link`, `query`, and `update` reroot implicitly (the latter
-two at their first argument). `find_root(i)` and `lca(a, b)` are therefore relative to the current
+`reroot(u)` sets it explicitly, while `link`, `query`, and `update` reroot implicitly (the latter
+two at their first argument). `find_root(u)` and `lca(u, v)` are therefore relative to the current
 root, so call `reroot(r)` first whenever a specific root `r` is intended.
 
 Time Complexity:
@@ -198,15 +198,10 @@ class LinkCut {
     return prev;
   }
 
-  // Helper variables.
-  Node *u, *v;
-
-  void get_uv(int a, int b) {
-    auto it1 = nodes.find(a);
-    auto it2 = nodes.find(b);
-    assert(it1 != nodes.end() && it2 != nodes.end());
-    u = it1->second;
-    v = it2->second;
+  Node *find_node(int u) const {
+    auto it = nodes.find(u);
+    assert(it != nodes.end());
+    return it->second;
   }
 
  public:
@@ -223,75 +218,72 @@ class LinkCut {
   int size() const { return static_cast<int>(nodes.size()); }
   int trees() const { return num_trees; }
 
-  void add_node(int i, const T &value = T()) {
-    assert(nodes.find(i) == nodes.end());
-    Node *n = new Node(i, value);
+  void add_node(int u, const T &value = T()) {
+    assert(nodes.find(u) == nodes.end());
+    Node *n = new Node(u, value);
     expose(n);
     n->rev = !n->rev;
-    nodes[i] = n;
+    nodes[u] = n;
     num_trees++;
   }
 
-  bool is_connected(int a, int b) {
-    get_uv(a, b);
-    if (a == b) {
+  bool connected(int u, int v) {
+    Node *nu = find_node(u), *nv = find_node(v);
+    if (u == v) {
       return true;
     }
-    expose(u);
-    expose(v);
-    return u->parent != nullptr;
+    expose(nu);
+    expose(nv);
+    return nu->parent != nullptr;
   }
 
-  void link(int a, int b) {
-    assert(!is_connected(a, b));
-    get_uv(a, b);
-    expose(u);
-    u->rev = !u->rev;
-    u->parent = v;
+  void link(int u, int v) {
+    assert(!connected(u, v));
+    Node *nu = find_node(u), *nv = find_node(v);
+    expose(nu);
+    nu->rev = !nu->rev;
+    nu->parent = nv;
     num_trees--;
   }
 
-  void cut(int a, int b) {
-    get_uv(a, b);
-    expose(u);
-    u->rev = !u->rev;
-    expose(v);
-    assert(v->left == u && u->right == nullptr);
-    v->left->parent = nullptr;
-    v->left = nullptr;
+  void cut(int u, int v) {
+    Node *nu = find_node(u), *nv = find_node(v);
+    expose(nu);
+    nu->rev = !nu->rev;
+    expose(nv);
+    assert(nv->left == nu && nu->right == nullptr);
+    nv->left->parent = nullptr;
+    nv->left = nullptr;
     num_trees++;
   }
 
-  T query(int a, int b) {
-    assert(is_connected(a, b));
-    get_uv(a, b);
-    expose(u);
-    u->rev = !u->rev;
-    expose(v);
-    return v->get_subtree_value();
+  T query(int u, int v) {
+    assert(connected(u, v));
+    Node *nu = find_node(u), *nv = find_node(v);
+    expose(nu);
+    nu->rev = !nu->rev;
+    expose(nv);
+    return nv->get_subtree_value();
   }
 
-  void update(int a, int b, const T &d) {
-    assert(is_connected(a, b));
-    get_uv(a, b);
-    expose(u);
-    u->rev = !u->rev;
-    expose(v);
-    v->delta = v->pending ? compose_deltas(v->delta, d) : d;
-    v->pending = true;
+  void update(int u, int v, const T &d) {
+    assert(connected(u, v));
+    Node *nu = find_node(u), *nv = find_node(v);
+    expose(nu);
+    nu->rev = !nu->rev;
+    expose(nv);
+    nv->delta = nv->pending ? compose_deltas(nv->delta, d) : d;
+    nv->pending = true;
   }
 
-  void reroot(int i) {
-    auto it = nodes.find(i);
-    assert(it != nodes.end());
-    expose(it->second);
-    it->second->rev = !it->second->rev;
+  void reroot(int u) {
+    Node *n = find_node(u);
+    expose(n);
+    n->rev = !n->rev;
   }
 
-  int find_root(int i) {
-    auto it = nodes.find(i);
-    assert(it != nodes.end());
-    Node *n = it->second;
+  int find_root(int u) {
+    Node *n = find_node(u);
     expose(n);
     while (n->left != nullptr) {  // The leftmost node of the exposed path is the tree's root.
       n = n->left;
@@ -301,16 +293,17 @@ class LinkCut {
     return n->id;
   }
 
-  int lca(int a, int b) {
-    get_uv(a, b);
-    if (a == b) {
-      return a;
+  int lca(int u, int v) {
+    Node *nu = find_node(u), *nv = find_node(v);
+    if (u == v) {
+      return u;
     }
-    expose(u);
-    expose(v);
-    assert(u->parent != nullptr);
-    splay(u);  // u->parent is now the node where u's path rejoins v's exposed path, i.e. the LCA.
-    return u->parent != nullptr ? u->parent->id : u->id;
+    expose(nu);
+    expose(nv);
+    assert(nu->parent != nullptr);
+    splay(nu);
+    // nu->parent is now where nu's path rejoins nv's exposed path, i.e. their LCA.
+    return nu->parent != nullptr ? nu->parent->id : nu->id;
   }
 };
 
@@ -366,8 +359,8 @@ int main() {
   //                      +---------4
   //                              v=100
   assert(lcf.trees() == 2);
-  assert(!lcf.is_connected(1, 2));
-  assert(!lcf.is_connected(0, 4));
-  assert(lcf.is_connected(2, 3));
+  assert(!lcf.connected(1, 2));
+  assert(!lcf.connected(0, 4));
+  assert(lcf.connected(2, 3));
   return 0;
 }

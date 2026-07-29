@@ -18,6 +18,7 @@ orbit until it returns to its start.
   takes a vector instead of a range.
 - `next_permutation_mask(x)` returns the next integer having the same number of 1-bits. Treating
   each 1-bit as whether to take its corresponding item generates combinations of a set of $n$ items.
+  It returns $0$ if no successor fits in `uint64_t`.
 - `permutation_by_rank(n, r)` returns the permutation of the integers in the range $[0, `n`)$ which
   is lexicographically ranked $r$, where $r$ is a 0-based rank in the range $[0, n!)$.
 - `rank_by_permutation(a)` returns an integer representing the 0-based rank of permutation `a`,
@@ -93,11 +94,14 @@ bool next_permutation(std::vector<T> &a, Compare comp = Compare()) {
   return false;
 }
 
-int64_t next_permutation_mask(int64_t x) {
+uint64_t next_permutation_mask(uint64_t x) {
   if (x == 0) {
     return 0;
   }
-  int64_t s = x & -x, r = x + s;
+  uint64_t s = x & -x, r = x + s;
+  if (r == 0) {
+    return 0;
+  }
   return r | (((x ^ r) >> 2) / s);
 }
 
@@ -221,14 +225,15 @@ int main() {
   {  // Permutations of binary digits.
     const int n = 5;
     cout << "\nPermutations of 2 zeros and 3 ones:" << endl;
-    int lo = bitset<5>(string("00111")).to_ulong();
-    int hi = bitset<6>(string("100011")).to_ulong();
+    uint64_t lo = bitset<5>(string("00111")).to_ullong();
+    uint64_t hi = bitset<6>(string("100011")).to_ullong();
     int count = 0;
     do {
       cout << bitset<n>(lo).to_string() << " ";
       count++;
     } while ((lo = next_permutation_mask(lo)) != hi);
     assert(count == 10);
+    assert(next_permutation_mask(1ULL << 63) == 0);
     cout << endl;
   }
   {

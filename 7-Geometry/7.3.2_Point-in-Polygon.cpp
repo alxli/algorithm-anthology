@@ -8,9 +8,9 @@ with `Point`, `PointD`, or `PointI` from 7.1.1 or any struct with numeric `.x` a
 comparisons are exact (no epsilon): the ray-crossing parity needs a consistent comparison to be
 correct, and the result is exact for integer-coordinate points.
 
-- `point_in_polygon(p, lo, hi, edge_is_inside = true)` returns whether `p` lies within the polygon
+- `point_in_polygon(p, lo, hi, include_boundary = true)` returns whether `p` lies within the polygon
   with vertices specified by the range $[`lo`, `hi`)$ of points in either clockwise or
-  counter-clockwise order. The `edge_is_inside` flag controls whether points exactly on an edge or
+  counter-clockwise order. The `include_boundary` flag controls whether points exactly on an edge or
   vertex count as inside.
 
 Overflow warning: the edge orientation test forms a cross product that grows like the squared
@@ -33,19 +33,19 @@ auto cross(const Pt &a, const Pt &b, const Pt &o) {
 
 // Detection is exact for integer-coordinate Pt.
 template<typename Pt, typename It>
-bool point_in_polygon(const Pt &p, It lo, It hi, bool edge_is_inside = true) {
+bool point_in_polygon(const Pt &p, It lo, It hi, bool include_boundary = true) {
   if (lo == hi) {
     return false;
   }
   bool res = false;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
     if (i->y == p.y && (i->x == p.x || (j->y == p.y && (i->x <= p.x || j->x <= p.x)))) {
-      return edge_is_inside;
+      return include_boundary;
     }
     if ((p.y < i->y) != (p.y < j->y)) {
       auto det = cross(*i, *j, p);
       if (det == 0) {
-        return edge_is_inside;
+        return include_boundary;
       }
       if ((0 < det) != (i->y < j->y)) {
         res = !res;

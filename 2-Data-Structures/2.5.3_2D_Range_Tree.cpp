@@ -63,11 +63,8 @@ class RangeTree {
     );
   }
 
-  // Helper variables for query().
-  T x1, y1, x2, y2;
-
   template<typename Fn>
-  void query(int n, int lo, int hi, Fn &f) {
+  void query(int n, int lo, int hi, const T &x1, const T &y1, const T &x2, const T &y2, Fn &f) {
     if (points[hi].value.first < x1 || x2 < points[lo].value.first) {
       return;
     }
@@ -84,8 +81,8 @@ class RangeTree {
       }
     } else if (lo != hi) {
       int mid = lo + (hi - lo) / 2;
-      query(n * 2 + 1, lo, mid, f);
-      query(n * 2 + 2, mid + 1, hi, f);
+      query(n * 2 + 1, lo, mid, x1, y1, x2, y2, f);
+      query(n * 2 + 2, mid + 1, hi, x1, y1, x2, y2, f);
     }
   }
 
@@ -109,11 +106,7 @@ class RangeTree {
   template<typename Fn>
   void query(const T &x1, const T &y1, const T &x2, const T &y2, Fn f) {
     assert(!(x2 < x1) && !(y2 < y1));
-    this->x1 = x1;
-    this->y1 = y1;
-    this->x2 = x2;
-    this->y2 = y2;
-    query(0, 0, static_cast<int>(points.size()) - 1, f);
+    query(0, 0, static_cast<int>(points.size()) - 1, x1, y1, x2, y2, f);
   }
 };
 

@@ -86,40 +86,40 @@ T inverse(T a, T m) {
 
 template<auto MOD>
 class Modular {
-  using value_t = decltype(MOD);
+  using T = decltype(MOD);
 
-  static_assert(std::is_integral_v<value_t> && std::is_signed_v<value_t>);
-  static_assert(MOD > 0 && MOD <= std::numeric_limits<value_t>::max() / 2);
+  static_assert(std::is_integral_v<T> && std::is_signed_v<T>);
+  static_assert(MOD > 0 && MOD <= std::numeric_limits<T>::max() / 2);
 
   // Widen through int64_t for 32-bit storage, or __int128 for 64-bit storage where it exists
   // (__extension__ silences -pedantic). Without __int128, only 32-bit moduli are supported.
 #if defined(__SIZEOF_INT128__)
-  __extension__ typedef std::conditional_t<sizeof(value_t) <= 4, int64_t, __int128> wide_t;
+  __extension__ typedef std::conditional_t<sizeof(T) <= 4, int64_t, __int128> wide_t;
 #else
   using wide_t = int64_t;
-  static_assert(sizeof(value_t) <= 4, "64-bit moduli require __int128, which is unavailable");
+  static_assert(sizeof(T) <= 4, "64-bit moduli require __int128, which is unavailable");
 #endif
 
-  value_t v;
+  T v;
 
-  static value_t normalize(wide_t x) {
+  static T normalize(wide_t x) {
     if (-static_cast<wide_t>(mod()) <= x && x < static_cast<wide_t>(mod())) {
-      value_t y = static_cast<value_t>(x);
+      T y = static_cast<T>(x);
       return y < 0 ? y + mod() : y;
     }
     x %= mod();
     if (x < 0) {
       x += mod();
     }
-    return static_cast<value_t>(x);
+    return static_cast<T>(x);
   }
 
  public:
   Modular(wide_t x = 0) { v = normalize(x); }
 
-  static value_t mod() { return MOD; }
-  value_t value() const { return v; }
-  value_t operator()() const { return v; }
+  static T mod() { return MOD; }
+  T value() const { return v; }
+  T operator()() const { return v; }
   explicit operator int() const { return static_cast<int>(v); }
   explicit operator long long() const { return static_cast<long long>(v); }
   explicit operator double() const { return static_cast<double>(v); }

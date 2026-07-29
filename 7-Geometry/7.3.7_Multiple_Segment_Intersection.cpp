@@ -9,13 +9,13 @@ endpoints may be integer (`PointI`) or floating-point (`Point` or `PointD`), but
 `operator<` which orders points lexicographically. The cross-product sign tests in
 `seg_intersection` are exact for integer endpoints, so intersection detection is exact.
 
+This implementation counts endpoint contacts as intersections. See 7.2.3 for pairwise intersection
+predicates when that distinction matters.
+
 - `find_intersection(lo, hi, &res1, &res2)` returns whether any pair of segments intersect given a
   range $[`lo`, `hi`)$ of segments, where `lo` and `hi` are random-access iterators. If an
   intersection is found, then one such pair of segments will be stored into pointers `res1` and
   `res2`.
-
-This implementation counts endpoint contacts as intersections. See 7.2.3 for pairwise intersection
-predicates when that distinction matters.
 
 Overflow warning: `seg_intersection` forms the usual quadratic cross products, but the $y$-ordering
 cross-multiplication (`ay * bdx`) is cubic in the coordinate magnitude. With 32-bit `int` endpoints

@@ -52,7 +52,7 @@ Epsilon Comparisons:
 \begin{compactitem}
   \item \inlinecode{EQ()}, \inlinecode{NE()}, \inlinecode{LT()}, \inlinecode{GT()}, \inlinecode{LE()}, and \inlinecode{GE()} relationally compare two values $x$ and $y$. Arguments may be of different types; the common type governs behavior. If the common type is a floating-point type, exactly equal values (including same-signed infinities) compare equal; otherwise absolute-error epsilon comparison is used. Values within \inlinecode{EPS} of each other are considered equal, and \inlinecode{LT}/\inlinecode{GT}/\inlinecode{LE}/\inlinecode{GE} shift the boundary by \inlinecode{EPS} accordingly. Otherwise exact comparison is used (\inlinecode{==}, \inlinecode{\textless{}}, etc.). The branch is selected with \inlinecode{if constexpr}, so exact types without floating-point arithmetic (e.g. integers, \inlinecode{Modular}, \inlinecode{Rational}) compose as well.
   \item \inlinecode{rEQ(ref, val)} returns whether \inlinecode{val} equals reference \inlinecode{ref} within relative error \inlinecode{EPS}. The tolerance scales with $|{\inlinecodemath{ref}}|$, so \inlinecode{rEQ(ref, val)} is NOT the same as \inlinecode{rEQ(val, ref)}. Use this when one argument is a known exact value and the other is a computed approximation. Degenerates to exact comparison when \inlinecode{ref} is $0$, since the tolerance collapses to $0$; use \inlinecode{EQ} near zero.
-  \item \inlinecode{rEQ\_sym(x, y)} is the symmetric (commutative) variant: tolerance scales with $\max(|{\inlinecodemath{x}}|, |{\inlinecodemath{y}}|)$, so the result is the same regardless of argument order. Still degenerates near zero when both arguments are close to $0$.
+  \item \inlinecode{rEQ\_sym(x, y)} is the symmetric (commutative) variant: tolerance scales with $\max(|{\inlinecodemath{x}}|, |{\inlinecodemath{y}}|)$, so the result is the same regardless of argument order. Still degenerates near zero when both arguments are close to $0$. For both relative comparisons, exactly equal infinities compare equal, while unequal infinities and comparisons between finite and non-finite values compare unequal.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -77,12 +77,22 @@ template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool rEQ(T ref, U val) {
-  return C(ref) == C(val) || fabs(C(ref) - C(val)) <= EPS * fabs(C(ref));
+  C x = C(ref), y = C(val);
+  if (x == y) return true;
+  if constexpr (std::is_floating_point_v<C>) {
+    if (!std::isfinite(x) || !std::isfinite(y)) return false;
+  }
+  return fabs(x - y) <= EPS * fabs(x);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool rEQ_sym(T x, U y) {
-  return C(x) == C(y) || fabs(C(x) - C(y)) <= EPS * std::max(fabs(C(x)), fabs(C(y)));
+  C a = C(x), b = C(y);
+  if (a == b) return true;
+  if constexpr (std::is_floating_point_v<C>) {
+    if (!std::isfinite(a) || !std::isfinite(b)) return false;
+  }
+  return fabs(a - b) <= EPS * std::max(fabs(a), fabs(b));
 }
 \end{lstlisting}
 Sign Functions:
@@ -122,7 +132,7 @@ Rounding Functions:
   \item \inlinecode{round\_half\_alternate(x)} returns \inlinecode{x} rounded, where ties are broken by alternating rounds towards positive and negative infinity.
   \item \inlinecode{round\_half\_alternate0(x)} returns \inlinecode{x} rounded, where ties are broken by alternating symmetric rounds towards and away from zero.
   \item \inlinecode{round\_half\_random(x)} returns \inlinecode{x} rounded, where ties are broken randomly.
-  \item \inlinecode{round\_n\_places(x, n, f)} returns \inlinecode{x} rounded to \inlinecode{n} digits after the decimal, using the specified rounding function \inlinecode{f(x)}.
+  \item \inlinecode{round\_n\_places(x, n, round)} returns \inlinecode{x} rounded to \inlinecode{n} digits after the decimal, using the specified rounding function \inlinecode{round(x)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -175,26 +185,38 @@ Double round_half_even(const Double &x, const Double &eps = 1e-9) {
 
 template<typename Double>
 Double round_half_alternate(const Double &x) {
-  static bool up = true;
-  return (up = !up) ? round_half_up(x) : round_half_down(x);
+  Double up = round_half_up(x), down = round_half_down(x);
+  if (up == down) {
+    return up;
+  }
+  static bool round_up = false;
+  return (round_up = !round_up) ? up : down;
 }
 
 template<typename Double>
 Double round_half_alternate0(const Double &x) {
-  static bool up = true;
-  return (up = !up) ? round_half_from0(x) : round_half_to0(x);
+  Double away = round_half_from0(x), toward = round_half_to0(x);
+  if (away == toward) {
+    return away;
+  }
+  static bool round_away = false;
+  return (round_away = !round_away) ? away : toward;
 }
 
 template<typename Double>
 Double round_half_random(const Double &x) {
+  Double away = round_half_from0(x), toward = round_half_to0(x);
+  if (away == toward) {
+    return away;
+  }
   static std::mt19937 rng(std::random_device{}());
-  return (rng() % 2 == 0) ? round_half_from0(x) : round_half_to0(x);
+  return (rng() % 2 == 0) ? away : toward;
 }
 
 template<typename Double, typename RoundFn>
-Double round_n_places(const Double &x, unsigned int n, RoundFn f) {
+Double round_n_places(const Double &x, unsigned int n, RoundFn round) {
   Double scale = pow(10, n);
-  return f(x * scale) / scale;
+  return round(x * scale) / scale;
 }
 \end{lstlisting}
 Modular Arithmetic:
@@ -317,6 +339,7 @@ using namespace std;
 int main() {
   assert(EQ(M_PI, 3.14159265359));
   assert(EQ(M_INF, M_INF) && rEQ(M_INF, M_INF) && rEQ_sym(M_INF, M_INF));
+  assert(!rEQ(M_INF, 0.0) && !rEQ_sym(M_INF, -M_INF));
   assert(EQ(M_E, 2.718281828459));
   assert(EQ(M_PHI, 1.61803398875));
 
@@ -344,8 +367,14 @@ int main() {
   assert(EQ(round_half_to0(-1.5), -1) && EQ(round_half_from0(-1.5), -2));
   assert(EQ(round_half_even(+1.5), +2) && EQ(round_half_even(-1.5), -2));
   assert(EQ(round_half_even(3.1), 3) && EQ(round_half_even(3.4), 3));  // non-ties round normally
-  assert(NE(round_half_alternate(+1.5), round_half_alternate(+1.5)));
-  assert(NE(round_half_alternate0(-1.5), round_half_alternate0(-1.5)));
+  double alt1 = round_half_alternate(+1.5);
+  assert(EQ(round_half_alternate(+1.2), +1));  // Non-ties do not consume an alternating turn.
+  double alt2 = round_half_alternate(+1.5);
+  assert(NE(alt1, alt2));
+  double alt01 = round_half_alternate0(-1.5);
+  assert(EQ(round_half_alternate0(-1.2), -1));
+  double alt02 = round_half_alternate0(-1.5);
+  assert(NE(alt01, alt02));
   assert(EQ(round_n_places(-1.23456, 3, round_half_to0<double>), -1.235));
 
   assert(addmod(7, 8, 10) == 5 && submod(2, 5, 10) == 7);
@@ -793,7 +822,7 @@ The lexicographic successor is found by locating the rightmost ascent, increasin
 \begin{compactitem}
   \item \inlinecode{next\_permutation2(lo, hi, comp = std::less\textless{}\textgreater{}())} is analogous to \inlinecode{std::next\_permutation()}, taking two BidirectionalIterators as a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ for which the function tries to rearrange to the next lexicographically greater permutation according to \inlinecode{comp}. The function returns true if such a permutation exists, or false if the range is already in reverse comparator order, in which case it is rearranged into comparator order.
   \item \inlinecode{next\_permutation(a, comp = std::less\textless{}\textgreater{}())} is analogous to \inlinecode{next\_permutation2()}, except that it takes a vector instead of a range.
-  \item \inlinecode{next\_permutation\_mask(x)} returns the next integer having the same number of 1-bits. Treating each 1-bit as whether to take its corresponding item generates combinations of a set of $n$ items.
+  \item \inlinecode{next\_permutation\_mask(x)} returns the next integer having the same number of 1-bits. Treating each 1-bit as whether to take its corresponding item generates combinations of a set of $n$ items. It returns $0$ if no successor fits in \inlinecode{uint64\_t}.
   \item \inlinecode{permutation\_by\_rank(n, r)} returns the permutation of the integers in the range $[0, {\inlinecodemath{n}})$ which is lexicographically ranked $r$, where $r$ is a 0-based rank in the range $[0, n!)$.
   \item \inlinecode{rank\_by\_permutation(a)} returns an integer representing the 0-based rank of permutation \inlinecode{a}, which must be a permutation of the integers $[0, n)$.
   \item \inlinecode{permutation\_cycles(a)} returns the orbits of the index mapping \inlinecode{i} $\mapsto$ \inlinecode{a[i]}. For example, $\{3, 1, 0, 2\}$ decomposes into cycles $\{0, 3, 2\}$ and $\{1\}$ because following the mapping from index $0$ gives $0 \to 3 \to 2 \to 0$, while index $1$ maps to itself.
@@ -871,11 +900,14 @@ bool next_permutation(std::vector<T> &a, Compare comp = Compare()) {
   return false;
 }
 
-int64_t next_permutation_mask(int64_t x) {
+uint64_t next_permutation_mask(uint64_t x) {
   if (x == 0) {
     return 0;
   }
-  int64_t s = x & -x, r = x + s;
+  uint64_t s = x & -x, r = x + s;
+  if (r == 0) {
+    return 0;
+  }
   return r | (((x ^ r) >> 2) / s);
 }
 
@@ -987,14 +1019,15 @@ int main() {
   {  // Permutations of binary digits.
     const int n = 5;
     cout << "\nPermutations of 2 zeros and 3 ones:" << endl;
-    int lo = bitset<5>(string("00111")).to_ulong();
-    int hi = bitset<6>(string("100011")).to_ulong();
+    uint64_t lo = bitset<5>(string("00111")).to_ullong();
+    uint64_t hi = bitset<6>(string("100011")).to_ullong();
     int count = 0;
     do {
       cout << bitset<n>(lo).to_string() << " ";
       count++;
     } while ((lo = next_permutation_mask(lo)) != hi);
     assert(count == 10);
+    assert(next_permutation_mask(1ULL << 63) == 0);
     cout << endl;
   }
   {
@@ -1038,11 +1071,13 @@ The lexicographic successor advances the rightmost chosen position that can stil
 \begin{compactitem}
   \item \inlinecode{next\_combination(lo, mid, hi, comp = std::less\textless{}\textgreater{}())} takes random-access iterators \inlinecode{lo}, \inlinecode{mid}, and \inlinecode{hi} as a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of $n$ elements for which the function will rearrange such that the $k$ elements in $[{\inlinecodemath{lo}}, {\inlinecodemath{mid}})$ become the next lexicographically greater combination. The function returns true if such a combination exists, or false if $[{\inlinecodemath{lo}}, {\inlinecodemath{mid}})$ already consists of the lexicographically greatest combination of the elements in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, in which case the range is reset to its first combination. The comparator \inlinecode{comp} defines the element ordering.
   \item \inlinecode{next\_combination(n, a)} rearranges \inlinecode{a} to become the next lexicographically greater combination of distinct integers in the range $[0, {\inlinecodemath{n}})$. The vector \inlinecode{a} must be sorted and contain distinct integers in the range $[0, {\inlinecodemath{n}})$.
-  \item \inlinecode{next\_combination\_mask(x)} interprets the bits of an integer \inlinecode{x} as a mask with 1-bits specifying the chosen items for a combination and returns the mask of the next lexicographically greater combination (that is, the lowest integer greater than \inlinecode{x} with the same number of 1 bits). Note that this does not generate combinations in the same order as \inlinecode{next\_combination()}, nor does it work if the corresponding $n$ items are not distinct (in that case, duplicate combinations will be generated).
+  \item \inlinecode{next\_combination\_mask(x)} interprets the bits of an integer \inlinecode{x} as a mask with 1-bits specifying the chosen items for a combination and returns the mask of the next lexicographically greater combination (that is, the lowest integer greater than \inlinecode{x} with the same number of 1 bits). Note that this does not generate combinations in the same order as \inlinecode{next\_combination()}, nor does it work if the corresponding $n$ items are not distinct (in that case, duplicate combinations will be generated). It returns $0$ if no successor fits in \inlinecode{uint64\_t}.
   \item \inlinecode{combination\_by\_rank(n, k, r)} returns the combination of $k$ distinct integers in the range $[0, {\inlinecodemath{n}})$ that is lexicographically ranked $r$, where $r$ is a 0-based rank in the range $[0, \binom{n}{k})$.
   \item \inlinecode{rank\_by\_combination(n, a)} returns an integer representing the 0-based rank of combination \inlinecode{a}, which must contain sorted distinct integers in $[0, {\inlinecodemath{n}})$.
   \item \inlinecode{next\_combination\_with\_repeats(n, a)} rearranges \inlinecode{a} to become the next lexicographically greater combination of not necessarily distinct integers in the range $[0, {\inlinecodemath{n}})$. The vector \inlinecode{a} must be sorted. Note that there is a total of $n \mathbin{\text{multichoose}} k$ combinations if repetition is allowed, where $n \mathbin{\text{multichoose}} k = \binom{n + k - 1}{k}$.
 \end{compactitem}
+
+Exact counts and ranks used by the ranking operations must fit in \inlinecode{int64\_t}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -1064,6 +1099,7 @@ The lexicographic successor advances the rightmost chosen position that can stil
 #include <algorithm>
 #include <cstdint>
 #include <functional>
+#include <numeric>
 #include <utility>
 #include <vector>
 
@@ -1129,11 +1165,14 @@ bool next_combination(int n, std::vector<int> &a) {
   return false;
 }
 
-int64_t next_combination_mask(int64_t x) {
+uint64_t next_combination_mask(uint64_t x) {
   if (x == 0) {
     return 0;
   }
-  int64_t s = x & -x, r = x + s;
+  uint64_t s = x & -x, r = x + s;
+  if (r == 0) {
+    return 0;
+  }
   return r | (((x ^ r) >> 2) / s);
 }
 
@@ -1143,7 +1182,12 @@ int64_t n_choose_k(int64_t n, int64_t k) {
   }
   int64_t res = 1;
   for (int i = 0; i < k; i++) {
-    res = res * (n - i) / (i + 1);
+    int64_t num = n - i, den = i + 1;
+    int64_t g = std::gcd(num, den);
+    num /= g;
+    den /= g;
+    res /= den;
+    res *= num;  // Overflow warning.
   }
   return res;
 }
@@ -1225,7 +1269,7 @@ int main() {
     int n = 5, k = 3;
     string char_set = "abcde";  // Must be distinct.
     cout << "\n\"" << char_set << "\" choose " << k << " with masks:" << endl;
-    int64_t mask = (1LL << k) - 1, limit = 1LL << n;
+    uint64_t mask = (1ULL << k) - 1, limit = 1ULL << n;
     int count = 0;
     do {
       for (int i = 0; i < n; i++) {
@@ -1238,6 +1282,7 @@ int main() {
       mask = next_combination_mask(mask);
     } while (mask < limit);
     assert(count == 10);
+    assert(next_combination_mask(1ULL << 63) == 0);
     cout << endl;
   }
   {
@@ -1258,6 +1303,7 @@ int main() {
       count++;
     } while (next_combination(n, a));
     assert(count == 10);
+    assert(n_choose_k(66, 33) == 7219428434016265740LL);
     cout << endl;
   }
   {  // Combinations with repeats.
@@ -1471,12 +1517,14 @@ Let $A$ be the number of candidate values considered at each position (the base 
   \item \inlinecode{enumerate(f)} calls the function \inlinecode{f(lo, hi)} on every specified combinatorial sequence in lexicographically increasing order, where \inlinecode{lo} and \inlinecode{hi} are two random-access iterators to a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of integers.
 \end{compactitem}
 
+All exact counts and ranks must fit in \inlinecode{int64\_t}.
+
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(A \cdot L)$ calls to \inlinecode{count()} per call to \inlinecode{to\_rank()} and \inlinecode{from\_rank()}.
   \item $O(T \cdot A \cdot L)$ calls to \inlinecode{count()} per call to \inlinecode{enumerate()}, excluding the cost of the callback \inlinecode{f}.
-  \item $O(A^{2})$ constructor time for \inlinecode{CombinationEnumerator} and $O(L^{2})$ constructor time for \inlinecode{PartitionEnumerator} to build their tables.
+  \item $O(A \cdot (\min\left(L, A - L\right) + 1))$ constructor time for \inlinecode{CombinationEnumerator} and $O(L^{2})$ constructor time for \inlinecode{PartitionEnumerator} to build their tables.
   \item The actual running time multiplies these bounds by the subclass cost of \inlinecode{count()}. In the implementations below, \inlinecode{CombinationEnumerator::count()} is $O(1)$, while \inlinecode{ArrangementEnumerator::count()} and \inlinecode{PartitionEnumerator::count()} are $O(L)$.
 \end{compactitem}
 
@@ -1485,10 +1533,11 @@ Let $A$ be the number of candidate values considered at each position (the base 
 \begin{compactitem}
   \item $O(L)$ auxiliary for \inlinecode{to\_rank()}, \inlinecode{from\_rank()}, and \inlinecode{enumerate()}, excluding output storage.
   \item $O(1)$ object storage for \inlinecode{ArrangementEnumerator} and \inlinecode{PermutationEnumerator}.
-  \item $O(A^{2})$ object storage for \inlinecode{CombinationEnumerator} and $O(L^{2})$ object storage for \inlinecode{PartitionEnumerator} tables.
+  \item $O(A \cdot (\min\left(L, A - L\right) + 1))$ object storage for \inlinecode{CombinationEnumerator} and $O(L^{2})$ object storage for \inlinecode{PartitionEnumerator} tables.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <algorithm>
 #include <cstdint>
 #include <vector>
 
@@ -1568,12 +1617,17 @@ class PermutationEnumerator : public ArrangementEnumerator {
 class CombinationEnumerator : public AbstractEnumerator {
   std::vector<std::vector<int64_t>> table;
 
+  int64_t combinations(int n, int k) const {
+    return (k < 0 || k > n) ? 0 : table[n][std::min(k, n - k)];
+  }
+
  public:
   CombinationEnumerator(int n, int k)
-      : AbstractEnumerator(n, k), table(n + 1, std::vector<int64_t>(n + 1)) {
+      : AbstractEnumerator(n, k), table(n + 1, std::vector<int64_t>(std::min(k, n - k) + 1)) {
+    int max_col = static_cast<int>(table[0].size()) - 1;
     for (int i = 0; i <= n; i++) {
-      for (int j = 0; j <= i; j++) {
-        table[i][j] = (j == 0) ? 1 : table[i - 1][j - 1] + table[i - 1][j];
+      for (int j = 0; j <= std::min(i, max_col); j++) {
+        table[i][j] = (j == 0) ? 1 : table[i - 1][j - 1] + table[i - 1][j];  // Overflow warning.
       }
     }
   }
@@ -1584,9 +1638,9 @@ class CombinationEnumerator : public AbstractEnumerator {
       return 0;
     }
     if (n == 0) {
-      return table[range][length - n];
+      return combinations(range, length);
     }
-    return table[range - prefix[n - 1] - 1][length - n];
+    return combinations(range - prefix[n - 1] - 1, length - n);
   }
 };
 
@@ -1681,6 +1735,12 @@ int main() {
     assert(count == 4);
     assert((comb.from_rank(3) == vector<int>{1, 2, 3}));
     assert(comb.to_rank(vector<int>{1, 2, 3}) == 3);
+    CombinationEnumerator narrow(67, 1);
+    assert(narrow.total_count() == 67);
+    CombinationEnumerator full(67, 67);
+    assert(full.total_count() == 1);
+    CombinationEnumerator central(66, 33);
+    assert(central.total_count() == 7219428434016265740LL);
     cout << endl;
   }
   {
@@ -1724,7 +1784,7 @@ Common number theory operations relating to modular arithmetic.
   \item \inlinecode{diophantine(a, b, c, \&x, \&y, \&g)} solves the linear Diophantine equation $ax + by = c$, returning whether a solution exists (one does if and only if $\gcd(a, b)$ divides $c$), and on success sets \inlinecode{g} to $\gcd(a, b)$ and (\inlinecode{x}, \inlinecode{y}) to a particular solution bounded by $\max(|a|, |b|, |c|)$ in magnitude. A 128-bit intermediate is used where available to keep the scaling step overflow-free.
   \item \inlinecode{mod(a, m)} returns the value of \inlinecode{a} mod \inlinecode{m} under the true Euclidean definition of modulo, that is, the smallest nonnegative integer $r$ satisfying $a + mn = r$ for some integer $n$. Note that this is identical to the remainder operator \inlinecode{\%} in C++ for nonnegative operands \inlinecode{a} and \inlinecode{m}, but the result will differ when an operand is negative.
   \item \inlinecode{mod\_inverse(a, m)} returns an integer $x$ such that $ax \equiv 1 \pmod m$, where the arguments must satisfy $m > 0$ and $\gcd(a, m) = 1$.
-  \item \inlinecode{generate\_inverse(p)} returns a vector \inlinecode{v} of integers where for each index $i$ in the vector, $i \cdot {\inlinecodemath{v[i]}} \equiv 1 \pmod p$, where the argument $p$ is prime.
+  \item \inlinecode{mod\_inverse\_table(p)} returns a vector \inlinecode{v} of integers where for each index $i$ in the vector, $i \cdot {\inlinecodemath{v[i]}} \equiv 1 \pmod p$, where the argument $p$ is prime.
   \item \inlinecode{crt(r1, m1, r2, m2, r, m)} merges the two congruences $x \equiv r_1 \pmod{m_1}$ and $x \equiv r_2 \pmod{m_2}$ for arbitrary moduli (not necessarily coprime). It returns whether the system is consistent, and on success sets \inlinecode{m} to \inlinecode{lcm(m\_1, m\_2)} and \inlinecode{r} to the unique solution in $[0, {\inlinecodemath{m}})$. Both moduli must be positive, and their least common multiple must fit in \inlinecode{int64\_t}. Fold it pairwise to merge more than two congruences.
   \item \inlinecode{garner\_restore(a, p)} returns the smallest nonnegative solution $x$ for the system of simultaneous congruences $x \equiv {\inlinecodemath{a[i]}} \pmod{{\inlinecodemath{p[i]}}}$ for all indices \inlinecode{i} in $[0, n)$, where $n$ is \inlinecode{a.size()} and \inlinecode{p} consists of pairwise coprime integers (unlike \inlinecode{crt}, which allows shared factors). The exact solution is unique modulo the product of all moduli, so that product and the final answer must fit in \inlinecode{int64\_t}.
   \item \inlinecode{garner\_restore\_mod(a, p, m)} returns that same CRT solution modulo \inlinecode{m}. This is the right variant when the product of the moduli is too large to fit in \inlinecode{int64\_t}.
@@ -1735,14 +1795,14 @@ Common number theory operations relating to modular arithmetic.
 \begin{compactitem}
   \item $O(\log\left(a + b\right))$ per call to \inlinecode{gcd(a, b)}, \inlinecode{lcm(a, b)}, \inlinecode{extended\_euclid(a, b)}, \inlinecode{diophantine(a, b, c, ...)}, \inlinecode{mod\_inverse(a, m)}, and \inlinecode{crt(...)}.
   \item $O(1)$ per call to \inlinecode{mod()}.
-  \item $O(p)$ per call to \inlinecode{generate\_inverse()}.
+  \item $O(p)$ per call to \inlinecode{mod\_inverse\_table()}.
   \item $O(n^{2})$ per call to \inlinecode{garner\_restore()} and \inlinecode{garner\_restore\_mod()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(p)$ auxiliary for \inlinecode{generate\_inverse()}.
+  \item $O(p)$ auxiliary for \inlinecode{mod\_inverse\_table()}.
   \item $O(n)$ auxiliary for \inlinecode{garner\_restore()} and \inlinecode{garner\_restore\_mod()}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
@@ -1845,7 +1905,7 @@ Int mod_inverse(Int a, Int m) {
   return mod(extended_euclid(a, m).first, m);
 }
 
-std::vector<int> generate_inverse(int p) {
+std::vector<int> mod_inverse_table(int p) {
   std::vector<int> res(p);
   res[1] = 1;
   for (int i = 2; i < p; i++) {
@@ -1940,7 +2000,7 @@ int main() {
   }
   {
     int p = 17;
-    auto res = generate_inverse(p);
+    auto res = mod_inverse_table(p);
     for (int i = 0; i < p; i++) {
       if (i > 0) {
         assert(mod(i * res[i], p) == 1);
@@ -2076,40 +2136,40 @@ T inverse(T a, T m) {
 
 template<auto MOD>
 class Modular {
-  using value_t = decltype(MOD);
+  using T = decltype(MOD);
 
-  static_assert(std::is_integral_v<value_t> && std::is_signed_v<value_t>);
-  static_assert(MOD > 0 && MOD <= std::numeric_limits<value_t>::max() / 2);
+  static_assert(std::is_integral_v<T> && std::is_signed_v<T>);
+  static_assert(MOD > 0 && MOD <= std::numeric_limits<T>::max() / 2);
 
   // Widen through int64_t for 32-bit storage, or __int128 for 64-bit storage where it exists
   // (__extension__ silences -pedantic). Without __int128, only 32-bit moduli are supported.
 #if defined(__SIZEOF_INT128__)
-  __extension__ typedef std::conditional_t<sizeof(value_t) <= 4, int64_t, __int128> wide_t;
+  __extension__ typedef std::conditional_t<sizeof(T) <= 4, int64_t, __int128> wide_t;
 #else
   using wide_t = int64_t;
-  static_assert(sizeof(value_t) <= 4, "64-bit moduli require __int128, which is unavailable");
+  static_assert(sizeof(T) <= 4, "64-bit moduli require __int128, which is unavailable");
 #endif
 
-  value_t v;
+  T v;
 
-  static value_t normalize(wide_t x) {
+  static T normalize(wide_t x) {
     if (-static_cast<wide_t>(mod()) <= x && x < static_cast<wide_t>(mod())) {
-      value_t y = static_cast<value_t>(x);
+      T y = static_cast<T>(x);
       return y < 0 ? y + mod() : y;
     }
     x %= mod();
     if (x < 0) {
       x += mod();
     }
-    return static_cast<value_t>(x);
+    return static_cast<T>(x);
   }
 
  public:
   Modular(wide_t x = 0) { v = normalize(x); }
 
-  static value_t mod() { return MOD; }
-  value_t value() const { return v; }
-  value_t operator()() const { return v; }
+  static T mod() { return MOD; }
+  T value() const { return v; }
+  T operator()() const { return v; }
   explicit operator int() const { return static_cast<int>(v); }
   explicit operator long long() const { return static_cast<long long>(v); }
   explicit operator double() const { return static_cast<double>(v); }
@@ -2711,7 +2771,7 @@ The linear sieve finds the least prime factor of each integer. When processing \
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log \log n)$ per call to \inlinecode{sieve(n)}.
-  \item $O(\sqrt{{\inlinecodemath{hi}}} \cdot \log\left(\log\left({\inlinecodemath{hi}}\right)\right) + w \cdot \log\left(\log\left({\inlinecodemath{hi}}\right)\right))$ per call to \inlinecode{sieve(lo, hi)}, where $w = {\inlinecodemath{hi}} - {\inlinecodemath{lo}} + 1$.
+  \item $O((w + \sqrt{{\inlinecodemath{hi}}}) \cdot \log\left(\log\left({\inlinecodemath{hi}}\right)\right))$ per call to \inlinecode{sieve(lo, hi)}, where $w = {\inlinecodemath{hi}} - {\inlinecodemath{lo}} + 1$.
   \item $O(n)$ per call to \inlinecode{linear\_sieve()}.
 \end{compactitem}
 
@@ -3365,7 +3425,7 @@ The overload \inlinecode{phi\_table(lo, hi)} computes the totients of a high but
 \begin{compactitem}
   \item $O(\sqrt{n})$ per call to \inlinecode{phi(n)}.
   \item $O(n \log \log n)$ per call to \inlinecode{phi\_table(n)}.
-  \item $O(\sqrt{{\inlinecodemath{hi}}} \cdot \log\left(\log\left({\inlinecodemath{hi}}\right)\right) + w \cdot \log\left(\log\left({\inlinecodemath{hi}}\right)\right))$ per call to \inlinecode{phi\_table(lo, hi)}, where $w = {\inlinecodemath{hi}} - {\inlinecodemath{lo}} + 1$.
+  \item $O((w + \sqrt{{\inlinecodemath{hi}}}) \cdot \log\left(\log\left({\inlinecodemath{hi}}\right)\right))$ per call to \inlinecode{phi\_table(lo, hi)}, where $w = {\inlinecodemath{hi}} - {\inlinecodemath{lo}} + 1$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -5495,7 +5555,7 @@ int main() {
 The LU decomposition of a matrix $a$ with row-partial pivoting is a factorization of $a$ (after some rows are possibly permuted by a permutation matrix $p$) as a product of a lower triangular matrix $l$ and an upper triangular matrix $u$. This factorization can be used to tackle many common problems in linear algebra such as solving systems of linear equations and computing determinants. An improvement on basic row reduction, LU decomposition by row-partial pivoting keeps the relative magnitude of matrix values small, thus reducing the relative error due to rounding in computed solutions.
 
 \begin{compactitem}
-  \item \inlinecode{lu\_decompose(a, \&p1col, eps = 1e-10)} assigns the $m$ by $n$ matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}, returning either $0$ or $1$ denoting the ``sign'' of the permutation parity ($0$ if the number of overall row swaps performed is even, or $1$ if it is odd), or $-1$ denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix \inlinecode{lu} has \inlinecode{lu[i][j]} = \inlinecode{l[i][j]} for \inlinecode{i} \textgreater{} \inlinecode{j} and \inlinecode{lu[i][j]} = \inlinecode{u[i][j]} for \inlinecode{i} $\leq$ \inlinecode{j}. Note that the algorithm always yields a unit lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to $1$, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optionally, a \inlinecode{vector\textless{}int\textgreater{}} pointer \inlinecode{p1col} may be passed to return the permutation vector \inlinecode{p1col} where \inlinecode{p1col[i]} stores the only column that is equal to $1$ in row $i$ of the permutation matrix $p$ (all other columns in row $i$ of $p$ are implicitly $0$). The permutation matrix $p$ corresponding to \inlinecode{p1col} satisfies $pa = lu$.
+  \item \inlinecode{lu\_decompose(a, \&perm, eps = 1e-10)} assigns the $m$ by $n$ matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}, returning either $0$ or $1$ denoting the ``sign'' of the permutation parity ($0$ if the number of overall row swaps performed is even, or $1$ if it is odd), or $-1$ denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix \inlinecode{lu} has \inlinecode{lu[i][j]} = \inlinecode{l[i][j]} for \inlinecode{i} \textgreater{} \inlinecode{j} and \inlinecode{lu[i][j]} = \inlinecode{u[i][j]} for \inlinecode{i} $\leq$ \inlinecode{j}. Note that the algorithm always yields a unit lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to $1$, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optionally, a \inlinecode{vector\textless{}int\textgreater{}} pointer \inlinecode{perm} may be passed to return the permutation vector \inlinecode{perm} where \inlinecode{perm[i]} stores the only column that is equal to $1$ in row $i$ of the permutation matrix $p$ (all other columns in row $i$ of $p$ are implicitly $0$). The permutation matrix $p$ corresponding to \inlinecode{perm} satisfies $pa = lu$.
   \item \inlinecode{solve\_system(a, b, \&x, eps = 1e-10)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning $0$ if there is one solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then the output pointer \inlinecode{x} is populated with the solution vector of length $n$.
   \item \inlinecode{det(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a} using LU decomposition.
   \item \inlinecode{invert(a)} assigns the $n$ by $n$ matrix \inlinecode{a} to its inverse (if it exists), returning $0$ if the inversion was successful or $-1$ if \inlinecode{a} has no inverse.
@@ -5524,13 +5584,13 @@ The LU decomposition of a matrix $a$ with row-partial pivoting is a factorizatio
 #include <vector>
 
 template<typename Matrix>
-int lu_decompose(Matrix &a, std::vector<int> *p1col = nullptr, const double eps = 1e-10) {
+int lu_decompose(Matrix &a, std::vector<int> *perm = nullptr, const double eps = 1e-10) {
   int rows = static_cast<int>(a.size());
   int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
   int parity = 0;
-  if (p1col != nullptr) {
-    p1col->resize(rows);
-    std::iota(p1col->begin(), p1col->end(), 0);
+  if (perm != nullptr) {
+    perm->resize(rows);
+    std::iota(perm->begin(), perm->end(), 0);
   }
   for (int i = 0; i < rows && i < cols; i++) {
     int pi = i;
@@ -5543,8 +5603,8 @@ int lu_decompose(Matrix &a, std::vector<int> *p1col = nullptr, const double eps 
       return -1;
     }
     if (pi != i) {
-      if (p1col != nullptr) {
-        std::iter_swap(p1col->begin() + i, p1col->begin() + pi);
+      if (perm != nullptr) {
+        std::iter_swap(perm->begin() + i, perm->begin() + pi);
       }
       std::iter_swap(a.begin() + i, a.begin() + pi);
       parity = 1 - parity;
@@ -5579,14 +5639,14 @@ int solve_system(
     return -1;
   }
   x->resize(cols);
-  std::vector<int> p1col;
+  std::vector<int> perm;
   Matrix lu;
-  int status = lu_decompose(lu = a, &p1col, eps);
+  int status = lu_decompose(lu = a, &perm, eps);
   if (status < 0) {
     return status;
   }
   for (int i = 0; i < cols; i++) {
-    (*x)[i] = b[p1col[i]];
+    (*x)[i] = b[perm[i]];
     for (int k = 0; k < i; k++) {
       (*x)[i] -= getl(lu, i, k) * (*x)[k];
     }
@@ -5629,15 +5689,15 @@ double det(const T &a) {
 template<typename T>
 int invert(T &a) {
   int n = static_cast<int>(a.size());
-  std::vector<int> p1col;
-  int status = lu_decompose(a, &p1col);
+  std::vector<int> perm;
+  int status = lu_decompose(a, &perm);
   if (status < 0) {
     return status;
   }
   T ia(n, typename T::value_type(n, 0));
   for (int j = 0; j < n; j++) {
     for (int i = 0; i < n; i++) {
-      if (p1col[i] == j) {
+      if (perm[i] == j) {
         ia[i][j] = 1.0;
       } else {
         ia[i][j] = 0.0;
@@ -7446,46 +7506,33 @@ int minimax(int stones, bool maximizing) {
   if (stones == 0) {
     return maximizing ? -1 : 1;
   }
-  if (maximizing) {
-    int best = -2;
-    for (int take = 1; take <= 2 && take <= stones; take++) {
-      best = std::max(best, minimax(stones - take, false));
-    }
-    return best;
-  } else {
-    int best = 2;
-    for (int take = 1; take <= 2 && take <= stones; take++) {
-      best = std::min(best, minimax(stones - take, true));
-    }
-    return best;
+  int best = maximizing ? -2 : 2;
+  for (int take = 1; take <= 2 && take <= stones; take++) {
+    int child = minimax(stones - take, !maximizing);
+    best = maximizing ? std::max(best, child) : std::min(best, child);
   }
+  return best;
 }
 
 int alpha_beta(int stones, bool maximizing, int alpha = -2, int beta = 2) {
   if (stones == 0) {
     return maximizing ? -1 : 1;
   }
-  if (maximizing) {
-    int value = -2;
-    for (int take = 1; take <= 2 && take <= stones; take++) {
-      value = std::max(value, alpha_beta(stones - take, false, alpha, beta));
+  int value = maximizing ? -2 : 2;
+  for (int take = 1; take <= 2 && take <= stones; take++) {
+    int child = alpha_beta(stones - take, !maximizing, alpha, beta);
+    if (maximizing) {
+      value = std::max(value, child);
       alpha = std::max(alpha, value);
-      if (alpha >= beta) {
-        break;
-      }
-    }
-    return value;
-  } else {
-    int value = 2;
-    for (int take = 1; take <= 2 && take <= stones; take++) {
-      value = std::min(value, alpha_beta(stones - take, true, alpha, beta));
+    } else {
+      value = std::min(value, child);
       beta = std::min(beta, value);
-      if (alpha >= beta) {
-        break;
-      }
     }
-    return value;
+    if (alpha >= beta) {
+      break;
+    }
   }
+  return value;
 }
 
 int best_take(int stones) {

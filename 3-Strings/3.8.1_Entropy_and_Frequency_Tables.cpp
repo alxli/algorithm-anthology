@@ -33,26 +33,26 @@ using std::string;
 
 std::vector<int> byte_frequencies(const string &s) {
   std::vector<int> freq(256, 0);
-  for (int i = 0; i < static_cast<int>(s.size()); i++) {
-    freq[static_cast<unsigned char>(s[i])]++;
+  for (unsigned char c : s) {
+    freq[c]++;
   }
   return freq;
 }
 
 double entropy(const std::vector<int> &freq) {
   int64_t total = 0;
-  for (int i = 0; i < static_cast<int>(freq.size()); i++) {
-    total += freq[i];
+  for (int count : freq) {
+    total += count;
   }
   if (total == 0) {
     return 0;
   }
   double res = 0;
-  for (int i = 0; i < static_cast<int>(freq.size()); i++) {
-    if (freq[i] == 0) {
+  for (int count : freq) {
+    if (count == 0) {
       continue;
     }
-    double p = static_cast<double>(freq[i]) / total;
+    double p = static_cast<double>(count) / total;
     res -= p * std::log2(p);
   }
   return res;
@@ -65,8 +65,8 @@ double entropy(const string &s) {
 double expected_code_length(const std::vector<int> &freq, const std::vector<int> &length) {
   assert(freq.size() == length.size());
   int64_t total = 0;
-  for (int i = 0; i < static_cast<int>(freq.size()); i++) {
-    total += freq[i];
+  for (int count : freq) {
+    total += count;
   }
   if (total == 0) {
     return 0;

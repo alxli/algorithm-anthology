@@ -79,7 +79,7 @@ std::vector<int> eulerian_path_directed(const std::vector<std::vector<int>> &adj
       return {};
     }
   }
-  if (!((sources == 0 && sinks == 0) || (sources == 1 && sinks == 1))) {
+  if (sources != sinks || sources > 1) {
     return {};
   }
   if (start == -1) {

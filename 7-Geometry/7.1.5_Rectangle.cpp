@@ -4,17 +4,17 @@ Common axis-aligned rectangle calculations in two dimensions. The functions are 
 point type `Pt`, which should accept `Point`, `PointD`, or `PointI` from 7.1.1, or any struct with
 numeric `.x` and `.y` fields.
 
-- `point_in_rectangle(p, v, w, h, edge_is_inside = true)` returns whether point `p` lies inside the
+- `point_in_rectangle(p, v, w, h, include_boundary = true)` returns whether `p` is inside the
   axis-aligned rectangle whose opposite corners are `v` and (`v.x + w`, `v.y + h`). Negative widths
-  and heights are supported. The `edge_is_inside` flag controls whether boundary points count.
-- `point_in_rectangle(p, a, b, edge_is_inside = true)` returns whether point `p` lies inside the
+  and heights are supported. The `include_boundary` flag controls whether boundary points count.
+- `point_in_rectangle(p, a, b, include_boundary = true)` returns whether `p` is inside the
   axis-aligned rectangle with opposite corners `a` and `b`.
-- `rectangle_intersection(a1, b1, a2, b2, &p, &q, edge_is_inside = true)` computes the intersection
+- `rectangle_intersection(a1, b1, a2, b2, &p, &q, include_boundary = true)` finds the intersection
   of two axis-aligned rectangles, where `a1`/`b1` and `a2`/`b2` are opposite-corner pairs. Returns
   $-1$ if the rectangles are disjoint, $0$ if they partially intersect, $1$ if the first rectangle
   is completely inside the second, and $2$ if the second rectangle is completely inside the first.
   If an intersection exists, its lower-left and upper-right corners are stored in `p` and `q` when
-  those pointers are non-null. The `edge_is_inside` flag controls whether boundary-only contact
+  those pointers are non-null. The `include_boundary` flag controls whether boundary-only contact
   counts as intersecting.
 
 For integer-coordinate inputs, comparisons are exact as long as intermediate coordinate additions,
@@ -54,29 +54,29 @@ template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
 
 template<typename Pt, typename T>
 bool point_in_rectangle(
-    const Pt &p, const Pt &v, const T &w, const T &h, const bool edge_is_inside = true
+    const Pt &p, const Pt &v, const T &w, const T &h, const bool include_boundary = true
 ) {
   if (w < 0) {
-    return point_in_rectangle(p, Pt(v.x + w, v.y), -w, h, edge_is_inside);
+    return point_in_rectangle(p, Pt(v.x + w, v.y), -w, h, include_boundary);
   }
   if (h < 0) {
-    return point_in_rectangle(p, Pt(v.x, v.y + h), w, -h, edge_is_inside);
+    return point_in_rectangle(p, Pt(v.x, v.y + h), w, -h, include_boundary);
   }
-  return edge_is_inside ? (GE(p.x, v.x) && LE(p.x, v.x + w) && GE(p.y, v.y) && LE(p.y, v.y + h))
-                        : (GT(p.x, v.x) && LT(p.x, v.x + w) && GT(p.y, v.y) && LT(p.y, v.y + h));
+  return include_boundary ? (GE(p.x, v.x) && LE(p.x, v.x + w) && GE(p.y, v.y) && LE(p.y, v.y + h))
+                          : (GT(p.x, v.x) && LT(p.x, v.x + w) && GT(p.y, v.y) && LT(p.y, v.y + h));
 }
 
 template<typename Pt>
-bool point_in_rectangle(const Pt &p, const Pt &a, const Pt &b, const bool edge_is_inside = true) {
+bool point_in_rectangle(const Pt &p, const Pt &a, const Pt &b, const bool include_boundary = true) {
   auto xl = std::min(a.x, b.x), yl = std::min(a.y, b.y);
   auto xh = std::max(a.x, b.x), yh = std::max(a.y, b.y);
-  return point_in_rectangle(p, Pt(xl, yl), xh - xl, yh - yl, edge_is_inside);
+  return point_in_rectangle(p, Pt(xl, yl), xh - xl, yh - yl, include_boundary);
 }
 
 template<typename Pt>
 int rectangle_intersection(
     const Pt &a1, const Pt &b1, const Pt &a2, const Pt &b2, Pt *p = nullptr, Pt *q = nullptr,
-    const bool edge_is_inside = true
+    const bool include_boundary = true
 ) {
   // Normalize each rectangle to [xl, xh] x [yl, yh] with coordinate-wise min/max only.
   // (Using auto keeps the native coordinate type, so integer rectangles stay exact.)
@@ -87,7 +87,8 @@ int rectangle_intersection(
   // The intersection is the overlap of the two coordinate intervals.
   auto ixl = std::max(xl1, xl2), ixh = std::min(xh1, xh2);
   auto iyl = std::max(yl1, yl2), iyh = std::min(yh1, yh2);
-  bool disjoint = edge_is_inside ? (GT(ixl, ixh) || GT(iyl, iyh)) : (GE(ixl, ixh) || GE(iyl, iyh));
+  bool disjoint =
+      include_boundary ? (GT(ixl, ixh) || GT(iyl, iyh)) : (GE(ixl, ixh) || GE(iyl, iyh));
   if (disjoint) {
     return -1;  // Completely disjoint.
   }

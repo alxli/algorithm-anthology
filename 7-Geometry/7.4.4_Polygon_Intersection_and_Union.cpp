@@ -31,7 +31,6 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
-#include <set>
 #include <type_traits>
 #include <vector>
 
@@ -62,7 +61,7 @@ bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
          LE(std::min(a.y, b.y), p.y) && LE(p.y, std::max(a.y, b.y));
 }
 
-// Specialized version of seg_intersection() from 7.2.3, simplified for touch_is_intersect = true,
+// Specialized version of seg_intersection() from 7.2.3, simplified for include_boundary = true,
 // returning -1 for no intersection, 0 for one intersection point, 1 for positive length overlap.
 template<typename Pt>
 int seg_intersection1(
@@ -152,33 +151,34 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   if (lo1 == hi1 || lo2 == hi2) {
     return 0;
   }
-  struct _PointD {
+  struct SweepPoint {
     double x, y;
   };  // For line intersection with the sweep line.
-  std::vector<It> plo{lo1, lo2}, phi{hi1, hi2};
-  std::set<double> xs;
+  std::vector<It> poly_lo{lo1, lo2}, poly_hi{hi1, hi2};
+  std::vector<double> x_coords;
   for (It it = lo1; it != hi1; ++it) {
-    xs.insert(it->x);
+    x_coords.push_back(it->x);
   }
   for (It it = lo2; it != hi2; ++it) {
-    xs.insert(it->x);
+    x_coords.push_back(it->x);
   }
   for (It i1 = lo1, j1 = hi1 - 1; i1 != hi1; j1 = i1++) {
     for (It i2 = lo2, j2 = hi2 - 1; i2 != hi2; j2 = i2++) {
       double outx, outy;
       if (seg_intersection1(*i1, *j1, *i2, *j2, &outx, &outy) == 0) {
-        xs.insert(outx);
+        x_coords.push_back(outx);
       }
     }
   }
-  std::vector<double> xsa(xs.begin(), xs.end());
+  std::sort(x_coords.begin(), x_coords.end());
+  x_coords.erase(std::unique(x_coords.begin(), x_coords.end()), x_coords.end());
   double res = 0;
-  for (int k = 0; k + 1 < static_cast<int>(xsa.size()); k++) {
-    double x = (xsa[k] + xsa[k + 1]) / 2;
-    _PointD sweep0{x, 0}, sweep1{x, 1};
+  for (int k = 0; k + 1 < static_cast<int>(x_coords.size()); k++) {
+    double x = (x_coords[k] + x_coords[k + 1]) / 2;
+    SweepPoint sweep0{x, 0}, sweep1{x, 1};
     std::vector<Event> events;
     for (int poly = 0; poly < 2; poly++) {
-      It lo = plo[poly], hi = phi[poly];
+      It lo = poly_lo[poly], hi = poly_hi[poly];
       double area = 0;
       for (It i = lo, j = hi - 1; i != hi; j = i++) {
         area += (static_cast<double>(j->x) - i->x) * (static_cast<double>(j->y) + i->y);
@@ -202,17 +202,17 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
       }
       return e1.mask_delta < e2.mask_delta;
     });
-    double a = 0;
-    int cnt[2] = {0, 0};
+    double height = 0;
+    int coverage[2] = {0, 0};
     for (int j = 0; j < static_cast<int>(events.size()); j++) {
-      if (cnt[0] != 0 && cnt[1] != 0) {
-        a += events[j].y - events[j - 1].y;
+      if (coverage[0] != 0 && coverage[1] != 0) {
+        height += events[j].y - events[j - 1].y;
       }
       int bit = std::abs(events[j].mask_delta);
       int poly = (bit == 1 ? 0 : 1);
-      cnt[poly] += events[j].mask_delta / bit;
+      coverage[poly] += events[j].mask_delta / bit;
     }
-    res += a * (xsa[k + 1] - xsa[k]);
+    res += height * (x_coords[k + 1] - x_coords[k]);
   }
   return res;
 }

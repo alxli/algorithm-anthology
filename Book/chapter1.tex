@@ -329,9 +329,9 @@ int main() {
   cout << "------" << endl;
 
   std::mt19937 rng(1234567);  // Fixed seed for reproducibility.
-  vector<int> data;
-  for (int i = 0; i < 5000000; i++) {
-    data.push_back(static_cast<int>(rng()));
+  vector<int> data(5000000);
+  for (int &x : data) {
+    x = static_cast<int>(rng());
   }
   cout << "Sorting five million integers..." << endl;
   cout.precision(3);
@@ -1115,17 +1115,17 @@ The examples below cover sorted 2-sum/3-sum variants, finding the shortest subar
 \begin{compactitem}
   \item \inlinecode{two\_sum\_sorted(a, target)} returns two indices whose values sum to \inlinecode{target}, or $(-1, -1)$ if no such pair exists. The input array must be sorted.
   \item \inlinecode{three\_sum(a, target)} returns three original indices whose values sum to \inlinecode{target}, or $(-1, -1, -1)$ if none exist.
-  \item \inlinecode{min\_length\_at\_least(a, target)} returns a tuple (\inlinecode{length}, \inlinecode{lo}, \inlinecode{hi}), the minimum length and inclusive endpoints of a contiguous subarray with sum at least \inlinecode{target}, or length $-1$ if none exists. Values in \inlinecode{a} must be nonnegative. If \inlinecode{target} is nonpositive, it returns the empty subarray.
-  \item \inlinecode{longest\_at\_most\_k\_distinct(a, k)} returns a tuple (\inlinecode{length}, \inlinecode{lo}, \inlinecode{hi}), the maximum length and inclusive endpoints of a contiguous subarray containing at most \inlinecode{k} distinct values. If \inlinecode{k} is nonpositive, it returns the empty subarray.
+  \item \inlinecode{min\_subarray\_at\_least(a, target)} returns a tuple (\inlinecode{length}, \inlinecode{lo}, \inlinecode{hi}), the minimum length and inclusive endpoints of a contiguous subarray with sum at least \inlinecode{target}, or length $-1$ if none exists. Values in \inlinecode{a} must be nonnegative. If \inlinecode{target} is nonpositive, it returns the empty subarray.
+  \item \inlinecode{max\_subarray\_at\_most\_k\_distinct(a, k)} returns a tuple (\inlinecode{length}, \inlinecode{lo}, \inlinecode{hi}), the maximum length and inclusive endpoints of a contiguous subarray containing at most \inlinecode{k} distinct values. If \inlinecode{k} is nonpositive, it returns the empty subarray.
   \item \inlinecode{sliding\_window\_extrema(a, k, comp = std::less\textless{}\textgreater{})} returns the extreme value in each window of length \inlinecode{k}. With the default \inlinecode{less\textless{}\textgreater{}} comparator it returns minimums; passing \inlinecode{greater\textless{}\textgreater{}} returns maximums.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to \inlinecode{two\_sum\_sorted()} and \inlinecode{min\_length\_at\_least()}, where $n$ is the array size.
+  \item $O(n)$ per call to \inlinecode{two\_sum\_sorted()} and \inlinecode{min\_subarray\_at\_least()}, where $n$ is the array size.
   \item $O(n^{2})$ per call to \inlinecode{three\_sum()}.
-  \item $O(n)$ expected per call to \inlinecode{longest\_at\_most\_k\_distinct()}.
+  \item $O(n)$ expected per call to \inlinecode{max\_subarray\_at\_most\_k\_distinct()}.
   \item $O(n)$ per call to \inlinecode{sliding\_window\_extrema()}.
 \end{compactitem}
 
@@ -1134,8 +1134,8 @@ The examples below cover sorted 2-sum/3-sum variants, finding the shortest subar
 \begin{compactitem}
   \item $O(1)$ auxiliary for \inlinecode{two\_sum\_sorted(a, target)}.
   \item $O(n)$ auxiliary for \inlinecode{three\_sum(a, target)}.
-  \item $O(1)$ auxiliary for \inlinecode{min\_length\_at\_least(a, target)}.
-  \item $O(k)$ auxiliary for \inlinecode{longest\_at\_most\_k\_distinct(a, k)}.
+  \item $O(1)$ auxiliary for \inlinecode{min\_subarray\_at\_least(a, target)}.
+  \item $O(k)$ auxiliary for \inlinecode{max\_subarray\_at\_most\_k\_distinct(a, k)}.
   \item $O(k)$ auxiliary and $O(n)$ for the result of \inlinecode{sliding\_window\_extrema()}.
 \end{compactitem}
 
@@ -1189,7 +1189,7 @@ std::array<int, 3> three_sum(const std::vector<int> &a, int64_t target) {
   return {-1, -1, -1};
 }
 
-std::tuple<int, int, int> min_length_at_least(const std::vector<int> &a, int64_t target) {
+std::tuple<int, int, int> min_subarray_at_least(const std::vector<int> &a, int64_t target) {
   if (target <= 0) {
     return {0, 0, -1};
   }
@@ -1212,7 +1212,7 @@ std::tuple<int, int, int> min_length_at_least(const std::vector<int> &a, int64_t
   return {best, best_lo, best_hi};
 }
 
-std::tuple<int, int, int> longest_at_most_k_distinct(const std::vector<int> &a, int k) {
+std::tuple<int, int, int> max_subarray_at_most_k_distinct(const std::vector<int> &a, int k) {
   if (k <= 0) {
     return {0, 0, -1};
   }
@@ -1324,15 +1324,15 @@ int main() {
   assert((three_sum(d, 30) == array<int, 3>{-1, -1, -1}));
 
   vector<int> a{2, 3, 1, 2, 4, 3};
-  auto [length, lo, hi] = min_length_at_least(a, 7);
+  auto [length, lo, hi] = min_subarray_at_least(a, 7);
   assert(length == 2);
   assert(lo == 4 && hi == 5);  // [4, 3].
-  auto [empty_length, empty_lo, empty_hi] = min_length_at_least(a, 0);
+  auto [empty_length, empty_lo, empty_hi] = min_subarray_at_least(a, 0);
   assert(empty_length == 0);
   assert(empty_lo == 0 && empty_hi == -1);
 
   vector<int> b{1, 2, 1, 3, 4, 3, 5};
-  auto [longest, longest_lo, longest_hi] = longest_at_most_k_distinct(b, 2);
+  auto [longest, longest_lo, longest_hi] = max_subarray_at_most_k_distinct(b, 2);
   assert(longest == 3);
   assert(longest_lo == 0 && longest_hi == 2);  // [1, 2, 1].
 
@@ -1926,7 +1926,7 @@ The MEX of a dynamic multiset can be computed using counts of present values and
   \item \inlinecode{DynamicMex()} maintains the MEX of a multiset of nonnegative integers.
   \item \inlinecode{add(x)} inserts one copy of value \inlinecode{x} if \inlinecode{x} $\geq 0$.
   \item \inlinecode{remove(x)} removes one copy of value \inlinecode{x} if present.
-  \item \inlinecode{get()} returns the current MEX.
+  \item \inlinecode{mex()} returns the current MEX.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1934,7 +1934,7 @@ The MEX of a dynamic multiset can be computed using counts of present values and
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{mex(lo, hi)}, where $n$ is the number of values.
   \item $O(\log n)$ expected per call to \inlinecode{add(x)} and \inlinecode{remove(x)} for \inlinecode{DynamicMex}, and $O(n)$ in the collision-heavy worst case for the hash table.
-  \item $O(1)$ per call to \inlinecode{get()} for \inlinecode{DynamicMex}.
+  \item $O(1)$ per call to \inlinecode{mex()} for \inlinecode{DynamicMex}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -2004,7 +2004,7 @@ class DynamicMex {
     }
   }
 
-  int get() const { return *missing.begin(); }
+  int mex() const { return *missing.begin(); }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -2024,15 +2024,15 @@ int main() {
   m.add(1);
   m.add(1);
   m.add(3);
-  assert(m.get() == 2);
+  assert(m.mex() == 2);
   m.add(2);
-  assert(m.get() == 4);
+  assert(m.mex() == 4);
   m.remove(1);
-  assert(m.get() == 4);  // One copy of 1 remains.
+  assert(m.mex() == 4);  // One copy of 1 remains.
   m.remove(1);
-  assert(m.get() == 1);
+  assert(m.mex() == 1);
   m.remove(100);
-  assert(m.get() == 1);
+  assert(m.mex() == 1);
   return 0;
 }
 \end{lstlisting}
@@ -2356,14 +2356,14 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Subset Sum}
-Given a collection of integers and a target $v$, the subset sum problem asks for the maximum sum of any subset that is at most $v$. Two algorithms below solve this problem in complementary regimes, and which one wins depends on whether the bottleneck is the number of items or the size of the weights.
+Given a collection of integers and a target, the subset sum problem asks for the maximum sum of any subset that does not exceed the target. Two algorithms below solve this problem in complementary regimes, and which one wins depends on whether the bottleneck is the number of items or the size of the weights.
 
 The meet-in-the-middle method splits the collection in half, enumerates every subset sum for each half, sorts one side, and binary searches for the best compatible partner. It makes no assumption about the sign or size of the values, so it handles negative inputs, and it is the method of choice when the number of items $n$ is small (up to roughly $40$).
 
 Pisinger's algorithm targets the opposite regime: nonnegative weights whose maximum value is small, with possibly many items. Let $W$ be the largest weight. It greedily takes a maximal prefix with sum $s$ that fits the target; because the next weight is at most $W$ and does not fit, $s$ is greater than \inlinecode{target} $- W$. The prefix itself is feasible, so the optimum lies between $s$ and \inlinecode{target} and only that width-$W$ window matters. A balanced sweep explores exchanges that add later items to sums below the target and remove earlier items from sums above it. For each sum, it retains the farthest prefix boundary reached, which dominates smaller boundaries because it permits at least the same future exchanges. This gives a running time linear in the number of items times $W$, independent of the target beyond that window. This routine is sometimes called ``fast knapsack,'' a slight misnomer: it maximizes a subset sum rather than packing items with distinct values, so it is really the bounded-weight case of subset sum rather than the 0-1 value knapsack.
 
 \begin{compactitem}
-  \item \inlinecode{max\_subset\_sum\_at\_most(lo, hi, v)} returns a pair (\inlinecode{sum}, \inlinecode{items}) containing that maximum sum and the selected item indices relative to \inlinecode{lo}. Values may be negative. The range is supplied as random-access iterators, and \inlinecode{v} must be nonnegative.
+  \item \inlinecode{max\_subset\_sum\_at\_most(lo, hi, target)} returns a pair (\inlinecode{sum}, \inlinecode{items}) containing that maximum sum and the selected item indices relative to \inlinecode{lo}. Values may be negative. The range is supplied as random-access iterators, and \inlinecode{target} must be nonnegative.
   \item \inlinecode{max\_subset\_sum\_bounded(lo, hi, target)} returns the maximum sum of any subset of the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ that does not exceed \inlinecode{target}. All weights and \inlinecode{target} must be nonnegative integers. This is faster than meet-in-the-middle when the largest weight is small relative to $2^{n/2}$.
 \end{compactitem}
 
@@ -2392,33 +2392,33 @@ All subset sums and intermediate differences in \inlinecode{max\_subset\_sum\_at
 #include <vector>
 
 template<typename It>
-std::pair<int64_t, std::vector<int>> max_subset_sum_at_most(It lo, It hi, int64_t v) {
+std::pair<int64_t, std::vector<int>> max_subset_sum_at_most(It lo, It hi, int64_t target) {
   int n = static_cast<int>(hi - lo);
-  assert(v >= 0 && n >= 0 && n / 2 < 63 && n - n / 2 < 63);
-  int64_t llen = 1LL << (n / 2), hlen = 1LL << (n - n / 2);
+  assert(target >= 0 && n >= 0 && n / 2 < 63 && n - n / 2 < 63);
+  int64_t llen = 1LL << (n / 2), rlen = 1LL << (n - n / 2);
   std::vector<int64_t> lsum(llen);
-  std::vector<std::pair<int64_t, int64_t>> hsum(hlen);
+  std::vector<std::pair<int64_t, int64_t>> rsum(rlen);
   for (int64_t mask = 1; mask < llen; mask++) {
     int bit = __builtin_ctzll(mask);
     lsum[mask] = lsum[mask ^ (1LL << bit)] + *(lo + bit);  // Overflow warning.
   }
-  for (int64_t mask = 1; mask < hlen; mask++) {
+  for (int64_t mask = 1; mask < rlen; mask++) {
     int bit = __builtin_ctzll(mask);
-    hsum[mask].first = hsum[mask ^ (1LL << bit)].first + *(lo + n / 2 + bit);
-    hsum[mask].second = mask;
+    rsum[mask].first = rsum[mask ^ (1LL << bit)].first + *(lo + n / 2 + bit);
+    rsum[mask].second = mask;
   }
-  std::sort(hsum.begin(), hsum.end());
-  int64_t best = INT64_MIN, lmask = 0, hmask = 0;
+  std::sort(rsum.begin(), rsum.end());
+  int64_t best = INT64_MIN, lmask = 0, rmask = 0;
   for (int64_t mask = 0; mask < llen; mask++) {
-    int64_t limit = v - lsum[mask];  // Overflow warning.
-    auto it = std::upper_bound(hsum.begin(), hsum.end(), std::make_pair(limit, INT64_MAX));
-    if (it != hsum.begin()) {
+    int64_t limit = target - lsum[mask];  // Overflow warning.
+    auto it = std::upper_bound(rsum.begin(), rsum.end(), std::make_pair(limit, INT64_MAX));
+    if (it != rsum.begin()) {
       --it;
       int64_t candidate = lsum[mask] + it->first;
       if (best < candidate) {
         best = candidate;
         lmask = mask;
-        hmask = it->second;
+        rmask = it->second;
       }
     }
   }
@@ -2429,7 +2429,7 @@ std::pair<int64_t, std::vector<int>> max_subset_sum_at_most(It lo, It hi, int64_
     }
   }
   for (int i = 0; i < n - n / 2; i++) {
-    if ((hmask >> i) & 1) {
+    if ((rmask >> i) & 1) {
       items.push_back(n / 2 + i);
     }
   }
@@ -3207,13 +3207,13 @@ Selects uniformly random samples from a stream whose length may be unknown in ad
 
 Reservoir sampling keeps only the chosen sample or samples in memory while processing each element once. The first arrivals fill the reservoir, and the $i$-th element then replaces a uniformly chosen occupant with probability $1/i$ (or $k/i$ when keeping $k$ samples), which by induction leaves every element seen so far equally likely to be in the sample.
 
-Each class maintains its reservoir incrementally; call \inlinecode{add(x)} once per stream element in any order, then call \inlinecode{get()} to retrieve the result.
+Each class maintains its reservoir incrementally; call \inlinecode{add(x)} once per stream element in any order, then call \inlinecode{sample()} to retrieve the result.
 
 \begin{compactitem}
   \item \inlinecode{ReservoirSampleOne\textless{}T\textgreater{}()} constructs a single-element sampler.
   \item \inlinecode{ReservoirSampleK\textless{}T\textgreater{}(k)} constructs a \inlinecode{k}-element sampler.
   \item \inlinecode{add(x)} incorporates one more stream element.
-  \item \inlinecode{get()} returns the current sample. For \inlinecode{ReservoirSampleOne}, \inlinecode{get()} requires at least one \inlinecode{add()} call; for \inlinecode{ReservoirSampleK}, it returns the full reservoir, which may contain fewer than \inlinecode{k} elements if the stream was shorter.
+  \item \inlinecode{sample()} returns the current sample. For \inlinecode{ReservoirSampleOne}, \inlinecode{sample()} requires at least one \inlinecode{add()} call; for \inlinecode{ReservoirSampleK}, it returns the full reservoir, which may contain fewer than \inlinecode{k} elements if the stream was shorter.
   \item \inlinecode{count()} returns the number of stream elements seen so far.
 \end{compactitem}
 
@@ -3244,20 +3244,20 @@ int rand_int(int lo, int hi) {
 
 template<typename T>
 class ReservoirSampleOne {
-  std::optional<T> sample;
+  std::optional<T> value;
   int seen = 0;
 
  public:
   void add(const T &x) {
     seen++;
     if (rand_int(1, seen) == 1) {
-      sample = x;
+      value = x;
     }
   }
 
-  const T &get() const {
-    assert(sample.has_value());
-    return *sample;
+  const T &sample() const {
+    assert(value.has_value());
+    return *value;
   }
 
   int count() const { return seen; }
@@ -3286,7 +3286,7 @@ class ReservoirSampleK {
     }
   }
 
-  const std::vector<T> &get() const { return reservoir; }
+  const std::vector<T> &sample() const { return reservoir; }
   int count() const { return seen; }
 };
 \end{lstlisting}
@@ -3305,7 +3305,7 @@ int main() {
     s1.add(x);
   }
   assert(s1.count() == 5);
-  int one = s1.get();
+  int one = s1.sample();
   assert(one == 10 || one == 20 || one == 30 || one == 40 || one == 50);
 
   ReservoirSampleK<int> sk(3);
@@ -3313,14 +3313,14 @@ int main() {
     sk.add(x);
   }
   assert(sk.count() == 5);
-  assert(sk.get().size() == 3);
+  assert(sk.sample().size() == 3);
 
   ReservoirSampleK<int> large(10);
   for (int x : a) {
     large.add(x);
   }
   assert(large.count() == 5);
-  assert(large.get().size() == 5);
+  assert(large.sample().size() == 5);
   return 0;
 }
 \end{lstlisting}

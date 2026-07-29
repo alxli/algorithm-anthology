@@ -50,14 +50,14 @@ std::pair<double, State> anneal_min(
   assert(0 < temp_end && temp_end < temp_start);
   assert(0 < cooling_rate && cooling_rate < 1);
   std::uniform_real_distribution<double> unit(0.0, 1.0);
-  State current = initial, best = initial;
+  State current = std::move(initial), best = current;
   double current_energy = energy(current), best_energy = current_energy;
   for (double temp = temp_start; temp > temp_end; temp *= cooling_rate) {
     State next = rand_neighbor(current, temp, rng);
     double next_energy = energy(next);
     if (next_energy <= current_energy ||
         unit(rng) < std::exp((current_energy - next_energy) / temp)) {
-      current = next;
+      current = std::move(next);
       current_energy = next_energy;
       if (current_energy < best_energy) {
         best = current;
@@ -65,7 +65,7 @@ std::pair<double, State> anneal_min(
       }
     }
   }
-  return {best_energy, best};
+  return {best_energy, std::move(best)};
 }
 
 /*** Example Usage ***/

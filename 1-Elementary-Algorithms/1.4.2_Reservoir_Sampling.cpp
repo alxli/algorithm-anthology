@@ -9,12 +9,12 @@ occupant with probability $1/i$ (or $k/i$ when keeping $k$ samples), which by in
 element seen so far equally likely to be in the sample.
 
 Each class maintains its reservoir incrementally; call `add(x)` once per stream element in any
-order, then call `get()` to retrieve the result.
+order, then call `sample()` to retrieve the result.
 
 - `ReservoirSampleOne<T>()` constructs a single-element sampler.
 - `ReservoirSampleK<T>(k)` constructs a `k`-element sampler.
 - `add(x)` incorporates one more stream element.
-- `get()` returns the current sample. For `ReservoirSampleOne`, `get()` requires at least one
+- `sample()` returns the current sample. For `ReservoirSampleOne`, `sample()` requires at least one
   `add()` call; for `ReservoirSampleK`, it returns the full reservoir, which may contain fewer than
   `k` elements if the stream was shorter.
 - `count()` returns the number of stream elements seen so far.
@@ -42,20 +42,20 @@ int rand_int(int lo, int hi) {
 
 template<typename T>
 class ReservoirSampleOne {
-  std::optional<T> sample;
+  std::optional<T> value;
   int seen = 0;
 
  public:
   void add(const T &x) {
     seen++;
     if (rand_int(1, seen) == 1) {
-      sample = x;
+      value = x;
     }
   }
 
-  const T &get() const {
-    assert(sample.has_value());
-    return *sample;
+  const T &sample() const {
+    assert(value.has_value());
+    return *value;
   }
 
   int count() const { return seen; }
@@ -84,7 +84,7 @@ class ReservoirSampleK {
     }
   }
 
-  const std::vector<T> &get() const { return reservoir; }
+  const std::vector<T> &sample() const { return reservoir; }
   int count() const { return seen; }
 };
 
@@ -102,7 +102,7 @@ int main() {
     s1.add(x);
   }
   assert(s1.count() == 5);
-  int one = s1.get();
+  int one = s1.sample();
   assert(one == 10 || one == 20 || one == 30 || one == 40 || one == 50);
 
   ReservoirSampleK<int> sk(3);
@@ -110,13 +110,13 @@ int main() {
     sk.add(x);
   }
   assert(sk.count() == 5);
-  assert(sk.get().size() == 3);
+  assert(sk.sample().size() == 3);
 
   ReservoirSampleK<int> large(10);
   for (int x : a) {
     large.add(x);
   }
   assert(large.count() == 5);
-  assert(large.get().size() == 5);
+  assert(large.sample().size() == 5);
   return 0;
 }

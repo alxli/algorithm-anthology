@@ -18,7 +18,7 @@ Common number theory operations relating to modular arithmetic.
   the result will differ when an operand is negative.
 - `mod_inverse(a, m)` returns an integer $x$ such that $ax \equiv 1 \pmod m$, where the arguments
   must satisfy $m > 0$ and $\gcd(a, m) = 1$.
-- `generate_inverse(p)` returns a vector `v` of integers where for each index $i$ in the vector,
+- `mod_inverse_table(p)` returns a vector `v` of integers where for each index $i$ in the vector,
   $i \cdot `v[i]` \equiv 1 \pmod p$, where the argument $p$ is prime.
 - `crt(r1, m1, r2, m2, r, m)` merges the two congruences $x \equiv r_1 \pmod{m_1}$ and
   $x \equiv r_2 \pmod{m_2}$ for arbitrary moduli (not necessarily coprime). It returns whether the
@@ -37,11 +37,11 @@ Time Complexity:
 - O(log(a + b)) per call to `gcd(a, b)`, `lcm(a, b)`, `extended_euclid(a, b)`,
   `diophantine(a, b, c, ...)`, `mod_inverse(a, m)`, and `crt(...)`.
 - O(1) per call to `mod()`.
-- O(p) per call to `generate_inverse()`.
+- O(p) per call to `mod_inverse_table()`.
 - O(n^2) per call to `garner_restore()` and `garner_restore_mod()`.
 
 Space Complexity:
-- O(p) auxiliary for `generate_inverse()`.
+- O(p) auxiliary for `mod_inverse_table()`.
 - O(n) auxiliary for `garner_restore()` and `garner_restore_mod()`.
 - O(1) auxiliary for all other operations.
 
@@ -144,7 +144,7 @@ Int mod_inverse(Int a, Int m) {
   return mod(extended_euclid(a, m).first, m);
 }
 
-std::vector<int> generate_inverse(int p) {
+std::vector<int> mod_inverse_table(int p) {
   std::vector<int> res(p);
   res[1] = 1;
   for (int i = 2; i < p; i++) {
@@ -238,7 +238,7 @@ int main() {
   }
   {
     int p = 17;
-    auto res = generate_inverse(p);
+    auto res = mod_inverse_table(p);
     for (int i = 0; i < p; i++) {
       if (i > 0) {
         assert(mod(i * res[i], p) == 1);

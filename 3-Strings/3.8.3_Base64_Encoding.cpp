@@ -31,8 +31,8 @@ string base64_encode(const string &bytes) {
   string res;
   uint32_t val = 0;
   int bits = -6;
-  for (int i = 0; i < static_cast<int>(bytes.size()); i++) {
-    val = (val << 8) + static_cast<unsigned char>(bytes[i]);
+  for (unsigned char byte : bytes) {
+    val = (val << 8) + byte;
     bits += 8;
     while (bits >= 0) {
       res.push_back(BASE64_ALPHABET[(val >> bits) & 63]);
@@ -56,11 +56,11 @@ string base64_decode(const string &text) {
   string res;
   uint32_t val = 0;
   int bits = -8;
-  for (int i = 0; i < static_cast<int>(text.size()); i++) {
-    if (text[i] == '=') {
+  for (unsigned char c : text) {
+    if (c == '=') {
       break;
     }
-    int x = table[static_cast<unsigned char>(text[i])];
+    int x = table[c];
     if (x < 0) {
       break;
     }

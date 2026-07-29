@@ -23,7 +23,7 @@ rank. Bitmask successors use the same order as increasing integers with a fixed 
   combination (that is, the lowest integer greater than `x` with the same number of 1 bits). Note
   that this does not generate combinations in the same order as `next_combination()`, nor does it
   work if the corresponding $n$ items are not distinct (in that case, duplicate combinations will be
-  generated).
+  generated). It returns $0$ if no successor fits in `uint64_t`.
 - `combination_by_rank(n, k, r)` returns the combination of $k$ distinct integers in the range
   $[0, `n`)$ that is lexicographically ranked $r$, where $r$ is a 0-based rank in the range
   $[0, \binom{n}{k})$.
@@ -33,6 +33,8 @@ rank. Bitmask successors use the same order as increasing integers with a fixed 
   combination of not necessarily distinct integers in the range $[0, `n`)$. The vector `a` must be
   sorted. Note that there is a total of $n \mathbin{\text{multichoose}} k$ combinations if
   repetition is allowed, where $n \mathbin{\text{multichoose}} k = \binom{n + k - 1}{k}$.
+
+Exact counts and ranks used by the ranking operations must fit in `int64_t`.
 
 Time Complexity:
 - O(n) per call to `next_combination(lo, mid, hi)`, where $n$ is the distance between `lo` and `hi`.
@@ -50,6 +52,7 @@ Space Complexity:
 #include <algorithm>
 #include <cstdint>
 #include <functional>
+#include <numeric>
 #include <utility>
 #include <vector>
 
@@ -115,11 +118,14 @@ bool next_combination(int n, std::vector<int> &a) {
   return false;
 }
 
-int64_t next_combination_mask(int64_t x) {
+uint64_t next_combination_mask(uint64_t x) {
   if (x == 0) {
     return 0;
   }
-  int64_t s = x & -x, r = x + s;
+  uint64_t s = x & -x, r = x + s;
+  if (r == 0) {
+    return 0;
+  }
   return r | (((x ^ r) >> 2) / s);
 }
 
@@ -129,7 +135,12 @@ int64_t n_choose_k(int64_t n, int64_t k) {
   }
   int64_t res = 1;
   for (int i = 0; i < k; i++) {
-    res = res * (n - i) / (i + 1);
+    int64_t num = n - i, den = i + 1;
+    int64_t g = std::gcd(num, den);
+    num /= g;
+    den /= g;
+    res /= den;
+    res *= num;  // Overflow warning.
   }
   return res;
 }
@@ -224,7 +235,7 @@ int main() {
     int n = 5, k = 3;
     string char_set = "abcde";  // Must be distinct.
     cout << "\n\"" << char_set << "\" choose " << k << " with masks:" << endl;
-    int64_t mask = (1LL << k) - 1, limit = 1LL << n;
+    uint64_t mask = (1ULL << k) - 1, limit = 1ULL << n;
     int count = 0;
     do {
       for (int i = 0; i < n; i++) {
@@ -237,6 +248,7 @@ int main() {
       mask = next_combination_mask(mask);
     } while (mask < limit);
     assert(count == 10);
+    assert(next_combination_mask(1ULL << 63) == 0);
     cout << endl;
   }
   {
@@ -257,6 +269,7 @@ int main() {
       count++;
     } while (next_combination(n, a));
     assert(count == 10);
+    assert(n_choose_k(66, 33) == 7219428434016265740LL);
     cout << endl;
   }
   {  // Combinations with repeats.

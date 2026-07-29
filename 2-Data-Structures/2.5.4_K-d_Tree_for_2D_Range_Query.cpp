@@ -64,11 +64,8 @@ class RangeKDTree {
     build(mid + 1, hi, !div_x);
   }
 
-  // Helper variables for query().
-  T x1, y1, x2, y2;
-
   template<typename Fn>
-  void query(int lo, int hi, Fn &f) {
+  void query(int lo, int hi, const T &x1, const T &y1, const T &x2, const T &y2, Fn &f) {
     if (lo >= hi) {
       return;
     }
@@ -84,8 +81,8 @@ class RangeKDTree {
       }
       return;
     }
-    query(lo, mid, f);
-    query(mid + 1, hi, f);
+    query(lo, mid, x1, y1, x2, y2, f);
+    query(mid + 1, hi, x1, y1, x2, y2, f);
     if (tree[mid].first < x1 || x2 < tree[mid].first || tree[mid].second < y1 ||
         y2 < tree[mid].second) {
       return;
@@ -107,11 +104,7 @@ class RangeKDTree {
   template<typename Fn>
   void query(const T &x1, const T &y1, const T &x2, const T &y2, Fn f) {
     assert(!(x2 < x1) && !(y2 < y1));
-    this->x1 = x1;
-    this->y1 = y1;
-    this->x2 = x2;
-    this->y2 = y2;
-    query(0, static_cast<int>(tree.size()), f);
+    query(0, static_cast<int>(tree.size()), x1, y1, x2, y2, f);
   }
 };
 

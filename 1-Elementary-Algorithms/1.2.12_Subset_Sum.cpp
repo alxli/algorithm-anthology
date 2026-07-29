@@ -1,9 +1,9 @@
 /*
 
-Given a collection of integers and a target $v$, the subset sum problem asks for the maximum sum of
-any subset that is at most $v$. Two algorithms below solve this problem in complementary regimes,
-and which one wins depends on whether the bottleneck is the number of items or the size of the
-weights.
+Given a collection of integers and a target, the subset sum problem asks for the maximum sum of any
+subset that does not exceed the target. Two algorithms below solve this problem in complementary
+regimes, and which one wins depends on whether the bottleneck is the number of items or the size of
+the weights.
 
 The meet-in-the-middle method splits the collection in half, enumerates every subset sum for each
 half, sorts one side, and binary searches for the best compatible partner. It makes no assumption
@@ -22,9 +22,9 @@ the target beyond that window. This routine is sometimes called "fast knapsack,"
 it maximizes a subset sum rather than packing items with distinct values, so it is really the
 bounded-weight case of subset sum rather than the 0-1 value knapsack.
 
-- `max_subset_sum_at_most(lo, hi, v)` returns a pair (`sum`, `items`) containing that maximum sum
-  and the selected item indices relative to `lo`. Values may be negative. The range is supplied as
-  random-access iterators, and `v` must be nonnegative.
+- `max_subset_sum_at_most(lo, hi, target)` returns a pair (`sum`, `items`) containing that maximum
+  sum and the selected item indices relative to `lo`. Values may be negative. The range is supplied
+  as random-access iterators, and `target` must be nonnegative.
 - `max_subset_sum_bounded(lo, hi, target)` returns the maximum sum of any subset of the range
   $[`lo`, `hi`)$ that does not exceed `target`. All weights and `target` must be nonnegative
   integers. This is faster than meet-in-the-middle when the largest weight is small relative to
@@ -52,33 +52,33 @@ Space Complexity:
 #include <vector>
 
 template<typename It>
-std::pair<int64_t, std::vector<int>> max_subset_sum_at_most(It lo, It hi, int64_t v) {
+std::pair<int64_t, std::vector<int>> max_subset_sum_at_most(It lo, It hi, int64_t target) {
   int n = static_cast<int>(hi - lo);
-  assert(v >= 0 && n >= 0 && n / 2 < 63 && n - n / 2 < 63);
-  int64_t llen = 1LL << (n / 2), hlen = 1LL << (n - n / 2);
+  assert(target >= 0 && n >= 0 && n / 2 < 63 && n - n / 2 < 63);
+  int64_t llen = 1LL << (n / 2), rlen = 1LL << (n - n / 2);
   std::vector<int64_t> lsum(llen);
-  std::vector<std::pair<int64_t, int64_t>> hsum(hlen);
+  std::vector<std::pair<int64_t, int64_t>> rsum(rlen);
   for (int64_t mask = 1; mask < llen; mask++) {
     int bit = __builtin_ctzll(mask);
     lsum[mask] = lsum[mask ^ (1LL << bit)] + *(lo + bit);  // Overflow warning.
   }
-  for (int64_t mask = 1; mask < hlen; mask++) {
+  for (int64_t mask = 1; mask < rlen; mask++) {
     int bit = __builtin_ctzll(mask);
-    hsum[mask].first = hsum[mask ^ (1LL << bit)].first + *(lo + n / 2 + bit);
-    hsum[mask].second = mask;
+    rsum[mask].first = rsum[mask ^ (1LL << bit)].first + *(lo + n / 2 + bit);
+    rsum[mask].second = mask;
   }
-  std::sort(hsum.begin(), hsum.end());
-  int64_t best = INT64_MIN, lmask = 0, hmask = 0;
+  std::sort(rsum.begin(), rsum.end());
+  int64_t best = INT64_MIN, lmask = 0, rmask = 0;
   for (int64_t mask = 0; mask < llen; mask++) {
-    int64_t limit = v - lsum[mask];  // Overflow warning.
-    auto it = std::upper_bound(hsum.begin(), hsum.end(), std::make_pair(limit, INT64_MAX));
-    if (it != hsum.begin()) {
+    int64_t limit = target - lsum[mask];  // Overflow warning.
+    auto it = std::upper_bound(rsum.begin(), rsum.end(), std::make_pair(limit, INT64_MAX));
+    if (it != rsum.begin()) {
       --it;
       int64_t candidate = lsum[mask] + it->first;
       if (best < candidate) {
         best = candidate;
         lmask = mask;
-        hmask = it->second;
+        rmask = it->second;
       }
     }
   }
@@ -89,7 +89,7 @@ std::pair<int64_t, std::vector<int>> max_subset_sum_at_most(It lo, It hi, int64_
     }
   }
   for (int i = 0; i < n - n / 2; i++) {
-    if ((hmask >> i) & 1) {
+    if ((rmask >> i) & 1) {
       items.push_back(n / 2 + i);
     }
   }

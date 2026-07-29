@@ -763,17 +763,17 @@ By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For
   \item \inlinecode{RollingHash\textless{}T\textgreater{}()} constructs an empty hash sequence.
   \item \inlinecode{RollingHash\textless{}T\textgreater{}(lo, hi)} constructs prefix hashes from the values in the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{RollingHash\textless{}T\textgreater{}(v)} constructs prefix hashes for vector \inlinecode{v}.
-  \item \inlinecode{get(lo, hi)} returns the hash of the half-open subsequence $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
-  \item \inlinecode{hash(lo, hi)} returns the hash of the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
-  \item \inlinecode{hash(v)} returns the hash of vector \inlinecode{v}.
+  \item \inlinecode{h.hash(lo, hi)} returns the hash of the half-open subsequence $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
+  \item \inlinecode{RollingHash\textless{}T\textgreater{}::hash(lo, hi)} returns the hash of the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
+  \item \inlinecode{RollingHash\textless{}T\textgreater{}::hash(v)} returns the hash of vector \inlinecode{v}.
   \item \inlinecode{concat(left, right, right\_len)} returns the hash of the concatenation of a sequence with hash \inlinecode{left} and a sequence with hash \inlinecode{right} and length \inlinecode{right\_len}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to the constructor or \inlinecode{hash()}, where $n$ is the sequence length.
-  \item $O(1)$ per call to \inlinecode{get()} and \inlinecode{concat()}.
+  \item $O(n)$ per call to the constructor or static \inlinecode{hash()}, where $n$ is the sequence length.
+  \item $O(1)$ per call to the member \inlinecode{hash()} and \inlinecode{concat()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -875,7 +875,7 @@ class RollingHash {
 
   int size() const { return static_cast<int>(pref.size()) - 1; }
 
-  uint64_t get(int lo, int hi) const {
+  uint64_t hash(int lo, int hi) const {
     assert(0 <= lo && lo <= hi && hi <= size());
     return hash_sub(pref[hi], hash_mul(pref[lo], pow_base[hi - lo]));
   }
@@ -883,12 +883,12 @@ class RollingHash {
   template<typename It>
   static uint64_t hash(It lo, It hi, const Hash &hasher = Hash()) {
     RollingHash<T, Hash> h(lo, hi, hasher);
-    return h.get(0, h.size());
+    return h.hash(0, h.size());
   }
 
   static uint64_t hash(const std::vector<T> &v, const Hash &hasher = Hash()) {
     RollingHash<T, Hash> h(v, hasher);
-    return h.get(0, h.size());
+    return h.hash(0, h.size());
   }
 
   static uint64_t concat(uint64_t left, uint64_t right, int right_len) {
@@ -921,8 +921,8 @@ struct PointHasher {
 int main() {
   string s = "abracadabra";
   RollingHash<char> hs(s.begin(), s.end());
-  assert(hs.get(0, 4) == hs.get(7, 11));  // "abra" == "abra"
-  assert(hs.get(0, 4) != hs.get(3, 7));   // "abra" != "acad"
+  assert(hs.hash(0, 4) == hs.hash(7, 11));  // "abra" == "abra"
+  assert(hs.hash(0, 4) != hs.hash(3, 7));   // "abra" != "acad"
 
   string a = "abc", b = "def";
   uint64_t ab = RollingHash<char>::concat(
@@ -939,12 +939,12 @@ int main() {
   v.push_back(1);
   v.push_back(2);
   RollingHash<int> hv(v);
-  assert(hv.get(0, 2) == hv.get(3, 5));  // Both ranges are [1, 2].
-  assert(hv.get(0, 3) == RollingHash<int>::hash(v.begin(), v.begin() + 3));
+  assert(hv.hash(0, 2) == hv.hash(3, 5));  // Both ranges are [1, 2].
+  assert(hv.hash(0, 3) == RollingHash<int>::hash(v.begin(), v.begin() + 3));
 
   vector<PointI> poly{{1, 2}, {3, 4}};
   RollingHash<PointI, PointHasher> hp(poly);
-  assert((hp.get(0, 2) == RollingHash<PointI, PointHasher>::hash(poly)));
+  assert((hp.hash(0, 2) == RollingHash<PointI, PointHasher>::hash(poly)));
   return 0;
 }
 \end{lstlisting}
@@ -1284,7 +1284,7 @@ This technique is useful for probabilistic equality checks on sets, distinct-pre
 
 \begin{compactitem}
   \item \inlinecode{ZobristHash\textless{}T\textgreater{}(seed = 0)} constructs a token generator with initial value \inlinecode{seed}.
-  \item \inlinecode{get(x)} returns the stable token assigned to key \inlinecode{x}, creating it if needed.
+  \item \inlinecode{token(x)} returns the stable token assigned to key \inlinecode{x}, creating it if needed.
   \item \inlinecode{toggle(h, x)} returns the hash obtained by inserting \inlinecode{x} into set hash \inlinecode{h} if absent, or removing \inlinecode{x} from \inlinecode{h} if present.
   \item \inlinecode{distinct\_prefix\_hashes(lo, hi)} returns \inlinecode{n + 1} hashes. Element \inlinecode{i} hashes the first \inlinecode{i} values in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ with each distinct key contributing only on its first occurrence.
 \end{compactitem}
@@ -1292,7 +1292,7 @@ This technique is useful for probabilistic equality checks on sets, distinct-pre
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ expected per call to \inlinecode{get()} and \inlinecode{toggle()}.
+  \item $O(1)$ expected per call to \inlinecode{token()} and \inlinecode{toggle()}.
   \item $O(n)$ expected per call to \inlinecode{distinct\_prefix\_hashes(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 \end{compactitem}
 
@@ -1311,7 +1311,7 @@ This technique is useful for probabilistic equality checks on sets, distinct-pre
 
 template<typename T>
 class ZobristHash {
-  std::unordered_map<T, uint64_t> token;
+  std::unordered_map<T, uint64_t> tokens;
   uint64_t state;
 
   // SplitMix64 mixer.
@@ -1325,16 +1325,16 @@ class ZobristHash {
  public:
   explicit ZobristHash(uint64_t seed = 0) : state(seed) {}
 
-  uint64_t get(const T &x) {
-    if (auto it = token.find(x); it != token.end()) {
+  uint64_t token(const T &x) {
+    if (auto it = tokens.find(x); it != tokens.end()) {
       return it->second;
     }
     state = mix64(state);
-    token[x] = state;
+    tokens[x] = state;
     return state;
   }
 
-  uint64_t toggle(uint64_t h, const T &x) { return h ^ get(x); }
+  uint64_t toggle(uint64_t h, const T &x) { return h ^ token(x); }
 
   template<typename It>
   std::vector<uint64_t> distinct_prefix_hashes(It lo, It hi) {
@@ -1343,7 +1343,7 @@ class ZobristHash {
     uint64_t h = 0;
     for (It it = lo; it != hi; ++it) {
       if (seen.insert(*it).second) {
-        h ^= get(*it);
+        h ^= token(*it);
       }
       res.push_back(h);
     }
@@ -1547,9 +1547,9 @@ int main() {
 }
 \end{lstlisting}
 \subsection{String Searching (Aho-Corasick)}
-Given a set of strings (needles) and subsequent queries of texts (haystacks) to be searched, determine all positions in which needles occur within the given haystacks in linear time using the Aho-Corasick algorithm. The needles are arranged in a trie whose nodes carry failure links to the longest proper suffix that is also a trie node. Scanning the haystack once while following transitions and failure links then reports every match through each node's output set.
+Given a set of strings (needles) and subsequent queries of texts (haystacks) to be searched, determine all positions in which needles occur within the given haystacks in linear time using the Aho-Corasick algorithm. The needles are arranged in a trie whose nodes carry failure links to the longest proper suffix that is also a trie node. Scanning the haystack once while following transitions and failure links then reports every match through each node's output list.
 
-This implementation stores transitions in hash tables, which keeps lookups expected constant time without assuming a fixed alphabet size. The output tables are stored as ordered sets so matches ending at the same position are reported in deterministic needle order.
+This implementation stores transitions in hash tables, which keeps lookups expected constant time without assuming a fixed alphabet size. Output lists store both needles ending at each trie node and needles inherited through its failure link.
 
 \begin{compactitem}
   \item \inlinecode{AhoCorasick(needles)} constructs the finite-state automaton for a set of needle strings that are to be searched for subsequently in haystack queries. Empty needles are ignored.
@@ -1559,7 +1559,7 @@ This implementation stores transitions in hash tables, which keeps lookups expec
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(L + z \log m)$ expected per call to the constructor, where $L$ is the total length of the $m$ needles and $z$ is the total number of inherited output entries.
+  \item $O(L + z)$ expected per call to the constructor, where $L$ is the total needle length and $z$ is the total number of inherited output entries.
   \item $O(n + z)$ expected per call to \inlinecode{find\_all\_in(haystack, report\_match)}, where $n$ is the length of \inlinecode{haystack} and $z$ is the number of matches.
 \end{compactitem}
 
@@ -1572,7 +1572,6 @@ This implementation stores transitions in hash tables, which keeps lookups expec
 
 \begin{lstlisting}[language=C++]
 #include <queue>
-#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -1582,7 +1581,7 @@ class AhoCorasick {
   std::vector<string> needles;
   std::vector<int> fail;
   std::vector<std::unordered_map<char, int>> adj;
-  std::vector<std::set<int>> out;
+  std::vector<std::vector<int>> out;
 
   int next_state(int curr, char c) const {
     int next = curr;
@@ -1619,7 +1618,7 @@ class AhoCorasick {
           curr = adj[curr][c] = states++;
         }
       }
-      out[curr].insert(i);
+      out[curr].push_back(i);
     }
     std::queue<int> q;
     for (auto &[c, v] : adj[0]) {
@@ -1639,7 +1638,7 @@ class AhoCorasick {
         auto fit = adj[f].find(c);
         f = (fit != adj[f].end()) ? fit->second : 0;
         fail[v] = f;
-        out[v].insert(out[f].begin(), out[f].end());
+        out[v].insert(out[v].end(), out[f].begin(), out[f].end());
         q.push(v);
       }
     }
@@ -1990,8 +1989,8 @@ The original Manber-Myers doubling algorithm comparison-sorts the suffixes by th
 
 \begin{compactitem}
   \item \inlinecode{SuffixArrayManberMyers(s)} constructs a suffix array from string \inlinecode{s}.
-  \item \inlinecode{get\_sa()} returns the constructed suffix array.
-  \item \inlinecode{get\_lcp()} returns the corresponding LCP array for the suffix array.
+  \item \inlinecode{suffix\_array()} returns the constructed suffix array.
+  \item \inlinecode{lcp\_array()} returns the corresponding LCP array for the suffix array.
   \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
 \end{compactitem}
 
@@ -1999,8 +1998,8 @@ The original Manber-Myers doubling algorithm comparison-sorts the suffixes by th
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log^{2} n)$ per call to the constructor, where $n$ is the length of \inlinecode{s}.
-  \item $O(1)$ per call to \inlinecode{get\_sa()}.
-  \item $O(n)$ per call to \inlinecode{get\_lcp()}, where $n$ is the length of \inlinecode{s}.
+  \item $O(1)$ per call to \inlinecode{suffix\_array()}.
+  \item $O(n)$ per call to \inlinecode{lcp\_array()}, where $n$ is the length of \inlinecode{s}.
   \item $O(m \log n)$ per call to \inlinecode{find(needle)}, where $m$ is the length of \inlinecode{needle} and $n$ is the length of \inlinecode{s}.
 \end{compactitem}
 
@@ -2044,9 +2043,9 @@ class SuffixArrayManberMyers {
     }
   }
 
-  const std::vector<int> &get_sa() const { return sa; }
+  const std::vector<int> &suffix_array() const { return sa; }
 
-  std::vector<int> get_lcp() const {
+  std::vector<int> lcp_array() const {
     int n = static_cast<int>(s.size());
     if (n == 0) {
       return {};
@@ -2098,7 +2097,7 @@ using namespace std;
 
 int main() {
   SuffixArrayManberMyers sa("banana");
-  vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
+  vector<int> sarr = sa.suffix_array(), lcp = sa.lcp_array();
   vector<int> sarr_expected{5, 3, 1, 0, 4, 2};
   vector<int> lcp_expected{1, 3, 0, 0, 2};
   assert(sarr == sarr_expected);
@@ -2117,8 +2116,8 @@ The original Manber-Myers doubling algorithm comparison-sorts the suffixes by th
 
 \begin{compactitem}
   \item \inlinecode{SuffixArrayCountingSort(s)} constructs a suffix array from string \inlinecode{s}.
-  \item \inlinecode{get\_sa()} returns the constructed suffix array.
-  \item \inlinecode{get\_lcp()} returns the corresponding LCP array for the suffix array.
+  \item \inlinecode{suffix\_array()} returns the constructed suffix array.
+  \item \inlinecode{lcp\_array()} returns the corresponding LCP array for the suffix array.
   \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
 \end{compactitem}
 
@@ -2126,8 +2125,8 @@ The original Manber-Myers doubling algorithm comparison-sorts the suffixes by th
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ per call to the constructor, where $n$ is the length of \inlinecode{s}.
-  \item $O(1)$ per call to \inlinecode{get\_sa()}.
-  \item $O(n)$ per call to \inlinecode{get\_lcp()}, where $n$ is the length of \inlinecode{s}.
+  \item $O(1)$ per call to \inlinecode{suffix\_array()}.
+  \item $O(n)$ per call to \inlinecode{lcp\_array()}, where $n$ is the length of \inlinecode{s}.
   \item $O(m \log n)$ per call to \inlinecode{find(needle)}, where $m$ is the length of \inlinecode{needle} and $n$ is the length of \inlinecode{s}.
 \end{compactitem}
 
@@ -2179,9 +2178,9 @@ class SuffixArrayCountingSort {
     }
   }
 
-  const std::vector<int> &get_sa() const { return sa; }
+  const std::vector<int> &suffix_array() const { return sa; }
 
-  std::vector<int> get_lcp() const {
+  std::vector<int> lcp_array() const {
     int n = static_cast<int>(s.size());
     if (n == 0) {
       return {};
@@ -2233,7 +2232,7 @@ using namespace std;
 
 int main() {
   SuffixArrayCountingSort sa("banana");
-  vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
+  vector<int> sarr = sa.suffix_array(), lcp = sa.lcp_array();
   vector<int> sarr_expected{5, 3, 1, 0, 4, 2};
   vector<int> lcp_expected{1, 3, 0, 0, 2};
   assert(sarr == sarr_expected);
@@ -2242,7 +2241,7 @@ int main() {
   assert(sa.find("x") == string::npos);
 
   SuffixArrayCountingSort repeated("bbba");
-  assert((repeated.get_lcp() == vector<int>{0, 1, 2}));
+  assert((repeated.lcp_array() == vector<int>{0, 1, 2}));
   return 0;
 }
 \end{lstlisting}
@@ -2255,8 +2254,8 @@ The DC3/skew algorithm recursively constructs the suffix array of the suffixes s
 
 \begin{compactitem}
   \item \inlinecode{SuffixArrayDC3(s)} constructs a suffix array from string \inlinecode{s}.
-  \item \inlinecode{get\_sa()} returns the constructed suffix array.
-  \item \inlinecode{get\_lcp()} returns the corresponding LCP array for the suffix array.
+  \item \inlinecode{suffix\_array()} returns the constructed suffix array.
+  \item \inlinecode{lcp\_array()} returns the corresponding LCP array for the suffix array.
   \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
 \end{compactitem}
 
@@ -2264,8 +2263,8 @@ The DC3/skew algorithm recursively constructs the suffix array of the suffixes s
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to the constructor, where $n$ is the length of \inlinecode{s}.
-  \item $O(1)$ per call to \inlinecode{get\_sa()}.
-  \item $O(n)$ per call to \inlinecode{get\_lcp()}, where $n$ is the length of \inlinecode{s}.
+  \item $O(1)$ per call to \inlinecode{suffix\_array()}.
+  \item $O(n)$ per call to \inlinecode{lcp\_array()}, where $n$ is the length of \inlinecode{s}.
   \item $O(m \log n)$ per call to \inlinecode{find(needle)}, where $m$ is the length of \inlinecode{needle} and $n$ is the length of \inlinecode{s}.
 \end{compactitem}
 
@@ -2382,9 +2381,9 @@ class SuffixArrayDC3 {
     sa.erase(sa.begin());
   }
 
-  const std::vector<int> &get_sa() const { return sa; }
+  const std::vector<int> &suffix_array() const { return sa; }
 
-  std::vector<int> get_lcp() const {
+  std::vector<int> lcp_array() const {
     int n = static_cast<int>(s.size());
     if (n == 0) {
       return {};
@@ -2436,7 +2435,7 @@ using namespace std;
 
 int main() {
   SuffixArrayDC3 sa("banana");
-  vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
+  vector<int> sarr = sa.suffix_array(), lcp = sa.lcp_array();
   vector<int> sarr_expected{5, 3, 1, 0, 4, 2};
   vector<int> lcp_expected{1, 3, 0, 0, 2};
   assert(sarr == sarr_expected);
@@ -4009,7 +4008,7 @@ int main() {
 \setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Recursive Descent Parsing (Simple)}
-Evaluate an expression according to the order of operations (parentheses, unary plus and minus signs, multiplication/division, addition/subtraction). The following is a minimalistic recursive descent implementation using iterators. Each precedence level is parsed by its own function that obtains operands by calling the next-tighter level, so the call structure itself enforces the order of operations.
+Evaluate an expression according to the order of operations (parentheses, unary plus and minus signs, multiplication/division, addition/subtraction). The following is a minimalistic recursive descent implementation using iterators. Each precedence level is parsed by its own function that obtains operands by calling the next-tighter level, so the call structure itself enforces the order of operations. Literals are nonnegative decimal integers, division truncates toward zero, and the input must not contain whitespace.
 
 \begin{compactitem}
   \item \inlinecode{eval(s)} returns an evaluation of the arithmetic expression \inlinecode{s}.
@@ -4085,11 +4084,11 @@ Evaluate an expression with custom operand types, prefix unary operators, binary
 
 An arbitrary operand type is supported by changing the \inlinecode{Operand} alias and the static \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} helpers. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting \inlinecode{-1} as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify nonnegative numbers as operands alongside the unary operator \inlinecode{-}.
 
-Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either [\inlinecode{"+"}, \inlinecode{"+"}] or [\inlinecode{"++"}] depending on the lexicographical ordering of conflicting operators.
+Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. When multiple operators match at the same position, the longest one is chosen, so \inlinecode{\textless{}=} remains one token when \inlinecode{\textless{}} is also an operator.
 
 \begin{compactitem}
   \item \inlinecode{RecursiveDescentParser(unary\_ops, binary\_ops)} initializes a parser with operators specified by hash tables \inlinecode{unary\_ops} (of operator to unary function object) and \inlinecode{binary\_ops} (of operator to pair of binary function object and operator precedence). Operator precedences should be numbered upwards starting at $0$ (lowest precedence, evaluated last).
-  \item \inlinecode{split(s)} returns a vector of tokens for the expression \inlinecode{s}, split on the given operators during construction. Each parenthesis, operator, and operand satisfying \inlinecode{is\_operand()} will be split into a separate token. The algorithm is naive, matching operators lazily in the case of overlapping operators as mentioned above. Under these circumstances, the parse may not always succeed.
+  \item \inlinecode{split(s)} returns a vector of tokens for the expression \inlinecode{s}, split on the given operators during construction. Each parenthesis, operator, and operand satisfying \inlinecode{is\_operand()} will be split into a separate token.
   \item \inlinecode{eval(lo, hi)} returns the evaluation of a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
   \item \inlinecode{eval(s)} returns the evaluation of expression \inlinecode{s}, after first calling \inlinecode{split(s)} to obtain the tokens.
 \end{compactitem}
@@ -4097,7 +4096,7 @@ Operators may be non-empty strings of any length, but should not contain any par
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(m)$ per call to the constructor, where $m$ is the total number of operators.
+  \item $O(m \cdot k \cdot \log m)$ per call to the constructor, where $m$ is the total number of operators and $k$ is their maximum length.
   \item $O(n \cdot m \cdot k)$ per call to \inlinecode{split(s)}, where $n$ is the length of \inlinecode{s}, $m$ is the total number of operators defined for the parser instance, and $k$ is the maximum length for any operator representation.
   \item $O(n)$ expected per call to \inlinecode{eval(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
   \item $O(n \cdot m \cdot k + n)$ expected per call to \inlinecode{eval(s)}, where $n$ is the length of \inlinecode{s}, and $m$ and $k$ are as defined previously.
@@ -4114,7 +4113,6 @@ Operators may be non-empty strings of any length, but should not contain any par
 #include <algorithm>
 #include <cctype>
 #include <functional>
-#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -4137,7 +4135,7 @@ class RecursiveDescentParser {
   using BinaryOpMap = std::unordered_map<string, BinaryRule>;
   UnaryOpMap unary_ops;
   BinaryOpMap binary_ops;
-  std::set<string> op_tokens;
+  std::vector<string> op_tokens;
   int max_precedence;
 
   static bool is_operand(const string &s) {
@@ -4210,13 +4208,17 @@ class RecursiveDescentParser {
   RecursiveDescentParser(const UnaryOpMap &unary_ops, const BinaryOpMap &binary_ops)
       : unary_ops(unary_ops), binary_ops(binary_ops) {
     for (const auto &[op, _] : unary_ops) {
-      op_tokens.insert(op);
+      op_tokens.push_back(op);
     }
     max_precedence = 0;
     for (const auto &[op, fn_prec] : binary_ops) {
-      op_tokens.insert(op);
+      op_tokens.push_back(op);
       max_precedence = std::max(max_precedence, fn_prec.precedence);
     }
+    std::sort(op_tokens.begin(), op_tokens.end(), [](const string &a, const string &b) {
+      return a.size() != b.size() ? a.size() > b.size() : a < b;
+    });
+    op_tokens.erase(std::unique(op_tokens.begin(), op_tokens.end()), op_tokens.end());
   }
 
   std::vector<string> split(const string &s) const {
@@ -4237,7 +4239,7 @@ class RecursiveDescentParser {
         string found_op;
         for (int j = i; j < next_paren && found == next_paren; j++) {
           for (const auto &op : op_tokens) {
-            if (s.substr(j, op.size()) == op) {
+            if (s.compare(j, op.size(), op) == 0) {
               found = j;
               found_op = op;
               break;
@@ -4297,15 +4299,18 @@ int main() {
   unary_ops["-"] = [](double x) { return -x; };
 
   unordered_map<string, BinaryRule> binary_ops;
-  binary_ops["+"] = {[](double a, double b) { return a + b; }, 0};
-  binary_ops["-"] = {[](double a, double b) { return a - b; }, 0};
-  binary_ops["*"] = {[](double a, double b) { return a * b; }, 1};
-  binary_ops["/"] = {[](double a, double b) { return a / b; }, 1};
-  binary_ops["^"] = {[](double a, double b) { return std::pow(a, b); }, 2};
+  binary_ops["+"] = {[](double a, double b) { return a + b; }, 1};
+  binary_ops["-"] = {[](double a, double b) { return a - b; }, 1};
+  binary_ops["*"] = {[](double a, double b) { return a * b; }, 2};
+  binary_ops["/"] = {[](double a, double b) { return a / b; }, 2};
+  binary_ops["^"] = {[](double a, double b) { return std::pow(a, b); }, 3};
+  binary_ops["<"] = {[](double a, double b) { return a < b; }, 0};
+  binary_ops["<="] = {[](double a, double b) { return a <= b; }, 0};
 
   RecursiveDescentParser p(unary_ops, binary_ops);
   assert(EQ(p.eval("-+-((--(-+1)))"), -1));
   assert(EQ(p.eval("5*(3+3)-2-2"), 26));
+  assert(EQ(p.eval("1<=1"), 1));  // Prefer the longest operator token at a shared prefix.
   assert(EQ(p.eval("1+2*3*4+3*(+2)-100"), -69));
   assert(EQ(p.eval("3*3*3*3*3*3-2*2*2*2*2*2*2*2"), 473));
   assert(EQ(p.eval("3.14 + 3 * (7.7/9.8^32.9  )"), 3.14));
@@ -4329,11 +4334,11 @@ The shunting yard algorithm commonly converts infix expressions to postfix notat
 
 An arbitrary operand type is supported by changing the \inlinecode{Operand} alias and the static \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} helpers. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting \inlinecode{-1} as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify nonnegative numbers as operands alongside the unary operator \inlinecode{-}.
 
-Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either [\inlinecode{"+"}, \inlinecode{"+"}] or [\inlinecode{"++"}] depending on the lexicographical ordering of conflicting operators.
+Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. When multiple operators match at the same position, the longest one is chosen, so \inlinecode{\textless{}=} remains one token when \inlinecode{\textless{}} is also an operator.
 
 \begin{compactitem}
   \item \inlinecode{ShuntingYardParser(unary\_ops, binary\_ops)} initializes a parser with operators specified by hash tables \inlinecode{unary\_ops} (of operator to unary function object) and \inlinecode{binary\_ops} (of operator to pair of binary function object and operator precedence). Operator precedences should be numbered upwards starting at $0$ (lowest precedence, evaluated last).
-  \item \inlinecode{split(s)} returns a vector of tokens for the expression \inlinecode{s}, split on the given operators during construction. Each parenthesis, operator, and operand satisfying \inlinecode{is\_operand()} will be split into a separate token. The algorithm is naive, matching operators lazily in the case of overlapping operators as mentioned above. Under these circumstances, the parse may not always succeed.
+  \item \inlinecode{split(s)} returns a vector of tokens for the expression \inlinecode{s}, split on the given operators during construction. Each parenthesis, operator, and operand satisfying \inlinecode{is\_operand()} will be split into a separate token.
   \item \inlinecode{eval(lo, hi)} returns the evaluation of a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
   \item \inlinecode{eval(s)} returns the evaluation of expression \inlinecode{s}, after first calling \inlinecode{split(s)} to obtain the tokens.
 \end{compactitem}
@@ -4341,7 +4346,7 @@ Operators may be non-empty strings of any length, but should not contain any par
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(m)$ per call to the constructor, where $m$ is the total number of operators.
+  \item $O(m \cdot k \cdot \log m)$ per call to the constructor, where $m$ is the total number of operators and $k$ is their maximum length.
   \item $O(n \cdot m \cdot k)$ per call to \inlinecode{split(s)}, where $n$ is the length of \inlinecode{s}, $m$ is the total number of operators defined for the parser instance, and $k$ is the maximum length for any operator representation.
   \item $O(n)$ expected per call to \inlinecode{eval(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
   \item $O(n \cdot m \cdot k + n)$ expected per call to \inlinecode{eval(s)}, where $n$ is the length of \inlinecode{s}, and $m$ and $k$ are as defined previously.
@@ -4358,7 +4363,6 @@ Operators may be non-empty strings of any length, but should not contain any par
 #include <algorithm>
 #include <cctype>
 #include <functional>
-#include <set>
 #include <sstream>
 #include <stack>
 #include <stdexcept>
@@ -4383,7 +4387,7 @@ class ShuntingYardParser {
   using BinaryOpMap = std::unordered_map<string, BinaryRule>;
   UnaryOpMap unary_ops;
   BinaryOpMap binary_ops;
-  std::set<string> op_tokens;
+  std::vector<string> op_tokens;
 
   static Operand eval_operand(const string &s) {
     Operand res;
@@ -4417,11 +4421,15 @@ class ShuntingYardParser {
   ShuntingYardParser(const UnaryOpMap &unary_ops, const BinaryOpMap &binary_ops)
       : unary_ops(unary_ops), binary_ops(binary_ops) {
     for (const auto &[op, fn] : unary_ops) {
-      op_tokens.insert(op);
+      op_tokens.push_back(op);
     }
     for (const auto &[op, fn_prec] : binary_ops) {
-      op_tokens.insert(op);
+      op_tokens.push_back(op);
     }
+    std::sort(op_tokens.begin(), op_tokens.end(), [](const string &a, const string &b) {
+      return a.size() != b.size() ? a.size() > b.size() : a < b;
+    });
+    op_tokens.erase(std::unique(op_tokens.begin(), op_tokens.end()), op_tokens.end());
   }
 
   std::vector<string> split(const string &s) const {
@@ -4442,7 +4450,7 @@ class ShuntingYardParser {
         string found_op;
         for (int j = i; j < next_paren && found == next_paren; j++) {
           for (const auto &op : op_tokens) {
-            if (s.substr(j, op.size()) == op) {
+            if (s.compare(j, op.size(), op) == 0) {
               found = j;
               found_op = op;
               break;
@@ -4555,15 +4563,18 @@ int main() {
   unary_ops["-"] = [](double x) { return -x; };
 
   unordered_map<string, BinaryRule> binary_ops;
-  binary_ops["+"] = {[](double a, double b) { return a + b; }, 0};
-  binary_ops["-"] = {[](double a, double b) { return a - b; }, 0};
-  binary_ops["*"] = {[](double a, double b) { return a * b; }, 1};
-  binary_ops["/"] = {[](double a, double b) { return a / b; }, 1};
-  binary_ops["^"] = {[](double a, double b) { return std::pow(a, b); }, 2};
+  binary_ops["+"] = {[](double a, double b) { return a + b; }, 1};
+  binary_ops["-"] = {[](double a, double b) { return a - b; }, 1};
+  binary_ops["*"] = {[](double a, double b) { return a * b; }, 2};
+  binary_ops["/"] = {[](double a, double b) { return a / b; }, 2};
+  binary_ops["^"] = {[](double a, double b) { return std::pow(a, b); }, 3};
+  binary_ops["<"] = {[](double a, double b) { return a < b; }, 0};
+  binary_ops["<="] = {[](double a, double b) { return a <= b; }, 0};
 
   ShuntingYardParser p(unary_ops, binary_ops);
   assert(EQ(p.eval("-+-((--(-+1)))"), -1));
   assert(EQ(p.eval("5*(3+3)-2-2"), 26));
+  assert(EQ(p.eval("1<=1"), 1));  // Prefer the longest operator token at a shared prefix.
   assert(EQ(p.eval("1+2*3*4+3*(+2)-100"), -69));
   assert(EQ(p.eval("3*3*3*3*3*3-2*2*2*2*2*2*2*2"), 473));
   assert(EQ(p.eval("3.14 + 3 * (7.7/9.8^32.9  )"), 3.14));
@@ -4620,26 +4631,26 @@ using std::string;
 
 std::vector<int> byte_frequencies(const string &s) {
   std::vector<int> freq(256, 0);
-  for (int i = 0; i < static_cast<int>(s.size()); i++) {
-    freq[static_cast<unsigned char>(s[i])]++;
+  for (unsigned char c : s) {
+    freq[c]++;
   }
   return freq;
 }
 
 double entropy(const std::vector<int> &freq) {
   int64_t total = 0;
-  for (int i = 0; i < static_cast<int>(freq.size()); i++) {
-    total += freq[i];
+  for (int count : freq) {
+    total += count;
   }
   if (total == 0) {
     return 0;
   }
   double res = 0;
-  for (int i = 0; i < static_cast<int>(freq.size()); i++) {
-    if (freq[i] == 0) {
+  for (int count : freq) {
+    if (count == 0) {
       continue;
     }
-    double p = static_cast<double>(freq[i]) / total;
+    double p = static_cast<double>(count) / total;
     res -= p * std::log2(p);
   }
   return res;
@@ -4652,8 +4663,8 @@ double entropy(const string &s) {
 double expected_code_length(const std::vector<int> &freq, const std::vector<int> &length) {
   assert(freq.size() == length.size());
   int64_t total = 0;
-  for (int i = 0; i < static_cast<int>(freq.size()); i++) {
-    total += freq[i];
+  for (int count : freq) {
+    total += count;
   }
   if (total == 0) {
     return 0;
@@ -4716,9 +4727,9 @@ using std::string;
 
 std::vector<std::pair<char, int>> run_length_encode(const string &s) {
   std::vector<std::pair<char, int>> res;
-  for (int i = 0; i < static_cast<int>(s.size()); i++) {
-    if (res.empty() || res.back().first != s[i]) {
-      res.emplace_back(s[i], 1);
+  for (char c : s) {
+    if (res.empty() || res.back().first != c) {
+      res.emplace_back(c, 1);
     } else {
       res.back().second++;
     }
@@ -4728,8 +4739,8 @@ std::vector<std::pair<char, int>> run_length_encode(const string &s) {
 
 string run_length_decode(const std::vector<std::pair<char, int>> &runs) {
   string res;
-  for (int i = 0; i < static_cast<int>(runs.size()); i++) {
-    res.append(runs[i].second, runs[i].first);
+  for (auto [c, count] : runs) {
+    res.append(count, c);
   }
   return res;
 }
@@ -4777,8 +4788,8 @@ string base64_encode(const string &bytes) {
   string res;
   uint32_t val = 0;
   int bits = -6;
-  for (int i = 0; i < static_cast<int>(bytes.size()); i++) {
-    val = (val << 8) + static_cast<unsigned char>(bytes[i]);
+  for (unsigned char byte : bytes) {
+    val = (val << 8) + byte;
     bits += 8;
     while (bits >= 0) {
       res.push_back(BASE64_ALPHABET[(val >> bits) & 63]);
@@ -4802,11 +4813,11 @@ string base64_decode(const string &text) {
   string res;
   uint32_t val = 0;
   int bits = -8;
-  for (int i = 0; i < static_cast<int>(text.size()); i++) {
-    if (text[i] == '=') {
+  for (unsigned char c : text) {
+    if (c == '=') {
       break;
     }
-    int x = table[static_cast<unsigned char>(text[i])];
+    int x = table[c];
     if (x < 0) {
       break;
     }
@@ -4896,8 +4907,8 @@ class HuffmanTree {
  public:
   explicit HuffmanTree(const string &text) : root(-1), code(256) {
     std::vector<int> freq(256, 0);
-    for (int i = 0; i < static_cast<int>(text.size()); i++) {
-      freq[static_cast<unsigned char>(text[i])]++;
+    for (unsigned char c : text) {
+      freq[c]++;
     }
     std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<>> pq;
     for (int c = 0; c < 256; c++) {
@@ -4925,8 +4936,8 @@ class HuffmanTree {
 
   string encode(const string &text) const {
     string bits;
-    for (int i = 0; i < static_cast<int>(text.size()); i++) {
-      bits += code[static_cast<unsigned char>(text[i])];
+    for (unsigned char c : text) {
+      bits += code[c];
     }
     return bits;
   }
@@ -4942,8 +4953,8 @@ class HuffmanTree {
       return string(bits.size(), static_cast<char>(nodes[root].ch));
     }
     int u = root;
-    for (int i = 0; i < static_cast<int>(bits.size()); i++) {
-      u = bits[i] == '0' ? nodes[u].left : nodes[u].right;
+    for (char bit : bits) {
+      u = bit == '0' ? nodes[u].left : nodes[u].right;
       if (nodes[u].left == -1 && nodes[u].right == -1) {
         text.push_back(static_cast<char>(nodes[u].ch));
         u = root;

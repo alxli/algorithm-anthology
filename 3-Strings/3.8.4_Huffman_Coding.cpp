@@ -61,8 +61,8 @@ class HuffmanTree {
  public:
   explicit HuffmanTree(const string &text) : root(-1), code(256) {
     std::vector<int> freq(256, 0);
-    for (int i = 0; i < static_cast<int>(text.size()); i++) {
-      freq[static_cast<unsigned char>(text[i])]++;
+    for (unsigned char c : text) {
+      freq[c]++;
     }
     std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<>> pq;
     for (int c = 0; c < 256; c++) {
@@ -90,8 +90,8 @@ class HuffmanTree {
 
   string encode(const string &text) const {
     string bits;
-    for (int i = 0; i < static_cast<int>(text.size()); i++) {
-      bits += code[static_cast<unsigned char>(text[i])];
+    for (unsigned char c : text) {
+      bits += code[c];
     }
     return bits;
   }
@@ -107,8 +107,8 @@ class HuffmanTree {
       return string(bits.size(), static_cast<char>(nodes[root].ch));
     }
     int u = root;
-    for (int i = 0; i < static_cast<int>(bits.size()); i++) {
-      u = bits[i] == '0' ? nodes[u].left : nodes[u].right;
+    for (char bit : bits) {
+      u = bit == '0' ? nodes[u].left : nodes[u].right;
       if (nodes[u].left == -1 && nodes[u].right == -1) {
         text.push_back(static_cast<char>(nodes[u].ch));
         u = root;

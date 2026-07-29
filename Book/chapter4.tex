@@ -1332,7 +1332,7 @@ std::vector<int> eulerian_path_directed(const std::vector<std::vector<int>> &adj
       return {};
     }
   }
-  if (!((sources == 0 && sinks == 0) || (sources == 1 && sinks == 1))) {
+  if (sources != sinks || sources > 1) {
     return {};
   }
   if (start == -1) {
@@ -3967,7 +3967,7 @@ int64_t prim_mst() {
   int n = static_cast<int>(adj.size());
   mst.clear();
   std::vector<char> visit(n);
-  int64_t total_dist = 0;
+  int64_t total_weight = 0;
   for (int i = 0; i < n; i++) {
     if (visit[i]) {
       continue;
@@ -3986,13 +3986,13 @@ int64_t prim_mst() {
       }
       visit[v] = true;
       mst.emplace_back(u, v, w);
-      total_dist += w;
+      total_weight += w;
       for (auto [to, ew] : adj[v]) {
         pq.emplace(ew, v, to);
       }
     }
   }
-  return total_dist;
+  return total_weight;
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -4072,10 +4072,10 @@ int64_t kruskal_mst(int n) {
   std::sort(order.begin(), order.end(), [](int a, int b) {
     return std::get<0>(edges[a]) < std::get<0>(edges[b]);
   });
-  int64_t total_dist = 0;
   dsu_root.assign(n, 0);
   dsu_size.assign(n, 1);
   std::iota(dsu_root.begin(), dsu_root.end(), 0);
+  int64_t total_weight = 0;
   for (int id : order) {
     auto [w, u, v] = edges[id];
     u = find(u);
@@ -4087,10 +4087,10 @@ int64_t kruskal_mst(int n) {
       dsu_root[v] = u;
       dsu_size[u] += dsu_size[v];
       mst.push_back(id);
-      total_dist += w;
+      total_weight += w;
     }
   }
-  return total_dist;
+  return total_weight;
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}

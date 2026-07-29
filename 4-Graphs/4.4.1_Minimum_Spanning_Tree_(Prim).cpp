@@ -42,7 +42,7 @@ int64_t prim_mst() {
   int n = static_cast<int>(adj.size());
   mst.clear();
   std::vector<char> visit(n);
-  int64_t total_dist = 0;
+  int64_t total_weight = 0;
   for (int i = 0; i < n; i++) {
     if (visit[i]) {
       continue;
@@ -61,13 +61,13 @@ int64_t prim_mst() {
       }
       visit[v] = true;
       mst.emplace_back(u, v, w);
-      total_dist += w;
+      total_weight += w;
       for (auto [to, ew] : adj[v]) {
         pq.emplace(ew, v, to);
       }
     }
   }
-  return total_dist;
+  return total_weight;
 }
 
 /*** Example Usage ***/
