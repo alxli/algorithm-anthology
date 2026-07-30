@@ -13,13 +13,16 @@ processed the matrix holds the all-pairs shortest distances.
   shortest-path distance from $u$ to $v$, updates `next_node` for path reconstruction, and returns
   whether the graph contains no negative-weight cycle.
 - `get_path(start, dest)` returns the shortest path from `start` to `dest`, or an empty vector if
-  `dest` is unreachable from `start`, after the latest successful call to `floyd_warshall()`.
+  `dest` is unreachable from `start`, provided the most recent call to `floyd_warshall()` returned
+  true.
 
 For path reconstruction, `next_node[i][j]` stores the next node to visit after `i` on a current
 shortest path from `i` to `j`. It is initialized to `j` for every pair and, when a shorter route `i`
 $\to$ `k` $\to$ `j` is found, becomes `next_node[i][k]`. Repeatedly setting `i` to `next_node[i][j]`
 therefore walks the path from source to destination. This value is meaningful only when
 `dist[i][j] != INF`.
+
+Overflow warning: All finite path distances and intermediate sums must fit in `int64_t`.
 
 Time Complexity:
 - O(n^2) per call to `init_floyd()`, where $n$ is the number of nodes.

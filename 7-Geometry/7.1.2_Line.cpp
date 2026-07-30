@@ -187,8 +187,10 @@ struct TLine {
     auto clean = [](T v) -> double {
       return fabs(static_cast<double>(v)) < EPS ? 0 : static_cast<double>(v);
     };
-    return out << clean(l.a) << "x" << std::showpos << clean(l.b) << "y" << clean(l.c) << "=0"
-               << std::noshowpos;
+    auto flags = out.flags();
+    out << clean(l.a) << "x" << std::showpos << clean(l.b) << "y" << clean(l.c) << "=0";
+    out.flags(flags);
+    return out;
   }
 };
 

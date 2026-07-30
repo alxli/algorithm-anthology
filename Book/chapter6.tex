@@ -1781,19 +1781,21 @@ Common number theory operations relating to modular arithmetic.
   \item \inlinecode{gcd(a, b)} returns the greatest common divisor of \inlinecode{a} and \inlinecode{b} using the Euclidean algorithm. This is mainly for educational purposes, as \inlinecode{std::gcd(a, b)} from \inlinecode{\textless{}numeric\textgreater{}} is available as of C++17 (\inlinecode{\_\_gcd(a, b)} from \inlinecode{\textless{}algorithm\textgreater{}} in C++14 and earlier).
   \item \inlinecode{lcm(a, b)} returns the least common multiple of \inlinecode{a} and \inlinecode{b}. This implementation is mainly for educational purposes, as \inlinecode{std::lcm(a, b)} from \inlinecode{\textless{}numeric\textgreater{}} is available as of C++17.
   \item \inlinecode{extended\_euclid(a, b)} returns a pair $(x, y)$ of integers such that $\gcd(a, b) = ax + by$.
-  \item \inlinecode{diophantine(a, b, c, \&x, \&y, \&g)} solves the linear Diophantine equation $ax + by = c$, returning whether a solution exists (one does if and only if $\gcd(a, b)$ divides $c$), and on success sets \inlinecode{g} to $\gcd(a, b)$ and (\inlinecode{x}, \inlinecode{y}) to a particular solution bounded by $\max(|a|, |b|, |c|)$ in magnitude. A 128-bit intermediate is used where available to keep the scaling step overflow-free.
-  \item \inlinecode{mod(a, m)} returns the value of \inlinecode{a} mod \inlinecode{m} under the true Euclidean definition of modulo, that is, the smallest nonnegative integer $r$ satisfying $a + mn = r$ for some integer $n$. Note that this is identical to the remainder operator \inlinecode{\%} in C++ for nonnegative operands \inlinecode{a} and \inlinecode{m}, but the result will differ when an operand is negative.
+  \item \inlinecode{diophantine(a, b, c, \&g, \&x, \&y)} solves the linear Diophantine equation $ax + by = c$, returning whether a solution exists (one does if and only if $\gcd(a, b)$ divides $c$). \inlinecode{g} is always set to $\gcd(a, b)$, while (\inlinecode{x}, \inlinecode{y}) is set only on success to a particular solution bounded by $\max(|a|, |b|, |c|)$ in magnitude. Every other solution is $({\inlinecodemath{x}} + t({\inlinecodemath{b}}/{\inlinecodemath{g}}), {\inlinecodemath{y}} - t({\inlinecodemath{a}}/{\inlinecodemath{g}}))$ for an integer $t$. A 128-bit intermediate is used where available to keep the scaling step overflow-free.
+  \item \inlinecode{mod(a, m)} returns the least nonnegative residue of \inlinecode{a} modulo \inlinecode{m}, that is, the unique value in $[0, {\inlinecodemath{m}})$ congruent to \inlinecode{a}, where \inlinecode{m} must be positive. Unlike the C++ remainder operator \inlinecode{\%}, whose result follows the sign of \inlinecode{a}, the result is never negative.
   \item \inlinecode{mod\_inverse(a, m)} returns an integer $x$ such that $ax \equiv 1 \pmod m$, where the arguments must satisfy $m > 0$ and $\gcd(a, m) = 1$.
   \item \inlinecode{mod\_inverse\_table(p)} returns a vector \inlinecode{v} of integers where for each index $i$ in the vector, $i \cdot {\inlinecodemath{v[i]}} \equiv 1 \pmod p$, where the argument $p$ is prime.
-  \item \inlinecode{crt(r1, m1, r2, m2, r, m)} merges the two congruences $x \equiv r_1 \pmod{m_1}$ and $x \equiv r_2 \pmod{m_2}$ for arbitrary moduli (not necessarily coprime). It returns whether the system is consistent, and on success sets \inlinecode{m} to \inlinecode{lcm(m\_1, m\_2)} and \inlinecode{r} to the unique solution in $[0, {\inlinecodemath{m}})$. Both moduli must be positive, and their least common multiple must fit in \inlinecode{int64\_t}. Fold it pairwise to merge more than two congruences.
+  \item \inlinecode{crt(r1, m1, r2, m2, \&r, \&m)} merges the two congruences $x \equiv r_1 \pmod{m_1}$ and $x \equiv r_2 \pmod{m_2}$ for arbitrary moduli (not necessarily coprime). It returns whether the system is consistent, and on success sets \inlinecode{m} to \inlinecode{lcm(m\_1, m\_2)} and \inlinecode{r} to the unique solution in $[0, {\inlinecodemath{m}})$. Both moduli must be positive, and their least common multiple must fit in \inlinecode{int64\_t}. Fold it pairwise to merge more than two congruences.
   \item \inlinecode{garner\_restore(a, p)} returns the smallest nonnegative solution $x$ for the system of simultaneous congruences $x \equiv {\inlinecodemath{a[i]}} \pmod{{\inlinecodemath{p[i]}}}$ for all indices \inlinecode{i} in $[0, n)$, where $n$ is \inlinecode{a.size()} and \inlinecode{p} consists of pairwise coprime integers (unlike \inlinecode{crt}, which allows shared factors). The exact solution is unique modulo the product of all moduli, so that product and the final answer must fit in \inlinecode{int64\_t}.
   \item \inlinecode{garner\_restore\_mod(a, p, m)} returns that same CRT solution modulo \inlinecode{m}. This is the right variant when the product of the moduli is too large to fit in \inlinecode{int64\_t}.
 \end{compactitem}
 
+Every intermediate and result of the templated signed-integer helpers must be representable by \inlinecode{Int}; in particular, the minimum value of \inlinecode{Int} cannot be negated or divided by $-1$.
+
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(\log\left(a + b\right))$ per call to \inlinecode{gcd(a, b)}, \inlinecode{lcm(a, b)}, \inlinecode{extended\_euclid(a, b)}, \inlinecode{diophantine(a, b, c, ...)}, \inlinecode{mod\_inverse(a, m)}, and \inlinecode{crt(...)}.
+  \item $O(\log M)$ per call to \inlinecode{gcd()}, \inlinecode{lcm()}, \inlinecode{extended\_euclid()}, \inlinecode{diophantine()}, \inlinecode{mod\_inverse()}, and \inlinecode{crt()}, where $M$ is the largest relevant input magnitude.
   \item $O(1)$ per call to \inlinecode{mod()}.
   \item $O(p)$ per call to \inlinecode{mod\_inverse\_table()}.
   \item $O(n^{2})$ per call to \inlinecode{garner\_restore()} and \inlinecode{garner\_restore\_mod()}.
@@ -1808,6 +1810,7 @@ Common number theory operations relating to modular arithmetic.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <cstdint>
 #include <type_traits>
 #include <utility>
@@ -1848,31 +1851,31 @@ std::pair<Int, Int> extended_euclid(Int a, Int b) {
 }
 
 template<typename Int>
-bool diophantine(Int a, Int b, Int c, Int &x, Int &y, Int &g) {
+bool diophantine(Int a, Int b, Int c, Int *g, Int *x, Int *y) {
   if (a == 0 && b == 0) {
-    x = y = g = 0;
+    *g = *x = *y = 0;
     return c == 0;
   }
   if (a == 0) {
-    g = (b < 0) ? -b : b;
+    *g = (b < 0) ? -b : b;
     if (c % b != 0) {
       return false;
     }
-    x = 0;
-    y = c / b;
+    *x = 0;
+    *y = c / b;
     return true;
   }
   if (b == 0) {
-    g = (a < 0) ? -a : a;
+    *g = (a < 0) ? -a : a;
     if (c % a != 0) {
       return false;
     }
-    x = c / a;
-    y = 0;
+    *x = c / a;
+    *y = 0;
     return true;
   }
-  g = gcd(a, b);
-  if (c % g != 0) {
+  *g = gcd(a, b);
+  if (c % *g != 0) {
     return false;
   }
   // Absorb the bulk of c into a*dx + b*dy, then scale the base solution by the small remainder so
@@ -1883,21 +1886,22 @@ bool diophantine(Int a, Int b, Int c, Int &x, Int &y, Int &g) {
   c -= dx * a;
   Int dy = c / b;
   c -= dy * b;
-  Int f = c / g;
+  Int f = c / *g;
 #if defined(__SIZEOF_INT128__)
   __extension__ typedef std::conditional_t<sizeof(Int) <= 4, int64_t, __int128> wide_t;
 #else
   using wide_t = int64_t;
 #endif
-  x = dx + static_cast<Int>(static_cast<wide_t>(base.first) * f % b);
-  y = dy + static_cast<Int>(static_cast<wide_t>(base.second) * f % a);
+  *x = dx + static_cast<Int>(static_cast<wide_t>(base.first) * f % b);
+  *y = dy + static_cast<Int>(static_cast<wide_t>(base.second) * f % a);
   return true;
 }
 
 template<typename Int>
 Int mod(Int a, Int m) {
+  assert(m > 0);
   Int r = a % m;
-  return (r >= 0) ? r : (r + m);
+  return (r < 0) ? (r + m) : r;
 }
 
 template<typename Int>
@@ -1914,21 +1918,21 @@ std::vector<int> mod_inverse_table(int p) {
   return res;
 }
 
-bool crt(int64_t r1, int64_t m1, int64_t r2, int64_t m2, int64_t &r, int64_t &m) {
+bool crt(int64_t r1, int64_t m1, int64_t r2, int64_t m2, int64_t *r, int64_t *m) {
   r1 = mod(r1, m1);
   r2 = mod(r2, m2);
-  int64_t x, y, g;
-  if (!diophantine(m1, -m2, r2 - r1, x, y, g)) {
+  int64_t g, x, y;
+  if (!diophantine(m1, -m2, r2 - r1, &g, &x, &y)) {
     return false;
   }
-  m = m1 / g * m2;
+  *m = m1 / g * m2;
 #if defined(__SIZEOF_INT128__)
   __extension__ typedef __int128 int128_t;
-  r = static_cast<int64_t>(
-      (static_cast<int128_t>(r1) + static_cast<int128_t>(m1) * mod(x, m2 / g)) % m
+  *r = static_cast<int64_t>(
+      (static_cast<int128_t>(r1) + static_cast<int128_t>(m1) * mod(x, m2 / g)) % *m
   );
 #else
-  r = mod(r1 + m1 * mod(x, m2 / g), m);  // Overflow warning without int128.
+  *r = mod(r1 + m1 * mod(x, m2 / g), *m);  // Overflow warning without int128.
 #endif
   return true;
 }
@@ -1985,6 +1989,9 @@ int64_t garner_restore_mod(const std::vector<int> &a, const std::vector<int> &p,
 using namespace std;
 
 int main() {
+  assert(mod(-5, 3) == 1);  // Negative dividends wrap up into [0, m).
+  assert(mod(5, 3) == 2);
+  assert(mod(-6, 3) == 0);
   {
     for (int a = -20; a <= 20; a++) {
       for (int b = -20; b <= 20; b++) {
@@ -2034,9 +2041,10 @@ int main() {
     for (int a = -8; a <= 8; a++) {
       for (int b = -8; b <= 8; b++) {
         for (int c = -8; c <= 8; c++) {
-          int x, y, g, gg = gcd(a, b);
-          bool ok = diophantine(a, b, c, x, y, g);
+          int g, x, y, gg = gcd(a, b);
+          bool ok = diophantine(a, b, c, &g, &x, &y);
           assert(ok == (gg == 0 ? c == 0 : c % gg == 0));
+          assert(g == gg);  // g is set even when no solution exists.
           if (ok) {
             assert(a * x + b * y == c);
           }
@@ -2050,7 +2058,7 @@ int main() {
         for (int r1 = 0; r1 < m1; r1++) {
           for (int r2 = 0; r2 < m2; r2++) {
             int64_t r, m;
-            bool ok = crt(r1, m1, r2, m2, r, m);
+            bool ok = crt(r1, m1, r2, m2, &r, &m);
             int limit = lcm(m1, m2), want = -1;
             for (int v = 0; v < limit && want < 0; v++) {
               if (v % m1 == r1 && v % m2 == r2) {
@@ -2764,7 +2772,7 @@ The linear sieve finds the least prime factor of each integer. When processing \
 \begin{compactitem}
   \item \inlinecode{sieve(n)} returns a vector of all the primes less than or equal to \inlinecode{n}.
   \item \inlinecode{sieve(lo, hi)} returns a vector of all the primes in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
-  \item \inlinecode{linear\_sieve(n, least\_out = nullptr)} returns a vector of all primes less than or equal to \inlinecode{n} in linear time. If \inlinecode{least\_out} is not null, it is filled so that \inlinecode{(*least\_out)[x]} is the least prime factor of \inlinecode{x} for every \inlinecode{x} $\geq 2$.
+  \item \inlinecode{linear\_sieve(n, \&least\_out)} returns a vector of all primes less than or equal to \inlinecode{n} in linear time. If \inlinecode{least\_out} is not null, it is filled so that \inlinecode{(*least\_out)[x]} is the least prime factor of \inlinecode{x} for every \inlinecode{x} $\geq 2$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -3552,9 +3560,9 @@ The Mobius function $\mu(n)$ is the multiplicative function defined as $1$ if $n
 Inclusion-exclusion itself counts the size of a union by alternately adding and subtracting the sizes of intersections. A canonical number-theoretic instance is counting integers in $[1, n]$ that are coprime to a modulus $m$: subtract the multiples of each prime factor of $m$, add back those counted twice, and so on. The signed terms are precisely the values of $\mu$ over the squarefree divisors of $m$, so \inlinecode{count\_coprime(n, m)} equals $\sum_{d \mid m} \mu(d) \lfloor n / d \rfloor$.
 
 \begin{compactitem}
-  \item \inlinecode{mobius(n)} returns $\mu(n)$ for a single \inlinecode{n} by trial division.
-  \item \inlinecode{mobius\_sieve(n)} returns a vector of length $n + 1$ where index $i$ holds $\mu(i)$, computed together with a linear sieve.
-  \item \inlinecode{count\_coprime(n, m)} returns the number of integers in $[1, {\inlinecodemath{n}}]$ that are coprime to $m$, via inclusion-exclusion over the distinct prime factors of \inlinecode{m}.
+  \item \inlinecode{mobius(n)} returns $\mu(n)$ for a single positive \inlinecode{n} by trial division.
+  \item \inlinecode{mobius\_sieve(n)} returns a vector of length $n + 1$ where index $i$ holds $\mu(i)$, computed together with a linear sieve, where \inlinecode{n} must be nonnegative.
+  \item \inlinecode{count\_coprime(n, m)} returns the number of integers in $[1, {\inlinecodemath{n}}]$ that are coprime to $m$, via inclusion-exclusion over the distinct prime factors of \inlinecode{m}, where \inlinecode{n} must be nonnegative and \inlinecode{m} must be positive.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -4192,9 +4200,11 @@ class BigInt {
       out << '-';
     }
     out << (v.digits.empty() ? 0 : v.digits.back());
+    char old_fill = out.fill('0');
     for (int i = static_cast<int>(v.digits.size()) - 2; i >= 0; i--) {
-      out << std::setw(BASE_DIGITS) << std::setfill('0') << v.digits[i];
+      out << std::setw(BASE_DIGITS) << v.digits[i];
     }
+    out.fill(old_fill);
     return out;
   }
 
@@ -4854,12 +4864,17 @@ int columns(const Matrix<T> &a) {
 
 template<typename T>
 std::ostream &operator<<(std::ostream &out, const Matrix<T> &a) {
+  auto flags = out.flags();
+  auto precision = out.precision();
+  out << std::fixed << std::setprecision(5);
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
-      out << std::setw(10) << std::fixed << std::setprecision(5) << a[i][j];
+      out << std::setw(10) << a[i][j];
     }
     out << std::endl;
   }
+  out.flags(flags);
+  out.precision(precision);
   return out;
 }
 
@@ -5190,7 +5205,7 @@ Converts a matrix to reduced row echelon form using Gaussian elimination to solv
 \begin{compactitem}
   \item \inlinecode{row\_reduce(a)} assigns the matrix \inlinecode{a} to its reduced row echelon form, returning a reference to the modified argument itself.
   \item \inlinecode{matrix\_rank(a)} returns the rank of matrix \inlinecode{a}, i.e. the number of nonzero rows after row reduction.
-  \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning $0$ if there is one solution, $-1$ if there are zero solutions, or $-2$ if there are infinite solutions. If there is exactly one solution, then the output pointer \inlinecode{x} is populated with the solution vector of length $n$.
+  \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning $0$ if there is one solution, $-1$ if there are zero solutions, or $-2$ if there are infinite solutions. If there is exactly one solution, then the output vector \inlinecode{x} is populated with the solution of length $n$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -5555,10 +5570,10 @@ int main() {
 The LU decomposition of a matrix $a$ with row-partial pivoting is a factorization of $a$ (after some rows are possibly permuted by a permutation matrix $p$) as a product of a lower triangular matrix $l$ and an upper triangular matrix $u$. This factorization can be used to tackle many common problems in linear algebra such as solving systems of linear equations and computing determinants. An improvement on basic row reduction, LU decomposition by row-partial pivoting keeps the relative magnitude of matrix values small, thus reducing the relative error due to rounding in computed solutions.
 
 \begin{compactitem}
-  \item \inlinecode{lu\_decompose(a, \&perm, eps = 1e-10)} assigns the $m$ by $n$ matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}, returning either $0$ or $1$ denoting the ``sign'' of the permutation parity ($0$ if the number of overall row swaps performed is even, or $1$ if it is odd), or $-1$ denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix \inlinecode{lu} has \inlinecode{lu[i][j]} = \inlinecode{l[i][j]} for \inlinecode{i} \textgreater{} \inlinecode{j} and \inlinecode{lu[i][j]} = \inlinecode{u[i][j]} for \inlinecode{i} $\leq$ \inlinecode{j}. Note that the algorithm always yields a unit lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to $1$, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optionally, a \inlinecode{vector\textless{}int\textgreater{}} pointer \inlinecode{perm} may be passed to return the permutation vector \inlinecode{perm} where \inlinecode{perm[i]} stores the only column that is equal to $1$ in row $i$ of the permutation matrix $p$ (all other columns in row $i$ of $p$ are implicitly $0$). The permutation matrix $p$ corresponding to \inlinecode{perm} satisfies $pa = lu$.
-  \item \inlinecode{solve\_system(a, b, \&x, eps = 1e-10)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning $0$ if there is one solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then the output pointer \inlinecode{x} is populated with the solution vector of length $n$.
+  \item \inlinecode{lu\_decompose(a, \&perm, eps = 1e-10)} assigns the $m$ by $n$ matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}, returning either $0$ or $1$ denoting the ``sign'' of the permutation parity ($0$ if the number of overall row swaps performed is even, or $1$ if it is odd), or $-1$ denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix \inlinecode{lu} has \inlinecode{lu[i][j]} = \inlinecode{l[i][j]} for \inlinecode{i} \textgreater{} \inlinecode{j} and \inlinecode{lu[i][j]} = \inlinecode{u[i][j]} for \inlinecode{i} $\leq$ \inlinecode{j}. Note that the algorithm always yields a unit lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to $1$, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optionally, a \inlinecode{vector\textless{}int\textgreater{}} pointer \inlinecode{perm} may be passed to return the permutation vector \inlinecode{perm} where \inlinecode{perm[i]} stores the only column that is equal to $1$ in row $i$ of the permutation matrix $p$ (all other columns in row $i$ of $p$ are implicitly $0$). Left-multiplying \inlinecode{a} by this permutation matrix gives the product of the separate lower and upper triangular matrices, not the merged storage matrix \inlinecode{lu} itself.
+  \item \inlinecode{solve\_system(a, b, \&x, eps = 1e-10)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning $0$ if there is one solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then the output vector \inlinecode{x} is populated with the solution of length $n$; otherwise, \inlinecode{x} is unchanged.
   \item \inlinecode{det(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a} using LU decomposition.
-  \item \inlinecode{invert(a)} assigns the $n$ by $n$ matrix \inlinecode{a} to its inverse (if it exists), returning $0$ if the inversion was successful or $-1$ if \inlinecode{a} has no inverse.
+  \item \inlinecode{invert(a)} assigns the $n$ by $n$ matrix \inlinecode{a} to its inverse (if it exists), returning $0$ if the inversion was successful or $-1$ if \inlinecode{a} has no inverse, in which case \inlinecode{a} is unchanged.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -5638,29 +5653,29 @@ int solve_system(
   if (x == nullptr || a.empty() || a.size() != b.size() || rows < cols) {
     return -1;
   }
-  x->resize(cols);
   std::vector<int> perm;
   Matrix lu;
   int status = lu_decompose(lu = a, &perm, eps);
   if (status < 0) {
     return status;
   }
+  std::vector<T> solution(cols);
   for (int i = 0; i < cols; i++) {
-    (*x)[i] = b[perm[i]];
+    solution[i] = b[perm[i]];
     for (int k = 0; k < i; k++) {
-      (*x)[i] -= getl(lu, i, k) * (*x)[k];
+      solution[i] -= getl(lu, i, k) * solution[k];
     }
   }
   for (int i = cols - 1; i >= 0; i--) {
     for (int k = i + 1; k < cols; k++) {
-      (*x)[i] -= getu(lu, i, k) * (*x)[k];
+      solution[i] -= getu(lu, i, k) * solution[k];
     }
-    (*x)[i] /= getu(lu, i, i);
+    solution[i] /= getu(lu, i, i);
   }
   for (int i = 0; i < rows; i++) {
     double val = 0;
     for (int j = 0; j < cols; j++) {
-      val += a[i][j] * (*x)[j];
+      val += a[i][j] * solution[j];
     }
     // Mixed absolute/relative tolerance: dividing by b[i] alone would skip the check for negative
     // b[i] (ratio goes negative) and divide by zero when b[i] == 0.
@@ -5668,6 +5683,7 @@ int solve_system(
       return -1;
     }
   }
+  x->swap(solution);
   return 0;
 }
 
@@ -5690,7 +5706,8 @@ template<typename T>
 int invert(T &a) {
   int n = static_cast<int>(a.size());
   std::vector<int> perm;
-  int status = lu_decompose(a, &perm);
+  T lu = a;
+  int status = lu_decompose(lu, &perm);
   if (status < 0) {
     return status;
   }
@@ -5703,14 +5720,14 @@ int invert(T &a) {
         ia[i][j] = 0.0;
       }
       for (int k = 0; k < i; k++) {
-        ia[i][j] -= getl(a, i, k) * ia[k][j];
+        ia[i][j] -= getl(lu, i, k) * ia[k][j];
       }
     }
     for (int i = n - 1; i >= 0; i--) {
       for (int k = i + 1; k < n; k++) {
-        ia[i][j] -= getu(a, i, k) * ia[k][j];
+        ia[i][j] -= getu(lu, i, k) * ia[k][j];
       }
-      ia[i][j] /= getu(a, i, i);
+      ia[i][j] /= getu(lu, i, i);
     }
   }
   a.swap(ia);
@@ -5763,6 +5780,16 @@ int main() {
         assert(EQ(res[i][j], i == j ? 1 : 0));
       }
     }
+  }
+  {  // Failed operations leave their output arguments unchanged.
+    vector<vector<double>> singular{{1, 2}, {2, 4}};
+    vector<vector<double>> original = singular;
+    assert(invert(singular) == -1 && singular == original);
+
+    vector<vector<double>> inconsistent{{1}, {1}};
+    vector<double> b{1, 2}, x{99, 100};
+    assert(solve_system(inconsistent, b, &x) == -1);
+    assert((x == vector<double>{99, 100}));
   }
   return 0;
 }

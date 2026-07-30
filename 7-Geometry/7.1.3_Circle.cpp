@@ -142,9 +142,12 @@ struct Circle {
   }
 
   friend std::ostream &operator<<(std::ostream &out, const Circle &c) {
-    return out << std::showpos << "(x" << -(fabs(c.h) < EPS ? 0 : c.h) << ")^2+"
-               << "(y" << -(fabs(c.k) < EPS ? 0 : c.k) << ")^2" << std::noshowpos << "="
-               << (fabs(c.r) < EPS ? 0 : c.r * c.r);
+    auto flags = out.flags();
+    out << std::showpos << "(x" << -(fabs(c.h) < EPS ? 0 : c.h) << ")^2+"
+        << "(y" << -(fabs(c.k) < EPS ? 0 : c.k) << ")^2" << std::noshowpos << "="
+        << (fabs(c.r) < EPS ? 0 : c.r * c.r);
+    out.flags(flags);
+    return out;
   }
 };
 

@@ -3,7 +3,8 @@
 Given an optimization problem with a constraint on the number of chosen objects, Lagrangian
 relaxation moves that count into the objective by charging a penalty per object. If the relaxed
 problem can be solved quickly and the number chosen is monotone as the penalty changes, binary
-search recovers the best value for the desired count.
+search recovers the best value for the desired count. This technique is often called the Aliens
+trick. Widen the penalty range when in doubt.
 
 For maximization, solve the relaxed problem as `score - penalty*count`, breaking ties toward larger
 `count`. As `penalty` increases, the optimal count never increases. The largest penalty whose
@@ -16,7 +17,7 @@ after adding back `penalty*target_count`.
   the half-open range $[`lo`, `hi`)$; `lo` must choose at least `target_count` objects, while `hi`
   must be greater than the last penalty that does so.
 
-This technique is often called the Aliens trick. Widen the penalty range when in doubt.
+Overflow warning: The difference `hi - lo` must fit in `int64_t`.
 
 Time Complexity:
 - O(log n) calls to `solve()` per call, where $n$ is the distance between `lo` and `hi`.

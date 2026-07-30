@@ -19,6 +19,8 @@ requested range, including roots of even multiplicity.
   interval $[`a`, `b`]$ for a polynomial `p` using the bisection method. The roots are found to a
   tolerance of `eps` in absolute or relative error (whichever is reached first).
 
+The coefficient vector must be nonempty and contain at least one nonzero coefficient.
+
 Time Complexity:
 - O(n) per call to `horner_eval()`, where $n$ is the degree of the polynomial.
 - O(nt) per call to `find_one_root()`, where $n$ is the degree of the polynomial and $t$ is the

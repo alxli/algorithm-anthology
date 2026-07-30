@@ -460,8 +460,10 @@ struct TLine {
     auto clean = [](T v) -> double {
       return fabs(static_cast<double>(v)) < EPS ? 0 : static_cast<double>(v);
     };
-    return out << clean(l.a) << "x" << std::showpos << clean(l.b) << "y" << clean(l.c) << "=0"
-               << std::noshowpos;
+    auto flags = out.flags();
+    out << clean(l.a) << "x" << std::showpos << clean(l.b) << "y" << clean(l.c) << "=0";
+    out.flags(flags);
+    return out;
   }
 };
 
@@ -661,9 +663,12 @@ struct Circle {
   }
 
   friend std::ostream &operator<<(std::ostream &out, const Circle &c) {
-    return out << std::showpos << "(x" << -(fabs(c.h) < EPS ? 0 : c.h) << ")^2+"
-               << "(y" << -(fabs(c.k) < EPS ? 0 : c.k) << ")^2" << std::noshowpos << "="
-               << (fabs(c.r) < EPS ? 0 : c.r * c.r);
+    auto flags = out.flags();
+    out << std::showpos << "(x" << -(fabs(c.h) < EPS ? 0 : c.h) << ")^2+"
+        << "(y" << -(fabs(c.k) < EPS ? 0 : c.k) << ")^2" << std::noshowpos << "="
+        << (fabs(c.r) < EPS ? 0 : c.r * c.r);
+    out.flags(flags);
+    return out;
   }
 };
 
@@ -1087,7 +1092,7 @@ double angle_between(const Pt &a, const Pt &b) {
   return (t < 0) ? (t + 2 * PI) : t;
 }
 
-double angle_between(const double &a1, const double &b1, const double &a2, const double &b2) {
+double angle_between(double a1, double b1, double a2, double b2) {
   double t = atan2(a1 * b2 - a2 * b1, a1 * a2 + b1 * b2);
   if (t < 0) {
     t += PI;
@@ -1331,7 +1336,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Line Intersection}
-Intersection calculations in two dimensions for straight lines and line segments. The functions are templated on the point type \inlinecode{Pt}: pass any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields (for example \inlinecode{PointD}/\inlinecode{PointI} from 7.1.1, or the local example struct) for which \inlinecode{operator\textless{}} orders points lexicographically using exact coordinate comparisons. Point outputs are written through a caller-supplied pointer whose type is deduced, so the output point type may differ from the input -- e.g. integer endpoints with a floating-point output point.
+Intersection calculations in two dimensions for straight lines and line segments. The functions are templated on the point type \inlinecode{Pt}: pass any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields (for example \inlinecode{PointD}/\inlinecode{PointI} from 7.1.1, or the local example struct) for which \inlinecode{operator\textless{}} orders points lexicographically using exact coordinate comparisons. Point output types are deduced from the caller-supplied arguments, so they may differ from the input type, e.g. integer endpoints with a floating-point output point.
 
 \begin{compactitem}
   \item \inlinecode{line\_intersection(a1, b1, c1, a2, b2, c2, \&p)} intersects lines $a_1 x + b_1 y + c_1 = 0$ and $a_2 x + b_2 y + c_2 = 0$, returning $-1$ (parallel), $0$ (one point, stored into \inlinecode{p}), or $1$ (identical).
@@ -1615,9 +1620,9 @@ Circle tangent and intersection calculations in two dimensions. Such calculation
 Circle radii are normalized to be nonnegative. \inlinecode{tangent()} requires a positive radius, and lines passed to \inlinecode{intersection()} must be valid.
 
 \begin{compactitem}
-  \item \inlinecode{tangent(c, p, l1 = nullptr, l2 = nullptr)} determines the line(s) tangent to circle \inlinecode{c} that pass through point \inlinecode{p}, returning $-1$ if there is no tangent line because \inlinecode{p} is strictly inside \inlinecode{c}, $0$ if there is exactly one tangent line because \inlinecode{p} is on the boundary of \inlinecode{c} (in which case the line will be stored into pointer \inlinecode{l1} if it's not \inlinecode{nullptr}), or $1$ if there are two tangent lines because \inlinecode{p} is strictly outside of \inlinecode{c} (in which case the lines will be stored into pointers \inlinecode{l1} and \inlinecode{l2} if they are not \inlinecode{nullptr}).
-  \item \inlinecode{intersection(c, l, p = nullptr, q = nullptr)} determines the intersection between the circle \inlinecode{c} and line \inlinecode{l}, returning $-1$ if there is no intersection, $0$ if the line has one intersection point because the line is tangent (in which case it will be stored into pointer \inlinecode{p} if it's not \inlinecode{nullptr}), or $1$ if there are two intersection points because the line crosses through the circle (stored independently into \inlinecode{p} and \inlinecode{q} when those pointers are non-null).
-  \item \inlinecode{intersection(c1, c2, p = nullptr, q = nullptr)} determines the intersection points between two circles \inlinecode{c1} and \inlinecode{c2}, returning $-2$ if circle \inlinecode{c2} completely encloses circle \inlinecode{c1}, $-1$ if circle \inlinecode{c1} completely encloses circle \inlinecode{c2}, $0$ if the circles are completely disjoint, $1$ if the circles are tangent with one intersection (stored in \inlinecode{p} if it's not \inlinecode{nullptr}), $2$ if the circles intersect at two points (stored independently in \inlinecode{p} and \inlinecode{q} when those pointers are non-null), or $3$ if the circles are equal and intersect at infinite points.
+  \item \inlinecode{tangent(c, p, \&l1, \&l2)} determines the line(s) tangent to circle \inlinecode{c} that pass through point \inlinecode{p}, returning $-1$ if there is no tangent line because \inlinecode{p} is strictly inside \inlinecode{c}, $0$ if there is exactly one tangent line because \inlinecode{p} is on the boundary of \inlinecode{c} (in which case the line will be stored into pointer \inlinecode{l1} if it's not \inlinecode{nullptr}), or $1$ if there are two tangent lines because \inlinecode{p} is strictly outside of \inlinecode{c} (in which case the lines will be stored into pointers \inlinecode{l1} and \inlinecode{l2} if they are not \inlinecode{nullptr}).
+  \item \inlinecode{intersection(c, l, \&p, \&q)} determines the intersection between the circle \inlinecode{c} and line \inlinecode{l}, returning $-1$ if there is no intersection, $0$ if the line has one intersection point because the line is tangent (in which case it will be stored into pointer \inlinecode{p} if it's not \inlinecode{nullptr}), or $1$ if there are two intersection points because the line crosses through the circle (stored independently into \inlinecode{p} and \inlinecode{q} when those pointers are non-null).
+  \item \inlinecode{intersection(c1, c2, \&p, \&q)} determines the intersection points between two circles \inlinecode{c1} and \inlinecode{c2}, returning $-2$ if circle \inlinecode{c2} completely encloses circle \inlinecode{c1}, $-1$ if circle \inlinecode{c1} completely encloses circle \inlinecode{c2}, $0$ if the circles are completely disjoint, $1$ if the circles are tangent with one intersection (stored in \inlinecode{p} if it's not \inlinecode{nullptr}), $2$ if the circles intersect at two points (stored independently in \inlinecode{p} and \inlinecode{q} when those pointers are non-null), or $3$ if the circles are equal and intersect at infinite points.
   \item \inlinecode{intersection\_area(c1, c2)} returns the intersection area of circles \inlinecode{c1} and \inlinecode{c2}.
 \end{compactitem}
 
@@ -2440,7 +2445,7 @@ bool point_in_convex_polygon(
   }
   int lo = 1, hi = n - 1;
   while (hi - lo > 1) {
-    int mid = (lo + hi) / 2;
+    int mid = lo + (hi - lo) / 2;
     if (cross(poly[mid], p, poly[0]) >= 0) {
       lo = mid;
     } else {
@@ -2717,7 +2722,7 @@ int main() {
 Given a list of points in two dimensions, finds the closest pair using a divide-and-conquer algorithm. The points are split in half by $x$-coordinate and each half is solved recursively; the combining step then only needs to examine points within the best distance so far of the dividing line, where each point in this strip is compared to a constant number of $y$-ordered neighbors.
 
 \begin{compactitem}
-  \item \inlinecode{closest\_pair(lo, hi, res = nullptr)} returns the minimum squared distance between any two points in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators. The input range is reordered during the computation. If \inlinecode{res} is non-null, one closest pair is stored there in lexicographic order. With fewer than two points, the maximum value of the squared-distance type is returned and \inlinecode{res} is unchanged. The function is templated on the point type and works with any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members and a lexicographic \inlinecode{operator\textless{}}.
+  \item \inlinecode{closest\_pair(lo, hi, \&res)} returns the minimum squared distance between any two points in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators. The input range is reordered during the computation. If \inlinecode{res} is non-null, one closest pair is stored there in lexicographic order. With fewer than two points, the maximum value of the squared-distance type is returned and \inlinecode{res} is unchanged. The function is templated on the point type and works with any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members and a lexicographic \inlinecode{operator\textless{}}.
 \end{compactitem}
 
 The returned distance preserves the coordinate arithmetic type. For integer-coordinate inputs, the result is therefore an exact squared distance provided intermediate products do not overflow. The returned pair contains the original point type.
@@ -2857,7 +2862,7 @@ Given a list of line segments in two dimensions, determine whether any pair of s
 This implementation counts endpoint contacts as intersections. See 7.2.3 for pairwise intersection predicates when that distinction matters.
 
 \begin{compactitem}
-  \item \inlinecode{find\_intersection(lo, hi, \&res1, \&res2)} returns whether any pair of segments intersect given a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of segments, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators. If an intersection is found, then one such pair of segments will be stored into pointers \inlinecode{res1} and \inlinecode{res2}.
+  \item \inlinecode{find\_intersection(lo, hi, \&res1, \&res2)} returns whether any pair of segments intersect given a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of segments, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators. If an intersection is found, then one such pair of segments is stored in \inlinecode{res1} and \inlinecode{res2}.
 \end{compactitem}
 
 Overflow warning: \inlinecode{seg\_intersection} forms the usual quadratic cross products, but the $y$-ordering cross-multiplication (\inlinecode{ay * bdx}) is cubic in the coordinate magnitude. With 32-bit \inlinecode{int} endpoints this overflows once coordinates reach the low thousands, so use a 64-bit (\inlinecode{int64\_t}) coordinate type for any non-trivial integer inputs.
@@ -2904,7 +2909,7 @@ bool intersects(const Segment<Pt> &s1, const Segment<Pt> &s2) {
   return seg_intersection(s1.p, s1.q, s2.p, s2.q);
 }
 
-// Seg is deduced from the output pointers (e.g. Segment<PointI>* or Segment<PointD>*).
+// Deduce Seg from the outputs so their point type may differ from the input point type.
 template<typename It, typename Seg>
 bool find_intersection(It lo, It hi, Seg *res1, Seg *res2) {
   using Pt = std::decay_t<decltype(lo->p)>;

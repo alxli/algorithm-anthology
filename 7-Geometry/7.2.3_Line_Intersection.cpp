@@ -3,9 +3,9 @@
 Intersection calculations in two dimensions for straight lines and line segments. The functions are
 templated on the point type `Pt`: pass any struct with numeric `.x` and `.y` fields (for example
 `PointD`/`PointI` from 7.1.1, or the local example struct) for which `operator<` orders points
-lexicographically using exact coordinate comparisons. Point outputs are written through a
-caller-supplied pointer whose type is deduced, so the output point type may differ from the input --
-e.g. integer endpoints with a floating-point output point.
+lexicographically using exact coordinate comparisons. Point output types are deduced from the
+caller-supplied arguments, so they may differ from the input type, e.g. integer endpoints with a
+floating-point output point.
 
 - `line_intersection(a1, b1, c1, a2, b2, c2, &p)` intersects lines $a_1 x + b_1 y + c_1 = 0$ and
   $a_2 x + b_2 y + c_2 = 0$, returning $-1$ (parallel), $0$ (one point, stored into `p`), or $1$

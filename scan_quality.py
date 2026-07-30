@@ -890,6 +890,22 @@ def scan_default_argument_docs(paths):
                 for param in split_parameters(match.group(2))
                 if top_level_default_expression(param)
             ]
+            optional_outputs = True
+            for param in defaulted_params:
+                param_name = re.search(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*=", param)
+                if (
+                    "*" not in param
+                    or top_level_default_expression(param) != "nullptr"
+                    or not param_name
+                    or not any(
+                        re.search(r"&\s*" + re.escape(param_name.group(1)) + r"\b", signature)
+                        for _, signature, _ in documented.get(match.group(1), [])
+                    )
+                ):
+                    optional_outputs = False
+                    break
+            if defaulted_params and optional_outputs:
+                continue
             if defaulted_params and all(
                 re.search(r"\b(?:comp|hasher)\s*=", param) for param in defaulted_params
             ):
@@ -917,11 +933,6 @@ def scan_default_argument_docs(paths):
 def scan_api_parameter_names(paths):
     issues = []
     bullet_call_re = re.compile(r"-\s+`([^`]+)`")
-    code_decl_re = re.compile(
-        r"^\s*(?:static\s+)?[A-Za-z_][\w:<>,\s*&~]*\s+"
-        r"([A-Za-z_][A-Za-z0-9_]*)\s*\(([^{};]*)\)"
-        r"\s*(?:const\s*)?(?:\{|;)"
-    )
 
     def parameter_names(params):
         names = []
@@ -939,15 +950,10 @@ def scan_api_parameter_names(paths):
         text = path.read_text()
         pre_example = text.split("/*** Example Usage", 1)[0]
         declarations = {}
-        for line in pre_example.splitlines():
-            if line.lstrip().startswith(("return ", "if ", "while ", "for ", "switch ")):
-                continue
-            match = code_decl_re.match(line)
-            if not match:
-                continue
-            names = parameter_names(match.group(2))
+        for name, params in function_declarations(pre_example):
+            names = parameter_names(params)
             if names is not None:
-                declarations.setdefault(match.group(1), []).append(names)
+                declarations.setdefault(name, []).append(names)
 
         for line_no, line in enumerate(pre_example.splitlines(), start=1):
             match = bullet_call_re.search(line)
@@ -978,6 +984,96 @@ def scan_api_parameter_names(paths):
                     )
                 )
     return issues
+
+
+def scan_api_output_argument_style(paths):
+    issues = []
+    bullet_call_re = re.compile(r"-\s+`([^`]+)`")
+
+    def argument_name(param):
+        default = top_level_default_expression(param)
+        if default:
+            param = param[: len(param) - len(default) - 1].rstrip()
+        match = re.fullmatch(r"\s*&?\s*([A-Za-z_][A-Za-z0-9_]*)\s*", param)
+        return match.group(1) if match else None
+
+    def parameter_name(param):
+        default = top_level_default_expression(param)
+        if default:
+            param = param[: len(param) - len(default) - 1].rstrip()
+        match = re.search(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*(?:\[[^]]*\])?$", param)
+        return match.group(1) if match else None
+
+    for path in paths:
+        text = path.read_text()
+        pre_example = text.split("/*** Example Usage", 1)[0]
+        declarations = {}
+        for name, params in function_declarations(pre_example):
+            declarations.setdefault(name, []).append(split_parameters(params))
+        for line_no, line in enumerate(pre_example.splitlines(), start=1):
+            bullet = bullet_call_re.search(line)
+            if not bullet:
+                continue
+            signature = bullet.group(1)
+            doc_params = split_parameters(call_parameters(signature))
+            addressed = [i for i, param in enumerate(doc_params) if param.lstrip().startswith("&")]
+            if not addressed:
+                continue
+            name_match = re.search(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*\(", signature)
+            if not name_match:
+                continue
+            name = name_match.group(1)
+            doc_names = [argument_name(param) for param in doc_params]
+            for code_params in declarations.get(name, []):
+                if len(code_params) != len(doc_params):
+                    continue
+                if [parameter_name(param) for param in code_params] != doc_names:
+                    continue
+                wrong_address = []
+                for i in addressed:
+                    param = code_params[i]
+                    param_name = parameter_name(param)
+                    prefix = param[: param.rfind(param_name)]
+                    if "*" not in prefix:
+                        wrong_address.append(param_name)
+                if wrong_address:
+                    joined = ", ".join(f"`{param}`" for param in wrong_address)
+                    issues.append(
+                        Issue(
+                            path,
+                            line_no,
+                            "api-address",
+                            f"Do not take the address of reference parameter(s) {joined} in the "
+                            "documented call.",
+                            line,
+                        )
+                    )
+                break
+    return issues
+
+
+def function_declarations(text):
+    header_re = re.compile(
+        r"^\s*(?:template<[^\n]+>\s*\n\s*)?"
+        r"(?:(?:static|inline|constexpr|virtual|friend|explicit)\s+)*"
+        r"(?:[A-Za-z_][\w:<>, *&~]*\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*\(",
+        flags=re.MULTILINE,
+    )
+    for header in header_re.finditer(text):
+        name = header.group(1)
+        if name in {"if", "while", "for", "switch", "return"}:
+            continue
+        open_paren = header.end() - 1
+        params = call_parameters(text[open_paren:])
+        close_paren = open_paren + len(params) + 1
+        tail = text[close_paren + 1 :]
+        definition = re.match(
+            r"\s*(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?"
+            r"(?:->[^;{]+)?([:{])",
+            tail,
+        )
+        if definition:
+            yield name, params
 
 
 def scan_documented_api_names(paths):
@@ -1337,6 +1433,7 @@ def main():
     issues.extend(scan_result_parameter_name_collisions(paths))
     issues.extend(scan_default_argument_docs(paths))
     issues.extend(scan_api_parameter_names(paths))
+    issues.extend(scan_api_output_argument_style(paths))
     issues.extend(scan_documented_api_names(paths))
     issues.extend(scan_repeated_literal_defaults(paths))
     issues.extend(scan_contextual_math_style(paths))

@@ -1,8 +1,8 @@
 /*
 
-Given an undirected graph, determine a maximum clique: a largest subset of nodes in which every pair
-is connected by an edge. A weighted variant instead seeks the clique of maximum total node weight,
-given a weight for each node.
+Given a simple undirected graph, determine a maximum clique: a largest subset of nodes in which
+every pair is connected by an edge. A weighted variant instead seeks the clique of maximum total
+node weight, given a weight for each node.
 
 The Bron-Kerbosch algorithm recursively extends a growing clique, tracking the set of candidate
 nodes that may still be added and the set of nodes already excluded. Choosing a pivot node to avoid

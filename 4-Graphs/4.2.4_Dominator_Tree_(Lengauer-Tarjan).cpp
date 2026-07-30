@@ -30,13 +30,13 @@ Space Complexity:
 
 class Dominators {
   std::vector<std::vector<int>> adj, pred, bucket;
-  std::vector<int> time, node_at_time, parent, sdom, idom_index, dsu, best;
+  std::vector<int> time, node_at_time, parent, sdom, idom_index, dsu_root, best;
   int timer;
 
   void dfs(int u) {
     time[u] = ++timer;
     node_at_time[timer] = u;
-    sdom[timer] = dsu[timer] = best[timer] = timer;
+    sdom[timer] = dsu_root[timer] = best[timer] = timer;
     for (int v : adj[u]) {
       if (time[v] == 0) {
         dfs(v);
@@ -48,17 +48,19 @@ class Dominators {
     }
   }
 
-  int find_best(int u, bool compress) {
-    if (dsu[u] != u) {
-      int v = find_best(dsu[u], true);
-      if (sdom[v] < sdom[best[u]]) {
-        best[u] = v;
-      }
-      if (compress) {
-        dsu[u] = dsu[dsu[u]];
-      }
+  int find_best(int u, int depth = 0) {
+    if (u == dsu_root[u]) {
+      return depth == 0 ? u : -1;
     }
-    return best[u];
+    int root = find_best(dsu_root[u], depth + 1);
+    if (root == -1) {
+      return u;
+    }
+    if (sdom[best[dsu_root[u]]] < sdom[best[u]]) {
+      best[u] = best[dsu_root[u]];
+    }
+    dsu_root[u] = root;
+    return depth == 0 ? best[u] : root;  // The outer call returns the label, recursion the root.
   }
 
  public:
@@ -74,24 +76,24 @@ class Dominators {
     parent.assign(n + 1, 0);
     sdom.assign(n + 1, 0);
     idom_index.assign(n + 1, 0);
-    dsu.assign(n + 1, 0);
+    dsu_root.assign(n + 1, 0);
     best.assign(n + 1, 0);
     pred.assign(n + 1, {});
     bucket.assign(n + 1, {});
     dfs(start);
     for (int i = timer; i >= 1; i--) {
       for (int v : pred[i]) {
-        sdom[i] = std::min(sdom[i], sdom[find_best(v, false)]);
+        sdom[i] = std::min(sdom[i], sdom[find_best(v)]);
       }
       if (i > 1) {
         bucket[sdom[i]].push_back(i);
       }
       for (int v : bucket[i]) {
-        int u = find_best(v, false);
+        int u = find_best(v);
         idom_index[v] = (sdom[u] == sdom[v]) ? sdom[v] : u;
       }
       if (i > 1) {
-        dsu[i] = parent[i];
+        dsu_root[i] = parent[i];
       }
     }
     std::vector<int> idom(adj.size(), -1);
@@ -112,20 +114,39 @@ class Dominators {
 using namespace std;
 
 int main() {
-  // 0 ---> 1 ---+   +-------> 4
-  // |           |  /          |
-  // v           v /           v
-  // 2 --------> 3 ---> 5 ---> 6
-  Dominators g(7);
-  g.add_edge(0, 1);
-  g.add_edge(0, 2);
-  g.add_edge(1, 3);
-  g.add_edge(2, 3);
-  g.add_edge(3, 4);
-  g.add_edge(3, 5);
-  g.add_edge(4, 6);
-  g.add_edge(5, 6);
-  vector<int> idom = g.find_dominators(0);
-  assert((idom == vector<int>{0, 0, 0, 0, 3, 3, 3}));
+  {
+    // 0 ---> 1 ---+   +-------> 4
+    // |           |  /          |
+    // v           v /           v
+    // 2 --------> 3 ---> 5 ---> 6
+    Dominators g(7);
+    g.add_edge(0, 1);
+    g.add_edge(0, 2);
+    g.add_edge(1, 3);
+    g.add_edge(2, 3);
+    g.add_edge(3, 4);
+    g.add_edge(3, 5);
+    g.add_edge(4, 6);
+    g.add_edge(5, 6);
+    vector<int> idom = g.find_dominators(0);
+    assert((idom == vector<int>{0, 0, 0, 0, 3, 3, 3}));
+  }
+  {
+    // Node 3 is reachable through either 1 or 2, so neither one dominates it.
+    // 4 ---> 1 -----+
+    // |     ^|      |
+    // |   /  |      |
+    // v /    v      v
+    // 0 ---> 2 ---> 3
+    Dominators g(5);
+    g.add_edge(0, 1);
+    g.add_edge(0, 2);
+    g.add_edge(1, 2);
+    g.add_edge(1, 3);
+    g.add_edge(2, 3);
+    g.add_edge(4, 0);
+    g.add_edge(4, 1);
+    assert((g.find_dominators(4) == vector<int>{4, 4, 4, 4, 4}));
+  }
   return 0;
 }

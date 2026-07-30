@@ -45,7 +45,7 @@ class FenwickRUPQ {
 
   void add(int i, const T &x) {
     assert(0 <= i && i < len);
-    add_helper(i, x);
+    add(i, i, x);
   }
 
   void add(int lo, int hi, const T &x) {
@@ -78,6 +78,9 @@ int main() {
   assert(t.at(0) == 5);
   assert(t.at(1) == 10);
   assert(t.at(2) == 15);
+  assert(t.at(4) == 10);
+  t.add(3, -4);
+  assert(t.at(3) == 6);
   assert(t.at(4) == 10);
   return 0;
 }

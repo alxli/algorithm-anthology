@@ -30,9 +30,9 @@ Integer Conversion:
 - `to_str(i)` returns the string representation of integer `i`, much like `std::to_string()`.
 - `to_int(s)` returns the integer representation of string `s`, much like `std::atoi()`, except here
   we handle special cases of overflow by throwing an exception.
-- `itoa(value, &str, base = 10)` implements the non-standard C function which converts `value` into
-  a C string, storing it into pointer `str` in the given `base`. For more generalized base
-  conversion, see the math utilities section.
+- `itoa(value, str, base = 10)` implements the non-standard C function which converts `value` into a
+  C string, storing it into pointer `str` in the given `base`. For more generalized base conversion,
+  see the math utilities section.
 - `is_integer(s)` returns whether `s` is a valid base-10 integer literal with an optional sign.
 - `is_number(s)` returns whether `s` is a decimal number literal with optional sign, decimal point,
   and exponent.

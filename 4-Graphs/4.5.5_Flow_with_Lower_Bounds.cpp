@@ -7,9 +7,10 @@ imbalance: for an edge from $u$ to $v$, its lower-bound flow must leave $u$ and 
 super-source supplies every node with net demand, and every node with net surplus sends that surplus
 to a super-sink. The bounds are feasible exactly when all such auxiliary edges can be saturated.
 
-For $s$-$t$ flow, add an infinite edge from $t$ back to $s$ before checking feasibility. The flow on
-that artificial edge is one feasible value. After the feasibility check, augmenting from $s$ to $t$
-maximizes the value; augmenting from $t$ to $s$ cancels as much flow as possible and minimizes it.
+For $s$-$t$ flow, add infinite auxiliary edges in both directions between $s$ and $t$ before
+checking feasibility. The difference between their flows is one feasible signed value. After the
+feasibility check, augmenting from $s$ to $t$ maximizes the value; augmenting from $t$ to $s$
+minimizes it.
 
 - `BoundedFlow(n)` constructs a directed lower-bound flow network with nodes in $[0, `n`)$.
 - `add_edge(u, v, lo, hi)` adds an edge with lower capacity `lo` and upper capacity `hi`.
@@ -21,9 +22,11 @@ maximizes the value; augmenting from $t$ to $s$ cancels as much flow as possible
   `std::nullopt` if no feasible flow exists.
 - `edge_flows()` returns one feasible flow value for each original edge after a successful call.
 
-All capacities should be nonnegative integers and `lo` $\leq$ `hi`. Choose `INF` larger than any
-possible finite flow value. Each feasibility or optimization call starts from the original network,
-so different variants may be solved successively on the same instance.
+The flow value is the net flow leaving `source` and may be negative when the bounds force flow in
+the opposite direction. All capacities should be nonnegative integers and `lo` $\leq$ `hi`. Choose
+`INF` larger than the absolute value of any possible finite flow. Each feasibility or optimization
+call starts from the original network, so different variants may be solved successively on the same
+instance.
 
 Time Complexity:
 - O(n^2*(n + m)) per feasibility check or optimized flow call, where $n$ is the number of nodes and
@@ -110,7 +113,9 @@ class BoundedFlow {
     return flow;
   }
 
-  bool satisfy_demands(int source, int sink, int &artificial_index, int64_t &forced_flow) {
+  bool satisfy_demands(
+      int source, int sink, int &backward_index, int &forward_index, int64_t &forced_flow
+  ) {
     int super_source = static_cast<int>(adj.size());
     int super_sink = super_source + 1;
     adj.resize(super_sink + 1);
@@ -122,8 +127,10 @@ class BoundedFlow {
       balance[e.v] += e.lo;
     }
     if (source != -1) {
-      artificial_index = static_cast<int>(adj[sink].size());
+      backward_index = static_cast<int>(adj[sink].size());
       add_residual_edge(sink, source, INF);
+      forward_index = static_cast<int>(adj[source].size());
+      add_residual_edge(source, sink, INF);
     }
     int64_t need = 0;
     for (int u = 0; u < nodes; u++) {
@@ -135,19 +142,26 @@ class BoundedFlow {
       }
     }
     bool ok = dinic(super_source, super_sink) == need;
-    forced_flow = source == -1 ? 0 : adj[source][adj[sink][artificial_index].rev].cap;
+    forced_flow = 0;
+    if (source != -1) {
+      forced_flow = adj[source][adj[sink][backward_index].rev].cap -
+                    adj[sink][adj[source][forward_index].rev].cap;
+    }
     return ok;
   }
 
   std::optional<int64_t> optimize_flow(int source, int sink, bool maximize) {
-    int artificial_index = -1;
+    int backward_index = -1, forward_index = -1;
     int64_t value = 0;
-    if (!satisfy_demands(source, sink, artificial_index, value)) {
+    if (!satisfy_demands(source, sink, backward_index, forward_index, value)) {
       return std::nullopt;
     }
-    Edge &artificial = adj[sink][artificial_index];
-    Edge &reverse = adj[source][artificial.rev];
-    artificial.cap = reverse.cap = 0;
+    Edge &backward = adj[sink][backward_index];
+    Edge &backward_reverse = adj[source][backward.rev];
+    Edge &forward = adj[source][forward_index];
+    Edge &forward_reverse = adj[sink][forward.rev];
+    backward.cap = backward_reverse.cap = 0;
+    forward.cap = forward_reverse.cap = 0;
     return maximize ? value + dinic(source, sink) : value - dinic(sink, source);
   }
 
@@ -173,9 +187,9 @@ class BoundedFlow {
 
   bool feasible_circulation() {
     reset();
-    int artificial_index = -1;
+    int backward_index = -1, forward_index = -1;
     int64_t value = 0;
-    return satisfy_demands(-1, -1, artificial_index, value);
+    return satisfy_demands(-1, -1, backward_index, forward_index, value);
   }
 
   std::optional<int64_t> max_flow(int source, int sink) {
@@ -220,6 +234,12 @@ int main() {
   assert(max_flow[0] + max_flow[1] == 5);
 
   assert(network.min_flow(0, 3) == 1);
+
+  BoundedFlow reverse_flow(2);
+  reverse_flow.add_edge(1, 0, 1, 1);
+  assert(reverse_flow.max_flow(0, 1) == -1);
+  assert(reverse_flow.min_flow(0, 1) == -1);
+  assert((reverse_flow.edge_flows() == std::vector<int64_t>{1}));
 
   //            [2,3]
   //       0 ----------> 1

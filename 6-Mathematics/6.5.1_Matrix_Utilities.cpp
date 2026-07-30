@@ -90,12 +90,17 @@ int columns(const Matrix<T> &a) {
 
 template<typename T>
 std::ostream &operator<<(std::ostream &out, const Matrix<T> &a) {
+  auto flags = out.flags();
+  auto precision = out.precision();
+  out << std::fixed << std::setprecision(5);
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
-      out << std::setw(10) << std::fixed << std::setprecision(5) << a[i][j];
+      out << std::setw(10) << a[i][j];
     }
     out << std::endl;
   }
+  out.flags(flags);
+  out.precision(precision);
   return out;
 }
 

@@ -132,6 +132,9 @@ Prefer code that a strong contestant can adapt quickly after skimming:
   more powerful API when it does not make the section heavy.
 - Prefer returning result objects, pairs, tuples, vectors, or sentinels over output pointers for new
   APIs, unless the local section already strongly uses pointer outputs.
+- Use pointers for secondary output parameters so mutation remains explicit at the call site, even
+  when the output is required. Use `nullptr` only when suppressing that output is supported; keep
+  references for a function's primary in-place argument.
 - For configurable data structures, expose the operations contestants actually customize:
   `combine`, `apply_delta`, `compose_deltas`, comparator types, identity values, or template flags.
 - Template flags should be uppercase and reserved for compile-time behavior choices. Runtime flags

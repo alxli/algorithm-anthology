@@ -79,7 +79,7 @@ bool point_in_convex_polygon(
   }
   int lo = 1, hi = n - 1;
   while (hi - lo > 1) {
-    int mid = (lo + hi) / 2;
+    int mid = lo + (hi - lo) / 2;
     if (cross(poly[mid], p, poly[0]) >= 0) {
       lo = mid;
     } else {

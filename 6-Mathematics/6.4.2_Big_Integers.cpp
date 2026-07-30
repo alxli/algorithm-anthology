@@ -321,9 +321,11 @@ class BigInt {
       out << '-';
     }
     out << (v.digits.empty() ? 0 : v.digits.back());
+    char old_fill = out.fill('0');
     for (int i = static_cast<int>(v.digits.size()) - 2; i >= 0; i--) {
-      out << std::setw(BASE_DIGITS) << std::setfill('0') << v.digits[i];
+      out << std::setw(BASE_DIGITS) << v.digits[i];
     }
+    out.fill(old_fill);
     return out;
   }
 

@@ -12,7 +12,7 @@ Binary search locates a target in sorted data, or more generally the transition 
   \item \inlinecode{fbinary\_search(lo, hi, pred)} is the equivalent of \inlinecode{binary\_search\_first\_true()} on floating point predicates. Since any interval of real numbers is dense, the exact target cannot be found due to floating point error. Instead, a value that is very close to the border between false and true is returned. The precision of the answer depends on the number of repetitions the function performs. Since each repetition bisects the search space, the absolute error of the answer is $1/(2^n)$ times the distance between \inlinecode{lo} and \inlinecode{hi} after $n$ repetitions. Although the error can be controlled by looping until the distance shrinks to an arbitrary epsilon, it is simpler to let the loop run for a desired number of iterations until floating point arithmetic breaks down. $100$ iterations is usually sufficient, since the search space will be reduced to $2^{-100}$ (roughly $10^{-30}$) times its original size. This implementation can be modified to find the ``last true'' point by simply interchanging the assignments of \inlinecode{lo} and \inlinecode{hi} in the if-else statements.
 \end{compactitem}
 
-Overflow warning: For both integer searches, \inlinecode{hi - lo} must be representable by \inlinecode{Int}. For example, [INT\_MIN, INT\_MAX) will overflow if passed as signed 32-bit integer boundaries.
+Overflow warning: For both integer searches, \inlinecode{hi - lo} must be representable by \inlinecode{Int}. For example, $[{\inlinecodemath{INT\_MIN}}, {\inlinecodemath{INT\_MAX}})$ will overflow if passed as signed 32-bit integer boundaries.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -89,7 +89,7 @@ int main() {
 \subsection{Exponential Search}
 Finds the first value where a monotone Boolean predicate becomes true when an upper bound is not known in advance. Exponential search first grows the search range by powers of two until it brackets the transition point, then finishes with ordinary binary search.
 
-This is useful for answer-search problems over unbounded or very large integer domains. The predicate must eventually become true, or the search may overflow or run forever unless an explicit limit is added.
+This is useful for answer-search problems over unbounded or very large integer domains. The predicate must become true before the exponentially growing probe overflows \inlinecode{Int}; otherwise, add an explicit limit.
 
 \begin{compactitem}
   \item \inlinecode{exponential\_search\_first\_true(lo, pred)} returns the smallest integer \inlinecode{x} greater than or equal to \inlinecode{lo} such that \inlinecode{pred(x)} is true.
@@ -703,7 +703,7 @@ Computes minimum costs for every half-open interval $[{\inlinecodemath{l}}, {\in
 A direct implementation checks every split and takes $O(n^{3})$. Knuth optimization applies when the smallest optimal splits satisfy \inlinecode{opt[l][r - 1]} $\leq$ \inlinecode{opt[l][r]} $\leq$ \inlinecode{opt[l + 1][r]}. The two neighboring states therefore bound the splits that must be checked for \inlinecode{dp[l][r]}, reducing the total number of candidate checks to $O(n^{2})$. Common applications include optimal binary search trees and some range merging problems. The caller must verify the required monotonicity property for the chosen \inlinecode{cost(l, r)}; the quadrangle inequality and interval monotonicity of the cost are common sufficient conditions.
 
 \begin{compactitem}
-  \item \inlinecode{knuth\_interval\_dp(n, cost, \&opt)} computes minimum costs for all half-open intervals $[{\inlinecodemath{l}}, {\inlinecodemath{r}})$ over \inlinecode{n} items. The template parameter \inlinecode{cost} must be callable such that \inlinecode{cost(l, r)} returns the interval cost added after choosing the best split. If the optional pointer \inlinecode{opt} is supplied, it is filled with the chosen split points.
+  \item \inlinecode{knuth\_interval\_dp(n, cost, \&opt\_out)} computes minimum costs for all half-open intervals $[{\inlinecodemath{l}}, {\inlinecodemath{r}})$ over \inlinecode{n} items. The template parameter \inlinecode{cost} must be callable such that \inlinecode{cost(l, r)} returns the interval cost added after choosing the best split. If the optional pointer \inlinecode{opt\_out} is supplied, it is filled with the chosen split points.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n^{2})$ calls to \inlinecode{cost()} and $O(n^{2})$ candidate split checks per call.
@@ -719,7 +719,7 @@ const int64_t INF = INT64_MAX / 4;
 
 template<typename Cost>
 std::vector<std::vector<int64_t>> knuth_interval_dp(
-    int n, Cost cost, std::vector<std::vector<int>> *out = nullptr
+    int n, Cost cost, std::vector<std::vector<int>> *opt_out = nullptr
 ) {
   std::vector<std::vector<int64_t>> dp(n + 1, std::vector<int64_t>(n + 1, 0));
   std::vector<std::vector<int>> opt(n + 1, std::vector<int>(n + 1, 0));
@@ -746,8 +746,8 @@ std::vector<std::vector<int64_t>> knuth_interval_dp(
       }
     }
   }
-  if (out != nullptr) {
-    *out = opt;
+  if (opt_out != nullptr) {
+    *opt_out = opt;
   }
   return dp;
 }
@@ -783,7 +783,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Lagrangian Relaxation (Aliens Trick)}
-Given an optimization problem with a constraint on the number of chosen objects, Lagrangian relaxation moves that count into the objective by charging a penalty per object. If the relaxed problem can be solved quickly and the number chosen is monotone as the penalty changes, binary search recovers the best value for the desired count.
+Given an optimization problem with a constraint on the number of chosen objects, Lagrangian relaxation moves that count into the objective by charging a penalty per object. If the relaxed problem can be solved quickly and the number chosen is monotone as the penalty changes, binary search recovers the best value for the desired count. This technique is often called the Aliens trick. Widen the penalty range when in doubt.
 
 For maximization, solve the relaxed problem as \inlinecode{score - penalty*count}, breaking ties toward larger \inlinecode{count}. As \inlinecode{penalty} increases, the optimal count never increases. The largest penalty whose relaxed optimum still chooses at least \inlinecode{target\_count} objects gives the exact constrained score after adding back \inlinecode{penalty*target\_count}.
 
@@ -791,7 +791,7 @@ For maximization, solve the relaxed problem as \inlinecode{score - penalty*count
   \item \inlinecode{lagrangian\_maximize(target\_count, lo, hi, solve)} returns the maximum original score using exactly \inlinecode{target\_count} objects. The callable \inlinecode{solve(penalty)} must return \inlinecode{relaxed\_score} and \inlinecode{count} as a pair and must tie-break toward larger \inlinecode{count}. Penalties are searched over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$; \inlinecode{lo} must choose at least \inlinecode{target\_count} objects, while \inlinecode{hi} must be greater than the last penalty that does so.
 \end{compactitem}
 
-This technique is often called the Aliens trick. Widen the penalty range when in doubt.
+Overflow warning: The difference \inlinecode{hi - lo} must fit in \inlinecode{int64\_t}.
 
 \textbf{Time Complexity}: $O(\log n)$ calls to \inlinecode{solve()} per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
@@ -1062,7 +1062,7 @@ A Li Chao tree fixes an inclusive coordinate domain $[{\inlinecodemath{lo}}, {\i
   \item \inlinecode{query(x)} returns the minimum $y$-value among all inserted lines at coordinate \inlinecode{x}. At least one line must have been inserted, and query coordinates may be supplied in any order.
 \end{compactitem}
 
-Overflow warning: each comparison and query evaluates \inlinecode{m * x + b}, which must fit in \inlinecode{int64\_t}.
+Overflow warning: each comparison and query evaluates \inlinecode{m * x + b}, which must fit in \inlinecode{int64\_t}. The difference \inlinecode{hi - lo} must also fit in \inlinecode{int64\_t}.
 
 \textbf{Time Complexity}: $O(\log d)$ per call to \inlinecode{add\_line()} and \inlinecode{query()}, where $d$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
@@ -1367,6 +1367,8 @@ The key observation is that derivative roots split the real line into intervals 
   \item \inlinecode{find\_all\_roots(p, a = -1e20, b = 1e20, eps = 1e-15)} returns a vector of all roots in the interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a polynomial \inlinecode{p} using the bisection method. The roots are found to a tolerance of \inlinecode{eps} in absolute or relative error (whichever is reached first).
 \end{compactitem}
 
+The coefficient vector must be nonempty and contain at least one nonzero coefficient.
+
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
@@ -1475,6 +1477,8 @@ Finds every complex root $x$ for a polynomial $p$ with complex coefficients such
   \item \inlinecode{find\_one\_root(p, x0, eps = 1e-15, iterations = 10000)} returns a complex root $x$ for polynomial \inlinecode{p} (represented as a vector of size $d + 1$ where \inlinecode{p[i]} stores the complex coefficient for the $x^i$ term) using an initial guess \inlinecode{x0} which should be relatively close to $x$. The root is found to a tolerance of \inlinecode{eps} in absolute or relative error (whichever is reached first).
   \item \inlinecode{find\_all\_roots(p, eps = 1e-15, iterations = 10000)} returns a vector of all complex roots for a complex polynomial \inlinecode{p}. The roots are found to a tolerance of \inlinecode{eps} in absolute or relative error (whichever is reached first).
 \end{compactitem}
+
+Coefficient vectors must be nonempty and omit trailing zero coefficients. \inlinecode{find\_one\_root()} requires a polynomial of degree at least one.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -1622,6 +1626,8 @@ This routine is intended for well-scaled polynomials when all complex roots are 
   \item \inlinecode{eval\_with\_derivative(p, x)} returns a pair $(p(x), p'(x))$ for a polynomial $p$ given as a vector \inlinecode{p} where \inlinecode{p[i]} stores the coefficient for the $x^i$ term.
   \item \inlinecode{find\_all\_roots(p, eps = ROOT\_EPS, iterations = 2000)} returns a vector of all complex roots for a complex polynomial given by the vector of coefficients \inlinecode{p}. A \inlinecode{vector\textless{}dbl\textgreater{}} overload is provided for polynomials with real coefficients. The roots are found to a tolerance of \inlinecode{eps} in absolute or relative error (whichever is reached first), and zero roots are removed exactly before the simultaneous iteration starts.
 \end{compactitem}
+
+Root-finding inputs must contain at least one nonzero coefficient; trailing near-zero coefficients are discarded. \inlinecode{eval\_with\_derivative()} requires a nonempty coefficient vector.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -1912,7 +1918,7 @@ int simplex_solve(
     const double eps = 1e-10
 ) {
   int m = static_cast<int>(a.size()), n = static_cast<int>(c.size());
-  assert(x != nullptr && b.size() == a.size());
+  assert(x != nullptr && n > 0 && b.size() == a.size());
   std::vector<int> basis(m), nonbasis(n + 1);
   std::vector<std::vector<double>> tab(m + 2, std::vector<double>(n + 2));
   for (int i = 0; i < m; i++) {

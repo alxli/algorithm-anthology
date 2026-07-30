@@ -42,7 +42,7 @@ int simplex_solve(
     const double eps = 1e-10
 ) {
   int m = static_cast<int>(a.size()), n = static_cast<int>(c.size());
-  assert(x != nullptr && b.size() == a.size());
+  assert(x != nullptr && n > 0 && b.size() == a.size());
   std::vector<int> basis(m), nonbasis(n + 1);
   std::vector<std::vector<double>> tab(m + 2, std::vector<double>(n + 2));
   for (int i = 0; i < m; i++) {

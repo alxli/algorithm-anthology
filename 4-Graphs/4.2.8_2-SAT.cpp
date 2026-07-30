@@ -41,6 +41,11 @@ class TwoSAT {
 
   static int neg(int x) { return x ^ 1; }
 
+  void add_edge(int a, int b) {
+    adj[a].push_back(b);
+    rev[b].push_back(a);
+  }
+
   void dfs_order(int u, std::vector<char> &visited) {
     visited[u] = true;
     for (int v : adj[u]) {
@@ -66,17 +71,13 @@ class TwoSAT {
   int literal(int variable, bool value) const { return 2 * variable + (value ? 0 : 1); }
 
   void add_implication(int a, int b) {
-    adj[a].push_back(b);
-    rev[b].push_back(a);
+    add_edge(a, b);
+    add_edge(neg(b), neg(a));
   }
 
-  void add_or(int a, int b) {
-    add_implication(neg(a), b);
-    add_implication(neg(b), a);
-  }
-
-  void add_true(int a) { add_implication(neg(a), a); }
-  void add_false(int a) { add_implication(a, neg(a)); }
+  void add_or(int a, int b) { add_implication(neg(a), b); }
+  void add_true(int a) { add_edge(neg(a), a); }
+  void add_false(int a) { add_edge(a, neg(a)); }
   void add(int variable, bool value) { add_true(literal(variable, value)); }
   void add(int x, bool xval, int y, bool yval) { add_or(literal(x, xval), literal(y, yval)); }
 
@@ -100,6 +101,8 @@ class TwoSAT {
       if (component[2 * i] == component[2 * i + 1]) {
         return false;
       }
+    }
+    for (int i = 0; i < variables; i++) {
       solution[i] = component[2 * i] > component[2 * i + 1];
     }
     return true;
@@ -125,5 +128,22 @@ int main() {
   solver.add(1, true, 2, false);
   assert(solver.satisfiable());
   assert((solver.assignment() == vector<int>{true, true, true}));
+
+  TwoSAT stateful(2);
+  assert(stateful.satisfiable());
+  vector<int> last_assignment = stateful.assignment();
+  stateful.add(0, false);
+  stateful.add(1, true);
+  stateful.add(1, false);
+  assert(!stateful.satisfiable());
+  assert(stateful.assignment() == last_assignment);
+
+  TwoSAT implication(2);
+  int x = implication.literal(0, true);
+  int y = implication.literal(1, true);
+  implication.add_true(x);
+  implication.add_false(y);
+  implication.add_implication(x, y);
+  assert(!implication.satisfiable());
   return 0;
 }

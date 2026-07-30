@@ -108,7 +108,7 @@ double angle_between(const Pt &a, const Pt &b) {
   return (t < 0) ? (t + 2 * PI) : t;
 }
 
-double angle_between(const double &a1, const double &b1, const double &a2, const double &b2) {
+double angle_between(double a1, double b1, double a2, double b2) {
   double t = atan2(a1 * b2 - a2 * b1, a1 * a2 + b1 * b2);
   if (t < 0) {
     t += PI;

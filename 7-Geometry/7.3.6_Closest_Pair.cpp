@@ -5,9 +5,9 @@ algorithm. The points are split in half by $x$-coordinate and each half is solve
 combining step then only needs to examine points within the best distance so far of the dividing
 line, where each point in this strip is compared to a constant number of $y$-ordered neighbors.
 
-- `closest_pair(lo, hi, res = nullptr)` returns the minimum squared distance between any two points
-  in the range $[`lo`, `hi`)$, where `lo` and `hi` must be random-access iterators. The input range
-  is reordered during the computation. If `res` is non-null, one closest pair is stored there in
+- `closest_pair(lo, hi, &res)` returns the minimum squared distance between any two points in the
+  range $[`lo`, `hi`)$, where `lo` and `hi` must be random-access iterators. The input range is
+  reordered during the computation. If `res` is non-null, one closest pair is stored there in
   lexicographic order. With fewer than two points, the maximum value of the squared-distance type is
   returned and `res` is unchanged. The function is templated on the point type and works with any
   type exposing numeric `.x` and `.y` members and a lexicographic `operator<`.

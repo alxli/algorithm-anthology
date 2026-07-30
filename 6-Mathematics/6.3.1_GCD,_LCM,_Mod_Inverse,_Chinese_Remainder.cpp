@@ -8,19 +8,20 @@ Common number theory operations relating to modular arithmetic.
 - `lcm(a, b)` returns the least common multiple of `a` and `b`. This implementation is mainly for
   educational purposes, as `std::lcm(a, b)` from `<numeric>` is available as of C++17.
 - `extended_euclid(a, b)` returns a pair $(x, y)$ of integers such that $\gcd(a, b) = ax + by$.
-- `diophantine(a, b, c, &x, &y, &g)` solves the linear Diophantine equation $ax + by = c$, returning
-  whether a solution exists (one does if and only if $\gcd(a, b)$ divides $c$), and on success sets
-  `g` to $\gcd(a, b)$ and (`x`, `y`) to a particular solution bounded by $\max(|a|, |b|, |c|)$ in
-  magnitude. A 128-bit intermediate is used where available to keep the scaling step overflow-free.
-- `mod(a, m)` returns the value of `a` mod `m` under the true Euclidean definition of modulo, that
-  is, the smallest nonnegative integer $r$ satisfying $a + mn = r$ for some integer $n$. Note that
-  this is identical to the remainder operator `%` in C++ for nonnegative operands `a` and `m`, but
-  the result will differ when an operand is negative.
+- `diophantine(a, b, c, &g, &x, &y)` solves the linear Diophantine equation $ax + by = c$, returning
+  whether a solution exists (one does if and only if $\gcd(a, b)$ divides $c$). `g` is always set to
+  $\gcd(a, b)$, while (`x`, `y`) is set only on success to a particular solution bounded by
+  $\max(|a|, |b|, |c|)$ in magnitude. Every other solution is $(`x` + t(`b`/`g`), `y` - t(`a`/`g`))$
+  for an integer $t$. A 128-bit intermediate is used where available to keep the scaling step
+  overflow-free.
+- `mod(a, m)` returns the least nonnegative residue of `a` modulo `m`, that is, the unique value in
+  $[0, `m`)$ congruent to `a`, where `m` must be positive. Unlike the C++ remainder operator `%`,
+  whose result follows the sign of `a`, the result is never negative.
 - `mod_inverse(a, m)` returns an integer $x$ such that $ax \equiv 1 \pmod m$, where the arguments
   must satisfy $m > 0$ and $\gcd(a, m) = 1$.
 - `mod_inverse_table(p)` returns a vector `v` of integers where for each index $i$ in the vector,
   $i \cdot `v[i]` \equiv 1 \pmod p$, where the argument $p$ is prime.
-- `crt(r1, m1, r2, m2, r, m)` merges the two congruences $x \equiv r_1 \pmod{m_1}$ and
+- `crt(r1, m1, r2, m2, &r, &m)` merges the two congruences $x \equiv r_1 \pmod{m_1}$ and
   $x \equiv r_2 \pmod{m_2}$ for arbitrary moduli (not necessarily coprime). It returns whether the
   system is consistent, and on success sets `m` to `lcm(m_1, m_2)` and `r` to the unique solution in
   $[0, `m`)$. Both moduli must be positive, and their least common multiple must fit in `int64_t`.
@@ -33,9 +34,12 @@ Common number theory operations relating to modular arithmetic.
 - `garner_restore_mod(a, p, m)` returns that same CRT solution modulo `m`. This is the right variant
   when the product of the moduli is too large to fit in `int64_t`.
 
+Every intermediate and result of the templated signed-integer helpers must be representable by
+`Int`; in particular, the minimum value of `Int` cannot be negated or divided by $-1$.
+
 Time Complexity:
-- O(log(a + b)) per call to `gcd(a, b)`, `lcm(a, b)`, `extended_euclid(a, b)`,
-  `diophantine(a, b, c, ...)`, `mod_inverse(a, m)`, and `crt(...)`.
+- O(log M) per call to `gcd()`, `lcm()`, `extended_euclid()`, `diophantine()`, `mod_inverse()`, and
+  `crt()`, where $M$ is the largest relevant input magnitude.
 - O(1) per call to `mod()`.
 - O(p) per call to `mod_inverse_table()`.
 - O(n^2) per call to `garner_restore()` and `garner_restore_mod()`.
@@ -47,6 +51,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cstdint>
 #include <type_traits>
 #include <utility>
@@ -87,31 +92,31 @@ std::pair<Int, Int> extended_euclid(Int a, Int b) {
 }
 
 template<typename Int>
-bool diophantine(Int a, Int b, Int c, Int &x, Int &y, Int &g) {
+bool diophantine(Int a, Int b, Int c, Int *g, Int *x, Int *y) {
   if (a == 0 && b == 0) {
-    x = y = g = 0;
+    *g = *x = *y = 0;
     return c == 0;
   }
   if (a == 0) {
-    g = (b < 0) ? -b : b;
+    *g = (b < 0) ? -b : b;
     if (c % b != 0) {
       return false;
     }
-    x = 0;
-    y = c / b;
+    *x = 0;
+    *y = c / b;
     return true;
   }
   if (b == 0) {
-    g = (a < 0) ? -a : a;
+    *g = (a < 0) ? -a : a;
     if (c % a != 0) {
       return false;
     }
-    x = c / a;
-    y = 0;
+    *x = c / a;
+    *y = 0;
     return true;
   }
-  g = gcd(a, b);
-  if (c % g != 0) {
+  *g = gcd(a, b);
+  if (c % *g != 0) {
     return false;
   }
   // Absorb the bulk of c into a*dx + b*dy, then scale the base solution by the small remainder so
@@ -122,21 +127,22 @@ bool diophantine(Int a, Int b, Int c, Int &x, Int &y, Int &g) {
   c -= dx * a;
   Int dy = c / b;
   c -= dy * b;
-  Int f = c / g;
+  Int f = c / *g;
 #if defined(__SIZEOF_INT128__)
   __extension__ typedef std::conditional_t<sizeof(Int) <= 4, int64_t, __int128> wide_t;
 #else
   using wide_t = int64_t;
 #endif
-  x = dx + static_cast<Int>(static_cast<wide_t>(base.first) * f % b);
-  y = dy + static_cast<Int>(static_cast<wide_t>(base.second) * f % a);
+  *x = dx + static_cast<Int>(static_cast<wide_t>(base.first) * f % b);
+  *y = dy + static_cast<Int>(static_cast<wide_t>(base.second) * f % a);
   return true;
 }
 
 template<typename Int>
 Int mod(Int a, Int m) {
+  assert(m > 0);
   Int r = a % m;
-  return (r >= 0) ? r : (r + m);
+  return (r < 0) ? (r + m) : r;
 }
 
 template<typename Int>
@@ -153,21 +159,21 @@ std::vector<int> mod_inverse_table(int p) {
   return res;
 }
 
-bool crt(int64_t r1, int64_t m1, int64_t r2, int64_t m2, int64_t &r, int64_t &m) {
+bool crt(int64_t r1, int64_t m1, int64_t r2, int64_t m2, int64_t *r, int64_t *m) {
   r1 = mod(r1, m1);
   r2 = mod(r2, m2);
-  int64_t x, y, g;
-  if (!diophantine(m1, -m2, r2 - r1, x, y, g)) {
+  int64_t g, x, y;
+  if (!diophantine(m1, -m2, r2 - r1, &g, &x, &y)) {
     return false;
   }
-  m = m1 / g * m2;
+  *m = m1 / g * m2;
 #if defined(__SIZEOF_INT128__)
   __extension__ typedef __int128 int128_t;
-  r = static_cast<int64_t>(
-      (static_cast<int128_t>(r1) + static_cast<int128_t>(m1) * mod(x, m2 / g)) % m
+  *r = static_cast<int64_t>(
+      (static_cast<int128_t>(r1) + static_cast<int128_t>(m1) * mod(x, m2 / g)) % *m
   );
 #else
-  r = mod(r1 + m1 * mod(x, m2 / g), m);  // Overflow warning without int128.
+  *r = mod(r1 + m1 * mod(x, m2 / g), *m);  // Overflow warning without int128.
 #endif
   return true;
 }
@@ -223,6 +229,9 @@ int64_t garner_restore_mod(const std::vector<int> &a, const std::vector<int> &p,
 using namespace std;
 
 int main() {
+  assert(mod(-5, 3) == 1);  // Negative dividends wrap up into [0, m).
+  assert(mod(5, 3) == 2);
+  assert(mod(-6, 3) == 0);
   {
     for (int a = -20; a <= 20; a++) {
       for (int b = -20; b <= 20; b++) {
@@ -272,9 +281,10 @@ int main() {
     for (int a = -8; a <= 8; a++) {
       for (int b = -8; b <= 8; b++) {
         for (int c = -8; c <= 8; c++) {
-          int x, y, g, gg = gcd(a, b);
-          bool ok = diophantine(a, b, c, x, y, g);
+          int g, x, y, gg = gcd(a, b);
+          bool ok = diophantine(a, b, c, &g, &x, &y);
           assert(ok == (gg == 0 ? c == 0 : c % gg == 0));
+          assert(g == gg);  // g is set even when no solution exists.
           if (ok) {
             assert(a * x + b * y == c);
           }
@@ -288,7 +298,7 @@ int main() {
         for (int r1 = 0; r1 < m1; r1++) {
           for (int r2 = 0; r2 < m2; r2++) {
             int64_t r, m;
-            bool ok = crt(r1, m1, r2, m2, r, m);
+            bool ok = crt(r1, m1, r2, m2, &r, &m);
             int limit = lcm(m1, m2), want = -1;
             for (int v = 0; v < limit && want < 0; v++) {
               if (v % m1 == r1 && v % m2 == r2) {

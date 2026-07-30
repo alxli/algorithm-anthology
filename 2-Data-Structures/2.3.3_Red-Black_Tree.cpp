@@ -115,7 +115,7 @@ class RedBlackTree {
           }
           rotate_right(grandparent);
           std::swap(parent->color, grandparent->color);
-          n = parent;
+          break;
         }
       } else if (parent == grandparent->right) {
         Node *uncle = grandparent->left;
@@ -132,7 +132,7 @@ class RedBlackTree {
           }
           rotate_left(grandparent);
           std::swap(parent->color, grandparent->color);
-          n = parent;
+          break;
         }
       }
     }

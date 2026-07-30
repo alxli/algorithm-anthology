@@ -103,7 +103,7 @@ class SparseSegTree {
 
   T query(Node *n, int lo, int hi, int tgt_lo, int tgt_hi) {
     if (n == nullptr) {
-      return repeat_value(init, hi - lo + 1);
+      return repeat_value(init, tgt_hi - tgt_lo + 1);
     }
     push_delta(n, lo, hi);
     if (lo == tgt_lo && hi == tgt_hi) {

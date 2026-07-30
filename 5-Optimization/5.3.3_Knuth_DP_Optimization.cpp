@@ -12,10 +12,10 @@ and some range merging problems. The caller must verify the required monotonicit
 chosen `cost(l, r)`; the quadrangle inequality and interval monotonicity of the cost are common
 sufficient conditions.
 
-- `knuth_interval_dp(n, cost, &opt)` computes minimum costs for all half-open intervals $[`l`, `r`)$
-  over `n` items. The template parameter `cost` must be callable such that `cost(l, r)` returns the
-  interval cost added after choosing the best split. If the optional pointer `opt` is supplied, it
-  is filled with the chosen split points.
+- `knuth_interval_dp(n, cost, &opt_out)` computes minimum costs for all half-open intervals
+  $[`l`, `r`)$ over `n` items. The template parameter `cost` must be callable such that `cost(l, r)`
+  returns the interval cost added after choosing the best split. If the optional pointer `opt_out`
+  is supplied, it is filled with the chosen split points.
 
 Time Complexity:
 - O(n^2) calls to `cost()` and O(n^2) candidate split checks per call.
@@ -33,7 +33,7 @@ const int64_t INF = INT64_MAX / 4;
 
 template<typename Cost>
 std::vector<std::vector<int64_t>> knuth_interval_dp(
-    int n, Cost cost, std::vector<std::vector<int>> *out = nullptr
+    int n, Cost cost, std::vector<std::vector<int>> *opt_out = nullptr
 ) {
   std::vector<std::vector<int64_t>> dp(n + 1, std::vector<int64_t>(n + 1, 0));
   std::vector<std::vector<int>> opt(n + 1, std::vector<int>(n + 1, 0));
@@ -60,8 +60,8 @@ std::vector<std::vector<int64_t>> knuth_interval_dp(
       }
     }
   }
-  if (out != nullptr) {
-    *out = opt;
+  if (opt_out != nullptr) {
+    *opt_out = opt;
   }
   return dp;
 }

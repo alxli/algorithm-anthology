@@ -14,8 +14,7 @@ predicates when that distinction matters.
 
 - `find_intersection(lo, hi, &res1, &res2)` returns whether any pair of segments intersect given a
   range $[`lo`, `hi`)$ of segments, where `lo` and `hi` are random-access iterators. If an
-  intersection is found, then one such pair of segments will be stored into pointers `res1` and
-  `res2`.
+  intersection is found, then one such pair of segments is stored in `res1` and `res2`.
 
 Overflow warning: `seg_intersection` forms the usual quadratic cross products, but the $y$-ordering
 cross-multiplication (`ay * bdx`) is cubic in the coordinate magnitude. With 32-bit `int` endpoints
@@ -67,7 +66,7 @@ bool intersects(const Segment<Pt> &s1, const Segment<Pt> &s2) {
   return seg_intersection(s1.p, s1.q, s2.p, s2.q);
 }
 
-// Seg is deduced from the output pointers (e.g. Segment<PointI>* or Segment<PointD>*).
+// Deduce Seg from the outputs so their point type may differ from the input point type.
 template<typename It, typename Seg>
 bool find_intersection(It lo, It hi, Seg *res1, Seg *res2) {
   using Pt = std::decay_t<decltype(lo->p)>;

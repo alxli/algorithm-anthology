@@ -303,7 +303,7 @@ To implement the same cache without \inlinecode{std::list}, use the intrusive do
 
 \begin{compactitem}
   \item \inlinecode{LRUCache\textless{}K, V\textgreater{}(capacity)} constructs an empty cache holding at most \inlinecode{capacity} keys.
-  \item \inlinecode{get(key, \&value)} returns whether \inlinecode{key} is present. If present, it stores the value in \inlinecode{value} and marks the key as most recently used.
+  \item \inlinecode{get(key, \&value)} returns whether \inlinecode{key} is present. On success, it copies the associated value into \inlinecode{value} and marks the key as most recently used.
   \item \inlinecode{put(key, value)} inserts or updates \inlinecode{key}, marking it as most recently used and evicting the least recently used key if needed.
   \item \inlinecode{size()} returns the number of keys currently stored.
 \end{compactitem}
@@ -339,6 +339,8 @@ class LRUCache {
  public:
   explicit LRUCache(int capacity) : cap(capacity) { assert(capacity >= 0); }
 
+  LRUCache(const LRUCache &) = delete;
+  LRUCache &operator=(const LRUCache &) = delete;
   int size() const { return static_cast<int>(items.size()); }
 
   bool get(const K &key, V *value) {
@@ -1688,7 +1690,7 @@ class RedBlackTree {
           }
           rotate_right(grandparent);
           std::swap(parent->color, grandparent->color);
-          n = parent;
+          break;
         }
       } else if (parent == grandparent->right) {
         Node *uncle = grandparent->left;
@@ -1705,7 +1707,7 @@ class RedBlackTree {
           }
           rotate_left(grandparent);
           std::swap(parent->color, grandparent->color);
-          n = parent;
+          break;
         }
       }
     }
@@ -2209,7 +2211,7 @@ The order-statistic API matches GNU PBDS naming and 0-based rank conventions.
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the map elements.
-  \item $O(\log n)$ auxiliary stack space for \inlinecode{insert()}, \inlinecode{erase()}, \inlinecode{entries()}, and destruction.
+  \item $O(\log n)$ auxiliary stack space for \inlinecode{insert()}, \inlinecode{erase()}, \inlinecode{find\_by\_order()}, \inlinecode{order\_of\_key()}, \inlinecode{entries()}, and destruction.
   \item $O(n)$ for the vector returned by \inlinecode{entries()}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
@@ -5117,7 +5119,7 @@ class SparseSegTree {
 
   T query(Node *n, int lo, int hi, int tgt_lo, int tgt_hi) {
     if (n == nullptr) {
-      return repeat_value(init, hi - lo + 1);
+      return repeat_value(init, tgt_hi - tgt_lo + 1);
     }
     push_delta(n, lo, hi);
     if (lo == tgt_lo && hi == tgt_hi) {
@@ -7179,7 +7181,7 @@ class FenwickRUPQ {
 
   void add(int i, const T &x) {
     assert(0 <= i && i < len);
-    add_helper(i, x);
+    add(i, i, x);
   }
 
   void add(int lo, int hi, const T &x) {
@@ -7213,6 +7215,9 @@ int main() {
   assert(t.at(0) == 5);
   assert(t.at(1) == 10);
   assert(t.at(2) == 15);
+  assert(t.at(4) == 10);
+  t.add(3, -4);
+  assert(t.at(3) == 6);
   assert(t.at(4) == 10);
   return 0;
 }
@@ -7731,7 +7736,7 @@ The value type \inlinecode{T} must represent $0$ and support addition and subtra
 
 The outer dimension is an ordinary Fenwick tree over the sorted distinct update rows. Each outer node owns an inner Fenwick tree over only those columns that reach it along an update path, again stored in a sorted vector. A prefix query maps its row argument to the number of update rows at or below it, walks the outer tree, and within each visited node maps its column argument to a rank by binary search. Compared with the online sparse 2D Fenwick tree backed by hash tables, this is deterministic and has markedly better constants, at the cost of requiring all update locations up front. Prefer the dense 2D Fenwick tree when the coordinates are small enough to allocate directly, and the sparse 2D Fenwick tree when update locations are not known ahead of time or rectangle updates are needed.
 
-Usage is two-phase. First declare every cell that will be updated with \inlinecode{register\_point()}; then call \inlinecode{build()} once; then issue \inlinecode{add()} updates and \inlinecode{sum()} / \inlinecode{at()} queries freely. Updates may only target registered cells, but queries may use any coordinates.
+Usage is two-phase. First declare every cell that will be updated with \inlinecode{register\_point()}; then call \inlinecode{build()} once; then issue \inlinecode{add()} updates and \inlinecode{sum()} / \inlinecode{at()} queries freely. Updates may only target registered cells. All row and column coordinates must exceed \inlinecode{INT\_MIN}, which is reserved so inclusive rectangle queries can form predecessor bounds.
 
 \begin{compactitem}
   \item \inlinecode{OfflineFenwick2D\textless{}T\textgreater{}()} constructs an empty structure in the declaration phase.
@@ -7740,7 +7745,7 @@ Usage is two-phase. First declare every cell that will be updated with \inlineco
   \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}), which must have been registered.
   \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}), which must have been registered.
   \item \inlinecode{at(r, c)} returns the value at index (\inlinecode{r}, \inlinecode{c}).
-  \item \inlinecode{sum(r, c)} returns the sum of the rectangle with rows $[0, {\inlinecodemath{r}}]$ and columns $[0, {\inlinecodemath{c}}]$.
+  \item \inlinecode{sum(r, c)} returns the sum over all registered rows at most \inlinecode{r} and columns at most \inlinecode{c}.
   \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with rows $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
 \end{compactitem}
 

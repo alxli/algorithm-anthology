@@ -43,7 +43,8 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the map elements.
-- O(log n) auxiliary stack space for `insert()`, `erase()`, `entries()`, and destruction.
+- O(log n) auxiliary stack space for `insert()`, `erase()`, `find_by_order()`, `order_of_key()`,
+  `entries()`, and destruction.
 - O(n) for the vector returned by `entries()`.
 - O(1) auxiliary for all other operations.
 

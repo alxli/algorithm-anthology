@@ -20,7 +20,8 @@ updates are needed.
 
 Usage is two-phase. First declare every cell that will be updated with `register_point()`; then call
 `build()` once; then issue `add()` updates and `sum()` / `at()` queries freely. Updates may only
-target registered cells, but queries may use any coordinates.
+target registered cells. All row and column coordinates must exceed `INT_MIN`, which is reserved so
+inclusive rectangle queries can form predecessor bounds.
 
 - `OfflineFenwick2D<T>()` constructs an empty structure in the declaration phase.
 - `register_point(r, c)` declares that the cell (`r`, `c`) may later be updated. Call before
@@ -30,7 +31,7 @@ target registered cells, but queries may use any coordinates.
 - `add(r, c, x)` adds `x` to the value at index (`r`, `c`), which must have been registered.
 - `set(r, c, x)` assigns `x` to the value at index (`r`, `c`), which must have been registered.
 - `at(r, c)` returns the value at index (`r`, `c`).
-- `sum(r, c)` returns the sum of the rectangle with rows $[0, `r`]$ and columns $[0, `c`]$.
+- `sum(r, c)` returns the sum over all registered rows at most `r` and columns at most `c`.
 - `sum(r1, c1, r2, c2)` returns the sum of the rectangle with rows $[`r1`, `r2`]$ and columns
   $[`c1`, `c2`]$.
 

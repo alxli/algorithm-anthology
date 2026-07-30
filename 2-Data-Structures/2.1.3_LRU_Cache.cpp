@@ -14,8 +14,8 @@ from section 2.1.2. Store a `Node*` in the map instead of a list iterator, move 
 with `move_to_front(&sentinel, node)`, and evict `sentinel.prev`.
 
 - `LRUCache<K, V>(capacity)` constructs an empty cache holding at most `capacity` keys.
-- `get(key, &value)` returns whether `key` is present. If present, it stores the value in `value`
-  and marks the key as most recently used.
+- `get(key, &value)` returns whether `key` is present. On success, it copies the associated value
+  into `value` and marks the key as most recently used.
 - `put(key, value)` inserts or updates `key`, marking it as most recently used and evicting the
   least recently used key if needed.
 - `size()` returns the number of keys currently stored.
@@ -55,6 +55,8 @@ class LRUCache {
  public:
   explicit LRUCache(int capacity) : cap(capacity) { assert(capacity >= 0); }
 
+  LRUCache(const LRUCache &) = delete;
+  LRUCache &operator=(const LRUCache &) = delete;
   int size() const { return static_cast<int>(items.size()); }
 
   bool get(const K &key, V *value) {

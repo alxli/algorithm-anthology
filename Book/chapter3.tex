@@ -28,7 +28,7 @@ Integer Conversion:
 \begin{compactitem}
   \item \inlinecode{to\_str(i)} returns the string representation of integer \inlinecode{i}, much like \inlinecode{std::to\_string()}.
   \item \inlinecode{to\_int(s)} returns the integer representation of string \inlinecode{s}, much like \inlinecode{std::atoi()}, except here we handle special cases of overflow by throwing an exception.
-  \item \inlinecode{itoa(value, \&str, base = 10)} implements the non-standard C function which converts \inlinecode{value} into a C string, storing it into pointer \inlinecode{str} in the given \inlinecode{base}. For more generalized base conversion, see the math utilities section.
+  \item \inlinecode{itoa(value, str, base = 10)} implements the non-standard C function which converts \inlinecode{value} into a C string, storing it into pointer \inlinecode{str} in the given \inlinecode{base}. For more generalized base conversion, see the math utilities section.
   \item \inlinecode{is\_integer(s)} returns whether \inlinecode{s} is a valid base-10 integer literal with an optional sign.
   \item \inlinecode{is\_number(s)} returns whether \inlinecode{s} is a decimal number literal with optional sign, decimal point, and exponent.
 \end{compactitem}

@@ -1,7 +1,7 @@
 /*
 
-Given an undirected graph, assign a color to every node such that no pair of adjacent nodes have the
-same color, and that the total number of colors used is minimized.
+Given a simple undirected graph, assign a color to every node such that no pair of adjacent nodes
+have the same color, and that the total number of colors used is minimized.
 
 This implementation finds the chromatic number by backtracking: nodes (ordered by degree to prune
 sooner) are colored one at a time, each tried with every color already in use plus one new color,

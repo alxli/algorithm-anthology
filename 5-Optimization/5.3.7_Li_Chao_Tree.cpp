@@ -17,7 +17,8 @@ Li Chao tree has a simpler invariant and is easier to extend to lines active onl
 - `query(x)` returns the minimum $y$-value among all inserted lines at coordinate `x`. At least one
   line must have been inserted, and query coordinates may be supplied in any order.
 
-Overflow warning: each comparison and query evaluates `m * x + b`, which must fit in `int64_t`.
+Overflow warning: each comparison and query evaluates `m * x + b`, which must fit in `int64_t`. The
+difference `hi - lo` must also fit in `int64_t`.
 
 Time Complexity:
 - O(log d) per call to `add_line()` and `query()`, where $d$ is the distance between `lo` and

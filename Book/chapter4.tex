@@ -1992,13 +1992,13 @@ Lengauer-Tarjan's algorithm numbers nodes by DFS order, computes each reachable 
 
 class Dominators {
   std::vector<std::vector<int>> adj, pred, bucket;
-  std::vector<int> time, node_at_time, parent, sdom, idom_index, dsu, best;
+  std::vector<int> time, node_at_time, parent, sdom, idom_index, dsu_root, best;
   int timer;
 
   void dfs(int u) {
     time[u] = ++timer;
     node_at_time[timer] = u;
-    sdom[timer] = dsu[timer] = best[timer] = timer;
+    sdom[timer] = dsu_root[timer] = best[timer] = timer;
     for (int v : adj[u]) {
       if (time[v] == 0) {
         dfs(v);
@@ -2010,17 +2010,19 @@ class Dominators {
     }
   }
 
-  int find_best(int u, bool compress) {
-    if (dsu[u] != u) {
-      int v = find_best(dsu[u], true);
-      if (sdom[v] < sdom[best[u]]) {
-        best[u] = v;
-      }
-      if (compress) {
-        dsu[u] = dsu[dsu[u]];
-      }
+  int find_best(int u, int depth = 0) {
+    if (u == dsu_root[u]) {
+      return depth == 0 ? u : -1;
     }
-    return best[u];
+    int root = find_best(dsu_root[u], depth + 1);
+    if (root == -1) {
+      return u;
+    }
+    if (sdom[best[dsu_root[u]]] < sdom[best[u]]) {
+      best[u] = best[dsu_root[u]];
+    }
+    dsu_root[u] = root;
+    return depth == 0 ? best[u] : root;  // The outer call returns the label, recursion the root.
   }
 
  public:
@@ -2036,24 +2038,24 @@ class Dominators {
     parent.assign(n + 1, 0);
     sdom.assign(n + 1, 0);
     idom_index.assign(n + 1, 0);
-    dsu.assign(n + 1, 0);
+    dsu_root.assign(n + 1, 0);
     best.assign(n + 1, 0);
     pred.assign(n + 1, {});
     bucket.assign(n + 1, {});
     dfs(start);
     for (int i = timer; i >= 1; i--) {
       for (int v : pred[i]) {
-        sdom[i] = std::min(sdom[i], sdom[find_best(v, false)]);
+        sdom[i] = std::min(sdom[i], sdom[find_best(v)]);
       }
       if (i > 1) {
         bucket[sdom[i]].push_back(i);
       }
       for (int v : bucket[i]) {
-        int u = find_best(v, false);
+        int u = find_best(v);
         idom_index[v] = (sdom[u] == sdom[v]) ? sdom[v] : u;
       }
       if (i > 1) {
-        dsu[i] = parent[i];
+        dsu_root[i] = parent[i];
       }
     }
     std::vector<int> idom(adj.size(), -1);
@@ -2075,21 +2077,40 @@ class Dominators {
 using namespace std;
 
 int main() {
-  // 0 ---> 1 ---+   +-------> 4
-  // |           |  /          |
-  // v           v /           v
-  // 2 --------> 3 ---> 5 ---> 6
-  Dominators g(7);
-  g.add_edge(0, 1);
-  g.add_edge(0, 2);
-  g.add_edge(1, 3);
-  g.add_edge(2, 3);
-  g.add_edge(3, 4);
-  g.add_edge(3, 5);
-  g.add_edge(4, 6);
-  g.add_edge(5, 6);
-  vector<int> idom = g.find_dominators(0);
-  assert((idom == vector<int>{0, 0, 0, 0, 3, 3, 3}));
+  {
+    // 0 ---> 1 ---+   +-------> 4
+    // |           |  /          |
+    // v           v /           v
+    // 2 --------> 3 ---> 5 ---> 6
+    Dominators g(7);
+    g.add_edge(0, 1);
+    g.add_edge(0, 2);
+    g.add_edge(1, 3);
+    g.add_edge(2, 3);
+    g.add_edge(3, 4);
+    g.add_edge(3, 5);
+    g.add_edge(4, 6);
+    g.add_edge(5, 6);
+    vector<int> idom = g.find_dominators(0);
+    assert((idom == vector<int>{0, 0, 0, 0, 3, 3, 3}));
+  }
+  {
+    // Node 3 is reachable through either 1 or 2, so neither one dominates it.
+    // 4 ---> 1 -----+
+    // |     ^|      |
+    // |   /  |      |
+    // v /    v      v
+    // 0 ---> 2 ---> 3
+    Dominators g(5);
+    g.add_edge(0, 1);
+    g.add_edge(0, 2);
+    g.add_edge(1, 2);
+    g.add_edge(1, 3);
+    g.add_edge(2, 3);
+    g.add_edge(4, 0);
+    g.add_edge(4, 1);
+    assert((g.find_dominators(4) == vector<int>{4, 4, 4, 4, 4}));
+  }
   return 0;
 }
 \end{lstlisting}
@@ -2607,6 +2628,11 @@ class TwoSAT {
 
   static int neg(int x) { return x ^ 1; }
 
+  void add_edge(int a, int b) {
+    adj[a].push_back(b);
+    rev[b].push_back(a);
+  }
+
   void dfs_order(int u, std::vector<char> &visited) {
     visited[u] = true;
     for (int v : adj[u]) {
@@ -2632,17 +2658,13 @@ class TwoSAT {
   int literal(int variable, bool value) const { return 2 * variable + (value ? 0 : 1); }
 
   void add_implication(int a, int b) {
-    adj[a].push_back(b);
-    rev[b].push_back(a);
+    add_edge(a, b);
+    add_edge(neg(b), neg(a));
   }
 
-  void add_or(int a, int b) {
-    add_implication(neg(a), b);
-    add_implication(neg(b), a);
-  }
-
-  void add_true(int a) { add_implication(neg(a), a); }
-  void add_false(int a) { add_implication(a, neg(a)); }
+  void add_or(int a, int b) { add_implication(neg(a), b); }
+  void add_true(int a) { add_edge(neg(a), a); }
+  void add_false(int a) { add_edge(a, neg(a)); }
   void add(int variable, bool value) { add_true(literal(variable, value)); }
   void add(int x, bool xval, int y, bool yval) { add_or(literal(x, xval), literal(y, yval)); }
 
@@ -2666,6 +2688,8 @@ class TwoSAT {
       if (component[2 * i] == component[2 * i + 1]) {
         return false;
       }
+    }
+    for (int i = 0; i < variables; i++) {
       solution[i] = component[2 * i] > component[2 * i + 1];
     }
     return true;
@@ -2692,6 +2716,23 @@ int main() {
   solver.add(1, true, 2, false);
   assert(solver.satisfiable());
   assert((solver.assignment() == vector<int>{true, true, true}));
+
+  TwoSAT stateful(2);
+  assert(stateful.satisfiable());
+  vector<int> last_assignment = stateful.assignment();
+  stateful.add(0, false);
+  stateful.add(1, true);
+  stateful.add(1, false);
+  assert(!stateful.satisfiable());
+  assert(stateful.assignment() == last_assignment);
+
+  TwoSAT implication(2);
+  int x = implication.literal(0, true);
+  int y = implication.literal(1, true);
+  implication.add_true(x);
+  implication.add_false(y);
+  implication.add_implication(x, y);
+  assert(!implication.satisfiable());
   return 0;
 }
 \end{lstlisting}
@@ -3359,7 +3400,7 @@ Bellman-Ford relaxes every edge in the graph up to $n - 1$ times, stopping early
 
 \begin{compactitem}
   \item \inlinecode{bellman\_ford(n, start)} populates \inlinecode{dist} and \inlinecode{pred} for a global, pre-populated edge list \inlinecode{edges} whose endpoints must be numbered $[0, {\inlinecodemath{n}})$, and returns whether no reachable negative-weight cycle was found.
-  \item \inlinecode{get\_path(dest)} returns the path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable, after the latest successful call to \inlinecode{bellman\_ford()}.
+  \item \inlinecode{get\_path(dest)} returns the path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable, only after a successful call to \inlinecode{bellman\_ford()}. Otherwise, if the latest call finds a reachable negative-weight cycle, the shortest paths will be undefined.
 \end{compactitem}
 
 For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
@@ -3684,10 +3725,12 @@ Floyd-Warshall's algorithm is a dynamic program over intermediate nodes: for eac
 \begin{compactitem}
   \item \inlinecode{init\_floyd(n)} initializes \inlinecode{dist} and \inlinecode{next\_node} for a graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
   \item \inlinecode{floyd\_warshall()} updates the global adjacency matrix \inlinecode{dist} so \inlinecode{dist[u][v]} stores the shortest-path distance from $u$ to $v$, updates \inlinecode{next\_node} for path reconstruction, and returns whether the graph contains no negative-weight cycle.
-  \item \inlinecode{get\_path(start, dest)} returns the shortest path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable from \inlinecode{start}, after the latest successful call to \inlinecode{floyd\_warshall()}.
+  \item \inlinecode{get\_path(start, dest)} returns the shortest path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable from \inlinecode{start}, provided the most recent call to \inlinecode{floyd\_warshall()} returned true.
 \end{compactitem}
 
 For path reconstruction, \inlinecode{next\_node[i][j]} stores the next node to visit after \inlinecode{i} on a current shortest path from \inlinecode{i} to \inlinecode{j}. It is initialized to \inlinecode{j} for every pair and, when a shorter route \inlinecode{i} $\to$ \inlinecode{k} $\to$ \inlinecode{j} is found, becomes \inlinecode{next\_node[i][k]}. Repeatedly setting \inlinecode{i} to \inlinecode{next\_node[i][j]} therefore walks the path from source to destination. This value is meaningful only when \inlinecode{dist[i][j] != INF}.
+
+Overflow warning: All finite path distances and intermediate sums must fit in \inlinecode{int64\_t}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -3795,12 +3838,12 @@ Initializing every potential to $0$ is equivalent to adding a virtual source wit
 
 \begin{compactitem}
   \item \inlinecode{johnson\_all\_pairs(n)} populates \inlinecode{dist} and \inlinecode{next\_node} for a global, pre-populated edge list \inlinecode{edges} whose nodes are numbered $[0, {\inlinecodemath{n}})$. Each edge is stored as (\inlinecode{u}, \inlinecode{v}, \inlinecode{weight}). Afterward, \inlinecode{dist[u][v]} is the shortest distance from $u$ to $v$, or \inlinecode{INF} if $v$ is unreachable from $u$. The function returns whether the graph contains no negative-weight cycle.
-  \item \inlinecode{get\_path(start, dest)} returns the shortest path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable from \inlinecode{start}, after the latest successful call to \inlinecode{johnson\_all\_pairs()}.
+  \item \inlinecode{get\_path(start, dest)} returns the shortest path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable from \inlinecode{start}, provided the most recent call to \inlinecode{johnson\_all\_pairs()} returned true.
 \end{compactitem}
 
 For path reconstruction, \inlinecode{next\_node[u][v]} stores the first node after \inlinecode{u} on a shortest path to \inlinecode{v}, or $-1$ if \inlinecode{v} is unreachable from \inlinecode{u}. Repeatedly advance \inlinecode{u} to \inlinecode{next\_node[u][v]} until it equals \inlinecode{v}.
 
-All potentials, reduced weights, and path distances must fit in \inlinecode{int64\_t}.
+Overflow warning: All potentials, reduced weights, and path distances must fit in \inlinecode{int64\_t}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -5046,7 +5089,7 @@ int main() {
 \subsection{Flow with Lower Bounds}
 Given a directed network where each edge has lower and upper capacity bounds, find whether the lower bounds can be satisfied, and optionally optimize an $s$-$t$ flow value. Reserve each edge's lower bound, leaving the difference between its bounds as residual capacity, then record the forced imbalance: for an edge from $u$ to $v$, its lower-bound flow must leave $u$ and enter $v$. A super-source supplies every node with net demand, and every node with net surplus sends that surplus to a super-sink. The bounds are feasible exactly when all such auxiliary edges can be saturated.
 
-For $s$-$t$ flow, add an infinite edge from $t$ back to $s$ before checking feasibility. The flow on that artificial edge is one feasible value. After the feasibility check, augmenting from $s$ to $t$ maximizes the value; augmenting from $t$ to $s$ cancels as much flow as possible and minimizes it.
+For $s$-$t$ flow, add infinite auxiliary edges in both directions between $s$ and $t$ before checking feasibility. The difference between their flows is one feasible signed value. After the feasibility check, augmenting from $s$ to $t$ maximizes the value; augmenting from $t$ to $s$ minimizes it.
 
 \begin{compactitem}
   \item \inlinecode{BoundedFlow(n)} constructs a directed lower-bound flow network with nodes in $[0, {\inlinecodemath{n}})$.
@@ -5057,7 +5100,7 @@ For $s$-$t$ flow, add an infinite edge from $t$ back to $s$ before checking feas
   \item \inlinecode{edge\_flows()} returns one feasible flow value for each original edge after a successful call.
 \end{compactitem}
 
-All capacities should be nonnegative integers and \inlinecode{lo} $\leq$ \inlinecode{hi}. Choose \inlinecode{INF} larger than any possible finite flow value. Each feasibility or optimization call starts from the original network, so different variants may be solved successively on the same instance.
+The flow value is the net flow leaving \inlinecode{source} and may be negative when the bounds force flow in the opposite direction. All capacities should be nonnegative integers and \inlinecode{lo} $\leq$ \inlinecode{hi}. Choose \inlinecode{INF} larger than the absolute value of any possible finite flow. Each feasibility or optimization call starts from the original network, so different variants may be solved successively on the same instance.
 
 \textbf{Time Complexity}: $O(n^{2} \cdot (n + m))$ per feasibility check or optimized flow call, where $n$ is the number of nodes and $m$ is the number of edges.
 
@@ -5140,7 +5183,9 @@ class BoundedFlow {
     return flow;
   }
 
-  bool satisfy_demands(int source, int sink, int &artificial_index, int64_t &forced_flow) {
+  bool satisfy_demands(
+      int source, int sink, int &backward_index, int &forward_index, int64_t &forced_flow
+  ) {
     int super_source = static_cast<int>(adj.size());
     int super_sink = super_source + 1;
     adj.resize(super_sink + 1);
@@ -5152,8 +5197,10 @@ class BoundedFlow {
       balance[e.v] += e.lo;
     }
     if (source != -1) {
-      artificial_index = static_cast<int>(adj[sink].size());
+      backward_index = static_cast<int>(adj[sink].size());
       add_residual_edge(sink, source, INF);
+      forward_index = static_cast<int>(adj[source].size());
+      add_residual_edge(source, sink, INF);
     }
     int64_t need = 0;
     for (int u = 0; u < nodes; u++) {
@@ -5165,19 +5212,26 @@ class BoundedFlow {
       }
     }
     bool ok = dinic(super_source, super_sink) == need;
-    forced_flow = source == -1 ? 0 : adj[source][adj[sink][artificial_index].rev].cap;
+    forced_flow = 0;
+    if (source != -1) {
+      forced_flow = adj[source][adj[sink][backward_index].rev].cap -
+                    adj[sink][adj[source][forward_index].rev].cap;
+    }
     return ok;
   }
 
   std::optional<int64_t> optimize_flow(int source, int sink, bool maximize) {
-    int artificial_index = -1;
+    int backward_index = -1, forward_index = -1;
     int64_t value = 0;
-    if (!satisfy_demands(source, sink, artificial_index, value)) {
+    if (!satisfy_demands(source, sink, backward_index, forward_index, value)) {
       return std::nullopt;
     }
-    Edge &artificial = adj[sink][artificial_index];
-    Edge &reverse = adj[source][artificial.rev];
-    artificial.cap = reverse.cap = 0;
+    Edge &backward = adj[sink][backward_index];
+    Edge &backward_reverse = adj[source][backward.rev];
+    Edge &forward = adj[source][forward_index];
+    Edge &forward_reverse = adj[sink][forward.rev];
+    backward.cap = backward_reverse.cap = 0;
+    forward.cap = forward_reverse.cap = 0;
     return maximize ? value + dinic(source, sink) : value - dinic(sink, source);
   }
 
@@ -5203,9 +5257,9 @@ class BoundedFlow {
 
   bool feasible_circulation() {
     reset();
-    int artificial_index = -1;
+    int backward_index = -1, forward_index = -1;
     int64_t value = 0;
-    return satisfy_demands(-1, -1, artificial_index, value);
+    return satisfy_demands(-1, -1, backward_index, forward_index, value);
   }
 
   std::optional<int64_t> max_flow(int source, int sink) {
@@ -5251,6 +5305,12 @@ int main() {
   assert(max_flow[0] + max_flow[1] == 5);
 
   assert(network.min_flow(0, 3) == 1);
+
+  BoundedFlow reverse_flow(2);
+  reverse_flow.add_edge(1, 0, 1, 1);
+  assert(reverse_flow.max_flow(0, 1) == -1);
+  assert(reverse_flow.min_flow(0, 1) == -1);
+  assert((reverse_flow.edge_flows() == std::vector<int64_t>{1}));
 
   //            [2,3]
   //       0 ----------> 1
@@ -6706,6 +6766,9 @@ class WeightedGeneralMatching {
           }
         }
       }
+      if (d == INT64_MAX) {
+        return false;
+      }
       for (int u = 1; u <= n; u++) {
         if (s_[st[u]] == 0) {
           if (lab[u] <= d) {
@@ -6836,6 +6899,12 @@ int main() {
   t.add_edge(2, 3, 5);
   t.add_edge(2, 3, 1);     // A lighter parallel edge does not replace the heavier one.
   assert(t.solve() == 8);  // Edges 0-1 and 2-3 with weights 3 + 5.
+
+  WeightedGeneralMatching star(4);
+  star.add_edge(0, 1, 12);
+  star.add_edge(0, 2, 29);
+  star.add_edge(0, 3, 29);
+  assert(star.solve() == 29);  // Once one heavy edge is matched, no finite dual step remains.
   return 0;
 }
 \end{lstlisting}
@@ -7038,7 +7107,7 @@ int main() {
 \setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Maximum Clique (Bron-Kerbosch)}
-Given an undirected graph, determine a maximum clique: a largest subset of nodes in which every pair is connected by an edge. A weighted variant instead seeks the clique of maximum total node weight, given a weight for each node.
+Given a simple undirected graph, determine a maximum clique: a largest subset of nodes in which every pair is connected by an edge. A weighted variant instead seeks the clique of maximum total node weight, given a weight for each node.
 
 The Bron-Kerbosch algorithm recursively extends a growing clique, tracking the set of candidate nodes that may still be added and the set of nodes already excluded. Choosing a pivot node to avoid branching on its neighbors prunes large parts of the search, keeping it efficient on most graphs.
 
@@ -7174,7 +7243,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Graph Coloring (Backtracking)}
-Given an undirected graph, assign a color to every node such that no pair of adjacent nodes have the same color, and that the total number of colors used is minimized.
+Given a simple undirected graph, assign a color to every node such that no pair of adjacent nodes have the same color, and that the total number of colors used is minimized.
 
 This implementation finds the chromatic number by backtracking: nodes (ordered by degree to prune sooner) are colored one at a time, each tried with every color already in use plus one new color, while the fewest colors seen in a complete coloring so far bounds the search and cuts off any branch at least as costly.
 

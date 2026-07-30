@@ -17,6 +17,9 @@ scales may require rescaling the input or using multiprecision arithmetic.
   relative error (whichever is reached first), and zero roots are removed exactly before the
   simultaneous iteration starts.
 
+Root-finding inputs must contain at least one nonzero coefficient; trailing near-zero coefficients
+are discarded. `eval_with_derivative()` requires a nonempty coefficient vector.
+
 Time Complexity:
 - O(n) per call to `eval_with_derivative()`, where $n$ is the degree of the polynomial.
 - O(n^2 t) per call to `find_all_roots()`, where $n$ is the degree of the polynomial and $t$ is the

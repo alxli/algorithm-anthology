@@ -35,7 +35,7 @@ materialize, including broad integer or real intervals.
   point by simply interchanging the assignments of `lo` and `hi` in the if-else statements.
 
 Overflow warning: For both integer searches, `hi - lo` must be representable by `Int`. For example,
-[INT_MIN, INT_MAX) will overflow if passed as signed 32-bit integer boundaries.
+$[`INT_MIN`, `INT_MAX`)$ will overflow if passed as signed 32-bit integer boundaries.
 
 Time Complexity:
 - O(log n) calls to `pred()` per call to `binary_search_first_true()` and

@@ -19,14 +19,15 @@ solutions.
   the `getl(lu, i, j)` and `getu(lu, i, j)` functions. Optionally, a `vector<int>` pointer `perm`
   may be passed to return the permutation vector `perm` where `perm[i]` stores the only column that
   is equal to $1$ in row $i$ of the permutation matrix $p$ (all other columns in row $i$ of $p$ are
-  implicitly $0$). The permutation matrix $p$ corresponding to `perm` satisfies $pa = lu$.
+  implicitly $0$). Left-multiplying `a` by this permutation matrix gives the product of the separate
+  lower and upper triangular matrices, not the merged storage matrix `lu` itself.
 - `solve_system(a, b, &x, eps = 1e-10)` solves the system of linear equations $ax = b$ given an $m$
   by $n$ matrix `a` of real values, and a length $m$ vector `b`, returning $0$ if there is one
   solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then
-  the output pointer `x` is populated with the solution vector of length $n$.
+  the output vector `x` is populated with the solution of length $n$; otherwise, `x` is unchanged.
 - `det(a)` returns the determinant of an $n$ by $n$ matrix `a` using LU decomposition.
 - `invert(a)` assigns the $n$ by $n$ matrix `a` to its inverse (if it exists), returning $0$ if the
-  inversion was successful or $-1$ if `a` has no inverse.
+  inversion was successful or $-1$ if `a` has no inverse, in which case `a` is unchanged.
 
 Time Complexity:
 - O(m*n*min(m, n)) per call to `lu_decompose(a)`, where $m$ and $n$ are the numbers of rows and
@@ -101,29 +102,29 @@ int solve_system(
   if (x == nullptr || a.empty() || a.size() != b.size() || rows < cols) {
     return -1;
   }
-  x->resize(cols);
   std::vector<int> perm;
   Matrix lu;
   int status = lu_decompose(lu = a, &perm, eps);
   if (status < 0) {
     return status;
   }
+  std::vector<T> solution(cols);
   for (int i = 0; i < cols; i++) {
-    (*x)[i] = b[perm[i]];
+    solution[i] = b[perm[i]];
     for (int k = 0; k < i; k++) {
-      (*x)[i] -= getl(lu, i, k) * (*x)[k];
+      solution[i] -= getl(lu, i, k) * solution[k];
     }
   }
   for (int i = cols - 1; i >= 0; i--) {
     for (int k = i + 1; k < cols; k++) {
-      (*x)[i] -= getu(lu, i, k) * (*x)[k];
+      solution[i] -= getu(lu, i, k) * solution[k];
     }
-    (*x)[i] /= getu(lu, i, i);
+    solution[i] /= getu(lu, i, i);
   }
   for (int i = 0; i < rows; i++) {
     double val = 0;
     for (int j = 0; j < cols; j++) {
-      val += a[i][j] * (*x)[j];
+      val += a[i][j] * solution[j];
     }
     // Mixed absolute/relative tolerance: dividing by b[i] alone would skip the check for negative
     // b[i] (ratio goes negative) and divide by zero when b[i] == 0.
@@ -131,6 +132,7 @@ int solve_system(
       return -1;
     }
   }
+  x->swap(solution);
   return 0;
 }
 
@@ -153,7 +155,8 @@ template<typename T>
 int invert(T &a) {
   int n = static_cast<int>(a.size());
   std::vector<int> perm;
-  int status = lu_decompose(a, &perm);
+  T lu = a;
+  int status = lu_decompose(lu, &perm);
   if (status < 0) {
     return status;
   }
@@ -166,14 +169,14 @@ int invert(T &a) {
         ia[i][j] = 0.0;
       }
       for (int k = 0; k < i; k++) {
-        ia[i][j] -= getl(a, i, k) * ia[k][j];
+        ia[i][j] -= getl(lu, i, k) * ia[k][j];
       }
     }
     for (int i = n - 1; i >= 0; i--) {
       for (int k = i + 1; k < n; k++) {
-        ia[i][j] -= getu(a, i, k) * ia[k][j];
+        ia[i][j] -= getu(lu, i, k) * ia[k][j];
       }
-      ia[i][j] /= getu(a, i, i);
+      ia[i][j] /= getu(lu, i, i);
     }
   }
   a.swap(ia);
@@ -225,6 +228,16 @@ int main() {
         assert(EQ(res[i][j], i == j ? 1 : 0));
       }
     }
+  }
+  {  // Failed operations leave their output arguments unchanged.
+    vector<vector<double>> singular{{1, 2}, {2, 4}};
+    vector<vector<double>> original = singular;
+    assert(invert(singular) == -1 && singular == original);
+
+    vector<vector<double>> inconsistent{{1}, {1}};
+    vector<double> b{1, 2}, x{99, 100};
+    assert(solve_system(inconsistent, b, &x) == -1);
+    assert((x == vector<double>{99, 100}));
   }
   return 0;
 }

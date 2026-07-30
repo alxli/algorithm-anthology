@@ -17,6 +17,9 @@ repeats on the lower-degree quotient until every root has been extracted.
   complex polynomial `p`. The roots are found to a tolerance of `eps` in absolute or relative error
   (whichever is reached first).
 
+Coefficient vectors must be nonempty and omit trailing zero coefficients. `find_one_root()` requires
+a polynomial of degree at least one.
+
 Time Complexity:
 - O(n) per call to `horner_eval()`, where $n$ is the degree of the polynomial.
 - O(nt) per call to `find_one_root()`, where $n$ is the degree of the polynomial and $t$ is the

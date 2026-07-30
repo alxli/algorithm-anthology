@@ -287,6 +287,9 @@ class WeightedGeneralMatching {
           }
         }
       }
+      if (d == INT64_MAX) {
+        return false;
+      }
       for (int u = 1; u <= n; u++) {
         if (s_[st[u]] == 0) {
           if (lab[u] <= d) {
@@ -416,5 +419,11 @@ int main() {
   t.add_edge(2, 3, 5);
   t.add_edge(2, 3, 1);     // A lighter parallel edge does not replace the heavier one.
   assert(t.solve() == 8);  // Edges 0-1 and 2-3 with weights 3 + 5.
+
+  WeightedGeneralMatching star(4);
+  star.add_edge(0, 1, 12);
+  star.add_edge(0, 2, 29);
+  star.add_edge(0, 3, 29);
+  assert(star.solve() == 29);  // Once one heavy edge is matched, no finite dual step remains.
   return 0;
 }

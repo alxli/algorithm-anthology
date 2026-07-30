@@ -15,7 +15,8 @@ anywhere in the graph, add a virtual source with zero-weight edges to every node
   whose endpoints must be numbered $[0, `n`)$, and returns whether no reachable negative-weight
   cycle was found.
 - `get_path(dest)` returns the path from `start` to `dest`, or an empty vector if `dest` is
-  unreachable, after the latest successful call to `bellman_ford()`.
+  unreachable, only after a successful call to `bellman_ford()`. Otherwise, if the latest call finds
+  a reachable negative-weight cycle, the shortest paths will be undefined.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 `start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the

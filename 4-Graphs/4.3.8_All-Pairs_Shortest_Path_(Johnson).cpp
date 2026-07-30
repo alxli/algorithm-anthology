@@ -16,13 +16,14 @@ reachable from a particular original node. If such a cycle exists, shortest path
   Afterward, `dist[u][v]` is the shortest distance from $u$ to $v$, or `INF` if $v$ is unreachable
   from $u$. The function returns whether the graph contains no negative-weight cycle.
 - `get_path(start, dest)` returns the shortest path from `start` to `dest`, or an empty vector if
-  `dest` is unreachable from `start`, after the latest successful call to `johnson_all_pairs()`.
+  `dest` is unreachable from `start`, provided the most recent call to `johnson_all_pairs()`
+  returned true.
 
 For path reconstruction, `next_node[u][v]` stores the first node after `u` on a shortest path to
 `v`, or $-1$ if `v` is unreachable from `u`. Repeatedly advance `u` to `next_node[u][v]` until it
 equals `v`.
 
-All potentials, reduced weights, and path distances must fit in `int64_t`.
+Overflow warning: All potentials, reduced weights, and path distances must fit in `int64_t`.
 
 Time Complexity:
 - O(n*m + n*(n + m)*log n) per call, where $n$ is the number of nodes and $m$ is the number of

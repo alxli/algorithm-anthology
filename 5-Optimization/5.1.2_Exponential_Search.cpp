@@ -5,8 +5,8 @@ known in advance. Exponential search first grows the search range by powers of t
 the transition point, then finishes with ordinary binary search.
 
 This is useful for answer-search problems over unbounded or very large integer domains. The
-predicate must eventually become true, or the search may overflow or run forever unless an explicit
-limit is added.
+predicate must become true before the exponentially growing probe overflows `Int`; otherwise, add an
+explicit limit.
 
 - `exponential_search_first_true(lo, pred)` returns the smallest integer `x` greater than or equal
   to `lo` such that `pred(x)` is true.
