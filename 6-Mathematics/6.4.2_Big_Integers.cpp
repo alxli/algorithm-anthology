@@ -2,10 +2,10 @@
 
 Perform operations on arbitrary precision big integers internally represented as a vector of
 base-`BASE` digits in little-endian order. `BASE` defaults to $10^9$ and must be a power of 10 no
-larger than $10^9$; `USE_FFT_MULT` selects FFT multiplication when true and Karatsuba multiplication
-when false. Typical arithmetic operations involving mixed numeric primitives and strings are
-supported through implicit construction and hidden friend operators, as long as at least one operand
-is a `BigInt` at any given level of evaluation.
+larger than $10^9$. Multiplication picks its algorithm from the operand size, so no configuration is
+needed. Typical arithmetic operations involving mixed numeric primitives and strings are supported
+through implicit construction and hidden friend operators, as long as at least one operand is a
+`BigInt` at any given level of evaluation.
 
 - `BigInt()` constructs zero, and `BigInt(n)` constructs a big integer from an integer `n`.
 - `BigInt(s)` constructs a big integer from a C string or an `std::string` `s`.
@@ -24,12 +24,12 @@ is a `BigInt` at any given level of evaluation.
 - Operators `<`, `>`, `<=`, `>=`, `==`, `!=`, `+`, `-`, `*`, `/`, `%`, `++`, `--`, `+=`, `-=`, `*=`,
   `/=`, and `%=` are defined analogous to those on integer primitives. Addition, subtraction, and
   comparisons are performed using the standard linear algorithms. Multiplication first converts
-  limbs from base $10^9$ to base $10^4$ so coefficient products fit safely, then uses either
-  Karatsuba multiplication (if `USE_FFT_MULT` is false) or complex FFT convolution (if
-  `USE_FFT_MULT` is true), converting the result back to base $10^9$. Division and modulo are
-  computed together by normalized long division: scale the operands so the divisor's leading limb is
-  large, estimate each quotient limb from the top one or two limbs of the running remainder, correct
-  the estimate by adding the divisor back if necessary, then unscale the remainder.
+  limbs from base `BASE` to the narrower base `MULT_BASE` so coefficient products fit safely, then
+  multiplies with schoolbook, Karatsuba, or complex FFT convolution according to the operand size,
+  converting the result back. Division and modulo are computed together by normalized long division:
+  scale the operands so the divisor's leading limb is large, estimate each quotient limb from the
+  top one or two limbs of the running remainder, correct the estimate by adding the divisor back if
+  necessary, then unscale the remainder.
 - `a.div(v)` returns a pair consisting of the quotient and remainder when `a` is divided by `v`.
 - `v.pow(n)` returns `v` raised to the nonnegative power $n$.
 - `v.sqrt()` returns the integral part of the square root of big integer `v`.
@@ -40,13 +40,22 @@ is a `BigInt` at any given level of evaluation.
 `pow(n)` uses binary exponentiation. `sqrt()` uses a digit-by-digit square-root algorithm in the
 internal base, while `nth_root(n)` uses binary search over the answer range.
 
+All three multiplication methods produce identical results, so the choice only trades constant
+factors. Karatsuba falls back to schoolbook on short operands, and beats FFT up to roughly $400$
+decimal digits; past that FFT pulls ahead, reaching about a $3.5$x advantage by $6400$ digits.
+`FFT_CUTOFF` is the padded transform length, counted in `MULT_BASE` limbs, at which FFT takes over,
+so lowering it favors FFT on smaller inputs. The rebasing is what keeps multiplication exact: a
+product of two base-$10^9$ limbs already reaches $10^{18}$, so summing only nine of them would
+overflow `int64_t`, and such coefficients are far past the $53$ bits a complex FFT represents
+exactly.
+
 Time Complexity:
 - O(n) per call to the constructors, `size()`, `to_string()`, `to_llong()`, `to_double()`,
   `to_ldouble()`, `abs()`, `comp()`, `rand()`, and all comparison and arithmetic operators except
   multiplication, division, and modulo, where $n$ is total number of digits in the arguments and
   result for each operation.
-- O(n*log(n)*log(log(n))) or O(n^1.585) per call to multiplication operations, depending on whether
-  `USE_FFT_MULT` is set to true or false.
+- O(n*log(n)*log(log(n))) per call to multiplication operations once operands reach `FFT_CUTOFF`,
+  and O(n^1.585) below it.
 - O(n*m) per call to division and modulo operations, where $n$ and $m$ are the number of digits in
   the dividend and divisor, respectively.
 - O(M(d) log n) per call to `pow()`, where $d$ is the maximum digit length reached during
@@ -81,10 +90,19 @@ Space Complexity:
 #include <vector>
 
 class BigInt {
-  static const int BASE = 1000000000, BASE_DIGITS = 9;
-  static const bool USE_FFT_MULT = true;
-  static_assert(10 <= BASE && BASE <= 1000000000, "BASE must be between 10 and 10^9");
-  static_assert(BASE_DIGITS > 0, "BASE must be a power of 10");
+  static const int BASE = 1000000000, BASE_DIGITS = 9;  // BASE must equal 10^BASE_DIGITS.
+  // Multiplication rebases to half as many decimal digits per limb, so that coefficient products
+  // stay exact both in int64_t and within the FFT's double precision.
+  static const int MULT_BASE = 10000, MULT_BASE_DIGITS = 4;  // Keep consistent with BASE_DIGITS.
+  static const int FFT_CUTOFF = 256;  // Padded MULT_BASE length past which FFT beats Karatsuba.
+  static_assert(
+      BASE >= 100 && BASE <= 1000000000,
+      "BASE must be between 10^2 and 10^9; below that MULT_BASE_DIGITS would round down to zero"
+  );
+  static_assert(
+      MULT_BASE_DIGITS == BASE_DIGITS / 2 && MULT_BASE <= 10000,
+      "MULT_BASE must hold half of BASE's digits and stay exact under the FFT"
+  );
 
   using vint = std::vector<int>;
   using vint64 = std::vector<int64_t>;
@@ -424,9 +442,8 @@ class BigInt {
   }
 
   friend BigInt operator*(const BigInt &u, const BigInt &v) {
-    static const int TEMP_BASE = 10000, TEMP_BASE_DIGITS = 4;
-    vint a = convert_base(u.digits, BASE_DIGITS, TEMP_BASE_DIGITS);
-    vint b = convert_base(v.digits, BASE_DIGITS, TEMP_BASE_DIGITS);
+    vint a = convert_base(u.digits, BASE_DIGITS, MULT_BASE_DIGITS);
+    vint b = convert_base(v.digits, BASE_DIGITS, MULT_BASE_DIGITS);
     int n = 1;
     while (n < 2 * static_cast<int>(std::max(a.size(), b.size()))) {
       n <<= 1;
@@ -434,7 +451,7 @@ class BigInt {
     a.resize(n, 0);
     b.resize(n, 0);
     vint64 c;
-    if (USE_FFT_MULT) {
+    if (n >= FFT_CUTOFF) {
       auto at = fft(a.begin(), a.end()), bt = fft(b.begin(), b.end());
       for (int i = 0; i < n; i++) {
         at[i] *= bt[i];
@@ -451,10 +468,10 @@ class BigInt {
     res.sign = u.sign * v.sign;
     for (int i = 0, carry = 0; i < static_cast<int>(c.size()); i++) {
       int64_t d = c[i] + carry;
-      res.digits.push_back(d % TEMP_BASE);
-      carry = d / TEMP_BASE;
+      res.digits.push_back(d % MULT_BASE);
+      carry = d / MULT_BASE;
     }
-    res.digits = convert_base(res.digits, TEMP_BASE_DIGITS, BASE_DIGITS);
+    res.digits = convert_base(res.digits, MULT_BASE_DIGITS, BASE_DIGITS);
     res.normalize();
     return res;
   }

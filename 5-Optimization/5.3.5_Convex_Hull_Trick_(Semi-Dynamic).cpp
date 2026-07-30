@@ -41,45 +41,43 @@ Space Complexity:
 #include <vector>
 
 class SemiDynamicCHT {
-  std::vector<int64_t> slopes, intercepts;
+  std::vector<int64_t> vm, vb;
   int ptr = 0;
 
  public:
   void add_line(int64_t m, int64_t b) {
-    int len = static_cast<int>(slopes.size());
-    if (len > 0 && slopes.back() == m) {
-      if (intercepts.back() <= b) {
+    int len = static_cast<int>(vm.size());
+    if (len > 0 && vm.back() == m) {
+      if (vb.back() <= b) {
         return;
       }
-      slopes.pop_back();
-      intercepts.pop_back();
+      vm.pop_back();
+      vb.pop_back();
       len--;
       if (ptr > len) {
         ptr = len;
       }
     }
-    // Overflow warning.
-    while (len > 1 && (intercepts[len - 2] - intercepts[len - 1]) * (m - slopes[len - 1]) >=
-                          (intercepts[len - 1] - b) * (slopes[len - 1] - slopes[len - 2])) {
+    while (len > 1 && (vb[len - 2] - vb[len - 1]) * (m - vm[len - 1]) >=
+                          (vb[len - 1] - b) * (vm[len - 1] - vm[len - 2])) {  // Overflow warning.
       len--;
     }
-    slopes.resize(len);
-    intercepts.resize(len);
-    slopes.push_back(m);
-    intercepts.push_back(b);
+    vm.resize(len);
+    vb.resize(len);
+    vm.push_back(m);
+    vb.push_back(b);
   }
 
   int64_t query(int64_t x) {
-    assert(!slopes.empty());
-    if (ptr >= static_cast<int>(slopes.size())) {
-      ptr = static_cast<int>(slopes.size()) - 1;
+    assert(!vm.empty());
+    if (ptr >= static_cast<int>(vm.size())) {
+      ptr = static_cast<int>(vm.size()) - 1;
     }
-    // Overflow warning.
-    while (ptr + 1 < static_cast<int>(slopes.size()) &&
-           slopes[ptr + 1] * x + intercepts[ptr + 1] <= slopes[ptr] * x + intercepts[ptr]) {
+    while (ptr + 1 < static_cast<int>(vm.size()) &&
+           vm[ptr + 1] * x + vb[ptr + 1] <= vm[ptr] * x + vb[ptr]) {  // Overflow warning.
       ptr++;
     }
-    return slopes[ptr] * x + intercepts[ptr];
+    return vm[ptr] * x + vb[ptr];
   }
 };
 

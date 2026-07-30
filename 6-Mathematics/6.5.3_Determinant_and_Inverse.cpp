@@ -5,26 +5,30 @@ matrix $a$ is another matrix $b$ such that $ab$ equals the identity matrix. The 
 exists if and only if the determinant of $a$ is nonzero. In this case, $a$ is called invertible or
 non-singular. The determinant falls out of elimination as the product of the pivots, negated once
 per row swap. The inverse is found by appending the identity matrix and row-reducing the combined
-matrix: the operations that turn $a$ into the identity turn the identity into the inverse. In
-practice, simple Gaussian elimination is prone to rounding error on certain matrices. For a more
-accurate algorithm for solving systems of linear equations, use LU decomposition with row partial
-pivoting. For an integer matrix whose determinant is wanted exactly, the Bareiss algorithm runs a
-fraction-free elimination: every intermediate value is itself a determinant of a submatrix, so the
-divisions are always exact and the arithmetic stays in integers.
+matrix: the operations that turn $a$ into the identity turn the identity into the inverse.
+
+Floating-point matrices use the largest-magnitude pivot in each column, although Gaussian
+elimination can still suffer from rounding error; use LU decomposition for greater numerical
+stability. Exact field types such as `Modular<MOD>` use any nonzero pivot and perform exact
+arithmetic. These types must support construction from $0$ and $1$, equality, addition, subtraction,
+multiplication, and division. For an integer matrix whose determinant is wanted exactly, the Bareiss
+algorithm runs a fraction-free elimination: every intermediate value is itself a determinant of a
+submatrix, so the divisions are always exact and the arithmetic stays in integers.
 
 - `det_naive(a)` returns the determinant of an $n$ by $n$ matrix `a`, using the classic
   divide-and-conquer algorithm by Laplace expansions. It is division-free and computes in the
   matrix's element type, so an integer matrix yields an exact integer determinant; but at O(n!) it
   is only practical for tiny `n`, so prefer `det_bareiss` for exact integer determinants.
-- `det(a, eps = 1e-10)` returns the determinant of an $n$ by $n$ matrix `a` using Gaussian
-  elimination, treating pivots within `eps` of zero as singular.
+- `det(a, eps = 1e-10)` returns the determinant of an $n$ by $n$ floating-point or exact-field
+  matrix `a` using Gaussian elimination. Floating-point pivots within `eps` of zero are treated as
+  singular; exact fields use equality with zero.
 - `det_bareiss(a)` returns the exact determinant of an integer matrix `a` using fraction-free
   elimination, with no rounding error. Stored entries are minors of `a`, but the products in each
   update can be larger. They use 128-bit intermediates when available; otherwise those products must
   fit in `int64_t`.
-- `invert(a, eps = 1e-10)` returns $0$ after assigning the $n$ by $n$ matrix `a` to its inverse. It
-  must contain real values. The function leaves `a` unchanged and returns $-1$ if a pivot is within
-  `eps` of zero.
+- `invert(a, eps = 1e-10)` returns $0$ after assigning the $n$ by $n$ floating-point or exact-field
+  matrix `a` to its inverse. It leaves `a` unchanged and returns $-1$ if the matrix is singular;
+  floating-point pivots within `eps` of zero are treated as singular.
 
 Time Complexity:
 - O(n!) per call to `det_naive()`, where $n$ is the dimension of the matrix.
@@ -46,8 +50,8 @@ Space Complexity:
 
 template<typename SquareMatrix>
 auto det_naive(const SquareMatrix &a) {
-  int n = static_cast<int>(a.size());
   using T = std::decay_t<decltype(a[0][0])>;
+  int n = static_cast<int>(a.size());
   if (n == 0) {
     return T(1);
   }
@@ -79,30 +83,44 @@ auto det_naive(const SquareMatrix &a) {
 }
 
 template<typename SquareMatrix>
-double det(const SquareMatrix &a, double eps = 1e-10) {
+int elimination_pivot(const SquareMatrix &a, int row, int col, double eps) {
+  using T = std::decay_t<decltype(a[0][0])>;
   int n = static_cast<int>(a.size());
-  SquareMatrix b(a);
-  double res = 1.0;
-  for (int i = 0; i < n; i++) {
-    // Partial pivoting: bring the largest-magnitude entry in column i to the diagonal. Each row
-    // swap negates the determinant, so the swap sign must be tracked. Selecting pivot rows out of
-    // order without this sign correction can return |det| with the wrong sign.
-    int p = i;
-    for (int r = i + 1; r < n; r++) {
-      if (fabs(b[r][i]) > fabs(b[p][i])) {
-        p = r;
+  if constexpr (std::is_floating_point_v<T>) {
+    int pivot = row;
+    for (int r = row + 1; r < n; r++) {
+      if (fabs(a[r][col]) > fabs(a[pivot][col])) {
+        pivot = r;
       }
     }
-    if (fabs(b[p][i]) < eps) {
-      return 0;
+    return fabs(a[pivot][col]) < eps ? -1 : pivot;
+  }
+  for (int r = row; r < n; r++) {
+    if (a[r][col] != T(0)) {
+      return r;
+    }
+  }
+  return -1;
+}
+
+template<typename SquareMatrix>
+auto det(const SquareMatrix &a, double eps = 1e-10) {
+  using T = std::decay_t<decltype(a[0][0])>;
+  int n = static_cast<int>(a.size());
+  SquareMatrix b(a);
+  T res = 1;
+  for (int i = 0; i < n; i++) {
+    int p = elimination_pivot(b, i, i, eps);
+    if (p == -1) {
+      return T(0);
     }
     if (p != i) {
       std::swap(b[p], b[i]);
-      res = -res;
+      res = T(0) - res;
     }
     res *= b[i][i];
     for (int j = i + 1; j < n; j++) {
-      double z = b[j][i] / b[i][i];
+      T z = b[j][i] / b[i][i];
       for (int k = i; k < n; k++) {
         b[j][k] -= z * b[i][k];
       }
@@ -114,9 +132,6 @@ double det(const SquareMatrix &a, double eps = 1e-10) {
 int64_t det_bareiss(std::vector<std::vector<int64_t>> a) {
   int n = static_cast<int>(a.size());
   int64_t prev = 1, sign = 1;
-#if defined(__SIZEOF_INT128__)
-  __extension__ typedef __int128 int128_t;
-#endif
   for (int k = 0; k < n; k++) {
     if (a[k][k] == 0) {  // Swap in a nonzero pivot; each swap flips the sign.
       int p = -1;
@@ -135,12 +150,12 @@ int64_t det_bareiss(std::vector<std::vector<int64_t>> a) {
     for (int i = k + 1; i < n; i++) {
       for (int j = k + 1; j < n; j++) {
 #if defined(__SIZEOF_INT128__)
+        __extension__ typedef __int128 int128_t;
         int128_t numerator =
             static_cast<int128_t>(a[i][j]) * a[k][k] - static_cast<int128_t>(a[i][k]) * a[k][j];
         a[i][j] = static_cast<int64_t>(numerator / prev);
 #else
-        // Overflow warning.
-        a[i][j] = (a[i][j] * a[k][k] - a[i][k] * a[k][j]) / prev;
+        a[i][j] = (a[i][j] * a[k][k] - a[i][k] * a[k][j]) / prev;  // Overflow warning.
 #endif
       }
     }
@@ -151,6 +166,7 @@ int64_t det_bareiss(std::vector<std::vector<int64_t>> a) {
 
 template<typename SquareMatrix>
 int invert(SquareMatrix &a, double eps = 1e-10) {
+  using T = std::decay_t<decltype(a[0][0])>;
   int n = static_cast<int>(a.size());
   SquareMatrix b(a);
   for (int i = 0; i < n; i++) {
@@ -160,26 +176,18 @@ int invert(SquareMatrix &a, double eps = 1e-10) {
     }
   }
   for (int i = 0; i < n; i++) {
-    // Partial pivoting: without it a zero on the diagonal divides by zero and fails even for an
-    // invertible matrix (e.g. a permutation matrix). Picking the largest-magnitude pivot also
-    // improves numerical stability.
-    int p = i;
-    for (int r = i + 1; r < n; r++) {
-      if (fabs(b[r][i]) > fabs(b[p][i])) {
-        p = r;
-      }
-    }
-    if (fabs(b[p][i]) < eps) {
+    int p = elimination_pivot(b, i, i, eps);
+    if (p == -1) {
       return -1;
     }
     std::swap(b[p], b[i]);
-    double pivot = b[i][i];
+    T pivot = b[i][i];
     for (int j = i; j < n * 2; j++) {
       b[i][j] /= pivot;
     }
     for (int j = 0; j < n; j++) {
       if (i != j) {
-        double factor = b[j][i];
+        T factor = b[j][i];
         for (int k = 0; k < n * 2; k++) {
           b[j][k] -= factor * b[i][k];
         }

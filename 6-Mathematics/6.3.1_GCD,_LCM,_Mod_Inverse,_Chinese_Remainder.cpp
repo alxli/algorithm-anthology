@@ -173,7 +173,7 @@ bool crt(int64_t r1, int64_t m1, int64_t r2, int64_t m2, int64_t *r, int64_t *m)
       (static_cast<int128_t>(r1) + static_cast<int128_t>(m1) * mod(x, m2 / g)) % *m
   );
 #else
-  *r = mod(r1 + m1 * mod(x, m2 / g), *m);  // Overflow warning without int128.
+  *r = mod(r1 + m1 * mod(x, m2 / g), *m);  // Overflow warning.
 #endif
   return true;
 }

@@ -13,7 +13,7 @@ way to find the critical path in a schedule of dependent tasks.
   have any sign. `dist[v]` is set to `INF` for nodes not reachable from `start`, and `pred` stores
   the shortest-path tree for path reconstruction.
 - `get_path(dest)` returns the path from `start` to `dest`, or an empty vector if `dest` is
-  unreachable, after the latest call to `dag_shortest_path()`.
+  unreachable, using the state left by the most recent call to `dag_shortest_path()`.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 `start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the
@@ -40,23 +40,22 @@ std::vector<std::vector<std::pair<int, int>>> adj;
 std::vector<int64_t> dist;
 std::vector<int> pred;
 
-void topological_dfs(int u, std::vector<char> &visit, std::vector<int> &order) {
-  visit[u] = true;
-  for (auto [v, w] : adj[u]) {
-    if (!visit[v]) {
-      topological_dfs(v, visit, order);
-    }
-  }
-  order.push_back(u);
-}
-
 void dag_shortest_path(int start) {
   int n = static_cast<int>(adj.size());
   std::vector<char> visit(n, false);
   std::vector<int> order;
+  auto dfs = [&](auto &&dfs, int u) -> void {
+    visit[u] = true;
+    for (auto [v, w] : adj[u]) {
+      if (!visit[v]) {
+        dfs(dfs, v);
+      }
+    }
+    order.push_back(u);
+  };
   for (int i = 0; i < n; i++) {
     if (!visit[i]) {
-      topological_dfs(i, visit, order);
+      dfs(dfs, i);
     }
   }
   std::reverse(order.begin(), order.end());
@@ -68,7 +67,7 @@ void dag_shortest_path(int start) {
       continue;
     }
     for (auto [v, w] : adj[u]) {
-      if (dist[u] + w < dist[v]) {
+      if (dist[u] + w < dist[v]) {  // Overflow warning.
         dist[v] = dist[u] + w;
         pred[v] = u;
       }

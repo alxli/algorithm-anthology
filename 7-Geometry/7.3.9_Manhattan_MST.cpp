@@ -39,7 +39,6 @@ std::vector<std::tuple<int64_t, int, int>> manhattan_mst_edges(std::vector<Point
   std::iota(id.begin(), id.end(), 0);
   std::vector<std::tuple<int64_t, int, int>> edges;
   for (int rot = 0; rot < 4; rot++) {
-    // Overflow warning.
     std::sort(id.begin(), id.end(), [&](int i, int j) {
       return p[i].x + p[i].y < p[j].x + p[j].y;
     });

@@ -36,17 +36,6 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-std::string matrix_chain_parenthesization(
-    const std::vector<std::vector<int>> &split, int lo, int hi
-) {
-  if (lo == hi) {
-    return "A" + std::to_string(lo);
-  }
-  int k = split[lo][hi];
-  return "(" + matrix_chain_parenthesization(split, lo, k) + " * " +
-         matrix_chain_parenthesization(split, k + 1, hi) + ")";
-}
-
 std::pair<int64_t, std::string> matrix_chain_order(const std::vector<int> &dimensions) {
   assert(dimensions.size() >= 2);
   for (int d : dimensions) {
@@ -69,7 +58,14 @@ std::pair<int64_t, std::string> matrix_chain_order(const std::vector<int> &dimen
       }
     }
   }
-  return {dp[0][n - 1], matrix_chain_parenthesization(split, 0, n - 1)};
+  auto rec = [&](auto &&rec, int lo, int hi) -> std::string {
+    if (lo == hi) {
+      return "A" + std::to_string(lo);
+    }
+    int k = split[lo][hi];
+    return "(" + rec(rec, lo, k) + " * " + rec(rec, k + 1, hi) + ")";
+  };
+  return {dp[0][n - 1], rec(rec, 0, n - 1)};
 }
 
 /*** Example Usage ***/

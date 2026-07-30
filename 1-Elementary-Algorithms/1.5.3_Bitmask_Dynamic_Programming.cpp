@@ -171,22 +171,23 @@ int64_t count_domino_tilings(int rows, int cols) {
 /*** Example Usage ***/
 
 #include <cassert>
+using namespace std;
 
 int main() {
-  std::vector<std::vector<int64_t>> cost{{9, 2, 7}, {6, 4, 3}, {5, 8, 1}};
+  vector<vector<int64_t>> cost{{9, 2, 7}, {6, 4, 3}, {5, 8, 1}};
   auto [assignment_cost, job] = assignment_min_cost(cost);
   assert(assignment_cost == 9);
-  assert((job == std::vector<int>{1, 0, 2}));
+  assert((job == vector<int>{1, 0, 2}));
 
-  std::vector<int> sets{0b0011, 0b0110, 0b1100, 0b1000};
+  vector<int> sets{0b0011, 0b0110, 0b1100, 0b1000};
   auto [cover_count, chosen] = minimum_set_cover(sets, 4);
   assert(cover_count == 2);
-  assert((chosen == std::vector<int>{0, 2}));
+  assert((chosen == vector<int>{0, 2}));
 
-  auto [impossible_count, impossible_chosen] = minimum_set_cover(std::vector<int>{0b001, 0b010}, 3);
+  auto [impossible_count, impossible_chosen] = minimum_set_cover(vector<int>{0b001, 0b010}, 3);
   assert(impossible_count == -1 && impossible_chosen.empty());
 
-  std::vector<int64_t> group_cost{
+  vector<int64_t> group_cost{
       0,        // Empty group is unused.
       4, 6, 7,  // Singletons.
       6, 2, 3,  // Pairs.

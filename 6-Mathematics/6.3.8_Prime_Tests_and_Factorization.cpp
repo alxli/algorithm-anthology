@@ -40,25 +40,25 @@ integers.
 
 Time Complexity:
 - O(sqrt(n)) per call to `is_prime_slow()` and `factorize_slow()`.
-- O(k*log(n)) modular multiplications per call to `is_probable_prime()` and O(log(n)) per call to
-  `is_prime()`. The portable multiplication fallback adds another O(log(n)) factor.
+- O(k*log n) modular multiplications per call to `is_probable_prime()` and O(log n) per call to
+  `is_prime()`. The portable multiplication fallback adds another O(log n) factor.
 - O(n) per call to `cached_sieve()` when rebuilding the cache, or O(1) when the existing cache is
   large enough.
 - O(sqrt(p)) expected modular multiplications per call to `rho_factor(n)`, where $p$ is the smallest
   prime factor of `n`. For composite `n`, this is at most O(n^{1/4}).
 - O(n^{1/4}) expected per call to `factorize_rho()`. `factorize(n, L)` additionally performs
-  O(L/log(L)) trial divisions and takes O(L) time if the prime cache must be rebuilt to `L`.
+  O(L/log L) trial divisions and takes O(L) time if the prime cache must be rebuilt to `L`.
 - O(|a| + |b|) per call to `merge_factors()`.
-- O(d log(d)) per call to `divisors_from_factors()`, where $d$ is the number of divisors generated,
+- O(d log d) per call to `divisors_from_factors()`, where $d$ is the number of divisors generated,
   due to sorting the result.
-- O(L/log(L) + n^{1/4} + d log(d)) expected per call to `get_divisors()`, plus O(L) if the prime
-  cache must be rebuilt.
+- O(L/log L + n^{1/4} + d log d) expected per call to `get_divisors()`, plus O(L) if the prime cache
+  must be rebuilt.
 
 Space Complexity:
 - O(c) cached space for the largest `cached_sieve(c)` call.
-- O(f + log(n)) auxiliary for recursive factorization, where $f$ is the number of compressed prime
+- O(f + log n) auxiliary for recursive factorization, where $f$ is the number of compressed prime
   factors returned.
-- O(d) output space and O(log(d)) auxiliary stack space for `divisors_from_factors()` and
+- O(d) output space and O(log d) auxiliary stack space for `divisors_from_factors()` and
   `get_divisors()`.
 - O(1) auxiliary for the primality tests, `rho_factor()`, `factorize_slow()`, and `merge_factors()`,
   excluding returned vectors.

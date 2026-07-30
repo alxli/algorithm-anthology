@@ -20,29 +20,28 @@ Space Complexity:
 
 #include <vector>
 
-int grundy_dfs(int u, const std::vector<std::vector<int>> &g, std::vector<int> *memo) {
-  if ((*memo)[u] != -1) {
-    return (*memo)[u];
-  }
-  std::vector<char> seen(g[u].size() + 1, false);
-  for (int v : g[u]) {
-    int x = grundy_dfs(v, g, memo);
-    if (x < static_cast<int>(seen.size())) {
-      seen[x] = true;
-    }
-  }
-  int res = 0;
-  while (res < static_cast<int>(seen.size()) && seen[res]) {
-    res++;
-  }
-  (*memo)[u] = res;
-  return res;
-}
-
 std::vector<int> grundy_on_dag(const std::vector<std::vector<int>> &g) {
   std::vector<int> memo(g.size(), -1);
+  auto dfs = [&](auto &&dfs, int u) -> void {
+    if (memo[u] != -1) {
+      return;
+    }
+    std::vector<char> seen(g[u].size() + 1, false);
+    for (int v : g[u]) {
+      dfs(dfs, v);
+      int x = memo[v];
+      if (x < static_cast<int>(seen.size())) {
+        seen[x] = true;
+      }
+    }
+    int res = 0;
+    while (res < static_cast<int>(seen.size()) && seen[res]) {
+      res++;
+    }
+    memo[u] = res;
+  };
   for (int u = 0; u < static_cast<int>(g.size()); u++) {
-    grundy_dfs(u, g, &memo);
+    dfs(dfs, u);
   }
   return memo;
 }

@@ -18,6 +18,12 @@ where both row updates and column pivot lookups are common.
 - `swap_rows(i, j)` swaps two rows while keeping the column maps synchronized.
 - `transpose()` transposes the matrix in place.
 - `multiply_vector(x)` returns the matrix-vector product with vector `x`.
+- `a + b` and `a - b` return the sum and difference of two matrices with identical dimensions.
+- `a * b` returns the matrix product, requiring `a.num_cols()` to equal `b.num_rows()`. Only pairs
+  of stored entries are ever multiplied.
+- `a * k` returns `a` scaled by the value `k`. Scaling by zero yields an empty matrix.
+- Operators `+=`, `-=`, and `*=` assign the corresponding result back into the left operand. In all
+  of these operators, entries that cancel to zero are not stored.
 - `row_reduce(a, limit)` converts columns $[0, `limit`)$ of `a` to sparse row echelon form,
   returning the rank found in those columns.
 - `det(a)` returns the determinant of a square sparse matrix.
@@ -41,6 +47,11 @@ Time Complexity:
   of stored nonzero entries.
 - O((r_i + r_j)*log d) per call to `swap_rows(i, j)`, where $r_i$ and $r_j$ are the sizes of the two
   rows.
+- O((n_a + n_b)*log d) per call to `operator+` and `operator-`, where $n_a$ and $n_b$ are the
+  operand nonzero counts.
+- O(n*log d) per call to scalar `operator*`, where $n$ is the number of stored nonzero entries.
+- O(f*log d) per call to `operator*`, where $f$ is the number of scalar products accumulated, that
+  is, the sum of `b.row(k).size()` over every stored entry `a[i][k]`.
 - O(f * log d) for sparse elimination, where $f$ is the number of entry updates performed after
   fill-in and $d$ is a touched row or column size. In the worst case this is still cubic.
 - O(f * log d) per call to `det()`, `sparse_rank()`, and `solve_system()`.
@@ -51,6 +62,7 @@ Space Complexity:
 - O(1) auxiliary for `get()`, `set()`, `add()`, `row()`, `column()`, and `transpose()`.
 - O(r_i + r_j) auxiliary for `swap_rows(i, j)`.
 - O(R) auxiliary for `multiply_vector()`.
+- O(c) auxiliary for `operator*`, where $c$ is the largest number of nonzeros in one result row.
 - O(n + R) auxiliary for elimination, in addition to the copied matrix used by `det()` and
   `sparse_rank()` or the augmented matrix used by `solve_system()`.
 
@@ -142,6 +154,72 @@ class SparseMatrix {
     }
     return res;
   }
+
+  SparseMatrix operator+(const SparseMatrix &b) const {
+    assert(rows == b.rows && cols == b.cols);
+    SparseMatrix res(rows, cols);
+    for (int i = 0; i < rows; i++) {
+      for (const auto &[j, value] : rvals[i]) {
+        res.set(i, j, value);
+      }
+      for (const auto &[j, value] : b.rvals[i]) {
+        res.add(i, j, value);  // Cancellation to zero erases the entry.
+      }
+    }
+    return res;
+  }
+
+  SparseMatrix operator-(const SparseMatrix &b) const {
+    assert(rows == b.rows && cols == b.cols);
+    SparseMatrix res(rows, cols);
+    for (int i = 0; i < rows; i++) {
+      for (const auto &[j, value] : rvals[i]) {
+        res.set(i, j, value);
+      }
+      for (const auto &[j, value] : b.rvals[i]) {
+        res.add(i, j, T{} - value);
+      }
+    }
+    return res;
+  }
+
+  // Scaling by zero cancels every entry, so the result stores nothing at all.
+  SparseMatrix operator*(const T &k) const {
+    SparseMatrix res(rows, cols);
+    if (is_zero(k)) {
+      return res;
+    }
+    for (int i = 0; i < rows; i++) {
+      for (const auto &[j, value] : rvals[i]) {
+        res.set(i, j, value * k);
+      }
+    }
+    return res;
+  }
+
+  // Row-by-row product: each stored a[i][k] scatters row k of b into an accumulator for row i, so
+  // only nonzero-by-nonzero pairs are ever multiplied.
+  SparseMatrix operator*(const SparseMatrix &b) const {
+    assert(cols == b.rows);
+    SparseMatrix res(rows, b.cols);
+    for (int i = 0; i < rows; i++) {
+      std::map<int, T> acc;
+      for (const auto &[k, aik] : rvals[i]) {
+        for (const auto &[j, bkj] : b.rvals[k]) {
+          acc[j] = acc[j] + aik * bkj;
+        }
+      }
+      for (const auto &[j, value] : acc) {
+        res.set(i, j, value);
+      }
+    }
+    return res;
+  }
+
+  SparseMatrix &operator+=(const SparseMatrix &b) { return *this = *this + b; }
+  SparseMatrix &operator-=(const SparseMatrix &b) { return *this = *this - b; }
+  SparseMatrix &operator*=(const SparseMatrix &b) { return *this = *this * b; }
+  SparseMatrix &operator*=(const T &k) { return *this = *this * k; }
 };
 
 template<typename T>
@@ -309,6 +387,45 @@ int main() {
   assert(a.num_rows() == 4 && a.num_cols() == 3);
   assert(a.get(3, 2) == 7);
   assert(a.get(2, 1) == 4);
+
+  //  p = [1 2]   q = [0 3]   p + q = [1 5]   p * q = [4 3]
+  //      [0 1]       [2 0]           [2 1]           [2 0]
+  SparseMatrix<int64_t> p(2, 2), q(2, 2);
+  p.set(0, 0, 1);
+  p.set(0, 1, 2);
+  p.set(1, 1, 1);
+  q.set(0, 1, 3);
+  q.set(1, 0, 2);
+  SparseMatrix<int64_t> sum = p + q;
+  assert(sum.get(0, 0) == 1 && sum.get(0, 1) == 5);
+  assert(sum.get(1, 0) == 2 && sum.get(1, 1) == 1);
+  SparseMatrix<int64_t> product = p * q;
+  assert(product.get(0, 0) == 4 && product.get(0, 1) == 3);
+  assert(product.get(1, 0) == 2 && product.get(1, 1) == 0);
+  assert(product.nonzeros() == 3);  // The zero entry is never stored.
+
+  // Cancelling entries are dropped rather than stored as explicit zeros.
+  SparseMatrix<int64_t> negated(2, 2);
+  negated.set(0, 0, -1);
+  negated.set(0, 1, -2);
+  negated.set(1, 1, -1);
+  assert((p + negated).nonzeros() == 0);
+  assert((p - p).nonzeros() == 0);
+
+  SparseMatrix<int64_t> difference = p - q;
+  assert(difference.get(0, 0) == 1 && difference.get(0, 1) == -1);
+  assert(difference.get(1, 0) == -2 && difference.get(1, 1) == 1);
+
+  SparseMatrix<int64_t> scaled = p * 3;
+  assert(scaled.get(0, 0) == 3 && scaled.get(0, 1) == 6 && scaled.get(1, 1) == 3);
+  assert((p * static_cast<int64_t>(0)).nonzeros() == 0);
+
+  SparseMatrix<int64_t> acc = p;
+  acc += q;
+  assert(acc.get(0, 1) == 5 && acc.get(1, 0) == 2);
+  acc -= q;
+  acc *= 2;
+  assert(acc.get(0, 0) == 2 && acc.get(0, 1) == 4 && acc.get(1, 1) == 2);
 
   SparseMatrix<double> d(3, 3);
   d.set(0, 0, 2);

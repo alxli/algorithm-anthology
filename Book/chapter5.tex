@@ -497,7 +497,7 @@ int main() {
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Divide-and-Conquer DP Optimization}
-Computes one layer of a dynamic program of the form \inlinecode{dp\_cur[i] = min(dp\_prev[k] + cost(k, i))}, where $0 \leq {\inlinecodemath{k}} \leq {\inlinecodemath{i}}$. Let \inlinecode{opt[i]} be the smallest index \inlinecode{k} attaining this minimum. Divide-and-conquer optimization applies when \inlinecode{opt[i]} $\leq$ \inlinecode{opt[i + 1]}, so the best transition index moves only to the right as \inlinecode{i} increases.
+Computes one layer of a dynamic program of the form \inlinecode{dp\_cur[i] = min(dp\_prev[k] + cost(k, i))}, where ${\inlinecodemath{k}} \in [0, {\inlinecodemath{i}}]$. Let \inlinecode{opt[i]} be the smallest index \inlinecode{k} attaining this minimum. Divide-and-conquer optimization applies when \inlinecode{opt[i]} $\leq$ \inlinecode{opt[i + 1]}, so the best transition index moves only to the right as \inlinecode{i} increases.
 
 To compute \inlinecode{dp\_cur[lo..hi]}, evaluate its midpoint and record its best transition as \inlinecode{best\_k}. Monotonicity restricts every optimum in the left half to indices at most \inlinecode{best\_k}, and every optimum in the right half to indices at least \inlinecode{best\_k}. Recursively applying these bounds avoids checking every transition for every state. The caller must verify the required monotonicity property.
 
@@ -871,45 +871,43 @@ Overflow warning: \inlinecode{add\_line()} compares intersections by cross-multi
 #include <vector>
 
 class SemiDynamicCHT {
-  std::vector<int64_t> slopes, intercepts;
+  std::vector<int64_t> vm, vb;
   int ptr = 0;
 
  public:
   void add_line(int64_t m, int64_t b) {
-    int len = static_cast<int>(slopes.size());
-    if (len > 0 && slopes.back() == m) {
-      if (intercepts.back() <= b) {
+    int len = static_cast<int>(vm.size());
+    if (len > 0 && vm.back() == m) {
+      if (vb.back() <= b) {
         return;
       }
-      slopes.pop_back();
-      intercepts.pop_back();
+      vm.pop_back();
+      vb.pop_back();
       len--;
       if (ptr > len) {
         ptr = len;
       }
     }
-    // Overflow warning.
-    while (len > 1 && (intercepts[len - 2] - intercepts[len - 1]) * (m - slopes[len - 1]) >=
-                          (intercepts[len - 1] - b) * (slopes[len - 1] - slopes[len - 2])) {
+    while (len > 1 && (vb[len - 2] - vb[len - 1]) * (m - vm[len - 1]) >=
+                          (vb[len - 1] - b) * (vm[len - 1] - vm[len - 2])) {  // Overflow warning.
       len--;
     }
-    slopes.resize(len);
-    intercepts.resize(len);
-    slopes.push_back(m);
-    intercepts.push_back(b);
+    vm.resize(len);
+    vb.resize(len);
+    vm.push_back(m);
+    vb.push_back(b);
   }
 
   int64_t query(int64_t x) {
-    assert(!slopes.empty());
-    if (ptr >= static_cast<int>(slopes.size())) {
-      ptr = static_cast<int>(slopes.size()) - 1;
+    assert(!vm.empty());
+    if (ptr >= static_cast<int>(vm.size())) {
+      ptr = static_cast<int>(vm.size()) - 1;
     }
-    // Overflow warning.
-    while (ptr + 1 < static_cast<int>(slopes.size()) &&
-           slopes[ptr + 1] * x + intercepts[ptr + 1] <= slopes[ptr] * x + intercepts[ptr]) {
+    while (ptr + 1 < static_cast<int>(vm.size()) &&
+           vm[ptr + 1] * x + vb[ptr + 1] <= vm[ptr] * x + vb[ptr]) {  // Overflow warning.
       ptr++;
     }
-    return slopes[ptr] * x + intercepts[ptr];
+    return vm[ptr] * x + vb[ptr];
   }
 };
 \end{lstlisting}

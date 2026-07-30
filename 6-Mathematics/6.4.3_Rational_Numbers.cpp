@@ -16,6 +16,8 @@ arithmetic cross-multiply numerators and denominators, so instantiate with a wid
   converted to an `std::string`, `int64_t`, `double`, and `long double` respectively with potential
   truncation or approximation for the primitive types. Equivalent conversions are also available
   through explicit casts to `int`, `long long`, `double`, and `long double`.
+- `v.to_arithmetic<T>()` is the general form behind the three numeric conversions above, returning
+  `v` as any arithmetic type `T` readable from a stream. Integral `T` truncates toward zero.
 - `v.abs()`, `abs(v)`, `v.floor()`, and `v.ceil()` return the absolute value, floor, and ceiling of
   rational `v`.
 - Operators `<`, `>`, `<=`, `>=`, `==`, `!=`, `+`, `-`, `*`, `/`, `%`, `++`, `--`, `+=`, `-=`, `*=`,
@@ -83,31 +85,20 @@ class Rational {
     return ss.str();
   }
 
-  // to_llong/to_double/to_ldouble round-trip through a stringstream so that any Int supporting
-  // streamed I/O (e.g. a big-integer type) converts, even without a direct cast to the target type.
-  int64_t to_llong() const {
+  // Round-trips through a stringstream so that any Int supporting streamed I/O (e.g. a big-integer
+  // type) converts, even without a direct cast to the target type. Integral T truncates.
+  template<typename T>
+  T to_arithmetic() const {
     std::stringstream ss;
     ss << num << " " << den;
-    int64_t n, d;
+    T n, d;
     ss >> n >> d;
     return n / d;
   }
 
-  double to_double() const {
-    std::stringstream ss;
-    ss << num << " " << den;
-    double n, d;
-    ss >> n >> d;
-    return n / d;
-  }
-
-  long double to_ldouble() const {
-    std::stringstream ss;
-    ss << num << " " << den;
-    long double n, d;
-    ss >> n >> d;
-    return n / d;
-  }
+  int64_t to_llong() const { return to_arithmetic<int64_t>(); }
+  double to_double() const { return to_arithmetic<double>(); }
+  long double to_ldouble() const { return to_arithmetic<long double>(); }
 
   explicit operator int() const { return static_cast<int>(to_llong()); }
   explicit operator long long() const { return static_cast<long long>(to_llong()); }

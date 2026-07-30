@@ -52,15 +52,17 @@ std::vector<std::string> parallel_cases(const std::vector<Case> &cases, int thre
 
 /*** Example Usage ***/
 
+using namespace std;
+
 int main() {
-  std::vector<long long> squares(1000);
+  vector<long long> squares(1000);
   parallel_for(static_cast<int>(squares.size()), 4, [&](int i) { squares[i] = 1LL * i * i; });
   assert(squares[17] == 289);
-  assert(std::accumulate(squares.begin(), squares.end(), 0LL) == 332833500);
+  assert(accumulate(squares.begin(), squares.end(), 0LL) == 332833500);
 
-  std::vector<int> cases = {3, 1, 4, 2};
+  vector<int> cases = {3, 1, 4, 2};
   auto out =
-      parallel_cases(cases, 2, [](int x, std::ostringstream &os) { os << x << "^2 = " << x * x; });
-  assert((out == std::vector<std::string>{"3^2 = 9", "1^2 = 1", "4^2 = 16", "2^2 = 4"}));
+      parallel_cases(cases, 2, [](int x, ostringstream &os) { os << x << "^2 = " << x * x; });
+  assert((out == vector<string>{"3^2 = 9", "1^2 = 1", "4^2 = 16", "2^2 = 4"}));
   return 0;
 }

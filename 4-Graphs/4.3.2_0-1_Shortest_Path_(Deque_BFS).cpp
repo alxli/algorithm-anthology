@@ -13,7 +13,7 @@ weight-0 relaxations to the front and weight-1 relaxations to the back.
   `adj` uses its indices as nodes. Each edge is stored as (`neighbor`, `weight`),
   where `weight` is either $0$ or $1$. Pass a singleton vector for a single source.
 - `get_path(dest)` returns the path from a nearest starting node to `dest`, or an empty vector if
-  `dest` is unreachable, after the latest call to `bfs_zero_one()`.
+  `dest` is unreachable, using the state left by the most recent call to `bfs_zero_one()`.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 a nearest start to `v`, or $-1$ if `v` is a starting node or unreachable. Follow `pred` backward

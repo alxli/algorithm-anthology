@@ -10,7 +10,9 @@ Variables are numbered $[0, n)$. A literal is represented by `literal(variable, 
 
 - `TwoSAT(n = 0)` constructs an empty formula over `n` variables.
 - `literal(variable, value)` returns the integer ID for a variable or its negation.
-- `add_implication(a, b)` adds the implication $a \rightarrow b$.
+- `add_implication(a, b)` adds the implication $a \rightarrow b$ together with its contrapositive
+  $\lnot b \rightarrow \lnot a$. Both edges are required for the strongly connected component test
+  to detect contradictions, so callers should not add the contrapositive separately.
 - `add_or(a, b)` adds the clause $(`a` \lor `b`)$.
 - `add_true(a)` forces literal `a` to be true.
 - `add_false(a)` forces literal `a` to be false.

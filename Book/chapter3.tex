@@ -1914,29 +1914,26 @@ The construction here is the Fredricksen-Kessler-Maiorana (FKM) algorithm. It co
 #include <cassert>
 #include <vector>
 
-static void de_bruijn_gen(
-    int t, int p, int k, int n, std::vector<int> &word, std::vector<int> &seq
-) {
-  if (t > n) {
-    if (n % p == 0) {
-      for (int i = 1; i <= p; i++) {
-        seq.push_back(word[i]);
-      }
-    }
-    return;
-  }
-  word[t] = word[t - p];
-  de_bruijn_gen(t + 1, p, k, n, word, seq);
-  for (int j = word[t - p] + 1; j < k; j++) {
-    word[t] = j;
-    de_bruijn_gen(t + 1, t, k, n, word, seq);
-  }
-}
-
 std::vector<int> de_bruijn(int k, int n) {
   assert(k >= 1 && n >= 1);
   std::vector<int> word(n + 1, 0), seq;
-  de_bruijn_gen(1, 1, k, n, word, seq);
+  auto dfs = [&](auto &&dfs, int t, int p) -> void {
+    if (t > n) {
+      if (n % p == 0) {
+        for (int i = 1; i <= p; i++) {
+          seq.push_back(word[i]);
+        }
+      }
+      return;
+    }
+    word[t] = word[t - p];
+    dfs(dfs, t + 1, p);
+    for (int j = word[t - p] + 1; j < k; j++) {
+      word[t] = j;
+      dfs(dfs, t + 1, t);
+    }
+  };
+  dfs(dfs, 1, 1);
   return seq;
 }
 \end{lstlisting}
@@ -3883,24 +3880,25 @@ std::pair<string, string> hirschberg_align(
 \begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
+using namespace std;
 
 int main() {
   assert(edit_distance("kitten", "sitting") == 3);
   assert(edit_distance("", "abc") == 3);
 
   auto alignment = align_sequences("AGGGCT", "AGGCA", 2, 3);
-  assert(alignment == (std::pair<string, string>{"AGGGCT", "A_GGCA"}));
+  assert(alignment == (pair<string, string>{"AGGGCT", "A_GGCA"}));
   assert(hirschberg_align("AGGGCT", "AGGCA", 2, 3) == alignment);
 
-  assert((hirschberg_align("ab", "zabz") == std::pair<string, string>{"_ab_", "zabz"}));
+  assert((hirschberg_align("ab", "zabz") == pair<string, string>{"_ab_", "zabz"}));
   assert(
       (hirschberg_align("a", "bbbbbbbbbb", 1, 5) ==
-       std::pair<string, string>{"__________a", "bbbbbbbbbb_"})
+       pair<string, string>{"__________a", "bbbbbbbbbb_"})
   );
-  assert((hirschberg_align("aa", "ba", 1, 2) == std::pair<string, string>{"a_a", "_ba"}));
+  assert((hirschberg_align("aa", "ba", 1, 2) == pair<string, string>{"a_a", "_ba"}));
 
-  std::cout << "Aligned strings:" << std::endl;
-  std::cout << alignment.first << std::endl << alignment.second << std::endl;
+  cout << "Aligned strings:" << endl;
+  cout << alignment.first << endl << alignment.second << endl;
   return 0;
 }
 \end{lstlisting}
@@ -4008,7 +4006,7 @@ int main() {
 \setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Recursive Descent Parsing (Simple)}
-Evaluate an expression according to the order of operations (parentheses, unary plus and minus signs, multiplication/division, addition/subtraction). The following is a minimalistic recursive descent implementation using iterators. Each precedence level is parsed by its own function that obtains operands by calling the next-tighter level, so the call structure itself enforces the order of operations. Literals are nonnegative decimal integers, division truncates toward zero, and the input must not contain whitespace.
+Evaluate an expression according to the order of operations (parentheses, unary plus and minus signs, multiplication/division, addition/subtraction). The following is a minimalistic recursive descent implementation using iterators. Each precedence level is parsed by its own function that obtains operands by calling the next-tighter level, so the call structure itself enforces the order of operations. Literals are nonnegative decimal integers, division truncates toward zero, and the input must be a valid expression without whitespace. Every divisor must be nonzero, and all intermediate results must fit in \inlinecode{int}.
 
 \begin{compactitem}
   \item \inlinecode{eval(s)} returns an evaluation of the arithmetic expression \inlinecode{s}.
@@ -4598,12 +4596,15 @@ int main() {
 \subsection{Entropy and Frequency Tables}
 Computes byte frequency tables and empirical information-theoretic quantities for strings. These primitives are useful when analyzing compression, building coding schemes such as Huffman coding, or comparing symbol distributions.
 
-For a string with symbol probabilities $p_i$, empirical entropy is $H = -\sum_i p_i \log_2 p_i$ bits per symbol. This is a lower bound on the average number of bits per symbol achievable by any uniquely decodable code for the same independent symbol model.
+Shannon entropy measures the average uncertainty of a random symbol, in bits. It is called empirical* here because the probabilities are estimated from the string itself rather than supplied by a known source. The \textit{order} of the estimate is how much preceding context it conditions on: an order-0 model treats symbols as independent and looks only at how often each byte occurs, while an order-$k$ model conditions each symbol on the $k$ bytes before it.
+
+For symbol probabilities $p_i$, the order-0 empirical entropy is $H = -\sum_i p_i \log_2 p_i$ bits per symbol, a lower bound on the average number of bits per symbol achievable by any uniquely decodable code under that independent model. Because it ignores ordering, \inlinecode{"abab"} and \inlinecode{"aabb"} have identical order-0 entropy. Real data has structure across positions, so conditioning lowers the estimate: order-$k$ entropy never exceeds order-$(k - 1)$ entropy, which is why practical compressors beat the order-0 bound.
 
 \begin{compactitem}
   \item \inlinecode{byte\_frequencies(s)} returns a length-256 table of byte counts in string \inlinecode{s}.
-  \item \inlinecode{entropy(freq)} returns empirical entropy in bits per symbol for a frequency table.
-  \item \inlinecode{entropy(s)} returns empirical entropy in bits per symbol for string \inlinecode{s}.
+  \item \inlinecode{entropy(freq)} returns order-0 empirical entropy in bits per symbol for a frequency table.
+  \item \inlinecode{entropy(s)} returns order-0 empirical entropy in bits per symbol for string \inlinecode{s}.
+  \item \inlinecode{conditional\_entropy(s, order = 1)} returns the order-\inlinecode{order} empirical entropy of \inlinecode{s} in bits per symbol, that is, the average uncertainty of each byte given the \inlinecode{order} bytes preceding it. \inlinecode{conditional\_entropy(s, 0)} equals \inlinecode{entropy(s)}, and raising \inlinecode{order} never increases the result. A string of at most \inlinecode{order} bytes has no complete context, so the result is $0$.
   \item \inlinecode{expected\_code\_length(freq, length)} returns the average encoded bits per symbol for code lengths \inlinecode{length[c]}. The two input vectors must have the same size.
 \end{compactitem}
 
@@ -4612,12 +4613,14 @@ For a string with symbol probabilities $p_i$, empirical entropy is $H = -\sum_i 
 \begin{compactitem}
   \item $O(n + m)$ per call to \inlinecode{entropy(s)}, where $n$ is the string length and $m = 256$.
   \item $O(m)$ per call to \inlinecode{entropy(freq)} and \inlinecode{expected\_code\_length(freq, length)}.
+  \item $O(n \cdot k)$ expected per call to \inlinecode{conditional\_entropy(s, k)}, for hashing the context of each position.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(m)$ for the table returned by \inlinecode{byte\_frequencies()} and $O(m)$ auxiliary for \inlinecode{entropy(s)}.
+  \item $O(n \cdot k)$ auxiliary for \inlinecode{conditional\_entropy(s, k)}, since at most $n$ distinct contexts are stored.
   \item $O(1)$ auxiliary for the other operations.
 \end{compactitem}
 
@@ -4626,6 +4629,7 @@ For a string with symbol probabilities $p_i$, empirical entropy is $H = -\sum_i 
 #include <cmath>
 #include <cstdint>
 #include <string>
+#include <unordered_map>
 #include <vector>
 using std::string;
 
@@ -4658,6 +4662,30 @@ double entropy(const std::vector<int> &freq) {
 
 double entropy(const string &s) {
   return entropy(byte_frequencies(s));
+}
+
+double conditional_entropy(const string &s, int order = 1) {
+  assert(order >= 0);
+  int n = static_cast<int>(s.size());
+  if (n <= order) {
+    return 0;
+  }
+  // Contexts are keyed by their bytes rather than indexed by an alphabet-sized table, so the space
+  // used depends on how many distinct contexts occur instead of on the alphabet size raised to the
+  // order. Every context is exactly that many bytes, so splitting an event key is unambiguous.
+  std::unordered_map<string, int> context_count, event_count;
+  for (int i = order; i < n; i++) {
+    string context = s.substr(i - order, order);
+    context_count[context]++;
+    event_count[context + s[i]]++;
+  }
+  double total = n - order;
+  double res = 0;
+  for (const auto &[event, count] : event_count) {
+    double conditional = count / static_cast<double>(context_count[event.substr(0, order)]);
+    res -= (count / total) * std::log2(conditional);
+  }
+  return res;
 }
 
 double expected_code_length(const std::vector<int> &freq, const std::vector<int> &length) {
@@ -4697,6 +4725,21 @@ int main() {
   length['a'] = 1;
   length['b'] = 1;
   assert(EQ(expected_code_length(freq, length), 1.0));
+
+  // Order 0 conditions on nothing, so it reproduces the plain entropy.
+  assert(EQ(conditional_entropy("aabb", 0), entropy("aabb")));
+
+  // Order-0 entropy ignores ordering; higher orders do not. In "abab" the previous symbol
+  // determines the next one exactly, so no uncertainty remains.
+  assert(EQ(entropy("abab"), entropy("aabb")));
+  assert(EQ(conditional_entropy("abab"), 0.0));
+  assert(EQ(conditional_entropy("aabb"), 2.0 / 3));
+  assert(conditional_entropy("aabb") < entropy("aabb"));
+
+  // Raising the order never increases the estimate, and too little text yields no context at all.
+  assert(conditional_entropy("abcabcabc", 2) <= conditional_entropy("abcabcabc", 1));
+  assert(EQ(conditional_entropy("a"), 0.0));
+  assert(EQ(conditional_entropy("abc", 3), 0.0));
   return 0;
 }
 \end{lstlisting}

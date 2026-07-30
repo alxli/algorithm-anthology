@@ -76,7 +76,7 @@ std::pair<int64_t, std::vector<int>> global_min_cut(std::vector<std::vector<int6
       }
       added[sel] = true;
       for (int i = 0; i < n; i++) {
-        weight[i] += cap[sel][i];
+        weight[i] += cap[sel][i];  // Overflow warning.
       }
       s = sel;
     }

@@ -55,7 +55,7 @@ std::optional<int64_t> directed_mst(int n, std::vector<Edge> edges, int root) {
     std::vector<int> comp(n, -1), seen(n, -1);
     min_in[root] = 0;
     for (int v = 0; v < n; v++) {
-      total_dist += min_in[v];
+      total_dist += min_in[v];  // Overflow warning.
       int u = v;
       while (seen[u] != v && comp[u] == -1 && u != root) {
         seen[u] = v;
@@ -80,7 +80,7 @@ std::optional<int64_t> directed_mst(int n, std::vector<Edge> edges, int root) {
     for (auto &[u, v, w] : edges) {
       int cu = comp[u], cv = comp[v];
       if (cu != cv) {
-        w -= min_in[v];
+        w -= min_in[v];  // Overflow warning.
       }
       u = cu;
       v = cv;

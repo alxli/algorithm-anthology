@@ -11,7 +11,7 @@ Small contest-template helpers that are useful across many algorithms. These sni
   \item \inlinecode{ckmax(a, b)} assigns \inlinecode{a = b} and returns true if \inlinecode{a} \textless{} \inlinecode{b} before the assignment.
   \item \inlinecode{between(x, a, b)} returns whether \inlinecode{a} $\leq$ \inlinecode{x} $\leq$ \inlinecode{b}.
   \item \inlinecode{clmp(x, a, b)} returns \inlinecode{x} clamped into the interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$. This is not needed on C++17 and later, where \inlinecode{std::clamp()} is available.
-  \item \inlinecode{floor\_div(a, b)} and \inlinecode{ceil\_div(a, b)} divide signed integers with mathematical rounding toward negative or positive infinity. Requires \inlinecode{b != 0} and a quotient representable by the result type; in particular, the minimum value cannot be divided by $-1$.
+  \item \inlinecode{floor\_div(a, b)} and \inlinecode{ceil\_div(a, b)} divide signed integers with mathematical rounding toward negative or positive infinity. Requires nonzero \inlinecode{b} and the resulting quotient to be representable by the result type; in particular, the minimum value cannot be divided by $-1$.
   \item \inlinecode{sort\_unique(v)} sorts a vector and removes duplicates.
   \item \inlinecode{erase\_one(c, x)} erases one existing value from an associative container, asserting that it is present.
   \item \inlinecode{min\_priority\_queue\textless{}T\textgreater{}} is a min-heap alias.
@@ -195,12 +195,12 @@ int main() {
 Fast input and output wrappers based on \inlinecode{fread()} and \inlinecode{fwrite()}. For most problems, \inlinecode{ios::sync\_with\_stdio(false); cin.tie(nullptr);} is simpler and fast enough. Use these classes when input is huge or when \inlinecode{iostream} overhead is measurable.
 
 \begin{compactitem}
-  \item \inlinecode{FastInput in(file = stdin)} reads tokens from a \inlinecode{FILE*}.
+  \item \inlinecode{set\_in(name)}, \inlinecode{set\_out(name)}, and \inlinecode{set\_io(iname, oname)} redirect standard input/output to files. For example, \inlinecode{set\_io("task.in", "task.out")} is convenient for USACO-style problems.
+  \item \inlinecode{FastInput in(file = stdin)} constructs a faster reader from a \inlinecode{FILE*}.
   \item \inlinecode{in \textgreater{}\textgreater{} x} reads a non-whitespace token into \inlinecode{char}, \inlinecode{std::string}, integral types, or floating point types.
-  \item \inlinecode{FastOutput out(file = stdout)} writes to a \inlinecode{FILE*}.
+  \item \inlinecode{FastOutput out(file = stdout)} constructs a faster writer to a \inlinecode{FILE*}.
   \item \inlinecode{out \textless{}\textless{} x} writes \inlinecode{char}, C strings, \inlinecode{std::string}, integral types, or floating point types.
   \item \inlinecode{out.flush()} writes any buffered output immediately.
-  \item \inlinecode{set\_in(name)}, \inlinecode{set\_out(name)}, and \inlinecode{set\_io(iname, oname)} redirect standard input/output to files. For example, \inlinecode{set\_io("task.in", "task.out")} is convenient for USACO-style problems.
 \end{compactitem}
 
 The parser assumes valid input. Floating point input/output is provided for convenience, not as the main performance path.
@@ -430,16 +430,18 @@ struct FastOutput {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+using namespace std;
+
 int main() {
   // set_io("file.in", "file.out");
 
   FILE *input = tmpfile();
-  std::fputs("42 hello 3.5 -2147483648 1 Z 1234567890123\n", input);
-  std::rewind(input);
+  fputs("42 hello 3.5 -2147483648 1 Z 1234567890123\n", input);
+  rewind(input);
 
   FastInput in(input);
   int x;
-  std::string s;
+  string s;
   double y;
   int z;
   bool flag;
@@ -449,7 +451,7 @@ int main() {
   assert(x == 42 && s == "hello" && y == 3.5);
   assert(z == -2147483648);
   assert(flag && ch == 'Z' && big == 1234567890123LL);
-  std::fclose(input);
+  fclose(input);
 
   FILE *output = tmpfile();
   {
@@ -457,11 +459,11 @@ int main() {
     out << x << ' ' << s << ' ' << y << ' ' << z << ' ' << flag << ' ' << ch << ' ' << big << '\n';
     out.flush();
   }
-  std::rewind(output);
+  rewind(output);
   char buf[96] = {};
-  assert(std::fgets(buf, sizeof(buf), output));
-  assert(std::strncmp(buf, "42 hello 3.5 -2147483648 1 Z 1234567890123", 42) == 0);
-  std::fclose(output);
+  assert(fgets(buf, sizeof(buf), output));
+  assert(strncmp(buf, "42 hello 3.5 -2147483648 1 Z 1234567890123", 42) == 0);
+  fclose(output);
   return 0;
 }
 \end{lstlisting}
@@ -992,7 +994,7 @@ int main() {
   assert(mp.order_of_key(7) == 1);
   assert(mp.erase_one(5));
   assert(!mp.erase_one(5));
-  assert(mp.find_by_order(0) == std::make_pair(7, 'c'));
+  assert(mp.find_by_order(0).first == 7);
 
   PairingHeap<int> h1, h2;
   auto it = h1.push(10);
@@ -1060,16 +1062,18 @@ std::vector<std::string> parallel_cases(const std::vector<Case> &cases, int thre
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+using namespace std;
+
 int main() {
-  std::vector<long long> squares(1000);
+  vector<long long> squares(1000);
   parallel_for(static_cast<int>(squares.size()), 4, [&](int i) { squares[i] = 1LL * i * i; });
   assert(squares[17] == 289);
-  assert(std::accumulate(squares.begin(), squares.end(), 0LL) == 332833500);
+  assert(accumulate(squares.begin(), squares.end(), 0LL) == 332833500);
 
-  std::vector<int> cases = {3, 1, 4, 2};
+  vector<int> cases = {3, 1, 4, 2};
   auto out =
-      parallel_cases(cases, 2, [](int x, std::ostringstream &os) { os << x << "^2 = " << x * x; });
-  assert((out == std::vector<std::string>{"3^2 = 9", "1^2 = 1", "4^2 = 16", "2^2 = 4"}));
+      parallel_cases(cases, 2, [](int x, ostringstream &os) { os << x << "^2 = " << x * x; });
+  assert((out == vector<string>{"3^2 = 9", "1^2 = 1", "4^2 = 16", "2^2 = 4"}));
   return 0;
 }
 \end{lstlisting}

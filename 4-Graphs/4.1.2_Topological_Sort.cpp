@@ -33,30 +33,29 @@ Space Complexity:
 
 std::vector<std::vector<int>> adj;
 
-bool dfs(int u, std::vector<char> &state, std::vector<int> &res) {
-  if (state[u] == 1) {
-    return false;
-  }
-  if (state[u] == 2) {
-    return true;
-  }
-  state[u] = 1;
-  for (int v : adj[u]) {
-    if (!dfs(v, state, res)) {
-      return false;
-    }
-  }
-  state[u] = 2;
-  res.push_back(u);
-  return true;
-}
-
 std::vector<int> toposort_dfs() {
   int n = static_cast<int>(adj.size());
   std::vector<char> state(n);
   std::vector<int> res;
+  auto dfs = [&](auto &&dfs, int u) -> bool {
+    if (state[u] == 1) {
+      return false;
+    }
+    if (state[u] == 2) {
+      return true;
+    }
+    state[u] = 1;
+    for (int v : adj[u]) {
+      if (!dfs(dfs, v)) {
+        return false;
+      }
+    }
+    state[u] = 2;
+    res.push_back(u);
+    return true;
+  };
   for (int i = 0; i < n; i++) {
-    if (state[i] == 0 && !dfs(i, state, res)) {
+    if (state[i] == 0 && !dfs(dfs, i)) {
       return {};
     }
   }

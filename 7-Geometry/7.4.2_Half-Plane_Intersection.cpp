@@ -61,7 +61,7 @@ struct HalfPlane {
 
   bool out(const Point &q) const { return LT(dir.cross(q - p), 0); }
 
-  Point intersection(const HalfPlane &h) const {
+  Point intersect(const HalfPlane &h) const {
     double t = h.dir.cross(p - h.p) / dir.cross(h.dir);
     return p + dir * t;
   }
@@ -89,10 +89,10 @@ std::vector<Point> half_plane_intersection(std::vector<HalfPlane> planes) {
   }
   std::deque<HalfPlane> dq;
   auto bad_back = [&](const HalfPlane &h) {
-    return dq.size() >= 2 && h.out(dq[dq.size() - 2].intersection(dq.back()));
+    return dq.size() >= 2 && h.out(dq[dq.size() - 2].intersect(dq.back()));
   };
   auto bad_front = [&](const HalfPlane &h) {
-    return dq.size() >= 2 && h.out(dq[0].intersection(dq[1]));
+    return dq.size() >= 2 && h.out(dq[0].intersect(dq[1]));
   };
   for (const HalfPlane &h : unique) {
     while (bad_back(h)) {
@@ -103,10 +103,10 @@ std::vector<Point> half_plane_intersection(std::vector<HalfPlane> planes) {
     }
     dq.push_back(h);
   }
-  while (dq.size() >= 3 && dq.front().out(dq[dq.size() - 2].intersection(dq.back()))) {
+  while (dq.size() >= 3 && dq.front().out(dq[dq.size() - 2].intersect(dq.back()))) {
     dq.pop_back();
   }
-  while (dq.size() >= 3 && dq.back().out(dq[0].intersection(dq[1]))) {
+  while (dq.size() >= 3 && dq.back().out(dq[0].intersect(dq[1]))) {
     dq.pop_front();
   }
   if (dq.size() < 3) {
@@ -117,7 +117,7 @@ std::vector<Point> half_plane_intersection(std::vector<HalfPlane> planes) {
     if (EQ(dq[i].dir.cross(dq[(i + 1) % dq.size()].dir), 0)) {
       return {};
     }
-    res.push_back(dq[i].intersection(dq[(i + 1) % dq.size()]));
+    res.push_back(dq[i].intersect(dq[(i + 1) % dq.size()]));
   }
   return res;
 }

@@ -10,7 +10,7 @@ traversal. Optionally, reconstruct a shortest path using the predecessor vector 
   minimum distance from any start. The global, pre-populated adjacency list `adj` uses its indices
   as nodes and must contain only valid node indices. Pass a singleton vector for single-source BFS.
 - `get_path(dest)` returns the path from a nearest starting node to `dest`, or an empty vector if
-  `dest` is unreachable, after the latest call to `bfs()`.
+  `dest` is unreachable, using the state left by the most recent call to `bfs()`.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 a nearest start to `v`, or $-1$ if `v` is a starting node or unreachable. Follow `pred` backward

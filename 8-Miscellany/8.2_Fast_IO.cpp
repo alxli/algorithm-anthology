@@ -4,14 +4,14 @@ Fast input and output wrappers based on `fread()` and `fwrite()`. For most probl
 `ios::sync_with_stdio(false); cin.tie(nullptr);` is simpler and fast enough. Use these classes when
 input is huge or when `iostream` overhead is measurable.
 
-- `FastInput in(file = stdin)` reads tokens from a `FILE*`.
-- `in >> x` reads a non-whitespace token into `char`, `std::string`, integral types, or floating
-  point types.
-- `FastOutput out(file = stdout)` writes to a `FILE*`.
-- `out << x` writes `char`, C strings, `std::string`, integral types, or floating point types.
-- `out.flush()` writes any buffered output immediately.
 - `set_in(name)`, `set_out(name)`, and `set_io(iname, oname)` redirect standard input/output to
   files. For example, `set_io("task.in", "task.out")` is convenient for USACO-style problems.
+- `FastInput in(file = stdin)` constructs a faster reader from a `FILE*`.
+- `in >> x` reads a non-whitespace token into `char`, `std::string`, integral types, or floating
+  point types.
+- `FastOutput out(file = stdout)` constructs a faster writer to a `FILE*`.
+- `out << x` writes `char`, C strings, `std::string`, integral types, or floating point types.
+- `out.flush()` writes any buffered output immediately.
 
 The parser assumes valid input. Floating point input/output is provided for convenience, not as the
 main performance path.
@@ -241,16 +241,18 @@ struct FastOutput {
 
 /*** Example Usage ***/
 
+using namespace std;
+
 int main() {
   // set_io("file.in", "file.out");
 
   FILE *input = tmpfile();
-  std::fputs("42 hello 3.5 -2147483648 1 Z 1234567890123\n", input);
-  std::rewind(input);
+  fputs("42 hello 3.5 -2147483648 1 Z 1234567890123\n", input);
+  rewind(input);
 
   FastInput in(input);
   int x;
-  std::string s;
+  string s;
   double y;
   int z;
   bool flag;
@@ -260,7 +262,7 @@ int main() {
   assert(x == 42 && s == "hello" && y == 3.5);
   assert(z == -2147483648);
   assert(flag && ch == 'Z' && big == 1234567890123LL);
-  std::fclose(input);
+  fclose(input);
 
   FILE *output = tmpfile();
   {
@@ -268,10 +270,10 @@ int main() {
     out << x << ' ' << s << ' ' << y << ' ' << z << ' ' << flag << ' ' << ch << ' ' << big << '\n';
     out.flush();
   }
-  std::rewind(output);
+  rewind(output);
   char buf[96] = {};
-  assert(std::fgets(buf, sizeof(buf), output));
-  assert(std::strncmp(buf, "42 hello 3.5 -2147483648 1 Z 1234567890123", 42) == 0);
-  std::fclose(output);
+  assert(fgets(buf, sizeof(buf), output));
+  assert(strncmp(buf, "42 hello 3.5 -2147483648 1 Z 1234567890123", 42) == 0);
+  fclose(output);
   return 0;
 }

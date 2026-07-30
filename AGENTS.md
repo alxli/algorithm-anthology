@@ -73,12 +73,16 @@ Prefer code that a strong contestant can adapt quickly after skimming:
 - Add only the headers required by pedantic C++ compilation. Remove unused includes when touching a
   file.
 - In reusable code, use `std::` qualifications rather than `using namespace std;`. Example blocks
-  may use `using namespace std;` when that matches the local style.
+  use `using namespace std;` by default; keep explicit `std::` only where the contrast carries
+  meaning, as in 8.6 alongside `__gnu_pbds`.
 - Prefer `static_cast<int>(container.size())` before mixing sizes with `int` indices.
 - For read-only structured bindings of small pairs or tuples, prefer copying with `auto [...]`;
   use `const auto &` when copying the bound object would be material.
-- Prefer a self-passing generic lambda for local recursion in C++17. Use `std::function` only when
-  type erasure or a stored recursive callable is actually needed.
+- Prefer a self-passing generic lambda for local recursion in C++17, especially when a file-scope
+  helper exists only to thread the caller's locals through by-reference or pointer parameters. Keep
+  a free function when the recursion reads only globals and value parameters and its shape is a
+  canonical idiom readers expect, such as the augmenting-path `dfs` in the matching sections. Use
+  `std::function` only when type erasure or a stored recursive callable is actually needed.
 - Use `int` for ordinary sizes, indices, iterator distances, and node IDs unless the algorithm needs
   a wider type. Do not introduce iterator `difference_type` aliases merely for generic formality.
 - Adjacent one-line function definitions may remain together. Surround every multiline function
@@ -135,6 +139,11 @@ Prefer code that a strong contestant can adapt quickly after skimming:
 - Use pointers for secondary output parameters so mutation remains explicit at the call site, even
   when the output is required. Use `nullptr` only when suppressing that output is supported; keep
   references for a function's primary in-place argument.
+- On failure, leave output arguments unchanged: compute into a local and commit it only once the
+  operation is known to succeed, and state that guarantee in the API bullet.
+- A streaming `operator<<` that changes format state (`showpos`, `setprecision`, `setfill`, ...)
+  must restore it before returning; save `flags()`, `precision()`, or `fill()` and put them back.
+  `setw` is one-shot and needs no restore.
 - For configurable data structures, expose the operations contestants actually customize:
   `combine`, `apply_delta`, `compose_deltas`, comparator types, identity values, or template flags.
 - Template flags should be uppercase and reserved for compile-time behavior choices. Runtime flags
@@ -251,7 +260,9 @@ sections elsewhere, include both `Time Complexity:` and `Space Complexity:`.
   possible. Metric operations that require square roots, trigonometry, or division should promote
   non-floating-point coordinates to `double`.
 - Call out overflow and representation assumptions explicitly, especially for products, squared
-  norms, modular arithmetic, big integers, and floating-point normalization.
+  norms, modular arithmetic, big integers, and floating-point normalization. Lead such a docstring
+  note with `Overflow warning:` so it stays greppable; the in-code comment form is
+  `// Overflow warning.`.
 - Avoid `std::is_integral_v<T>` as a proxy for "exact integer-like" when custom types such as
   `BigInt`, `Rational`, or `Modular` may be relevant. Prefer branching on floating-point behavior
   when the issue is really precision/metric support.
@@ -283,9 +294,10 @@ Before finishing meaningful edits, run checks scaled to the touched files:
   `git diff --check -- path/to/file.cpp`
 - Check line length for touched files:
   `awk 'length($0) > 100 { print FILENAME ":" FNR ":" length($0) ":" $0 }' path/to/file.cpp`
-- Check docstring wrapping when touching comments:
-  `python3 scan_quality.py`
-- Run the bounded stabilization audit when asked to "scan" or before declaring the repo stable:
+- Check compiler warnings:
+  `clang++ -std=c++17 -fsyntax-only -Wall -Wextra path/to/file.cpp`
+- Check docstring wrapping and run the bounded stabilization audit, both when touching comments and
+  before declaring the repo stable:
   `python3 scan_quality.py`
 
 Warnings from the compiler should be investigated. If a warning is known and harmless, mention it
@@ -316,11 +328,14 @@ repo-wide consistency issues, and keep taste calls out of the default scan until
 them as a convention. The current code-consistency pass in `scan_quality.py` checks for:
 
 - unused helper functions left in example blocks;
-- direct `std::random_device{}` seeding inside examples, where a fixed seed keeps examples
-  reproducible;
-- C `rand()`/`srand()` usage, which should be replaced by a C++ random engine and distribution.
-- `std::fabs()` usage, which should follow the anthology's plain `fabs()` convention.
-- `static_cast<C>(EPS)` in floating-point comparison helpers, where direct `EPS` is clearer.
+- direct `std::random_device{}` seeding inside examples, where the fixed seed `1234567` keeps
+  examples reproducible;
+- fixed literal seeds in reusable randomized code, which should seed at runtime instead;
+- C `rand()`/`srand()` usage, which should be replaced by a C++ random engine and distribution;
+- `std::fabs()` usage, which should follow the anthology's plain `fabs()` convention;
+- `static_cast<C>(EPS)` in floating-point comparison helpers, where direct `EPS` is clearer;
+- `include_boundary` naming drift in geometry boundary flags;
+- `Overflow warning.` comment punctuation.
 
 When scanning for code quality, first run `python3 scan_quality.py` and fix deterministic
 findings. Then do a bounded exploratory pass for one new family of smells, such as dead example
@@ -357,7 +372,7 @@ grep-style drift checks. This is the path to a stable "scan" result.
 
 - Preserve unrelated user changes in the dirty worktree. Do not revert files unless explicitly
   asked.
-- Use `rg` for searches and `apply_patch` for manual edits.
+- Use `rg` for searches, and keep manual edits to targeted, single-purpose hunks.
 - Keep diffs scoped. Do not reformat or refactor unrelated sections just because you noticed them.
 - When changing an API, update the docstring, examples, and all local callers in the same edit.
 - When touching docstrings, preserve the generated-book style: 100 columns, ASCII, API bullets, and

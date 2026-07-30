@@ -11,19 +11,19 @@ reconstructs one optimal path. The helpers below assume movement only down or ri
 
 - `count_grid_paths(blocked)` returns the number of paths from the upper-left cell to the
   lower-right cell, moving only down or right and avoiding blocked cells marked nonzero.
-- `min_grid_path_cost(cost)` returns a pair (`sum`, `path`) containing the minimum cost of a
+- `min_cost_grid_path(cost)` returns a pair (`min_cost`, `path`) containing the minimum cost of a
   down/right path from the upper-left cell to the lower-right cell and the cells of one optimal path
-  in order. If the grid is empty, `sum` is $0$ and `path` is empty.
+  in order. If the grid is empty, `min_cost` is $0$ and `path` is empty.
 
 Path counts and path costs must fit in `int64_t`.
 
 Time Complexity:
-- O(R*C) per call to `count_grid_paths(blocked)` and `min_grid_path_cost(cost)`, where $R$ and $C$
+- O(R*C) per call to `count_grid_paths(blocked)` and `min_cost_grid_path(cost)`, where $R$ and $C$
   are the grid dimensions.
 
 Space Complexity:
 - O(C) auxiliary for `count_grid_paths(blocked)`.
-- O(R*C) auxiliary and O(R + C) for the returned path from `min_grid_path_cost(cost)`.
+- O(R*C) auxiliary and O(R + C) for the returned path from `min_cost_grid_path(cost)`.
 
 */
 
@@ -52,7 +52,7 @@ int64_t count_grid_paths(const std::vector<std::vector<char>> &blocked) {
   return dp[cols - 1];
 }
 
-std::pair<int64_t, std::vector<std::pair<int, int>>> min_grid_path_cost(
+std::pair<int64_t, std::vector<std::pair<int, int>>> min_cost_grid_path(
     const std::vector<std::vector<int>> &cost
 ) {
   int rows = static_cast<int>(cost.size());
@@ -111,8 +111,8 @@ int main() {
       {1, 5, 1},
       {4, 2, 1},
   };
-  auto [sum, path] = min_grid_path_cost(cost);
-  assert(sum == 7);
+  auto [min_cost, path] = min_cost_grid_path(cost);
+  assert(min_cost == 7);
   assert((path == vector<pair<int, int>>{{0, 0}, {0, 1}, {0, 2}, {1, 2}, {2, 2}}));
   return 0;
 }

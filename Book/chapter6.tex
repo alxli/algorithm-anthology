@@ -1932,7 +1932,7 @@ bool crt(int64_t r1, int64_t m1, int64_t r2, int64_t m2, int64_t *r, int64_t *m)
       (static_cast<int128_t>(r1) + static_cast<int128_t>(m1) * mod(x, m2 / g)) % *m
   );
 #else
-  *r = mod(r1 + m1 * mod(x, m2 / g), *m);  // Overflow warning without int128.
+  *r = mod(r1 + m1 * mod(x, m2 / g), *m);  // Overflow warning.
 #endif
   return true;
 }
@@ -2080,7 +2080,7 @@ int main() {
 \subsection{Modular Arithmetic}
 Wraps arithmetic modulo a compile-time constant in a small value type. This is a common contest helper for dynamic programming, combinatorics, polynomial operations, and any calculation where all answers are taken modulo some number $p$ such as $10^9 + 7$.
 
-The implementation is intentionally close to common contest ``Mint'' templates: normalization happens at construction, arithmetic operators are overloaded, mixed integer operations are supported through implicit construction, and combinations can be computed from lazy factorial tables. The operators use the hidden friend idiom: each \inlinecode{friend} defined inside the class is a non-template function, so mixed expressions like \inlinecode{2 + Mint(3)} convert the integer operand through the implicit constructor. (Free function template operators cannot do this - template argument deduction ignores implicit conversions - which is why some contest templates carry per-operator \inlinecode{Modular op U} and \inlinecode{U op Modular} overloads instead.)
+The implementation follows the conventional modular-integer wrapper (often called \inlinecode{Mint} in contest templates): normalization happens at construction, arithmetic operators are overloaded, mixed integer operations are supported through implicit construction, and combinations can be computed from lazy factorial tables. The operators use the hidden friend idiom: each \inlinecode{friend} defined inside the class is a non-template function, so mixed expressions like \inlinecode{2 + Mint(3)} convert the integer operand through the implicit constructor. (Free function template operators cannot do this - template argument deduction ignores implicit conversions - which is why some contest templates carry per-operator \inlinecode{Modular op U} and \inlinecode{U op Modular} overloads instead.)
 
 The modulus is a positive signed \inlinecode{auto} template argument. For example, \inlinecode{Modular\textless{}1000000007\textgreater{}} and \inlinecode{Modular\textless{}998244353\textgreater{}} need no other annotation. Its literal type determines the storage type, so a 64-bit modulus (e.g. \inlinecode{Modular\textless{}(1LL \textless{}\textless{} 61) - 1\textgreater{}}) is stored in 64 bits. The modulus must be a compile-time constant; a runtime-chosen modulus is not supported by this design.
 
@@ -2485,7 +2485,7 @@ The baby-step giant-step method writes $x = np - q$ for a block size $n$ near th
   \item \inlinecode{discrete\_log(a, b, m)} returns the smallest nonnegative \inlinecode{x} with \inlinecode{a\textasciicircum{}x} congruent to \inlinecode{b} modulo \inlinecode{m}, or $-1$ if no such \inlinecode{x} exists. Requires \inlinecode{m} $\geq 1$; \inlinecode{a} and \inlinecode{b} are reduced modulo \inlinecode{m} internally.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(\sqrt{m})$ expected per call with constant-time modular multiplication, and $O(\sqrt{m} \cdot \log\left(m\right))$ with the portable double-and-add fallback.
+\textbf{Time Complexity}: $O(\sqrt{m})$ expected per call with constant-time modular multiplication, and $O(\sqrt{m} \cdot \log m)$ with the portable double-and-add fallback.
 
 \textbf{Space Complexity}: $O(\sqrt{m})$ auxiliary for the table.
 
@@ -2765,7 +2765,7 @@ int main() {
 \subsection{Prime Generation}
 Generate prime numbers using the Sieve of Eratosthenes, which repeatedly marks the multiples of each prime as composite.
 
-The range overload \inlinecode{sieve(lo, hi)} uses a segmented sieve, letting primes in a high but narrow window be found without sieving everything below it. Since every composite at most \inlinecode{hi} has a prime factor at most $\sqrt{{\inlinecodemath{hi}}}$, it first sieves the primes up to $\sqrt{{\inlinecodemath{hi}}}$, then uses only those primes to mark composites within $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ (each prime $p$ starting at the first of its multiples that is at least both $p^2$ and \inlinecode{lo}). This needs only $O(w + \sqrt{h})$ space, where $w = {\inlinecodemath{hi}} - {\inlinecodemath{lo}} + 1$ and $h = {\inlinecodemath{hi}}$, instead of the $O(h)$ space that sieving all of $[2, {\inlinecodemath{hi}}]$ would require.
+The range overload \inlinecode{sieve(lo, hi)} uses a segmented sieve, letting primes in a high but narrow window be found without sieving everything below it. Since every composite at most \inlinecode{hi} has a prime factor at most $\sqrt{{\inlinecodemath{hi}}}$, it first sieves the primes up to $\sqrt{{\inlinecodemath{hi}}}$, then uses only those primes to mark composites within $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ (each prime $p$ starting at the first of its multiples that is at least both $p^2$ and \inlinecode{lo}). This needs only $O(w + \sqrt{{\inlinecodemath{hi}}})$ space, where $w = {\inlinecodemath{hi}} - {\inlinecodemath{lo}} + 1$, instead of the $O({\inlinecodemath{hi}})$ space that sieving all of $[2, {\inlinecodemath{hi}}]$ would require.
 
 The linear sieve finds the least prime factor of each integer. When processing \inlinecode{i}, it marks \inlinecode{i * p} for each known prime \inlinecode{p} no greater than \inlinecode{least[i]}. Every composite \inlinecode{x} is therefore generated exactly once: writing \inlinecode{x = i * p}, where \inlinecode{p} is its least prime factor, gives \inlinecode{p} $\leq$ \inlinecode{least[i]}, while any representation using a larger prime is skipped. This single visit per composite gives the $O(n)$ running time.
 
@@ -2945,21 +2945,21 @@ Modular multiplication inside Miller-Rabin and Pollard's rho uses \inlinecode{\_
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(\sqrt{n})$ per call to \inlinecode{is\_prime\_slow()} and \inlinecode{factorize\_slow()}.
-  \item $O(k \cdot \log\left(n\right))$ modular multiplications per call to \inlinecode{is\_probable\_prime()} and $O(\log\left(n\right))$ per call to \inlinecode{is\_prime()}. The portable multiplication fallback adds another $O(\log\left(n\right))$ factor.
+  \item $O(k \cdot \log n)$ modular multiplications per call to \inlinecode{is\_probable\_prime()} and $O(\log n)$ per call to \inlinecode{is\_prime()}. The portable multiplication fallback adds another $O(\log n)$ factor.
   \item $O(n)$ per call to \inlinecode{cached\_sieve()} when rebuilding the cache, or $O(1)$ when the existing cache is large enough.
   \item $O(\sqrt{p})$ expected modular multiplications per call to \inlinecode{rho\_factor(n)}, where $p$ is the smallest prime factor of \inlinecode{n}. For composite \inlinecode{n}, this is at most $O(n^{1/4})$.
-  \item $O(n^{1/4})$ expected per call to \inlinecode{factorize\_rho()}. \inlinecode{factorize(n, L)} additionally performs $O(L/\log\left(L\right))$ trial divisions and takes $O(L)$ time if the prime cache must be rebuilt to \inlinecode{L}.
+  \item $O(n^{1/4})$ expected per call to \inlinecode{factorize\_rho()}. \inlinecode{factorize(n, L)} additionally performs $O(L/\log L)$ trial divisions and takes $O(L)$ time if the prime cache must be rebuilt to \inlinecode{L}.
   \item $O(|a| + |b|)$ per call to \inlinecode{merge\_factors()}.
-  \item $O(d \log\left(d\right))$ per call to \inlinecode{divisors\_from\_factors()}, where $d$ is the number of divisors generated, due to sorting the result.
-  \item $O(L/\log\left(L\right) + n^{1/4} + d \log\left(d\right))$ expected per call to \inlinecode{get\_divisors()}, plus $O(L)$ if the prime cache must be rebuilt.
+  \item $O(d \log d)$ per call to \inlinecode{divisors\_from\_factors()}, where $d$ is the number of divisors generated, due to sorting the result.
+  \item $O(L/\log L + n^{1/4} + d \log d)$ expected per call to \inlinecode{get\_divisors()}, plus $O(L)$ if the prime cache must be rebuilt.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(c)$ cached space for the largest \inlinecode{cached\_sieve(c)} call.
-  \item $O(f + \log\left(n\right))$ auxiliary for recursive factorization, where $f$ is the number of compressed prime factors returned.
-  \item $O(d)$ output space and $O(\log\left(d\right))$ auxiliary stack space for \inlinecode{divisors\_from\_factors()} and \inlinecode{get\_divisors()}.
+  \item $O(f + \log n)$ auxiliary for recursive factorization, where $f$ is the number of compressed prime factors returned.
+  \item $O(d)$ output space and $O(\log d)$ auxiliary stack space for \inlinecode{divisors\_from\_factors()} and \inlinecode{get\_divisors()}.
   \item $O(1)$ auxiliary for the primality tests, \inlinecode{rho\_factor()}, \inlinecode{factorize\_slow()}, and \inlinecode{merge\_factors()}, excluding returned vectors.
 \end{compactitem}
 
@@ -3901,7 +3901,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Big Integers}
-Perform operations on arbitrary precision big integers internally represented as a vector of base-\inlinecode{BASE} digits in little-endian order. \inlinecode{BASE} defaults to $10^9$ and must be a power of 10 no larger than $10^9$; \inlinecode{USE\_FFT\_MULT} selects FFT multiplication when true and Karatsuba multiplication when false. Typical arithmetic operations involving mixed numeric primitives and strings are supported through implicit construction and hidden friend operators, as long as at least one operand is a \inlinecode{BigInt} at any given level of evaluation.
+Perform operations on arbitrary precision big integers internally represented as a vector of base-\inlinecode{BASE} digits in little-endian order. \inlinecode{BASE} defaults to $10^9$ and must be a power of 10 no larger than $10^9$. Multiplication picks its algorithm from the operand size, so no configuration is needed. Typical arithmetic operations involving mixed numeric primitives and strings are supported through implicit construction and hidden friend operators, as long as at least one operand is a \inlinecode{BigInt} at any given level of evaluation.
 
 \begin{compactitem}
   \item \inlinecode{BigInt()} constructs zero, and \inlinecode{BigInt(n)} constructs a big integer from an integer \inlinecode{n}.
@@ -3912,7 +3912,7 @@ Perform operations on arbitrary precision big integers internally represented as
   \item \inlinecode{v.to\_string()}, \inlinecode{v.to\_llong()}, \inlinecode{v.to\_double()}, and \inlinecode{v.to\_ldouble()} return the big integer \inlinecode{v} converted to an \inlinecode{std::string}, \inlinecode{int64\_t}, \inlinecode{double}, and \inlinecode{long double} respectively. For the latter three data types, overflow behavior is based on that of inputting from \inlinecode{std::istream}. Equivalent conversions are also available through explicit casts to \inlinecode{int}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double}.
   \item \inlinecode{v.abs()} returns the absolute value of big integer \inlinecode{v}.
   \item \inlinecode{a.comp(v)} returns $-1$, $0$, or $1$ depending on whether the big integers \inlinecode{a} and \inlinecode{v} compare less, equal, or greater, respectively.
-  \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on integer primitives. Addition, subtraction, and comparisons are performed using the standard linear algorithms. Multiplication first converts limbs from base $10^9$ to base $10^4$ so coefficient products fit safely, then uses either Karatsuba multiplication (if \inlinecode{USE\_FFT\_MULT} is false) or complex FFT convolution (if \inlinecode{USE\_FFT\_MULT} is true), converting the result back to base $10^9$. Division and modulo are computed together by normalized long division: scale the operands so the divisor's leading limb is large, estimate each quotient limb from the top one or two limbs of the running remainder, correct the estimate by adding the divisor back if necessary, then unscale the remainder.
+  \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on integer primitives. Addition, subtraction, and comparisons are performed using the standard linear algorithms. Multiplication first converts limbs from base \inlinecode{BASE} to the narrower base \inlinecode{MULT\_BASE} so coefficient products fit safely, then multiplies with schoolbook, Karatsuba, or complex FFT convolution according to the operand size, converting the result back. Division and modulo are computed together by normalized long division: scale the operands so the divisor's leading limb is large, estimate each quotient limb from the top one or two limbs of the running remainder, correct the estimate by adding the divisor back if necessary, then unscale the remainder.
   \item \inlinecode{a.div(v)} returns a pair consisting of the quotient and remainder when \inlinecode{a} is divided by \inlinecode{v}.
   \item \inlinecode{v.pow(n)} returns \inlinecode{v} raised to the nonnegative power $n$.
   \item \inlinecode{v.sqrt()} returns the integral part of the square root of big integer \inlinecode{v}.
@@ -3922,11 +3922,13 @@ Perform operations on arbitrary precision big integers internally represented as
 
 \inlinecode{pow(n)} uses binary exponentiation. \inlinecode{sqrt()} uses a digit-by-digit square-root algorithm in the internal base, while \inlinecode{nth\_root(n)} uses binary search over the answer range.
 
+All three multiplication methods produce identical results, so the choice only trades constant factors. Karatsuba falls back to schoolbook on short operands, and beats FFT up to roughly $400$ decimal digits; past that FFT pulls ahead, reaching about a $3.5$x advantage by $6400$ digits. \inlinecode{FFT\_CUTOFF} is the padded transform length, counted in \inlinecode{MULT\_BASE} limbs, at which FFT takes over, so lowering it favors FFT on smaller inputs. The rebasing is what keeps multiplication exact: a product of two base-$10^9$ limbs already reaches $10^{18}$, so summing only nine of them would overflow \inlinecode{int64\_t}, and such coefficients are far past the $53$ bits a complex FFT represents exactly.
+
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to the constructors, \inlinecode{size()}, \inlinecode{to\_string()}, \inlinecode{to\_llong()}, \inlinecode{to\_double()}, \inlinecode{to\_ldouble()}, \inlinecode{abs()}, \inlinecode{comp()}, \inlinecode{rand()}, and all comparison and arithmetic operators except multiplication, division, and modulo, where $n$ is total number of digits in the arguments and result for each operation.
-  \item $O(n \cdot \log\left(n\right) \cdot \log\left(\log\left(n\right)\right))$ or $O(n^{1.585})$ per call to multiplication operations, depending on whether \inlinecode{USE\_FFT\_MULT} is set to true or false.
+  \item $O(n \cdot \log\left(n\right) \cdot \log\left(\log\left(n\right)\right))$ per call to multiplication operations once operands reach \inlinecode{FFT\_CUTOFF}, and $O(n^{1.585})$ below it.
   \item $O(n \cdot m)$ per call to division and modulo operations, where $n$ and $m$ are the number of digits in the dividend and divisor, respectively.
   \item $O(M(d) \log n)$ per call to \inlinecode{pow()}, where $d$ is the maximum digit length reached during exponentiation and $M(d)$ denotes the cost of one multiplication of two $d$-digit big integers using the selected multiplication method above.
   \item $O(d^{2})$ per call to \inlinecode{sqrt()}, where $d$ is the number of digits.
@@ -3960,10 +3962,19 @@ Perform operations on arbitrary precision big integers internally represented as
 #include <vector>
 
 class BigInt {
-  static const int BASE = 1000000000, BASE_DIGITS = 9;
-  static const bool USE_FFT_MULT = true;
-  static_assert(10 <= BASE && BASE <= 1000000000, "BASE must be between 10 and 10^9");
-  static_assert(BASE_DIGITS > 0, "BASE must be a power of 10");
+  static const int BASE = 1000000000, BASE_DIGITS = 9;  // BASE must equal 10^BASE_DIGITS.
+  // Multiplication rebases to half as many decimal digits per limb, so that coefficient products
+  // stay exact both in int64_t and within the FFT's double precision.
+  static const int MULT_BASE = 10000, MULT_BASE_DIGITS = 4;  // Keep consistent with BASE_DIGITS.
+  static const int FFT_CUTOFF = 256;  // Padded MULT_BASE length past which FFT beats Karatsuba.
+  static_assert(
+      BASE >= 100 && BASE <= 1000000000,
+      "BASE must be between 10^2 and 10^9; below that MULT_BASE_DIGITS would round down to zero"
+  );
+  static_assert(
+      MULT_BASE_DIGITS == BASE_DIGITS / 2 && MULT_BASE <= 10000,
+      "MULT_BASE must hold half of BASE's digits and stay exact under the FFT"
+  );
 
   using vint = std::vector<int>;
   using vint64 = std::vector<int64_t>;
@@ -4303,9 +4314,8 @@ class BigInt {
   }
 
   friend BigInt operator*(const BigInt &u, const BigInt &v) {
-    static const int TEMP_BASE = 10000, TEMP_BASE_DIGITS = 4;
-    vint a = convert_base(u.digits, BASE_DIGITS, TEMP_BASE_DIGITS);
-    vint b = convert_base(v.digits, BASE_DIGITS, TEMP_BASE_DIGITS);
+    vint a = convert_base(u.digits, BASE_DIGITS, MULT_BASE_DIGITS);
+    vint b = convert_base(v.digits, BASE_DIGITS, MULT_BASE_DIGITS);
     int n = 1;
     while (n < 2 * static_cast<int>(std::max(a.size(), b.size()))) {
       n <<= 1;
@@ -4313,7 +4323,7 @@ class BigInt {
     a.resize(n, 0);
     b.resize(n, 0);
     vint64 c;
-    if (USE_FFT_MULT) {
+    if (n >= FFT_CUTOFF) {
       auto at = fft(a.begin(), a.end()), bt = fft(b.begin(), b.end());
       for (int i = 0; i < n; i++) {
         at[i] *= bt[i];
@@ -4330,10 +4340,10 @@ class BigInt {
     res.sign = u.sign * v.sign;
     for (int i = 0, carry = 0; i < static_cast<int>(c.size()); i++) {
       int64_t d = c[i] + carry;
-      res.digits.push_back(d % TEMP_BASE);
-      carry = d / TEMP_BASE;
+      res.digits.push_back(d % MULT_BASE);
+      carry = d / MULT_BASE;
     }
-    res.digits = convert_base(res.digits, TEMP_BASE_DIGITS, BASE_DIGITS);
+    res.digits = convert_base(res.digits, MULT_BASE_DIGITS, BASE_DIGITS);
     res.normalize();
     return res;
   }
@@ -4602,6 +4612,7 @@ Perform operations on rational numbers internally represented as two integers: a
   \item \inlinecode{operator\textgreater{}\textgreater{}} inputs a rational number using the next integer from the stream as the numerator and 1 as the denominator.
   \item \inlinecode{operator\textless{}\textless{}} outputs the rational number as a string consisting of possibly a minus sign followed by the numerator, followed by a slash, followed by the denominator.
   \item \inlinecode{v.to\_string()}, \inlinecode{v.to\_llong()}, \inlinecode{v.to\_double()}, and \inlinecode{v.to\_ldouble()} return the rational \inlinecode{v} converted to an \inlinecode{std::string}, \inlinecode{int64\_t}, \inlinecode{double}, and \inlinecode{long double} respectively with potential truncation or approximation for the primitive types. Equivalent conversions are also available through explicit casts to \inlinecode{int}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double}.
+  \item \inlinecode{v.to\_arithmetic\textless{}T\textgreater{}()} is the general form behind the three numeric conversions above, returning \inlinecode{v} as any arithmetic type \inlinecode{T} readable from a stream. Integral \inlinecode{T} truncates toward zero.
   \item \inlinecode{v.abs()}, \inlinecode{abs(v)}, \inlinecode{v.floor()}, and \inlinecode{v.ceil()} return the absolute value, floor, and ceiling of rational \inlinecode{v}.
   \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on numerical primitives. The comparisons and binary arithmetic are hidden friends, so a raw integer operand works on either side.
 \end{compactitem}
@@ -4671,31 +4682,20 @@ class Rational {
     return ss.str();
   }
 
-  // to_llong/to_double/to_ldouble round-trip through a stringstream so that any Int supporting
-  // streamed I/O (e.g. a big-integer type) converts, even without a direct cast to the target type.
-  int64_t to_llong() const {
+  // Round-trips through a stringstream so that any Int supporting streamed I/O (e.g. a big-integer
+  // type) converts, even without a direct cast to the target type. Integral T truncates.
+  template<typename T>
+  T to_arithmetic() const {
     std::stringstream ss;
     ss << num << " " << den;
-    int64_t n, d;
+    T n, d;
     ss >> n >> d;
     return n / d;
   }
 
-  double to_double() const {
-    std::stringstream ss;
-    ss << num << " " << den;
-    double n, d;
-    ss >> n >> d;
-    return n / d;
-  }
-
-  long double to_ldouble() const {
-    std::stringstream ss;
-    ss << num << " " << den;
-    long double n, d;
-    ss >> n >> d;
-    return n / d;
-  }
+  int64_t to_llong() const { return to_arithmetic<int64_t>(); }
+  double to_double() const { return to_arithmetic<double>(); }
+  long double to_ldouble() const { return to_arithmetic<long double>(); }
 
   explicit operator int() const { return static_cast<int>(to_llong()); }
   explicit operator long long() const { return static_cast<long long>(to_llong()); }
@@ -4785,7 +4785,7 @@ int main() {
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Matrix Utilities}
-Basic matrix operations defined on a two-dimensional vector of numeric values.
+Basic matrix operations defined on a two-dimensional vector of numeric values. Matrix arithmetic also supports modular value types such as \inlinecode{Modular\textless{}MOD\textgreater{}} from 6.3.2. The element type must be constructible from $0$ and $1$ and support the arithmetic operators used by the requested operation.
 
 \begin{compactitem}
   \item \inlinecode{make\_matrix\textless{}T\textgreater{}(m, n, v)} constructs and returns an $m$ by $n$ matrix with 0-based indices (row indices $[0, {\inlinecodemath{m}})$ and column indices $[0, {\inlinecodemath{n}})$), where every value is initialized to \inlinecode{v}.
@@ -4796,8 +4796,8 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
   \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, and \inlinecode{!=} define lexicographical comparison based on that of \inlinecode{std::vector}.
   \item Operators \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, and \inlinecode{/=} define scalar addition, subtraction, multiplication, and division involving a matrix and a numeric scalar value.
   \item Operators \inlinecode{*} and \inlinecode{*=} define vector and matrix multiplication.
-  \item Operators \inlinecode{\textasciicircum{}} and \inlinecode{\textasciicircum{}=} define iterative binary matrix exponentiation of a square matrix \inlinecode{a} by an integer power \inlinecode{p}.
-  \item \inlinecode{power\_sum(a, p)} returns the power sum of a square matrix \inlinecode{a} up to an integer power \inlinecode{p}, that is, $a + a^2 + \ldots + a^p$.
+  \item Operators \inlinecode{\textasciicircum{}} and \inlinecode{\textasciicircum{}=} define iterative binary matrix exponentiation of a square matrix \inlinecode{a} by a \inlinecode{uint64\_t} power \inlinecode{p}.
+  \item \inlinecode{power\_sum(a, p)} returns the power sum of a square matrix \inlinecode{a} up to a \inlinecode{uint64\_t} power \inlinecode{p}, that is, $a + a^2 + \ldots + a^p$.
   \item \inlinecode{transpose(a)} returns the transpose of an $m$ by $n$ matrix \inlinecode{a}, that is, a new $n$ by $m$ matrix $b$ such that \inlinecode{a[i][j]} = \inlinecode{b[j][i]} for every \inlinecode{i} $\in [0, m)$ and \inlinecode{j} $\in [0, n)$.
   \item \inlinecode{transpose\_in\_place(a)} assigns the square matrix \inlinecode{a} to its transpose, returning a reference to the modified argument itself.
   \item \inlinecode{rotate(a, d = 90)} returns the matrix \inlinecode{a} rotated \inlinecode{d} degrees clockwise. A negative \inlinecode{d} specifies a counter-clockwise rotation, and \inlinecode{d} must be a multiple of 90.
@@ -4830,6 +4830,7 @@ Exponentiation uses the usual iterative binary exponentiation pattern: keep an a
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
 #include <iomanip>
 #include <ostream>
 #include <utility>
@@ -4970,9 +4971,12 @@ template<typename T>
 Matrix<T> operator*(const Matrix<T> &a, const Matrix<T> &b) {
   assert(columns(a) == rows(b));
   Matrix<T> res = make_matrix<T>(rows(a), columns(b));
+  // The k loop sits outside j so the inner loop walks res[i] and b[k] contiguously instead of
+  // striding down a column of b. Each res[i][j] still accumulates in increasing k, so results are
+  // unchanged, including for floating-point types.
   for (int i = 0; i < rows(a); i++) {
-    for (int j = 0; j < columns(b); j++) {
-      for (int k = 0; k < rows(b); k++) {
+    for (int k = 0; k < rows(b); k++) {
+      for (int j = 0; j < columns(b); j++) {
         res[i][j] += a[i][k] * b[k][j];
       }
     }
@@ -5008,26 +5012,28 @@ Matrix<T> operator-(const U &v, const Matrix<T> &a) {
 }
 
 template<typename T>
-Matrix<T> operator^(Matrix<T> a, unsigned int p) {
+Matrix<T> operator^(Matrix<T> a, uint64_t p) {
   assert(rows(a) == columns(a));
   Matrix<T> res = identity_matrix<T>(rows(a));
   while (p > 0) {
     if (p & 1) {
       res *= a;
     }
-    a *= a;
     p >>= 1;
+    if (p > 0) {
+      a *= a;
+    }
   }
   return res;
 }
 
 template<typename T>
-Matrix<T> &operator^=(Matrix<T> &a, unsigned int p) {
+Matrix<T> &operator^=(Matrix<T> &a, uint64_t p) {
   return a = a ^ p;
 }
 
 template<typename T>
-Matrix<T> power_sum(const Matrix<T> &a, unsigned int p) {
+Matrix<T> power_sum(const Matrix<T> &a, uint64_t p) {
   assert(rows(a) == columns(a));
   int n = rows(a);
   if (p == 0) {
@@ -5200,12 +5206,12 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Row Reduction}
-Converts a matrix to reduced row echelon form using Gaussian elimination to solve a system of linear equations and compute rank. Each round finds a row with a nonzero entry in the current leading column, swaps the largest-magnitude candidate into place for partial pivoting, normalizes that row, and subtracts multiples of it from every other row to clear the column. In practice, this method can still be prone to rounding error on certain matrices. For a more accurate algorithm for solving systems of linear equations, LU decomposition with row partial pivoting should be used.
+Converts a matrix to reduced row echelon form using Gaussian elimination to solve a system of linear equations and compute rank. Each round finds a row with a nonzero entry in the current leading column, normalizes that row, and subtracts multiples of it from every other row to clear the column. Floating-point matrices use the largest-magnitude candidate for partial pivoting, though elimination can still be prone to rounding error; use LU decomposition for greater numerical stability. Exact field types such as \inlinecode{Modular\textless{}MOD\textgreater{}} instead use any nonzero pivot and perform exact arithmetic. Such types must support construction from $0$ and $1$, equality, addition, subtraction, multiplication, and division.
 
 \begin{compactitem}
   \item \inlinecode{row\_reduce(a)} assigns the matrix \inlinecode{a} to its reduced row echelon form, returning a reference to the modified argument itself.
   \item \inlinecode{matrix\_rank(a)} returns the rank of matrix \inlinecode{a}, i.e. the number of nonzero rows after row reduction.
-  \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning $0$ if there is one solution, $-1$ if there are zero solutions, or $-2$ if there are infinite solutions. If there is exactly one solution, then the output vector \inlinecode{x} is populated with the solution of length $n$.
+  \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} over the real numbers or an exact field, and a length $m$ vector \inlinecode{b}, returning $0$ if there is one solution, $-1$ if there are zero solutions, or $-2$ if there are infinite solutions. If there is exactly one solution, then the output vector \inlinecode{x} is populated with the solution of length $n$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -5225,25 +5231,41 @@ Converts a matrix to reduced row echelon form using Gaussian elimination to solv
 \begin{lstlisting}[language=C++]
 #include <cassert>
 #include <cmath>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 const double EPS = 1e-9;
+
+template<typename T>
+bool rref_is_zero(const T &v) {
+  if constexpr (std::is_floating_point_v<T>) {
+    return fabs(v) < EPS;
+  }
+  return v == T(0);
+}
 
 template<typename Matrix>
 Matrix &row_reduce(Matrix &a) {
   if (a.empty()) {
     return a;
   }
+  using T = std::decay_t<decltype(a[0][0])>;
   int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
   for (int r = 0, lead = 0; r < rows && lead < cols; lead++) {
     int pivot = r;
-    for (int i = r + 1; i < rows; i++) {
-      if (fabs(a[i][lead]) > fabs(a[pivot][lead])) {
-        pivot = i;
+    if constexpr (std::is_floating_point_v<T>) {
+      for (int i = r + 1; i < rows; i++) {
+        if (fabs(a[i][lead]) > fabs(a[pivot][lead])) {
+          pivot = i;
+        }
+      }
+    } else {
+      while (pivot < rows && rref_is_zero(a[pivot][lead])) {
+        pivot++;
       }
     }
-    if (fabs(a[pivot][lead]) < EPS) {
+    if (pivot == rows || rref_is_zero(a[pivot][lead])) {
       continue;
     }
     std::swap(a[pivot], a[r]);
@@ -5274,7 +5296,7 @@ int matrix_rank(Matrix a) {
   int rank = 0;
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
     for (int j = 0; j < static_cast<int>(a[i].size()); j++) {
-      if (fabs(a[i][j]) > EPS) {
+      if (!rref_is_zero(a[i][j])) {
         rank++;
         break;
       }
@@ -5298,13 +5320,13 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
   for (int i = 0; i < rows; i++) {
     int lead = -1;
     for (int j = 0; j < cols && lead < 0; j++) {
-      if (fabs(m[i][j]) > EPS) {
+      if (!rref_is_zero(m[i][j])) {
         lead = j;
       }
     }
     if (lead < 0) {
       // A zero coefficient row with a nonzero constant means 0 = nonzero (no solution).
-      if (fabs(m[i][cols]) > EPS) {
+      if (!rref_is_zero(m[i][cols])) {
         return -1;
       }
     } else {
@@ -5348,13 +5370,15 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Determinant and Inverse}
-Computes the determinant and inverse of a square matrix using Gaussian elimination. The inverse of a matrix $a$ is another matrix $b$ such that $ab$ equals the identity matrix. The inverse of $a$ exists if and only if the determinant of $a$ is nonzero. In this case, $a$ is called invertible or non-singular. The determinant falls out of elimination as the product of the pivots, negated once per row swap. The inverse is found by appending the identity matrix and row-reducing the combined matrix: the operations that turn $a$ into the identity turn the identity into the inverse. In practice, simple Gaussian elimination is prone to rounding error on certain matrices. For a more accurate algorithm for solving systems of linear equations, use LU decomposition with row partial pivoting. For an integer matrix whose determinant is wanted exactly, the Bareiss algorithm runs a fraction-free elimination: every intermediate value is itself a determinant of a submatrix, so the divisions are always exact and the arithmetic stays in integers.
+Computes the determinant and inverse of a square matrix using Gaussian elimination. The inverse of a matrix $a$ is another matrix $b$ such that $ab$ equals the identity matrix. The inverse of $a$ exists if and only if the determinant of $a$ is nonzero. In this case, $a$ is called invertible or non-singular. The determinant falls out of elimination as the product of the pivots, negated once per row swap. The inverse is found by appending the identity matrix and row-reducing the combined matrix: the operations that turn $a$ into the identity turn the identity into the inverse.
+
+Floating-point matrices use the largest-magnitude pivot in each column, although Gaussian elimination can still suffer from rounding error; use LU decomposition for greater numerical stability. Exact field types such as \inlinecode{Modular\textless{}MOD\textgreater{}} use any nonzero pivot and perform exact arithmetic. These types must support construction from $0$ and $1$, equality, addition, subtraction, multiplication, and division. For an integer matrix whose determinant is wanted exactly, the Bareiss algorithm runs a fraction-free elimination: every intermediate value is itself a determinant of a submatrix, so the divisions are always exact and the arithmetic stays in integers.
 
 \begin{compactitem}
   \item \inlinecode{det\_naive(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a}, using the classic divide-and-conquer algorithm by Laplace expansions. It is division-free and computes in the matrix's element type, so an integer matrix yields an exact integer determinant; but at $O(n!)$ it is only practical for tiny \inlinecode{n}, so prefer \inlinecode{det\_bareiss} for exact integer determinants.
-  \item \inlinecode{det(a, eps = 1e-10)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a} using Gaussian elimination, treating pivots within \inlinecode{eps} of zero as singular.
+  \item \inlinecode{det(a, eps = 1e-10)} returns the determinant of an $n$ by $n$ floating-point or exact-field matrix \inlinecode{a} using Gaussian elimination. Floating-point pivots within \inlinecode{eps} of zero are treated as singular; exact fields use equality with zero.
   \item \inlinecode{det\_bareiss(a)} returns the exact determinant of an integer matrix \inlinecode{a} using fraction-free elimination, with no rounding error. Stored entries are minors of \inlinecode{a}, but the products in each update can be larger. They use 128-bit intermediates when available; otherwise those products must fit in \inlinecode{int64\_t}.
-  \item \inlinecode{invert(a, eps = 1e-10)} returns $0$ after assigning the $n$ by $n$ matrix \inlinecode{a} to its inverse. It must contain real values. The function leaves \inlinecode{a} unchanged and returns $-1$ if a pivot is within \inlinecode{eps} of zero.
+  \item \inlinecode{invert(a, eps = 1e-10)} returns $0$ after assigning the $n$ by $n$ floating-point or exact-field matrix \inlinecode{a} to its inverse. It leaves \inlinecode{a} unchanged and returns $-1$ if the matrix is singular; floating-point pivots within \inlinecode{eps} of zero are treated as singular.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -5380,8 +5404,8 @@ Computes the determinant and inverse of a square matrix using Gaussian eliminati
 
 template<typename SquareMatrix>
 auto det_naive(const SquareMatrix &a) {
-  int n = static_cast<int>(a.size());
   using T = std::decay_t<decltype(a[0][0])>;
+  int n = static_cast<int>(a.size());
   if (n == 0) {
     return T(1);
   }
@@ -5413,30 +5437,44 @@ auto det_naive(const SquareMatrix &a) {
 }
 
 template<typename SquareMatrix>
-double det(const SquareMatrix &a, double eps = 1e-10) {
+int elimination_pivot(const SquareMatrix &a, int row, int col, double eps) {
+  using T = std::decay_t<decltype(a[0][0])>;
   int n = static_cast<int>(a.size());
-  SquareMatrix b(a);
-  double res = 1.0;
-  for (int i = 0; i < n; i++) {
-    // Partial pivoting: bring the largest-magnitude entry in column i to the diagonal. Each row
-    // swap negates the determinant, so the swap sign must be tracked. Selecting pivot rows out of
-    // order without this sign correction can return |det| with the wrong sign.
-    int p = i;
-    for (int r = i + 1; r < n; r++) {
-      if (fabs(b[r][i]) > fabs(b[p][i])) {
-        p = r;
+  if constexpr (std::is_floating_point_v<T>) {
+    int pivot = row;
+    for (int r = row + 1; r < n; r++) {
+      if (fabs(a[r][col]) > fabs(a[pivot][col])) {
+        pivot = r;
       }
     }
-    if (fabs(b[p][i]) < eps) {
-      return 0;
+    return fabs(a[pivot][col]) < eps ? -1 : pivot;
+  }
+  for (int r = row; r < n; r++) {
+    if (a[r][col] != T(0)) {
+      return r;
+    }
+  }
+  return -1;
+}
+
+template<typename SquareMatrix>
+auto det(const SquareMatrix &a, double eps = 1e-10) {
+  using T = std::decay_t<decltype(a[0][0])>;
+  int n = static_cast<int>(a.size());
+  SquareMatrix b(a);
+  T res = 1;
+  for (int i = 0; i < n; i++) {
+    int p = elimination_pivot(b, i, i, eps);
+    if (p == -1) {
+      return T(0);
     }
     if (p != i) {
       std::swap(b[p], b[i]);
-      res = -res;
+      res = T(0) - res;
     }
     res *= b[i][i];
     for (int j = i + 1; j < n; j++) {
-      double z = b[j][i] / b[i][i];
+      T z = b[j][i] / b[i][i];
       for (int k = i; k < n; k++) {
         b[j][k] -= z * b[i][k];
       }
@@ -5448,9 +5486,6 @@ double det(const SquareMatrix &a, double eps = 1e-10) {
 int64_t det_bareiss(std::vector<std::vector<int64_t>> a) {
   int n = static_cast<int>(a.size());
   int64_t prev = 1, sign = 1;
-#if defined(__SIZEOF_INT128__)
-  __extension__ typedef __int128 int128_t;
-#endif
   for (int k = 0; k < n; k++) {
     if (a[k][k] == 0) {  // Swap in a nonzero pivot; each swap flips the sign.
       int p = -1;
@@ -5469,12 +5504,12 @@ int64_t det_bareiss(std::vector<std::vector<int64_t>> a) {
     for (int i = k + 1; i < n; i++) {
       for (int j = k + 1; j < n; j++) {
 #if defined(__SIZEOF_INT128__)
+        __extension__ typedef __int128 int128_t;
         int128_t numerator =
             static_cast<int128_t>(a[i][j]) * a[k][k] - static_cast<int128_t>(a[i][k]) * a[k][j];
         a[i][j] = static_cast<int64_t>(numerator / prev);
 #else
-        // Overflow warning.
-        a[i][j] = (a[i][j] * a[k][k] - a[i][k] * a[k][j]) / prev;
+        a[i][j] = (a[i][j] * a[k][k] - a[i][k] * a[k][j]) / prev;  // Overflow warning.
 #endif
       }
     }
@@ -5485,6 +5520,7 @@ int64_t det_bareiss(std::vector<std::vector<int64_t>> a) {
 
 template<typename SquareMatrix>
 int invert(SquareMatrix &a, double eps = 1e-10) {
+  using T = std::decay_t<decltype(a[0][0])>;
   int n = static_cast<int>(a.size());
   SquareMatrix b(a);
   for (int i = 0; i < n; i++) {
@@ -5494,26 +5530,18 @@ int invert(SquareMatrix &a, double eps = 1e-10) {
     }
   }
   for (int i = 0; i < n; i++) {
-    // Partial pivoting: without it a zero on the diagonal divides by zero and fails even for an
-    // invertible matrix (e.g. a permutation matrix). Picking the largest-magnitude pivot also
-    // improves numerical stability.
-    int p = i;
-    for (int r = i + 1; r < n; r++) {
-      if (fabs(b[r][i]) > fabs(b[p][i])) {
-        p = r;
-      }
-    }
-    if (fabs(b[p][i]) < eps) {
+    int p = elimination_pivot(b, i, i, eps);
+    if (p == -1) {
       return -1;
     }
     std::swap(b[p], b[i]);
-    double pivot = b[i][i];
+    T pivot = b[i][i];
     for (int j = i; j < n * 2; j++) {
       b[i][j] /= pivot;
     }
     for (int j = 0; j < n; j++) {
       if (i != j) {
-        double factor = b[j][i];
+        T factor = b[j][i];
         for (int k = 0; k < n * 2; k++) {
           b[j][k] -= factor * b[i][k];
         }
@@ -5825,10 +5853,6 @@ int64_t powmod(int64_t b, int64_t e, int64_t m) {
   return res;
 }
 
-int64_t inv(int64_t a) {
-  return powmod((a % MOD + MOD) % MOD, MOD - 2, MOD);
-}
-
 void to_hessenberg(std::vector<std::vector<int64_t>> &m) {
   int n = static_cast<int>(m.size());
   for (int j = 0; j + 2 < n; j++) {
@@ -5848,7 +5872,7 @@ void to_hessenberg(std::vector<std::vector<int64_t>> &m) {
         std::swap(m[r][pivot], m[r][j + 1]);
       }
     }
-    int64_t pinv = inv(m[j + 1][j]);
+    int64_t pinv = powmod(m[j + 1][j], MOD - 2, MOD);
     for (int k = j + 2; k < n; k++) {
       int64_t u = m[k][j] * pinv % MOD;
       if (u == 0) {
@@ -6048,6 +6072,10 @@ A sparse matrix stores only nonzero entries, which is useful when the matrix is 
   \item \inlinecode{swap\_rows(i, j)} swaps two rows while keeping the column maps synchronized.
   \item \inlinecode{transpose()} transposes the matrix in place.
   \item \inlinecode{multiply\_vector(x)} returns the matrix-vector product with vector \inlinecode{x}.
+  \item \inlinecode{a + b} and \inlinecode{a - b} return the sum and difference of two matrices with identical dimensions.
+  \item \inlinecode{a * b} returns the matrix product, requiring \inlinecode{a.num\_cols()} to equal \inlinecode{b.num\_rows()}. Only pairs of stored entries are ever multiplied.
+  \item \inlinecode{a * k} returns \inlinecode{a} scaled by the value \inlinecode{k}. Scaling by zero yields an empty matrix.
+  \item Operators \inlinecode{+=}, \inlinecode{-=}, and \inlinecode{*=} assign the corresponding result back into the left operand. In all of these operators, entries that cancel to zero are not stored.
   \item \inlinecode{row\_reduce(a, limit)} converts columns $[0, {\inlinecodemath{limit}})$ of \inlinecode{a} to sparse row echelon form, returning the rank found in those columns.
   \item \inlinecode{det(a)} returns the determinant of a square sparse matrix.
   \item \inlinecode{sparse\_rank(a)} returns the rank of a sparse matrix.
@@ -6064,6 +6092,9 @@ Sparse elimination chooses, in each pivot column, the available pivot row with t
   \item $O(\log d)$ per call to \inlinecode{get()}, \inlinecode{set()}, and \inlinecode{add()}, where $d$ is the number of nonzeros in the touched row or column.
   \item $O(1)$ per call to \inlinecode{transpose()} and $O(n)$ per call to \inlinecode{multiply\_vector()}, where $n$ is the number of stored nonzero entries.
   \item $O((r_i + r_j) \cdot \log d)$ per call to \inlinecode{swap\_rows(i, j)}, where $r_i$ and $r_j$ are the sizes of the two rows.
+  \item $O((n_a + n_b) \cdot \log d)$ per call to \inlinecode{operator+} and \inlinecode{operator-}, where $n_a$ and $n_b$ are the operand nonzero counts.
+  \item $O(n \cdot \log d)$ per call to scalar \inlinecode{operator*}, where $n$ is the number of stored nonzero entries.
+  \item $O(f \cdot \log d)$ per call to \inlinecode{operator*}, where $f$ is the number of scalar products accumulated, that is, the sum of \inlinecode{b.row(k).size()} over every stored entry \inlinecode{a[i][k]}.
   \item $O(f \cdot \log d)$ for sparse elimination, where $f$ is the number of entry updates performed after fill-in and $d$ is a touched row or column size. In the worst case this is still cubic.
   \item $O(f \cdot \log d)$ per call to \inlinecode{det()}, \inlinecode{sparse\_rank()}, and \inlinecode{solve\_system()}.
   \item $O(1)$ per call to \inlinecode{num\_rows()}, \inlinecode{num\_cols()}, \inlinecode{nonzeros()}, \inlinecode{row()}, and \inlinecode{column()}.
@@ -6076,6 +6107,7 @@ Sparse elimination chooses, in each pivot column, the available pivot row with t
   \item $O(1)$ auxiliary for \inlinecode{get()}, \inlinecode{set()}, \inlinecode{add()}, \inlinecode{row()}, \inlinecode{column()}, and \inlinecode{transpose()}.
   \item $O(r_i + r_j)$ auxiliary for \inlinecode{swap\_rows(i, j)}.
   \item $O(R)$ auxiliary for \inlinecode{multiply\_vector()}.
+  \item $O(c)$ auxiliary for \inlinecode{operator*}, where $c$ is the largest number of nonzeros in one result row.
   \item $O(n + R)$ auxiliary for elimination, in addition to the copied matrix used by \inlinecode{det()} and \inlinecode{sparse\_rank()} or the augmented matrix used by \inlinecode{solve\_system()}.
 \end{compactitem}
 
@@ -6166,6 +6198,72 @@ class SparseMatrix {
     }
     return res;
   }
+
+  SparseMatrix operator+(const SparseMatrix &b) const {
+    assert(rows == b.rows && cols == b.cols);
+    SparseMatrix res(rows, cols);
+    for (int i = 0; i < rows; i++) {
+      for (const auto &[j, value] : rvals[i]) {
+        res.set(i, j, value);
+      }
+      for (const auto &[j, value] : b.rvals[i]) {
+        res.add(i, j, value);  // Cancellation to zero erases the entry.
+      }
+    }
+    return res;
+  }
+
+  SparseMatrix operator-(const SparseMatrix &b) const {
+    assert(rows == b.rows && cols == b.cols);
+    SparseMatrix res(rows, cols);
+    for (int i = 0; i < rows; i++) {
+      for (const auto &[j, value] : rvals[i]) {
+        res.set(i, j, value);
+      }
+      for (const auto &[j, value] : b.rvals[i]) {
+        res.add(i, j, T{} - value);
+      }
+    }
+    return res;
+  }
+
+  // Scaling by zero cancels every entry, so the result stores nothing at all.
+  SparseMatrix operator*(const T &k) const {
+    SparseMatrix res(rows, cols);
+    if (is_zero(k)) {
+      return res;
+    }
+    for (int i = 0; i < rows; i++) {
+      for (const auto &[j, value] : rvals[i]) {
+        res.set(i, j, value * k);
+      }
+    }
+    return res;
+  }
+
+  // Row-by-row product: each stored a[i][k] scatters row k of b into an accumulator for row i, so
+  // only nonzero-by-nonzero pairs are ever multiplied.
+  SparseMatrix operator*(const SparseMatrix &b) const {
+    assert(cols == b.rows);
+    SparseMatrix res(rows, b.cols);
+    for (int i = 0; i < rows; i++) {
+      std::map<int, T> acc;
+      for (const auto &[k, aik] : rvals[i]) {
+        for (const auto &[j, bkj] : b.rvals[k]) {
+          acc[j] = acc[j] + aik * bkj;
+        }
+      }
+      for (const auto &[j, value] : acc) {
+        res.set(i, j, value);
+      }
+    }
+    return res;
+  }
+
+  SparseMatrix &operator+=(const SparseMatrix &b) { return *this = *this + b; }
+  SparseMatrix &operator-=(const SparseMatrix &b) { return *this = *this - b; }
+  SparseMatrix &operator*=(const SparseMatrix &b) { return *this = *this * b; }
+  SparseMatrix &operator*=(const T &k) { return *this = *this * k; }
 };
 
 template<typename T>
@@ -6334,6 +6432,45 @@ int main() {
   assert(a.num_rows() == 4 && a.num_cols() == 3);
   assert(a.get(3, 2) == 7);
   assert(a.get(2, 1) == 4);
+
+  //  p = [1 2]   q = [0 3]   p + q = [1 5]   p * q = [4 3]
+  //      [0 1]       [2 0]           [2 1]           [2 0]
+  SparseMatrix<int64_t> p(2, 2), q(2, 2);
+  p.set(0, 0, 1);
+  p.set(0, 1, 2);
+  p.set(1, 1, 1);
+  q.set(0, 1, 3);
+  q.set(1, 0, 2);
+  SparseMatrix<int64_t> sum = p + q;
+  assert(sum.get(0, 0) == 1 && sum.get(0, 1) == 5);
+  assert(sum.get(1, 0) == 2 && sum.get(1, 1) == 1);
+  SparseMatrix<int64_t> product = p * q;
+  assert(product.get(0, 0) == 4 && product.get(0, 1) == 3);
+  assert(product.get(1, 0) == 2 && product.get(1, 1) == 0);
+  assert(product.nonzeros() == 3);  // The zero entry is never stored.
+
+  // Cancelling entries are dropped rather than stored as explicit zeros.
+  SparseMatrix<int64_t> negated(2, 2);
+  negated.set(0, 0, -1);
+  negated.set(0, 1, -2);
+  negated.set(1, 1, -1);
+  assert((p + negated).nonzeros() == 0);
+  assert((p - p).nonzeros() == 0);
+
+  SparseMatrix<int64_t> difference = p - q;
+  assert(difference.get(0, 0) == 1 && difference.get(0, 1) == -1);
+  assert(difference.get(1, 0) == -2 && difference.get(1, 1) == 1);
+
+  SparseMatrix<int64_t> scaled = p * 3;
+  assert(scaled.get(0, 0) == 3 && scaled.get(0, 1) == 6 && scaled.get(1, 1) == 3);
+  assert((p * static_cast<int64_t>(0)).nonzeros() == 0);
+
+  SparseMatrix<int64_t> acc = p;
+  acc += q;
+  assert(acc.get(0, 1) == 5 && acc.get(1, 0) == 2);
+  acc -= q;
+  acc *= 2;
+  assert(acc.get(0, 0) == 2 && acc.get(0, 1) == 4 && acc.get(1, 1) == 2);
 
   SparseMatrix<double> d(3, 3);
   d.set(0, 0, 2);
@@ -6638,11 +6775,17 @@ The code aliases one modular field element as \inlinecode{Coeff} and one coeffic
   \item \inlinecode{derivative(a)} returns the formal derivative of \inlinecode{a}.
   \item \inlinecode{integral(a)} returns the formal antiderivative of \inlinecode{a} with constant term zero.
   \item \inlinecode{inverse(a, n)} returns the first \inlinecode{n} coefficients of \inlinecode{1 / a}, requiring \inlinecode{a[0]} to be nonzero.
+  \item \inlinecode{log(a, n)} returns the first \inlinecode{n} coefficients of $\log a$, requiring \inlinecode{a[0]} to be $1$.
+  \item \inlinecode{exp(a, n)} returns the first \inlinecode{n} coefficients of $\exp a$, requiring \inlinecode{a[0]} to be $0$.
+  \item \inlinecode{sqrt(a, n)} returns the first \inlinecode{n} coefficients of the square root of \inlinecode{a} whose constant term is $1$, requiring \inlinecode{a[0]} to be $1$.
+  \item \inlinecode{power(a, k, n)} returns the first \inlinecode{n} coefficients of $a^k$ for a nonnegative \inlinecode{uint64\_t} exponent \inlinecode{k}; \inlinecode{k = 0} returns the constant series $1$.
   \item \inlinecode{divide(a, b)} returns the polynomial quotient of \inlinecode{a / b}, requiring \inlinecode{b} to be nonzero.
   \item \inlinecode{modulo(a, b)} returns the polynomial remainder of \inlinecode{a / b}, requiring \inlinecode{b} to be nonzero.
 \end{compactitem}
 
 The inverse is a formal power series inverse modulo $x^n$: it finds $b$ such that $a \cdot b \equiv 1 \pmod{x^n}$. Division uses the standard reversal trick: reverse both polynomials, compute a truncated series inverse of the reversed divisor, multiply, truncate, and reverse back.
+
+The logarithm follows from $(\log a)' = a'/a$, integrating the truncated quotient. The exponential and square root use Newton iteration, which doubles the number of correct coefficients each round and so costs the same asymptotically as the final multiplication. To take a square root whose constant term is not $1$, factor \inlinecode{a[0]} out and multiply back one of its modular square roots (see 6.3.5); if the lowest nonzero coefficient sits at an odd power of $x$, no square root exists. Power factors $a = x^t c b$, where $b(0) = 1$, and uses $a^k = x^{tk} c^k \exp(k \log b)$.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -6650,6 +6793,8 @@ The inverse is a formal power series inverse modulo $x^n$: it finds $b$ such tha
   \item $O(n)$ per call to \inlinecode{trim()}, \inlinecode{add()}, \inlinecode{subtract()}, \inlinecode{derivative()}, and \inlinecode{integral()}.
   \item $O(|a||b|)$ per call to \inlinecode{multiply()} on small inputs and $O(n \log n)$ otherwise, where $n$ is the padded transform length.
   \item $O(n \log n)$ per call to \inlinecode{inverse(a, n)}, where $n$ is the requested length.
+  \item $O(n \log n)$ per call to \inlinecode{log()}, \inlinecode{exp()}, and \inlinecode{sqrt()}, where $n$ is the requested length. The exponential carries the largest constant, since every Newton round computes a logarithm.
+  \item $O(n \log n + \log k)$ per call to \inlinecode{power()}, where $n$ is the requested length.
   \item $O(n \log n)$ per call to \inlinecode{divide()} and \inlinecode{modulo()}, where $n$ is the padded multiplication length.
 \end{compactitem}
 
@@ -6670,7 +6815,7 @@ const Coeff ROOT = 3;
 const int MAX_POWER_OF_TWO = 23;
 const int NAIVE_CUTOFF = 150;
 
-Coeff powmod(Coeff b, Coeff e, Coeff m = MOD) {
+Coeff powmod(Coeff b, uint64_t e, Coeff m = MOD) {
   Coeff res = 1;
   for (b %= m; e > 0; e >>= 1) {
     if (e & 1) {
@@ -6817,6 +6962,102 @@ Poly inverse(const Poly &a, int n) {
   return res;
 }
 
+Poly log(const Poly &a, int n) {
+  assert(n >= 0 && !a.empty() && a[0] == 1);
+  if (n == 0) {
+    return {};
+  }
+  // Since (log a)' = a'/a, integrating the truncated quotient recovers log a.
+  Poly cut(a.begin(), a.begin() + std::min(static_cast<int>(a.size()), n));
+  Poly res = multiply(derivative(cut), inverse(cut, n));
+  res.resize(n - 1);
+  res = integral(res);
+  res.resize(n);
+  return res;
+}
+
+Poly exp(const Poly &a, int n) {
+  assert(n >= 0 && (a.empty() || a[0] == 0));
+  if (n == 0) {
+    return {};
+  }
+  // Newton iteration on log(f) - a = 0 gives f <- f*(1 - log(f) + a), doubling the number of
+  // correct coefficients each round.
+  Poly res{1};
+  while (static_cast<int>(res.size()) < n) {
+    int len = static_cast<int>(res.size()) << 1;
+    Poly cut(a.begin(), a.begin() + std::min(static_cast<int>(a.size()), len));
+    Poly correction = subtract(cut, log(res, len));
+    correction.resize(std::max(1, static_cast<int>(correction.size())));
+    correction[0] = (correction[0] + 1) % MOD;
+    res = multiply(res, correction);
+    res.resize(len);
+  }
+  res.resize(n);
+  return res;
+}
+
+Poly sqrt(const Poly &a, int n) {
+  assert(n >= 0 && !a.empty() && a[0] == 1);
+  if (n == 0) {
+    return {};
+  }
+  // Newton iteration on f^2 - a = 0 gives f <- (f + a/f) / 2.
+  const Coeff INV2 = powmod(2, MOD - 2);
+  Poly res{1};
+  while (static_cast<int>(res.size()) < n) {
+    int len = static_cast<int>(res.size()) << 1;
+    Poly cut(a.begin(), a.begin() + std::min(static_cast<int>(a.size()), len));
+    res = add(res, multiply(cut, inverse(res, len)));
+    res.resize(len);
+    for (Coeff &c : res) {
+      c = c * INV2 % MOD;
+    }
+  }
+  res.resize(n);
+  return res;
+}
+
+Poly power(const Poly &a, uint64_t k, int n) {
+  assert(n >= 0);
+  if (n == 0) {
+    return {};
+  }
+  Poly res(n);
+  if (k == 0) {
+    res[0] = 1;
+    return res;
+  }
+  int limit = std::min(static_cast<int>(a.size()), n);
+  int first = 0;
+  while (first < limit && a[first] == 0) {
+    first++;
+  }
+  if (first == limit || (first > 0 && k > static_cast<uint64_t>((n - 1) / first))) {
+    return res;
+  }
+  int shift = static_cast<int>(static_cast<uint64_t>(first) * k);
+  int len = n - shift;
+  int terms = std::min(static_cast<int>(a.size()) - first, len);
+  Poly normalized(a.begin() + first, a.begin() + first + terms);
+  Coeff leading = normalized[0];
+  Coeff leading_inv = powmod(leading, MOD - 2);
+  for (Coeff &c : normalized) {
+    c = c * leading_inv % MOD;
+  }
+  Poly exponent = log(normalized, len);
+  Coeff k_mod = static_cast<Coeff>(k % static_cast<uint64_t>(MOD));
+  for (Coeff &c : exponent) {
+    c = c * k_mod % MOD;
+  }
+  Poly body = exp(exponent, len);
+  Coeff leading_power = powmod(leading, k);
+  for (int i = 0; i < len; i++) {
+    res[i + shift] = body[i] * leading_power % MOD;
+  }
+  return res;
+}
+
 Poly divide(Poly a, Poly b) {
   trim(a);
   trim(b);
@@ -6872,6 +7113,32 @@ int main() {
   Poly divisor{MOD - 1, 1};
   assert((divide(dividend, divisor) == Poly{1, 1, 1}));
   assert(modulo(dividend, divisor).empty());
+
+  // exp(x) = 1 + x + x^2/2 + x^3/6 + ..., checked by clearing each denominator.
+  Poly exp_x = exp({0, 1}, 4);
+  assert(exp_x[0] == 1 && exp_x[1] == 1);
+  assert(exp_x[2] * 2 % MOD == 1 && exp_x[3] * 6 % MOD == 1);
+
+  // log(1 + x) = x - x^2/2 + x^3/3 - ...
+  Poly log_1x = log({1, 1}, 4);
+  assert(log_1x[0] == 0 && log_1x[1] == 1);
+  assert((log_1x[2] * 2 + 1) % MOD == 0 && log_1x[3] * 3 % MOD == 1);
+
+  // Truncated to the same length, exp and log invert each other.
+  Poly series{1, 5, 9, 2, 7};
+  Poly logged = log(series, 5);
+  assert(logged[0] == 0);
+  assert(exp(logged, 5) == series);
+
+  // A series square root squares back to the original, modulo x^5.
+  Poly root = sqrt(series, 5);
+  Poly root_squared = multiply(root, root);
+  root_squared.resize(5);
+  assert(root_squared == series);
+
+  // (2x + x^2)^3 = 8x^3 + 12x^4 + 6x^5 + x^6.
+  assert((power({0, 2, 1}, 3, 7) == Poly{0, 0, 0, 8, 12, 6, 1}));
+  assert((power({}, 0, 4) == Poly{1, 0, 0, 0}));
 
   Poly ones(160, 1);
   Poly square = multiply(ones, ones);
@@ -7463,29 +7730,28 @@ The implementation uses memoized DFS. It assumes the graph is acyclic; if cycles
 \begin{lstlisting}[language=C++]
 #include <vector>
 
-int grundy_dfs(int u, const std::vector<std::vector<int>> &g, std::vector<int> *memo) {
-  if ((*memo)[u] != -1) {
-    return (*memo)[u];
-  }
-  std::vector<char> seen(g[u].size() + 1, false);
-  for (int v : g[u]) {
-    int x = grundy_dfs(v, g, memo);
-    if (x < static_cast<int>(seen.size())) {
-      seen[x] = true;
-    }
-  }
-  int res = 0;
-  while (res < static_cast<int>(seen.size()) && seen[res]) {
-    res++;
-  }
-  (*memo)[u] = res;
-  return res;
-}
-
 std::vector<int> grundy_on_dag(const std::vector<std::vector<int>> &g) {
   std::vector<int> memo(g.size(), -1);
+  auto dfs = [&](auto &&dfs, int u) -> void {
+    if (memo[u] != -1) {
+      return;
+    }
+    std::vector<char> seen(g[u].size() + 1, false);
+    for (int v : g[u]) {
+      dfs(dfs, v);
+      int x = memo[v];
+      if (x < static_cast<int>(seen.size())) {
+        seen[x] = true;
+      }
+    }
+    int res = 0;
+    while (res < static_cast<int>(seen.size()) && seen[res]) {
+      res++;
+    }
+    memo[u] = res;
+  };
   for (int u = 0; u < static_cast<int>(g.size()); u++) {
-    grundy_dfs(u, g, &memo);
+    dfs(dfs, u);
   }
   return memo;
 }

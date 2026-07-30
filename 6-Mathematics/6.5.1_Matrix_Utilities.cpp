@@ -1,6 +1,8 @@
 /*
 
-Basic matrix operations defined on a two-dimensional vector of numeric values.
+Basic matrix operations defined on a two-dimensional vector of numeric values. Matrix arithmetic
+also supports modular value types such as `Modular<MOD>` from 6.3.2. The element type must be
+constructible from $0$ and $1$ and support the arithmetic operators used by the requested operation.
 
 - `make_matrix<T>(m, n, v)` constructs and returns an $m$ by $n$ matrix with 0-based indices (row
   indices $[0, `m`)$ and column indices $[0, `n`)$), where every value is initialized to `v`.
@@ -14,9 +16,9 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
 - Operators `+`, `-`, `*`, `/`, `+=`, `-=`, `*=`, and `/=` define scalar addition, subtraction,
   multiplication, and division involving a matrix and a numeric scalar value.
 - Operators `*` and `*=` define vector and matrix multiplication.
-- Operators `^` and `^=` define iterative binary matrix exponentiation of a square matrix `a` by an
-  integer power `p`.
-- `power_sum(a, p)` returns the power sum of a square matrix `a` up to an integer power `p`, that
+- Operators `^` and `^=` define iterative binary matrix exponentiation of a square matrix `a` by a
+  `uint64_t` power `p`.
+- `power_sum(a, p)` returns the power sum of a square matrix `a` up to a `uint64_t` power `p`, that
   is, $a + a^2 + \ldots + a^p$.
 - `transpose(a)` returns the transpose of an $m$ by $n$ matrix `a`, that is, a new $n$ by $m$ matrix
   $b$ such that `a[i][j]` = `b[j][i]` for every `i` $\in [0, m)$ and `j` $\in [0, n)$.
@@ -56,6 +58,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
 #include <iomanip>
 #include <ostream>
 #include <utility>
@@ -196,9 +199,12 @@ template<typename T>
 Matrix<T> operator*(const Matrix<T> &a, const Matrix<T> &b) {
   assert(columns(a) == rows(b));
   Matrix<T> res = make_matrix<T>(rows(a), columns(b));
+  // The k loop sits outside j so the inner loop walks res[i] and b[k] contiguously instead of
+  // striding down a column of b. Each res[i][j] still accumulates in increasing k, so results are
+  // unchanged, including for floating-point types.
   for (int i = 0; i < rows(a); i++) {
-    for (int j = 0; j < columns(b); j++) {
-      for (int k = 0; k < rows(b); k++) {
+    for (int k = 0; k < rows(b); k++) {
+      for (int j = 0; j < columns(b); j++) {
         res[i][j] += a[i][k] * b[k][j];
       }
     }
@@ -236,26 +242,28 @@ Matrix<T> operator-(const U &v, const Matrix<T> &a) {
 }
 
 template<typename T>
-Matrix<T> operator^(Matrix<T> a, unsigned int p) {
+Matrix<T> operator^(Matrix<T> a, uint64_t p) {
   assert(rows(a) == columns(a));
   Matrix<T> res = identity_matrix<T>(rows(a));
   while (p > 0) {
     if (p & 1) {
       res *= a;
     }
-    a *= a;
     p >>= 1;
+    if (p > 0) {
+      a *= a;
+    }
   }
   return res;
 }
 
 template<typename T>
-Matrix<T> &operator^=(Matrix<T> &a, unsigned int p) {
+Matrix<T> &operator^=(Matrix<T> &a, uint64_t p) {
   return a = a ^ p;
 }
 
 template<typename T>
-Matrix<T> power_sum(const Matrix<T> &a, unsigned int p) {
+Matrix<T> power_sum(const Matrix<T> &a, uint64_t p) {
   assert(rows(a) == columns(a));
   int n = rows(a);
   if (p == 0) {

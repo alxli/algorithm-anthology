@@ -14,7 +14,8 @@ processed the matrix holds the all-pairs shortest distances.
   whether the graph contains no negative-weight cycle.
 - `get_path(start, dest)` returns the shortest path from `start` to `dest`, or an empty vector if
   `dest` is unreachable from `start`, provided the most recent call to `floyd_warshall()` returned
-  true.
+  true. If it returned false, a reachable negative-weight cycle leaves the distances and paths
+  undefined.
 
 For path reconstruction, `next_node[i][j]` stores the next node to visit after `i` on a current
 shortest path from `i` to `j`. It is initialized to `j` for every pair and, when a shorter route `i`

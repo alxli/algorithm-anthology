@@ -1,7 +1,7 @@
 /*
 
 Computes one layer of a dynamic program of the form `dp_cur[i] = min(dp_prev[k] + cost(k, i))`,
-where $0 \leq `k` \leq `i`$. Let `opt[i]` be the smallest index `k` attaining this minimum.
+where $`k` \in [0, `i`]$. Let `opt[i]` be the smallest index `k` attaining this minimum.
 Divide-and-conquer optimization applies when `opt[i]` $\leq$ `opt[i + 1]`, so the best transition
 index moves only to the right as `i` increases.
 

@@ -7,9 +7,8 @@ The range overload `sieve(lo, hi)` uses a segmented sieve, letting primes in a h
 window be found without sieving everything below it. Since every composite at most `hi` has a prime
 factor at most $\sqrt{`hi`}$, it first sieves the primes up to $\sqrt{`hi`}$, then uses only those
 primes to mark composites within $[`lo`, `hi`]$ (each prime $p$ starting at the first of its
-multiples that is at least both $p^2$ and `lo`). This needs only O(w + sqrt(h)) space, where
-$w = `hi` - `lo` + 1$ and $h = `hi`$, instead of the O(h) space that sieving all of $[2, `hi`]$
-would require.
+multiples that is at least both $p^2$ and `lo`). This needs only O(w + sqrt(`hi`)) space, where
+$w = `hi` - `lo` + 1$, instead of the O(`hi`) space that sieving all of $[2, `hi`]$ would require.
 
 The linear sieve finds the least prime factor of each integer. When processing `i`, it marks `i * p`
 for each known prime `p` no greater than `least[i]`. Every composite `x` is therefore generated

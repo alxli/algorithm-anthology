@@ -105,7 +105,7 @@ int64_t shortest_hamiltonian_cycle() {
   }
   int64_t res = INF;
   for (int i = 1; i < n; i++) {
-    res = std::min(res, dp[max_mask][i] + adj[i][0]);
+    res = std::min(res, dp[max_mask][i] + adj[i][0]);  // Overflow warning.
   }
   int mask = max_mask, old = 0;
   for (int i = n - 1; i >= 1; i--) {

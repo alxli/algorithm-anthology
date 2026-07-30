@@ -126,17 +126,6 @@ class IterativeLazySegTree {
     }
   }
 
-  void pull_after_update(int l, int r) {
-    for (int h = 1; h <= height; h++) {
-      if (((l >> h) << h) != l) {
-        pull(l >> h);
-      }
-      if (((r >> h) << h) != r) {
-        pull((r - 1) >> h);
-      }
-    }
-  }
-
  public:
   explicit IterativeLazySegTree(int n, const T &v = T()) : len(n) {
     assert(len > 0);
@@ -189,7 +178,15 @@ class IterativeLazySegTree {
         apply(--r, d);
       }
     }
-    pull_after_update(l0, r0);
+    // Rebuild only ancestors whose segments were not fully covered by the update.
+    for (int h = 1; h <= height; h++) {
+      if (((l0 >> h) << h) != l0) {
+        pull(l0 >> h);
+      }
+      if (((r0 >> h) << h) != r0) {
+        pull((r0 - 1) >> h);
+      }
+    }
   }
 
   void update(int i, const T &d) {

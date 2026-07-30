@@ -13,7 +13,7 @@ nonnegative, a node's distance is final the first time it is removed from the qu
   whose indices represent the nodes. Each edge is stored as (`neighbor`, `weight`), where `weight`
   is nonnegative.
 - `get_path(dest)` returns the path from `start` to `dest`, or an empty vector if `dest` is
-  unreachable, after the latest call to `dijkstra()`.
+  unreachable, using the state left by the most recent call to `dijkstra()`.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 `start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the
@@ -59,7 +59,7 @@ void dijkstra(int start) {
       continue;
     }
     for (auto [v, w] : adj[u]) {
-      if (dist[v] > dist[u] + w) {
+      if (dist[v] > dist[u] + w) {  // Overflow warning.
         dist[v] = dist[u] + w;
         pred[v] = u;
         pq.emplace(dist[v], v);

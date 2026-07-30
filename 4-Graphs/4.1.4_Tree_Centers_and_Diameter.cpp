@@ -78,19 +78,18 @@ int find_centroid(int u = 0, int p = -1) {
   return good_center ? u : -count;
 }
 
-std::pair<int, int> dfs(int u, int p, int depth) {
-  std::pair<int, int> res{depth, u};
-  for (int v : adj[u]) {
-    if (v != p) {
-      res = std::max(res, dfs(v, u, depth + 1));
-    }
-  }
-  return res;
-}
-
 int diameter() {
-  int furthest_node = dfs(0, -1, 0).second;
-  return dfs(furthest_node, -1, 0).first;
+  auto dfs = [&](auto &&dfs, int u, int p = -1, int depth = 0) -> std::pair<int, int> {
+    std::pair<int, int> res{depth, u};
+    for (int v : adj[u]) {
+      if (v != p) {
+        res = std::max(res, dfs(dfs, v, u, depth + 1));
+      }
+    }
+    return res;
+  };
+  int furthest_node = dfs(dfs, 0).second;
+  return dfs(dfs, furthest_node).first;
 }
 
 /*** Example Usage ***/

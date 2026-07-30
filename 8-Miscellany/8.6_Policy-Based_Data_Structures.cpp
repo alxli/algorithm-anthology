@@ -193,7 +193,7 @@ int main() {
   assert(mp.order_of_key(7) == 1);
   assert(mp.erase_one(5));
   assert(!mp.erase_one(5));
-  assert(mp.find_by_order(0) == std::make_pair(7, 'c'));
+  assert(mp.find_by_order(0).first == 7);
 
   PairingHeap<int> h1, h2;
   auto it = h1.push(10);

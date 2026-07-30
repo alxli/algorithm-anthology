@@ -838,20 +838,21 @@ int64_t inversions(const std::vector<int> &a) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+using namespace std;
 
 int main() {
   {
-    std::vector<int> a{6, 9, 1, 14, 8, 12, 3, 2};
+    vector<int> a{6, 9, 1, 14, 8, 12, 3, 2};
     assert(inversions(a.begin(), a.end()) == 16);
-    assert(std::is_sorted(a.begin(), a.end()));
+    assert(is_sorted(a.begin(), a.end()));
   }
   {
-    std::vector<int> a{6, 9, 1, 14, 8, 12, 3, 2};
+    vector<int> a{6, 9, 1, 14, 8, 12, 3, 2};
     assert(inversions(a) == 16);
-    assert((a == std::vector<int>{6, 9, 1, 14, 8, 12, 3, 2}));
+    assert((a == vector<int>{6, 9, 1, 14, 8, 12, 3, 2}));
   }
   {
-    std::vector<int> a{2, 2, 1};
+    vector<int> a{2, 2, 1};
     assert(inversions(a) == 2);  // Equal elements are not inversions.
   }
   return 0;
@@ -2512,18 +2513,18 @@ For path-counting, \inlinecode{dp[r][c]} stores the number of ways to reach cell
 
 \begin{compactitem}
   \item \inlinecode{count\_grid\_paths(blocked)} returns the number of paths from the upper-left cell to the lower-right cell, moving only down or right and avoiding blocked cells marked nonzero.
-  \item \inlinecode{min\_grid\_path\_cost(cost)} returns a pair (\inlinecode{sum}, \inlinecode{path}) containing the minimum cost of a down/right path from the upper-left cell to the lower-right cell and the cells of one optimal path in order. If the grid is empty, \inlinecode{sum} is $0$ and \inlinecode{path} is empty.
+  \item \inlinecode{min\_cost\_grid\_path(cost)} returns a pair (\inlinecode{min\_cost}, \inlinecode{path}) containing the minimum cost of a down/right path from the upper-left cell to the lower-right cell and the cells of one optimal path in order. If the grid is empty, \inlinecode{min\_cost} is $0$ and \inlinecode{path} is empty.
 \end{compactitem}
 
 Path counts and path costs must fit in \inlinecode{int64\_t}.
 
-\textbf{Time Complexity}: $O(R \cdot C)$ per call to \inlinecode{count\_grid\_paths(blocked)} and \inlinecode{min\_grid\_path\_cost(cost)}, where $R$ and $C$ are the grid dimensions.
+\textbf{Time Complexity}: $O(R \cdot C)$ per call to \inlinecode{count\_grid\_paths(blocked)} and \inlinecode{min\_cost\_grid\_path(cost)}, where $R$ and $C$ are the grid dimensions.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(C)$ auxiliary for \inlinecode{count\_grid\_paths(blocked)}.
-  \item $O(R \cdot C)$ auxiliary and $O(R + C)$ for the returned path from \inlinecode{min\_grid\_path\_cost(cost)}.
+  \item $O(R \cdot C)$ auxiliary and $O(R + C)$ for the returned path from \inlinecode{min\_cost\_grid\_path(cost)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -2552,7 +2553,7 @@ int64_t count_grid_paths(const std::vector<std::vector<char>> &blocked) {
   return dp[cols - 1];
 }
 
-std::pair<int64_t, std::vector<std::pair<int, int>>> min_grid_path_cost(
+std::pair<int64_t, std::vector<std::pair<int, int>>> min_cost_grid_path(
     const std::vector<std::vector<int>> &cost
 ) {
   int rows = static_cast<int>(cost.size());
@@ -2612,13 +2613,13 @@ int main() {
       {1, 5, 1},
       {4, 2, 1},
   };
-  auto [sum, path] = min_grid_path_cost(cost);
-  assert(sum == 7);
+  auto [min_cost, path] = min_cost_grid_path(cost);
+  assert(min_cost == 7);
   assert((path == vector<pair<int, int>>{{0, 0}, {0, 1}, {0, 2}, {1, 2}, {2, 2}}));
   return 0;
 }
 \end{lstlisting}
-\subsection{Matrix Chain Multiplication}
+\subsection{Matrix Chain Parenthesization}
 Given a fixed-order chain of compatible matrices, finds a parenthesization that minimizes the number of scalar multiplications needed to compute their product. The algorithm examines only the matrix dimensions; it does not multiply matrix entries. Matrix multiplication is associative, but multiplying an $a$-by-$b$ matrix with a $b$-by-$c$ matrix costs $abc$ scalar multiplications, so different parenthesizations can have very different costs. This is a canonical example of interval dynamic programming.
 
 Write $d_i$ for \inlinecode{dimensions[i]}, so matrix $i$ has $d_i$ rows and $d_{i+1}$ columns. For a chain of matrices, $dp(l, r)$ is the minimum cost of multiplying matrices $l$ through $r$. Trying every final split $k$ gives the recurrence $dp(l, r) = \min_{l \le k < r}(dp(l, k) + dp(k + 1, r) + d_l d_{k+1} d_{r+1})$. The final product multiplies a $d_l$-by-$d_{k+1}$ matrix with a $d_{k+1}$-by-$d_{r+1}$ matrix. Processing intervals in increasing order of length ensures that both subintervals have already been solved. The same pattern applies whenever a contiguous interval is formed by combining two smaller intervals.
@@ -2639,17 +2640,6 @@ Overflow warning: The minimum cost and all intermediate products must fit in \in
 #include <string>
 #include <utility>
 #include <vector>
-
-std::string matrix_chain_parenthesization(
-    const std::vector<std::vector<int>> &split, int lo, int hi
-) {
-  if (lo == hi) {
-    return "A" + std::to_string(lo);
-  }
-  int k = split[lo][hi];
-  return "(" + matrix_chain_parenthesization(split, lo, k) + " * " +
-         matrix_chain_parenthesization(split, k + 1, hi) + ")";
-}
 
 std::pair<int64_t, std::string> matrix_chain_order(const std::vector<int> &dimensions) {
   assert(dimensions.size() >= 2);
@@ -2673,7 +2663,14 @@ std::pair<int64_t, std::string> matrix_chain_order(const std::vector<int> &dimen
       }
     }
   }
-  return {dp[0][n - 1], matrix_chain_parenthesization(split, 0, n - 1)};
+  auto rec = [&](auto &&rec, int lo, int hi) -> std::string {
+    if (lo == hi) {
+      return "A" + std::to_string(lo);
+    }
+    int k = split[lo][hi];
+    return "(" + rec(rec, lo, k) + " * " + rec(rec, k + 1, hi) + ")";
+  };
+  return {dp[0][n - 1], rec(rec, 0, n - 1)};
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -2768,7 +2765,7 @@ The greedy choice is safe because among all intervals that could be chosen first
 Intervals are represented as half-open ranges $[{\inlinecodemath{start}}, {\inlinecodemath{finish}})$, so two intervals are compatible if the next interval's \inlinecode{start} is at least the previous interval's \inlinecode{finish}.
 
 \begin{compactitem}
-  \item \inlinecode{schedule\_intervals(intervals)} returns one maximum-size compatible subset of intervals, in the order they are selected, as original indices into an input vector of \inlinecode{Interval} with fields \inlinecode{start} and \inlinecode{finish}. Every interval must satisfy \inlinecode{start \textless{} finish}.
+  \item \inlinecode{schedule\_intervals(intervals)} returns one maximum-size compatible subset of intervals, in the order they are selected, as original indices into an input vector of \inlinecode{Interval} with fields \inlinecode{start} and \inlinecode{finish}. Every interval must satisfy \inlinecode{start} \textless{} \inlinecode{finish}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting, where $n$ is the number of intervals.
@@ -4002,22 +3999,23 @@ int64_t count_domino_tilings(int rows, int cols) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+using namespace std;
 
 int main() {
-  std::vector<std::vector<int64_t>> cost{{9, 2, 7}, {6, 4, 3}, {5, 8, 1}};
+  vector<vector<int64_t>> cost{{9, 2, 7}, {6, 4, 3}, {5, 8, 1}};
   auto [assignment_cost, job] = assignment_min_cost(cost);
   assert(assignment_cost == 9);
-  assert((job == std::vector<int>{1, 0, 2}));
+  assert((job == vector<int>{1, 0, 2}));
 
-  std::vector<int> sets{0b0011, 0b0110, 0b1100, 0b1000};
+  vector<int> sets{0b0011, 0b0110, 0b1100, 0b1000};
   auto [cover_count, chosen] = minimum_set_cover(sets, 4);
   assert(cover_count == 2);
-  assert((chosen == std::vector<int>{0, 2}));
+  assert((chosen == vector<int>{0, 2}));
 
-  auto [impossible_count, impossible_chosen] = minimum_set_cover(std::vector<int>{0b001, 0b010}, 3);
+  auto [impossible_count, impossible_chosen] = minimum_set_cover(vector<int>{0b001, 0b010}, 3);
   assert(impossible_count == -1 && impossible_chosen.empty());
 
-  std::vector<int64_t> group_cost{
+  vector<int64_t> group_cost{
       0,        // Empty group is unused.
       4, 6, 7,  // Singletons.
       6, 2, 3,  // Pairs.
@@ -4417,17 +4415,26 @@ The fast Walsh-Hadamard transform (FWHT) diagonalizes XOR convolution in the sam
   \item \inlinecode{xor\_convolve(a, b)} returns the XOR convolution of \inlinecode{a} and \inlinecode{b}.
   \item \inlinecode{or\_convolve(a, b)} returns the OR convolution of \inlinecode{a} and \inlinecode{b}.
   \item \inlinecode{and\_convolve(a, b)} returns the AND convolution of \inlinecode{a} and \inlinecode{b}.
+  \item \inlinecode{subset\_convolve(a, b)} returns the subset convolution of \inlinecode{a} and \inlinecode{b}, where \inlinecode{c[m]} sums \inlinecode{a[x]*b[y]} over the pairs of disjoint masks satisfying \inlinecode{x | y = m}.
 \end{compactitem}
+
+Subset convolution restricts OR convolution to pairs of disjoint masks, so \inlinecode{c[m]} must count only \inlinecode{x | y = m} with \inlinecode{x \& y = 0}. Rank each entry by its number of set bits, transform every rank layer, and multiply the layers as polynomials in the rank. Mobius inversion then recovers pairs whose union is exactly \inlinecode{m}; among these pairs, the ranks sum to the number of set bits in \inlinecode{m} exactly when the pair is disjoint.
 
 The in-place transforms require a nonempty array whose length is a power of two. A convolution returns empty if either input is empty; otherwise, both inputs are padded with zeros to the smallest power of two at least their maximum length, which is also the output length. For exact integer XOR convolution, the inverse divisions are exact; for modular arithmetic, replace the division by multiplication with the modular inverse of the transform length. All intermediate sums, differences, and products must be representable in the value type.
 
-\textbf{Time Complexity}: $O(n \log n)$ per transform or convolution, where $n$ is the padded power-of-two length.
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ per transform or bitwise convolution, where $n$ is the padded power-of-two length.
+  \item $O(n \log^{2} n)$ per call to \inlinecode{subset\_convolve()}.
+\end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for the in-place transforms.
-  \item $O(n)$ auxiliary and $O(n)$ for the returned array from each convolution.
+  \item $O(n)$ auxiliary and $O(n)$ for the returned array from each bitwise convolution.
+  \item $O(n \log n)$ auxiliary for \inlinecode{subset\_convolve()}, from the rank layers.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -4526,6 +4533,52 @@ template<typename T>
 std::vector<T> and_convolve(std::vector<T> a, std::vector<T> b) {
   return bitwise_convolve(std::move(a), std::move(b), and_transform<T>);
 }
+
+template<typename T>
+std::vector<T> subset_convolve(std::vector<T> a, std::vector<T> b) {
+  if (a.empty() || b.empty()) {
+    return {};
+  }
+  int needed = static_cast<int>(std::max(a.size(), b.size()));
+  int n = 1, bits = 0;
+  while (n < needed) {
+    n <<= 1;
+    bits++;
+  }
+  a.resize(n);
+  b.resize(n);
+  std::vector<int> ranks(n);
+  for (int mask = 1; mask < n; mask++) {
+    ranks[mask] = ranks[mask >> 1] + (mask & 1);
+  }
+  // Split each input into layers by rank, so that layer k holds only the masks with k set bits.
+  std::vector<std::vector<T>> fa(bits + 1, std::vector<T>(n)), fb = fa, fc = fa;
+  for (int mask = 0; mask < n; mask++) {
+    fa[ranks[mask]][mask] = a[mask];
+    fb[ranks[mask]][mask] = b[mask];
+  }
+  for (int k = 0; k <= bits; k++) {
+    or_transform(fa[k], false);
+    or_transform(fb[k], false);
+  }
+  // Multiplying layers groups pairs by total rank. Once Mobius inversion recovers each pair's exact
+  // union, total rank ranks[mask] selects precisely the disjoint pairs covering mask.
+  for (int i = 0; i <= bits; i++) {
+    for (int j = 0; i + j <= bits; j++) {
+      for (int mask = 0; mask < n; mask++) {
+        fc[i + j][mask] += fa[i][mask] * fb[j][mask];  // Overflow warning.
+      }
+    }
+  }
+  std::vector<T> res(n);
+  for (int k = 0; k <= bits; k++) {
+    or_transform(fc[k], true);
+  }
+  for (int mask = 0; mask < n; mask++) {
+    res[mask] = fc[ranks[mask]][mask];
+  }
+  return res;
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -4565,11 +4618,19 @@ int main() {
   // AND: c[m] sums a[x] * b[y] over pairs with x & y == m.
   assert((and_convolve(a, b) == vector<int64_t>{103, 52, 73, 32}));
 
+  // Subset: c[m] sums a[x] * b[y] over disjoint pairs with x | y == m. Every entry is at most the
+  // corresponding OR convolution, which also counts the overlapping pairs.
+  assert((subset_convolve(a, b) == vector<int64_t>{5, 16, 22, 60}));
+
   vector<int64_t> one_mask{0, 1, 0, 0};
   vector<int64_t> two_mask{0, 0, 1};
   assert((xor_convolve(one_mask, two_mask) == vector<int64_t>{0, 0, 0, 1}));
   assert((or_convolve(one_mask, two_mask) == vector<int64_t>{0, 0, 0, 1}));
   assert((and_convolve(one_mask, two_mask) == vector<int64_t>{1, 0, 0, 0}));
+  assert((subset_convolve(one_mask, two_mask) == vector<int64_t>{0, 0, 0, 1}));
+
+  // Overlapping masks contribute nothing at all to a subset convolution.
+  assert((subset_convolve(one_mask, one_mask) == vector<int64_t>{0, 0, 0, 0}));
   return 0;
 }
 \end{lstlisting}

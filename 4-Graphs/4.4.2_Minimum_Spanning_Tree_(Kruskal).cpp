@@ -63,7 +63,7 @@ int64_t kruskal_mst(int n) {
       dsu_root[v] = u;
       dsu_size[u] += dsu_size[v];
       mst.push_back(id);
-      total_weight += w;
+      total_weight += w;  // Overflow warning.
     }
   }
   return total_weight;

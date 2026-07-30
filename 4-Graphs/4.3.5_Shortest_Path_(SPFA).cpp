@@ -11,8 +11,9 @@ is not adversarial.
 - `spfa(start)` populates `dist` and `pred` for a global, pre-populated adjacency list `adj` which
   uses its indices as nodes. Each edge is stored as (`neighbor`, `weight`). The function returns
   `false` if it detects a reachable negative cycle, and returns `true` otherwise.
-- `get_path(dest)` returns the path from `start` to `dest` after a successful call to `spfa()`, or
-  an empty vector if `dest` is unreachable.
+- `get_path(dest)` returns the path from `start` to `dest`, or an empty vector if `dest` is
+  unreachable, provided the most recent call to `spfa()` returned true. If it returned false, a
+  reachable negative-weight cycle leaves the distances and paths undefined.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 `start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the
@@ -57,7 +58,7 @@ bool spfa(int start) {
     q.pop();
     in_queue[u] = false;
     for (auto [v, w] : adj[u]) {
-      if (dist[v] > dist[u] + w) {
+      if (dist[v] > dist[u] + w) {  // Overflow warning.
         dist[v] = dist[u] + w;
         pred[v] = u;
         path_edges[v] = path_edges[u] + 1;

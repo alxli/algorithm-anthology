@@ -28,29 +28,26 @@ Space Complexity:
 #include <cassert>
 #include <vector>
 
-static void de_bruijn_gen(
-    int t, int p, int k, int n, std::vector<int> &word, std::vector<int> &seq
-) {
-  if (t > n) {
-    if (n % p == 0) {
-      for (int i = 1; i <= p; i++) {
-        seq.push_back(word[i]);
-      }
-    }
-    return;
-  }
-  word[t] = word[t - p];
-  de_bruijn_gen(t + 1, p, k, n, word, seq);
-  for (int j = word[t - p] + 1; j < k; j++) {
-    word[t] = j;
-    de_bruijn_gen(t + 1, t, k, n, word, seq);
-  }
-}
-
 std::vector<int> de_bruijn(int k, int n) {
   assert(k >= 1 && n >= 1);
   std::vector<int> word(n + 1, 0), seq;
-  de_bruijn_gen(1, 1, k, n, word, seq);
+  auto dfs = [&](auto &&dfs, int t, int p) -> void {
+    if (t > n) {
+      if (n % p == 0) {
+        for (int i = 1; i <= p; i++) {
+          seq.push_back(word[i]);
+        }
+      }
+      return;
+    }
+    word[t] = word[t - p];
+    dfs(dfs, t + 1, p);
+    for (int j = word[t - p] + 1; j < k; j++) {
+      word[t] = j;
+      dfs(dfs, t + 1, t);
+    }
+  };
+  dfs(dfs, 1, 1);
   return seq;
 }
 

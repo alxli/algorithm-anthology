@@ -44,10 +44,6 @@ int64_t powmod(int64_t b, int64_t e, int64_t m) {
   return res;
 }
 
-int64_t inv(int64_t a) {
-  return powmod((a % MOD + MOD) % MOD, MOD - 2, MOD);
-}
-
 void to_hessenberg(std::vector<std::vector<int64_t>> &m) {
   int n = static_cast<int>(m.size());
   for (int j = 0; j + 2 < n; j++) {
@@ -67,7 +63,7 @@ void to_hessenberg(std::vector<std::vector<int64_t>> &m) {
         std::swap(m[r][pivot], m[r][j + 1]);
       }
     }
-    int64_t pinv = inv(m[j + 1][j]);
+    int64_t pinv = powmod(m[j + 1][j], MOD - 2, MOD);
     for (int k = j + 2; k < n; k++) {
       int64_t u = m[k][j] * pinv % MOD;
       if (u == 0) {

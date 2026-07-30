@@ -61,7 +61,7 @@ int64_t prim_mst() {
       }
       visit[v] = true;
       mst.emplace_back(u, v, w);
-      total_weight += w;
+      total_weight += w;  // Overflow warning.
       for (auto [to, ew] : adj[v]) {
         pq.emplace(ew, v, to);
       }

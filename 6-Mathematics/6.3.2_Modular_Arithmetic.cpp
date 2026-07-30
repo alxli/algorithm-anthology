@@ -4,14 +4,14 @@ Wraps arithmetic modulo a compile-time constant in a small value type. This is a
 helper for dynamic programming, combinatorics, polynomial operations, and any calculation where all
 answers are taken modulo some number $p$ such as $10^9 + 7$.
 
-The implementation is intentionally close to common contest "Mint" templates: normalization happens
-at construction, arithmetic operators are overloaded, mixed integer operations are supported through
-implicit construction, and combinations can be computed from lazy factorial tables. The operators
-use the hidden friend idiom: each `friend` defined inside the class is a non-template function, so
-mixed expressions like `2 + Mint(3)` convert the integer operand through the implicit constructor.
-(Free function template operators cannot do this - template argument deduction ignores implicit
-conversions - which is why some contest templates carry per-operator `Modular op U` and
-`U op Modular` overloads instead.)
+The implementation follows the conventional modular-integer wrapper (often called `Mint` in contest
+templates): normalization happens at construction, arithmetic operators are overloaded, mixed
+integer operations are supported through implicit construction, and combinations can be computed
+from lazy factorial tables. The operators use the hidden friend idiom: each `friend` defined inside
+the class is a non-template function, so mixed expressions like `2 + Mint(3)` convert the integer
+operand through the implicit constructor. (Free function template operators cannot do this -
+template argument deduction ignores implicit conversions - which is why some contest templates carry
+per-operator `Modular op U` and `U op Modular` overloads instead.)
 
 The modulus is a positive signed `auto` template argument. For example, `Modular<1000000007>` and
 `Modular<998244353>` need no other annotation. Its literal type determines the storage type, so a

@@ -199,30 +199,29 @@ The DFS version uses the fact that every outgoing dependency of a node is finish
 
 std::vector<std::vector<int>> adj;
 
-bool dfs(int u, std::vector<char> &state, std::vector<int> &res) {
-  if (state[u] == 1) {
-    return false;
-  }
-  if (state[u] == 2) {
-    return true;
-  }
-  state[u] = 1;
-  for (int v : adj[u]) {
-    if (!dfs(v, state, res)) {
-      return false;
-    }
-  }
-  state[u] = 2;
-  res.push_back(u);
-  return true;
-}
-
 std::vector<int> toposort_dfs() {
   int n = static_cast<int>(adj.size());
   std::vector<char> state(n);
   std::vector<int> res;
+  auto dfs = [&](auto &&dfs, int u) -> bool {
+    if (state[u] == 1) {
+      return false;
+    }
+    if (state[u] == 2) {
+      return true;
+    }
+    state[u] = 1;
+    for (int v : adj[u]) {
+      if (!dfs(dfs, v)) {
+        return false;
+      }
+    }
+    state[u] = 2;
+    res.push_back(u);
+    return true;
+  };
   for (int i = 0; i < n; i++) {
-    if (state[i] == 0 && !dfs(i, state, res)) {
+    if (state[i] == 0 && !dfs(dfs, i)) {
       return {};
     }
   }
@@ -684,19 +683,18 @@ int find_centroid(int u = 0, int p = -1) {
   return good_center ? u : -count;
 }
 
-std::pair<int, int> dfs(int u, int p, int depth) {
-  std::pair<int, int> res{depth, u};
-  for (int v : adj[u]) {
-    if (v != p) {
-      res = std::max(res, dfs(v, u, depth + 1));
-    }
-  }
-  return res;
-}
-
 int diameter() {
-  int furthest_node = dfs(0, -1, 0).second;
-  return dfs(furthest_node, -1, 0).first;
+  auto dfs = [&](auto &&dfs, int u, int p = -1, int depth = 0) -> std::pair<int, int> {
+    std::pair<int, int> res{depth, u};
+    for (int v : adj[u]) {
+      if (v != p) {
+        res = std::max(res, dfs(dfs, v, u, depth + 1));
+      }
+    }
+    return res;
+  };
+  int furthest_node = dfs(dfs, 0).second;
+  return dfs(dfs, furthest_node).first;
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -941,27 +939,6 @@ Summary objects must support \inlinecode{.size()}, and \inlinecode{merge(big, sm
 #include <unordered_map>
 #include <vector>
 
-template<typename Summary, typename Init, typename Merge, typename Answer>
-int dfs_subtree_small_to_large(
-    int u, int p, const std::vector<std::vector<int>> &adj, std::vector<Summary> &summary,
-    Init &init, Merge &merge, Answer &answer
-) {
-  int keep = u;
-  summary[u] = init(u);
-  for (int v : adj[u]) {
-    if (v == p) {
-      continue;
-    }
-    int child = dfs_subtree_small_to_large(v, u, adj, summary, init, merge, answer);
-    if (summary[keep].size() < summary[child].size()) {
-      std::swap(keep, child);
-    }
-    merge(summary[keep], summary[child]);
-  }
-  answer(u, summary[keep]);
-  return keep;
-}
-
 template<typename Init, typename Merge, typename Answer>
 void subtree_small_to_large_merge(
     const std::vector<std::vector<int>> &adj, int root, Init init, Merge merge, Answer answer
@@ -970,19 +947,37 @@ void subtree_small_to_large_merge(
   assert(0 <= root && root < n);
   using Summary = decltype(init(0));
   std::vector<Summary> summary(n);
-  dfs_subtree_small_to_large(root, -1, adj, summary, init, merge, answer);
+  auto dfs = [&](auto &&dfs, int u, int p) -> int {
+    int keep = u;
+    summary[u] = init(u);
+    for (int v : adj[u]) {
+      if (v == p) {
+        continue;
+      }
+      int child = dfs(dfs, v, u);
+      if (summary[keep].size() < summary[child].size()) {
+        std::swap(keep, child);
+      }
+      merge(summary[keep], summary[child]);
+    }
+    answer(u, summary[keep]);
+    return keep;
+  };
+  dfs(dfs, root, -1);
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+using namespace std;
+
 int main() {
   //          0:A
   //       /     |
   //     1:B    2:A
   //    /  |     |
   // 3:C  4:B   5:C
-  std::vector<std::vector<int>> adj(6);
+  vector<vector<int>> adj(6);
   auto add_edge = [&](int u, int v) {
     adj[u].push_back(v);
     adj[v].push_back(u);
@@ -992,24 +987,23 @@ int main() {
   add_edge(1, 3);
   add_edge(1, 4);
   add_edge(2, 5);
-
-  std::vector<int> color{0, 1, 0, 2, 1, 2};
-  std::vector<int> ans(6);
+  vector<int> color{0, 1, 0, 2, 1, 2};
+  vector<int> ans(6);
   auto init = [&](int u) {
-    std::unordered_map<int, int> freq;
+    unordered_map<int, int> freq;
     freq[color[u]] = 1;
     return freq;
   };
-  auto merge = [](std::unordered_map<int, int> &big, const std::unordered_map<int, int> &small) {
+  auto merge = [](unordered_map<int, int> &big, const unordered_map<int, int> &small) {
     for (const auto &[c, cnt] : small) {
       big[c] += cnt;
     }
   };
-  auto answer = [&](int u, const std::unordered_map<int, int> &freq) {
+  auto answer = [&](int u, const unordered_map<int, int> &freq) {
     ans[u] = static_cast<int>(freq.size());
   };
   subtree_small_to_large_merge(adj, 0, init, merge, answer);
-  assert((ans == std::vector<int>{3, 2, 2, 1, 1, 1}));
+  assert((ans == vector<int>{3, 2, 2, 1, 1, 1}));
   return 0;
 }
 \end{lstlisting}
@@ -1636,7 +1630,7 @@ int main() {
 Given an undirected graph, label every node with its connected component and collect the nodes in each component. This is the standard graph reachability primitive behind many larger routines: run one depth-first search from every unseen node, and all nodes visited by that search belong to the same component. For directed graphs, use a strongly connected components algorithm instead.
 
 \begin{compactitem}
-  \item \inlinecode{connected\_components()} populates the global arrays \inlinecode{comp\_id[]} (component ID for each node) and \inlinecode{components[]} (nodes for each component ID) given a global, bidirectionally pre-populated adjacency list \inlinecode{adj} whose indices represent the nodes.
+  \item \inlinecode{connected\_components()} populates the global arrays \inlinecode{comp\_id} (component ID for each node) and \inlinecode{components} (nodes for each component ID) given a global, bidirectionally pre-populated adjacency list \inlinecode{adj} whose indices represent the nodes.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -2597,7 +2591,7 @@ Variables are numbered $[0, n)$. A literal is represented by \inlinecode{literal
 \begin{compactitem}
   \item \inlinecode{TwoSAT(n = 0)} constructs an empty formula over \inlinecode{n} variables.
   \item \inlinecode{literal(variable, value)} returns the integer ID for a variable or its negation.
-  \item \inlinecode{add\_implication(a, b)} adds the implication $a \rightarrow b$.
+  \item \inlinecode{add\_implication(a, b)} adds the implication $a \rightarrow b$ together with its contrapositive $\lnot b \rightarrow \lnot a$. Both edges are required for the strongly connected component test to detect contradictions, so callers should not add the contrapositive separately.
   \item \inlinecode{add\_or(a, b)} adds the clause $({\inlinecodemath{a}} \lor {\inlinecodemath{b}})$.
   \item \inlinecode{add\_true(a)} forces literal \inlinecode{a} to be true.
   \item \inlinecode{add\_false(a)} forces literal \inlinecode{a} to be false.
@@ -3084,7 +3078,7 @@ Given one or more starting nodes in an unweighted, directed graph, visit every r
 
 \begin{compactitem}
   \item \inlinecode{bfs(starts)} populates \inlinecode{dist} and \inlinecode{pred} from every node in \inlinecode{starts}, assigning each node its minimum distance from any start. The global, pre-populated adjacency list \inlinecode{adj} uses its indices as nodes and must contain only valid node indices. Pass a singleton vector for single-source BFS.
-  \item \inlinecode{get\_path(dest)} returns the path from a nearest starting node to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable, after the latest call to \inlinecode{bfs()}.
+  \item \inlinecode{get\_path(dest)} returns the path from a nearest starting node to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable, using the state left by the most recent call to \inlinecode{bfs()}.
 \end{compactitem}
 
 For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from a nearest start to \inlinecode{v}, or $-1$ if \inlinecode{v} is a starting node or unreachable. Follow \inlinecode{pred} backward from the destination to its starting node, then reverse that sequence to recover the path.
@@ -3187,7 +3181,7 @@ Given one or more starting nodes in a weighted graph whose edge weights are only
 
 \begin{compactitem}
   \item \inlinecode{bfs\_zero\_one(starts)} populates \inlinecode{dist} and \inlinecode{pred} for shortest paths from the nodes in \inlinecode{starts}, assigning each node its minimum distance from any start. The global, pre-populated adjacency list \inlinecode{adj} uses its indices as nodes. Each edge is stored as (\inlinecode{neighbor}, \inlinecode{weight}), where \inlinecode{weight} is either $0$ or $1$. Pass a singleton vector for a single source.
-  \item \inlinecode{get\_path(dest)} returns the path from a nearest starting node to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable, after the latest call to \inlinecode{bfs\_zero\_one()}.
+  \item \inlinecode{get\_path(dest)} returns the path from a nearest starting node to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable, using the state left by the most recent call to \inlinecode{bfs\_zero\_one()}.
 \end{compactitem}
 
 For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from a nearest start to \inlinecode{v}, or $-1$ if \inlinecode{v} is a starting node or unreachable. Follow \inlinecode{pred} backward from the destination to its starting node, then reverse that sequence to recover the path.
@@ -3297,7 +3291,7 @@ Dijkstra's algorithm repeatedly selects the unvisited node of smallest tentative
 
 \begin{compactitem}
   \item \inlinecode{dijkstra(start)} populates \inlinecode{dist} and \inlinecode{pred} for a global, pre-populated adjacency list \inlinecode{adj} whose indices represent the nodes. Each edge is stored as (\inlinecode{neighbor}, \inlinecode{weight}), where \inlinecode{weight} is nonnegative.
-  \item \inlinecode{get\_path(dest)} returns the path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable, after the latest call to \inlinecode{dijkstra()}.
+  \item \inlinecode{get\_path(dest)} returns the path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable, using the state left by the most recent call to \inlinecode{dijkstra()}.
 \end{compactitem}
 
 For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
@@ -3346,7 +3340,7 @@ void dijkstra(int start) {
       continue;
     }
     for (auto [v, w] : adj[u]) {
-      if (dist[v] > dist[u] + w) {
+      if (dist[v] > dist[u] + w) {  // Overflow warning.
         dist[v] = dist[u] + w;
         pred[v] = u;
         pq.emplace(dist[v], v);
@@ -3400,7 +3394,7 @@ Bellman-Ford relaxes every edge in the graph up to $n - 1$ times, stopping early
 
 \begin{compactitem}
   \item \inlinecode{bellman\_ford(n, start)} populates \inlinecode{dist} and \inlinecode{pred} for a global, pre-populated edge list \inlinecode{edges} whose endpoints must be numbered $[0, {\inlinecodemath{n}})$, and returns whether no reachable negative-weight cycle was found.
-  \item \inlinecode{get\_path(dest)} returns the path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable, only after a successful call to \inlinecode{bellman\_ford()}. Otherwise, if the latest call finds a reachable negative-weight cycle, the shortest paths will be undefined.
+  \item \inlinecode{get\_path(dest)} returns the path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable, provided the most recent call to \inlinecode{bellman\_ford()} returned true. If it returned false, a reachable negative-weight cycle leaves the distances and paths undefined.
 \end{compactitem}
 
 For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
@@ -3440,7 +3434,7 @@ bool bellman_ford(int n, int start) {
     for (auto [u, v, w] : edges) {
       // The dist[u] != INF guard avoids relaxing out of unreachable nodes: a negative edge from an
       // unreachable u would otherwise give v a bogus finite distance (INF + w < INF).
-      if (dist[u] != INF && dist[v] > dist[u] + w) {
+      if (dist[u] != INF && dist[v] > dist[u] + w) {  // Overflow warning.
         dist[v] = dist[u] + w;
         pred[v] = u;
         changed = true;
@@ -3450,7 +3444,7 @@ bool bellman_ford(int n, int start) {
   }
   // Check for a negative-weight cycle reachable from the start node.
   for (auto [u, v, w] : edges) {
-    if (dist[u] != INF && dist[v] > dist[u] + w) {
+    if (dist[u] != INF && dist[v] > dist[u] + w) {  // Overflow warning.
       return false;
     }
   }
@@ -3501,7 +3495,7 @@ Given a starting node in a weighted directed graph, compute shortest paths even 
 
 \begin{compactitem}
   \item \inlinecode{spfa(start)} populates \inlinecode{dist} and \inlinecode{pred} for a global, pre-populated adjacency list \inlinecode{adj} which uses its indices as nodes. Each edge is stored as (\inlinecode{neighbor}, \inlinecode{weight}). The function returns \inlinecode{false} if it detects a reachable negative cycle, and returns \inlinecode{true} otherwise.
-  \item \inlinecode{get\_path(dest)} returns the path from \inlinecode{start} to \inlinecode{dest} after a successful call to \inlinecode{spfa()}, or an empty vector if \inlinecode{dest} is unreachable.
+  \item \inlinecode{get\_path(dest)} returns the path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable, provided the most recent call to \inlinecode{spfa()} returned true. If it returned false, a reachable negative-weight cycle leaves the distances and paths undefined.
 \end{compactitem}
 
 For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
@@ -3548,7 +3542,7 @@ bool spfa(int start) {
     q.pop();
     in_queue[u] = false;
     for (auto [v, w] : adj[u]) {
-      if (dist[v] > dist[u] + w) {
+      if (dist[v] > dist[u] + w) {  // Overflow warning.
         dist[v] = dist[u] + w;
         pred[v] = u;
         path_edges[v] = path_edges[u] + 1;
@@ -3611,7 +3605,7 @@ Given a starting node in a weighted, directed acyclic graph (DAG), determine the
 
 \begin{compactitem}
   \item \inlinecode{dag\_shortest\_path(start)} populates \inlinecode{dist} and \inlinecode{pred} for a global, pre-populated adjacency list \inlinecode{adj} whose indices represent the nodes. Each edge is stored as (\inlinecode{neighbor}, \inlinecode{weight}) and may have any sign. \inlinecode{dist[v]} is set to \inlinecode{INF} for nodes not reachable from \inlinecode{start}, and \inlinecode{pred} stores the shortest-path tree for path reconstruction.
-  \item \inlinecode{get\_path(dest)} returns the path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable, after the latest call to \inlinecode{dag\_shortest\_path()}.
+  \item \inlinecode{get\_path(dest)} returns the path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable, using the state left by the most recent call to \inlinecode{dag\_shortest\_path()}.
 \end{compactitem}
 
 For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
@@ -3642,23 +3636,22 @@ std::vector<std::vector<std::pair<int, int>>> adj;
 std::vector<int64_t> dist;
 std::vector<int> pred;
 
-void topological_dfs(int u, std::vector<char> &visit, std::vector<int> &order) {
-  visit[u] = true;
-  for (auto [v, w] : adj[u]) {
-    if (!visit[v]) {
-      topological_dfs(v, visit, order);
-    }
-  }
-  order.push_back(u);
-}
-
 void dag_shortest_path(int start) {
   int n = static_cast<int>(adj.size());
   std::vector<char> visit(n, false);
   std::vector<int> order;
+  auto dfs = [&](auto &&dfs, int u) -> void {
+    visit[u] = true;
+    for (auto [v, w] : adj[u]) {
+      if (!visit[v]) {
+        dfs(dfs, v);
+      }
+    }
+    order.push_back(u);
+  };
   for (int i = 0; i < n; i++) {
     if (!visit[i]) {
-      topological_dfs(i, visit, order);
+      dfs(dfs, i);
     }
   }
   std::reverse(order.begin(), order.end());
@@ -3670,7 +3663,7 @@ void dag_shortest_path(int start) {
       continue;
     }
     for (auto [v, w] : adj[u]) {
-      if (dist[u] + w < dist[v]) {
+      if (dist[u] + w < dist[v]) {  // Overflow warning.
         dist[v] = dist[u] + w;
         pred[v] = u;
       }
@@ -3725,7 +3718,7 @@ Floyd-Warshall's algorithm is a dynamic program over intermediate nodes: for eac
 \begin{compactitem}
   \item \inlinecode{init\_floyd(n)} initializes \inlinecode{dist} and \inlinecode{next\_node} for a graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
   \item \inlinecode{floyd\_warshall()} updates the global adjacency matrix \inlinecode{dist} so \inlinecode{dist[u][v]} stores the shortest-path distance from $u$ to $v$, updates \inlinecode{next\_node} for path reconstruction, and returns whether the graph contains no negative-weight cycle.
-  \item \inlinecode{get\_path(start, dest)} returns the shortest path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable from \inlinecode{start}, provided the most recent call to \inlinecode{floyd\_warshall()} returned true.
+  \item \inlinecode{get\_path(start, dest)} returns the shortest path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable from \inlinecode{start}, provided the most recent call to \inlinecode{floyd\_warshall()} returned true. If it returned false, a reachable negative-weight cycle leaves the distances and paths undefined.
 \end{compactitem}
 
 For path reconstruction, \inlinecode{next\_node[i][j]} stores the next node to visit after \inlinecode{i} on a current shortest path from \inlinecode{i} to \inlinecode{j}. It is initialized to \inlinecode{j} for every pair and, when a shorter route \inlinecode{i} $\to$ \inlinecode{k} $\to$ \inlinecode{j} is found, becomes \inlinecode{next\_node[i][k]}. Repeatedly setting \inlinecode{i} to \inlinecode{next\_node[i][j]} therefore walks the path from source to destination. This value is meaningful only when \inlinecode{dist[i][j] != INF}.
@@ -3838,7 +3831,7 @@ Initializing every potential to $0$ is equivalent to adding a virtual source wit
 
 \begin{compactitem}
   \item \inlinecode{johnson\_all\_pairs(n)} populates \inlinecode{dist} and \inlinecode{next\_node} for a global, pre-populated edge list \inlinecode{edges} whose nodes are numbered $[0, {\inlinecodemath{n}})$. Each edge is stored as (\inlinecode{u}, \inlinecode{v}, \inlinecode{weight}). Afterward, \inlinecode{dist[u][v]} is the shortest distance from $u$ to $v$, or \inlinecode{INF} if $v$ is unreachable from $u$. The function returns whether the graph contains no negative-weight cycle.
-  \item \inlinecode{get\_path(start, dest)} returns the shortest path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable from \inlinecode{start}, provided the most recent call to \inlinecode{johnson\_all\_pairs()} returned true.
+  \item \inlinecode{get\_path(start, dest)} returns the shortest path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable from \inlinecode{start}, provided the most recent call to \inlinecode{johnson\_all\_pairs()} returned true. If it returned false, a reachable negative-weight cycle leaves the distances and paths undefined.
 \end{compactitem}
 
 For path reconstruction, \inlinecode{next\_node[u][v]} stores the first node after \inlinecode{u} on a shortest path to \inlinecode{v}, or $-1$ if \inlinecode{v} is unreachable from \inlinecode{u}. Repeatedly advance \inlinecode{u} to \inlinecode{next\_node[u][v]} until it equals \inlinecode{v}.
@@ -4029,7 +4022,7 @@ int64_t prim_mst() {
       }
       visit[v] = true;
       mst.emplace_back(u, v, w);
-      total_weight += w;
+      total_weight += w;  // Overflow warning.
       for (auto [to, ew] : adj[v]) {
         pq.emplace(ew, v, to);
       }
@@ -4130,7 +4123,7 @@ int64_t kruskal_mst(int n) {
       dsu_root[v] = u;
       dsu_size[u] += dsu_size[v];
       mst.push_back(id);
-      total_weight += w;
+      total_weight += w;  // Overflow warning.
     }
   }
   return total_weight;
@@ -4350,7 +4343,7 @@ std::optional<int64_t> directed_mst(int n, std::vector<Edge> edges, int root) {
     std::vector<int> comp(n, -1), seen(n, -1);
     min_in[root] = 0;
     for (int v = 0; v < n; v++) {
-      total_dist += min_in[v];
+      total_dist += min_in[v];  // Overflow warning.
       int u = v;
       while (seen[u] != v && comp[u] == -1 && u != root) {
         seen[u] = v;
@@ -4375,7 +4368,7 @@ std::optional<int64_t> directed_mst(int n, std::vector<Edge> edges, int root) {
     for (auto &[u, v, w] : edges) {
       int cu = comp[u], cv = comp[v];
       if (cu != cv) {
-        w -= min_in[v];
+        w -= min_in[v];  // Overflow warning.
       }
       u = cu;
       v = cv;
@@ -5340,7 +5333,7 @@ Given a flow network with capacities and edge costs, find a minimum-cost flow fr
 
 This implementation uses shortest augmenting paths with SPFA, so it supports negative edge costs as long as the residual graph has no reachable negative-cost cycle. For dense or adversarial inputs, a potential-based Dijkstra version is usually faster when reduced costs are nonnegative. The capacity type \inlinecode{T} should be signed, since reverse residual edges store negative flow.
 
-Overflow warning: the returned cost accumulates products of sent flow and edge cost. Ensure each product and the total cost fit in the cost type \inlinecode{C}.
+Overflow warning: all path costs, flow-cost products, and their sums must fit in the cost type \inlinecode{C}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -5497,7 +5490,7 @@ Given a flow network with capacities and edge costs, find a minimum-cost flow fr
 
 If all initial edge costs are nonnegative, the initial potentials can be zero and the first shortest path search is already Dijkstra-safe. If negative costs are present, this implementation first runs SPFA to compute valid initial potentials; it assumes there is no reachable negative-cost cycle. The capacity type \inlinecode{T} should be signed, since reverse residual edges store negative flow.
 
-Overflow warning: the returned cost accumulates products of sent flow and edge cost. Ensure each product and the total cost fit in the cost type \inlinecode{C}.
+Overflow warning: all path costs, reduced costs, potentials, flow-cost products, and their sums must fit in the cost type \inlinecode{C}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -5952,7 +5945,7 @@ std::pair<int64_t, std::vector<int>> global_min_cut(std::vector<std::vector<int6
       }
       added[sel] = true;
       for (int i = 0; i < n; i++) {
-        weight[i] += cap[sel][i];
+        weight[i] += cap[sel][i];  // Overflow warning.
       }
       s = sel;
     }
@@ -7621,7 +7614,7 @@ int64_t shortest_hamiltonian_cycle() {
   }
   int64_t res = INF;
   for (int i = 1; i < n; i++) {
-    res = std::min(res, dp[max_mask][i] + adj[i][0]);
+    res = std::min(res, dp[max_mask][i] + adj[i][0]);  // Overflow warning.
   }
   int mask = max_mask, old = 0;
   for (int i = n - 1; i >= 1; i--) {

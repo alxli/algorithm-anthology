@@ -116,9 +116,8 @@ struct TLine {
     if constexpr (CANONICALIZE) canonicalize();
   }
 
-  // Line through two points. Coefficients are exact (type T) for integer points.
+  // Line through two points. Coefficients are exact for integral points (overflow warning for c).
   template<typename Pt, typename = if_point<Pt>>
-  // Overflow warning.
   TLine(const Pt &p, const Pt &q) : a(q.y - p.y), b(p.x - q.x), c(-(a * p.x + b * p.y)) {
     if constexpr (CANONICALIZE) canonicalize();
   }

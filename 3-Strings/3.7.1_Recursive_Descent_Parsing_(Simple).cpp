@@ -5,7 +5,8 @@ signs, multiplication/division, addition/subtraction). The following is a minima
 descent implementation using iterators. Each precedence level is parsed by its own function that
 obtains operands by calling the next-tighter level, so the call structure itself enforces the order
 of operations. Literals are nonnegative decimal integers, division truncates toward zero, and the
-input must not contain whitespace.
+input must be a valid expression without whitespace. Every divisor must be nonzero, and all
+intermediate results must fit in `int`.
 
 - `eval(s)` returns an evaluation of the arithmetic expression `s`.
 

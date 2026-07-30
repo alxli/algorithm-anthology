@@ -389,9 +389,8 @@ struct TLine {
     if constexpr (CANONICALIZE) canonicalize();
   }
 
-  // Line through two points. Coefficients are exact (type T) for integer points.
+  // Line through two points. Coefficients are exact for integral points (overflow warning for c).
   template<typename Pt, typename = if_point<Pt>>
-  // Overflow warning.
   TLine(const Pt &p, const Pt &q) : a(q.y - p.y), b(p.x - q.x), c(-(a * p.x + b * p.y)) {
     if constexpr (CANONICALIZE) canonicalize();
   }
@@ -2383,7 +2382,7 @@ Given a convex polygon in counter-clockwise order, answer containment and tangen
   \item \inlinecode{convex\_polygon\_tangents(poly, p)} returns the two tangent vertex indices from an outside point \inlinecode{p} as (\inlinecode{left}, \inlinecode{right}). The left tangent has all polygon vertices on or to the left of the directed line \inlinecode{p} $\to$ \inlinecode{poly[left]}; the right tangent is analogous for the right side.
 \end{compactitem}
 
-For integer-coordinate inputs, all tests are exact provided the cross products do not overflow.
+For integer-coordinate inputs, all orientation tests are exact provided the cross products do not overflow. When a line crosses two sides, their returned order is determined using a floating-point line parameter.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -2755,6 +2754,7 @@ auto sqdist(const Pt &a, const Pt &b) {
 template<typename It, typename T, typename Pt = typename std::iterator_traits<It>::value_type>
 void closest_pair_rec(It lo, It hi, std::vector<Pt> &tmp, T &best, std::pair<Pt, Pt> *res) {
   int n = hi - lo;
+  auto by_y = [](const Pt &a, const Pt &b) { return a.y != b.y ? a.y < b.y : a.x < b.x; };
   if (n <= 3) {
     for (It i = lo; i != hi; ++i) {
       for (It j = i + 1; j != hi; ++j) {
@@ -2767,7 +2767,7 @@ void closest_pair_rec(It lo, It hi, std::vector<Pt> &tmp, T &best, std::pair<Pt,
         }
       }
     }
-    std::sort(lo, hi, [](const Pt &a, const Pt &b) { return a.y != b.y ? a.y < b.y : a.x < b.x; });
+    std::sort(lo, hi, by_y);
     return;
   }
   It mid = lo + n / 2;
@@ -2775,7 +2775,6 @@ void closest_pair_rec(It lo, It hi, std::vector<Pt> &tmp, T &best, std::pair<Pt,
   closest_pair_rec(lo, mid, tmp, best, res);
   closest_pair_rec(mid, hi, tmp, best, res);
   // Each half is now y-sorted, so merge them before examining the center strip.
-  auto by_y = [](const Pt &a, const Pt &b) { return a.y != b.y ? a.y < b.y : a.x < b.x; };
   tmp.clear();
   std::merge(lo, mid, mid, hi, std::back_inserter(tmp), by_y);
   std::move(tmp.begin(), tmp.end(), lo);
@@ -3163,7 +3162,6 @@ std::vector<std::tuple<int64_t, int, int>> manhattan_mst_edges(std::vector<Point
   std::iota(id.begin(), id.end(), 0);
   std::vector<std::tuple<int64_t, int, int>> edges;
   for (int rot = 0; rot < 4; rot++) {
-    // Overflow warning.
     std::sort(id.begin(), id.end(), [&](int i, int j) {
       return p[i].x + p[i].y < p[j].x + p[j].y;
     });
@@ -3429,7 +3427,7 @@ struct HalfPlane {
 
   bool out(const Point &q) const { return LT(dir.cross(q - p), 0); }
 
-  Point intersection(const HalfPlane &h) const {
+  Point intersect(const HalfPlane &h) const {
     double t = h.dir.cross(p - h.p) / dir.cross(h.dir);
     return p + dir * t;
   }
@@ -3457,10 +3455,10 @@ std::vector<Point> half_plane_intersection(std::vector<HalfPlane> planes) {
   }
   std::deque<HalfPlane> dq;
   auto bad_back = [&](const HalfPlane &h) {
-    return dq.size() >= 2 && h.out(dq[dq.size() - 2].intersection(dq.back()));
+    return dq.size() >= 2 && h.out(dq[dq.size() - 2].intersect(dq.back()));
   };
   auto bad_front = [&](const HalfPlane &h) {
-    return dq.size() >= 2 && h.out(dq[0].intersection(dq[1]));
+    return dq.size() >= 2 && h.out(dq[0].intersect(dq[1]));
   };
   for (const HalfPlane &h : unique) {
     while (bad_back(h)) {
@@ -3471,10 +3469,10 @@ std::vector<Point> half_plane_intersection(std::vector<HalfPlane> planes) {
     }
     dq.push_back(h);
   }
-  while (dq.size() >= 3 && dq.front().out(dq[dq.size() - 2].intersection(dq.back()))) {
+  while (dq.size() >= 3 && dq.front().out(dq[dq.size() - 2].intersect(dq.back()))) {
     dq.pop_back();
   }
-  while (dq.size() >= 3 && dq.back().out(dq[0].intersection(dq[1]))) {
+  while (dq.size() >= 3 && dq.back().out(dq[0].intersect(dq[1]))) {
     dq.pop_front();
   }
   if (dq.size() < 3) {
@@ -3485,7 +3483,7 @@ std::vector<Point> half_plane_intersection(std::vector<HalfPlane> planes) {
     if (EQ(dq[i].dir.cross(dq[(i + 1) % dq.size()].dir), 0)) {
       return {};
     }
-    res.push_back(dq[i].intersection(dq[(i + 1) % dq.size()]));
+    res.push_back(dq[i].intersect(dq[(i + 1) % dq.size()]));
   }
   return res;
 }

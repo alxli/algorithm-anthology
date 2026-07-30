@@ -16,6 +16,12 @@ coefficients must lie in $[0, `MOD`)$.
 - `derivative(a)` returns the formal derivative of `a`.
 - `integral(a)` returns the formal antiderivative of `a` with constant term zero.
 - `inverse(a, n)` returns the first `n` coefficients of `1 / a`, requiring `a[0]` to be nonzero.
+- `log(a, n)` returns the first `n` coefficients of $\log a$, requiring `a[0]` to be $1$.
+- `exp(a, n)` returns the first `n` coefficients of $\exp a$, requiring `a[0]` to be $0$.
+- `sqrt(a, n)` returns the first `n` coefficients of the square root of `a` whose constant term is
+  $1$, requiring `a[0]` to be $1$.
+- `power(a, k, n)` returns the first `n` coefficients of $a^k$ for a nonnegative `uint64_t` exponent
+  `k`; `k = 0` returns the constant series $1$.
 - `divide(a, b)` returns the polynomial quotient of `a / b`, requiring `b` to be nonzero.
 - `modulo(a, b)` returns the polynomial remainder of `a / b`, requiring `b` to be nonzero.
 
@@ -24,11 +30,21 @@ $a \cdot b \equiv 1 \pmod{x^n}$. Division uses the standard reversal trick: reve
 polynomials, compute a truncated series inverse of the reversed divisor, multiply, truncate, and
 reverse back.
 
+The logarithm follows from $(\log a)' = a'/a$, integrating the truncated quotient. The exponential
+and square root use Newton iteration, which doubles the number of correct coefficients each round
+and so costs the same asymptotically as the final multiplication. To take a square root whose
+constant term is not $1$, factor `a[0]` out and multiply back one of its modular square roots (see
+6.3.5); if the lowest nonzero coefficient sits at an odd power of $x$, no square root exists. Power
+factors $a = x^t c b$, where $b(0) = 1$, and uses $a^k = x^{tk} c^k \exp(k \log b)$.
+
 Time Complexity:
 - O(n) per call to `trim()`, `add()`, `subtract()`, `derivative()`, and `integral()`.
 - O(|a||b|) per call to `multiply()` on small inputs and O(n log n) otherwise, where $n$ is the
   padded transform length.
 - O(n log n) per call to `inverse(a, n)`, where $n$ is the requested length.
+- O(n log n) per call to `log()`, `exp()`, and `sqrt()`, where $n$ is the requested length. The
+  exponential carries the largest constant, since every Newton round computes a logarithm.
+- O(n log n + log k) per call to `power()`, where $n$ is the requested length.
 - O(n log n) per call to `divide()` and `modulo()`, where $n$ is the padded multiplication length.
 
 Space Complexity:
@@ -50,7 +66,7 @@ const Coeff ROOT = 3;
 const int MAX_POWER_OF_TWO = 23;
 const int NAIVE_CUTOFF = 150;
 
-Coeff powmod(Coeff b, Coeff e, Coeff m = MOD) {
+Coeff powmod(Coeff b, uint64_t e, Coeff m = MOD) {
   Coeff res = 1;
   for (b %= m; e > 0; e >>= 1) {
     if (e & 1) {
@@ -197,6 +213,102 @@ Poly inverse(const Poly &a, int n) {
   return res;
 }
 
+Poly log(const Poly &a, int n) {
+  assert(n >= 0 && !a.empty() && a[0] == 1);
+  if (n == 0) {
+    return {};
+  }
+  // Since (log a)' = a'/a, integrating the truncated quotient recovers log a.
+  Poly cut(a.begin(), a.begin() + std::min(static_cast<int>(a.size()), n));
+  Poly res = multiply(derivative(cut), inverse(cut, n));
+  res.resize(n - 1);
+  res = integral(res);
+  res.resize(n);
+  return res;
+}
+
+Poly exp(const Poly &a, int n) {
+  assert(n >= 0 && (a.empty() || a[0] == 0));
+  if (n == 0) {
+    return {};
+  }
+  // Newton iteration on log(f) - a = 0 gives f <- f*(1 - log(f) + a), doubling the number of
+  // correct coefficients each round.
+  Poly res{1};
+  while (static_cast<int>(res.size()) < n) {
+    int len = static_cast<int>(res.size()) << 1;
+    Poly cut(a.begin(), a.begin() + std::min(static_cast<int>(a.size()), len));
+    Poly correction = subtract(cut, log(res, len));
+    correction.resize(std::max(1, static_cast<int>(correction.size())));
+    correction[0] = (correction[0] + 1) % MOD;
+    res = multiply(res, correction);
+    res.resize(len);
+  }
+  res.resize(n);
+  return res;
+}
+
+Poly sqrt(const Poly &a, int n) {
+  assert(n >= 0 && !a.empty() && a[0] == 1);
+  if (n == 0) {
+    return {};
+  }
+  // Newton iteration on f^2 - a = 0 gives f <- (f + a/f) / 2.
+  const Coeff INV2 = powmod(2, MOD - 2);
+  Poly res{1};
+  while (static_cast<int>(res.size()) < n) {
+    int len = static_cast<int>(res.size()) << 1;
+    Poly cut(a.begin(), a.begin() + std::min(static_cast<int>(a.size()), len));
+    res = add(res, multiply(cut, inverse(res, len)));
+    res.resize(len);
+    for (Coeff &c : res) {
+      c = c * INV2 % MOD;
+    }
+  }
+  res.resize(n);
+  return res;
+}
+
+Poly power(const Poly &a, uint64_t k, int n) {
+  assert(n >= 0);
+  if (n == 0) {
+    return {};
+  }
+  Poly res(n);
+  if (k == 0) {
+    res[0] = 1;
+    return res;
+  }
+  int limit = std::min(static_cast<int>(a.size()), n);
+  int first = 0;
+  while (first < limit && a[first] == 0) {
+    first++;
+  }
+  if (first == limit || (first > 0 && k > static_cast<uint64_t>((n - 1) / first))) {
+    return res;
+  }
+  int shift = static_cast<int>(static_cast<uint64_t>(first) * k);
+  int len = n - shift;
+  int terms = std::min(static_cast<int>(a.size()) - first, len);
+  Poly normalized(a.begin() + first, a.begin() + first + terms);
+  Coeff leading = normalized[0];
+  Coeff leading_inv = powmod(leading, MOD - 2);
+  for (Coeff &c : normalized) {
+    c = c * leading_inv % MOD;
+  }
+  Poly exponent = log(normalized, len);
+  Coeff k_mod = static_cast<Coeff>(k % static_cast<uint64_t>(MOD));
+  for (Coeff &c : exponent) {
+    c = c * k_mod % MOD;
+  }
+  Poly body = exp(exponent, len);
+  Coeff leading_power = powmod(leading, k);
+  for (int i = 0; i < len; i++) {
+    res[i + shift] = body[i] * leading_power % MOD;
+  }
+  return res;
+}
+
 Poly divide(Poly a, Poly b) {
   trim(a);
   trim(b);
@@ -251,6 +363,32 @@ int main() {
   Poly divisor{MOD - 1, 1};
   assert((divide(dividend, divisor) == Poly{1, 1, 1}));
   assert(modulo(dividend, divisor).empty());
+
+  // exp(x) = 1 + x + x^2/2 + x^3/6 + ..., checked by clearing each denominator.
+  Poly exp_x = exp({0, 1}, 4);
+  assert(exp_x[0] == 1 && exp_x[1] == 1);
+  assert(exp_x[2] * 2 % MOD == 1 && exp_x[3] * 6 % MOD == 1);
+
+  // log(1 + x) = x - x^2/2 + x^3/3 - ...
+  Poly log_1x = log({1, 1}, 4);
+  assert(log_1x[0] == 0 && log_1x[1] == 1);
+  assert((log_1x[2] * 2 + 1) % MOD == 0 && log_1x[3] * 3 % MOD == 1);
+
+  // Truncated to the same length, exp and log invert each other.
+  Poly series{1, 5, 9, 2, 7};
+  Poly logged = log(series, 5);
+  assert(logged[0] == 0);
+  assert(exp(logged, 5) == series);
+
+  // A series square root squares back to the original, modulo x^5.
+  Poly root = sqrt(series, 5);
+  Poly root_squared = multiply(root, root);
+  root_squared.resize(5);
+  assert(root_squared == series);
+
+  // (2x + x^2)^3 = 8x^3 + 12x^4 + 6x^5 + x^6.
+  assert((power({0, 2, 1}, 3, 7) == Poly{0, 0, 0, 8, 12, 6, 1}));
+  assert((power({}, 0, 4) == Poly{1, 0, 0, 0}));
 
   Poly ones(160, 1);
   Poly square = multiply(ones, ones);

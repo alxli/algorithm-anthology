@@ -45,6 +45,7 @@ auto sqdist(const Pt &a, const Pt &b) {
 template<typename It, typename T, typename Pt = typename std::iterator_traits<It>::value_type>
 void closest_pair_rec(It lo, It hi, std::vector<Pt> &tmp, T &best, std::pair<Pt, Pt> *res) {
   int n = hi - lo;
+  auto by_y = [](const Pt &a, const Pt &b) { return a.y != b.y ? a.y < b.y : a.x < b.x; };
   if (n <= 3) {
     for (It i = lo; i != hi; ++i) {
       for (It j = i + 1; j != hi; ++j) {
@@ -57,7 +58,7 @@ void closest_pair_rec(It lo, It hi, std::vector<Pt> &tmp, T &best, std::pair<Pt,
         }
       }
     }
-    std::sort(lo, hi, [](const Pt &a, const Pt &b) { return a.y != b.y ? a.y < b.y : a.x < b.x; });
+    std::sort(lo, hi, by_y);
     return;
   }
   It mid = lo + n / 2;
@@ -65,7 +66,6 @@ void closest_pair_rec(It lo, It hi, std::vector<Pt> &tmp, T &best, std::pair<Pt,
   closest_pair_rec(lo, mid, tmp, best, res);
   closest_pair_rec(mid, hi, tmp, best, res);
   // Each half is now y-sorted, so merge them before examining the center strip.
-  auto by_y = [](const Pt &a, const Pt &b) { return a.y != b.y ? a.y < b.y : a.x < b.x; };
   tmp.clear();
   std::merge(lo, mid, mid, hi, std::back_inserter(tmp), by_y);
   std::move(tmp.begin(), tmp.end(), lo);

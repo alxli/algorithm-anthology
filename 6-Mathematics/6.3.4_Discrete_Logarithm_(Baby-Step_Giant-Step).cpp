@@ -17,7 +17,7 @@ are coprime.
   internally.
 
 Time Complexity:
-- O(sqrt(m)) expected per call with constant-time modular multiplication, and O(sqrt(m) * log(m))
+- O(sqrt(m)) expected per call with constant-time modular multiplication, and O(sqrt(m) * log m)
   with the portable double-and-add fallback.
 
 Space Complexity:

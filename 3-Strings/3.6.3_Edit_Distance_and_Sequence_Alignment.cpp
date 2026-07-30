@@ -191,23 +191,24 @@ A_GGCA
 
 #include <cassert>
 #include <iostream>
+using namespace std;
 
 int main() {
   assert(edit_distance("kitten", "sitting") == 3);
   assert(edit_distance("", "abc") == 3);
 
   auto alignment = align_sequences("AGGGCT", "AGGCA", 2, 3);
-  assert(alignment == (std::pair<string, string>{"AGGGCT", "A_GGCA"}));
+  assert(alignment == (pair<string, string>{"AGGGCT", "A_GGCA"}));
   assert(hirschberg_align("AGGGCT", "AGGCA", 2, 3) == alignment);
 
-  assert((hirschberg_align("ab", "zabz") == std::pair<string, string>{"_ab_", "zabz"}));
+  assert((hirschberg_align("ab", "zabz") == pair<string, string>{"_ab_", "zabz"}));
   assert(
       (hirschberg_align("a", "bbbbbbbbbb", 1, 5) ==
-       std::pair<string, string>{"__________a", "bbbbbbbbbb_"})
+       pair<string, string>{"__________a", "bbbbbbbbbb_"})
   );
-  assert((hirschberg_align("aa", "ba", 1, 2) == std::pair<string, string>{"a_a", "_ba"}));
+  assert((hirschberg_align("aa", "ba", 1, 2) == pair<string, string>{"a_a", "_ba"}));
 
-  std::cout << "Aligned strings:" << std::endl;
-  std::cout << alignment.first << std::endl << alignment.second << std::endl;
+  cout << "Aligned strings:" << endl;
+  cout << alignment.first << endl << alignment.second << endl;
   return 0;
 }

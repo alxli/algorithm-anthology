@@ -88,20 +88,21 @@ int64_t inversions(const std::vector<int> &a) {
 /*** Example Usage ***/
 
 #include <cassert>
+using namespace std;
 
 int main() {
   {
-    std::vector<int> a{6, 9, 1, 14, 8, 12, 3, 2};
+    vector<int> a{6, 9, 1, 14, 8, 12, 3, 2};
     assert(inversions(a.begin(), a.end()) == 16);
-    assert(std::is_sorted(a.begin(), a.end()));
+    assert(is_sorted(a.begin(), a.end()));
   }
   {
-    std::vector<int> a{6, 9, 1, 14, 8, 12, 3, 2};
+    vector<int> a{6, 9, 1, 14, 8, 12, 3, 2};
     assert(inversions(a) == 16);
-    assert((a == std::vector<int>{6, 9, 1, 14, 8, 12, 3, 2}));
+    assert((a == vector<int>{6, 9, 1, 14, 8, 12, 3, 2}));
   }
   {
-    std::vector<int> a{2, 2, 1};
+    vector<int> a{2, 2, 1};
     assert(inversions(a) == 2);  // Equal elements are not inversions.
   }
   return 0;

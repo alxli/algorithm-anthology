@@ -21,8 +21,8 @@ path search is already Dijkstra-safe. If negative costs are present, this implem
 SPFA to compute valid initial potentials; it assumes there is no reachable negative-cost cycle. The
 capacity type `T` should be signed, since reverse residual edges store negative flow.
 
-Overflow warning: the returned cost accumulates products of sent flow and edge cost. Ensure each
-product and the total cost fit in the cost type `C`.
+Overflow warning: all path costs, reduced costs, potentials, flow-cost products, and their sums must
+fit in the cost type `C`.
 
 Time Complexity:
 - O(n) per call to the constructor, where $n$ is the number of nodes.

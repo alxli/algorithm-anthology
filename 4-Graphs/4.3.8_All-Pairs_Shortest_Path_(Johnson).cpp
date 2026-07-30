@@ -17,7 +17,8 @@ reachable from a particular original node. If such a cycle exists, shortest path
   from $u$. The function returns whether the graph contains no negative-weight cycle.
 - `get_path(start, dest)` returns the shortest path from `start` to `dest`, or an empty vector if
   `dest` is unreachable from `start`, provided the most recent call to `johnson_all_pairs()`
-  returned true.
+  returned true. If it returned false, a reachable negative-weight cycle leaves the distances and
+  paths undefined.
 
 For path reconstruction, `next_node[u][v]` stores the first node after `u` on a shortest path to
 `v`, or $-1$ if `v` is unreachable from `u`. Repeatedly advance `u` to `next_node[u][v]` until it
