@@ -102,7 +102,6 @@ int main() {
   assert(a.sqnorm() == 1);
 
   Point3D p(1, 0, 0);
-  auto r = p.rotate(acos(-1.0) / 2, Point3D(0, 0, 1));
-  assert(EQ(r, Point3D(0, 1, 0)));
+  assert(EQ(p.rotate(acos(-1.0) / 2, Point3D(0, 0, 1)), Point3D(0, 1, 0)));
   return 0;
 }

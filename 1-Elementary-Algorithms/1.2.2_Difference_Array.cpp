@@ -107,17 +107,12 @@ int main() {
   d.add(1, 4, 4);   // Add 4 to indices 1-4.
   d.add(2, 3, -1);  // Subtract 1 from indices 2-3.
   d.add(4, 4, 3);   // Single index update.
-  vector<int64_t> a = d.build();
-  vector<int64_t> expected{2, 6, 5, 3, 7};
-  for (int i = 0; i < static_cast<int>(expected.size()); i++) {
-    assert(a[i] == expected[i]);
-  }
+  assert((d.build() == vector<int64_t>{2, 6, 5, 3, 7}));
 
   DifferenceArray2D d2(3, 4);
   d2.add(0, 0, 1, 2, 1);  // Add 1 to rows 0-1 and columns 0-2.
   d2.add(1, 1, 2, 3, 2);  // Add 2 to rows 1-2 and columns 1-3.
   d2.add(2, 0, 2, 0, 5);  // Single cell update.
-  vector<vector<int64_t>> g = d2.build();
   // clang-format off
   vector<vector<int64_t>> expected2{
     {1, 1, 1, 0},
@@ -125,6 +120,6 @@ int main() {
     {5, 2, 2, 2}
   };
   // clang-format on
-  assert(g == expected2);
+  assert(d2.build() == expected2);
   return 0;
 }

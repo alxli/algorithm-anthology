@@ -59,8 +59,7 @@ using namespace std;
 
 int main() {
   // B(2, 3) has length 8 and every 3-bit string appears once cyclically.
-  vector<int> seq = de_bruijn(2, 3);
-  assert(seq.size() == 8);
+  assert((de_bruijn(2, 3) == vector<int>{0, 0, 0, 1, 0, 1, 1, 1}));
 
   for (int k = 2; k <= 4; k++) {
     for (int n = 1; n <= 4; n++) {

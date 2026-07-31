@@ -317,8 +317,7 @@ int main() {
     adj[2].push_back(0);
     adj[0].push_back(3);
     assert((known_eulerian_path_directed(adj, 0) == vector<int>{0, 1, 2, 0, 3}));
-    vector<int> path = eulerian_path_directed(adj);
-    assert((path == vector<int>{0, 1, 2, 0, 3}));
+    assert((eulerian_path_directed(adj) == vector<int>{0, 1, 2, 0, 3}));
     assert(eulerian_path_directed(adj, 1).empty());
   }
   {
@@ -336,7 +335,6 @@ int main() {
     g.add_edge(3, 4);
     g.add_edge(4, 1);
     auto trail = g.eulerian_path(0);
-    assert(trail.edges.size() == 6);
     assert((trail.nodes == vector<int>{0, 1, 3, 4, 1, 2, 0}));
     assert(trail.is_cycle());
   }
@@ -358,7 +356,6 @@ int main() {
     vector<int> used_edges = trail.edges;
     sort(used_edges.begin(), used_edges.end());
     assert((used_edges == vector<int>{0, 1, 2, 3, 4, 5}));
-    assert(trail.nodes.size() == 7);
     assert(trail.is_cycle());
   }
   {

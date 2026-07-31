@@ -582,8 +582,7 @@ int main() {
     assert(cycles.size() == 1);
     sort(cycles[0].begin(), cycles[0].end());
     assert((cycles[0] == vector<int>{a, b, c}));
-    vector<int> nodes = g.cycle_nodes(cycles[0]);
-    assert(nodes.size() == 3);
+    assert((g.cycle_nodes(cycles[0]) == vector<int>{0, 1, 2}));
   }
   {
     // 0---a---1
@@ -616,7 +615,7 @@ An unweighted tree possesses a center, centroid, and diameter. The centers are f
 
 \begin{compactitem}
   \item \inlinecode{find\_centers()} returns a vector of either one or two tree Jordan centers. The Jordan center of a tree is the set of all nodes with minimum eccentricity, that is, the set of all nodes where the maximum distance to all other nodes in the tree is minimal.
-  \item \inlinecode{find\_centroid(u = 0, p = -1)} returns the node where all of its subtrees have a size less than or equal to $n / 2$, where $n$ is the number of nodes in the tree.
+  \item \inlinecode{find\_centroid()} returns the node where all of its subtrees have a size less than or equal to $n / 2$, where $n$ is the number of nodes in the tree.
   \item \inlinecode{diameter()} returns the maximum distance between any two nodes in the tree, using a well-known double depth-first search technique.
 \end{compactitem}
 
@@ -663,7 +662,7 @@ std::vector<int> find_centers() {
 
 // Returns the centroid node index if found in this subtree, or -(subtree size) to propagate
 // the size up to the parent so it can check the complementary component's size.
-int find_centroid(int u = 0, int p = -1) {
+static int find_centroid_dfs(int u, int p) {
   int n = static_cast<int>(adj.size());
   int count = 1;
   bool good_center = true;
@@ -671,7 +670,7 @@ int find_centroid(int u = 0, int p = -1) {
     if (v == p) {
       continue;
     }
-    int res = find_centroid(v, u);
+    int res = find_centroid_dfs(v, u);
     if (res >= 0) {
       return res;
     }
@@ -682,6 +681,8 @@ int find_centroid(int u = 0, int p = -1) {
   good_center &= (n - count <= n / 2);
   return good_center ? u : -count;
 }
+
+int find_centroid() { return find_centroid_dfs(0, -1); }
 
 int diameter() {
   auto dfs = [&](auto &&dfs, int u, int p = -1, int depth = 0) -> std::pair<int, int> {
@@ -719,7 +720,7 @@ int main() {
   add_edge(3, 4);
   add_edge(4, 5);
   vector<int> centers = find_centers();
-  assert(centers.size() == 2 && centers[0] == 1 && centers[1] == 4);
+  assert((centers == vector<int>{1, 4}));
   assert(find_centroid() == 4);
   assert(diameter() == 3);
   return 0;
@@ -903,8 +904,7 @@ int main() {
   assert(tree.subtree_size[1] == 4);
   assert(tree.is_ancestor(1, 4));
   assert(!tree.is_ancestor(3, 2));
-  vector<int64_t> distances = sum_distances_all_roots(tree);
-  assert((distances == vector<int64_t>{8, 5, 8, 6, 9}));
+  assert((sum_distances_all_roots(tree) == vector<int64_t>{8, 5, 8, 6, 9}));
 
   // Associative contributions retain adjacency-list order even when combine is not commutative.
   RerootingTree ordered(3);
@@ -913,8 +913,7 @@ int main() {
   auto combine = [](string a, const string &b) { return a + b; };
   auto finalize = [](string a, int u) { return a + to_string(u); };
   auto lift = [](const string &a, int, int) { return a; };
-  vector<string> traversal = ordered.rerooting_dp(string{}, combine, finalize, lift);
-  assert(traversal[1] == "201");
+  assert(ordered.rerooting_dp(string{}, combine, finalize, lift)[1] == "201");
   return 0;
 }
 \end{lstlisting}
@@ -1252,9 +1251,8 @@ int main() {
   add_edge(2, 3);
   add_edge(3, 4);
   vector<int> code = encode_prufer(adj);
-  assert(code.size() == 3 && code[0] == 3 && code[1] == 3 && code[2] == 3);
-  vector<pair<int, int>> edges = decode_prufer(code);
-  assert(edges.size() == 4);
+  assert((code == vector<int>{3, 3, 3}));
+  assert((decode_prufer(code) == vector<pair<int, int>>{{0, 3}, {1, 3}, {2, 3}, {3, 4}}));
   return 0;
 }
 \end{lstlisting}
@@ -1553,8 +1551,7 @@ int main() {
     adj[2].push_back(0);
     adj[0].push_back(3);
     assert((known_eulerian_path_directed(adj, 0) == vector<int>{0, 1, 2, 0, 3}));
-    vector<int> path = eulerian_path_directed(adj);
-    assert((path == vector<int>{0, 1, 2, 0, 3}));
+    assert((eulerian_path_directed(adj) == vector<int>{0, 1, 2, 0, 3}));
     assert(eulerian_path_directed(adj, 1).empty());
   }
   {
@@ -1572,7 +1569,6 @@ int main() {
     g.add_edge(3, 4);
     g.add_edge(4, 1);
     auto trail = g.eulerian_path(0);
-    assert(trail.edges.size() == 6);
     assert((trail.nodes == vector<int>{0, 1, 3, 4, 1, 2, 0}));
     assert(trail.is_cycle());
   }
@@ -1594,7 +1590,6 @@ int main() {
     vector<int> used_edges = trail.edges;
     sort(used_edges.begin(), used_edges.end());
     assert((used_edges == vector<int>{0, 1, 2, 3, 4, 5}));
-    assert(trail.nodes.size() == 7);
     assert(trail.is_cycle());
   }
   {
@@ -1690,7 +1685,6 @@ int main() {
   add_edge(3, 4);
   connected_components();
   assert((components == vector<vector<int>>{{0, 1, 2}, {3, 4}, {5}}));
-  assert(components.size() == 3);
   assert(comp_id[0] == comp_id[2]);
   assert(comp_id[0] != comp_id[3]);
   assert(comp_id[5] == 2);
@@ -1814,7 +1808,6 @@ int main() {
   // SCC condensation DAG:
   // {0,1,4} -> {2,3,7} -> {5,6}
   //     \-------------------^
-  assert(g.components().size() == 3);
   vector<vector<int>> components = g.components();
   for (auto &component : components) {
     sort(component.begin(), component.end());
@@ -1946,7 +1939,6 @@ int main() {
   // SCC condensation DAG:
   // {0,1,4} -> {2,3,7} -> {5,6}
   //     \-------------------^
-  assert(g.components().size() == 3);
   vector<vector<int>> components = g.components();
   for (auto &component : components) {
     sort(component.begin(), component.end());
@@ -2085,8 +2077,7 @@ int main() {
     g.add_edge(3, 5);
     g.add_edge(4, 6);
     g.add_edge(5, 6);
-    vector<int> idom = g.find_dominators(0);
-    assert((idom == vector<int>{0, 0, 0, 0, 3, 3, 3}));
+    assert((g.find_dominators(0) == vector<int>{0, 0, 0, 0, 3, 3, 3}));
   }
   {
     // Node 3 is reachable through either 1 or 2, so neither one dominates it.
@@ -4271,6 +4262,8 @@ class KruskalReconstructionTree {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+using namespace std;
+
 int main() {
   //            0
   //    w=2   /  | w=8
@@ -4280,7 +4273,7 @@ int main() {
   //  w=5 |   /
   //      | / w=9
   //      3
-  std::vector<std::tuple<int64_t, int, int>> edges{
+  vector<tuple<int64_t, int, int>> edges{
       {2, 0, 1}, {4, 1, 2}, {5, 1, 3}, {8, 0, 2}, {9, 2, 3}
   };
   KruskalReconstructionTree tree(4, edges);
@@ -4397,14 +4390,12 @@ int main() {
   vector<Edge> edges{
       {0, 1, 1}, {0, 2, 5}, {1, 2, 2}, {2, 3, 3}, {3, 1, 4},
   };
-  auto weight = directed_mst(4, edges, 0);
-  assert(weight == 6);  // Cheapest edges 0->1->2->3 form a tree of weight 6.
+  assert(directed_mst(4, edges, 0) == 6);  // Cheapest edges 0->1->2->3 form a tree of weight 6.
 
   //        w=1    w=2
   // root=0 ---> 1 ---> 2       3
   vector<Edge> disconnected{{0, 1, 1}, {1, 2, 1}};
-  auto disconnected_weight = directed_mst(4, disconnected, 0);
-  assert(!disconnected_weight);  // Node 3 is unreachable from root 0.
+  assert(!directed_mst(4, disconnected, 0));  // Node 3 is unreachable from root 0.
 
   vector<Edge> negative{{0, 1, -1}};
   assert(directed_mst(2, negative, 0) == -1);  // A weight of -1 is a valid result.
@@ -4481,6 +4472,7 @@ int64_t max_flow(int source, int sink) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+using namespace std;
 
 int main() {
   // Example graph after max flow, with each edge labeled flow/capacity:
@@ -4495,7 +4487,7 @@ int main() {
   //      v /
   //       2
   int nodes = 6;
-  cap.assign(nodes, std::vector<int64_t>(nodes));
+  cap.assign(nodes, vector<int64_t>(nodes));
   cap[0][1] = 4;
   cap[0][2] = 3;
   cap[1][3] = 2;
@@ -4649,8 +4641,7 @@ int main() {
   int flow = g.max_flow(0, 5);
   assert(flow == 5);
   assert(g.max_flow(0, 5) == 5);
-  vector<char> cut = g.min_cut(0);
-  assert((cut == vector<char>{true, true, true, false, false, false}));
+  assert((g.min_cut(0) == vector<char>{true, true, true, false, false, false}));
   g.clear_flow();
   assert(g.max_flow(0, 5) == 5);
   return 0;
@@ -5051,6 +5042,7 @@ std::vector<char> min_cut(int source) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+using namespace std;
 
 int main() {
   // Example graph after max flow, with each edge labeled flow/capacity:
@@ -5065,7 +5057,7 @@ int main() {
   //      v /
   //       2
   int nodes = 6;
-  cap.assign(nodes, std::vector<int64_t>(nodes));
+  cap.assign(nodes, vector<int64_t>(nodes));
   cap[0][1] = 4;
   cap[0][2] = 3;
   cap[1][3] = 2;
@@ -5074,7 +5066,7 @@ int main() {
   cap[3][5] = 2;
   cap[4][5] = 3;
   assert(push_relabel(0, 5) == 5);
-  std::vector<char> cut = min_cut(0);
+  vector<char> cut = min_cut(0);
   assert(cut[0] && !cut[5]);
   return 0;
 }
@@ -5281,6 +5273,8 @@ class BoundedFlow {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+using namespace std;
+
 int main() {
   //           [1,4]       [1,3]
   //       0 --------> 1 --------> 3
@@ -5294,7 +5288,7 @@ int main() {
   network.add_edge(1, 3, 1, 3);
   network.add_edge(2, 3, 0, 2);
   assert(network.max_flow(0, 3) == 5);
-  std::vector<int64_t> max_flow = network.edge_flows();
+  vector<int64_t> max_flow = network.edge_flows();
   assert(max_flow[0] + max_flow[1] == 5);
 
   assert(network.min_flow(0, 3) == 1);
@@ -5303,7 +5297,7 @@ int main() {
   reverse_flow.add_edge(1, 0, 1, 1);
   assert(reverse_flow.max_flow(0, 1) == -1);
   assert(reverse_flow.min_flow(0, 1) == -1);
-  assert((reverse_flow.edge_flows() == std::vector<int64_t>{1}));
+  assert((reverse_flow.edge_flows() == vector<int64_t>{1}));
 
   //            [2,3]
   //       0 ----------> 1
@@ -5316,7 +5310,7 @@ int main() {
   circulation.add_edge(1, 2, 2, 3);
   circulation.add_edge(2, 0, 2, 3);
   assert(circulation.feasible_circulation());
-  assert((circulation.edge_flows() == std::vector<int64_t>{2, 2, 2}));
+  assert((circulation.edge_flows() == vector<int64_t>{2, 2, 2}));
   return 0;
 }
 \end{lstlisting}
@@ -5325,7 +5319,7 @@ Given a flow network with capacities and edge costs, find a minimum-cost flow fr
 
 \begin{compactitem}
   \item \inlinecode{MinCostMaxFlow\textless{}T, C\textgreater{}(n)} constructs an empty residual network with nodes numbered $[0, {\inlinecodemath{n}})$.
-  \item \inlinecode{add\_edge(u, v, cap, cost, rev\_cap = 0)} adds a directed residual-network edge and returns its edge ID.
+  \item \inlinecode{add\_edge(u, v, cap, cost)} adds a directed edge and returns its edge ID.
   \item \inlinecode{edge\_flow(id)} returns the flow through a previously added edge.
   \item \inlinecode{clear\_flow()} resets all edge flows to zero.
   \item \inlinecode{min\_cost\_flow(source, sink, target\_flow)} sends up to \inlinecode{target\_flow} additional units of flow and returns a pair (\inlinecode{flow}, \inlinecode{cost}) for the flow sent by that call. If the returned flow is smaller than \inlinecode{target\_flow}, the residual network cannot carry the requested amount.
@@ -5371,12 +5365,12 @@ class MinCostMaxFlow {
  public:
   explicit MinCostMaxFlow(int n) : nodes(n), adj(n) {}
 
-  int add_edge(int u, int v, T cap, C cost, T rev_cap = 0) {
+  int add_edge(int u, int v, T cap, C cost) {
     int id = static_cast<int>(edges.size());
     adj[u].push_back(id);
     edges.push_back(Edge{u, v, cap, 0, cost});
     adj[v].push_back(id + 1);
-    edges.push_back(Edge{v, u, rev_cap, 0, -cost});
+    edges.push_back(Edge{v, u, 0, 0, -cost});
     return id;
   }
 
@@ -5482,7 +5476,7 @@ Given a flow network with capacities and edge costs, find a minimum-cost flow fr
 
 \begin{compactitem}
   \item \inlinecode{MinCostMaxFlow\textless{}T, C\textgreater{}(n)} constructs an empty residual network with nodes numbered $[0, {\inlinecodemath{n}})$.
-  \item \inlinecode{add\_edge(u, v, cap, cost, rev\_cap = 0)} adds a directed residual-network edge and returns its edge ID.
+  \item \inlinecode{add\_edge(u, v, cap, cost)} adds a directed edge and returns its edge ID.
   \item \inlinecode{edge\_flow(id)} returns the flow through a previously added edge.
   \item \inlinecode{clear\_flow()} resets all edge flows to zero.
   \item \inlinecode{min\_cost\_flow(source, sink, target\_flow)} sends up to \inlinecode{target\_flow} additional units of flow and returns a pair (\inlinecode{flow}, \inlinecode{cost}) for the flow sent by that call. If the returned flow is smaller than \inlinecode{target\_flow}, the residual network cannot carry the requested amount.
@@ -5570,12 +5564,12 @@ class MinCostMaxFlow {
  public:
   explicit MinCostMaxFlow(int n) : nodes(n), adj(n), potential(n, 0) {}
 
-  int add_edge(int u, int v, T cap, C cost, T rev_cap = 0) {
+  int add_edge(int u, int v, T cap, C cost) {
     int id = static_cast<int>(edges.size());
     adj[u].push_back(id);
     edges.push_back(Edge{u, v, cap, 0, cost});
     adj[v].push_back(id + 1);
-    edges.push_back(Edge{v, u, rev_cap, 0, -cost});
+    edges.push_back(Edge{v, u, 0, 0, -cost});
     return id;
   }
 
@@ -6452,7 +6446,7 @@ void add_edge(int u, int v) {
 }
 
 int matching_size(const vector<int> &match) {
-  return std::count_if(match.begin(), match.end(), [](int v) { return v != -1; }) / 2;
+  return count_if(match.begin(), match.end(), [](int v) { return v != -1; }) / 2;
 }
 
 int main() {
@@ -7199,6 +7193,8 @@ int64_t max_clique_weighted() {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+using namespace std;
+
 void add_edge(int u, int v) {
   adj[u][v] = true;
   adj[v][u] = true;
@@ -7215,7 +7211,7 @@ int main() {
   //       \ | /      /
   //        2(30)----+
   int nodes = 5;
-  adj.assign(nodes, std::vector<char>(nodes));
+  adj.assign(nodes, vector<char>(nodes));
   w.assign(nodes, 0);
   add_edge(0, 1);
   add_edge(0, 2);
@@ -7345,7 +7341,7 @@ int main() {
   //    \ /   /
   //     3---+
   int nodes = 5;
-  adj.assign(nodes, std::vector<char>(nodes));
+  adj.assign(nodes, vector<char>(nodes));
   add_edge(0, 1);
   add_edge(0, 4);
   add_edge(1, 3);
@@ -7653,7 +7649,7 @@ int main() {
   //          ^_______/
   //             w=5
   int nodes = 3;
-  adj.assign(nodes, std::vector<int64_t>(nodes));
+  adj.assign(nodes, vector<int64_t>(nodes));
   adj[0][1] = 1;
   adj[0][2] = 1;
   adj[1][0] = 7;

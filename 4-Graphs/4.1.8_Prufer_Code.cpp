@@ -115,8 +115,7 @@ int main() {
   add_edge(2, 3);
   add_edge(3, 4);
   vector<int> code = encode_prufer(adj);
-  assert(code.size() == 3 && code[0] == 3 && code[1] == 3 && code[2] == 3);
-  vector<pair<int, int>> edges = decode_prufer(code);
-  assert(edges.size() == 4);
+  assert((code == vector<int>{3, 3, 3}));
+  assert((decode_prufer(code) == vector<pair<int, int>>{{0, 3}, {1, 3}, {2, 3}, {3, 4}}));
   return 0;
 }

@@ -112,7 +112,6 @@ int main() {
 
   vector<Point> p{{0, 0}, {2, 1}, {3, 4}, {-1, 2}, {5, 0}};
   assert(manhattan_mst_weight(p) == 14);
-  auto edges = manhattan_mst_edges(p);
-  assert(edges.size() <= 4 * p.size());
+  assert(manhattan_mst_edges(p).size() <= 4 * p.size());
   return 0;
 }

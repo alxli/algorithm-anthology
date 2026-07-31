@@ -97,14 +97,15 @@ auto frequent_candidates(It lo, It hi, int k) {
 /*** Example Usage ***/
 
 #include <vector>
+using namespace std;
 
 int main() {
-  std::vector<int> a{3, 2, 3, 1, 3};
+  vector<int> a{3, 2, 3, 1, 3};
   assert(majority_element(a.begin(), a.end()) == a.begin());
-  std::vector<int> b{2, 3, 3, 3, 2, 1};
+  vector<int> b{2, 3, 3, 3, 2, 1};
   assert(majority_element(b.begin(), b.end()) == b.end());
 
-  std::vector<int> c{1, 2, 1, 3, 1, 2, 1, 4, 2, 2, 2};
+  vector<int> c{1, 2, 1, 3, 1, 2, 1, 4, 2, 2, 2};
   auto candidates = frequent_candidates(c.begin(), c.end(), 3);
   assert(candidates.count(1));
   assert(candidates.count(2));

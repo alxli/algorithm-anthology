@@ -8,8 +8,7 @@ After each augmentation, $h$ is updated with the new shortest-path distances so 
 remain nonnegative on the updated residual graph.
 
 - `MinCostMaxFlow<T, C>(n)` constructs an empty residual network with nodes numbered $[0, `n`)$.
-- `add_edge(u, v, cap, cost, rev_cap = 0)` adds a directed residual-network edge and returns its
-  edge ID.
+- `add_edge(u, v, cap, cost)` adds a directed edge and returns its edge ID.
 - `edge_flow(id)` returns the flow through a previously added edge.
 - `clear_flow()` resets all edge flows to zero.
 - `min_cost_flow(source, sink, target_flow)` sends up to `target_flow` additional units of flow and
@@ -104,12 +103,12 @@ class MinCostMaxFlow {
  public:
   explicit MinCostMaxFlow(int n) : nodes(n), adj(n), potential(n, 0) {}
 
-  int add_edge(int u, int v, T cap, C cost, T rev_cap = 0) {
+  int add_edge(int u, int v, T cap, C cost) {
     int id = static_cast<int>(edges.size());
     adj[u].push_back(id);
     edges.push_back(Edge{u, v, cap, 0, cost});
     adj[v].push_back(id + 1);
-    edges.push_back(Edge{v, u, rev_cap, 0, -cost});
+    edges.push_back(Edge{v, u, 0, 0, -cost});
     return id;
   }
 

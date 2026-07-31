@@ -178,7 +178,7 @@ using namespace std;
 // keys before mixing (as 3.2.1's IntHasher does).
 struct Hasher {
   inline static const uint64_t RAND_SEED =
-      std::chrono::steady_clock::now().time_since_epoch().count();
+        chrono::steady_clock::now().time_since_epoch().count();
 
   // Signed -> unsigned delegates.
   uint32_t operator()(int k) const { return Hasher()(static_cast<uint32_t>(k)); }
@@ -200,7 +200,7 @@ struct Hasher {
   }
 
   // Jenkins's one-at-a-time hash.
-  uint32_t operator()(const std::string &k) const {
+    uint32_t operator()(const string &k) const {
     uint32_t hash = RAND_SEED;
     for (char c : k) {
       hash += ((hash + static_cast<unsigned char>(c)) << 10);

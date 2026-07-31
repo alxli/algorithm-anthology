@@ -78,7 +78,7 @@ int main() {
   vector<int> values{2, 0, 1, 2, 1, 0, 1};
   // On a range containing only 0, 1, and 2, partitioning around 1 sorts the range.
   partition_three_way(values.begin(), values.end(), 1);
-  assert(std::is_sorted(values.begin(), values.end()));
+  assert(is_sorted(values.begin(), values.end()));
 
   vector<int> b{4, 2, 5, 3, 3, 1};
   auto [mid1, mid2] = partition_three_way(b.begin(), b.end(), 3);

@@ -192,7 +192,6 @@ int main() {
 
   // From the point to the right of the square, the upper-right and lower-right vertices are
   // tangent.
-  auto tangents = convex_polygon_tangents(square, PointI(6, 2));
-  assert(tangents == make_pair(2, 1));
+  assert(convex_polygon_tangents(square, PointI(6, 2)) == make_pair(2, 1));
   return 0;
 }

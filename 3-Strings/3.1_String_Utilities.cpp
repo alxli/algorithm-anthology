@@ -488,7 +488,8 @@ int main() {
   assert(contains("abracadabra", "cad"));
   assert(find_all("abracadabra", "ab") == pos);
   assert(count("abracadabra", "ab") == 2);
-  assert(count("aaa", "aa") == 1 && find_all("aaa", "aa").size() == 2);
+  assert(count("aaa", "aa") == 1);
+  assert((find_all("aaa", "aa") == vector<int>{0, 1}));
   assert(find_all("abc", "").empty());
   assert(replace("abcdabba", "ab", "00") == "00cd00ba");
   assert(join(regex_find_all("a12b345", "[0-9]+"), "|") == "12|345");

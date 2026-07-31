@@ -113,10 +113,6 @@ dbg_repr(const T &v) {
   return res + "}";
 }
 
-void dbg_out(bool) {
-  std::cerr << '\n';
-}
-
 template<typename Head, typename... Tail>
 void dbg_out(bool leading_space, const Head &head, const Tail &...tail) {
   if (leading_space) {

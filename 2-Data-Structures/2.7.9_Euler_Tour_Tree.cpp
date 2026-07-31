@@ -241,6 +241,7 @@ class EulerTourTree {
 /*** Example Usage ***/
 
 #include <algorithm>
+using namespace std;
 
 int main() {
   EulerTourTree ett(6);
@@ -257,8 +258,8 @@ int main() {
   assert(!ett.link(0, 2));  // Would create a cycle.
 
   auto c = ett.component_nodes(1);
-  std::sort(c.begin(), c.end());
-  assert((c == std::vector<int>{0, 1, 2}));
+  sort(c.begin(), c.end());
+  assert((c == vector<int>{0, 1, 2}));
 
   ett.reroot(2);
   assert(ett.connected(0, 2));
@@ -266,7 +267,7 @@ int main() {
 
   // 0---1     2    3---4    5
   assert(!ett.connected(0, 2));
-  assert((ett.component_nodes(2) == std::vector<int>{2}));
+  assert((ett.component_nodes(2) == vector<int>{2}));
 
   assert(ett.link(2, 3));
 

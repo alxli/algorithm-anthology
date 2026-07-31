@@ -38,8 +38,7 @@ The pivot chosen in this implementation is always a middle element of the range 
 reduce the likelihood of encountering the worst case, the pivot can be chosen in better ways (e.g.
 randomly, or using the "median of three" technique).
 
-Time Complexity (Average): O(n log n).
-Time Complexity (Worst): O(n^2).
+Time Complexity: O(n) best (all equal), O(n log n) average, and O(n^2) worst.
 Space Complexity: O(log n) auxiliary stack space.
 Stable?: No.
 
@@ -81,8 +80,7 @@ implementation here requires sufficient memory to be available. When O(n) auxili
 available, `std::stable_sort()` falls back to a time complexity of O(n log^2 n) whereas the
 implementation here will simply fail.
 
-Time Complexity (Average): O(n log n).
-Time Complexity (Worst): O(n log n).
+Time Complexity: O(n log n) in all cases.
 Space Complexity: O(log n) auxiliary stack space and O(n) auxiliary heap space.
 Stable?: Yes.
 
@@ -122,8 +120,7 @@ The loop below has two modes controlled by whether `i > lo`. While `i > lo`, it 
 heap is built, and the loop switches to extraction: repeatedly swap the root to the back of the
 unsorted region (`*j`) and sift down the new root.
 
-Time Complexity (Average): O(n log n).
-Time Complexity (Worst): O(n log n).
+Time Complexity: O(n log n) in all cases.
 Space Complexity: O(1) auxiliary.
 Stable?: No.
 
@@ -171,16 +168,14 @@ slot where the element belongs. Although its average and worst cases are quadrat
 stable, in-place, and online (it can sort a stream as elements arrive).
 
 Its strength is being adaptive: on an already-sorted or nearly-sorted range, each element travels
-only a short distance, giving O(n) best-case time and O(n + d) in general for `d` total inversions.
+only a short distance, giving O(n) best-case time and O(n + d) in general for $d$ total inversions.
 This is why it outperforms the asymptotically faster sorts on small or nearly-sorted ranges, and why
 hybrid sorts such as introsort and Timsort fall back to it once a subrange is small enough.
 
 The comparison `comp(key, *(j - 1))` is strict, so an element never moves past an earlier element it
 compares equal to, which keeps the sort stable.
 
-Time Complexity (Best): O(n) on an already-sorted range.
-Time Complexity (Average): O(n^2).
-Time Complexity (Worst): O(n^2).
+Time Complexity: O(n + d), i.e. O(n) best and O(n^2) average/worst.
 Space Complexity: O(1) auxiliary.
 Stable?: Yes.
 
@@ -207,7 +202,7 @@ compares elements separated by a fixed gap, decreasing that gap after every pass
 small values near the end toward the front quickly, avoiding the slow movement of such values in
 bubble sort. The shrink factor $1.3$ is a common empirical choice.
 
-Time Complexity (Worst): O(n^2).
+Time Complexity: O(n log n) best and O(n^2) worst.
 Space Complexity: O(1) auxiliary.
 Stable?: No.
 
@@ -380,7 +375,7 @@ int main() {
   }
   cout << "------" << endl;
 
-  std::mt19937 rng(1234567);  // Fixed seed for reproducibility.
+  mt19937 rng(1234567);  // Fixed seed for reproducibility.
   vector<int> data(5000000);
   for (int &x : data) {
     x = static_cast<int>(rng());
@@ -397,7 +392,7 @@ int main() {
     cout << setw(14) << left << name + "(): " << fixed << t << "s" << endl;
     assert(is_sorted(v.begin(), v.end()));
   };
-  benchmark("std::sort", [](auto lo, auto hi) { std::sort(lo, hi); });
+  benchmark("std::sort", [](auto lo, auto hi) { sort(lo, hi); });
   benchmark("quicksort", [](auto lo, auto hi) { quicksort(lo, hi); });
   benchmark("mergesort", [](auto lo, auto hi) { mergesort(lo, hi); });
   benchmark("heapsort", [](auto lo, auto hi) { heapsort(lo, hi); });

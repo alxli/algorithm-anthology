@@ -120,7 +120,6 @@ int main() {
   // SCC condensation DAG:
   // {0,1,4} -> {2,3,7} -> {5,6}
   //     \-------------------^
-  assert(g.components().size() == 3);
   vector<vector<int>> components = g.components();
   for (auto &component : components) {
     sort(component.begin(), component.end());

@@ -123,6 +123,7 @@ std::vector<char> min_cut(int source) {
 /*** Example Usage ***/
 
 #include <cassert>
+using namespace std;
 
 int main() {
   // Example graph after max flow, with each edge labeled flow/capacity:
@@ -137,7 +138,7 @@ int main() {
   //      v /
   //       2
   int nodes = 6;
-  cap.assign(nodes, std::vector<int64_t>(nodes));
+  cap.assign(nodes, vector<int64_t>(nodes));
   cap[0][1] = 4;
   cap[0][2] = 3;
   cap[1][3] = 2;
@@ -146,7 +147,7 @@ int main() {
   cap[3][5] = 2;
   cap[4][5] = 3;
   assert(push_relabel(0, 5) == 5);
-  std::vector<char> cut = min_cut(0);
+  vector<char> cut = min_cut(0);
   assert(cut[0] && !cut[5]);
   return 0;
 }

@@ -132,14 +132,13 @@ int main() {
     b[i].next = &b[i + 1];
   }
   ListNode *merged = merge_sorted_lists(&a[0], &b[0]);
-  vector<int> merged_values = values(merged);
-  assert((merged_values == vector<int>{1, 2, 3, 4, 5, 6}));
+  assert((values(merged) == vector<int>{1, 2, 3, 4, 5, 6}));
 
   ListNode *second = nullptr;
   ListNode *first = split_half(merged, &second);
-  assert(values(first).size() == 3);
-  assert(values(second).size() == 3);
-  assert(values(reverse_list(first))[0] == 3);
+  assert((values(first) == vector<int>{1, 2, 3}));
+  assert((values(second) == vector<int>{4, 5, 6}));
+  assert((values(reverse_list(first)) == vector<int>{3, 2, 1}));
 
   ListNode dummy(0), w(1), x(2), y(3), z(4);
   dummy.next = &w;

@@ -236,7 +236,7 @@ int main() {
   binary_ops["-"] = {[](double a, double b) { return a - b; }, 1};
   binary_ops["*"] = {[](double a, double b) { return a * b; }, 2};
   binary_ops["/"] = {[](double a, double b) { return a / b; }, 2};
-  binary_ops["^"] = {[](double a, double b) { return std::pow(a, b); }, 3};
+  binary_ops["^"] = {[](double a, double b) { return pow(a, b); }, 3};
   binary_ops["<"] = {[](double a, double b) { return a < b; }, 0};
   binary_ops["<="] = {[](double a, double b) { return a <= b; }, 0};
 

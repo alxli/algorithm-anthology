@@ -8,8 +8,6 @@ algorithm-specific policy and are meant to be pasted near the top of a solution 
 - `ckmin(a, b)` assigns `a = b` and returns true if `b` < `a` before the assignment.
 - `ckmax(a, b)` assigns `a = b` and returns true if `a` < `b` before the assignment.
 - `between(x, a, b)` returns whether `a` $\leq$ `x` $\leq$ `b`.
-- `clmp(x, a, b)` returns `x` clamped into the interval $[`a`, `b`]$. This is not needed on C++17
-  and later, where `std::clamp()` is available.
 - `floor_div(a, b)` and `ceil_div(a, b)` divide signed integers with mathematical rounding toward
   negative or positive infinity. Requires nonzero `b` and the resulting quotient to be representable
   by the result type; in particular, the minimum value cannot be divided by $-1$.
@@ -49,7 +47,6 @@ template<typename C> int sz(const C &c) { return static_cast<int>(c.size()); }
 template<typename T, typename U> bool ckmin(T &a, const U &b) { return b < a ? a = b, true : false; }
 template<typename T, typename U> bool ckmax(T &a, const U &b) { return a < b ? a = b, true : false; }
 template<typename T> bool between(const T &x, const T &a, const T &b) { return !(x < a) && !(b < x); }
-template<typename T> T clmp(const T &x, const T &a, const T &b) { return std::min(std::max(x, a), b); }
 // clang-format on
 
 template<typename T>
@@ -146,8 +143,6 @@ int main() {
   assert(between(2, 1, 3));
   assert(between(1, 1, 3) && between(3, 1, 3));
   assert(!between(0, 1, 3));
-  assert(clmp(-5, 1, 3) == 1);
-  assert(clmp(10, 1, 3) == 3);
   assert(floor_div(7, -3) == -3);
   assert(floor_div(-7, 3) == -3);
   assert(ceil_div(7, -3) == -2);

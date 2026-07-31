@@ -51,8 +51,10 @@ int64_t lagrangian_maximize(int target_count, int64_t lo, int64_t hi, Solve solv
 
 /*** Example Usage ***/
 
+using namespace std;
+
 int main() {
-  std::vector<int64_t> value{10, 7, 3, 2};
+  vector<int64_t> value{10, 7, 3, 2};
   auto choose_profitable = [&](int64_t penalty) {
     int64_t score = 0;
     int count = 0;
@@ -63,7 +65,7 @@ int main() {
         count++;
       }
     }
-    return std::pair<int64_t, int>{score, count};
+    return pair<int64_t, int>{score, count};
   };
 
   assert(lagrangian_maximize(2, 0, 20, choose_profitable) == 17);

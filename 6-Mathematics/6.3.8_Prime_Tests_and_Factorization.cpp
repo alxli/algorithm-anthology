@@ -46,8 +46,9 @@ Time Complexity:
   large enough.
 - O(sqrt(p)) expected modular multiplications per call to `rho_factor(n)`, where $p$ is the smallest
   prime factor of `n`. For composite `n`, this is at most O(n^{1/4}).
-- O(n^{1/4}) expected per call to `factorize_rho()`. `factorize(n, L)` additionally performs
-  O(L/log L) trial divisions and takes O(L) time if the prime cache must be rebuilt to `L`.
+- O(n^{1/4}) expected per call to `factorize_rho()`. `factorize()` additionally performs O(L/log L)
+  trial divisions, where $L$ is `small_prime_limit`, and takes O(L) time if the prime cache must be
+  rebuilt.
 - O(|a| + |b|) per call to `merge_factors()`.
 - O(d log d) per call to `divisors_from_factors()`, where $d$ is the number of divisors generated,
   due to sorting the result.
@@ -55,7 +56,7 @@ Time Complexity:
   must be rebuilt.
 
 Space Complexity:
-- O(c) cached space for the largest `cached_sieve(c)` call.
+- O(c) cached space after sieving through $c$.
 - O(f + log n) auxiliary for recursive factorization, where $f$ is the number of compressed prime
   factors returned.
 - O(d) output space and O(log d) auxiliary stack space for `divisors_from_factors()` and
@@ -482,8 +483,12 @@ int main() {
   {  // Compressed factors are convenient for building divisors.
     Factors factors{{2, 3}, {3, 2}, {5, 1}};
     vector<int64_t> divisors = divisors_from_factors(factors);
-    assert(divisors.size() == 24);
-    assert(divisors.front() == 1 && divisors.back() == 360);
+    assert(
+        (divisors == vector<int64_t>{
+                         1,  2,  3,  4,  5,  6,  8,  9,  10, 12,  15,  18,
+                         20, 24, 30, 36, 40, 45, 60, 72, 90, 120, 180, 360,
+                     })
+    );
     assert(factorize(360) == factors);
     assert(get_divisors(360) == divisors);
   }

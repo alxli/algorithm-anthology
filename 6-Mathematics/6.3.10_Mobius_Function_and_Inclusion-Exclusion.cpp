@@ -122,8 +122,7 @@ int main() {
   assert(mobius(12) == 0);   // Divisible by 2^2.
   assert(mobius(30) == -1);  // 2 * 3 * 5, three distinct primes.
 
-  vector<int> mu = mobius_sieve(12);
-  assert((mu == vector<int>{0, 1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0}));
+  assert((mobius_sieve(12) == vector<int>{0, 1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0}));
 
   assert(count_coprime(10, 6) == 3);  // 1, 5, 7
   assert(count_coprime(100, 1) == 100);

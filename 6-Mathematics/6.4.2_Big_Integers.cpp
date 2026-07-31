@@ -666,6 +666,8 @@ class BigInt {
 
 /*** Example Usage ***/
 
+using namespace std;
+
 int main() {
   BigInt a("-9899819294989142124"), b("12398124981294214");
   assert(a + b == "-9887421170007847910");
@@ -702,14 +704,14 @@ int main() {
       }
     }
   }
-  std::mt19937 rng(1234567);  // Fixed seed for reproducibility.
-  std::uniform_int_distribution<int> length_dist(1, 100);
+  mt19937 rng(1234567);  // Fixed seed for reproducibility.
+  uniform_int_distribution<int> length_dist(1, 100);
   for (int i = 0; i < 20; i++) {
     int n = length_dist(rng);
     BigInt value(BigInt::rand(n)), root(value.sqrt()), lower(root * root), upper(root + 1);
     upper *= upper;
     assert(lower <= value && value < upper);
-    std::uniform_int_distribution<int> divisor_length_dist(1, n);
+    uniform_int_distribution<int> divisor_length_dist(1, n);
     BigInt divisor(BigInt::rand(divisor_length_dist(rng)) + 1), quotient(value / divisor);
     lower = quotient * divisor;
     upper = divisor * (quotient + 1);

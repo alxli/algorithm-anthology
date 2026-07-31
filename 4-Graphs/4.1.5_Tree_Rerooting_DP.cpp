@@ -187,8 +187,7 @@ int main() {
   assert(tree.subtree_size[1] == 4);
   assert(tree.is_ancestor(1, 4));
   assert(!tree.is_ancestor(3, 2));
-  vector<int64_t> distances = sum_distances_all_roots(tree);
-  assert((distances == vector<int64_t>{8, 5, 8, 6, 9}));
+  assert((sum_distances_all_roots(tree) == vector<int64_t>{8, 5, 8, 6, 9}));
 
   // Associative contributions retain adjacency-list order even when combine is not commutative.
   RerootingTree ordered(3);
@@ -197,7 +196,6 @@ int main() {
   auto combine = [](string a, const string &b) { return a + b; };
   auto finalize = [](string a, int u) { return a + to_string(u); };
   auto lift = [](const string &a, int, int) { return a; };
-  vector<string> traversal = ordered.rerooting_dp(string{}, combine, finalize, lift);
-  assert(traversal[1] == "201");
+  assert(ordered.rerooting_dp(string{}, combine, finalize, lift)[1] == "201");
   return 0;
 }

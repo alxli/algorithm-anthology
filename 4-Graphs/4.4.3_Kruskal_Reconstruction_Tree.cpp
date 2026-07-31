@@ -119,6 +119,8 @@ class KruskalReconstructionTree {
 
 /*** Example Usage ***/
 
+using namespace std;
+
 int main() {
   //            0
   //    w=2   /  | w=8
@@ -128,7 +130,7 @@ int main() {
   //  w=5 |   /
   //      | / w=9
   //      3
-  std::vector<std::tuple<int64_t, int, int>> edges{
+  vector<tuple<int64_t, int, int>> edges{
       {2, 0, 1}, {4, 1, 2}, {5, 1, 3}, {8, 0, 2}, {9, 2, 3}
   };
   KruskalReconstructionTree tree(4, edges);

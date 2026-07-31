@@ -73,7 +73,7 @@ int main() {
   assert(inverse_gray_code(gray_code(0xdeadbeefu)) == 0xdeadbeefu);
 
   vector<Mask> seq = gray_sequence(3);
-  assert(seq.size() == 8);
+  assert((seq == vector<Mask>{0b000, 0b001, 0b011, 0b010, 0b110, 0b111, 0b101, 0b100}));
   for (int i = 0; i < static_cast<int>(seq.size()); i++) {
     Mask diff = seq[i] ^ seq[(i + 1) % seq.size()];
     assert((diff & (diff - 1)) == 0);  // Cyclically, one bit changes per step.

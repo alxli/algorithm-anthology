@@ -80,9 +80,10 @@ std::size_t find_substring_z(const string &haystack, const string &needle) {
 /*** Example Usage ***/
 
 #include <cassert>
+using namespace std;
 
 int main() {
-  assert((z_array(string("aaaaa")) == std::vector<int>{0, 4, 3, 2, 1}));
+  assert((z_array(string("aaaaa")) == vector<int>{0, 4, 3, 2, 1}));
   assert(find_substring_z("ABC ABCDAB ABCDABCDABDE", "ABCDABD") == 15);
   assert(find_substring_z("ABC ABCDAB ABCDABCDA", "ABCDABD") == string::npos);
   assert(find_substring_z("aaa", "aa") == 0);  // First overlapping occurrence.

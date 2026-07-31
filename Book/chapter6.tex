@@ -357,7 +357,7 @@ int main() {
   assert(!signbit_(M_INF) && signbit_(-M_INF));
   assert(!signbit_(M_NAN) && signbit_(-M_NAN));
   assert(copysign(1.0, +2.0) == +1.0 && copysign(M_INF, -2.0) == -M_INF);
-  assert(copysign(1.0, -2.0) == -1.0 && std::signbit(copysign(M_NAN, -2.0)));
+  assert(copysign(1.0, -2.0) == -1.0 && signbit(copysign(M_NAN, -2.0)));
 
   assert(EQ(floor0(1.5), 1.0) && EQ(ceil0(1.5), 2.0));
   assert(EQ(floor0(-1.5), -1.0) && EQ(ceil0(-1.5), -2.0));
@@ -389,13 +389,13 @@ int main() {
 
   assert(to_roman(1234) == "MCCXXXIV");
   assert(to_roman(5678) == "MMMMMDCLXXVIII");
-  std::vector<int> digits{6, 5, 4, 3, 2, 1};
-  std::vector<int> base20 = to_base(123456, 20);
+  vector<int> digits{6, 5, 4, 3, 2, 1};
+  vector<int> base20 = to_base(123456, 20);
   assert(convert_base(base20, 20, 10) == digits);
-  assert(convert_base(std::vector<int>{0, 0, 0}, 10, 2) == std::vector<int>{0});
+  assert(convert_base(vector<int>{0, 0, 0}, 10, 2) == vector<int>{0});
 
-  std::vector<int> big_decimal(30, 9);  // 10^30 - 1, larger than uint64_t.
-  std::vector<int> big_binary = convert_base(big_decimal, 10, 2);
+  vector<int> big_decimal(30, 9);  // 10^30 - 1, larger than uint64_t.
+  vector<int> big_binary = convert_base(big_decimal, 10, 2);
   assert(convert_base(big_binary, 2, 10) == big_decimal);
   return 0;
 }
@@ -775,8 +775,7 @@ int main() {
     int count = 0;
     do {
       print_range(a.begin(), a.end());
-      auto b = arrangement_by_rank(n, k, count);
-      assert(a == b);
+      assert(a == arrangement_by_rank(n, k, count));
       assert(rank_by_arrangement(n, a) == count);
       count++;
       if (count == 10 || count == 20) {
@@ -1002,8 +1001,7 @@ int main() {
       print_range(a.begin(), a.end());
       assert(b == a);
       assert(c == a);
-      vector<int> d = permutation_by_rank(n, count);
-      assert(d == a);
+      assert(permutation_by_rank(n, count) == a);
       assert(rank_by_permutation(a) == count);
       count++;
       if (count == 8 || count == 16) {
@@ -1040,9 +1038,7 @@ int main() {
     vector<int> a{3, 1, 0, 2};
     cout << "\nDecomposition of {3,1,0,2} into cycles:" << endl;
     Cycles c = permutation_cycles(a);
-    assert(c.size() == 2);
-    assert((c[0] == vector<int>{0, 3, 2}));
-    assert((c[1] == vector<int>{1}));
+    assert((c == Cycles{{0, 3, 2}, {1}}));
     for (const auto &cycle : c) {
       print_range(cycle.begin(), cycle.end());
     }
@@ -1297,8 +1293,7 @@ int main() {
     int count = 0;
     do {
       print_range(a.begin(), a.end());
-      vector<int> b = combination_by_rank(n, k, count);
-      assert(a == b);
+      assert(a == combination_by_rank(n, k, count));
       assert(rank_by_combination(n, a) == count);
       count++;
     } while (next_combination(n, a));
@@ -1476,8 +1471,7 @@ int main() {
     int count = 0;
     do {
       print_range(a.begin(), a.end());
-      vector<int> b = partition_by_rank(n, count);
-      assert(equal(a.begin(), a.end(), b.begin()));
+      assert(a == partition_by_rank(n, count));
       assert(rank_by_partition(a) == count);
       count++;
     } while (next_partition(a));
@@ -2772,7 +2766,7 @@ The linear sieve finds the least prime factor of each integer. When processing \
 \begin{compactitem}
   \item \inlinecode{sieve(n)} returns a vector of all the primes less than or equal to \inlinecode{n}.
   \item \inlinecode{sieve(lo, hi)} returns a vector of all the primes in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
-  \item \inlinecode{linear\_sieve(n, \&least\_out)} returns a vector of all primes less than or equal to \inlinecode{n} in linear time. If \inlinecode{least\_out} is not null, it is filled so that \inlinecode{(*least\_out)[x]} is the least prime factor of \inlinecode{x} for every \inlinecode{x} $\geq 2$.
+  \item \inlinecode{linear\_sieve(n, \&least\_out)} returns a vector of all primes less than or equal to \inlinecode{n} in linear time. If \inlinecode{least\_out} is not null, it is filled so that \inlinecode{least\_out[x]} is the least prime factor of \inlinecode{x} for every \inlinecode{x} $\geq 2$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -2948,7 +2942,7 @@ Modular multiplication inside Miller-Rabin and Pollard's rho uses \inlinecode{\_
   \item $O(k \cdot \log n)$ modular multiplications per call to \inlinecode{is\_probable\_prime()} and $O(\log n)$ per call to \inlinecode{is\_prime()}. The portable multiplication fallback adds another $O(\log n)$ factor.
   \item $O(n)$ per call to \inlinecode{cached\_sieve()} when rebuilding the cache, or $O(1)$ when the existing cache is large enough.
   \item $O(\sqrt{p})$ expected modular multiplications per call to \inlinecode{rho\_factor(n)}, where $p$ is the smallest prime factor of \inlinecode{n}. For composite \inlinecode{n}, this is at most $O(n^{1/4})$.
-  \item $O(n^{1/4})$ expected per call to \inlinecode{factorize\_rho()}. \inlinecode{factorize(n, L)} additionally performs $O(L/\log L)$ trial divisions and takes $O(L)$ time if the prime cache must be rebuilt to \inlinecode{L}.
+  \item $O(n^{1/4})$ expected per call to \inlinecode{factorize\_rho()}. \inlinecode{factorize()} additionally performs $O(L/\log L)$ trial divisions, where $L$ is \inlinecode{small\_prime\_limit}, and takes $O(L)$ time if the prime cache must be rebuilt.
   \item $O(|a| + |b|)$ per call to \inlinecode{merge\_factors()}.
   \item $O(d \log d)$ per call to \inlinecode{divisors\_from\_factors()}, where $d$ is the number of divisors generated, due to sorting the result.
   \item $O(L/\log L + n^{1/4} + d \log d)$ expected per call to \inlinecode{get\_divisors()}, plus $O(L)$ if the prime cache must be rebuilt.
@@ -2957,7 +2951,7 @@ Modular multiplication inside Miller-Rabin and Pollard's rho uses \inlinecode{\_
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(c)$ cached space for the largest \inlinecode{cached\_sieve(c)} call.
+  \item $O(c)$ cached space after sieving through $c$.
   \item $O(f + \log n)$ auxiliary for recursive factorization, where $f$ is the number of compressed prime factors returned.
   \item $O(d)$ output space and $O(\log d)$ auxiliary stack space for \inlinecode{divisors\_from\_factors()} and \inlinecode{get\_divisors()}.
   \item $O(1)$ auxiliary for the primality tests, \inlinecode{rho\_factor()}, \inlinecode{factorize\_slow()}, and \inlinecode{merge\_factors()}, excluding returned vectors.
@@ -3362,8 +3356,12 @@ int main() {
   {  // Compressed factors are convenient for building divisors.
     Factors factors{{2, 3}, {3, 2}, {5, 1}};
     vector<int64_t> divisors = divisors_from_factors(factors);
-    assert(divisors.size() == 24);
-    assert(divisors.front() == 1 && divisors.back() == 360);
+    assert(
+        (divisors == vector<int64_t>{
+                         1,  2,  3,  4,  5,  6,  8,  9,  10, 12,  15,  18,
+                         20, 24, 30, 36, 40, 45, 60, 72, 90, 120, 180, 360,
+                     })
+    );
     assert(factorize(360) == factors);
     assert(get_divisors(360) == divisors);
   }
@@ -3673,8 +3671,7 @@ int main() {
   assert(mobius(12) == 0);   // Divisible by 2^2.
   assert(mobius(30) == -1);  // 2 * 3 * 5, three distinct primes.
 
-  vector<int> mu = mobius_sieve(12);
-  assert((mu == vector<int>{0, 1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0}));
+  assert((mobius_sieve(12) == vector<int>{0, 1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0}));
 
   assert(count_coprime(10, 6) == 3);  // 1, 5, 7
   assert(count_coprime(100, 1) == 100);
@@ -4537,6 +4534,8 @@ class BigInt {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+using namespace std;
+
 int main() {
   BigInt a("-9899819294989142124"), b("12398124981294214");
   assert(a + b == "-9887421170007847910");
@@ -4573,14 +4572,14 @@ int main() {
       }
     }
   }
-  std::mt19937 rng(1234567);  // Fixed seed for reproducibility.
-  std::uniform_int_distribution<int> length_dist(1, 100);
+  mt19937 rng(1234567);  // Fixed seed for reproducibility.
+  uniform_int_distribution<int> length_dist(1, 100);
   for (int i = 0; i < 20; i++) {
     int n = length_dist(rng);
     BigInt value(BigInt::rand(n)), root(value.sqrt()), lower(root * root), upper(root + 1);
     upper *= upper;
     assert(lower <= value && value < upper);
-    std::uniform_int_distribution<int> divisor_length_dist(1, n);
+    uniform_int_distribution<int> divisor_length_dist(1, n);
     BigInt divisor(BigInt::rand(divisor_length_dist(rng)) + 1), quotient(value / divisor);
     lower = quotient * divisor;
     upper = divisor * (quotient + 1);
@@ -5375,7 +5374,7 @@ Computes the determinant and inverse of a square matrix using Gaussian eliminati
 Floating-point matrices use the largest-magnitude pivot in each column, although Gaussian elimination can still suffer from rounding error; use LU decomposition for greater numerical stability. Exact field types such as \inlinecode{Modular\textless{}MOD\textgreater{}} use any nonzero pivot and perform exact arithmetic. These types must support construction from $0$ and $1$, equality, addition, subtraction, multiplication, and division. For an integer matrix whose determinant is wanted exactly, the Bareiss algorithm runs a fraction-free elimination: every intermediate value is itself a determinant of a submatrix, so the divisions are always exact and the arithmetic stays in integers.
 
 \begin{compactitem}
-  \item \inlinecode{det\_naive(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a}, using the classic divide-and-conquer algorithm by Laplace expansions. It is division-free and computes in the matrix's element type, so an integer matrix yields an exact integer determinant; but at $O(n!)$ it is only practical for tiny \inlinecode{n}, so prefer \inlinecode{det\_bareiss} for exact integer determinants.
+  \item \inlinecode{det\_naive(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a}, using the classic divide-and-conquer algorithm by Laplace expansions. It is division-free and computes in the matrix's element type, so an integer matrix yields an exact integer determinant; but at $O(n!)$ it is only practical for tiny $n$, so prefer \inlinecode{det\_bareiss} for exact integer determinants.
   \item \inlinecode{det(a, eps = 1e-10)} returns the determinant of an $n$ by $n$ floating-point or exact-field matrix \inlinecode{a} using Gaussian elimination. Floating-point pivots within \inlinecode{eps} of zero are treated as singular; exact fields use equality with zero.
   \item \inlinecode{det\_bareiss(a)} returns the exact determinant of an integer matrix \inlinecode{a} using fraction-free elimination, with no rounding error. Stored entries are minors of \inlinecode{a}, but the products in each update can be larger. They use 128-bit intermediates when available; otherwise those products must fit in \inlinecode{int64\_t}.
   \item \inlinecode{invert(a, eps = 1e-10)} returns $0$ after assigning the $n$ by $n$ floating-point or exact-field matrix \inlinecode{a} to its inverse. It leaves \inlinecode{a} unchanged and returns $-1$ if the matrix is singular; floating-point pivots within \inlinecode{eps} of zero are treated as singular.
@@ -5565,8 +5564,7 @@ int main() {
   vector<vector<double>> a{{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
   int n = static_cast<int>(a.size());
   vector<vector<double>> res(n, vector<double>(n, 0));
-  double d = det(a);
-  assert(fabs(d - det_naive(a)) < 1e-10);
+  assert(fabs(det(a) - det_naive(a)) < 1e-10);
 
   // Bareiss gives the determinant of an integer matrix exactly, with no rounding.
   vector<vector<int64_t>> ai{{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
@@ -5907,9 +5905,9 @@ std::vector<int64_t> characteristic_polynomial(std::vector<std::vector<int64_t>>
     int64_t t = 1;
     for (int i = 0; i < k; i++) {
       t = t * a[k - i][k - i - 1] % MOD;  // Running product of subdiagonal entries.
-      int64_t coef = t * a[k - i - 1][k] % MOD;
+      int64_t coeff = t * a[k - i - 1][k] % MOD;
       for (int j = 0; j < static_cast<int>(p[k - i - 1].size()); j++) {
-        p[k + 1][j] = (p[k + 1][j] - coef * p[k - i - 1][j] % MOD + MOD) % MOD;
+        p[k + 1][j] = (p[k + 1][j] - coeff * p[k - i - 1][j] % MOD + MOD) % MOD;
       }
     }
   }
@@ -5925,8 +5923,7 @@ using namespace std;
 int main() {
   // [[1, 2], [3, 4]]: det(xI - A) = x^2 - 5x - 2.
   vector<vector<int64_t>> a{{1, 2}, {3, 4}};
-  vector<int64_t> c = characteristic_polynomial(a);
-  assert((c == vector<int64_t>{MOD - 2, MOD - 5, 1}));  // -2, -5, 1.
+  assert((characteristic_polynomial(a) == vector<int64_t>{MOD - 2, MOD - 5, 1}));  // -2, -5, 1.
 
   // For any matrix, c_{n-1} = -trace and c_0 = (-1)^n det.
   vector<vector<int64_t>> b{{2, 0, 1}, {0, 3, 0}, {4, 1, 5}};
@@ -6630,8 +6627,7 @@ using namespace std;
 int main() {
   // (1 + 2x + 3x^2)(4 + 5x + 6x^2) = 4 + 13x + 28x^2 + 27x^3 + 18x^4.
   vector<int64_t> a{1, 2, 3}, b{4, 5, 6};
-  vector<int64_t> c = convolve(a, b);
-  assert((c == vector<int64_t>{4, 13, 28, 27, 18}));
+  assert((convolve(a, b) == vector<int64_t>{4, 13, 28, 27, 18}));
   assert(convolve({}, b).empty());
   assert((convolve(vector<int64_t>{5}, vector<int64_t>{7}) == vector<int64_t>{35}));
   vector<int64_t> ones(160, 1);
@@ -6752,8 +6748,7 @@ using namespace std;
 int main() {
   // (1 + 2x + 3x^2)(4 + 5x + 6x^2) = 4 + 13x + 28x^2 + 27x^3 + 18x^4.
   vector<int64_t> a{1, 2, 3}, b{4, 5, 6};
-  vector<int64_t> c = convolve(a, b);
-  assert((c == vector<int64_t>{4, 13, 28, 27, 18}));
+  assert((convolve(a, b) == vector<int64_t>{4, 13, 28, 27, 18}));
   assert(convolve({}, b).empty());
   assert((convolve(vector<int64_t>{5}, vector<int64_t>{7}) == vector<int64_t>{35}));
   vector<int64_t> ones(160, 1);
@@ -6768,7 +6763,7 @@ Polynomial operations treat a vector \inlinecode{a} as coefficients of $a_0 + a_
 The code aliases one modular field element as \inlinecode{Coeff} and one coefficient vector as \inlinecode{Poly}. Input coefficients must lie in $[0, {\inlinecodemath{MOD}})$.
 
 \begin{compactitem}
-  \item \inlinecode{trim(a)} removes trailing zero coefficients from \inlinecode{a}.
+  \item \inlinecode{eval(a, x)} returns the value of \inlinecode{a} at \inlinecode{x} modulo \inlinecode{MOD}; \inlinecode{x} is reduced modulo \inlinecode{MOD}.
   \item \inlinecode{add(a, b)} returns \inlinecode{a + b}.
   \item \inlinecode{subtract(a, b)} returns \inlinecode{a - b}.
   \item \inlinecode{multiply(a, b)} returns \inlinecode{a * b}.
@@ -6790,7 +6785,7 @@ The logarithm follows from $(\log a)' = a'/a$, integrating the truncated quotien
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to \inlinecode{trim()}, \inlinecode{add()}, \inlinecode{subtract()}, \inlinecode{derivative()}, and \inlinecode{integral()}.
+  \item $O(n)$ per call to \inlinecode{eval()}, \inlinecode{add()}, \inlinecode{subtract()}, \inlinecode{derivative()}, and \inlinecode{integral()}.
   \item $O(|a||b|)$ per call to \inlinecode{multiply()} on small inputs and $O(n \log n)$ otherwise, where $n$ is the padded transform length.
   \item $O(n \log n)$ per call to \inlinecode{inverse(a, n)}, where $n$ is the requested length.
   \item $O(n \log n)$ per call to \inlinecode{log()}, \inlinecode{exp()}, and \inlinecode{sqrt()}, where $n$ is the requested length. The exponential carries the largest constant, since every Newton round computes a logarithm.
@@ -6798,7 +6793,7 @@ The logarithm follows from $(\log a)' = a'/a$, integrating the truncated quotien
   \item $O(n \log n)$ per call to \inlinecode{divide()} and \inlinecode{modulo()}, where $n$ is the padded multiplication length.
 \end{compactitem}
 
-\textbf{Space Complexity}: $O(n)$ auxiliary.
+\textbf{Space Complexity}: $O(1)$ auxiliary per call to \inlinecode{eval()} and $O(n)$ auxiliary for all other operations.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -6866,6 +6861,15 @@ void trim(Poly &a) {
   while (!a.empty() && a.back() == 0) {
     a.pop_back();
   }
+}
+
+Coeff eval(const Poly &a, Coeff x) {
+  x = (x % MOD + MOD) % MOD;
+  Coeff res = 0;
+  for (auto it = a.rbegin(); it != a.rend(); ++it) {
+    res = (res * x + *it) % MOD;
+  }
+  return res;
 }
 
 Poly add(const Poly &a, const Poly &b) {
@@ -7093,6 +7097,10 @@ Poly modulo(const Poly &a, const Poly &b) {
 using namespace std;
 
 int main() {
+  // 5 + 7x + 11x^2 evaluates to 63 at x = 2 and 9 at x = -1.
+  Poly p{5, 7, 11};
+  assert(eval(p, 2) == 63 && eval(p, -1) == 9);
+
   // (1 + 2x + 3x^2)(4 + 5x + 6x^2) = 4 + 13x + 28x^2 + 27x^3 + 18x^4.
   Poly a{1, 2, 3}, b{4, 5, 6};
   assert((add(a, b) == Poly{5, 7, 9}));
@@ -7100,13 +7108,11 @@ int main() {
   assert((multiply(a, b) == Poly{4, 13, 28, 27, 18}));
 
   // d/dx (5 + 7x + 11x^2) = 7 + 22x; integrating back chooses constant term 0.
-  Poly p{5, 7, 11};
   assert((derivative(p) == Poly{7, 22}));
   assert((integral(derivative(p)) == Poly{0, 7, 11}));
 
   // (1 - x)^-1 = 1 + x + x^2 + x^3 + ... modulo x^6.
-  Poly inv = inverse({1, MOD - 1}, 6);
-  assert((inv == Poly{1, 1, 1, 1, 1, 1}));
+  assert((inverse({1, MOD - 1}, 6) == Poly{1, 1, 1, 1, 1, 1}));
 
   // (x^3 - 1) / (x - 1) = x^2 + x + 1, remainder 0.
   Poly dividend{MOD - 1, 0, 0, 1};
@@ -7197,9 +7203,9 @@ std::vector<int64_t> berlekamp_massey(const std::vector<int64_t> &s) {
       continue;
     }
     prev = cur;
-    int64_t coef = delta * inv_last_delta % MOD;
+    int64_t coeff = delta * inv_last_delta % MOD;
     for (int j = m; j < n; j++) {
-      cur[j] = (cur[j] - coef * last[j - m] % MOD + MOD) % MOD;
+      cur[j] = (cur[j] - coeff * last[j - m] % MOD + MOD) % MOD;
     }
     if (2 * len > i) {
       continue;
@@ -7439,8 +7445,7 @@ using namespace std;
 int main() {
   // P(x) = x^2 + 2x + 3 sampled at x = 0, 1, 2 gives y = 3, 6, 11.
   vector<int64_t> x{0, 1, 2}, y{3, 6, 11};
-  vector<int64_t> coef = interpolate(x, y);
-  assert((coef == vector<int64_t>{3, 2, 1}));
+  assert((interpolate(x, y) == vector<int64_t>{3, 2, 1}));
   assert(interpolate_at(x, y, 5) == 38);  // 25 + 10 + 3.
 
   // Non-consecutive nodes for P(x) = 2x^3 - x + 4.
@@ -7449,8 +7454,7 @@ int main() {
   for (int64_t v : xs) {
     ys.push_back(poly(v));
   }
-  vector<int64_t> c = interpolate(xs, ys);
-  assert((c == vector<int64_t>{4, MOD - 1, 0, 2}));  // 4 - x + 2x^3.
+  assert((interpolate(xs, ys) == vector<int64_t>{4, MOD - 1, 0, 2}));  // 4 - x + 2x^3.
   assert(interpolate_at(xs, ys, 13) == poly(13));
   return 0;
 }
@@ -7784,7 +7788,7 @@ The example game is ``take $1$ or $2$ stones'': starting with \inlinecode{stones
 
 \begin{compactitem}
   \item \inlinecode{minimax(stones, maximizing)} returns the exact game-tree value, where \inlinecode{maximizing} indicates whose turn it is.
-  \item \inlinecode{alpha\_beta(stones, maximizing, alpha = -2, beta = 2)} returns the same value, with pruning using the current lower bound \inlinecode{alpha} and upper bound \inlinecode{beta}.
+  \item \inlinecode{alpha\_beta(stones, maximizing)} returns the same value using alpha-beta pruning.
   \item \inlinecode{best\_take(stones)} returns an optimal first move using alpha-beta pruning, either $1$ or $2$, for positive \inlinecode{stones}.
 \end{compactitem}
 
@@ -7807,13 +7811,13 @@ int minimax(int stones, bool maximizing) {
   return best;
 }
 
-int alpha_beta(int stones, bool maximizing, int alpha = -2, int beta = 2) {
+static int alpha_beta_search(int stones, bool maximizing, int alpha, int beta) {
   if (stones == 0) {
     return maximizing ? -1 : 1;
   }
   int value = maximizing ? -2 : 2;
   for (int take = 1; take <= 2 && take <= stones; take++) {
-    int child = alpha_beta(stones - take, !maximizing, alpha, beta);
+    int child = alpha_beta_search(stones - take, !maximizing, alpha, beta);
     if (maximizing) {
       value = std::max(value, child);
       alpha = std::max(alpha, value);
@@ -7826,6 +7830,10 @@ int alpha_beta(int stones, bool maximizing, int alpha = -2, int beta = 2) {
     }
   }
   return value;
+}
+
+int alpha_beta(int stones, bool maximizing) {
+  return alpha_beta_search(stones, maximizing, -2, 2);
 }
 
 int best_take(int stones) {

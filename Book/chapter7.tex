@@ -2122,8 +2122,8 @@ Point mean_center(It lo, It hi) {
 int main() {
   vector<Point> points{Point(1, 3), Point(1, 2), Point(2, 1), Point(0, 0), Point(-1, 3)};
   vector<Point> v(points);
-  std::mt19937 rng(1234567);  // Fixed seed for reproducibility.
-  std::shuffle(v.begin(), v.end(), rng);
+  mt19937 rng(1234567);  // Fixed seed for reproducibility.
+  shuffle(v.begin(), v.end(), rng);
   Point c = mean_center(v.begin(), v.end());
   assert(EQ(c, Point(0.6, 1.8)));
   sort(v.begin(), v.end(), [c](const Point &a, const Point &b) { return cw_comp(a, b, c); });
@@ -2343,8 +2343,8 @@ struct PointI {
 int main() {
   {
     vector<PointI> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
-    std::mt19937 rng(1234567);  // Fixed seed for reproducibility.
-    std::shuffle(v.begin(), v.end(), rng);
+  mt19937 rng(1234567);  // Fixed seed for reproducibility.
+  shuffle(v.begin(), v.end(), rng);
     vector<PointI> h{{-1, 3}, {0, 0}, {2, 1}, {1, 3}};
     assert(convex_hull(v.begin(), v.end()) == h);
   }
@@ -2556,8 +2556,7 @@ int main() {
 
   // From the point to the right of the square, the upper-right and lower-right vertices are
   // tangent.
-  auto tangents = convex_polygon_tangents(square, PointI(6, 2));
-  assert(tangents == make_pair(2, 1));
+  assert(convex_polygon_tangents(square, PointI(6, 2)) == make_pair(2, 1));
   return 0;
 }
 \end{lstlisting}
@@ -3236,8 +3235,7 @@ int main() {
 
   vector<Point> p{{0, 0}, {2, 1}, {3, 4}, {-1, 2}, {5, 0}};
   assert(manhattan_mst_weight(p) == 14);
-  auto edges = manhattan_mst_edges(p);
-  assert(edges.size() <= 4 * p.size());
+  assert(manhattan_mst_edges(p).size() <= 4 * p.size());
   return 0;
 }
 \end{lstlisting}
@@ -3683,7 +3681,7 @@ int main() {
   assert(shifted == expected_shifted);
 
   vector<Point> point_sum = minkowski_sum({Point(1, 2)}, {Point(3, 4)});
-  assert(point_sum.size() == 1 && point_sum[0] == Point(4, 6));
+  assert((point_sum == vector<Point>{{4, 6}}));
   return 0;
 }
 \end{lstlisting}
@@ -3870,10 +3868,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
       }
     }
     std::sort(events.begin(), events.end(), [](const Event &e1, const Event &e2) {
-      if (e1.y != e2.y) {
-        return e1.y < e2.y;
-      }
-      return e1.mask_delta < e2.mask_delta;
+      return e1.y != e2.y ? e1.y < e2.y : e1.mask_delta < e2.mask_delta;
     });
     double height = 0;
     int coverage[2] = {0, 0};
@@ -4501,8 +4496,7 @@ int main() {
   assert(a.sqnorm() == 1);
 
   Point3D p(1, 0, 0);
-  auto r = p.rotate(acos(-1.0) / 2, Point3D(0, 0, 1));
-  assert(EQ(r, Point3D(0, 1, 0)));
+  assert(EQ(p.rotate(acos(-1.0) / 2, Point3D(0, 0, 1)), Point3D(0, 1, 0)));
   return 0;
 }
 \end{lstlisting}
@@ -4554,7 +4548,7 @@ bool EQ(double a, double b) {
 }
 
 int main() {
-  using Face = std::tuple<int, int, int>;  // (a, b, c)
+  using Face = tuple<int, int, int>;  // (a, b, c)
   vector<Point3D> p{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
   vector<Face> faces{
       Face(0, 2, 1),

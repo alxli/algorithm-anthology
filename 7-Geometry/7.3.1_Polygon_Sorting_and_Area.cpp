@@ -149,8 +149,8 @@ Point mean_center(It lo, It hi) {
 int main() {
   vector<Point> points{Point(1, 3), Point(1, 2), Point(2, 1), Point(0, 0), Point(-1, 3)};
   vector<Point> v(points);
-  std::mt19937 rng(1234567);  // Fixed seed for reproducibility.
-  std::shuffle(v.begin(), v.end(), rng);
+  mt19937 rng(1234567);  // Fixed seed for reproducibility.
+  shuffle(v.begin(), v.end(), rng);
   Point c = mean_center(v.begin(), v.end());
   assert(EQ(c, Point(0.6, 1.8)));
   sort(v.begin(), v.end(), [c](const Point &a, const Point &b) { return cw_comp(a, b, c); });

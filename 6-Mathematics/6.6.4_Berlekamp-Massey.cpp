@@ -65,9 +65,9 @@ std::vector<int64_t> berlekamp_massey(const std::vector<int64_t> &s) {
       continue;
     }
     prev = cur;
-    int64_t coef = delta * inv_last_delta % MOD;
+    int64_t coeff = delta * inv_last_delta % MOD;
     for (int j = m; j < n; j++) {
-      cur[j] = (cur[j] - coef * last[j - m] % MOD + MOD) % MOD;
+      cur[j] = (cur[j] - coeff * last[j - m] % MOD + MOD) % MOD;
     }
     if (2 * len > i) {
       continue;

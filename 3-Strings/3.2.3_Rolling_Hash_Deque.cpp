@@ -189,7 +189,7 @@ int main() {
   assert(d.hash() == ab);  // Back to "ab".
 
   // An arbitrary element type via a custom hasher: a deque of whole words.
-  auto whash = [](const string &w) -> uint64_t { return std::hash<string>{}(w); };
+  auto whash = [](const string &w) -> uint64_t { return hash<string>{}(w); };
   HashDeque<string, decltype(whash)> sentence(whash), reversed(whash);
   for (string w : {string("the"), string("quick"), string("fox")}) {
     sentence.push_back(w);

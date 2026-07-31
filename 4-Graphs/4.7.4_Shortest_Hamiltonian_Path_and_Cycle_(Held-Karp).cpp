@@ -143,7 +143,7 @@ int main() {
   //          ^_______/
   //             w=5
   int nodes = 3;
-  adj.assign(nodes, std::vector<int64_t>(nodes));
+  adj.assign(nodes, vector<int64_t>(nodes));
   adj[0][1] = 1;
   adj[0][2] = 1;
   adj[1][0] = 7;

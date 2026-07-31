@@ -128,8 +128,7 @@ int main() {
     g.add_edge(3, 5);
     g.add_edge(4, 6);
     g.add_edge(5, 6);
-    vector<int> idom = g.find_dominators(0);
-    assert((idom == vector<int>{0, 0, 0, 0, 3, 3, 3}));
+    assert((g.find_dominators(0) == vector<int>{0, 0, 0, 0, 3, 3, 3}));
   }
   {
     // Node 3 is reachable through either 1 or 2, so neither one dominates it.

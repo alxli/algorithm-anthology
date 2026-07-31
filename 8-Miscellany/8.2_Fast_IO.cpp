@@ -22,7 +22,6 @@ main performance path.
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
 #include <limits>
 #include <string>
 #include <type_traits>
@@ -64,14 +63,6 @@ struct FastInput {
       }
     }
     return buf[pos++];
-  }
-
-  char peek_char() {
-    char c = get_char();
-    if (c) {
-      --pos;
-    }
-    return c;
   }
 
   void skip_blanks() {
@@ -273,7 +264,7 @@ int main() {
   rewind(output);
   char buf[96] = {};
   assert(fgets(buf, sizeof(buf), output));
-  assert(strncmp(buf, "42 hello 3.5 -2147483648 1 Z 1234567890123", 42) == 0);
+  assert(string(buf) == "42 hello 3.5 -2147483648 1 Z 1234567890123\n");
   fclose(output);
   return 0;
 }

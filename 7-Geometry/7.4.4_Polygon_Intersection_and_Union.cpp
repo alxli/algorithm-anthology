@@ -197,10 +197,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
       }
     }
     std::sort(events.begin(), events.end(), [](const Event &e1, const Event &e2) {
-      if (e1.y != e2.y) {
-        return e1.y < e2.y;
-      }
-      return e1.mask_delta < e2.mask_delta;
+      return e1.y != e2.y ? e1.y < e2.y : e1.mask_delta < e2.mask_delta;
     });
     double height = 0;
     int coverage[2] = {0, 0};

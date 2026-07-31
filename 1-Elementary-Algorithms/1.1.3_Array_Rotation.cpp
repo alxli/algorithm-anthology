@@ -111,7 +111,7 @@ int main() {
 
   // Insertion sort.
   for (auto i = a.begin(); i != a.end(); ++i) {
-    rotate1(std::upper_bound(a.begin(), i, *i), i, i + 1);
+    rotate1(upper_bound(a.begin(), i, *i), i, i + 1);
   }
   assert((a == vector<int>{0, 1, 2, 2, 3, 4, 5, 7, 7, 10}));
 

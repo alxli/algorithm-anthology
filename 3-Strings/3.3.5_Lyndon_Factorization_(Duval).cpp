@@ -75,16 +75,16 @@ int min_rotation(const Seq &s) {
 
 #include <cassert>
 #include <string>
-using std::string;
+using namespace std;
 
 int main() {
   // "banana" factors as "b" >= "an" >= "an" >= "a".
-  assert((lyndon_factorization(string("banana")) == std::vector<int>{0, 1, 3, 5}));
+  assert((lyndon_factorization(string("banana")) == vector<int>{0, 1, 3, 5}));
 
   // Among the rotations of "baca", "abac" (starting at index 3) is smallest.
   assert(min_rotation(string("baca")) == 3);
 
   // Both routines work on any comparable sequence, not just strings.
-  assert(min_rotation(std::vector<int>{3, 1, 2, 1, 3}) == 1);
+  assert(min_rotation(vector<int>{3, 1, 2, 1, 3}) == 1);
   return 0;
 }

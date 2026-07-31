@@ -98,9 +98,9 @@ std::vector<int64_t> characteristic_polynomial(std::vector<std::vector<int64_t>>
     int64_t t = 1;
     for (int i = 0; i < k; i++) {
       t = t * a[k - i][k - i - 1] % MOD;  // Running product of subdiagonal entries.
-      int64_t coef = t * a[k - i - 1][k] % MOD;
+      int64_t coeff = t * a[k - i - 1][k] % MOD;
       for (int j = 0; j < static_cast<int>(p[k - i - 1].size()); j++) {
-        p[k + 1][j] = (p[k + 1][j] - coef * p[k - i - 1][j] % MOD + MOD) % MOD;
+        p[k + 1][j] = (p[k + 1][j] - coeff * p[k - i - 1][j] % MOD + MOD) % MOD;
       }
     }
   }
@@ -115,8 +115,7 @@ using namespace std;
 int main() {
   // [[1, 2], [3, 4]]: det(xI - A) = x^2 - 5x - 2.
   vector<vector<int64_t>> a{{1, 2}, {3, 4}};
-  vector<int64_t> c = characteristic_polynomial(a);
-  assert((c == vector<int64_t>{MOD - 2, MOD - 5, 1}));  // -2, -5, 1.
+  assert((characteristic_polynomial(a) == vector<int64_t>{MOD - 2, MOD - 5, 1}));  // -2, -5, 1.
 
   // For any matrix, c_{n-1} = -trace and c_0 = (-1)^n det.
   vector<vector<int64_t>> b{{2, 0, 1}, {0, 3, 0}, {4, 1, 5}};

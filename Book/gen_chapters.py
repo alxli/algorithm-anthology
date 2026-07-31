@@ -69,12 +69,12 @@ SECTION_NAMES = {
     (7, 5): '3D Geometry',
     (8, 1): 'Contest Utilities',
     (8, 2): 'Fast IO',
-    (8, 3): 'Debugging',
-    (8, 4): 'Timing and Benchmarking',
+    (8, 3): 'Policy-Based Data Structures',
+    (8, 4): 'Debugging',
     (8, 5): 'Stress Testing',
-    (8, 6): 'Policy-Based Data Structures',
+    (8, 6): 'Benchmarking',
     (8, 7): 'Multithreading',
-    (8, 8): 'Memory Allocation',
+    (8, 8): 'Bump Allocation',
 }
 
 

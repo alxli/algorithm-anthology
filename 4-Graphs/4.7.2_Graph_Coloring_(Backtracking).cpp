@@ -110,7 +110,7 @@ int main() {
   //    \ /   /
   //     3---+
   int nodes = 5;
-  adj.assign(nodes, std::vector<char>(nodes));
+  adj.assign(nodes, vector<char>(nodes));
   add_edge(0, 1);
   add_edge(0, 4);
   add_edge(1, 3);

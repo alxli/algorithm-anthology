@@ -128,8 +128,7 @@ using namespace std;
 int main() {
   // (1 + 2x + 3x^2)(4 + 5x + 6x^2) = 4 + 13x + 28x^2 + 27x^3 + 18x^4.
   vector<int64_t> a{1, 2, 3}, b{4, 5, 6};
-  vector<int64_t> c = convolve(a, b);
-  assert((c == vector<int64_t>{4, 13, 28, 27, 18}));
+  assert((convolve(a, b) == vector<int64_t>{4, 13, 28, 27, 18}));
   assert(convolve({}, b).empty());
   assert((convolve(vector<int64_t>{5}, vector<int64_t>{7}) == vector<int64_t>{35}));
   vector<int64_t> ones(160, 1);

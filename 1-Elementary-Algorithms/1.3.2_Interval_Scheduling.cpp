@@ -66,11 +66,10 @@ using namespace std;
 
 int main() {
   vector<Interval> intervals{{1, 4}, {3, 5}, {0, 6}, {5, 7}, {8, 9}};
-  vector<int> selected = schedule_intervals(intervals);
   // Earliest-finish greedy chooses original indices 0, 3, 4.
-  assert((selected == vector<int>{0, 3, 4}));
+  assert((schedule_intervals(intervals) == vector<int>{0, 3, 4}));
 
   vector<Interval> touching{{0, 2}, {2, 4}, {4, 5}};
-  assert(schedule_intervals(touching).size() == 3);
+  assert((schedule_intervals(touching) == vector<int>{0, 1, 2}));
   return 0;
 }

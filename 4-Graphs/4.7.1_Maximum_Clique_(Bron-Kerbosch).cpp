@@ -102,6 +102,8 @@ int64_t max_clique_weighted() {
 
 /*** Example Usage ***/
 
+using namespace std;
+
 void add_edge(int u, int v) {
   adj[u][v] = true;
   adj[v][u] = true;
@@ -118,7 +120,7 @@ int main() {
   //       \ | /      /
   //        2(30)----+
   int nodes = 5;
-  adj.assign(nodes, std::vector<char>(nodes));
+  adj.assign(nodes, vector<char>(nodes));
   w.assign(nodes, 0);
   add_edge(0, 1);
   add_edge(0, 2);

@@ -285,8 +285,7 @@ int main() {
     assert(cycles.size() == 1);
     sort(cycles[0].begin(), cycles[0].end());
     assert((cycles[0] == vector<int>{a, b, c}));
-    vector<int> nodes = g.cycle_nodes(cycles[0]);
-    assert(nodes.size() == 3);
+    assert((g.cycle_nodes(cycles[0]) == vector<int>{0, 1, 2}));
   }
   {
     // 0---a---1

@@ -37,38 +37,38 @@ auto stress(int trials, Generate generate, Solve solve, Brute brute)
 using namespace std;
 
 int main() {
-  std::mt19937 rng(1234567);  // Fixed seed for reproducibility.
+  mt19937 rng(1234567);  // Fixed seed for reproducibility.
 
   auto generate = [&] {
-    int n = std::uniform_int_distribution<int>(1, 8)(rng);
-    std::vector<int> a(n);
+    int n = uniform_int_distribution<int>(1, 8)(rng);
+    vector<int> a(n);
     for (int &x : a) {
-      x = std::uniform_int_distribution<int>(-5, 5)(rng);
+      x = uniform_int_distribution<int>(-5, 5)(rng);
     }
     return a;
   };
-  auto solve = [](std::vector<int> a) {
-    std::sort(a.begin(), a.end());
+  auto solve = [](vector<int> a) {
+    sort(a.begin(), a.end());
     return a;
   };
-  auto brute = [](std::vector<int> a) {
+  auto brute = [](vector<int> a) {
     do {
-      if (std::is_sorted(a.begin(), a.end())) {
+      if (is_sorted(a.begin(), a.end())) {
         return a;
       }
-    } while (std::next_permutation(a.begin(), a.end()));
-    std::sort(a.begin(), a.end());
+    } while (next_permutation(a.begin(), a.end()));
+    sort(a.begin(), a.end());
     return a;
   };
 
   assert(!stress(100, generate, solve, brute));
 
   // Mutating solvers still receive independent copies of the generated test.
-  auto mutate = [](std::vector<int> &a) {
+  auto mutate = [](vector<int> &a) {
     a[0]++;
     return a[0];
   };
-  auto unchanged = [](const std::vector<int> &a) { return a[0]; };
-  assert(stress(1, [] { return std::vector<int>{1}; }, mutate, unchanged));
+  auto unchanged = [](const vector<int> &a) { return a[0]; };
+  assert(stress(1, [] { return vector<int>{1}; }, mutate, unchanged));
   return 0;
 }

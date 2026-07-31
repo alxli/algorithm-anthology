@@ -150,8 +150,7 @@ int main() {
     int count = 0;
     do {
       print_range(a.begin(), a.end());
-      auto b = arrangement_by_rank(n, k, count);
-      assert(a == b);
+      assert(a == arrangement_by_rank(n, k, count));
       assert(rank_by_arrangement(n, a) == count);
       count++;
       if (count == 10 || count == 20) {

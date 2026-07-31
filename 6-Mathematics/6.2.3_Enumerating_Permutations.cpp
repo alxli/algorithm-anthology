@@ -208,8 +208,7 @@ int main() {
       print_range(a.begin(), a.end());
       assert(b == a);
       assert(c == a);
-      vector<int> d = permutation_by_rank(n, count);
-      assert(d == a);
+      assert(permutation_by_rank(n, count) == a);
       assert(rank_by_permutation(a) == count);
       count++;
       if (count == 8 || count == 16) {
@@ -246,9 +245,7 @@ int main() {
     vector<int> a{3, 1, 0, 2};
     cout << "\nDecomposition of {3,1,0,2} into cycles:" << endl;
     Cycles c = permutation_cycles(a);
-    assert(c.size() == 2);
-    assert((c[0] == vector<int>{0, 3, 2}));
-    assert((c[1] == vector<int>{1}));
+    assert((c == Cycles{{0, 3, 2}, {1}}));
     for (const auto &cycle : c) {
       print_range(cycle.begin(), cycle.end());
     }

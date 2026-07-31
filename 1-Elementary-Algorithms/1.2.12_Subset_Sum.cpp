@@ -143,21 +143,22 @@ int64_t max_subset_sum_bounded(It lo, It hi, int target) {
 /*** Example Usage ***/
 
 #include <cassert>
+using namespace std;
 
 int main() {
-  std::vector<int> a{9, 1, 5, 0, 1, 11, 5};
+  vector<int> a{9, 1, 5, 0, 1, 11, 5};
   auto [sum, items] = max_subset_sum_at_most(a.begin(), a.end(), 8);
   int64_t selected_sum = 0;
   for (int i : items) {
     selected_sum += a[i];
   }
   assert(sum == 7 && selected_sum == sum);
-  std::vector<int> b{-7, -3, -2, 5, 8};
+  vector<int> b{-7, -3, -2, 5, 8};
   assert(max_subset_sum_at_most(b.begin(), b.end(), 0).first == 0);
 
   // The bounded-weight method agrees with meet-in-the-middle on nonnegative inputs.
   assert(max_subset_sum_bounded(a.begin(), a.end(), 8) == 7);
-  std::vector<int> c{3, 34, 4, 12, 5, 2};
+  vector<int> c{3, 34, 4, 12, 5, 2};
   assert(max_subset_sum_bounded(c.begin(), c.end(), 9) == 9);     // 4 + 5.
   assert(max_subset_sum_bounded(c.begin(), c.end(), 10) == 10);   // 3 + 5 + 2.
   assert(max_subset_sum_bounded(c.begin(), c.end(), 100) == 60);  // All items fit.

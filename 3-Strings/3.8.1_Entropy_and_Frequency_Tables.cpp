@@ -30,11 +30,13 @@ compressors beat the order-0 bound.
 Time Complexity:
 - O(n + m) per call to `entropy(s)`, where $n$ is the string length and $m = 256$.
 - O(m) per call to `entropy(freq)` and `expected_code_length(freq, length)`.
-- O(n*k) expected per call to `conditional_entropy(s, k)`, for hashing the context of each position.
+- O(n*k) expected per call to `conditional_entropy(s, order)`, where $k$ is `order`, for hashing the
+  context of each position.
 
 Space Complexity:
 - O(m) for the table returned by `byte_frequencies()` and O(m) auxiliary for `entropy(s)`.
-- O(n*k) auxiliary for `conditional_entropy(s, k)`, since at most $n$ distinct contexts are stored.
+- O(n*k) auxiliary for `conditional_entropy(s, order)`, since at most $n$ distinct contexts are
+  stored.
 - O(1) auxiliary for the other operations.
 
 */

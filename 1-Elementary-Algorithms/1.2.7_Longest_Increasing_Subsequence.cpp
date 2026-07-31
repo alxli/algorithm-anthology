@@ -64,8 +64,7 @@ using namespace std;
 
 int main() {
   vector<int> a{-2, -5, 1, 9, 10, 8, 11, 10, 13, 11};
-  vector<int> res = longest_increasing_subsequence(a.begin(), a.end());
-  assert((res == vector<int>{1, 2, 3, 4, 6, 8}));
+  assert((longest_increasing_subsequence(a.begin(), a.end()) == vector<int>{1, 2, 3, 4, 6, 8}));
 
   vector<int> b{1, 4, 3, 2};
   assert(

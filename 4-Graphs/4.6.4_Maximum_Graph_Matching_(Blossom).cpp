@@ -137,7 +137,7 @@ void add_edge(int u, int v) {
 }
 
 int matching_size(const vector<int> &match) {
-  return std::count_if(match.begin(), match.end(), [](int v) { return v != -1; }) / 2;
+  return count_if(match.begin(), match.end(), [](int v) { return v != -1; }) / 2;
 }
 
 int main() {

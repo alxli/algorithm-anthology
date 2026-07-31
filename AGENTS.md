@@ -19,11 +19,10 @@ correct, more reusable, and easier to study under contest pressure.
 
 ## Book Builds And Releases
 
-- Run `make -C Book pdf` to regenerate `chapter*.tex` and the canonical `Book/A3C5.pdf` using the
-  default `VERSION` and `RELEASE_DATE` in `Book/Makefile`.
+- Run `make -C Book pdf` to regenerate `chapter*.tex`, `Book/A3C5.pdf`, and the matching versioned
+  PDF using the default `VERSION` and `RELEASE_DATE` in `Book/Makefile`.
 - Run `make -C Book release VERSION=v1.1 RELEASE_DATE='October 1, 2026'` for a release. This injects
-  the version and date into the title page, updates the canonical PDF, creates
-  `Book/A3C5-v1.1.pdf`, and updates the versioned PDF link in `README.md`.
+  the version and date into both PDFs and updates the versioned PDF link in `README.md`.
 - `Book/A3C5.pdf`, versioned `Book/A3C5-v*.pdf` files, and the generated `chapter*.tex` files are
   tracked. The canonical PDF serves the evergreen URL, while each versioned PDF preserves a stable
   raw GitHub URL and download filename.
@@ -74,7 +73,7 @@ Prefer code that a strong contestant can adapt quickly after skimming:
   file.
 - In reusable code, use `std::` qualifications rather than `using namespace std;`. Example blocks
   use `using namespace std;` by default; keep explicit `std::` only where the contrast carries
-  meaning, as in 8.6 alongside `__gnu_pbds`.
+  meaning, as in 8.3 alongside `__gnu_pbds`.
 - Prefer `static_cast<int>(container.size())` before mixing sizes with `int` indices.
 - For read-only structured bindings of small pairs or tuples, prefer copying with `auto [...]`;
   use `const auto &` when copying the bound object would be material.
@@ -131,6 +130,11 @@ Prefer code that a strong contestant can adapt quickly after skimming:
 ## API Style
 
 - Public APIs should be small, direct, and easy to paste into a solution.
+- Public default arguments should represent useful caller choices. Do not expose internal traversal
+  state or residual-network bookkeeping merely because it has a conventional initial value; for
+  example, `add_edge()` initializes the reverse residual capacity to zero internally.
+- Keep recursive search bounds, parent nodes, depths, cursors, and similar implementation state in
+  internal helpers. The documented function should accept only the inputs a caller chooses.
 - Do not add one-line forwarding wrappers just to preserve older names.
 - If a function can naturally return the useful witness as well as the optimum value, prefer the
   more powerful API when it does not make the section heavy.

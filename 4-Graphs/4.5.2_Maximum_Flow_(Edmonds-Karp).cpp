@@ -145,8 +145,7 @@ int main() {
   int flow = g.max_flow(0, 5);
   assert(flow == 5);
   assert(g.max_flow(0, 5) == 5);
-  vector<char> cut = g.min_cut(0);
-  assert((cut == vector<char>{true, true, true, false, false, false}));
+  assert((g.min_cut(0) == vector<char>{true, true, true, false, false, false}));
   g.clear_flow();
   assert(g.max_flow(0, 5) == 5);
   return 0;

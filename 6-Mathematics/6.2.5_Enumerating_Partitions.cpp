@@ -156,8 +156,7 @@ int main() {
     int count = 0;
     do {
       print_range(a.begin(), a.end());
-      vector<int> b = partition_by_rank(n, count);
-      assert(equal(a.begin(), a.end(), b.begin()));
+      assert(a == partition_by_rank(n, count));
       assert(rank_by_partition(a) == count);
       count++;
     } while (next_partition(a));

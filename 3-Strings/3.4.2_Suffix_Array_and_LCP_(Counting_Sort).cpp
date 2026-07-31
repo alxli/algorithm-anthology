@@ -130,11 +130,8 @@ using namespace std;
 
 int main() {
   SuffixArrayCountingSort sa("banana");
-  vector<int> sarr = sa.suffix_array(), lcp = sa.lcp_array();
-  vector<int> sarr_expected{5, 3, 1, 0, 4, 2};
-  vector<int> lcp_expected{1, 3, 0, 0, 2};
-  assert(sarr == sarr_expected);
-  assert(lcp == lcp_expected);
+  assert((sa.suffix_array() == vector<int>{5, 3, 1, 0, 4, 2}));
+  assert((sa.lcp_array() == vector<int>{1, 3, 0, 0, 2}));
   assert(sa.find("ana") == 1);
   assert(sa.find("x") == string::npos);
 

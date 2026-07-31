@@ -117,7 +117,6 @@ int count_runs(const string &s) {
 
 int main() {
   string code = bwt("banana");
-  assert(code.size() == 7);  // "banana" plus the sentinel.
   assert(escaped(code) == "annb\\0aa");
   assert(inverse_bwt(code) == "banana");
   cout << "BWT(banana): " << escaped(code) << endl;

@@ -65,7 +65,6 @@ int main() {
   add_edge(3, 4);
   connected_components();
   assert((components == vector<vector<int>>{{0, 1, 2}, {3, 4}, {5}}));
-  assert(components.size() == 3);
   assert(comp_id[0] == comp_id[2]);
   assert(comp_id[0] != comp_id[3]);
   assert(comp_id[5] == 2);

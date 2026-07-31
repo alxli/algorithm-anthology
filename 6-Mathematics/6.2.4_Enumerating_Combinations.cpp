@@ -263,8 +263,7 @@ int main() {
     int count = 0;
     do {
       print_range(a.begin(), a.end());
-      vector<int> b = combination_by_rank(n, k, count);
-      assert(a == b);
+      assert(a == combination_by_rank(n, k, count));
       assert(rank_by_combination(n, a) == count);
       count++;
     } while (next_combination(n, a));

@@ -398,7 +398,7 @@ int main() {
   assert(!signbit_(M_INF) && signbit_(-M_INF));
   assert(!signbit_(M_NAN) && signbit_(-M_NAN));
   assert(copysign(1.0, +2.0) == +1.0 && copysign(M_INF, -2.0) == -M_INF);
-  assert(copysign(1.0, -2.0) == -1.0 && std::signbit(copysign(M_NAN, -2.0)));
+  assert(copysign(1.0, -2.0) == -1.0 && signbit(copysign(M_NAN, -2.0)));
 
   assert(EQ(floor0(1.5), 1.0) && EQ(ceil0(1.5), 2.0));
   assert(EQ(floor0(-1.5), -1.0) && EQ(ceil0(-1.5), -2.0));
@@ -430,13 +430,13 @@ int main() {
 
   assert(to_roman(1234) == "MCCXXXIV");
   assert(to_roman(5678) == "MMMMMDCLXXVIII");
-  std::vector<int> digits{6, 5, 4, 3, 2, 1};
-  std::vector<int> base20 = to_base(123456, 20);
+  vector<int> digits{6, 5, 4, 3, 2, 1};
+  vector<int> base20 = to_base(123456, 20);
   assert(convert_base(base20, 20, 10) == digits);
-  assert(convert_base(std::vector<int>{0, 0, 0}, 10, 2) == std::vector<int>{0});
+  assert(convert_base(vector<int>{0, 0, 0}, 10, 2) == vector<int>{0});
 
-  std::vector<int> big_decimal(30, 9);  // 10^30 - 1, larger than uint64_t.
-  std::vector<int> big_binary = convert_base(big_decimal, 10, 2);
+  vector<int> big_decimal(30, 9);  // 10^30 - 1, larger than uint64_t.
+  vector<int> big_binary = convert_base(big_decimal, 10, 2);
   assert(convert_base(big_binary, 2, 10) == big_decimal);
   return 0;
 }

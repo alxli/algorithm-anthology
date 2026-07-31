@@ -157,6 +157,6 @@ int main() {
   assert(shifted == expected_shifted);
 
   vector<Point> point_sum = minkowski_sum({Point(1, 2)}, {Point(3, 4)});
-  assert(point_sum.size() == 1 && point_sum[0] == Point(4, 6));
+  assert((point_sum == vector<Point>{{4, 6}}));
   return 0;
 }

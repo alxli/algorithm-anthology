@@ -9,7 +9,7 @@ underlying coefficient vectors.
 The code aliases one modular field element as `Coeff` and one coefficient vector as `Poly`. Input
 coefficients must lie in $[0, `MOD`)$.
 
-- `trim(a)` removes trailing zero coefficients from `a`.
+- `eval(a, x)` returns the value of `a` at `x` modulo `MOD`; `x` is reduced modulo `MOD`.
 - `add(a, b)` returns `a + b`.
 - `subtract(a, b)` returns `a - b`.
 - `multiply(a, b)` returns `a * b`.
@@ -38,7 +38,7 @@ constant term is not $1$, factor `a[0]` out and multiply back one of its modular
 factors $a = x^t c b$, where $b(0) = 1$, and uses $a^k = x^{tk} c^k \exp(k \log b)$.
 
 Time Complexity:
-- O(n) per call to `trim()`, `add()`, `subtract()`, `derivative()`, and `integral()`.
+- O(n) per call to `eval()`, `add()`, `subtract()`, `derivative()`, and `integral()`.
 - O(|a||b|) per call to `multiply()` on small inputs and O(n log n) otherwise, where $n$ is the
   padded transform length.
 - O(n log n) per call to `inverse(a, n)`, where $n$ is the requested length.
@@ -48,7 +48,7 @@ Time Complexity:
 - O(n log n) per call to `divide()` and `modulo()`, where $n$ is the padded multiplication length.
 
 Space Complexity:
-- O(n) auxiliary.
+- O(1) auxiliary per call to `eval()` and O(n) auxiliary for all other operations.
 
 */
 
@@ -117,6 +117,15 @@ void trim(Poly &a) {
   while (!a.empty() && a.back() == 0) {
     a.pop_back();
   }
+}
+
+Coeff eval(const Poly &a, Coeff x) {
+  x = (x % MOD + MOD) % MOD;
+  Coeff res = 0;
+  for (auto it = a.rbegin(); it != a.rend(); ++it) {
+    res = (res * x + *it) % MOD;
+  }
+  return res;
 }
 
 Poly add(const Poly &a, const Poly &b) {
@@ -343,6 +352,10 @@ Poly modulo(const Poly &a, const Poly &b) {
 using namespace std;
 
 int main() {
+  // 5 + 7x + 11x^2 evaluates to 63 at x = 2 and 9 at x = -1.
+  Poly p{5, 7, 11};
+  assert(eval(p, 2) == 63 && eval(p, -1) == 9);
+
   // (1 + 2x + 3x^2)(4 + 5x + 6x^2) = 4 + 13x + 28x^2 + 27x^3 + 18x^4.
   Poly a{1, 2, 3}, b{4, 5, 6};
   assert((add(a, b) == Poly{5, 7, 9}));
@@ -350,13 +363,11 @@ int main() {
   assert((multiply(a, b) == Poly{4, 13, 28, 27, 18}));
 
   // d/dx (5 + 7x + 11x^2) = 7 + 22x; integrating back chooses constant term 0.
-  Poly p{5, 7, 11};
   assert((derivative(p) == Poly{7, 22}));
   assert((integral(derivative(p)) == Poly{0, 7, 11}));
 
   // (1 - x)^-1 = 1 + x + x^2 + x^3 + ... modulo x^6.
-  Poly inv = inverse({1, MOD - 1}, 6);
-  assert((inv == Poly{1, 1, 1, 1, 1, 1}));
+  assert((inverse({1, MOD - 1}, 6) == Poly{1, 1, 1, 1, 1, 1}));
 
   // (x^3 - 1) / (x - 1) = x^2 + x + 1, remainder 0.
   Poly dividend{MOD - 1, 0, 0, 1};

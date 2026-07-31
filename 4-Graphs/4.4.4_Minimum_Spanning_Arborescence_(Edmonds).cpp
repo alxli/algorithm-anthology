@@ -108,14 +108,12 @@ int main() {
   vector<Edge> edges{
       {0, 1, 1}, {0, 2, 5}, {1, 2, 2}, {2, 3, 3}, {3, 1, 4},
   };
-  auto weight = directed_mst(4, edges, 0);
-  assert(weight == 6);  // Cheapest edges 0->1->2->3 form a tree of weight 6.
+  assert(directed_mst(4, edges, 0) == 6);  // Cheapest edges 0->1->2->3 form a tree of weight 6.
 
   //        w=1    w=2
   // root=0 ---> 1 ---> 2       3
   vector<Edge> disconnected{{0, 1, 1}, {1, 2, 1}};
-  auto disconnected_weight = directed_mst(4, disconnected, 0);
-  assert(!disconnected_weight);  // Node 3 is unreachable from root 0.
+  assert(!directed_mst(4, disconnected, 0));  // Node 3 is unreachable from root 0.
 
   vector<Edge> negative{{0, 1, -1}};
   assert(directed_mst(2, negative, 0) == -1);  // A weight of -1 is a valid result.

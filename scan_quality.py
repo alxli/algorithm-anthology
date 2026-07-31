@@ -19,7 +19,12 @@ KNOWN_LONG_DOCSTRING_LINES = {
 }
 
 EXAMPLE_OUTPUT_WITHOUT_DIRECT_PRINT = {
-    Path("8-Miscellany/8.3_Debugging.cpp"),
+    Path("8-Miscellany/8.4_Debugging.cpp"),
+}
+
+EXAMPLE_STD_QUALIFICATION_ALLOWLIST = {
+    Path("1-Elementary-Algorithms/1.1.3_Array_Rotation.cpp"): {"rotate"},
+    Path("6-Mathematics/6.2.3_Enumerating_Permutations.cpp"): {"next_permutation"},
 }
 
 EXAMPLE_HELPER_RE = re.compile(
@@ -143,6 +148,10 @@ STYLE_PATTERNS = [
     (
         re.compile(r"64-bit integer coordinate type (?:stays exact|is safe) up to"),
         "Use the standard `Overflow warning:` prose for coordinate overflow limits.",
+    ),
+    (
+        re.compile(r"`\(\*[A-Za-z_][A-Za-z0-9_]*\)"),
+        "Describe output pointers from the caller's perspective, without dereferencing them.",
     ),
 ]
 
@@ -560,9 +569,23 @@ def scan_code_consistency(paths):
 
         example = text[marker:]
         example_start_line = text[:marker].count("\n") + 1
+        imports_std = "using namespace std;" in example
         in_block_comment = False
         for offset, line in enumerate(example.splitlines(), start=0):
             code, in_block_comment = strip_cpp_comments_and_strings(line, in_block_comment)
+            if imports_std:
+                allowed = EXAMPLE_STD_QUALIFICATION_ALLOWLIST.get(path.relative_to(ROOT), set())
+                for name in re.findall(r"\bstd::([A-Za-z_][A-Za-z0-9_]*)", code):
+                    if name not in allowed:
+                        issues.append(
+                            Issue(
+                                path,
+                                example_start_line + offset,
+                                "code-consistency",
+                                "Drop redundant std:: qualification in an example that imports std.",
+                                line,
+                            )
+                        )
             if re.search(r"(?:std::)?random_device\s*\{\s*\}", code):
                 issues.append(
                     Issue(
@@ -881,15 +904,78 @@ def scan_default_argument_docs(paths):
             if name_match:
                 documented.setdefault(name_match.group(1), []).append((line_no, signature, line))
 
+        internal_api_parameters = {
+            "add_edge": {"rev_cap", "reverse_capacity"},
+            "alpha_beta": {"alpha", "beta"},
+            "find_centroid": {"u", "p", "parent"},
+        }
+        for name, forbidden in internal_api_parameters.items():
+            for doc_line_no, signature, doc_line in documented.get(name, []):
+                exposed = {
+                    param
+                    for param in forbidden
+                    if re.search(rf"\b{re.escape(param)}\b", call_parameters(signature))
+                }
+                if exposed:
+                    names = ", ".join(f"`{param}`" for param in sorted(exposed))
+                    issues.append(
+                        Issue(
+                            path,
+                            doc_line_no,
+                            "api-internal-state",
+                            f"Keep implementation parameter {names} out of `{name}()`'s public API.",
+                            doc_line,
+                        )
+                    )
+
         for line_no, line in enumerate(pre_example.splitlines(), start=1):
             match = code_decl_re.match(line)
             if not match:
                 continue
+            params = split_parameters(match.group(2))
             defaulted_params = [
                 param
-                for param in split_parameters(match.group(2))
+                for param in params
                 if top_level_default_expression(param)
             ]
+            defaulted_names = []
+            for param in defaulted_params:
+                name_match = re.search(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*=", param)
+                if name_match:
+                    defaulted_names.append(name_match.group(1))
+            exposed_bookkeeping = internal_api_parameters.get(match.group(1), set()).intersection(
+                defaulted_names
+            )
+            if exposed_bookkeeping:
+                names = ", ".join(f"`{name}`" for name in sorted(exposed_bookkeeping))
+                issues.append(
+                    Issue(
+                        path,
+                        line_no,
+                        "api-default",
+                        f"Keep implementation parameter {names} internal.",
+                        line,
+                    )
+                )
+                continue
+            internal_traversal_defaults = (
+                len(defaulted_params) == len(params)
+                and len(defaulted_names) >= 2
+                and all(name in {"u", "v", "p", "parent"} for name in defaulted_names)
+            )
+            if internal_traversal_defaults:
+                for doc_line_no, signature, doc_line in documented.get(match.group(1), []):
+                    if "=" in signature:
+                        issues.append(
+                            Issue(
+                                path,
+                                doc_line_no,
+                                "api-default",
+                                "Omit defaulted traversal-state parameters from the public API bullet.",
+                                doc_line,
+                            )
+                        )
+                continue
             optional_outputs = True
             for param in defaulted_params:
                 param_name = re.search(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*=", param)
@@ -1049,6 +1135,73 @@ def scan_api_output_argument_style(paths):
                         )
                     )
                 break
+    return issues
+
+
+def scan_complexity_call_parameter_names(paths):
+    issues = []
+    api_signature_re = re.compile(r"^-\s+`([^`]+)`")
+    call_re = re.compile(r"`([A-Za-z_][A-Za-z0-9_]*)\(([^`]*)\)`")
+
+    def argument_names(params):
+        names = []
+        for param in split_parameters(params):
+            param = param.split("=", 1)[0].strip().lstrip("&")
+            if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", param):
+                return None
+            names.append(param)
+        return tuple(names)
+
+    for path in paths:
+        text = path.read_text()
+        pre_example = text.split("/*** Example Usage", 1)[0]
+        documented = {}
+        for line in pre_example.splitlines():
+            match = api_signature_re.search(line)
+            if not match:
+                continue
+            signature = match.group(1)
+            name_match = re.search(r"([A-Za-z_][A-Za-z0-9_]*)\s*\(", signature)
+            if not name_match:
+                continue
+            params = argument_names(call_parameters(signature[name_match.end() - 1 :]))
+            if params is not None:
+                documented.setdefault(name_match.group(1), []).append(params)
+
+        in_complexity = False
+        for line_no, line in enumerate(pre_example.splitlines(), start=1):
+            stripped = line.strip()
+            if stripped in {"Time Complexity:", "Space Complexity:"}:
+                in_complexity = True
+                continue
+            if in_complexity and stripped == "*/":
+                in_complexity = False
+                continue
+            if not in_complexity:
+                continue
+            for call in call_re.finditer(line):
+                params = argument_names(call.group(2))
+                if not params:
+                    continue
+                same_arity = [
+                    expected
+                    for expected in documented.get(call.group(1), [])
+                    if len(expected) == len(params)
+                ]
+                if same_arity and params not in same_arity:
+                    expected = " or ".join(
+                        "(" + ", ".join(names) + ")" for names in same_arity
+                    )
+                    issues.append(
+                        Issue(
+                            path,
+                            line_no,
+                            "complexity-params",
+                            f"`{call.group(1)}()` uses parameters {params}, but its API documents "
+                            f"{expected}",
+                            line,
+                        )
+                    )
     return issues
 
 
@@ -1270,8 +1423,106 @@ def scan_contextual_math_style(paths):
     prose_code_expr_re = re.compile(r"\$`[A-Za-z][A-Za-z0-9_]*`\s*[-+]")
     inferred_size_re = re.compile(r"where `([a-z])` is `[^`]+\.size\(\)`")
     default_policy_re = re.compile(r"<(?:[^`>]|<[^`>]*>)*(?:Compare|Hash)\s*=")
+
+    def big_o_spans(text):
+        spans = []
+        pos = 0
+        while True:
+            start = text.find("O(", pos)
+            if start == -1:
+                return spans
+            depth = 1
+            end = start + 2
+            while end < len(text) and depth:
+                if text[end] == "(":
+                    depth += 1
+                elif text[end] == ")":
+                    depth -= 1
+                end += 1
+            if depth == 0:
+                spans.append((start, end, text[start + 2 : end - 1]))
+            pos = max(end, start + 2)
+
+    def documented_parameter_names(text):
+        params_by_name = {}
+        for line in text.splitlines():
+            match = re.search(r"^-\s+`([^`]+)`", line)
+            if not match:
+                continue
+            signature = match.group(1)
+            name_match = re.search(r"([A-Za-z_][A-Za-z0-9_]*)\s*\(", signature)
+            if not name_match:
+                continue
+            names = set()
+            for param in split_parameters(call_parameters(signature[name_match.end() - 1 :])):
+                param = param.split("=", 1)[0].strip().lstrip("&")
+                if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", param):
+                    names.add(param)
+            params_by_name.setdefault(name_match.group(1), set()).update(names)
+        return params_by_name
+
     for path in paths:
         lines = path.read_text().splitlines()
+        params_by_name = documented_parameter_names("\n".join(lines))
+        for start, end in docstring_ranges(lines):
+            if lines[start].startswith("/***"):
+                continue
+            i = start + 1
+            while i < end:
+                while i < end and not lines[i].strip():
+                    i += 1
+                paragraph_start = i
+                while i < end and lines[i].strip():
+                    i += 1
+                paragraph_lines = lines[paragraph_start:i]
+                paragraph = "\n".join(paragraph_lines)
+                spans = big_o_spans(paragraph)
+                if not spans:
+                    continue
+                outside = paragraph
+                for span_start, span_end, _ in reversed(spans):
+                    outside = outside[:span_start] + outside[span_end:]
+                code_names = set(re.findall(r"`([A-Za-z][A-Za-z0-9_]*)`", outside))
+                math_names = set()
+                for _, _, expression in spans:
+                    expression = re.sub(r"`[^`]*`", "", expression)
+                    math_names.update(
+                        re.findall(
+                            r"(?<![A-Za-z_])([A-Za-z][A-Za-z0-9_]*)", expression
+                        )
+                    )
+                mentioned = set(
+                    re.findall(r"`([A-Za-z_][A-Za-z0-9_]*)\s*\(", paragraph)
+                )
+                parameter_names = set()
+                for name in mentioned:
+                    parameter_names.update(params_by_name.get(name, set()))
+                candidates = (
+                    math_names
+                    & code_names
+                    - parameter_names
+                    - {"alpha", "log", "max", "min", "sqrt"}
+                )
+                for name in sorted(candidates):
+                    issue_line = next(
+                        (
+                            paragraph_start + offset + 1
+                            for offset, line in enumerate(paragraph_lines)
+                            if f"`{name}`" in line
+                        ),
+                        paragraph_start + 1,
+                    )
+                    issues.append(
+                        Issue(
+                            path,
+                            issue_line,
+                            "math-code-style",
+                            f"Use math mode for analytical variable `{name}` introduced by the "
+                            "Big-O expression.",
+                            lines[issue_line - 1],
+                        )
+                    )
+
         in_doc = False
         in_api_bullet = False
         api_params = set()
@@ -1434,6 +1685,7 @@ def main():
     issues.extend(scan_default_argument_docs(paths))
     issues.extend(scan_api_parameter_names(paths))
     issues.extend(scan_api_output_argument_style(paths))
+    issues.extend(scan_complexity_call_parameter_names(paths))
     issues.extend(scan_documented_api_names(paths))
     issues.extend(scan_repeated_literal_defaults(paths))
     issues.extend(scan_contextual_math_style(paths))

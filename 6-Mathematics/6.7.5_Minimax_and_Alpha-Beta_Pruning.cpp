@@ -13,8 +13,7 @@ when the maximizing player wins and $-1$ when the minimizing player wins.
 
 - `minimax(stones, maximizing)` returns the exact game-tree value, where `maximizing` indicates
   whose turn it is.
-- `alpha_beta(stones, maximizing, alpha = -2, beta = 2)` returns the same value, with pruning using
-  the current lower bound `alpha` and upper bound `beta`.
+- `alpha_beta(stones, maximizing)` returns the same value using alpha-beta pruning.
 - `best_take(stones)` returns an optimal first move using alpha-beta pruning, either $1$ or $2$, for
   positive `stones`.
 
@@ -41,13 +40,13 @@ int minimax(int stones, bool maximizing) {
   return best;
 }
 
-int alpha_beta(int stones, bool maximizing, int alpha = -2, int beta = 2) {
+static int alpha_beta_search(int stones, bool maximizing, int alpha, int beta) {
   if (stones == 0) {
     return maximizing ? -1 : 1;
   }
   int value = maximizing ? -2 : 2;
   for (int take = 1; take <= 2 && take <= stones; take++) {
-    int child = alpha_beta(stones - take, !maximizing, alpha, beta);
+    int child = alpha_beta_search(stones - take, !maximizing, alpha, beta);
     if (maximizing) {
       value = std::max(value, child);
       alpha = std::max(alpha, value);
@@ -60,6 +59,10 @@ int alpha_beta(int stones, bool maximizing, int alpha = -2, int beta = 2) {
     }
   }
   return value;
+}
+
+int alpha_beta(int stones, bool maximizing) {
+  return alpha_beta_search(stones, maximizing, -2, 2);
 }
 
 int best_take(int stones) {

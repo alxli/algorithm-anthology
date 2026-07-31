@@ -106,8 +106,7 @@ using namespace std;
 int main() {
   // P(x) = x^2 + 2x + 3 sampled at x = 0, 1, 2 gives y = 3, 6, 11.
   vector<int64_t> x{0, 1, 2}, y{3, 6, 11};
-  vector<int64_t> coef = interpolate(x, y);
-  assert((coef == vector<int64_t>{3, 2, 1}));
+  assert((interpolate(x, y) == vector<int64_t>{3, 2, 1}));
   assert(interpolate_at(x, y, 5) == 38);  // 25 + 10 + 3.
 
   // Non-consecutive nodes for P(x) = 2x^3 - x + 4.
@@ -116,8 +115,7 @@ int main() {
   for (int64_t v : xs) {
     ys.push_back(poly(v));
   }
-  vector<int64_t> c = interpolate(xs, ys);
-  assert((c == vector<int64_t>{4, MOD - 1, 0, 2}));  // 4 - x + 2x^3.
+  assert((interpolate(xs, ys) == vector<int64_t>{4, MOD - 1, 0, 2}));  // 4 - x + 2x^3.
   assert(interpolate_at(xs, ys, 13) == poly(13));
   return 0;
 }

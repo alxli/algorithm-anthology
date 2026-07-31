@@ -68,6 +68,7 @@ int64_t max_flow(int source, int sink) {
 /*** Example Usage ***/
 
 #include <cassert>
+using namespace std;
 
 int main() {
   // Example graph after max flow, with each edge labeled flow/capacity:
@@ -82,7 +83,7 @@ int main() {
   //      v /
   //       2
   int nodes = 6;
-  cap.assign(nodes, std::vector<int64_t>(nodes));
+  cap.assign(nodes, vector<int64_t>(nodes));
   cap[0][1] = 4;
   cap[0][2] = 3;
   cap[1][3] = 2;

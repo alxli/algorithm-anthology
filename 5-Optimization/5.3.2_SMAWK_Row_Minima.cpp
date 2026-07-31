@@ -127,7 +127,6 @@ int main() {
   };
   // clang-format on
   auto get = [&](int r, int c) { return m[r][c]; };
-  vector<int> arg = smawk_row_minima(5, 5, get);
-  assert((arg == vector<int>{0, 2, 2, 2, 4}));
+  assert((smawk_row_minima(5, 5, get) == vector<int>{0, 2, 2, 2, 4}));
   return 0;
 }

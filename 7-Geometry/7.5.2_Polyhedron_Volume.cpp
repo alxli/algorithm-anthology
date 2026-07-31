@@ -52,7 +52,7 @@ bool EQ(double a, double b) {
 }
 
 int main() {
-  using Face = std::tuple<int, int, int>;  // (a, b, c)
+  using Face = tuple<int, int, int>;  // (a, b, c)
   vector<Point3D> p{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
   vector<Face> faces{
       Face(0, 2, 1),

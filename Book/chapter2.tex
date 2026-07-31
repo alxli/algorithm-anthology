@@ -129,14 +129,13 @@ int main() {
     b[i].next = &b[i + 1];
   }
   ListNode *merged = merge_sorted_lists(&a[0], &b[0]);
-  vector<int> merged_values = values(merged);
-  assert((merged_values == vector<int>{1, 2, 3, 4, 5, 6}));
+  assert((values(merged) == vector<int>{1, 2, 3, 4, 5, 6}));
 
   ListNode *second = nullptr;
   ListNode *first = split_half(merged, &second);
-  assert(values(first).size() == 3);
-  assert(values(second).size() == 3);
-  assert(values(reverse_list(first))[0] == 3);
+  assert((values(first) == vector<int>{1, 2, 3}));
+  assert((values(second) == vector<int>{4, 5, 6}));
+  assert((values(reverse_list(first)) == vector<int>{3, 2, 1}));
 
   ListNode dummy(0), w(1), x(2), y(3), z(4);
   dummy.next = &w;
@@ -2893,7 +2892,7 @@ using namespace std;
 // keys before mixing (as 3.2.1's IntHasher does).
 struct Hasher {
   inline static const uint64_t RAND_SEED =
-      std::chrono::steady_clock::now().time_since_epoch().count();
+        chrono::steady_clock::now().time_since_epoch().count();
 
   // Signed -> unsigned delegates.
   uint32_t operator()(int k) const { return Hasher()(static_cast<uint32_t>(k)); }
@@ -2915,7 +2914,7 @@ struct Hasher {
   }
 
   // Jenkins's one-at-a-time hash.
-  uint32_t operator()(const std::string &k) const {
+    uint32_t operator()(const string &k) const {
     uint32_t hash = RAND_SEED;
     for (char c : k) {
       hash += ((hash + static_cast<unsigned char>(c)) << 10);
@@ -3216,7 +3215,7 @@ using namespace std;
 // keys before mixing (as 3.2.1's IntHasher does).
 struct Hasher {
   inline static const uint64_t RAND_SEED =
-      std::chrono::steady_clock::now().time_since_epoch().count();
+        chrono::steady_clock::now().time_since_epoch().count();
 
   // Signed -> unsigned delegates.
   uint32_t operator()(int k) const { return Hasher()(static_cast<uint32_t>(k)); }
@@ -3238,7 +3237,7 @@ struct Hasher {
   }
 
   // Jenkins's one-at-a-time hash.
-  uint32_t operator()(const std::string &k) const {
+    uint32_t operator()(const string &k) const {
     uint32_t hash = RAND_SEED;
     for (char c : k) {
       hash += ((hash + static_cast<unsigned char>(c)) << 10);
@@ -9468,6 +9467,7 @@ class EulerTourTree {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+using namespace std;
 
 int main() {
   EulerTourTree ett(6);
@@ -9484,8 +9484,8 @@ int main() {
   assert(!ett.link(0, 2));  // Would create a cycle.
 
   auto c = ett.component_nodes(1);
-  std::sort(c.begin(), c.end());
-  assert((c == std::vector<int>{0, 1, 2}));
+  sort(c.begin(), c.end());
+  assert((c == vector<int>{0, 1, 2}));
 
   ett.reroot(2);
   assert(ett.connected(0, 2));
@@ -9493,7 +9493,7 @@ int main() {
 
   // 0---1     2    3---4    5
   assert(!ett.connected(0, 2));
-  assert((ett.component_nodes(2) == std::vector<int>{2}));
+  assert((ett.component_nodes(2) == vector<int>{2}));
 
   assert(ett.link(2, 3));
 

@@ -10,8 +10,8 @@ $[0, n)$, where $n$ is `adj.size()`.
 - `find_centers()` returns a vector of either one or two tree Jordan centers. The Jordan center of a
   tree is the set of all nodes with minimum eccentricity, that is, the set of all nodes where the
   maximum distance to all other nodes in the tree is minimal.
-- `find_centroid(u = 0, p = -1)` returns the node where all of its subtrees have a size less than or
-  equal to $n / 2$, where $n$ is the number of nodes in the tree.
+- `find_centroid()` returns the node where all of its subtrees have a size less than or equal to
+  $n / 2$, where $n$ is the number of nodes in the tree.
 - `diameter()` returns the maximum distance between any two nodes in the tree, using a well-known
   double depth-first search technique.
 
@@ -58,7 +58,7 @@ std::vector<int> find_centers() {
 
 // Returns the centroid node index if found in this subtree, or -(subtree size) to propagate
 // the size up to the parent so it can check the complementary component's size.
-int find_centroid(int u = 0, int p = -1) {
+static int find_centroid_dfs(int u, int p) {
   int n = static_cast<int>(adj.size());
   int count = 1;
   bool good_center = true;
@@ -66,7 +66,7 @@ int find_centroid(int u = 0, int p = -1) {
     if (v == p) {
       continue;
     }
-    int res = find_centroid(v, u);
+    int res = find_centroid_dfs(v, u);
     if (res >= 0) {
       return res;
     }
@@ -77,6 +77,8 @@ int find_centroid(int u = 0, int p = -1) {
   good_center &= (n - count <= n / 2);
   return good_center ? u : -count;
 }
+
+int find_centroid() { return find_centroid_dfs(0, -1); }
 
 int diameter() {
   auto dfs = [&](auto &&dfs, int u, int p = -1, int depth = 0) -> std::pair<int, int> {
@@ -113,7 +115,7 @@ int main() {
   add_edge(3, 4);
   add_edge(4, 5);
   vector<int> centers = find_centers();
-  assert(centers.size() == 2 && centers[0] == 1 && centers[1] == 4);
+  assert((centers == vector<int>{1, 4}));
   assert(find_centroid() == 4);
   assert(diameter() == 3);
   return 0;

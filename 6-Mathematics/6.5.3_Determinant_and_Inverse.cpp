@@ -18,7 +18,7 @@ submatrix, so the divisions are always exact and the arithmetic stays in integer
 - `det_naive(a)` returns the determinant of an $n$ by $n$ matrix `a`, using the classic
   divide-and-conquer algorithm by Laplace expansions. It is division-free and computes in the
   matrix's element type, so an integer matrix yields an exact integer determinant; but at O(n!) it
-  is only practical for tiny `n`, so prefer `det_bareiss` for exact integer determinants.
+  is only practical for tiny $n$, so prefer `det_bareiss` for exact integer determinants.
 - `det(a, eps = 1e-10)` returns the determinant of an $n$ by $n$ floating-point or exact-field
   matrix `a` using Gaussian elimination. Floating-point pivots within `eps` of zero are treated as
   singular; exact fields use equality with zero.
@@ -210,8 +210,7 @@ int main() {
   vector<vector<double>> a{{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
   int n = static_cast<int>(a.size());
   vector<vector<double>> res(n, vector<double>(n, 0));
-  double d = det(a);
-  assert(fabs(d - det_naive(a)) < 1e-10);
+  assert(fabs(det(a) - det_naive(a)) < 1e-10);
 
   // Bareiss gives the determinant of an integer matrix exactly, with no rounding.
   vector<vector<int64_t>> ai{{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};

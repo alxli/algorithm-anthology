@@ -217,6 +217,8 @@ class BoundedFlow {
 
 /*** Example Usage ***/
 
+using namespace std;
+
 int main() {
   //           [1,4]       [1,3]
   //       0 --------> 1 --------> 3
@@ -230,7 +232,7 @@ int main() {
   network.add_edge(1, 3, 1, 3);
   network.add_edge(2, 3, 0, 2);
   assert(network.max_flow(0, 3) == 5);
-  std::vector<int64_t> max_flow = network.edge_flows();
+  vector<int64_t> max_flow = network.edge_flows();
   assert(max_flow[0] + max_flow[1] == 5);
 
   assert(network.min_flow(0, 3) == 1);
@@ -239,7 +241,7 @@ int main() {
   reverse_flow.add_edge(1, 0, 1, 1);
   assert(reverse_flow.max_flow(0, 1) == -1);
   assert(reverse_flow.min_flow(0, 1) == -1);
-  assert((reverse_flow.edge_flows() == std::vector<int64_t>{1}));
+  assert((reverse_flow.edge_flows() == vector<int64_t>{1}));
 
   //            [2,3]
   //       0 ----------> 1
@@ -252,6 +254,6 @@ int main() {
   circulation.add_edge(1, 2, 2, 3);
   circulation.add_edge(2, 0, 2, 3);
   assert(circulation.feasible_circulation());
-  assert((circulation.edge_flows() == std::vector<int64_t>{2, 2, 2}));
+  assert((circulation.edge_flows() == vector<int64_t>{2, 2, 2}));
   return 0;
 }

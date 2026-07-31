@@ -39,11 +39,13 @@ int local_min_index(const std::vector<T> &a) {
 
 /*** Example Usage ***/
 
-int main() {
-  assert(local_min_index(std::vector<int>{9, 7, 3, 4, 8}) == 2);
-  assert(local_min_index(std::vector<int>{1, 2, 3, 4}) == 0);
+using namespace std;
 
-  std::vector<int> duplicates{4, 2, 2, 3};
+int main() {
+  assert(local_min_index(vector<int>{9, 7, 3, 4, 8}) == 2);
+  assert(local_min_index(vector<int>{1, 2, 3, 4}) == 0);
+
+  vector<int> duplicates{4, 2, 2, 3};
   int i = local_min_index(duplicates);
   assert((i == 1 || i == 2) && duplicates[i] == 2);
   return 0;
