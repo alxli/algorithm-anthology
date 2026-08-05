@@ -12,8 +12,8 @@ every transition for every state. The caller must verify the required monotonici
 
 - `compute_dp_layer(dp_prev, dp_cur, lo, hi, opt_lo, opt_hi, cost)` fills `dp_cur[lo..hi]` using
   candidate transition indices in [`opt_lo`, `opt_hi`]. The template parameter `cost` must be
-  callable such that
-  `cost(k, i)` returns the transition cost from previous state `k` to current state `i`.
+  callable such that `cost(k, i)` returns the transition cost from previous state `k` to current
+  state `i`.
 
 Time Complexity:
 - O(n log n) calls to `cost()` per call, when computing one layer whose states each have O(n)

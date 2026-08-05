@@ -42,14 +42,6 @@ struct Point {
   double cross(const Point &p) const { return x * p.y - y * p.x; }
 };
 
-double polygon_area_2x(const std::vector<Point> &p) {
-  double area = 0;
-  for (int i = 0, j = static_cast<int>(p.size()) - 1; i < static_cast<int>(p.size()); j = i++) {
-    area += p[j].cross(p[i]);
-  }
-  return area;
-}
-
 std::vector<Point> normalize(std::vector<Point> p) {
   while (p.size() > 1 && EQ(p.front(), p.back())) {
     p.pop_back();
@@ -57,7 +49,11 @@ std::vector<Point> normalize(std::vector<Point> p) {
   if (p.size() <= 1) {
     return p;
   }
-  if (polygon_area_2x(p) < 0) {
+  double area = 0;
+  for (int i = 0, j = static_cast<int>(p.size()) - 1; i < static_cast<int>(p.size()); j = i++) {
+    area += p[j].cross(p[i]);
+  }
+  if (area < 0) {
     std::reverse(p.begin(), p.end());
   }
   int start = 0;
@@ -146,17 +142,11 @@ int main() {
 
   vector<Point> square{{0, 0}, {1, 0}, {1, 1}, {0, 1}};
   vector<Point> tri{{0, 0}, {2, 0}, {0, 2}};
-  vector<Point> sum = minkowski_sum(square, tri);
   // The square thickens the triangle by one unit in the positive x/y directions.
-  vector<Point> expected{{0, 0}, {3, 0}, {3, 1}, {1, 3}, {0, 3}};
-  assert(sum == expected);
+  assert((minkowski_sum(square, tri) == vector<Point>{{0, 0}, {3, 0}, {3, 1}, {1, 3}, {0, 3}}));
 
-  vector<Point> shifted = minkowski_sum(square, {Point(2, 3)});
   // Adding a single point translates the polygon.
-  vector<Point> expected_shifted{{2, 3}, {3, 3}, {3, 4}, {2, 4}};
-  assert(shifted == expected_shifted);
-
-  vector<Point> point_sum = minkowski_sum({Point(1, 2)}, {Point(3, 4)});
-  assert((point_sum == vector<Point>{{4, 6}}));
+  assert((minkowski_sum(square, {Point(2, 3)}) == vector<Point>{{2, 3}, {3, 3}, {3, 4}, {2, 4}}));
+  assert((minkowski_sum({Point(1, 2)}, {Point(3, 4)}) == vector<Point>{{4, 6}}));
   return 0;
 }

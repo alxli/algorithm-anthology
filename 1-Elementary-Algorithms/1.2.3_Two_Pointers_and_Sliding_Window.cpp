@@ -32,8 +32,8 @@ dynamic programming recurrence.
   exists. Values in `a` must be nonnegative. If `target` is nonpositive, it returns the empty
   subarray.
 - `max_subarray_at_most_k_distinct(a, k)` returns a tuple (`length`, `lo`, `hi`), the maximum length
-  and inclusive endpoints of a contiguous subarray containing at most `k` distinct values. If
-  `k` is nonpositive, it returns the empty subarray.
+  and inclusive endpoints of a contiguous subarray containing at most `k` distinct values. If `k` is
+  nonpositive, it returns the empty subarray.
 - `sliding_window_extrema(a, k, comp = std::less<>)` returns the extreme value in each window of
   length `k`. With the default `less<>` comparator it returns minimums; passing `greater<>` returns
   maximums.

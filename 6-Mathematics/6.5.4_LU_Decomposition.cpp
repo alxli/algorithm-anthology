@@ -6,38 +6,38 @@ $l$ and an upper triangular matrix $u$. This factorization can be used to tackle
 problems in linear algebra such as solving systems of linear equations and computing determinants.
 An improvement on basic row reduction, LU decomposition by row-partial pivoting keeps the relative
 magnitude of matrix values small, thus reducing the relative error due to rounding in computed
-solutions.
+solutions. These routines require floating-point matrix elements; use 6.5.3 for exact-field or
+integer determinant calculations.
 
-- `lu_decompose(a, &perm, eps = 1e-10)` assigns the $m$ by $n$ matrix `a` to merged LU decomposition
-  matrix `lu`, returning either $0$ or $1$ denoting the "sign" of the permutation parity ($0$ if the
-  number of overall row swaps performed is even, or $1$ if it is odd), or $-1$ denoting a degenerate
-  matrix (i.e. singular for square matrices). The merged matrix `lu` has
-  `lu[i][j]` = `l[i][j]` for `i` > `j` and `lu[i][j]` = `u[i][j]` for `i` $\leq$ `j`. Note that the
-  algorithm always yields a unit lower triangular matrix for which the diagonal entries `l[i][i]`
-  are always equal to $1$, so this is not explicitly stored in the resulting merged matrix. For
-  general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via
-  the `getl(lu, i, j)` and `getu(lu, i, j)` functions. Optionally, a `vector<int>` pointer `perm`
-  may be passed to return the permutation vector `perm` where `perm[i]` stores the only column that
-  is equal to $1$ in row $i$ of the permutation matrix $p$ (all other columns in row $i$ of $p$ are
-  implicitly $0$). Left-multiplying `a` by this permutation matrix gives the product of the separate
-  lower and upper triangular matrices, not the merged storage matrix `lu` itself.
+- `lu_decompose(a, &perm, eps = 1e-10)` assigns floating-point matrix `a` to merged LU decomposition
+  matrix `lu`; it returns $0$ for even row-swap parity, $1$ for odd parity, or $-1$ for a degenerate
+  matrix (i.e. singular for square matrices). The merged matrix `lu` has `lu[i][j]` = `l[i][j]` for
+  `i` > `j` and `lu[i][j]` = `u[i][j]` for `i` $\leq$ `j`. Note that the algorithm always yields a
+  unit lower triangular matrix for which the diagonal entries `l[i][i]` are always equal to $1$, so
+  this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values
+  of the lower and upper triangular matrices should be accessed via the `getl(lu, i, j)` and
+  `getu(lu, i, j)` functions. Optional output vector `perm` represents $p$:
+  `perm[i]` is the only column containing $1$ in row $i$. Left-multiplying `a` by this permutation
+  matrix gives the product of the separate lower and upper triangular matrices, not the merged
+  storage matrix `lu` itself.
 - `solve_system(a, b, &x, eps = 1e-10)` solves the system of linear equations $ax = b$ given an $m$
-  by $n$ matrix `a` of real values, and a length $m$ vector `b`, returning $0$ if there is one
+  by $n$ floating-point matrix `a` and a length $m$ vector `b`, returning $0$ if there is one
   solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then
   the output vector `x` is populated with the solution of length $n$; otherwise, `x` is unchanged.
-- `det(a)` returns the determinant of an $n$ by $n$ matrix `a` using LU decomposition.
-- `invert(a)` assigns the $n$ by $n$ matrix `a` to its inverse (if it exists), returning $0$ if the
-  inversion was successful or $-1$ if `a` has no inverse, in which case `a` is unchanged.
+- `det(a)` returns the determinant of an $n$ by $n$ floating-point matrix `a` using LU
+  decomposition.
+- `inverse(a)` returns the inverse of the $n$ by $n$ floating-point matrix `a`, or `std::nullopt` if
+  `a` is singular.
 
 Time Complexity:
 - O(m*n*min(m, n)) per call to `lu_decompose(a)`, where $m$ and $n$ are the numbers of rows and
   columns of `a`, respectively.
 - O(m*n^2) per call to `solve_system()`, which requires $m \geq n$.
-- O(n^3) per call to `det(a)` and `invert(a)`, where $n$ is the length of square matrix `a`.
+- O(n^3) per call to `det(a)` and `inverse(a)`, where $n$ is the length of square matrix `a`.
 
 Space Complexity:
 - O(1) auxiliary for `lu_decompose()`.
-- O(n^2) auxiliary for `det()` and `invert()`.
+- O(n^2) auxiliary for `det()` and `inverse()`.
 - O(m*n) auxiliary for `solve_system()`.
 
 */
@@ -45,6 +45,8 @@ Space Complexity:
 #include <algorithm>
 #include <cmath>
 #include <numeric>
+#include <optional>
+#include <type_traits>
 #include <vector>
 
 template<typename Matrix>
@@ -84,13 +86,15 @@ int lu_decompose(Matrix &a, std::vector<int> *perm = nullptr, const double eps =
 }
 
 template<typename Matrix>
-double getl(const Matrix &lu, int i, int j) {
-  return i > j ? lu[i][j] : (i < j ? 0 : 1);
+auto getl(const Matrix &lu, int i, int j) {
+  using T = std::decay_t<decltype(lu[0][0])>;
+  return i > j ? lu[i][j] : T(i == j);
 }
 
 template<typename Matrix>
-double getu(const Matrix &lu, int i, int j) {
-  return i <= j ? lu[i][j] : 0;
+auto getu(const Matrix &lu, int i, int j) {
+  using T = std::decay_t<decltype(lu[0][0])>;
+  return i <= j ? lu[i][j] : T(0);
 }
 
 template<typename Matrix, typename T>
@@ -102,9 +106,9 @@ int solve_system(
   if (x == nullptr || a.empty() || a.size() != b.size() || rows < cols) {
     return -1;
   }
+  Matrix lu(a);
   std::vector<int> perm;
-  Matrix lu;
-  int status = lu_decompose(lu = a, &perm, eps);
+  int status = lu_decompose(lu, &perm, eps);
   if (status < 0) {
     return status;
   }
@@ -122,7 +126,7 @@ int solve_system(
     solution[i] /= getu(lu, i, i);
   }
   for (int i = 0; i < rows; i++) {
-    double val = 0;
+    T val = 0;
     for (int j = 0; j < cols; j++) {
       val += a[i][j] * solution[j];
     }
@@ -136,31 +140,31 @@ int solve_system(
   return 0;
 }
 
-template<typename T>
-double det(const T &a) {
+template<typename Matrix>
+auto det(const Matrix &a) {
+  using T = std::decay_t<decltype(a[0][0])>;
   int n = static_cast<int>(a.size());
-  T lu;
-  int status = lu_decompose(lu = a);
+  Matrix lu(a);
+  int status = lu_decompose(lu);
   if (status < 0) {
-    return 0;
+    return T(0);
   }
-  double res = 1;
+  T res = 1;
   for (int i = 0; i < n; i++) {
     res *= lu[i][i];
   }
   return status == 0 ? res : -res;
 }
 
-template<typename T>
-int invert(T &a) {
+template<typename SquareMatrix>
+std::optional<SquareMatrix> inverse(SquareMatrix a) {
   int n = static_cast<int>(a.size());
   std::vector<int> perm;
-  T lu = a;
-  int status = lu_decompose(lu, &perm);
+  int status = lu_decompose(a, &perm);
   if (status < 0) {
-    return status;
+    return std::nullopt;
   }
-  T ia(n, typename T::value_type(n, 0));
+  SquareMatrix ia(n, typename SquareMatrix::value_type(n, 0));
   for (int j = 0; j < n; j++) {
     for (int i = 0; i < n; i++) {
       if (perm[i] == j) {
@@ -169,18 +173,17 @@ int invert(T &a) {
         ia[i][j] = 0.0;
       }
       for (int k = 0; k < i; k++) {
-        ia[i][j] -= getl(lu, i, k) * ia[k][j];
+        ia[i][j] -= getl(a, i, k) * ia[k][j];
       }
     }
     for (int i = n - 1; i >= 0; i--) {
       for (int k = i + 1; k < n; k++) {
-        ia[i][j] -= getu(lu, i, k) * ia[k][j];
+        ia[i][j] -= getu(a, i, k) * ia[k][j];
       }
-      ia[i][j] /= getu(lu, i, i);
+      ia[i][j] /= getu(a, i, i);
     }
   }
-  a.swap(ia);
-  return 0;
+  return ia;
 }
 
 /*** Example Usage ***/
@@ -212,14 +215,14 @@ int main() {
   }
   {  // Find the inverse.
     vector<vector<double>> a{{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
-    vector<vector<double>> inv = a;
+    auto inv = inverse(a);
     int n = static_cast<int>(a.size());
     vector<vector<double>> res(n, vector<double>(n, 0));
-    assert(invert(inv) == 0);
+    assert(inv);
     for (int i = 0; i < n; i++) {
       for (int j = 0; j < n; j++) {
         for (int k = 0; k < n; k++) {
-          res[i][j] += a[i][k] * inv[k][j];
+          res[i][j] += a[i][k] * (*inv)[k][j];
         }
       }
     }
@@ -229,11 +232,11 @@ int main() {
       }
     }
   }
-  {  // Failed operations leave their output arguments unchanged.
+  {  // Singular matrices have no inverse.
     vector<vector<double>> singular{{1, 2}, {2, 4}};
-    vector<vector<double>> original = singular;
-    assert(invert(singular) == -1 && singular == original);
+    assert(!inverse(singular));
 
+    // Failed operations leave their output arguments unchanged.
     vector<vector<double>> inconsistent{{1}, {1}};
     vector<double> b{1, 2}, x{99, 100};
     assert(solve_system(inconsistent, b, &x) == -1);

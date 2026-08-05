@@ -17,8 +17,7 @@ multiplication, so the square of the chosen modulus must fit in `int64_t`.
 - `catalan(n, p = MOD)` returns the $n$-th Catalan number mod $p$, where $p$ is prime and $2n < p$.
 - `partitions(n, m = MOD)` returns the number of partitions of $n$, mod $m$.
 - `partitions(n, k, m = MOD)` returns the number of partitions of $n$ into $k$ parts, mod $m$.
-- `stirling1(n, k, m = MOD)` returns the $(n, k)$ unsigned Stirling number of the 1st kind mod
-  $m$.
+- `stirling1(n, k, m = MOD)` returns the $(n, k)$ unsigned Stirling number of the 1st kind mod $m$.
 - `stirling2(n, k, m = MOD)` returns the $(n, k)$ Stirling number of the 2nd kind mod $m$.
 - `eulerian1(n, k, m = MOD)` returns the $(n, k)$ Eulerian number of the 1st kind mod $m$, where
   $n > k$.

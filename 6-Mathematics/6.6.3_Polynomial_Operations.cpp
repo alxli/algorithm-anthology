@@ -1,10 +1,11 @@
 /*
 
 Polynomial operations treat a vector `a` as coefficients of $a_0 + a_1 x + \dots + a_{n-1} x^{n-1}$
-over a field. This section implements the core algebra needed for formal power series and polynomial
-division modulo the prime $998244353$. Multiplication uses the number theoretic transform, so
-inverse and division are fast enough for large polynomials while still keeping the API close to the
-underlying coefficient vectors.
+over a field. For formal power series operations, vectors represent coefficients modulo $x^n$; no
+notion of analytic convergence is involved. This section implements the core algebra needed for
+formal power series and polynomial division modulo the prime $998244353$. Multiplication uses the
+number theoretic transform, so inverse and division are fast enough for large polynomials while
+still keeping the API close to the underlying coefficient vectors.
 
 The code aliases one modular field element as `Coeff` and one coefficient vector as `Poly`. Input
 coefficients must lie in $[0, `MOD`)$.
@@ -16,6 +17,8 @@ coefficients must lie in $[0, `MOD`)$.
 - `derivative(a)` returns the formal derivative of `a`.
 - `integral(a)` returns the formal antiderivative of `a` with constant term zero.
 - `inverse(a, n)` returns the first `n` coefficients of `1 / a`, requiring `a[0]` to be nonzero.
+- `series_divide(a, b, n)` returns the first `n` coefficients of the formal power series `a / b`,
+  requiring `b[0]` to be nonzero.
 - `log(a, n)` returns the first `n` coefficients of $\log a$, requiring `a[0]` to be $1$.
 - `exp(a, n)` returns the first `n` coefficients of $\exp a$, requiring `a[0]` to be $0$.
 - `sqrt(a, n)` returns the first `n` coefficients of the square root of `a` whose constant term is
@@ -26,9 +29,9 @@ coefficients must lie in $[0, `MOD`)$.
 - `modulo(a, b)` returns the polynomial remainder of `a / b`, requiring `b` to be nonzero.
 
 The inverse is a formal power series inverse modulo $x^n$: it finds $b$ such that
-$a \cdot b \equiv 1 \pmod{x^n}$. Division uses the standard reversal trick: reverse both
-polynomials, compute a truncated series inverse of the reversed divisor, multiply, truncate, and
-reverse back.
+$a \cdot b \equiv 1 \pmod{x^n}$. Series division multiplies by this inverse directly. Euclidean
+polynomial division instead uses the standard reversal trick: reverse both polynomials, compute a
+truncated series inverse of the reversed divisor, multiply, truncate, and reverse back.
 
 The logarithm follows from $(\log a)' = a'/a$, integrating the truncated quotient. The exponential
 and square root use Newton iteration, which doubles the number of correct coefficients each round
@@ -41,7 +44,7 @@ Time Complexity:
 - O(n) per call to `eval()`, `add()`, `subtract()`, `derivative()`, and `integral()`.
 - O(|a||b|) per call to `multiply()` on small inputs and O(n log n) otherwise, where $n$ is the
   padded transform length.
-- O(n log n) per call to `inverse(a, n)`, where $n$ is the requested length.
+- O(n log n) per call to `inverse()` and `series_divide()`, where $n$ is the requested length.
 - O(n log n) per call to `log()`, `exp()`, and `sqrt()`, where $n$ is the requested length. The
   exponential carries the largest constant, since every Newton round computes a logarithm.
 - O(n log n + log k) per call to `power()`, where $n$ is the requested length.
@@ -222,6 +225,17 @@ Poly inverse(const Poly &a, int n) {
   return res;
 }
 
+Poly series_divide(const Poly &a, const Poly &b, int n) {
+  assert(n >= 0 && !b.empty() && b[0] != 0);
+  if (n == 0) {
+    return {};
+  }
+  Poly cut(a.begin(), a.begin() + std::min(static_cast<int>(a.size()), n));
+  Poly res = multiply(cut, inverse(b, n));
+  res.resize(n);
+  return res;
+}
+
 Poly log(const Poly &a, int n) {
   assert(n >= 0 && !a.empty() && a[0] == 1);
   if (n == 0) {
@@ -368,6 +382,9 @@ int main() {
 
   // (1 - x)^-1 = 1 + x + x^2 + x^3 + ... modulo x^6.
   assert((inverse({1, MOD - 1}, 6) == Poly{1, 1, 1, 1, 1, 1}));
+
+  // (1 + x) / (1 - x) = 1 + 2x + 2x^2 + ... modulo x^5.
+  assert((series_divide({1, 1}, {1, MOD - 1}, 5) == Poly{1, 2, 2, 2, 2}));
 
   // (x^3 - 1) / (x - 1) = x^2 + x + 1, remainder 0.
   Poly dividend{MOD - 1, 0, 0, 1};

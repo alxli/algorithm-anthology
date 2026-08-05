@@ -32,8 +32,7 @@ Space Complexity:
 #include <vector>
 
 std::vector<std::vector<int>> adj;
-std::vector<int> match_left, match_right;
-std::vector<int> visit;
+std::vector<int> match_left, match_right, visit;
 int timer;
 
 bool dfs(int u) {

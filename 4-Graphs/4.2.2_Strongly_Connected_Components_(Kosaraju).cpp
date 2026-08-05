@@ -30,25 +30,25 @@ Space Complexity:
 class KosarajuSCC {
   std::vector<std::vector<int>> adj, rev, scc;
   std::vector<int> component;
-  std::vector<char> visited;
+  std::vector<char> visit;
 
-  void dfs(const std::vector<std::vector<int>> &g, std::vector<int> &res, int u) {
-    visited[u] = true;
-    for (int v : g[u]) {
-      if (!visited[v]) {
-        dfs(g, res, v);
+  void dfs_order(int u, std::vector<int> &order) {
+    visit[u] = true;
+    for (int v : adj[u]) {
+      if (!visit[v]) {
+        dfs_order(v, order);
       }
     }
-    res.push_back(u);
+    order.push_back(u);
   }
 
-  void dfs_component(int u, int id, std::vector<int> &res) {
-    visited[u] = true;
-    component[u] = id;
-    res.push_back(u);
+  void dfs_component(int u) {
+    visit[u] = true;
+    component[u] = static_cast<int>(scc.size()) - 1;
+    scc.back().push_back(u);
     for (int v : rev[u]) {
-      if (!visited[v]) {
-        dfs_component(v, id, res);
+      if (!visit[v]) {
+        dfs_component(v);
       }
     }
   }
@@ -63,24 +63,22 @@ class KosarajuSCC {
 
   void build_scc() {
     int n = static_cast<int>(adj.size());
-    visited.assign(n, false);
+    visit.assign(n, false);
     std::vector<int> order;
     for (int i = 0; i < n; i++) {
-      if (!visited[i]) {
-        dfs(adj, order, i);
+      if (!visit[i]) {
+        dfs_order(i, order);
       }
     }
     std::reverse(order.begin(), order.end());
-    visited.assign(n, false);
+    visit.assign(n, false);
     component.assign(n, -1);
     scc.clear();
     for (int u : order) {
-      if (visited[u]) {
-        continue;
+      if (!visit[u]) {
+        scc.emplace_back();
+        dfs_component(u);
       }
-      std::vector<int> comp_nodes;
-      dfs_component(u, static_cast<int>(scc.size()), comp_nodes);
-      scc.push_back(comp_nodes);
     }
   }
 

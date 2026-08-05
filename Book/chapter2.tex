@@ -2891,8 +2891,7 @@ using namespace std;
 // adversarially crafted collisions in open-hacking environments, a random seed is added to input
 // keys before mixing (as 3.2.1's IntHasher does).
 struct Hasher {
-  inline static const uint64_t RAND_SEED =
-        chrono::steady_clock::now().time_since_epoch().count();
+  inline static const uint64_t RAND_SEED = chrono::steady_clock::now().time_since_epoch().count();
 
   // Signed -> unsigned delegates.
   uint32_t operator()(int k) const { return Hasher()(static_cast<uint32_t>(k)); }
@@ -2914,7 +2913,7 @@ struct Hasher {
   }
 
   // Jenkins's one-at-a-time hash.
-    uint32_t operator()(const string &k) const {
+  uint32_t operator()(const string &k) const {
     uint32_t hash = RAND_SEED;
     for (char c : k) {
       hash += ((hash + static_cast<unsigned char>(c)) << 10);
@@ -3214,8 +3213,7 @@ using namespace std;
 // adversarially crafted collisions in open-hacking environments, a random seed is added to input
 // keys before mixing (as 3.2.1's IntHasher does).
 struct Hasher {
-  inline static const uint64_t RAND_SEED =
-        chrono::steady_clock::now().time_since_epoch().count();
+  inline static const uint64_t RAND_SEED = chrono::steady_clock::now().time_since_epoch().count();
 
   // Signed -> unsigned delegates.
   uint32_t operator()(int k) const { return Hasher()(static_cast<uint32_t>(k)); }
@@ -3237,7 +3235,7 @@ struct Hasher {
   }
 
   // Jenkins's one-at-a-time hash.
-    uint32_t operator()(const string &k) const {
+  uint32_t operator()(const string &k) const {
     uint32_t hash = RAND_SEED;
     for (char c : k) {
       hash += ((hash + static_cast<unsigned char>(c)) << 10);
@@ -3913,9 +3911,7 @@ int main() {
 
   int n = static_cast<int>(a.size());
   vector<pair<int, int>> queries{{0, 6}, {0, 2}, {3, 5}, {1, 1}, {2, 4}};
-  vector<int> ans = mos_algorithm(n, queries, add, remove, current);
-
-  assert((ans == vector<int>{3, 2, 3, 1, 3}));
+  assert((mos_algorithm(n, queries, add, remove, current) == vector<int>{3, 2, 3, 1, 3}));
   return 0;
 }
 \end{lstlisting}

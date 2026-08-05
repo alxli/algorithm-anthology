@@ -10,7 +10,8 @@ branching on its neighbors prunes large parts of the search, keeping it efficien
 
 - `max_clique()` returns the maximum clique size for a global, bidirectionally pre-populated
   adjacency matrix `adj`, whose row and column indices represent the nodes.
-- `max_clique_weighted()` additionally uses global `w` and returns the maximum clique weight.
+- `max_clique_weighted()` additionally uses the global weight array `w` and returns the maximum
+  clique weight.
 
 These implementations use `Mask`, which is `uint64_t` by default, so the number of nodes must be
 less than `MASK_BITS`. Node weights must be nonnegative.
@@ -84,8 +85,7 @@ int64_t max_clique_weighted_rec(const std::vector<Mask> &g, int64_t curr, Mask p
   while (z != 0) {
     int u = __builtin_ctzll(z);
     int64_t next_weight = curr + w[u];  // Overflow warning.
-    int64_t next = max_clique_weighted_rec(g, next_weight, pool & g[u], excl & g[u]);
-    res = std::max(res, next);
+    res = std::max(res, max_clique_weighted_rec(g, next_weight, pool & g[u], excl & g[u]));
     pool ^= Mask{1} << u;
     excl |= Mask{1} << u;
     z &= z - 1;

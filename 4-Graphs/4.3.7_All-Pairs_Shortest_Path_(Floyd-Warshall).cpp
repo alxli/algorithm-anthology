@@ -105,15 +105,12 @@ int main() {
   dist[0][1] = 1;
   dist[1][2] = 2;
   dist[0][2] = 5;
-  bool ok = floyd_warshall();
-  assert(ok);
-  int start = 0, dest = 2;
-  assert(dist[start][dest] == 3);
-  assert((get_path(start, dest) == vector<int>{0, 1, 2}));
+  assert(floyd_warshall());
+  assert((dist == vector<vector<int64_t>>{{0, 1, 3}, {INF, 0, 2}, {INF, INF, 0}}));
+  assert((get_path(0, 2) == vector<int>{0, 1, 2}));
 
   init_floyd(2);
   dist[0][1] = dist[1][0] = -1;
-  ok = floyd_warshall();
-  assert(!ok);
+  assert(!floyd_warshall());
   return 0;
 }

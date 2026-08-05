@@ -10,17 +10,16 @@ Lengauer-Tarjan's algorithm numbers nodes by DFS order, computes each reachable 
 using a disjoint-set structure with path compression, and then resolves immediate dominators from
 semidominator buckets.
 
-- `Dominators(n)` constructs a directed graph of `n` nodes numbered $[0, `n`)$.
-- `add_edge(u, v)` adds a directed edge from `u` to `v`.
-- `find_dominators(start)` returns a vector `idom` where `idom[start]` = `start`, `idom[v]` is the
-  immediate dominator of reachable node `v`, and `idom[v]` $= -1$ if `v` is unreachable.
+- `find_dominators(start)` uses the directed graph in the global adjacency list `adj` and returns a
+  vector `idom` where `idom[start]` = `start`, `idom[v]` is the immediate dominator of reachable
+  node `v`, and `idom[v]` $= -1$ if `v` is unreachable.
 
 Time Complexity:
 - O(max(n, m) log n) per call to `find_dominators()` in this path-compressed implementation, where
   $n$ is the number of nodes and $m$ is the number of edges.
 
 Space Complexity:
-- O(max(n, m)) for the graph and auxiliary heap arrays.
+- O(max(n, m)) for the graph, result, and auxiliary heap arrays.
 - O(n) auxiliary stack space for the DFS.
 
 */
@@ -28,31 +27,34 @@ Space Complexity:
 #include <algorithm>
 #include <vector>
 
-class Dominators {
-  std::vector<std::vector<int>> adj, pred, bucket;
-  std::vector<int> time, node_at_time, parent, sdom, idom_index, dsu_root, best;
-  int timer;
+std::vector<std::vector<int>> adj;
 
-  void dfs(int u) {
+std::vector<int> find_dominators(int start) {
+  int n = static_cast<int>(adj.size());
+  std::vector<std::vector<int>> pred(n + 1), bucket(n + 1);
+  std::vector<int> time(n), node_at_time(n + 1), parent(n + 1), sdom(n + 1);
+  std::vector<int> idom_index(n + 1), dsu_root(n + 1), best(n + 1);
+  int timer = 0;
+  auto dfs = [&](auto &&dfs, int u) -> void {
     time[u] = ++timer;
     node_at_time[timer] = u;
     sdom[timer] = dsu_root[timer] = best[timer] = timer;
     for (int v : adj[u]) {
       if (time[v] == 0) {
-        dfs(v);
+        dfs(dfs, v);
         parent[time[v]] = time[u];
       }
       if (time[v] != 0) {
         pred[time[v]].push_back(time[u]);
       }
     }
-  }
-
-  int find_best(int u, int depth = 0) {
+  };
+  dfs(dfs, start);
+  auto find_best = [&](auto &&find_best, int u, int depth) -> int {
     if (u == dsu_root[u]) {
       return depth == 0 ? u : -1;
     }
-    int root = find_best(dsu_root[u], depth + 1);
+    int root = find_best(find_best, dsu_root[u], depth + 1);
     if (root == -1) {
       return u;
     }
@@ -61,52 +63,32 @@ class Dominators {
     }
     dsu_root[u] = root;
     return depth == 0 ? best[u] : root;  // The outer call returns the label, recursion the root.
-  }
-
- public:
-  explicit Dominators(int n) : adj(n), timer(0) {}
-
-  void add_edge(int u, int v) { adj[u].push_back(v); }
-
-  std::vector<int> find_dominators(int start) {
-    int n = static_cast<int>(adj.size());
-    timer = 0;
-    time.assign(n, 0);
-    node_at_time.assign(n + 1, 0);
-    parent.assign(n + 1, 0);
-    sdom.assign(n + 1, 0);
-    idom_index.assign(n + 1, 0);
-    dsu_root.assign(n + 1, 0);
-    best.assign(n + 1, 0);
-    pred.assign(n + 1, {});
-    bucket.assign(n + 1, {});
-    dfs(start);
-    for (int i = timer; i >= 1; i--) {
-      for (int v : pred[i]) {
-        sdom[i] = std::min(sdom[i], sdom[find_best(v)]);
-      }
-      if (i > 1) {
-        bucket[sdom[i]].push_back(i);
-      }
-      for (int v : bucket[i]) {
-        int u = find_best(v);
-        idom_index[v] = (sdom[u] == sdom[v]) ? sdom[v] : u;
-      }
-      if (i > 1) {
-        dsu_root[i] = parent[i];
-      }
+  };
+  for (int i = timer; i >= 1; i--) {
+    for (int v : pred[i]) {
+      sdom[i] = std::min(sdom[i], sdom[find_best(find_best, v, 0)]);
     }
-    std::vector<int> idom(adj.size(), -1);
-    idom[start] = start;
-    for (int i = 2; i <= timer; i++) {
-      if (idom_index[i] != sdom[i]) {
-        idom_index[i] = idom_index[idom_index[i]];
-      }
-      idom[node_at_time[i]] = node_at_time[idom_index[i]];
+    if (i > 1) {
+      bucket[sdom[i]].push_back(i);
     }
-    return idom;
+    for (int v : bucket[i]) {
+      int u = find_best(find_best, v, 0);
+      idom_index[v] = (sdom[u] == sdom[v]) ? sdom[v] : u;
+    }
+    if (i > 1) {
+      dsu_root[i] = parent[i];
+    }
   }
-};
+  std::vector<int> idom(n, -1);
+  idom[start] = start;
+  for (int i = 2; i <= timer; i++) {
+    if (idom_index[i] != sdom[i]) {
+      idom_index[i] = idom_index[idom_index[i]];
+    }
+    idom[node_at_time[i]] = node_at_time[idom_index[i]];
+  }
+  return idom;
+}
 
 /*** Example Usage ***/
 
@@ -119,16 +101,8 @@ int main() {
     // |           |  /          |
     // v           v /           v
     // 2 --------> 3 ---> 5 ---> 6
-    Dominators g(7);
-    g.add_edge(0, 1);
-    g.add_edge(0, 2);
-    g.add_edge(1, 3);
-    g.add_edge(2, 3);
-    g.add_edge(3, 4);
-    g.add_edge(3, 5);
-    g.add_edge(4, 6);
-    g.add_edge(5, 6);
-    assert((g.find_dominators(0) == vector<int>{0, 0, 0, 0, 3, 3, 3}));
+    adj = {{1, 2}, {3}, {3}, {4, 5}, {6}, {6}, {}};
+    assert((find_dominators(0) == vector<int>{0, 0, 0, 0, 3, 3, 3}));
   }
   {
     // Node 3 is reachable through either 1 or 2, so neither one dominates it.
@@ -137,15 +111,8 @@ int main() {
     // |   /  |      |
     // v /    v      v
     // 0 ---> 2 ---> 3
-    Dominators g(5);
-    g.add_edge(0, 1);
-    g.add_edge(0, 2);
-    g.add_edge(1, 2);
-    g.add_edge(1, 3);
-    g.add_edge(2, 3);
-    g.add_edge(4, 0);
-    g.add_edge(4, 1);
-    assert((g.find_dominators(4) == vector<int>{4, 4, 4, 4, 4}));
+    adj = {{1, 2}, {2, 3}, {3}, {}, {0, 1}};
+    assert((find_dominators(4) == vector<int>{4, 4, 4, 4, 4}));
   }
   return 0;
 }

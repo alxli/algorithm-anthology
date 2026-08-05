@@ -115,6 +115,9 @@ Prefer code that a strong contestant can adapt quickly after skimming:
   avoid using `v` to mean a vertex value when it can be confused with endpoint `v`.
 - For line/geometry examples involving two objects, prefer `l1`, `l2`, `p1`, `p2` over ambiguous
   names like `l` and `m`.
+- Use `append(x)` for an online string or sequence algorithm that consumes one new trailing element.
+  Keep `push_back()`/`push_front()` for container-like interfaces, `insert()` for associative
+  structures, and `add()` for arithmetic updates, unordered registration, or stream summaries.
 - Avoid bare eponym-only public API names when the operation is not universally recognized at a call
   site. Prefer names that include the computed object or action, such as `frequent_candidates()`,
   `maximum_matching()`, `global_min_cut()`, or `min_assignment_cost()`. Eponyms are fine when they
@@ -130,16 +133,20 @@ Prefer code that a strong contestant can adapt quickly after skimming:
 ## API Style
 
 - Public APIs should be small, direct, and easy to paste into a solution.
-- Public default arguments should represent useful caller choices. Do not expose internal traversal
-  state or residual-network bookkeeping merely because it has a conventional initial value; for
-  example, `add_edge()` initializes the reverse residual capacity to zero internally.
-- Keep recursive search bounds, parent nodes, depths, cursors, and similar implementation state in
-  internal helpers. The documented function should accept only the inputs a caller chooses.
+- Documented default arguments should represent useful caller choices. Do not include internal
+  traversal state or residual-network bookkeeping in the API bullet merely because it has a
+  conventional initial value.
+- Omit recursive search bounds, parent nodes, depths, cursors, and similar implementation state from
+  the documented API. They may remain as defaulted parameters in the code when that keeps a compact
+  one-function implementation; do not add a forwarding wrapper solely to hide them.
 - Do not add one-line forwarding wrappers just to preserve older names.
 - If a function can naturally return the useful witness as well as the optimum value, prefer the
   more powerful API when it does not make the section heavy.
 - Prefer returning result objects, pairs, tuples, vectors, or sentinels over output pointers for new
   APIs, unless the local section already strongly uses pointer outputs.
+- Do not mutate an input merely to reuse it as internal workspace when the function naturally
+  returns a separate result. Accept it by value when the implementation needs a copy, or by const
+  reference when it does not; use an explicit failure-bearing return type when needed.
 - Use pointers for secondary output parameters so mutation remains explicit at the call site, even
   when the output is required. Use `nullptr` only when suppressing that output is supported; keep
   references for a function's primary in-place argument.

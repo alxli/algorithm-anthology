@@ -1993,8 +1993,7 @@ int main() {
         auto [x, y] = extended_euclid(a, b);
         assert(g == a * x + b * y);
         if (g == 1 && b > 1) {
-          int inv = mod_inverse(a, b);
-          assert(mod(a * inv, b) == 1);
+          assert(mod(a * mod_inverse(a, b), b) == 1);
         }
       }
     }
@@ -5377,28 +5376,28 @@ Floating-point matrices use the largest-magnitude pivot in each column, although
   \item \inlinecode{det\_naive(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a}, using the classic divide-and-conquer algorithm by Laplace expansions. It is division-free and computes in the matrix's element type, so an integer matrix yields an exact integer determinant; but at $O(n!)$ it is only practical for tiny $n$, so prefer \inlinecode{det\_bareiss} for exact integer determinants.
   \item \inlinecode{det(a, eps = 1e-10)} returns the determinant of an $n$ by $n$ floating-point or exact-field matrix \inlinecode{a} using Gaussian elimination. Floating-point pivots within \inlinecode{eps} of zero are treated as singular; exact fields use equality with zero.
   \item \inlinecode{det\_bareiss(a)} returns the exact determinant of an integer matrix \inlinecode{a} using fraction-free elimination, with no rounding error. Stored entries are minors of \inlinecode{a}, but the products in each update can be larger. They use 128-bit intermediates when available; otherwise those products must fit in \inlinecode{int64\_t}.
-  \item \inlinecode{invert(a, eps = 1e-10)} returns $0$ after assigning the $n$ by $n$ floating-point or exact-field matrix \inlinecode{a} to its inverse. It leaves \inlinecode{a} unchanged and returns $-1$ if the matrix is singular; floating-point pivots within \inlinecode{eps} of zero are treated as singular.
+  \item \inlinecode{inverse(a, eps = 1e-10)} returns the inverse of square matrix \inlinecode{a} with floating-point or exact-field elements, or \inlinecode{std::nullopt} if the matrix is singular. Floating-point pivots within \inlinecode{eps} of zero are treated as singular.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n!)$ per call to \inlinecode{det\_naive()}, where $n$ is the dimension of the matrix.
-  \item $O(n^{3})$ per call to \inlinecode{det()}, \inlinecode{det\_bareiss()}, and \inlinecode{invert()} where $n$ is the dimension of the matrix.
+  \item $O(n^{3})$ per call to \inlinecode{det()}, \inlinecode{det\_bareiss()}, and \inlinecode{inverse()} where $n$ is the dimension of the matrix.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ auxiliary stack space and $O(n^{3})$ auxiliary heap space for \inlinecode{det\_naive()}, where $n$ is the dimension of the matrix.
-  \item $O(n^{2})$ auxiliary heap space for \inlinecode{det()}, \inlinecode{det\_bareiss()}, and \inlinecode{invert()}.
+  \item $O(n^{2})$ auxiliary heap space for \inlinecode{det()}, \inlinecode{det\_bareiss()}, and \inlinecode{inverse()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <cmath>
 #include <cstdint>
+#include <optional>
 #include <type_traits>
-#include <utility>
 #include <vector>
 
 template<typename SquareMatrix>
@@ -5518,40 +5517,38 @@ int64_t det_bareiss(std::vector<std::vector<int64_t>> a) {
 }
 
 template<typename SquareMatrix>
-int invert(SquareMatrix &a, double eps = 1e-10) {
+std::optional<SquareMatrix> inverse(SquareMatrix a, double eps = 1e-10) {
   using T = std::decay_t<decltype(a[0][0])>;
   int n = static_cast<int>(a.size());
-  SquareMatrix b(a);
   for (int i = 0; i < n; i++) {
-    b[i].resize(2 * n);
+    a[i].resize(2 * n);
     for (int j = n; j < n * 2; j++) {
-      b[i][j] = (i == j - n ? 1 : 0);
+      a[i][j] = (i == j - n ? 1 : 0);
     }
   }
   for (int i = 0; i < n; i++) {
-    int p = elimination_pivot(b, i, i, eps);
+    int p = elimination_pivot(a, i, i, eps);
     if (p == -1) {
-      return -1;
+      return std::nullopt;
     }
-    std::swap(b[p], b[i]);
-    T pivot = b[i][i];
+    std::swap(a[p], a[i]);
+    T pivot = a[i][i];
     for (int j = i; j < n * 2; j++) {
-      b[i][j] /= pivot;
+      a[i][j] /= pivot;
     }
     for (int j = 0; j < n; j++) {
       if (i != j) {
-        T factor = b[j][i];
+        T factor = a[j][i];
         for (int k = 0; k < n * 2; k++) {
-          b[j][k] -= factor * b[i][k];
+          a[j][k] -= factor * a[i][k];
         }
       }
     }
   }
   for (int i = 0; i < n; i++) {
-    b[i].erase(b[i].begin(), b[i].begin() + n);
+    a[i].erase(a[i].begin(), a[i].begin() + n);
   }
-  a = std::move(b);
-  return 0;
+  return a;
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -5573,14 +5570,13 @@ int main() {
   assert(det_bareiss(ai) == -306);
   assert(det_bareiss({{2, 0, 0}, {0, 3, 0}, {0, 0, 5}}) == 30);
   assert(det_bareiss({{1, 2}, {2, 4}}) == 0);  // Singular.
-  vector<vector<double>> inv = a;
-  assert(invert(inv) == 0);
-  vector<vector<double>> singular{{1, 2}, {2, 4}}, unchanged = singular;
-  assert(invert(singular) == -1 && singular == unchanged);
+  auto inv = inverse(a);
+  assert(inv);
+  assert(!inverse(vector<vector<double>>{{1, 2}, {2, 4}}));
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < n; j++) {
       for (int k = 0; k < n; k++) {
-        res[i][j] += a[i][k] * inv[k][j];
+        res[i][j] += a[i][k] * (*inv)[k][j];
       }
     }
   }
@@ -5593,13 +5589,13 @@ int main() {
 }
 \end{lstlisting}
 \subsection{LU Decomposition}
-The LU decomposition of a matrix $a$ with row-partial pivoting is a factorization of $a$ (after some rows are possibly permuted by a permutation matrix $p$) as a product of a lower triangular matrix $l$ and an upper triangular matrix $u$. This factorization can be used to tackle many common problems in linear algebra such as solving systems of linear equations and computing determinants. An improvement on basic row reduction, LU decomposition by row-partial pivoting keeps the relative magnitude of matrix values small, thus reducing the relative error due to rounding in computed solutions.
+The LU decomposition of a matrix $a$ with row-partial pivoting is a factorization of $a$ (after some rows are possibly permuted by a permutation matrix $p$) as a product of a lower triangular matrix $l$ and an upper triangular matrix $u$. This factorization can be used to tackle many common problems in linear algebra such as solving systems of linear equations and computing determinants. An improvement on basic row reduction, LU decomposition by row-partial pivoting keeps the relative magnitude of matrix values small, thus reducing the relative error due to rounding in computed solutions. These routines require floating-point matrix elements; use 6.5.3 for exact-field or integer determinant calculations.
 
 \begin{compactitem}
-  \item \inlinecode{lu\_decompose(a, \&perm, eps = 1e-10)} assigns the $m$ by $n$ matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}, returning either $0$ or $1$ denoting the ``sign'' of the permutation parity ($0$ if the number of overall row swaps performed is even, or $1$ if it is odd), or $-1$ denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix \inlinecode{lu} has \inlinecode{lu[i][j]} = \inlinecode{l[i][j]} for \inlinecode{i} \textgreater{} \inlinecode{j} and \inlinecode{lu[i][j]} = \inlinecode{u[i][j]} for \inlinecode{i} $\leq$ \inlinecode{j}. Note that the algorithm always yields a unit lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to $1$, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optionally, a \inlinecode{vector\textless{}int\textgreater{}} pointer \inlinecode{perm} may be passed to return the permutation vector \inlinecode{perm} where \inlinecode{perm[i]} stores the only column that is equal to $1$ in row $i$ of the permutation matrix $p$ (all other columns in row $i$ of $p$ are implicitly $0$). Left-multiplying \inlinecode{a} by this permutation matrix gives the product of the separate lower and upper triangular matrices, not the merged storage matrix \inlinecode{lu} itself.
-  \item \inlinecode{solve\_system(a, b, \&x, eps = 1e-10)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning $0$ if there is one solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then the output vector \inlinecode{x} is populated with the solution of length $n$; otherwise, \inlinecode{x} is unchanged.
-  \item \inlinecode{det(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a} using LU decomposition.
-  \item \inlinecode{invert(a)} assigns the $n$ by $n$ matrix \inlinecode{a} to its inverse (if it exists), returning $0$ if the inversion was successful or $-1$ if \inlinecode{a} has no inverse, in which case \inlinecode{a} is unchanged.
+  \item \inlinecode{lu\_decompose(a, \&perm, eps = 1e-10)} assigns floating-point matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}; it returns $0$ for even row-swap parity, $1$ for odd parity, or $-1$ for a degenerate matrix (i.e. singular for square matrices). The merged matrix \inlinecode{lu} has \inlinecode{lu[i][j]} = \inlinecode{l[i][j]} for \inlinecode{i} \textgreater{} \inlinecode{j} and \inlinecode{lu[i][j]} = \inlinecode{u[i][j]} for \inlinecode{i} $\leq$ \inlinecode{j}. Note that the algorithm always yields a unit lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to $1$, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optional output vector \inlinecode{perm} represents $p$: \inlinecode{perm[i]} is the only column containing $1$ in row $i$. Left-multiplying \inlinecode{a} by this permutation matrix gives the product of the separate lower and upper triangular matrices, not the merged storage matrix \inlinecode{lu} itself.
+  \item \inlinecode{solve\_system(a, b, \&x, eps = 1e-10)} solves the system of linear equations $ax = b$ given an $m$ by $n$ floating-point matrix \inlinecode{a} and a length $m$ vector \inlinecode{b}, returning $0$ if there is one solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then the output vector \inlinecode{x} is populated with the solution of length $n$; otherwise, \inlinecode{x} is unchanged.
+  \item \inlinecode{det(a)} returns the determinant of an $n$ by $n$ floating-point matrix \inlinecode{a} using LU decomposition.
+  \item \inlinecode{inverse(a)} returns the inverse of the $n$ by $n$ floating-point matrix \inlinecode{a}, or \inlinecode{std::nullopt} if \inlinecode{a} is singular.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -5607,14 +5603,14 @@ The LU decomposition of a matrix $a$ with row-partial pivoting is a factorizatio
 \begin{compactitem}
   \item $O(m \cdot n \cdot \min\left(m, n\right))$ per call to \inlinecode{lu\_decompose(a)}, where $m$ and $n$ are the numbers of rows and columns of \inlinecode{a}, respectively.
   \item $O(m \cdot n^{2})$ per call to \inlinecode{solve\_system()}, which requires $m \geq n$.
-  \item $O(n^{3})$ per call to \inlinecode{det(a)} and \inlinecode{invert(a)}, where $n$ is the length of square matrix \inlinecode{a}.
+  \item $O(n^{3})$ per call to \inlinecode{det(a)} and \inlinecode{inverse(a)}, where $n$ is the length of square matrix \inlinecode{a}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for \inlinecode{lu\_decompose()}.
-  \item $O(n^{2})$ auxiliary for \inlinecode{det()} and \inlinecode{invert()}.
+  \item $O(n^{2})$ auxiliary for \inlinecode{det()} and \inlinecode{inverse()}.
   \item $O(m \cdot n)$ auxiliary for \inlinecode{solve\_system()}.
 \end{compactitem}
 
@@ -5622,6 +5618,8 @@ The LU decomposition of a matrix $a$ with row-partial pivoting is a factorizatio
 #include <algorithm>
 #include <cmath>
 #include <numeric>
+#include <optional>
+#include <type_traits>
 #include <vector>
 
 template<typename Matrix>
@@ -5661,13 +5659,15 @@ int lu_decompose(Matrix &a, std::vector<int> *perm = nullptr, const double eps =
 }
 
 template<typename Matrix>
-double getl(const Matrix &lu, int i, int j) {
-  return i > j ? lu[i][j] : (i < j ? 0 : 1);
+auto getl(const Matrix &lu, int i, int j) {
+  using T = std::decay_t<decltype(lu[0][0])>;
+  return i > j ? lu[i][j] : T(i == j);
 }
 
 template<typename Matrix>
-double getu(const Matrix &lu, int i, int j) {
-  return i <= j ? lu[i][j] : 0;
+auto getu(const Matrix &lu, int i, int j) {
+  using T = std::decay_t<decltype(lu[0][0])>;
+  return i <= j ? lu[i][j] : T(0);
 }
 
 template<typename Matrix, typename T>
@@ -5679,9 +5679,9 @@ int solve_system(
   if (x == nullptr || a.empty() || a.size() != b.size() || rows < cols) {
     return -1;
   }
+  Matrix lu(a);
   std::vector<int> perm;
-  Matrix lu;
-  int status = lu_decompose(lu = a, &perm, eps);
+  int status = lu_decompose(lu, &perm, eps);
   if (status < 0) {
     return status;
   }
@@ -5699,7 +5699,7 @@ int solve_system(
     solution[i] /= getu(lu, i, i);
   }
   for (int i = 0; i < rows; i++) {
-    double val = 0;
+    T val = 0;
     for (int j = 0; j < cols; j++) {
       val += a[i][j] * solution[j];
     }
@@ -5713,31 +5713,31 @@ int solve_system(
   return 0;
 }
 
-template<typename T>
-double det(const T &a) {
+template<typename Matrix>
+auto det(const Matrix &a) {
+  using T = std::decay_t<decltype(a[0][0])>;
   int n = static_cast<int>(a.size());
-  T lu;
-  int status = lu_decompose(lu = a);
+  Matrix lu(a);
+  int status = lu_decompose(lu);
   if (status < 0) {
-    return 0;
+    return T(0);
   }
-  double res = 1;
+  T res = 1;
   for (int i = 0; i < n; i++) {
     res *= lu[i][i];
   }
   return status == 0 ? res : -res;
 }
 
-template<typename T>
-int invert(T &a) {
+template<typename SquareMatrix>
+std::optional<SquareMatrix> inverse(SquareMatrix a) {
   int n = static_cast<int>(a.size());
   std::vector<int> perm;
-  T lu = a;
-  int status = lu_decompose(lu, &perm);
+  int status = lu_decompose(a, &perm);
   if (status < 0) {
-    return status;
+    return std::nullopt;
   }
-  T ia(n, typename T::value_type(n, 0));
+  SquareMatrix ia(n, typename SquareMatrix::value_type(n, 0));
   for (int j = 0; j < n; j++) {
     for (int i = 0; i < n; i++) {
       if (perm[i] == j) {
@@ -5746,18 +5746,17 @@ int invert(T &a) {
         ia[i][j] = 0.0;
       }
       for (int k = 0; k < i; k++) {
-        ia[i][j] -= getl(lu, i, k) * ia[k][j];
+        ia[i][j] -= getl(a, i, k) * ia[k][j];
       }
     }
     for (int i = n - 1; i >= 0; i--) {
       for (int k = i + 1; k < n; k++) {
-        ia[i][j] -= getu(lu, i, k) * ia[k][j];
+        ia[i][j] -= getu(a, i, k) * ia[k][j];
       }
-      ia[i][j] /= getu(lu, i, i);
+      ia[i][j] /= getu(a, i, i);
     }
   }
-  a.swap(ia);
-  return 0;
+  return ia;
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -5790,14 +5789,14 @@ int main() {
   }
   {  // Find the inverse.
     vector<vector<double>> a{{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
-    vector<vector<double>> inv = a;
+    auto inv = inverse(a);
     int n = static_cast<int>(a.size());
     vector<vector<double>> res(n, vector<double>(n, 0));
-    assert(invert(inv) == 0);
+    assert(inv);
     for (int i = 0; i < n; i++) {
       for (int j = 0; j < n; j++) {
         for (int k = 0; k < n; k++) {
-          res[i][j] += a[i][k] * inv[k][j];
+          res[i][j] += a[i][k] * (*inv)[k][j];
         }
       }
     }
@@ -5807,11 +5806,11 @@ int main() {
       }
     }
   }
-  {  // Failed operations leave their output arguments unchanged.
+  {  // Singular matrices have no inverse.
     vector<vector<double>> singular{{1, 2}, {2, 4}};
-    vector<vector<double>> original = singular;
-    assert(invert(singular) == -1 && singular == original);
+    assert(!inverse(singular));
 
+    // Failed operations leave their output arguments unchanged.
     vector<vector<double>> inconsistent{{1}, {1}};
     vector<double> b{1, 2}, x{99, 100};
     assert(solve_system(inconsistent, b, &x) == -1);
@@ -5925,13 +5924,9 @@ int main() {
   vector<vector<int64_t>> a{{1, 2}, {3, 4}};
   assert((characteristic_polynomial(a) == vector<int64_t>{MOD - 2, MOD - 5, 1}));  // -2, -5, 1.
 
-  // For any matrix, c_{n-1} = -trace and c_0 = (-1)^n det.
+  // det(xI - B) = (x - 3)(x^2 - 7x + 6) = x^3 - 10x^2 + 27x - 18.
   vector<vector<int64_t>> b{{2, 0, 1}, {0, 3, 0}, {4, 1, 5}};
-  vector<int64_t> cb = characteristic_polynomial(b);
-  assert(cb.size() == 4 && cb[3] == 1);
-  assert(cb[2] == (MOD - (2 + 3 + 5)) % MOD);  // Negated trace.
-  // det(B) = 2(15) - 0 + 1(0 - 12) = 18, so c_0 = (-1)^3 * 18 = -18.
-  assert(cb[0] == (MOD - 18) % MOD);
+  assert((characteristic_polynomial(b) == vector<int64_t>{MOD - 18, 27, MOD - 10, 1}));
   return 0;
 }
 \end{lstlisting}
@@ -6758,7 +6753,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Polynomial Operations}
-Polynomial operations treat a vector \inlinecode{a} as coefficients of $a_0 + a_1 x + \dots + a_{n-1} x^{n-1}$ over a field. This section implements the core algebra needed for formal power series and polynomial division modulo the prime $998244353$. Multiplication uses the number theoretic transform, so inverse and division are fast enough for large polynomials while still keeping the API close to the underlying coefficient vectors.
+Polynomial operations treat a vector \inlinecode{a} as coefficients of $a_0 + a_1 x + \dots + a_{n-1} x^{n-1}$ over a field. For formal power series operations, vectors represent coefficients modulo $x^n$; no notion of analytic convergence is involved. This section implements the core algebra needed for formal power series and polynomial division modulo the prime $998244353$. Multiplication uses the number theoretic transform, so inverse and division are fast enough for large polynomials while still keeping the API close to the underlying coefficient vectors.
 
 The code aliases one modular field element as \inlinecode{Coeff} and one coefficient vector as \inlinecode{Poly}. Input coefficients must lie in $[0, {\inlinecodemath{MOD}})$.
 
@@ -6770,6 +6765,7 @@ The code aliases one modular field element as \inlinecode{Coeff} and one coeffic
   \item \inlinecode{derivative(a)} returns the formal derivative of \inlinecode{a}.
   \item \inlinecode{integral(a)} returns the formal antiderivative of \inlinecode{a} with constant term zero.
   \item \inlinecode{inverse(a, n)} returns the first \inlinecode{n} coefficients of \inlinecode{1 / a}, requiring \inlinecode{a[0]} to be nonzero.
+  \item \inlinecode{series\_divide(a, b, n)} returns the first \inlinecode{n} coefficients of the formal power series \inlinecode{a / b}, requiring \inlinecode{b[0]} to be nonzero.
   \item \inlinecode{log(a, n)} returns the first \inlinecode{n} coefficients of $\log a$, requiring \inlinecode{a[0]} to be $1$.
   \item \inlinecode{exp(a, n)} returns the first \inlinecode{n} coefficients of $\exp a$, requiring \inlinecode{a[0]} to be $0$.
   \item \inlinecode{sqrt(a, n)} returns the first \inlinecode{n} coefficients of the square root of \inlinecode{a} whose constant term is $1$, requiring \inlinecode{a[0]} to be $1$.
@@ -6778,7 +6774,7 @@ The code aliases one modular field element as \inlinecode{Coeff} and one coeffic
   \item \inlinecode{modulo(a, b)} returns the polynomial remainder of \inlinecode{a / b}, requiring \inlinecode{b} to be nonzero.
 \end{compactitem}
 
-The inverse is a formal power series inverse modulo $x^n$: it finds $b$ such that $a \cdot b \equiv 1 \pmod{x^n}$. Division uses the standard reversal trick: reverse both polynomials, compute a truncated series inverse of the reversed divisor, multiply, truncate, and reverse back.
+The inverse is a formal power series inverse modulo $x^n$: it finds $b$ such that $a \cdot b \equiv 1 \pmod{x^n}$. Series division multiplies by this inverse directly. Euclidean polynomial division instead uses the standard reversal trick: reverse both polynomials, compute a truncated series inverse of the reversed divisor, multiply, truncate, and reverse back.
 
 The logarithm follows from $(\log a)' = a'/a$, integrating the truncated quotient. The exponential and square root use Newton iteration, which doubles the number of correct coefficients each round and so costs the same asymptotically as the final multiplication. To take a square root whose constant term is not $1$, factor \inlinecode{a[0]} out and multiply back one of its modular square roots (see 6.3.5); if the lowest nonzero coefficient sits at an odd power of $x$, no square root exists. Power factors $a = x^t c b$, where $b(0) = 1$, and uses $a^k = x^{tk} c^k \exp(k \log b)$.
 
@@ -6787,7 +6783,7 @@ The logarithm follows from $(\log a)' = a'/a$, integrating the truncated quotien
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{eval()}, \inlinecode{add()}, \inlinecode{subtract()}, \inlinecode{derivative()}, and \inlinecode{integral()}.
   \item $O(|a||b|)$ per call to \inlinecode{multiply()} on small inputs and $O(n \log n)$ otherwise, where $n$ is the padded transform length.
-  \item $O(n \log n)$ per call to \inlinecode{inverse(a, n)}, where $n$ is the requested length.
+  \item $O(n \log n)$ per call to \inlinecode{inverse()} and \inlinecode{series\_divide()}, where $n$ is the requested length.
   \item $O(n \log n)$ per call to \inlinecode{log()}, \inlinecode{exp()}, and \inlinecode{sqrt()}, where $n$ is the requested length. The exponential carries the largest constant, since every Newton round computes a logarithm.
   \item $O(n \log n + \log k)$ per call to \inlinecode{power()}, where $n$ is the requested length.
   \item $O(n \log n)$ per call to \inlinecode{divide()} and \inlinecode{modulo()}, where $n$ is the padded multiplication length.
@@ -6966,6 +6962,17 @@ Poly inverse(const Poly &a, int n) {
   return res;
 }
 
+Poly series_divide(const Poly &a, const Poly &b, int n) {
+  assert(n >= 0 && !b.empty() && b[0] != 0);
+  if (n == 0) {
+    return {};
+  }
+  Poly cut(a.begin(), a.begin() + std::min(static_cast<int>(a.size()), n));
+  Poly res = multiply(cut, inverse(b, n));
+  res.resize(n);
+  return res;
+}
+
 Poly log(const Poly &a, int n) {
   assert(n >= 0 && !a.empty() && a[0] == 1);
   if (n == 0) {
@@ -7113,6 +7120,9 @@ int main() {
 
   // (1 - x)^-1 = 1 + x + x^2 + x^3 + ... modulo x^6.
   assert((inverse({1, MOD - 1}, 6) == Poly{1, 1, 1, 1, 1, 1}));
+
+  // (1 + x) / (1 - x) = 1 + 2x + 2x^2 + ... modulo x^5.
+  assert((series_divide({1, 1}, {1, MOD - 1}, 5) == Poly{1, 2, 2, 2, 2}));
 
   // (x^3 - 1) / (x - 1) = x^2 + x + 1, remainder 0.
   Poly dividend{MOD - 1, 0, 0, 1};
@@ -7266,19 +7276,6 @@ The key identity is that the $n$-th term is a fixed linear combination of the fi
 
 const int64_t MOD = 998244353;
 
-void reduce(std::vector<int64_t> &p, const std::vector<int64_t> &c) {
-  int L = static_cast<int>(c.size());
-  for (int d = static_cast<int>(p.size()) - 1; d >= L; d--) {
-    if (p[d] != 0) {
-      for (int j = 0; j < L; j++) {
-        p[d - 1 - j] = (p[d - 1 - j] + p[d] * c[j]) % MOD;
-      }
-      p[d] = 0;
-    }
-  }
-  p.resize(L);
-}
-
 std::vector<int64_t> combine(
     const std::vector<int64_t> &a, const std::vector<int64_t> &b, const std::vector<int64_t> &c
 ) {
@@ -7288,7 +7285,15 @@ std::vector<int64_t> combine(
       res[i + j] = (res[i + j] + a[i] * b[j]) % MOD;
     }
   }
-  reduce(res, c);
+  int L = static_cast<int>(c.size());
+  for (int d = static_cast<int>(res.size()) - 1; d >= L; d--) {
+    if (res[d] != 0) {
+      for (int j = 0; j < L; j++) {
+        res[d - 1 - j] = (res[d - 1 - j] + res[d] * c[j]) % MOD;
+      }
+    }
+  }
+  res.resize(L);
   return res;
 }
 
@@ -7525,7 +7530,7 @@ int main() {
 
   vector<int> losing{1, 2, 3};
   assert(!first_player_wins(losing));
-  assert(winning_move(losing).first == -1);
+  assert((winning_move(losing) == pair<int, int>{-1, -1}));
   return 0;
 }
 \end{lstlisting}
@@ -7706,11 +7711,7 @@ int main() {
   vector<int> moves{1, 3, 4};
   auto g = subtraction_game_grundy(10, moves);
   // With moves 1, 3, 4, pile size 2 is losing and pile size 4 has mex {0, 1} = 2.
-  assert(g[0] == 0);
-  assert(g[1] == 1);
-  assert(g[2] == 0);
-  assert(g[4] == 2);
-  assert(g[7] == 0);
+  assert((g == vector<int>{0, 1, 0, 1, 2, 3, 2, 0, 1, 0, 1}));
 
   vector<int> heaps{g[5], g[7], g[10]};
   // Independent games combine by xor of their Grundy numbers.
@@ -7768,14 +7769,8 @@ using namespace std;
 
 int main() {
   vector<vector<int>> g{{1, 2}, {3}, {3, 4}, {}, {}};
-  auto grundy = grundy_on_dag(g);
-  // Terminal nodes have Grundy 0; their predecessors have mex {0} = 1.
-  assert(grundy[3] == 0);
-  assert(grundy[4] == 0);
-  assert(grundy[1] == 1);
-  assert(grundy[2] == 1);
-  // Node 0 can move to two positions with Grundy 1, so mex {1} = 0.
-  assert(grundy[0] == 0);
+  // Terminal nodes have Grundy 0, their predecessors have mex {0} = 1, and node 0 has mex {1} = 0.
+  assert((grundy_on_dag(g) == vector<int>{0, 1, 1, 0, 0}));
   return 0;
 }
 \end{lstlisting}
@@ -7811,13 +7806,13 @@ int minimax(int stones, bool maximizing) {
   return best;
 }
 
-static int alpha_beta_search(int stones, bool maximizing, int alpha, int beta) {
+int alpha_beta(int stones, bool maximizing, int alpha = -2, int beta = 2) {
   if (stones == 0) {
     return maximizing ? -1 : 1;
   }
   int value = maximizing ? -2 : 2;
   for (int take = 1; take <= 2 && take <= stones; take++) {
-    int child = alpha_beta_search(stones - take, !maximizing, alpha, beta);
+    int child = alpha_beta(stones - take, !maximizing, alpha, beta);
     if (maximizing) {
       value = std::max(value, child);
       alpha = std::max(alpha, value);
@@ -7830,10 +7825,6 @@ static int alpha_beta_search(int stones, bool maximizing, int alpha, int beta) {
     }
   }
   return value;
-}
-
-int alpha_beta(int stones, bool maximizing) {
-  return alpha_beta_search(stones, maximizing, -2, 2);
 }
 
 int best_take(int stones) {

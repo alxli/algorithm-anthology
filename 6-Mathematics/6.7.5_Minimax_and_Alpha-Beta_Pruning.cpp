@@ -40,13 +40,13 @@ int minimax(int stones, bool maximizing) {
   return best;
 }
 
-static int alpha_beta_search(int stones, bool maximizing, int alpha, int beta) {
+int alpha_beta(int stones, bool maximizing, int alpha = -2, int beta = 2) {
   if (stones == 0) {
     return maximizing ? -1 : 1;
   }
   int value = maximizing ? -2 : 2;
   for (int take = 1; take <= 2 && take <= stones; take++) {
-    int child = alpha_beta_search(stones - take, !maximizing, alpha, beta);
+    int child = alpha_beta(stones - take, !maximizing, alpha, beta);
     if (maximizing) {
       value = std::max(value, child);
       alpha = std::max(alpha, value);
@@ -59,10 +59,6 @@ static int alpha_beta_search(int stones, bool maximizing, int alpha, int beta) {
     }
   }
   return value;
-}
-
-int alpha_beta(int stones, bool maximizing) {
-  return alpha_beta_search(stones, maximizing, -2, 2);
 }
 
 int best_take(int stones) {

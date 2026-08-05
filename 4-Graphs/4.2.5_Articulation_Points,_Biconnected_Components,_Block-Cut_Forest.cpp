@@ -42,7 +42,7 @@ Space Complexity:
 class BiconnectedComponents {
   std::vector<std::vector<int>> adj, bccs, forest;
   std::vector<int> lowlink, tin, forest_id, articulation;
-  std::vector<char> visited, is_articulation;
+  std::vector<char> visit, is_articulation;
   std::vector<std::pair<int, int>> edges;
   std::vector<int> edge_stack;
   int timer;
@@ -66,7 +66,7 @@ class BiconnectedComponents {
   }
 
   void dfs(int u, int p) {
-    visited[u] = true;
+    visit[u] = true;
     lowlink[u] = tin[u] = timer++;
     int children = 0;
     for (int id : adj[u]) {
@@ -74,7 +74,7 @@ class BiconnectedComponents {
         continue;
       }
       int v = other(id, u);
-      if (visited[v]) {
+      if (visit[v]) {
         if (tin[v] < tin[u]) {
           edge_stack.push_back(id);
           lowlink[u] = std::min(lowlink[u], tin[v]);
@@ -114,11 +114,11 @@ class BiconnectedComponents {
     edge_stack.clear();
     lowlink.assign(n, 0);
     tin.assign(n, 0);
-    visited.assign(n, false);
+    visit.assign(n, false);
     is_articulation.assign(n, false);
     timer = 0;
     for (int i = 0; i < n; i++) {
-      if (!visited[i]) {
+      if (!visit[i]) {
         dfs(i, -1);
       }
     }

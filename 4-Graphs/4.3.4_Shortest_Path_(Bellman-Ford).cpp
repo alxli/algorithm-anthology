@@ -96,14 +96,12 @@ int main() {
   edges.emplace_back(0, 1, 1);
   edges.emplace_back(1, 2, 2);
   edges.emplace_back(0, 2, 5);
-  int start = 0, dest = 2;
-  bool ok = bellman_ford(3, start);
-  assert(ok);
-  assert(dist[dest] == 3);
-  assert((get_path(dest) == vector<int>{0, 1, 2}));
+  assert(bellman_ford(3, 0));
+  assert((dist == vector<int64_t>{0, 1, 3}));
+  assert((pred == vector<int>{-1, 0, 1}));
+  assert((get_path(2) == vector<int>{0, 1, 2}));
 
   edges = {{0, 1, -1}, {1, 0, -1}};
-  ok = bellman_ford(2, 0);
-  assert(!ok);
+  assert(!bellman_ford(2, 0));
   return 0;
 }

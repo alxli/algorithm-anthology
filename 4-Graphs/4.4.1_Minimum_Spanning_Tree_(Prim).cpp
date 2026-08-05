@@ -96,8 +96,7 @@ int main() {
   add_edge(4, 5, 2);
   add_edge(5, 6, 3);
   add_edge(6, 4, 4);
-  int64_t total = prim_mst();
-  assert(total == 13);
+  assert(prim_mst() == 13);
   assert(
       (mst == vector<tuple<int, int, int>>{{0, 2, 3}, {0, 1, 4}, {3, 4, 1}, {4, 5, 2}, {5, 6, 3}})
   );

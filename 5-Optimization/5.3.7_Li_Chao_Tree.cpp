@@ -21,8 +21,7 @@ Overflow warning: each comparison and query evaluates `m * x + b`, which must fi
 difference `hi - lo` must also fit in `int64_t`.
 
 Time Complexity:
-- O(log d) per call to `add_line()` and `query()`, where $d$ is the distance between `lo` and
-  `hi`.
+- O(log d) per call to `add_line()` and `query()`, where $d$ is the distance between `lo` and `hi`.
 
 Space Complexity:
 - O(n) node storage for $n$ lines inserted, since each insertion creates at most one node.

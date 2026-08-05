@@ -65,6 +65,6 @@ int main() {
 
   vector<int> losing{1, 2, 3};
   assert(!first_player_wins(losing));
-  assert(winning_move(losing).first == -1);
+  assert((winning_move(losing) == pair<int, int>{-1, -1}));
   return 0;
 }

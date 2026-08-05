@@ -3,7 +3,7 @@
 Given a directed graph, determine the strongly connected components (SCCs) using Tarjan's algorithm.
 A strongly connected component is a maximal set of nodes where every node can reach every other
 node. Condensing each SCC into one node produces a directed acyclic graph. A single depth-first
-search keeps visited nodes on a stack and tracks each node's low-link, the smallest entry time
+search keeps visit nodes on a stack and tracks each node's low-link, the smallest entry time
 reachable from its subtree; a node whose low-link equals its own entry time roots a component, which
 is popped off the stack in one piece.
 
@@ -32,16 +32,16 @@ class TarjanSCC {
   static const int INF = INT_MAX / 2;
   std::vector<std::vector<int>> adj, scc;
   std::vector<int> component, active, lowlink;
-  std::vector<char> visited;
+  std::vector<char> visit;
   int timer;
 
   void dfs(int u) {
     lowlink[u] = timer++;
-    visited[u] = true;
+    visit[u] = true;
     active.push_back(u);
     bool is_component_root = true;
     for (int v : adj[u]) {
-      if (!visited[v]) {
+      if (!visit[v]) {
         dfs(v);
       }
       if (lowlink[u] > lowlink[v]) {
@@ -76,10 +76,10 @@ class TarjanSCC {
     component.assign(n, -1);
     active.clear();
     lowlink.assign(n, 0);
-    visited.assign(n, false);
+    visit.assign(n, false);
     timer = 0;
     for (int i = 0; i < n; i++) {
-      if (!visited[i]) {
+      if (!visit[i]) {
         dfs(i);
       }
     }

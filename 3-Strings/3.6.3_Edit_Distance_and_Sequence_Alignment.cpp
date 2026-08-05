@@ -17,7 +17,7 @@ Both `gap_cost` and `sub_cost` must be nonnegative.
 - `align_sequences(s1, s2, gap_cost, sub_cost)` returns a pair of aligned strings for strings `s1`
   and `s2`, using a classic dynamic programming approach. This implementation first computes
   `dp[i][j]` (the cost of aligning the length $i$ prefix of `s1` with the length $j$ prefix of `s2`)
-  before following the path backwards to construct the answer. For `gap_cost = sub_cost = 1`,
+  before following the path backwards to construct the answer. For $`gap_cost` = `sub_cost` = 1$,
   `dp[n][m]` will be the Levenshtein edit distance, where $n$ and $m$ are the lengths of `s1` and
   `s2`, respectively.
 - `hirschberg_align(s1, s2, gap_cost, sub_cost)` returns the sequence alignment of strings `s1` and
@@ -28,11 +28,10 @@ Time Complexity:
   `hirschberg_align(s1, s2)`, where $n$ and $m$ are the lengths of `s1` and `s2`, respectively.
 
 Space Complexity:
-- O(min(n, m)) auxiliary heap space for `edit_distance()`.
-- O(n*m) auxiliary heap space for `align_sequences(s1, s2)`, where $n$ and $m$ are the lengths of
-  `s1` and `s2`, respectively.
+- O(min(n, m)) auxiliary heap space for `edit_distance(s1, s2)`.
+- O(n*m) auxiliary heap space for `align_sequences(s1, s2)`.
 - O(log(max(n, m))) auxiliary stack space and O(min(n, m)) auxiliary heap space for
-  `hirschberg_align(s1, s2)`, where $n$ and $m$ are the lengths of `s1` and `s2`, respectively.
+  `hirschberg_align(s1, s2)`.
 
 */
 

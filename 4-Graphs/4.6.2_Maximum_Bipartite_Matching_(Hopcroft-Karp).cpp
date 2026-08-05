@@ -27,8 +27,8 @@ Space Complexity:
 #include <vector>
 
 std::vector<std::vector<int>> adj;
-std::vector<char> used, visit;
 std::vector<int> match_left, match_right, dist;
+std::vector<char> used, visit;
 
 void bfs() {
   int n1 = static_cast<int>(adj.size());
@@ -108,8 +108,7 @@ int main() {
   adj[1].push_back(2);
   adj[2].push_back(2);
   adj[2].push_back(3);
-  int pairs = bipartite_matching_hk(n2);
-  assert(pairs == 3);
+  assert(bipartite_matching_hk(n2) == 3);
   assert((match_right == vector<int>{1, 0, 2, -1}));
   return 0;
 }

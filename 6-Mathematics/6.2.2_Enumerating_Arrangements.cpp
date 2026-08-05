@@ -27,8 +27,8 @@ just a base-$n$ counter.
   function could be thought of as incrementing the integer.
 
 Time Complexity:
-- O(n*k) per call to `next_arrangement()`, `arrangement_by_rank()`, and
-  `rank_by_arrangement(n, a)`, where $k$ is the size of `a`.
+- O(n*k) per call to `next_arrangement()`, `arrangement_by_rank()`, and `rank_by_arrangement(n, a)`,
+  where $k$ is the size of `a`.
 - O(k) per call to `next_arrangement_with_repeats()`.
 
 Space Complexity:

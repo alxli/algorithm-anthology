@@ -12,8 +12,8 @@ semantics in one place.
 - `line_convex_polygon_intersection(poly, a, b)` describes where the infinite directed line through
   `a` $\to$ `b` hits the polygon: $(-1, -1)$ for no intersection, $(i, -1)$ for touching vertex $i$,
   $(i, i)$ for containing side $i \to i+1$, or $(i, j)$ for crossing sides $i \to i+1$ and
-  $j \to j+1$, with side indices taken modulo the number of vertices. The polygon must have at
-  least three vertices, and `a` and `b` must differ.
+  $j \to j+1$, with side indices taken modulo the number of vertices. The polygon must have at least
+  three vertices, and `a` and `b` must differ.
 - `convex_polygon_tangents(poly, p)` returns the two tangent vertex indices from an outside point
   `p` as (`left`, `right`). The left tangent has all polygon vertices on or to the left of the
   directed line `p` $\to$ `poly[left]`; the right tangent is analogous for the right side.

@@ -37,21 +37,21 @@ Space Complexity:
 class BridgeDecomposition {
   std::vector<std::vector<int>> adj, two_edge_components, forest;
   std::vector<int> lowlink, tin, component;
-  std::vector<char> visited, is_bridge_edge;
+  std::vector<char> visit, is_bridge_edge;
   std::vector<std::pair<int, int>> edges, bridge_edges;
   int timer;
 
   int other(int id, int u) const { return edges[id].first ^ edges[id].second ^ u; }
 
   void dfs_bridges(int u, int p) {
-    visited[u] = true;
+    visit[u] = true;
     lowlink[u] = tin[u] = timer++;
     for (int id : adj[u]) {
       if (id == p) {
         continue;
       }
       int v = other(id, u);
-      if (visited[v]) {
+      if (visit[v]) {
         lowlink[u] = std::min(lowlink[u], tin[v]);
       } else {
         dfs_bridges(v, id);
@@ -90,11 +90,11 @@ class BridgeDecomposition {
     bridge_edges.clear();
     lowlink.assign(n, 0);
     tin.assign(n, 0);
-    visited.assign(n, false);
+    visit.assign(n, false);
     is_bridge_edge.assign(edges.size(), false);
     timer = 0;
     for (int i = 0; i < n; i++) {
-      if (!visited[i]) {
+      if (!visit[i]) {
         dfs_bridges(i, -1);
       }
     }

@@ -217,7 +217,7 @@ Find and Replace:
   \item \inlinecode{replace(s, old, replacement)} returns a copy of \inlinecode{s} with all occurrences of the string \inlinecode{old} replaced with the given \inlinecode{replacement}.
   \item \inlinecode{regex\_find\_all(s, pattern)} returns every substring of \inlinecode{s} matched by \inlinecode{pattern}.
   \item \inlinecode{regex\_groups(s, pattern)} returns the capture groups of the first match of \inlinecode{pattern} in \inlinecode{s}, excluding the full match. If there is no match, returns an empty vector.
-  \item \inlinecode{regex\_replace\_all(s, pattern, replacement)} returns a copy of \inlinecode{s} with every regex match replaced by \inlinecode{replacement}.
+  \item \inlinecode{regex\_replace\_all(s, pattern, replacement)} returns a copy of \inlinecode{s} with every regex match replaced by \inlinecode{replacement}, which may refer to capture groups as \inlinecode{\$1}, \inlinecode{\$2}, and so on.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -459,6 +459,7 @@ int main() {
   assert(join(regex_find_all("a12b345", "[0-9]+"), "|") == "12|345");
   assert(join(regex_groups("abc-123", "([a-z]+)-([0-9]+)"), "|") == "abc|123");
   assert(regex_replace_all("a12b345", "[0-9]+", "#") == "a#b#");
+  assert(regex_replace_all("2026-08-04", R"((\d{4})-(\d{2})-(\d{2}))", "$2/$3/$1") == "08/04/2026");
 
   assert(repeat("ab", 3) == "ababab");
   assert(repeat("ab", -1).empty());
@@ -3209,12 +3210,12 @@ Maintains a compact deterministic automaton representing all substrings of a str
 
 Each state represents an equivalence class of substrings with the same set of ending positions. The value \inlinecode{st[v].len} is the maximum length represented by state \inlinecode{v}, while \inlinecode{st[v].link} points to the state representing the longest proper suffix of that class.
 
-More precisely, state \inlinecode{v} contributes one distinct substring for each length greater than \inlinecode{st[st[v].link].len} and at most \inlinecode{st[v].len}. When a character is appended, \inlinecode{extend()} creates a state for the new full string and walks suffix links from the previous \inlinecode{last}, adding missing transitions to it. If an existing transition leads to a state whose maximum length is too large, a shorter clone of that state is inserted and the affected transitions and suffix links are redirected to it, splitting the ending-position classes without changing the recognized substrings. Summing these length ranges gives the number of distinct substrings. Membership queries follow transitions, while longest common substring queries retreat through suffix links when a match fails.
+More precisely, state \inlinecode{v} contributes one distinct substring for each length greater than \inlinecode{st[st[v].link].len} and at most \inlinecode{st[v].len}. When a character is appended, \inlinecode{append()} creates a state for the new full string and walks suffix links from the previous \inlinecode{last}, adding missing transitions to it. If an existing transition leads to a state whose maximum length is too large, a shorter clone of that state is inserted and the affected transitions and suffix links are redirected to it, splitting the ending-position classes without changing the recognized substrings. Summing these length ranges gives the number of distinct substrings. Membership queries follow transitions, while longest common substring queries retreat through suffix links when a match fails.
 
 \begin{compactitem}
   \item \inlinecode{SuffixAutomaton()} constructs an empty automaton.
   \item \inlinecode{SuffixAutomaton(s)} constructs the automaton for string \inlinecode{s}.
-  \item \inlinecode{extend(c)} appends character \inlinecode{c} to the current string.
+  \item \inlinecode{append(c)} appends character \inlinecode{c} to the current string.
   \item \inlinecode{contains(t)} returns whether string \inlinecode{t} occurs as a substring.
   \item \inlinecode{first\_occurrence(t)} returns the starting index of the first occurrence of \inlinecode{t}, or $-1$ if absent.
   \item \inlinecode{count\_distinct\_substrings()} returns the number of distinct nonempty substrings.
@@ -3225,6 +3226,7 @@ More precisely, state \inlinecode{v} contributes one distinct substring for each
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ expected per call to the constructor for a string of length $n$.
+  \item $O(1)$ expected amortized per call to \inlinecode{append()}.
   \item $O(m)$ expected per call to \inlinecode{contains(t)}, \inlinecode{first\_occurrence(t)}, or \inlinecode{longest\_common\_substring(t)}, where $m$ is the length of \inlinecode{t}.
   \item $O(n)$ per call to \inlinecode{count\_distinct\_substrings()}.
 \end{compactitem}
@@ -3259,11 +3261,11 @@ class SuffixAutomaton {
 
   explicit SuffixAutomaton(const string &s) : st(1), last(0) {
     for (char c : s) {
-      extend(c);
+      append(c);
     }
   }
 
-  void extend(char c) {
+  void append(char c) {
     int cur = static_cast<int>(st.size());
     st.emplace_back();
     st[cur].len = st[last].len + 1;
@@ -3370,9 +3372,9 @@ int main() {
   assert(sa.first_occurrence("abba") == -1);
 
   SuffixAutomaton online;
-  online.extend('a');
-  online.extend('b');
-  online.extend('c');
+  online.append('a');
+  online.append('b');
+  online.append('c');
   assert(online.contains("bc"));
   return 0;
 }
@@ -3382,12 +3384,12 @@ Maintains all distinct palindromic substrings of a string online using an Eertre
 
 The structure has two roots: one of length $-1$, which simplifies boundary cases, and one of length $0$, representing the empty palindrome. After each appended character, \inlinecode{last} points to the node for the longest palindromic suffix of the current string.
 
-To append a character, \inlinecode{add()} follows suffix links from \inlinecode{last} until finding the longest suffix palindrome that can be enclosed by the new character. If the corresponding transition already exists, that node becomes \inlinecode{last}; otherwise, a node two characters longer is created and linked to its longest proper palindromic suffix, found by the same search. Exactly one distinct palindrome can be created at each position, so the number of non-root nodes is the distinct count. Each node first counts the times it is the longest palindromic suffix; propagating those counts through suffix links then includes occurrences where it appears as a suffix of a longer palindrome.
+To append a character, \inlinecode{append()} follows suffix links from \inlinecode{last} until finding the longest suffix palindrome that can be enclosed by the new character. If the corresponding transition already exists, that node becomes \inlinecode{last}; otherwise, a node two characters longer is created and linked to its longest proper palindromic suffix, found by the same search. Exactly one distinct palindrome can be created at each position, so the number of non-root nodes is the distinct count. Each node first counts the times it is the longest palindromic suffix; propagating those counts through suffix links then includes occurrences where it appears as a suffix of a longer palindrome.
 
 \begin{compactitem}
   \item \inlinecode{Eertree()} constructs an empty palindromic tree.
   \item \inlinecode{Eertree(s)} constructs the tree for string \inlinecode{s}.
-  \item \inlinecode{add(c)} appends character \inlinecode{c} and returns \inlinecode{true} if this creates a new distinct palindrome.
+  \item \inlinecode{append(c)} appends character \inlinecode{c} and returns \inlinecode{true} if this creates a new distinct palindrome.
   \item \inlinecode{count\_distinct\_palindromes()} returns the number of distinct nonempty palindromic substrings.
   \item \inlinecode{longest\_suffix\_length()} returns the length of the current longest palindromic suffix.
   \item \inlinecode{count\_occurrences()} propagates occurrence counts through suffix links and returns \inlinecode{occ[v]} for each node \inlinecode{v}.
@@ -3397,7 +3399,7 @@ To append a character, \inlinecode{add()} follows suffix links from \inlinecode{
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ expected per call to the constructor for a string of length $n$.
-  \item $O(1)$ expected amortized per call to \inlinecode{add()}.
+  \item $O(1)$ expected amortized per call to \inlinecode{append()}.
   \item $O(n)$ per call to \inlinecode{count\_occurrences()}.
 \end{compactitem}
 
@@ -3447,11 +3449,11 @@ class Eertree {
     tree[0].link = 0;
     tree[1].link = 0;
     for (char c : s) {
-      add(c);
+      append(c);
     }
   }
 
-  bool add(char c) {
+  bool append(char c) {
     str += c;
     int pos = static_cast<int>(str.size()) - 1;
     int cur = get_suffix(last, pos, c);
@@ -3502,19 +3504,19 @@ int main() {
   assert(t.longest_suffix_length() == 7);
 
   Eertree online;
-  assert(online.add('a'));
-  assert(online.add('a'));
-  assert(online.add('b'));
-  assert(online.add('a'));
+  assert(online.append('a'));
+  assert(online.append('a'));
+  assert(online.append('b'));
+  assert(online.append('a'));
   assert(online.count_distinct_palindromes() == 4);
   assert(online.longest_suffix_length() == 3);
 
   Eertree duplicate;
-  assert(duplicate.add('a'));
-  assert(duplicate.add('b'));
-  assert(duplicate.add('c'));
+  assert(duplicate.append('a'));
+  assert(duplicate.append('b'));
+  assert(duplicate.append('c'));
   // The second 'a' creates substring "abca", but palindrome "a" already exists.
-  assert(!duplicate.add('a'));
+  assert(!duplicate.append('a'));
 
   // Nodes 2-8 represent a, b, aba, c, aca, bacab, and abacaba in creation order.
   assert((t.count_occurrences() == vector<int>{0, 7, 4, 2, 2, 1, 1, 1, 1}));
@@ -3636,20 +3638,6 @@ string longest_common_subsequence(const string &s1, const string &s2) {
 }
 
 template<typename It>
-std::vector<int> lcs_len(It lo1, It hi1, It lo2, It hi2) {
-  std::vector<int> res(std::distance(lo2, hi2) + 1), prev(res);
-  for (It it1 = lo1; it1 != hi1; ++it1) {
-    res.swap(prev);
-    int i = 0;
-    for (It it2 = lo2; it2 != hi2; ++it2) {
-      res[i + 1] = (*it1 == *it2) ? prev[i] + 1 : std::max(res[i], prev[i + 1]);
-      i++;
-    }
-  }
-  return res;
-}
-
-template<typename It>
 void hirschberg_rec(It lo1, It hi1, It lo2, It hi2, string *res) {
   if (lo1 == hi1) {
     return;
@@ -3662,6 +3650,18 @@ void hirschberg_rec(It lo1, It hi1, It lo2, It hi2, string *res) {
   }
   It mid1 = lo1 + (hi1 - lo1) / 2;
   std::reverse_iterator<It> rlo1(hi1), rmid1(mid1), rlo2(hi2), rhi2(lo2);
+  auto lcs_len = [](auto lo1, auto hi1, auto lo2, auto hi2) {
+    std::vector<int> res(std::distance(lo2, hi2) + 1), prev(res);
+    for (auto it1 = lo1; it1 != hi1; ++it1) {
+      res.swap(prev);
+      int i = 0;
+      for (auto it2 = lo2; it2 != hi2; ++it2) {
+        res[i + 1] = (*it1 == *it2) ? prev[i] + 1 : std::max(res[i], prev[i + 1]);
+        i++;
+      }
+    }
+    return res;
+  };
   std::vector<int> fwd = lcs_len(lo1, mid1, lo2, hi2);
   std::vector<int> rev = lcs_len(rlo1, rmid1, rlo2, rhi2);
   It mid2 = lo2;
@@ -3708,7 +3708,7 @@ Dynamic programming compares prefixes and chooses the cheapest last operation: a
 
 \begin{compactitem}
   \item \inlinecode{edit\_distance(s1, s2)} returns the Levenshtein edit distance between strings \inlinecode{s1} and \inlinecode{s2}.
-  \item \inlinecode{align\_sequences(s1, s2, gap\_cost, sub\_cost)} returns a pair of aligned strings for strings \inlinecode{s1} and \inlinecode{s2}, using a classic dynamic programming approach. This implementation first computes \inlinecode{dp[i][j]} (the cost of aligning the length $i$ prefix of \inlinecode{s1} with the length $j$ prefix of \inlinecode{s2}) before following the path backwards to construct the answer. For \inlinecode{gap\_cost = sub\_cost = 1}, \inlinecode{dp[n][m]} will be the Levenshtein edit distance, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+  \item \inlinecode{align\_sequences(s1, s2, gap\_cost, sub\_cost)} returns a pair of aligned strings for strings \inlinecode{s1} and \inlinecode{s2}, using a classic dynamic programming approach. This implementation first computes \inlinecode{dp[i][j]} (the cost of aligning the length $i$ prefix of \inlinecode{s1} with the length $j$ prefix of \inlinecode{s2}) before following the path backwards to construct the answer. For ${\inlinecodemath{gap\_cost}} = {\inlinecodemath{sub\_cost}} = 1$, \inlinecode{dp[n][m]} will be the Levenshtein edit distance, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
   \item \inlinecode{hirschberg\_align(s1, s2, gap\_cost, sub\_cost)} returns the sequence alignment of strings \inlinecode{s1} and \inlinecode{s2} using the more memory efficient Hirschberg's algorithm.
 \end{compactitem}
 
@@ -3717,9 +3717,9 @@ Dynamic programming compares prefixes and chooses the cheapest last operation: a
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(\min\left(n, m\right))$ auxiliary heap space for \inlinecode{edit\_distance()}.
-  \item $O(n \cdot m)$ auxiliary heap space for \inlinecode{align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
-  \item $O(\log\left(\max\left(n, m\right)\right))$ auxiliary stack space and $O(\min\left(n, m\right))$ auxiliary heap space for \inlinecode{hirschberg\_align(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+  \item $O(\min\left(n, m\right))$ auxiliary heap space for \inlinecode{edit\_distance(s1, s2)}.
+  \item $O(n \cdot m)$ auxiliary heap space for \inlinecode{align\_sequences(s1, s2)}.
+  \item $O(\log\left(\max\left(n, m\right)\right))$ auxiliary stack space and $O(\min\left(n, m\right))$ auxiliary heap space for \inlinecode{hirschberg\_align(s1, s2)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3998,8 +3998,12 @@ int main() {
 \section{\texorpdfstring{Expression Parsing}{3.7 Expression Parsing}}
 \setcounter{section}{7}
 \setcounter{subsection}{0}
-\subsection{Recursive Descent Parsing (Simple)}
-Evaluate an expression according to the order of operations (parentheses, unary plus and minus signs, multiplication/division, addition/subtraction). The following is a minimalistic recursive descent implementation using iterators. Each precedence level is parsed by its own function that obtains operands by calling the next-tighter level, so the call structure itself enforces the order of operations. Literals are nonnegative decimal integers, division truncates toward zero, and the input must be a valid expression without whitespace. Every divisor must be nonzero, and all intermediate results must fit in \inlinecode{int}.
+\subsection{Recursive Descent Parsing}
+Evaluate integer arithmetic expressions containing parentheses, unary plus and minus, multiplication and division, and addition and subtraction. The parser represents these as three precedence levels. At the tightest level, it consumes a chain of unary signs followed by either a decimal literal or a parenthesized expression.
+
+At each binary-operator level, the parser first evaluates one operand at the next tighter level, then repeatedly consumes operators of the current level and their right operands. These loops make binary operators left-associative, while recursively restarting at the loosest level inside parentheses enforces grouping.
+
+Literals must be nonnegative decimal integers, although unary signs may precede them. The input must be valid and contain no whitespace. Division truncates toward zero, every divisor must be nonzero, and all intermediate results must fit in \inlinecode{int}.
 
 \begin{compactitem}
   \item \inlinecode{eval(s)} returns an evaluation of the arithmetic expression \inlinecode{s}.
@@ -4012,49 +4016,48 @@ Evaluate an expression according to the order of operations (parentheses, unary 
 \begin{lstlisting}[language=C++]
 #include <string>
 
-template<typename It>
-int eval(It &it, int prec) {
-  if (prec == 0) {
-    int sign = 1, res = 0;
-    for (; *it == '-' || *it == '+'; it++) {
-      if (*it == '-') {
-        sign *= -1;
-      }
-    }
-    if (*it == '(') {
-      res = eval(++it, 2);
-      it++;
-    } else {
-      while (*it >= '0' && *it <= '9') {
-        res = 10 * res + (*(it++) - '0');
-      }
-    }
-    return sign * res;
-  }
-  int num = eval(it, prec - 1);
-  while (!((prec == 2 && *it != '+' && *it != '-') || (prec == 1 && *it != '*' && *it != '/'))) {
-    switch (*(it++)) {
-      case '+':
-        num += eval(it, prec - 1);
-        break;
-      case '-':
-        num -= eval(it, prec - 1);
-        break;
-      case '*':
-        num *= eval(it, prec - 1);
-        break;
-      case '/':
-        num /= eval(it, prec - 1);
-        break;
-    }
-  }
-  return num;
-}
-
 int eval(const std::string &s) {
   std::string expr = s + '\0';
   auto it = expr.begin();
-  return eval(it, 2);
+  auto rec = [&](auto &&rec, int prec) -> int {
+    if (prec == 0) {
+      int sign = 1, res = 0;
+      for (; *it == '-' || *it == '+'; it++) {
+        if (*it == '-') {
+          sign *= -1;
+        }
+      }
+      if (*it == '(') {
+        it++;
+        res = rec(rec, 2);
+        it++;
+      } else {
+        while (*it >= '0' && *it <= '9') {
+          res = 10 * res + (*(it++) - '0');
+        }
+      }
+      return sign * res;
+    }
+    int num = rec(rec, prec - 1);
+    while (!((prec == 2 && *it != '+' && *it != '-') || (prec == 1 && *it != '*' && *it != '/'))) {
+      switch (*(it++)) {
+        case '+':
+          num += rec(rec, prec - 1);
+          break;
+        case '-':
+          num -= rec(rec, prec - 1);
+          break;
+        case '*':
+          num *= rec(rec, prec - 1);
+          break;
+        case '/':
+          num /= rec(rec, prec - 1);
+          break;
+      }
+    }
+    return num;
+  };
+  return rec(rec, 2);
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -4070,208 +4073,193 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Recursive Descent Parsing}
-Evaluate an expression with custom operand types, prefix unary operators, binary operators, and precedences. Evaluation is performed by recursive descent: the parser recursively evaluates tighter precedence levels before looser ones. Parentheses are supported, but multiplication by juxtaposition is not.
+\subsection{Postfix Conversion and Evaluation}
+Convert an infix expression to postfix notation, also called reverse Polish notation (RPN), and evaluate the result. In postfix notation each operator follows its operands, so evaluation needs no parentheses or precedence rules: operands are pushed onto a value stack, and each operator replaces its operands with their result.
 
-An arbitrary operand type is supported by changing the \inlinecode{Operand} alias and the static \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} helpers. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting \inlinecode{-1} as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify nonnegative numbers as operands alongside the unary operator \inlinecode{-}.
+The shunting yard algorithm produces postfix notation by sending operands directly to the output and holding operators on a stack. An operator is emitted before a lower-precedence operator, or before a left-associative operator of equal precedence. Parentheses delimit independent portions of the operator stack. Whether \inlinecode{+} or \inlinecode{-} is unary follows from context: a prefix operator is expected at the beginning, after another operator, or after an opening parenthesis.
 
-Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. When multiple operators match at the same position, the longest one is chosen, so \inlinecode{\textless{}=} remains one token when \inlinecode{\textless{}} is also an operator.
+Customize the operand type and syntax by changing \inlinecode{Operand} and \inlinecode{eval\_operand(token)}. The unary and binary operator tables define their functions and precedences; binary rules additionally specify right-associativity. Prefix unary operators are emitted with a \inlinecode{u} prefix, so unary \inlinecode{-} becomes the distinct postfix token \inlinecode{u-}. Operators may contain multiple non-operand characters, and the longest matching operator is chosen. Operands are maximal strings of letters, digits, underscores, and periods.
 
 \begin{compactitem}
-  \item \inlinecode{RecursiveDescentParser(unary\_ops, binary\_ops)} initializes a parser with operators specified by hash tables \inlinecode{unary\_ops} (of operator to unary function object) and \inlinecode{binary\_ops} (of operator to pair of binary function object and operator precedence). Operator precedences should be numbered upwards starting at $0$ (lowest precedence, evaluated last).
-  \item \inlinecode{split(s)} returns a vector of tokens for the expression \inlinecode{s}, split on the given operators during construction. Each parenthesis, operator, and operand satisfying \inlinecode{is\_operand()} will be split into a separate token.
-  \item \inlinecode{eval(lo, hi)} returns the evaluation of a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
-  \item \inlinecode{eval(s)} returns the evaluation of expression \inlinecode{s}, after first calling \inlinecode{split(s)} to obtain the tokens.
+  \item \inlinecode{tokenize(s)} splits expression \inlinecode{s} into operands, operators, and parentheses. It throws \inlinecode{runtime\_error} for unknown tokens.
+  \item \inlinecode{to\_postfix(tokens)} converts infix \inlinecode{tokens} into postfix notation. It throws \inlinecode{runtime\_error} for malformed expressions or mismatched parentheses.
+  \item \inlinecode{eval\_postfix(tokens)} evaluates a tokenized postfix expression. It throws \inlinecode{runtime\_error} if an operator lacks operands or the expression does not produce one value.
+  \item \inlinecode{eval\_expression(s)} converts and evaluates infix expression \inlinecode{s}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(m \cdot k \cdot \log m)$ per call to the constructor, where $m$ is the total number of operators and $k$ is their maximum length.
-  \item $O(n \cdot m \cdot k)$ per call to \inlinecode{split(s)}, where $n$ is the length of \inlinecode{s}, $m$ is the total number of operators defined for the parser instance, and $k$ is the maximum length for any operator representation.
-  \item $O(n)$ expected per call to \inlinecode{eval(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
-  \item $O(n \cdot m \cdot k + n)$ expected per call to \inlinecode{eval(s)}, where $n$ is the length of \inlinecode{s}, and $m$ and $k$ are as defined previously.
+  \item $O(m \cdot k \cdot \log m + n \cdot m \cdot k)$ expected per call to \inlinecode{tokenize()} and \inlinecode{eval\_expression()}, where $n$ is the length of \inlinecode{s}, $m$ is the total number of operators, and $k$ is their maximum length.
+  \item $O(n)$ expected per call to \inlinecode{to\_postfix()} and \inlinecode{eval\_postfix()}, where $n$ is the total length of the tokens.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(m \cdot k)$ for storage of the $m$ operators, of maximum length $k$.
-  \item $O(n)$ auxiliary stack space for \inlinecode{split(s)}, \inlinecode{eval(lo, hi)}, and \inlinecode{eval(s)}, where $n$ is the length of the argument.
+  \item $O(n + m \cdot k)$ auxiliary space for \inlinecode{tokenize()} and \inlinecode{eval\_expression()}.
+  \item $O(n)$ auxiliary space for \inlinecode{to\_postfix()} and \inlinecode{eval\_postfix()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cctype>
 #include <functional>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
 using std::string;
 
-// Define the custom operand type and representation below.
 using Operand = double;
-using UnaryOp = std::function<Operand(Operand)>;
-using BinaryOp = std::function<Operand(Operand, Operand)>;
 
-struct BinaryRule {
-  BinaryOp op;
+struct UnaryRule {
+  std::function<Operand(Operand)> op;
   int precedence;
 };
 
-class RecursiveDescentParser {
-  using UnaryOpMap = std::unordered_map<string, UnaryOp>;
-  using BinaryOpMap = std::unordered_map<string, BinaryRule>;
-  UnaryOpMap unary_ops;
-  BinaryOpMap binary_ops;
+struct BinaryRule {
+  std::function<Operand(Operand, Operand)> op;
+  int precedence;
+  bool right_associative = false;
+};
+
+std::unordered_map<string, UnaryRule> unary_ops;
+std::unordered_map<string, BinaryRule> binary_ops;
+
+Operand eval_operand(const string &token) {
+  return std::stod(token);
+}
+
+void require(bool condition, const string &message) {
+  if (!condition) {
+    throw std::runtime_error(message);
+  }
+}
+
+std::vector<string> tokenize(const string &s) {
   std::vector<string> op_tokens;
-  int max_precedence;
-
-  static bool is_operand(const string &s) {
-    int npoints = 0;
-    for (char c : s) {
-      if (c == '.') {
-        if (++npoints > 1) {
-          return false;
-        }
-      } else if (!isdigit(static_cast<unsigned char>(c))) {
-        return false;
+  for (const auto &[op, rule] : unary_ops) {
+    op_tokens.push_back(op);
+  }
+  for (const auto &[op, rule] : binary_ops) {
+    op_tokens.push_back(op);
+  }
+  std::sort(op_tokens.begin(), op_tokens.end(), [](const string &a, const string &b) {
+    return a.size() != b.size() ? a.size() > b.size() : a < b;
+  });
+  op_tokens.erase(std::unique(op_tokens.begin(), op_tokens.end()), op_tokens.end());
+  auto is_operand_char = [](unsigned char c) { return std::isalnum(c) || c == '_' || c == '.'; };
+  std::vector<string> tokens;
+  int n = static_cast<int>(s.size());
+  for (int i = 0; i < n;) {
+    unsigned char c = static_cast<unsigned char>(s[i]);
+    if (std::isspace(c)) {
+      i++;
+    } else if (is_operand_char(c)) {
+      int j = i + 1;
+      while (j < n && is_operand_char(static_cast<unsigned char>(s[j]))) {
+        j++;
       }
-    }
-    return !s.empty();
-  }
-
-  static Operand eval_operand(const string &s) {
-    Operand res;
-    std::stringstream ss(s);
-    ss >> res;
-    return res;
-  }
-
-  template<typename StrIt>
-  Operand eval_unary(StrIt &lo, StrIt hi) const {
-    if (lo == hi) {
-      throw std::runtime_error("Unexpected end of expression.");
-    }
-    if (is_operand(*lo)) {
-      return eval_operand(*(lo++));
-    }
-    if (auto it = unary_ops.find(*lo); it != unary_ops.end()) {
-      return (it->second)(eval_unary(++lo, hi));
-    }
-    if (*lo != "(") {
-      throw std::runtime_error("Expected \"(\" during eval.");
-    }
-    Operand res = eval_binary(++lo, hi, 0);
-    if (lo == hi || *lo != ")") {
-      throw std::runtime_error("Expected \")\" during eval.");
-    }
-    ++lo;
-    return res;
-  }
-
-  template<typename StrIt>
-  Operand eval_binary(StrIt &lo, StrIt hi, int precedence) const {
-    if (precedence > max_precedence) {
-      return eval_unary(lo, hi);
-    }
-    Operand v = eval_binary(lo, hi, precedence + 1);
-    while (lo != hi) {
-      auto it = binary_ops.find(*lo);
-      if (it == binary_ops.end() || it->second.precedence != precedence) {
-        return v;
-      }
-      v = (it->second.op)(v, eval_binary(++lo, hi, precedence + 1));
-    }
-    return v;
-  }
-
-  static string strip(string s) {
-    auto not_space = [](unsigned char c) { return !std::isspace(c); };
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), not_space));
-    s.erase(std::find_if(s.rbegin(), s.rend(), not_space).base(), s.end());
-    return s;
-  }
-
- public:
-  RecursiveDescentParser(const UnaryOpMap &unary_ops, const BinaryOpMap &binary_ops)
-      : unary_ops(unary_ops), binary_ops(binary_ops) {
-    for (const auto &[op, _] : unary_ops) {
-      op_tokens.push_back(op);
-    }
-    max_precedence = 0;
-    for (const auto &[op, fn_prec] : binary_ops) {
-      op_tokens.push_back(op);
-      max_precedence = std::max(max_precedence, fn_prec.precedence);
-    }
-    std::sort(op_tokens.begin(), op_tokens.end(), [](const string &a, const string &b) {
-      return a.size() != b.size() ? a.size() > b.size() : a < b;
-    });
-    op_tokens.erase(std::unique(op_tokens.begin(), op_tokens.end()), op_tokens.end());
-  }
-
-  std::vector<string> split(const string &s) const {
-    std::vector<string> res;
-    for (int i = 0; i < static_cast<int>(s.size()); i++) {
-      if (std::isspace(static_cast<unsigned char>(s[i]))) {
-        continue;
-      }
-      int next_paren = static_cast<int>(s.size());
-      for (int j = i; j < static_cast<int>(s.size()); j++) {
-        if (s[j] == '(' || s[j] == ')') {
-          next_paren = j;
+      tokens.push_back(s.substr(i, j - i));
+      i = j;
+    } else if (s[i] == '(' || s[i] == ')') {
+      tokens.emplace_back(1, s[i]);
+      i++;
+    } else {
+      string op;
+      for (const string &candidate : op_tokens) {
+        if (s.compare(i, candidate.size(), candidate) == 0) {
+          op = candidate;
           break;
         }
       }
-      while (i < next_paren) {
-        int found = next_paren;
-        string found_op;
-        for (int j = i; j < next_paren && found == next_paren; j++) {
-          for (const auto &op : op_tokens) {
-            if (s.compare(j, op.size(), op) == 0) {
-              found = j;
-              found_op = op;
-              break;
-            }
-          }
-        }
-        string term = strip(s.substr(i, found - i));
-        if (!term.empty()) {
-          res.push_back(term);
-          if (!is_operand(term)) {
-            throw std::runtime_error("Failed to split term: \"" + term + "\".");
-          }
-        }
-        if (found < next_paren) {
-          res.push_back(found_op);
-          i = found + static_cast<int>(found_op.size());
-        } else {
-          i = next_paren;
-        }
-      }
-      if (next_paren < static_cast<int>(s.size())) {
-        res.emplace_back(1, s[next_paren]);
-      }
+      require(!op.empty(), "Unknown token at position " + std::to_string(i) + ".");
+      tokens.push_back(op);
+      i += static_cast<int>(op.size());
     }
-    return res;
   }
+  return tokens;
+}
 
-  template<typename StrIt>
-  Operand eval(StrIt lo, StrIt hi) const {
-    Operand res = eval_binary(lo, hi, 0);
-    if (lo != hi) {
-      throw std::runtime_error("Eval failed at token " + *lo + ".");
+std::vector<string> to_postfix(const std::vector<string> &tokens) {
+  struct PendingOp {
+    string token;
+    int precedence;
+  };
+  std::vector<string> output;
+  std::vector<PendingOp> op_stack;
+  bool expect_operand = true;
+  for (const string &token : tokens) {
+    bool is_operator = unary_ops.count(token) || binary_ops.count(token);
+    if (!is_operator && token != "(" && token != ")") {
+      require(expect_operand, "Expected an operator before token '" + token + "'.");
+      output.push_back(token);
+      expect_operand = false;
+    } else if (token == "(") {
+      require(expect_operand, "Expected an operator before opening parenthesis.");
+      op_stack.push_back({"(", -1});
+    } else if (token == ")") {
+      require(!expect_operand, "Unexpected closing parenthesis.");
+      while (!op_stack.empty() && op_stack.back().token != "(") {
+        output.push_back(op_stack.back().token);
+        op_stack.pop_back();
+      }
+      require(!op_stack.empty(), "Mismatched parentheses.");
+      op_stack.pop_back();
+      expect_operand = false;
+    } else if (expect_operand) {
+      auto it = unary_ops.find(token);
+      require(it != unary_ops.end(), "Expected an operand before token '" + token + "'.");
+      op_stack.push_back({"u" + token, it->second.precedence});
+    } else {
+      auto it = binary_ops.find(token);
+      require(it != binary_ops.end(), "Expected a binary operator, got '" + token + "'.");
+      const BinaryRule &rule = it->second;
+      while (!op_stack.empty() && op_stack.back().token != "(" &&
+             (op_stack.back().precedence > rule.precedence ||
+              (op_stack.back().precedence == rule.precedence && !rule.right_associative))) {
+        output.push_back(op_stack.back().token);
+        op_stack.pop_back();
+      }
+      op_stack.push_back({token, rule.precedence});
+      expect_operand = true;
     }
-    return res;
   }
+  require(!expect_operand, "Expression ends before an operand.");
+  while (!op_stack.empty()) {
+    require(op_stack.back().token != "(", "Mismatched parentheses.");
+    output.push_back(op_stack.back().token);
+    op_stack.pop_back();
+  }
+  return output;
+}
 
-  Operand eval(const string &s) const {
-    std::vector<string> tokens = split(s);
-    return eval(tokens.begin(), tokens.end());
+Operand eval_postfix(const std::vector<string> &tokens) {
+  std::vector<Operand> values;
+  for (const string &token : tokens) {
+    auto binary = binary_ops.find(token);
+    auto unary =
+        token.size() > 1 && token[0] == 'u' ? unary_ops.find(token.substr(1)) : unary_ops.end();
+    if (binary != binary_ops.end()) {
+      require(values.size() >= 2, "Binary operator lacks two operands: " + token);
+      Operand b = values.back();
+      values.pop_back();
+      values.back() = binary->second.op(values.back(), b);
+    } else if (unary != unary_ops.end()) {
+      require(!values.empty(), "Unary operator lacks an operand: " + token);
+      values.back() = unary->second.op(values.back());
+    } else {
+      values.push_back(eval_operand(token));
+    }
   }
-};
+  require(values.size() == 1, "Invalid postfix expression.");
+  return values.back();
+}
+
+Operand eval_expression(const string &s) {
+  return eval_postfix(to_postfix(tokenize(s)));
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -4281,261 +4269,156 @@ class RecursiveDescentParser {
 using namespace std;
 
 bool EQ(double a, double b) {
-  return fabs(a - b) < 1e-7;
+  return a == b || fabs(a - b) <= 1e-9;
 }
 
 int main() {
-  unordered_map<string, UnaryOp> unary_ops;
-  unary_ops["+"] = [](double x) { return +x; };
-  unary_ops["-"] = [](double x) { return -x; };
-
-  unordered_map<string, BinaryRule> binary_ops;
-  binary_ops["+"] = {[](double a, double b) { return a + b; }, 1};
-  binary_ops["-"] = {[](double a, double b) { return a - b; }, 1};
-  binary_ops["*"] = {[](double a, double b) { return a * b; }, 2};
-  binary_ops["/"] = {[](double a, double b) { return a / b; }, 2};
-  binary_ops["^"] = {[](double a, double b) { return pow(a, b); }, 3};
-  binary_ops["<"] = {[](double a, double b) { return a < b; }, 0};
-  binary_ops["<="] = {[](double a, double b) { return a <= b; }, 0};
-
-  RecursiveDescentParser p(unary_ops, binary_ops);
-  assert(EQ(p.eval("-+-((--(-+1)))"), -1));
-  assert(EQ(p.eval("5*(3+3)-2-2"), 26));
-  assert(EQ(p.eval("1<=1"), 1));  // Prefer the longest operator token at a shared prefix.
-  assert(EQ(p.eval("1+2*3*4+3*(+2)-100"), -69));
-  assert(EQ(p.eval("3*3*3*3*3*3-2*2*2*2*2*2*2*2"), 473));
-  assert(EQ(p.eval("3.14 + 3 * (7.7/9.8^32.9  )"), 3.14));
-  assert(EQ(p.eval("5*(3+2)/-1*-2+(-2-2-2+3)-3-(-2)+15/2/2/2+(-2)"), 45.875));
-  assert(EQ(p.eval("123456789./3/3/3*2*2*2+456/6-23/3"), 36579857.6666666667));
-  assert(EQ(p.eval("10/3+10/4+10/5+10/6+10/7+10/8+10/9+10/10+15*23456"), 351854.28968253968));
-  assert(
-      EQ(p.eval(
-             "-(5-(5-(5-(5-(5-2)))))+(3-(3-(3-(3-(3+3)))))*"
-             "(7-(7-(7-(7-(7-7+4*5)))))"
-         ),
-         117)
-  );
+  unary_ops = {
+      {"+", {[](Operand x) { return x; }, 3}},
+      {"-", {[](Operand x) { return -x; }, 3}},
+  };
+  binary_ops = {
+      {"<=", {[](Operand a, Operand b) { return a <= b; }, 0}},
+      {"+", {[](Operand a, Operand b) { return a + b; }, 1}},
+      {"-", {[](Operand a, Operand b) { return a - b; }, 1}},
+      {"*", {[](Operand a, Operand b) { return a * b; }, 2}},
+      {"/", {[](Operand a, Operand b) { return a / b; }, 2}},
+      {"^", {[](Operand a, Operand b) { return pow(a, b); }, 4, true}},
+  };
+  assert((tokenize("left <= -12.5") == vector<string>{"left", "<=", "-", "12.5"}));
+  assert((to_postfix(tokenize("-(2+3)*4")) == vector<string>{"2", "3", "+", "u-", "4", "*"}));
+  assert((to_postfix(tokenize("2^-3^2")) == vector<string>{"2", "3", "2", "^", "u-", "^"}));
+  assert(EQ(eval_postfix({"2", "3", "4", "*", "+"}), 14));
+  assert(EQ(eval_expression("-2^2"), -4));
+  assert(EQ(eval_expression("2^-3"), 0.125));
+  assert(EQ(eval_expression("1<=1"), 1));
+  assert(EQ(eval_expression("5*(3+2)/-1*-2"), 50));
   return 0;
 }
 \end{lstlisting}
-\subsection{Shunting Yard Parsing}
-Evaluates an infix expression with custom operand types, prefix unary operators, binary operators, and precedences. In infix notation, binary operators appear between operands; prefix and postfix notation place operators before and after their operands, respectively. Postfix notation is also called reverse Polish notation (RPN).
+\subsection{Pratt Parsing}
+Evaluate an expression with configurable prefix unary and infix binary operators using Pratt parsing, also called top-down operator-precedence parsing. Unlike recursive descent with one function per precedence level, a Pratt parser uses numeric binding powers to decide whether the next operator belongs to the current expression or to its caller.
 
-The shunting yard algorithm commonly converts infix expressions to postfix notation. This implementation instead maintains operator and value stacks and evaluates each operator when it would be emitted to the postfix output, avoiding an intermediate token list. Multiplication by juxtaposition is not supported.
+Parsing begins with an operand, parenthesized expression, or prefix operator. It then repeatedly consumes binary operators whose precedence is high enough for the current call. A left-associative operator raises the minimum precedence for its right operand, preventing another equal-precedence operator from joining that operand; a right-associative operator leaves the threshold unchanged.
 
-An arbitrary operand type is supported by changing the \inlinecode{Operand} alias and the static \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} helpers. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting \inlinecode{-1} as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify nonnegative numbers as operands alongside the unary operator \inlinecode{-}.
-
-Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. When multiple operators match at the same position, the longest one is chosen, so \inlinecode{\textless{}=} remains one token when \inlinecode{\textless{}} is also an operator.
+Customize the operand type and syntax by changing \inlinecode{Operand} and \inlinecode{eval\_operand()}. Operators may contain multiple non-operand characters, and the longest matching operator is chosen. Operands are maximal strings of letters, digits, underscores, and periods. Multiplication by juxtaposition and postfix operators are not supported.
 
 \begin{compactitem}
-  \item \inlinecode{ShuntingYardParser(unary\_ops, binary\_ops)} initializes a parser with operators specified by hash tables \inlinecode{unary\_ops} (of operator to unary function object) and \inlinecode{binary\_ops} (of operator to pair of binary function object and operator precedence). Operator precedences should be numbered upwards starting at $0$ (lowest precedence, evaluated last).
-  \item \inlinecode{split(s)} returns a vector of tokens for the expression \inlinecode{s}, split on the given operators during construction. Each parenthesis, operator, and operand satisfying \inlinecode{is\_operand()} will be split into a separate token.
-  \item \inlinecode{eval(lo, hi)} returns the evaluation of a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
-  \item \inlinecode{eval(s)} returns the evaluation of expression \inlinecode{s}, after first calling \inlinecode{split(s)} to obtain the tokens.
+  \item \inlinecode{eval\_pratt(s)} evaluates expression \inlinecode{s} using the global operator tables. It throws \inlinecode{runtime\_error} for malformed expressions, unknown tokens, or mismatched parentheses.
 \end{compactitem}
 
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(m \cdot k \cdot \log m)$ per call to the constructor, where $m$ is the total number of operators and $k$ is their maximum length.
-  \item $O(n \cdot m \cdot k)$ per call to \inlinecode{split(s)}, where $n$ is the length of \inlinecode{s}, $m$ is the total number of operators defined for the parser instance, and $k$ is the maximum length for any operator representation.
-  \item $O(n)$ expected per call to \inlinecode{eval(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
-  \item $O(n \cdot m \cdot k + n)$ expected per call to \inlinecode{eval(s)}, where $n$ is the length of \inlinecode{s}, and $m$ and $k$ are as defined previously.
-\end{compactitem}
+\textbf{Time Complexity}: $O(m \cdot k \cdot \log m + n \cdot m \cdot k)$ expected per call, where $n$ is the length of \inlinecode{s}, $m$ is the total number of operators, and $k$ is their maximum length.
 
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(m \cdot k)$ for storage of the $m$ operators, of maximum length $k$.
-  \item $O(n)$ auxiliary stack space for \inlinecode{split(s)}, \inlinecode{eval(lo, hi)}, and \inlinecode{eval(s)}, where $n$ is the length of the argument.
-\end{compactitem}
+\textbf{Space Complexity}: $O(n + m \cdot k)$ auxiliary space, including the recursive stack.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cctype>
 #include <functional>
-#include <sstream>
-#include <stack>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 using std::string;
 
-// Define the custom operand type and representation below.
 using Operand = double;
-using UnaryOp = std::function<Operand(Operand)>;
-using BinaryOp = std::function<Operand(Operand, Operand)>;
 
-struct BinaryRule {
-  BinaryOp op;
+struct UnaryRule {
+  std::function<Operand(Operand)> op;
   int precedence;
 };
 
-class ShuntingYardParser {
-  using UnaryOpMap = std::unordered_map<string, UnaryOp>;
-  using BinaryOpMap = std::unordered_map<string, BinaryRule>;
-  UnaryOpMap unary_ops;
-  BinaryOpMap binary_ops;
-  std::vector<string> op_tokens;
-
-  static Operand eval_operand(const string &s) {
-    Operand res;
-    std::stringstream ss(s);
-    ss >> res;
-    return res;
-  }
-
-  static bool is_operand(const string &s) {
-    int npoints = 0;
-    for (char c : s) {
-      if (c == '.') {
-        if (++npoints > 1) {
-          return false;
-        }
-      } else if (!isdigit(static_cast<unsigned char>(c))) {
-        return false;
-      }
-    }
-    return !s.empty();
-  }
-
-  static string strip(string s) {
-    auto not_space = [](unsigned char c) { return !std::isspace(c); };
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), not_space));
-    s.erase(std::find_if(s.rbegin(), s.rend(), not_space).base(), s.end());
-    return s;
-  }
-
- public:
-  ShuntingYardParser(const UnaryOpMap &unary_ops, const BinaryOpMap &binary_ops)
-      : unary_ops(unary_ops), binary_ops(binary_ops) {
-    for (const auto &[op, fn] : unary_ops) {
-      op_tokens.push_back(op);
-    }
-    for (const auto &[op, fn_prec] : binary_ops) {
-      op_tokens.push_back(op);
-    }
-    std::sort(op_tokens.begin(), op_tokens.end(), [](const string &a, const string &b) {
-      return a.size() != b.size() ? a.size() > b.size() : a < b;
-    });
-    op_tokens.erase(std::unique(op_tokens.begin(), op_tokens.end()), op_tokens.end());
-  }
-
-  std::vector<string> split(const string &s) const {
-    std::vector<string> res;
-    for (int i = 0; i < static_cast<int>(s.size()); i++) {
-      if (std::isspace(static_cast<unsigned char>(s[i]))) {
-        continue;
-      }
-      int next_paren = static_cast<int>(s.size());
-      for (int j = i; j < static_cast<int>(s.size()); j++) {
-        if (s[j] == '(' || s[j] == ')') {
-          next_paren = j;
-          break;
-        }
-      }
-      while (i < next_paren) {
-        int found = next_paren;
-        string found_op;
-        for (int j = i; j < next_paren && found == next_paren; j++) {
-          for (const auto &op : op_tokens) {
-            if (s.compare(j, op.size(), op) == 0) {
-              found = j;
-              found_op = op;
-              break;
-            }
-          }
-        }
-        string term = strip(s.substr(i, found - i));
-        if (!term.empty()) {
-          res.push_back(term);
-          if (!is_operand(term)) {
-            throw std::runtime_error("Failed to split term: \"" + term + "\".");
-          }
-        }
-        if (found < next_paren) {
-          res.push_back(found_op);
-          i = found + static_cast<int>(found_op.size());
-        } else {
-          i = next_paren;
-        }
-      }
-      if (next_paren < static_cast<int>(s.size())) {
-        res.emplace_back(1, s[next_paren]);
-      }
-    }
-    return res;
-  }
-
-  template<typename StrIt>
-  Operand eval(StrIt lo, StrIt hi) const {
-    if (lo == hi) {
-      throw std::runtime_error("Cannot evaluate an empty expression.");
-    }
-    std::stack<Operand> vals;
-    std::stack<std::pair<string, bool>> op_stack;
-    op_stack.emplace("(", false);
-    StrIt prev = hi;
-    while (true) {
-      string curr = (lo == hi) ? ")" : *lo;
-      if (is_operand(curr)) {
-        vals.push(eval_operand(curr));
-      } else if (curr == "(") {
-        op_stack.emplace(curr, false);
-      } else if (
-          unary_ops.find(curr) != unary_ops.end() &&
-          (prev == hi || *prev == "(" || binary_ops.find(*prev) != binary_ops.end())
-      ) {
-        op_stack.emplace(curr, true);
-      } else {
-        while (true) {
-          auto [op, is_unary] = op_stack.top();
-          auto it1 = binary_ops.find(op);
-          auto it2 = binary_ops.find(curr);
-          if (!is_unary && (it1 == binary_ops.end() ? -1 : it1->second.precedence) <
-                               (it2 == binary_ops.end() ? -1 : it2->second.precedence)) {
-            break;
-          }
-          op_stack.pop();
-          if (op == "(") {
-            break;
-          }
-          Operand b = vals.top();
-          vals.pop();
-          if (is_unary) {
-            if (auto it = unary_ops.find(op); it != unary_ops.end()) {
-              vals.push((it->second)(b));
-            } else {
-              throw std::runtime_error("Failed to eval unary op: " + op);
-            }
-          } else {
-            Operand a = vals.top();
-            vals.pop();
-            if (it1 == binary_ops.end()) {
-              throw std::runtime_error("Failed to eval binary op: " + op);
-            }
-            vals.push((it1->second.op)(a, b));
-          }
-        }
-        if (curr != ")") {
-          op_stack.emplace(*lo, false);
-        }
-      }
-      if (lo == hi) {
-        break;
-      }
-      prev = lo++;
-    }
-    return vals.top();
-  }
-
-  Operand eval(const string &s) const {
-    std::vector<string> tokens = split(s);
-    return eval(tokens.begin(), tokens.end());
-  }
+struct BinaryRule {
+  std::function<Operand(Operand, Operand)> op;
+  int precedence;
+  bool right_associative = false;
 };
+
+std::unordered_map<string, UnaryRule> unary_ops;
+std::unordered_map<string, BinaryRule> binary_ops;
+
+Operand eval_operand(const string &token) {
+  return std::stod(token);
+}
+
+void require(bool condition, const string &message) {
+  if (!condition) {
+    throw std::runtime_error(message);
+  }
+}
+
+Operand eval_pratt(const string &s) {
+  std::vector<string> op_tokens;
+  for (const auto &[op, rule] : unary_ops) {
+    op_tokens.push_back(op);
+  }
+  for (const auto &[op, rule] : binary_ops) {
+    op_tokens.push_back(op);
+  }
+  std::sort(op_tokens.begin(), op_tokens.end(), [](const string &a, const string &b) {
+    return a.size() != b.size() ? a.size() > b.size() : a < b;
+  });
+  op_tokens.erase(std::unique(op_tokens.begin(), op_tokens.end()), op_tokens.end());
+  int pos = 0, n = static_cast<int>(s.size());
+  auto skip_spaces = [&] {
+    while (pos < n && std::isspace(static_cast<unsigned char>(s[pos]))) {
+      pos++;
+    }
+  };
+  auto match_operator = [&](bool unary) {
+    skip_spaces();
+    for (const string &op : op_tokens) {
+      const bool allowed = unary ? unary_ops.count(op) : binary_ops.count(op);
+      if (allowed && s.compare(pos, op.size(), op) == 0) {
+        return op;
+      }
+    }
+    return string();
+  };
+  auto is_operand_char = [](unsigned char c) { return std::isalnum(c) || c == '_' || c == '.'; };
+  auto parse = [&](auto &&parse, int min_precedence) -> Operand {
+    skip_spaces();
+    require(pos != n, "Expression ends before an operand.");
+    Operand lhs;
+    if (s[pos] == '(') {
+      pos++;
+      lhs = parse(parse, 0);
+      skip_spaces();
+      require(pos != n && s[pos] == ')', "Mismatched parentheses.");
+      pos++;
+    } else if (string op = match_operator(true); !op.empty()) {
+      pos += static_cast<int>(op.size());
+      const UnaryRule &rule = unary_ops.at(op);
+      lhs = rule.op(parse(parse, rule.precedence));
+    } else {
+      require(
+          is_operand_char(static_cast<unsigned char>(s[pos])),
+          "Expected operand at position " + std::to_string(pos) + "."
+      );
+      int start = pos++;
+      while (pos < n && is_operand_char(static_cast<unsigned char>(s[pos]))) {
+        pos++;
+      }
+      lhs = eval_operand(s.substr(start, pos - start));
+    }
+    while (true) {
+      string op = match_operator(false);
+      if (op.empty()) {
+        return lhs;
+      }
+      const BinaryRule &rule = binary_ops.at(op);
+      if (rule.precedence < min_precedence) {
+        return lhs;
+      }
+      pos += static_cast<int>(op.size());
+      lhs = rule.op(lhs, parse(parse, rule.precedence + !rule.right_associative));
+    }
+  };
+  Operand value = parse(parse, 0);
+  skip_spaces();
+  require(pos == n, "Unexpected token at position " + std::to_string(pos) + ".");
+  return value;
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -4545,40 +4428,25 @@ class ShuntingYardParser {
 using namespace std;
 
 bool EQ(double a, double b) {
-  return fabs(a - b) < 1e-7;
+  return a == b || fabs(a - b) <= 1e-9;
 }
 
 int main() {
-  unordered_map<string, UnaryOp> unary_ops;
-  unary_ops["+"] = [](double x) { return +x; };
-  unary_ops["-"] = [](double x) { return -x; };
-
-  unordered_map<string, BinaryRule> binary_ops;
-  binary_ops["+"] = {[](double a, double b) { return a + b; }, 1};
-  binary_ops["-"] = {[](double a, double b) { return a - b; }, 1};
-  binary_ops["*"] = {[](double a, double b) { return a * b; }, 2};
-  binary_ops["/"] = {[](double a, double b) { return a / b; }, 2};
-  binary_ops["^"] = {[](double a, double b) { return pow(a, b); }, 3};
-  binary_ops["<"] = {[](double a, double b) { return a < b; }, 0};
-  binary_ops["<="] = {[](double a, double b) { return a <= b; }, 0};
-
-  ShuntingYardParser p(unary_ops, binary_ops);
-  assert(EQ(p.eval("-+-((--(-+1)))"), -1));
-  assert(EQ(p.eval("5*(3+3)-2-2"), 26));
-  assert(EQ(p.eval("1<=1"), 1));  // Prefer the longest operator token at a shared prefix.
-  assert(EQ(p.eval("1+2*3*4+3*(+2)-100"), -69));
-  assert(EQ(p.eval("3*3*3*3*3*3-2*2*2*2*2*2*2*2"), 473));
-  assert(EQ(p.eval("3.14 + 3 * (7.7/9.8^32.9  )"), 3.14));
-  assert(EQ(p.eval("5*(3+2)/-1*-2+(-2-2-2+3)-3-(-2)+15/2/2/2+(-2)"), 45.875));
-  assert(EQ(p.eval("123456789./3/3/3*2*2*2+456/6-23/3"), 36579857.6666666667));
-  assert(EQ(p.eval("10/3+10/4+10/5+10/6+10/7+10/8+10/9+10/10+15*23456"), 351854.28968253968));
-  assert(
-      EQ(p.eval(
-             "-(5-(5-(5-(5-(5-2)))))+(3-(3-(3-(3-(3+3)))))*"
-             "(7-(7-(7-(7-(7-7+4*5)))))"
-         ),
-         117)
-  );
+  unary_ops = {
+      {"+", {[](Operand x) { return x; }, 3}},
+      {"-", {[](Operand x) { return -x; }, 3}},
+  };
+  binary_ops = {
+      {"+", {[](Operand a, Operand b) { return a + b; }, 1}},
+      {"-", {[](Operand a, Operand b) { return a - b; }, 1}},
+      {"*", {[](Operand a, Operand b) { return a * b; }, 2}},
+      {"/", {[](Operand a, Operand b) { return a / b; }, 2}},
+      {"^", {[](Operand a, Operand b) { return pow(a, b); }, 4, true}},
+  };
+  assert(EQ(eval_pratt("-2^2"), -4));
+  assert(EQ(eval_pratt("2^-3"), 0.125));
+  assert(EQ(eval_pratt("2^3^2"), 512));
+  assert(EQ(eval_pratt("5*(3+2)/-1*-2"), 50));
   return 0;
 }
 \end{lstlisting}

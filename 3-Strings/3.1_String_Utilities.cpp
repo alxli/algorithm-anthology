@@ -237,7 +237,7 @@ Find and Replace:
 - `regex_groups(s, pattern)` returns the capture groups of the first match of `pattern` in `s`,
   excluding the full match. If there is no match, returns an empty vector.
 - `regex_replace_all(s, pattern, replacement)` returns a copy of `s` with every regex match replaced
-  by `replacement`.
+  by `replacement`, which may refer to capture groups as `$1`, `$2`, and so on.
 
 */
 
@@ -495,6 +495,7 @@ int main() {
   assert(join(regex_find_all("a12b345", "[0-9]+"), "|") == "12|345");
   assert(join(regex_groups("abc-123", "([a-z]+)-([0-9]+)"), "|") == "abc|123");
   assert(regex_replace_all("a12b345", "[0-9]+", "#") == "a#b#");
+  assert(regex_replace_all("2026-08-04", R"((\d{4})-(\d{2})-(\d{2}))", "$2/$3/$1") == "08/04/2026");
 
   assert(repeat("ab", 3) == "ababab");
   assert(repeat("ab", -1).empty());

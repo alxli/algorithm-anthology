@@ -64,20 +64,6 @@ string longest_common_subsequence(const string &s1, const string &s2) {
 }
 
 template<typename It>
-std::vector<int> lcs_len(It lo1, It hi1, It lo2, It hi2) {
-  std::vector<int> res(std::distance(lo2, hi2) + 1), prev(res);
-  for (It it1 = lo1; it1 != hi1; ++it1) {
-    res.swap(prev);
-    int i = 0;
-    for (It it2 = lo2; it2 != hi2; ++it2) {
-      res[i + 1] = (*it1 == *it2) ? prev[i] + 1 : std::max(res[i], prev[i + 1]);
-      i++;
-    }
-  }
-  return res;
-}
-
-template<typename It>
 void hirschberg_rec(It lo1, It hi1, It lo2, It hi2, string *res) {
   if (lo1 == hi1) {
     return;
@@ -90,6 +76,18 @@ void hirschberg_rec(It lo1, It hi1, It lo2, It hi2, string *res) {
   }
   It mid1 = lo1 + (hi1 - lo1) / 2;
   std::reverse_iterator<It> rlo1(hi1), rmid1(mid1), rlo2(hi2), rhi2(lo2);
+  auto lcs_len = [](auto lo1, auto hi1, auto lo2, auto hi2) {
+    std::vector<int> res(std::distance(lo2, hi2) + 1), prev(res);
+    for (auto it1 = lo1; it1 != hi1; ++it1) {
+      res.swap(prev);
+      int i = 0;
+      for (auto it2 = lo2; it2 != hi2; ++it2) {
+        res[i + 1] = (*it1 == *it2) ? prev[i] + 1 : std::max(res[i], prev[i + 1]);
+        i++;
+      }
+    }
+    return res;
+  };
   std::vector<int> fwd = lcs_len(lo1, mid1, lo2, hi2);
   std::vector<int> rev = lcs_len(rlo1, rmid1, rlo2, rhi2);
   It mid2 = lo2;

@@ -239,8 +239,7 @@ int main() {
         auto [x, y] = extended_euclid(a, b);
         assert(g == a * x + b * y);
         if (g == 1 && b > 1) {
-          int inv = mod_inverse(a, b);
-          assert(mod(a * inv, b) == 1);
+          assert(mod(a * mod_inverse(a, b), b) == 1);
         }
       }
     }

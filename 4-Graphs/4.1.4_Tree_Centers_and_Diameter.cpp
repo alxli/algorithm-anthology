@@ -12,8 +12,9 @@ $[0, n)$, where $n$ is `adj.size()`.
   maximum distance to all other nodes in the tree is minimal.
 - `find_centroid()` returns the node where all of its subtrees have a size less than or equal to
   $n / 2$, where $n$ is the number of nodes in the tree.
-- `diameter()` returns the maximum distance between any two nodes in the tree, using a well-known
-  double depth-first search technique.
+- `diameter()` returns a tuple (`length`, `u`, `v`), where `length` is the maximum distance between
+  any two nodes in the tree and `u` and `v` are endpoints attaining that distance. It uses a
+  well-known double DFS technique.
 
 Time Complexity:
 - O(max(n, m)) per call to `find_centers()`, `find_centroid()`, and `diameter()`, where $n$ is the
@@ -26,6 +27,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -56,9 +58,9 @@ std::vector<int> find_centers() {
   return leaves;
 }
 
-// Returns the centroid node index if found in this subtree, or -(subtree size) to propagate
-// the size up to the parent so it can check the complementary component's size.
-static int find_centroid_dfs(int u, int p) {
+// Returns the centroid node index if found in this subtree, or -(subtree size) to propagate the
+// size up to the parent so it can check the complementary component's size.
+int find_centroid(int u = 0, int p = -1) {
   int n = static_cast<int>(adj.size());
   int count = 1;
   bool good_center = true;
@@ -66,7 +68,7 @@ static int find_centroid_dfs(int u, int p) {
     if (v == p) {
       continue;
     }
-    int res = find_centroid_dfs(v, u);
+    int res = find_centroid(v, u);
     if (res >= 0) {
       return res;
     }
@@ -78,9 +80,7 @@ static int find_centroid_dfs(int u, int p) {
   return good_center ? u : -count;
 }
 
-int find_centroid() { return find_centroid_dfs(0, -1); }
-
-int diameter() {
+std::tuple<int, int, int> diameter() {
   auto dfs = [&](auto &&dfs, int u, int p = -1, int depth = 0) -> std::pair<int, int> {
     std::pair<int, int> res{depth, u};
     for (int v : adj[u]) {
@@ -90,8 +90,9 @@ int diameter() {
     }
     return res;
   };
-  int furthest_node = dfs(dfs, 0).second;
-  return dfs(dfs, furthest_node).first;
+  int u = dfs(dfs, 0).second;
+  auto [length, v] = dfs(dfs, u);
+  return {length, u, v};
 }
 
 /*** Example Usage ***/
@@ -114,9 +115,9 @@ int main() {
   add_edge(1, 4);
   add_edge(3, 4);
   add_edge(4, 5);
-  vector<int> centers = find_centers();
-  assert((centers == vector<int>{1, 4}));
+  assert((find_centers() == vector<int>{1, 4}));
   assert(find_centroid() == 4);
-  assert(diameter() == 3);
+  auto [length, u, v] = diameter();
+  assert(length == 3 && u == 5 && v == 2);
   return 0;
 }

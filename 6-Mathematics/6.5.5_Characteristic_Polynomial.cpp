@@ -117,12 +117,8 @@ int main() {
   vector<vector<int64_t>> a{{1, 2}, {3, 4}};
   assert((characteristic_polynomial(a) == vector<int64_t>{MOD - 2, MOD - 5, 1}));  // -2, -5, 1.
 
-  // For any matrix, c_{n-1} = -trace and c_0 = (-1)^n det.
+  // det(xI - B) = (x - 3)(x^2 - 7x + 6) = x^3 - 10x^2 + 27x - 18.
   vector<vector<int64_t>> b{{2, 0, 1}, {0, 3, 0}, {4, 1, 5}};
-  vector<int64_t> cb = characteristic_polynomial(b);
-  assert(cb.size() == 4 && cb[3] == 1);
-  assert(cb[2] == (MOD - (2 + 3 + 5)) % MOD);  // Negated trace.
-  // det(B) = 2(15) - 0 + 1(0 - 12) = 18, so c_0 = (-1)^3 * 18 = -18.
-  assert(cb[0] == (MOD - 18) % MOD);
+  assert((characteristic_polynomial(b) == vector<int64_t>{MOD - 18, 27, MOD - 10, 1}));
   return 0;
 }

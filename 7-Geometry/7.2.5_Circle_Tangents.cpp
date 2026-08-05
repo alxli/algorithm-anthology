@@ -110,13 +110,20 @@ int main() {
   assert(
       EQ(in[1].first, Point(0.5, sqrt(3.0) / 2)) && EQ(in[1].second, Point(3.5, -sqrt(3.0) / 2))
   );
-
+  auto all = ext;
+  all.insert(all.end(), in.begin(), in.end());
+  assert(all_circle_tangents(a, 1, b, 1) == all);
   auto point_to_circle = circle_tangents(Point(0, 0), 0, Point(2, 0), 1);
   assert(point_to_circle.size() == 2);
-  assert(EQ(point_to_circle[0].first, Point(0, 0)));
-
+  assert(
+      EQ(point_to_circle[0].first, Point(0, 0)) &&
+      EQ(point_to_circle[0].second, Point(1.5, -sqrt(3.0) / 2))
+  );
+  assert(
+      EQ(point_to_circle[1].first, Point(0, 0)) &&
+      EQ(point_to_circle[1].second, Point(1.5, sqrt(3.0) / 2))
+  );
   assert(circle_tangents(Point(0, 0), 5, Point(1, 0), 1).empty());        // contained
   assert(circle_tangents(Point(0, 0), 2, Point(3, 0), 2, true).empty());  // overlapping
-  assert(all_circle_tangents(Point(0, 0), 1, Point(4, 0), 1).size() == 4);
   return 0;
 }

@@ -134,8 +134,8 @@ struct PointI {
 int main() {
   {
     vector<PointI> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
-  mt19937 rng(1234567);  // Fixed seed for reproducibility.
-  shuffle(v.begin(), v.end(), rng);
+    mt19937 rng(1234567);  // Fixed seed for reproducibility.
+    shuffle(v.begin(), v.end(), rng);
     vector<PointI> h{{-1, 3}, {0, 0}, {2, 1}, {1, 3}};
     assert(convex_hull(v.begin(), v.end()) == h);
   }

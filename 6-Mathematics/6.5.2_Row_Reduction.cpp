@@ -14,10 +14,10 @@ and division.
 - `matrix_rank(a)` returns the rank of matrix `a`, i.e. the number of nonzero rows after row
   reduction.
 - `solve_system(a, b, &x)` solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix
-  `a` over the real numbers or an exact field, and a length $m$ vector `b`, returning $0$ if
-  there is one solution, $-1$ if there are zero solutions, or $-2$ if there are infinite solutions.
-  If there is exactly one solution, then the output vector `x` is populated with the solution of
-  length $n$.
+  `a` over the real numbers or an exact field, and a length $m$ vector `b`, returning $0$ if there
+  is one solution, $-1$ if there are zero solutions, or $-2$ if there are infinite solutions. If
+  there is exactly one solution, then the output vector `x` is populated with the solution of length
+  $n$.
 
 Time Complexity:
 - O(m*n*min(m, n)) per call to `row_reduce()` and `matrix_rank()`, where $m$ and $n$ are the numbers

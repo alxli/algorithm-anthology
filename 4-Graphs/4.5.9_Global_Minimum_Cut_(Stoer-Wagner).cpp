@@ -14,8 +14,8 @@ the next phase begins on the smaller graph. After $n - 1$ phases every candidate
 considered, and the smallest is the global minimum cut.
 
 - `global_min_cut(cap)` returns a pair (`weight`, `side`) for a graph as a symmetric capacity matrix
-  `cap` (with $0$ for the diagonal and absent edges), where `weight` is the total weight of
-  the global minimum cut and `side` lists the nodes on one side of that cut. The graph must have at
+  `cap` (with $0$ for the diagonal and absent edges), where `weight` is the total weight of the
+  global minimum cut and `side` lists the nodes on one side of that cut. The graph must have at
   least two nodes.
 
 Parallel edges should be pre-summed into the capacity matrix before calling: `cap[u][v]` holds a

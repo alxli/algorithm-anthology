@@ -5,15 +5,15 @@ Simpson's rule: the interval is split into $n$ equal subintervals and each conse
 approximated by a parabola, giving the approximation $\int_{a}^{b} f(x) \,dx \approx$
 $h/3 \cdot [f(x_0) + 4f(x_1) + 2f(x_2) + \ldots + 4f(x_{n-1}) + f(x_n)]$ with step $h = (b - a)/n$.
 
-Unlike adaptive quadrature, the step size here is uniform, so a feature narrower than `h` may be
+Unlike adaptive quadrature, the step size here is uniform, so a feature narrower than $h$ may be
 under-resolved. The benefit is a simple, non-recursive routine with predictable cost that is not
 fooled by the premature-termination heuristic that adaptive Simpson's rule can suffer on functions
 whose coarse sample points happen to fit a parabola.
 
 - `integrate(f, a, b, n = 1000000)` returns the definite integral of a function `f` from `a` to `b`
   using `n` subintervals, where `n` must be even. Larger `n` trades runtime for accuracy; the
-  leading error scales with `(b - a) * h^4` and the maximum magnitude of the fourth derivative of
-  $f$ over the interval.
+  leading error scales with $(b - a)h^4$ and the maximum magnitude of the fourth derivative of $f$
+  over the interval.
 
 Time Complexity:
 - O(n) per call, requiring $n + 1$ evaluations of $f$.

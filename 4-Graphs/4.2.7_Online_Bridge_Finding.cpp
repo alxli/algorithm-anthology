@@ -48,12 +48,12 @@ class OnlineBridges {
 
   void merge_path(int u, int v) {
     lca_iteration++;
-    std::vector<int> path_a, path_b;
+    std::vector<int> upath, vpath;
     int lca = -1;
     while (lca == -1) {
       if (u != -1) {
         u = find_2ecc(u);
-        path_a.push_back(u);
+        upath.push_back(u);
         if (last_visit[u] == lca_iteration) {
           lca = u;
           break;
@@ -63,7 +63,7 @@ class OnlineBridges {
       }
       if (v != -1) {
         v = find_2ecc(v);
-        path_b.push_back(v);
+        vpath.push_back(v);
         if (last_visit[v] == lca_iteration) {
           lca = v;
           break;
@@ -72,14 +72,14 @@ class OnlineBridges {
         v = parent[v];
       }
     }
-    for (int a : path_a) {
+    for (int a : upath) {
       dsu_2ecc[a] = lca;
       if (a == lca) {
         break;
       }
       num_bridges--;
     }
-    for (int b : path_b) {
+    for (int b : vpath) {
       dsu_2ecc[b] = lca;
       if (b == lca) {
         break;
@@ -106,18 +106,12 @@ class OnlineBridges {
     if (u == -1) {
       return -1;
     }
-    if (dsu_2ecc[u] == u) {
-      return u;
-    }
-    return dsu_2ecc[u] = find_2ecc(dsu_2ecc[u]);
+    return dsu_2ecc[u] == u ? u : dsu_2ecc[u] = find_2ecc(dsu_2ecc[u]);
   }
 
   int find_cc(int u) {
     u = find_2ecc(u);
-    if (dsu_cc[u] == u) {
-      return u;
-    }
-    return dsu_cc[u] = find_cc(dsu_cc[u]);
+    return dsu_cc[u] == u ? u : dsu_cc[u] = find_cc(dsu_cc[u]);
   }
 
   void add_edge(int u, int v) {
@@ -126,17 +120,17 @@ class OnlineBridges {
     if (u == v) {
       return;
     }
-    int ca = find_cc(u), cb = find_cc(v);
-    if (ca != cb) {
+    int cu = find_cc(u), cv = find_cc(v);
+    if (cu != cv) {
       num_bridges++;
-      if (dsu_cc_size[ca] > dsu_cc_size[cb]) {
+      if (dsu_cc_size[cu] > dsu_cc_size[cv]) {
         std::swap(u, v);
-        std::swap(ca, cb);
+        std::swap(cu, cv);
       }
       make_root(u);
       parent[u] = v;
       dsu_cc[u] = v;
-      dsu_cc_size[cb] += dsu_cc_size[u];
+      dsu_cc_size[cv] += dsu_cc_size[u];
     } else {
       merge_path(u, v);
     }

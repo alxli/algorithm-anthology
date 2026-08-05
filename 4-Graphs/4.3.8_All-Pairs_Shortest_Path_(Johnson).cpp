@@ -74,8 +74,8 @@ bool johnson_all_pairs(int n) {
   }
   dist.assign(n, std::vector<int64_t>(n, INF));
   next_node.assign(n, std::vector<int>(n, -1));
-  using qnode = std::pair<int64_t, int>;  // (distance, node)
   for (int start = 0; start < n; start++) {
+    using qnode = std::pair<int64_t, int>;  // (distance, node)
     std::priority_queue<qnode, std::vector<qnode>, std::greater<>> pq;
     dist[start][start] = 0;
     next_node[start][start] = start;
@@ -131,18 +131,20 @@ int main() {
   // +---------------------+
   //         w=4
   edges = {{0, 1, 1}, {0, 2, 4}, {1, 2, -2}, {2, 3, 2}, {3, 1, 3}};
-  bool ok = johnson_all_pairs(5);  // Node 4 is isolated.
-  assert(ok);
-  assert((dist[0] == vector<int64_t>{0, 1, -1, 1, INF}));
-  assert((dist[1] == vector<int64_t>{INF, 0, -2, 0, INF}));
-  assert((dist[2] == vector<int64_t>{INF, 5, 0, 2, INF}));
-  assert((dist[3] == vector<int64_t>{INF, 3, 1, 0, INF}));
-  assert((dist[4] == vector<int64_t>{INF, INF, INF, INF, 0}));
+  assert(johnson_all_pairs(5));  // Node 4 is isolated.
+  assert(
+      (dist == vector<vector<int64_t>>{
+                   {0, 1, -1, 1, INF},
+                   {INF, 0, -2, 0, INF},
+                   {INF, 5, 0, 2, INF},
+                   {INF, 3, 1, 0, INF},
+                   {INF, INF, INF, INF, 0},
+               })
+  );
   assert((get_path(0, 3) == vector<int>{0, 1, 2, 3}));
   assert(get_path(0, 4).empty());
 
   edges = {{0, 1, -1}, {1, 0, -1}};
-  ok = johnson_all_pairs(2);
-  assert(!ok);
+  assert(!johnson_all_pairs(2));
   return 0;
 }

@@ -51,7 +51,7 @@ SECTION_NAMES = {
     (4, 5): 'Flows and Cuts',
     (4, 6): 'Matching and Assignment',
     (4, 7): 'Exponential Graph Problems',
-    (5, 1): 'Monotone Predicate Search',
+    (5, 1): 'Binary Search',
     (5, 2): 'Unimodal and Continuous Search',
     (5, 3): 'Dynamic Programming Tricks',
     (5, 4): 'Numerical Methods',

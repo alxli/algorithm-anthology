@@ -8,7 +8,7 @@ The structure has two roots: one of length $-1$, which simplifies boundary cases
 $0$, representing the empty palindrome. After each appended character, `last` points to the node for
 the longest palindromic suffix of the current string.
 
-To append a character, `add()` follows suffix links from `last` until finding the longest suffix
+To append a character, `append()` follows suffix links from `last` until finding the longest suffix
 palindrome that can be enclosed by the new character. If the corresponding transition already
 exists, that node becomes `last`; otherwise, a node two characters longer is created and linked to
 its longest proper palindromic suffix, found by the same search. Exactly one distinct palindrome can
@@ -18,7 +18,7 @@ then includes occurrences where it appears as a suffix of a longer palindrome.
 
 - `Eertree()` constructs an empty palindromic tree.
 - `Eertree(s)` constructs the tree for string `s`.
-- `add(c)` appends character `c` and returns `true` if this creates a new distinct palindrome.
+- `append(c)` appends character `c` and returns `true` if this creates a new distinct palindrome.
 - `count_distinct_palindromes()` returns the number of distinct nonempty palindromic substrings.
 - `longest_suffix_length()` returns the length of the current longest palindromic suffix.
 - `count_occurrences()` propagates occurrence counts through suffix links and returns `occ[v]` for
@@ -26,7 +26,7 @@ then includes occurrences where it appears as a suffix of a longer palindrome.
 
 Time Complexity:
 - O(n) expected per call to the constructor for a string of length $n$.
-- O(1) expected amortized per call to `add()`.
+- O(1) expected amortized per call to `append()`.
 - O(n) per call to `count_occurrences()`.
 
 Space Complexity:
@@ -73,11 +73,11 @@ class Eertree {
     tree[0].link = 0;
     tree[1].link = 0;
     for (char c : s) {
-      add(c);
+      append(c);
     }
   }
 
-  bool add(char c) {
+  bool append(char c) {
     str += c;
     int pos = static_cast<int>(str.size()) - 1;
     int cur = get_suffix(last, pos, c);
@@ -127,19 +127,19 @@ int main() {
   assert(t.longest_suffix_length() == 7);
 
   Eertree online;
-  assert(online.add('a'));
-  assert(online.add('a'));
-  assert(online.add('b'));
-  assert(online.add('a'));
+  assert(online.append('a'));
+  assert(online.append('a'));
+  assert(online.append('b'));
+  assert(online.append('a'));
   assert(online.count_distinct_palindromes() == 4);
   assert(online.longest_suffix_length() == 3);
 
   Eertree duplicate;
-  assert(duplicate.add('a'));
-  assert(duplicate.add('b'));
-  assert(duplicate.add('c'));
+  assert(duplicate.append('a'));
+  assert(duplicate.append('b'));
+  assert(duplicate.append('c'));
   // The second 'a' creates substring "abca", but palindrome "a" already exists.
-  assert(!duplicate.add('a'));
+  assert(!duplicate.append('a'));
 
   // Nodes 2-8 represent a, b, aba, c, aca, bacab, and abacaba in creation order.
   assert((t.count_occurrences() == vector<int>{0, 7, 4, 2, 2, 1, 1, 1, 1}));

@@ -402,8 +402,7 @@ int main() {
   g.add_edge(2, 3, 5);
   g.add_edge(3, 4, 6);
   g.add_edge(4, 0, 5);
-  int64_t weight = g.solve();
-  assert(weight == 12);  // Edges 1-2 and 3-4 with weights 6 + 6.
+  assert(g.solve() == 12);  // Edges 1-2 and 3-4 with weights 6 + 6.
   assert(g.partner(1) == 2 && g.partner(2) == 1);
   assert(g.partner(3) == 4 && g.partner(4) == 3);
   assert(g.partner(0) == -1);  // Node 0 is left unmatched.

@@ -10,10 +10,9 @@ algorithm with a quad-edge data structure. The point set is split in half, each 
 recursively, and the halves are stitched together from the bottom up by a sequence of cross edges,
 with circumcircle tests deciding each connecting edge and deleting invalidated ones.
 
-- `delaunay_triangulation(p)` sorts `p` lexicographically and removes duplicate points in place (so
-  the input vector is modified), then returns the triangles of one Delaunay triangulation as a
-  vector of counterclockwise-oriented `Point<T>` triples (`std::tuple`). If fewer than three
-  non-collinear unique points remain, the result is empty.
+- `delaunay_triangulation(p)` returns the triangles of one Delaunay triangulation as a vector of
+  counterclockwise-oriented `Point<T>` triples (`std::tuple`). Duplicate points are ignored. If
+  fewer than three non-collinear unique points remain, the result is empty.
 
 The point type must provide exact lexicographic `operator<`; sorting and duplicate removal requires
 this strict ordering rather than epsilon equality. All arithmetic uses the point's own coordinate
@@ -168,7 +167,7 @@ bool in_circle(const Point<T> &a, const Point<T> &b, const Point<T> &c, const Po
 
 template<typename T>
 std::pair<Edge<T> *, Edge<T> *> build_triangulation(
-    std::vector<Point<T>> &p, int lo, int hi, QuadEdgePool<T> &pool
+    const std::vector<Point<T>> &p, int lo, int hi, QuadEdgePool<T> &pool
 ) {
   if (hi - lo == 1) {
     Edge<T> *a = pool.make_edge(p[lo], p[hi]);
@@ -241,7 +240,7 @@ std::pair<Edge<T> *, Edge<T> *> build_triangulation(
 }
 
 template<typename T>
-auto delaunay_triangulation(std::vector<Point<T>> &p) {
+auto delaunay_triangulation(std::vector<Point<T>> p) {
   using Pt = Point<T>;
   using Triangle = std::tuple<Pt, Pt, Pt>;
   // Rotates triangle vertices so that the lexicographically smallest comes first, preserving the

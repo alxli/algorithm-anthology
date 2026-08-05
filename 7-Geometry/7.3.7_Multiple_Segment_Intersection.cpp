@@ -14,7 +14,9 @@ predicates when that distinction matters.
 
 - `find_intersection(lo, hi, &res1, &res2)` returns whether any pair of segments intersect given a
   range $[`lo`, `hi`)$ of segments, where `lo` and `hi` are random-access iterators. If an
-  intersection is found, then one such pair of segments is stored in `res1` and `res2`.
+  intersection is found, then one such pair of segments is stored in `res1` and `res2`. Constructing
+  a `Segment` places its lexicographically smaller endpoint first, as required by the sweep. If no
+  intersection is found, the output segments are unchanged.
 
 Overflow warning: `seg_intersection` forms the usual quadratic cross products, but the $y$-ordering
 cross-multiplication (`ay * bdx`) is cubic in the coordinate magnitude. With 32-bit `int` endpoints
@@ -31,7 +33,9 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
+#include <iterator>
 #include <set>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -42,8 +46,7 @@ bool seg_intersection(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   auto cross = [](const Pt &p, const Pt &q, const Pt &r) {
     return (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
   };
-  auto c1 = cross(a, b, c), c2 = cross(a, b, d);
-  auto c3 = cross(c, d, a), c4 = cross(c, d, b);
+  auto c1 = cross(a, b, c), c2 = cross(a, b, d), c3 = cross(c, d, a), c4 = cross(c, d, b);
   if (c1 == 0 && c2 == 0 && c3 == 0 && c4 == 0) {
     Pt p = std::max(std::min(a, b), std::min(c, d));
     Pt q = std::min(std::max(a, b), std::max(c, d));
@@ -66,31 +69,24 @@ bool intersects(const Segment<Pt> &s1, const Segment<Pt> &s2) {
   return seg_intersection(s1.p, s1.q, s2.p, s2.q);
 }
 
-// Deduce Seg from the outputs so their point type may differ from the input point type.
-template<typename It, typename Seg>
-bool find_intersection(It lo, It hi, Seg *res1, Seg *res2) {
+template<typename It>
+bool find_intersection(
+    It lo, It hi, typename std::iterator_traits<It>::value_type *res1,
+    typename std::iterator_traits<It>::value_type *res2
+) {
   using Pt = std::decay_t<decltype(lo->p)>;
   struct Event {
     Pt p;
-    int type;
+    bool is_end;
     It seg;
   };
   std::vector<Event> e;
   for (It it = lo; it != hi; ++it) {
-    if (it->p > it->q) {
-      std::swap(it->p, it->q);
-    }
-    e.push_back(Event{it->p, 1, it});
-    e.push_back(Event{it->q, -1, it});
+    e.push_back(Event{it->p, false, it});
+    e.push_back(Event{it->q, true, it});
   }
-  std::sort(e.begin(), e.end(), [lo](const Event &a, const Event &b) {
-    if (a.p.x != b.p.x) {
-      return a.p.x < b.p.x;
-    }
-    if (a.type != b.type) {
-      return b.type < a.type;
-    }
-    return a.p.y != b.p.y ? a.p.y < b.p.y : a.seg - lo < b.seg - lo;
+  std::sort(e.begin(), e.end(), [](const Event &a, const Event &b) {
+    return std::tie(a.p.x, a.is_end, a.p.y, a.seg) < std::tie(b.p.x, b.is_end, b.p.y, b.seg);
   });
   // Compare y-values at sweep coordinate x without division: y = (p.y*dx + dy*(x - p.x)) / dx.
   // Vertical segments use their lower endpoint.
@@ -124,7 +120,7 @@ bool find_intersection(It lo, It hi, Seg *res1, Seg *res2) {
   std::vector<typename ActiveSet::iterator> position(hi - lo);
   for (const auto &ev : e) {
     It seg = ev.seg;
-    if (ev.type == 1) {
+    if (!ev.is_end) {
       auto it = s.insert(seg).first;
       position[seg - lo] = it;
       auto next = it;
@@ -197,7 +193,7 @@ int main() {
     Segment<PointI> res1, res2;
     assert(find_intersection(v.begin(), v.end(), &res1, &res2));
 
-    vector<Segment<PointI>> disjoint{
+    const vector<Segment<PointI>> disjoint{
         Segment<PointI>({0, 0}, {1, 0}), Segment<PointI>({0, 5}, {1, 5})
     };
     assert(!find_intersection(disjoint.begin(), disjoint.end(), &res1, &res2));

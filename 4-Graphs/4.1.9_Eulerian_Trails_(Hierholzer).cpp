@@ -10,11 +10,11 @@ Hierholzer's algorithm walks unused edges until stuck, then backtracks to splice
 into the final trail. For a directed graph known to have a trail from `start`, the core algorithm
 can simply consume outgoing edges by popping them from a local copy of the adjacency list.
 
-- `known_eulerian_path_directed(adj, start)` returns a node trail using every directed edge in
-  `adj` exactly once, assuming such a trail exists and begins at `start`.
-- `eulerian_path_directed(adj, start = -1)` returns a node trail using every directed edge in
-  `adj` exactly once, or an empty vector if no such trail exists. If `start` $= -1$, a valid start
-  is chosen automatically; otherwise the trail must begin at `start`.
+- `known_eulerian_path_directed(adj, start)` returns a node trail using every directed edge in `adj`
+  exactly once, assuming such a trail exists and begins at `start`.
+- `eulerian_path_directed(adj, start = -1)` returns a node trail using every directed edge in `adj`
+  exactly once, or an empty vector if no such trail exists. If `start` $= -1$, a valid start is
+  chosen automatically; otherwise the trail must begin at `start`.
 
 Parallel directed edges are supported by storing duplicate neighbors in `adj`. Since these functions
 return only nodes, use `EulerianGraph` below when edge IDs are needed.

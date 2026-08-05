@@ -62,11 +62,6 @@ cpoly derivative(const cpoly &p) {
   return res;
 }
 
-int comp(const cdouble &a, const cdouble &b, const double eps = 1e-15) {
-  double diff = std::abs(a) - std::abs(b);
-  return (diff < -eps) ? -1 : (diff > eps ? 1 : 0);
-}
-
 cdouble find_one_root(
     const cpoly &p, const cdouble &x0, const double eps = 1e-15, const int iterations = 10000
 ) {
@@ -75,16 +70,16 @@ cdouble find_one_root(
   cpoly p1 = derivative(p), p2 = derivative(p1);
   for (int i = 0; i < iterations; i++) {
     cdouble y0 = horner_eval(p, x).first;
-    if (comp(y0, 0, eps) == 0) {
+    if (std::abs(y0) <= eps) {
       break;
     }
     cdouble g = horner_eval(p1, x).first / y0;
     cdouble h = g * g - horner_eval(p2, x).first / y0;
     cdouble r = std::sqrt(cdouble(n - 1) * (h * cdouble(n) - g * g));
     cdouble d1 = g + r, d2 = g - r;
-    cdouble a = cdouble(n) / (comp(d1, d2, eps) > 0 ? d1 : d2);
+    cdouble a = cdouble(n) / (std::abs(d1) > std::abs(d2) ? d1 : d2);
     x -= a;
-    if (comp(a, 0, eps) == 0) {
+    if (std::abs(a) <= eps) {
       break;
     }
   }

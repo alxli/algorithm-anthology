@@ -89,8 +89,7 @@ int main() {
   edges.emplace_back(2, 4, 5);
   edges.emplace_back(3, 5, 6);
   edges.emplace_back(4, 6, 4);
-  int64_t total = kruskal_mst(7);
-  assert(total == 13);
+  assert(kruskal_mst(7) == 13);
   assert((mst == vector<int>{3, 4, 2, 5, 0}));
   return 0;
 }

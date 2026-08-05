@@ -131,9 +131,7 @@ int main() {
     }
   }
   adj = {{1}, {0}};
-  dfs_res = toposort_dfs();
-  kahn = toposort_kahn();
-  assert(dfs_res.empty());
-  assert(kahn.empty());
+  assert(toposort_dfs().empty());
+  assert(toposort_kahn().empty());
   return 0;
 }

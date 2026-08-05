@@ -6,11 +6,11 @@ combining step then only needs to examine points within the best distance so far
 line, where each point in this strip is compared to a constant number of $y$-ordered neighbors.
 
 - `closest_pair(lo, hi, &res)` returns the minimum squared distance between any two points in the
-  range $[`lo`, `hi`)$, where `lo` and `hi` must be random-access iterators. The input range is
-  reordered during the computation. If `res` is non-null, one closest pair is stored there in
-  lexicographic order. With fewer than two points, the maximum value of the squared-distance type is
-  returned and `res` is unchanged. The function is templated on the point type and works with any
-  type exposing numeric `.x` and `.y` members and a lexicographic `operator<`.
+  range $[`lo`, `hi`)$ without modifying it, where `lo` and `hi` must be random-access iterators. If
+  `res` is non-null, one closest pair is stored there in lexicographic order. With fewer than two
+  points, the maximum value of the squared-distance type is returned and `res` is unchanged. The
+  function is templated on the point type and works with any type exposing numeric `.x` and `.y`
+  members and a lexicographic `operator<`.
 
 The returned distance preserves the coordinate arithmetic type. For integer-coordinate inputs, the
 result is therefore an exact squared distance provided intermediate products do not overflow. The
@@ -98,10 +98,13 @@ template<typename It, typename Pt = typename std::iterator_traits<It>::value_typ
 auto closest_pair(It lo, It hi, std::pair<Pt, Pt> *res = nullptr) {
   using T = decltype(sqdist(*lo, *lo));
   T best = std::numeric_limits<T>::max();
-  std::sort(lo, hi, [](const Pt &a, const Pt &b) { return a.x != b.x ? a.x < b.x : a.y < b.y; });
+  std::vector<Pt> p(lo, hi);
+  std::sort(p.begin(), p.end(), [](const Pt &a, const Pt &b) {
+    return a.x != b.x ? a.x < b.x : a.y < b.y;
+  });
   std::vector<Pt> tmp;
-  tmp.reserve(hi - lo);
-  closest_pair_rec(lo, hi, tmp, best, res);
+  tmp.reserve(p.size());
+  closest_pair_rec(p.begin(), p.end(), tmp, best, res);
   return best;
 }
 

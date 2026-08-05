@@ -1,14 +1,13 @@
 /*
 
-A graph consists of a set of nodes and a set of connections (edges) between pairs of nodes. A graph
-may be stored as an adjacency list, which is a space-efficient representation that is also efficient
-for traversals.
+Stores a directed or undirected simple graph as adjacency lists. The list for node `u` contains its
+out-neighbors; an undirected edge is stored in both endpoints' lists. Nodes are nonnegative integer
+indices in $[0, `size()`)$, and `add_edge()` grows the graph when either endpoint is new. The class
+also provides depth-first search, cycle detection, and forest/DAG checks.
 
-The following class implements a simple graph using adjacency lists, along with depth-first search
-and a few other applications. The constructor takes a flag which specifies whether the instance is a
-directed or undirected graph. The nodes of the graph are identified by integer indices numbered
-consecutively starting from $0$. The total number of nodes automatically increases based on the
-maximum node index passed to `add_edge()` so far.
+A simple graph must not have self-loops or parallel edges, although the class does not enforce these
+restrictions. In particular, undirected `has_cycle()` cannot distinguish a second edge to the parent
+from the tree edge.
 
 - `Graph(directed = true)` constructs an empty graph, directed if `directed` is true and undirected
   otherwise.
@@ -24,12 +23,9 @@ maximum node index passed to `add_edge()` so far.
 - `is_forest()` returns whether the graph is undirected and acyclic.
 - `is_dag()` returns whether the graph is directed and acyclic.
 
-For undirected graphs, `has_cycle()` assumes a simple graph; parallel edges are not distinguished
-from the tree edge back to the parent.
-
 Time Complexity:
-- O(1) amortized per call to `add_edge()` when no resize is required; O(r) for a call that grows the
-  graph to $r$ nodes.
+- O(1) amortized per call to `add_edge()` when no resize is required; up to O(n) for a call that
+  grows the graph to $n$ nodes.
 - O(max(n, m)) per call for `dfs()`, `has_cycle()`, `is_forest()`, or `is_dag()`, where $n$ is the
   number of nodes and $m$ is the number of edges.
 - O(1) per call to all other public member functions.
@@ -49,35 +45,6 @@ class Graph {
   std::vector<std::vector<int>> adj;
   bool directed;
 
-  template<typename Fn>
-  void dfs(int u, std::vector<char> &visit, Fn f) const {
-    f(u);
-    visit[u] = true;
-    for (int v : adj[u]) {
-      if (!visit[v]) {
-        dfs(v, visit, f);
-      }
-    }
-  }
-
-  bool has_cycle(int u, int prev, std::vector<char> &visit, std::vector<char> &onstack) const {
-    visit[u] = true;
-    onstack[u] = true;
-    for (int v : adj[u]) {
-      if (directed && onstack[v]) {
-        return true;
-      }
-      if (!directed && visit[v] && v != prev) {
-        return true;
-      }
-      if (!visit[v] && has_cycle(v, u, visit, onstack)) {
-        return true;
-      }
-    }
-    onstack[u] = false;
-    return false;
-  }
-
  public:
   explicit Graph(bool directed = true) : directed(directed) {}
 
@@ -96,11 +63,39 @@ class Graph {
     }
   }
 
+  template<typename Fn>
+  void dfs(int start, Fn f) const {
+    std::vector<char> visit(adj.size(), false);
+    auto dfs = [&](auto &&dfs, int u) -> void {
+      f(u);
+      visit[u] = true;
+      for (int v : adj[u]) {
+        if (!visit[v]) {
+          dfs(dfs, v);
+        }
+      }
+    };
+    dfs(dfs, start);
+  }
+
   bool has_cycle() const {
     int n = static_cast<int>(adj.size());
     std::vector<char> visit(n, false), onstack(n, false);
+    auto dfs = [&](auto &&dfs, int u, int p) -> bool {
+      visit[u] = true;
+      onstack[u] = true;
+      for (int v : adj[u]) {
+        if ((directed && onstack[v]) ||           // back edge in directed graph
+            (!directed && visit[v] && v != p) ||  // back edge in undirected graph
+            (!visit[v] && dfs(dfs, v, u))) {      // tree edge to unvisited node
+          return true;
+        }
+      }
+      onstack[u] = false;
+      return false;
+    };
     for (int i = 0; i < n; i++) {
-      if (!visit[i] && has_cycle(i, -1, visit, onstack)) {
+      if (!visit[i] && dfs(dfs, i, -1)) {
         return true;
       }
     }
@@ -110,12 +105,6 @@ class Graph {
   bool is_directed() const { return directed; }
   bool is_forest() const { return !directed && !has_cycle(); }
   bool is_dag() const { return directed && !has_cycle(); }
-
-  template<typename Fn>
-  void dfs(int start, Fn f) const {
-    std::vector<char> visit(adj.size(), false);
-    dfs(start, visit, f);
-  }
 };
 
 /*** Example Usage ***/

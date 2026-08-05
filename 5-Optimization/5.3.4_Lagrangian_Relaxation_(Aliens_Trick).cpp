@@ -13,9 +13,9 @@ after adding back `penalty*target_count`.
 
 - `lagrangian_maximize(target_count, lo, hi, solve)` returns the maximum original score using
   exactly `target_count` objects. The callable `solve(penalty)` must return `relaxed_score` and
-  `count` as a pair and must tie-break toward larger `count`. Penalties are searched over
-  the half-open range $[`lo`, `hi`)$; `lo` must choose at least `target_count` objects, while `hi`
-  must be greater than the last penalty that does so.
+  `count` as a pair and must tie-break toward larger `count`. Penalties are searched over the
+  half-open range $[`lo`, `hi`)$; `lo` must choose at least `target_count` objects, while `hi` must
+  be greater than the last penalty that does so.
 
 Overflow warning: The difference `hi - lo` must fit in `int64_t`.
 

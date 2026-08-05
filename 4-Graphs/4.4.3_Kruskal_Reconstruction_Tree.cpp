@@ -37,8 +37,7 @@ Space Complexity:
 
 class KruskalReconstructionTree {
   std::vector<int> dsu_root, dsu_tree_root, depth, tin, tout;
-  std::vector<std::vector<int>> up;
-  std::vector<std::vector<int>> tree;
+  std::vector<std::vector<int>> up, tree;
   std::vector<int64_t> value;
   int timer = 0, root_node = -1;
 
@@ -130,9 +129,7 @@ int main() {
   //  w=5 |   /
   //      | / w=9
   //      3
-  vector<tuple<int64_t, int, int>> edges{
-      {2, 0, 1}, {4, 1, 2}, {5, 1, 3}, {8, 0, 2}, {9, 2, 3}
-  };
+  vector<tuple<int64_t, int, int>> edges{{2, 0, 1}, {4, 1, 2}, {5, 1, 3}, {8, 0, 2}, {9, 2, 3}};
   KruskalReconstructionTree tree(4, edges);
 
   // Reconstruction tree; internal nodes are labeled with their joining edge weight.

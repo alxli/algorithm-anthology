@@ -40,10 +40,10 @@ Space Complexity:
 
 class FunctionalGraph {
   std::vector<std::vector<int>> up;  // up[k][i] = f applied 2^k times to i.
-  std::vector<char> on_cyc;
-  std::vector<int> to_cyc;  // Steps from i to the first cycle node.
-  std::vector<int> comp;    // Identifier of the cycle that i reaches.
-  std::vector<int> clen;    // clen[c] = length of cycle c.
+  std::vector<char> on_cyc;          // on_cyc[i] = true if i is on a cycle.
+  std::vector<int> to_cyc;           // Steps from i to the first cycle node.
+  std::vector<int> comp;             // Identifier of the cycle that i reaches.
+  std::vector<int> clen;             // clen[c] = length of cycle c.
 
   int jump(int i, int64_t steps) const {
     for (int k = 0; steps > 0; k++, steps >>= 1) {

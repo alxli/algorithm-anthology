@@ -105,12 +105,12 @@ int main() {
   adj[0].emplace_back(2, 5);
   adj[1].emplace_back(2, -2);
   adj[2].emplace_back(3, 3);
-  int start = 0, dest = 3;
-  spfa(start);
-  assert(dist[dest] == 5);
-  assert((get_path(dest) == vector<int>{0, 1, 2, 3}));
+  spfa(0);
+  assert((dist == vector<int64_t>{0, 4, 2, 5}));
+  assert((pred == vector<int>{-1, 0, 1, 2}));
+  assert((get_path(3) == vector<int>{0, 1, 2, 3}));
 
   adj[3].emplace_back(1, -2);  // The cycle 1 -> 2 -> 3 -> 1 now has total weight -1.
-  assert(!spfa(start));
+  assert(!spfa(0));
   return 0;
 }

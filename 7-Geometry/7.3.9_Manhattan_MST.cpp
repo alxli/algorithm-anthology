@@ -6,7 +6,8 @@ rotations/reflections; in each sweep, dominance by $x + y$ identifies the only n
 that can matter. Run Kruskal on the returned edges to obtain the MST.
 
 - `manhattan_mst_edges(p)` returns O(n) candidate edges as tuples (`weight`, `u`, `v`).
-- `manhattan_mst_weight(p)` is a small Kruskal wrapper that returns the MST weight.
+- `manhattan_mst_weight(p)` returns the MST weight by running Kruskal's algorithm on those candidate
+  edges.
 
 Overflow warning: the sweeps form coordinate sums, negations, and differences such as `x + y` and
 `dx + dy`. With `int64_t` coordinates, those intermediate values must fit in `int64_t`.
@@ -22,6 +23,7 @@ Space Complexity:
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <cstdlib>
 #include <map>
 #include <numeric>
 #include <tuple>
@@ -112,6 +114,12 @@ int main() {
 
   vector<Point> p{{0, 0}, {2, 1}, {3, 4}, {-1, 2}, {5, 0}};
   assert(manhattan_mst_weight(p) == 14);
-  assert(manhattan_mst_edges(p).size() <= 4 * p.size());
+  auto edges = manhattan_mst_edges(p);
+  assert(edges.size() <= 4 * p.size());
+  for (auto [w, u, v] : edges) {
+    assert(0 <= u && u < static_cast<int>(p.size()));
+    assert(0 <= v && v < static_cast<int>(p.size()));
+    assert(w == abs(p[u].x - p[v].x) + abs(p[u].y - p[v].y));
+  }
   return 0;
 }

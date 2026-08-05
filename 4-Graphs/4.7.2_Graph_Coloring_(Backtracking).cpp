@@ -25,8 +25,8 @@ Space Complexity:
 #include <vector>
 
 std::vector<std::vector<char>> adj;
-int min_colors;
 std::vector<int> color, curr, order;
+int min_colors;
 
 void color_rec(int pos, int used_colors) {
   if (used_colors >= min_colors) {
@@ -118,8 +118,7 @@ int main() {
   add_edge(2, 3);
   add_edge(2, 4);
   add_edge(3, 4);
-  int colors = color_graph();
-  assert(colors == 3);
+  assert(color_graph() == 3);
   for (int u = 0; u < nodes; u++) {
     for (int v = u + 1; v < nodes; v++) {
       if (adj[u][v]) {

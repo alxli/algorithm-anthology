@@ -25,8 +25,8 @@ the `<bit>` header, which are additionally well-defined at $0$.
   `std::has_single_bit()`.
 - `floor_pow2(x)` returns the largest power of two that is $\leq$ `x` (for `x` $> 0$), analogous to
   C++20's `std::bit_floor()`.
-- `ceil_pow2(x)` returns the smallest power of two that is $\geq$ `x`, for
-  $0 < `x` \leq 2^{b - 1}$ where $b$ is `MASK_BITS`, analogous to C++20's `std::bit_ceil()`.
+- `ceil_pow2(x)` returns the smallest power of two that is $\geq$ `x`, for $0 < `x` \leq 2^{b - 1}$
+  where $b$ is `MASK_BITS`, analogous to C++20's `std::bit_ceil()`.
 - `for_each_set_bit(x, f)` calls `f(i)` once for each set bit position `i` of `x`, in increasing
   order.
 

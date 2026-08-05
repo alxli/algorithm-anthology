@@ -23,9 +23,8 @@ Space Complexity:
 
 #include <vector>
 
-std::vector<int> match_left, match_right;
-std::vector<int> visit;
 std::vector<std::vector<int>> adj;
+std::vector<int> match_left, match_right, visit;
 int timer;
 
 bool dfs(int u) {
@@ -82,8 +81,7 @@ int main() {
   adj[1].push_back(2);
   adj[2].push_back(2);
   adj[2].push_back(3);
-  int pairs = bipartite_matching(n2);
-  assert(pairs == 3);
+  assert(bipartite_matching(n2) == 3);
   assert((match_right == vector<int>{1, 0, 2, -1}));
   return 0;
 }

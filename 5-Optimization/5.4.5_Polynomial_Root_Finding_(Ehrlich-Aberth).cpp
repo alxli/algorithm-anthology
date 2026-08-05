@@ -46,13 +46,8 @@ const dbl ZERO_EPS = 1e-30L;   // Treat coefficients and denominators this small
 const dbl ROOT_EPS = 1e-18L;   // Stop once root updates are this small relative to the root.
 const dbl CHECK_EPS = 1e-12L;  // Residual tolerance used by the example assertions.
 
-bool is_zero(const cdbl &z, const dbl eps = ZERO_EPS) {
-  return std::abs(z) <= eps;
-}
-
-bool is_finite(const cdbl &z) {
-  return std::isfinite(z.real()) && std::isfinite(z.imag());
-}
+bool is_zero(const cdbl &z) { return std::abs(z) <= ZERO_EPS; }
+bool is_finite(const cdbl &z) { return std::isfinite(z.real()) && std::isfinite(z.imag()); }
 
 std::pair<cdbl, cdbl> eval_with_derivative(const cpoly &p, const cdbl &x) {
   cdbl value = p.back(), derivative = 0;
@@ -73,13 +68,6 @@ dbl root_bound(const cpoly &p) {
     }
   }
   return 2 * std::max(static_cast<dbl>(1), res);
-}
-
-bool root_less(const cdbl &a, const cdbl &b) {
-  if (a.real() != b.real()) {
-    return a.real() < b.real();
-  }
-  return a.imag() < b.imag();
 }
 
 cpoly find_all_roots(cpoly p, const dbl eps = ROOT_EPS, const int iterations = 2000) {
@@ -170,7 +158,9 @@ cpoly find_all_roots(cpoly p, const dbl eps = ROOT_EPS, const int iterations = 2
   for (int i = 0; i < n; i++) {
     roots.emplace_back(z[i]);
   }
-  std::sort(roots.begin(), roots.end(), root_less);
+  std::sort(roots.begin(), roots.end(), [](const cdbl &a, const cdbl &b) {
+    return a.real() != b.real() ? a.real() < b.real() : a.imag() < b.imag();
+  });
   return roots;
 }
 

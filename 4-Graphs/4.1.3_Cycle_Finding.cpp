@@ -149,40 +149,6 @@ class CycleFinder {
   std::vector<std::vector<int>> adj;
   bool directed;
 
-  void dfs_cycles(
-      int u, int parent_edge, int max_cycles, int max_total_size, std::vector<int> &state,
-      std::vector<int> &edge_stack, std::vector<std::vector<int>> &cycles, int &total_size
-  ) const {
-    if (static_cast<int>(cycles.size()) >= max_cycles || total_size >= max_total_size) {
-      return;
-    }
-    // -1 = unvisited, -2 = finished, otherwise the node's index in the current edge stack.
-    state[u] = static_cast<int>(edge_stack.size());
-    for (int id : adj[u]) {
-      if (!directed && id == parent_edge) {
-        continue;
-      }
-      const auto &[eu, ev] = edges[id];
-      int v = directed ? ev : eu ^ ev ^ u;
-      if (state[v] >= 0) {
-        std::vector<int> cycle{id};
-        for (int i = state[v]; i < static_cast<int>(edge_stack.size()); i++) {
-          cycle.push_back(edge_stack[i]);
-        }
-        cycles.push_back(cycle);
-        total_size += static_cast<int>(cycle.size());
-        if (static_cast<int>(cycles.size()) >= max_cycles || total_size >= max_total_size) {
-          return;
-        }
-      } else if (state[v] == -1) {
-        edge_stack.push_back(id);
-        dfs_cycles(v, id, max_cycles, max_total_size, state, edge_stack, cycles, total_size);
-        edge_stack.pop_back();
-      }
-    }
-    state[u] = -2;
-  }
-
  public:
   CycleFinder(int n, bool directed) : adj(n), directed(directed) {}
 
@@ -203,9 +169,38 @@ class CycleFinder {
     std::vector<int> state(n, -1), edge_stack;
     std::vector<std::vector<int>> cycles;
     int total_size = 0;
+    auto dfs = [&](auto &&dfs, int u, int parent_edge) -> void {
+      if (static_cast<int>(cycles.size()) >= max_cycles || total_size >= max_total_size) {
+        return;
+      }
+      state[u] = static_cast<int>(edge_stack.size());
+      for (int id : adj[u]) {
+        if (!directed && id == parent_edge) {
+          continue;
+        }
+        const auto &[eu, ev] = edges[id];
+        int v = directed ? ev : eu ^ ev ^ u;
+        if (state[v] >= 0) {
+          std::vector<int> cycle{id};
+          for (int i = state[v]; i < static_cast<int>(edge_stack.size()); i++) {
+            cycle.push_back(edge_stack[i]);
+          }
+          cycles.push_back(cycle);
+          total_size += static_cast<int>(cycle.size());
+          if (static_cast<int>(cycles.size()) >= max_cycles || total_size >= max_total_size) {
+            return;
+          }
+        } else if (state[v] == -1) {
+          edge_stack.push_back(id);
+          dfs(dfs, v, id);
+          edge_stack.pop_back();
+        }
+      }
+      state[u] = -2;
+    };
     for (int u = 0; u < n; u++) {
       if (state[u] == -1) {
-        dfs_cycles(u, -1, max_cycles, max_total_size, state, edge_stack, cycles, total_size);
+        dfs(dfs, u, -1);
       }
     }
     return cycles;

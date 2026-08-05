@@ -122,8 +122,7 @@ int main() {
     vector<Point> v{{1, 3}, {2, 2}, {2, 1}, {0, 0}, {-1, 3}};
     // Cut using the vertical line through (0, 0).
     vector<Point> c{{-1, 3}, {0, 3}, {0, 0}};
-    vector<Point> cut = convex_cut(v.begin(), v.end(), Point(0, 0), Point(0, 1));
-    assert(EQ(cut, c));
+    assert(EQ(convex_cut(v.begin(), v.end(), Point(0, 0), Point(0, 1)), c));
   }
   {  // On a non-convex input, the result may be multiple disjoint polygons!
     vector<Point> v{{0, 0}, {2, 2}, {0, 4}, {3, 4}, {3, 0}};

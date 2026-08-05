@@ -98,9 +98,9 @@ int main() {
   adj[1].emplace_back(2, 2);
   adj[1].emplace_back(3, 4);
   adj[2].emplace_back(3, 1);
-  int start = 0, dest = 3;
-  dijkstra(start);
-  assert(dist[dest] == 5);
-  assert((get_path(dest) == vector<int>{0, 1, 2, 3}));
+  dijkstra(0);
+  assert((dist == vector<int64_t>{0, 2, 4, 5}));
+  assert((pred == vector<int>{-1, 0, 1, 2}));
+  assert((get_path(3) == vector<int>{0, 1, 2, 3}));
   return 0;
 }

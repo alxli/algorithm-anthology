@@ -4,9 +4,9 @@
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Graph Class and DFS}
-A graph consists of a set of nodes and a set of connections (edges) between pairs of nodes. A graph may be stored as an adjacency list, which is a space-efficient representation that is also efficient for traversals.
+Stores a directed or undirected simple graph as adjacency lists. The list for node \inlinecode{u} contains its out-neighbors; an undirected edge is stored in both endpoints' lists. Nodes are nonnegative integer indices in $[0, {\inlinecodemath{size()}})$, and \inlinecode{add\_edge()} grows the graph when either endpoint is new. The class also provides depth-first search, cycle detection, and forest/DAG checks.
 
-The following class implements a simple graph using adjacency lists, along with depth-first search and a few other applications. The constructor takes a flag which specifies whether the instance is a directed or undirected graph. The nodes of the graph are identified by integer indices numbered consecutively starting from $0$. The total number of nodes automatically increases based on the maximum node index passed to \inlinecode{add\_edge()} so far.
+A simple graph must not have self-loops or parallel edges, although the class does not enforce these restrictions. In particular, undirected \inlinecode{has\_cycle()} cannot distinguish a second edge to the parent from the tree edge.
 
 \begin{compactitem}
   \item \inlinecode{Graph(directed = true)} constructs an empty graph, directed if \inlinecode{directed} is true and undirected otherwise.
@@ -20,12 +20,10 @@ The following class implements a simple graph using adjacency lists, along with 
   \item \inlinecode{is\_dag()} returns whether the graph is directed and acyclic.
 \end{compactitem}
 
-For undirected graphs, \inlinecode{has\_cycle()} assumes a simple graph; parallel edges are not distinguished from the tree edge back to the parent.
-
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ amortized per call to \inlinecode{add\_edge()} when no resize is required; $O(r)$ for a call that grows the graph to $r$ nodes.
+  \item $O(1)$ amortized per call to \inlinecode{add\_edge()} when no resize is required; up to $O(n)$ for a call that grows the graph to $n$ nodes.
   \item $O(\max\left(n, m\right))$ per call for \inlinecode{dfs()}, \inlinecode{has\_cycle()}, \inlinecode{is\_forest()}, or \inlinecode{is\_dag()}, where $n$ is the number of nodes and $m$ is the number of edges.
   \item $O(1)$ per call to all other public member functions.
 \end{compactitem}
@@ -46,35 +44,6 @@ class Graph {
   std::vector<std::vector<int>> adj;
   bool directed;
 
-  template<typename Fn>
-  void dfs(int u, std::vector<char> &visit, Fn f) const {
-    f(u);
-    visit[u] = true;
-    for (int v : adj[u]) {
-      if (!visit[v]) {
-        dfs(v, visit, f);
-      }
-    }
-  }
-
-  bool has_cycle(int u, int prev, std::vector<char> &visit, std::vector<char> &onstack) const {
-    visit[u] = true;
-    onstack[u] = true;
-    for (int v : adj[u]) {
-      if (directed && onstack[v]) {
-        return true;
-      }
-      if (!directed && visit[v] && v != prev) {
-        return true;
-      }
-      if (!visit[v] && has_cycle(v, u, visit, onstack)) {
-        return true;
-      }
-    }
-    onstack[u] = false;
-    return false;
-  }
-
  public:
   explicit Graph(bool directed = true) : directed(directed) {}
 
@@ -93,11 +62,39 @@ class Graph {
     }
   }
 
+  template<typename Fn>
+  void dfs(int start, Fn f) const {
+    std::vector<char> visit(adj.size(), false);
+    auto dfs = [&](auto &&dfs, int u) -> void {
+      f(u);
+      visit[u] = true;
+      for (int v : adj[u]) {
+        if (!visit[v]) {
+          dfs(dfs, v);
+        }
+      }
+    };
+    dfs(dfs, start);
+  }
+
   bool has_cycle() const {
     int n = static_cast<int>(adj.size());
     std::vector<char> visit(n, false), onstack(n, false);
+    auto dfs = [&](auto &&dfs, int u, int p) -> bool {
+      visit[u] = true;
+      onstack[u] = true;
+      for (int v : adj[u]) {
+        if ((directed && onstack[v]) ||           // back edge in directed graph
+            (!directed && visit[v] && v != p) ||  // back edge in undirected graph
+            (!visit[v] && dfs(dfs, v, u))) {      // tree edge to unvisited node
+          return true;
+        }
+      }
+      onstack[u] = false;
+      return false;
+    };
     for (int i = 0; i < n; i++) {
-      if (!visit[i] && has_cycle(i, -1, visit, onstack)) {
+      if (!visit[i] && dfs(dfs, i, -1)) {
         return true;
       }
     }
@@ -107,12 +104,6 @@ class Graph {
   bool is_directed() const { return directed; }
   bool is_forest() const { return !directed && !has_cycle(); }
   bool is_dag() const { return directed && !has_cycle(); }
-
-  template<typename Fn>
-  void dfs(int start, Fn f) const {
-    std::vector<char> visit(adj.size(), false);
-    dfs(start, visit, f);
-  }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -298,10 +289,8 @@ int main() {
     }
   }
   adj = {{1}, {0}};
-  dfs_res = toposort_dfs();
-  kahn = toposort_kahn();
-  assert(dfs_res.empty());
-  assert(kahn.empty());
+  assert(toposort_dfs().empty());
+  assert(toposort_kahn().empty());
   return 0;
 }
 \end{lstlisting}
@@ -445,40 +434,6 @@ class CycleFinder {
   std::vector<std::vector<int>> adj;
   bool directed;
 
-  void dfs_cycles(
-      int u, int parent_edge, int max_cycles, int max_total_size, std::vector<int> &state,
-      std::vector<int> &edge_stack, std::vector<std::vector<int>> &cycles, int &total_size
-  ) const {
-    if (static_cast<int>(cycles.size()) >= max_cycles || total_size >= max_total_size) {
-      return;
-    }
-    // -1 = unvisited, -2 = finished, otherwise the node's index in the current edge stack.
-    state[u] = static_cast<int>(edge_stack.size());
-    for (int id : adj[u]) {
-      if (!directed && id == parent_edge) {
-        continue;
-      }
-      const auto &[eu, ev] = edges[id];
-      int v = directed ? ev : eu ^ ev ^ u;
-      if (state[v] >= 0) {
-        std::vector<int> cycle{id};
-        for (int i = state[v]; i < static_cast<int>(edge_stack.size()); i++) {
-          cycle.push_back(edge_stack[i]);
-        }
-        cycles.push_back(cycle);
-        total_size += static_cast<int>(cycle.size());
-        if (static_cast<int>(cycles.size()) >= max_cycles || total_size >= max_total_size) {
-          return;
-        }
-      } else if (state[v] == -1) {
-        edge_stack.push_back(id);
-        dfs_cycles(v, id, max_cycles, max_total_size, state, edge_stack, cycles, total_size);
-        edge_stack.pop_back();
-      }
-    }
-    state[u] = -2;
-  }
-
  public:
   CycleFinder(int n, bool directed) : adj(n), directed(directed) {}
 
@@ -499,9 +454,38 @@ class CycleFinder {
     std::vector<int> state(n, -1), edge_stack;
     std::vector<std::vector<int>> cycles;
     int total_size = 0;
+    auto dfs = [&](auto &&dfs, int u, int parent_edge) -> void {
+      if (static_cast<int>(cycles.size()) >= max_cycles || total_size >= max_total_size) {
+        return;
+      }
+      state[u] = static_cast<int>(edge_stack.size());
+      for (int id : adj[u]) {
+        if (!directed && id == parent_edge) {
+          continue;
+        }
+        const auto &[eu, ev] = edges[id];
+        int v = directed ? ev : eu ^ ev ^ u;
+        if (state[v] >= 0) {
+          std::vector<int> cycle{id};
+          for (int i = state[v]; i < static_cast<int>(edge_stack.size()); i++) {
+            cycle.push_back(edge_stack[i]);
+          }
+          cycles.push_back(cycle);
+          total_size += static_cast<int>(cycle.size());
+          if (static_cast<int>(cycles.size()) >= max_cycles || total_size >= max_total_size) {
+            return;
+          }
+        } else if (state[v] == -1) {
+          edge_stack.push_back(id);
+          dfs(dfs, v, id);
+          edge_stack.pop_back();
+        }
+      }
+      state[u] = -2;
+    };
     for (int u = 0; u < n; u++) {
       if (state[u] == -1) {
-        dfs_cycles(u, -1, max_cycles, max_total_size, state, edge_stack, cycles, total_size);
+        dfs(dfs, u, -1);
       }
     }
     return cycles;
@@ -616,7 +600,7 @@ An unweighted tree possesses a center, centroid, and diameter. The centers are f
 \begin{compactitem}
   \item \inlinecode{find\_centers()} returns a vector of either one or two tree Jordan centers. The Jordan center of a tree is the set of all nodes with minimum eccentricity, that is, the set of all nodes where the maximum distance to all other nodes in the tree is minimal.
   \item \inlinecode{find\_centroid()} returns the node where all of its subtrees have a size less than or equal to $n / 2$, where $n$ is the number of nodes in the tree.
-  \item \inlinecode{diameter()} returns the maximum distance between any two nodes in the tree, using a well-known double depth-first search technique.
+  \item \inlinecode{diameter()} returns a tuple (\inlinecode{length}, \inlinecode{u}, \inlinecode{v}), where \inlinecode{length} is the maximum distance between any two nodes in the tree and \inlinecode{u} and \inlinecode{v} are endpoints attaining that distance. It uses a well-known double DFS technique.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{find\_centers()}, \inlinecode{find\_centroid()}, and \inlinecode{diameter()}, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -630,6 +614,7 @@ An unweighted tree possesses a center, centroid, and diameter. The centers are f
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -660,9 +645,9 @@ std::vector<int> find_centers() {
   return leaves;
 }
 
-// Returns the centroid node index if found in this subtree, or -(subtree size) to propagate
-// the size up to the parent so it can check the complementary component's size.
-static int find_centroid_dfs(int u, int p) {
+// Returns the centroid node index if found in this subtree, or -(subtree size) to propagate the
+// size up to the parent so it can check the complementary component's size.
+int find_centroid(int u = 0, int p = -1) {
   int n = static_cast<int>(adj.size());
   int count = 1;
   bool good_center = true;
@@ -670,7 +655,7 @@ static int find_centroid_dfs(int u, int p) {
     if (v == p) {
       continue;
     }
-    int res = find_centroid_dfs(v, u);
+    int res = find_centroid(v, u);
     if (res >= 0) {
       return res;
     }
@@ -682,9 +667,7 @@ static int find_centroid_dfs(int u, int p) {
   return good_center ? u : -count;
 }
 
-int find_centroid() { return find_centroid_dfs(0, -1); }
-
-int diameter() {
+std::tuple<int, int, int> diameter() {
   auto dfs = [&](auto &&dfs, int u, int p = -1, int depth = 0) -> std::pair<int, int> {
     std::pair<int, int> res{depth, u};
     for (int v : adj[u]) {
@@ -694,8 +677,9 @@ int diameter() {
     }
     return res;
   };
-  int furthest_node = dfs(dfs, 0).second;
-  return dfs(dfs, furthest_node).first;
+  int u = dfs(dfs, 0).second;
+  auto [length, v] = dfs(dfs, u);
+  return {length, u, v};
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -719,22 +703,18 @@ int main() {
   add_edge(1, 4);
   add_edge(3, 4);
   add_edge(4, 5);
-  vector<int> centers = find_centers();
-  assert((centers == vector<int>{1, 4}));
+  assert((find_centers() == vector<int>{1, 4}));
   assert(find_centroid() == 4);
-  assert(diameter() == 3);
+  auto [length, u, v] = diameter();
+  assert(length == 3 && u == 5 && v == 2);
   return 0;
 }
 \end{lstlisting}
 \subsection{Tree Rerooting DP}
-Given a tree DP that can answer one rooted query with a recursive \inlinecode{dfs(u, p)}, compute that same answer for every possible root. Rerooting DP first stores parent pointers, depths, preorder, subtree sizes, and entry/exit times. A bottom-up pass computes the usual child-to-parent DFS values, then a top-down pass uses prefix/suffix aggregation to compute the missing parent-to-child values. The prefix/suffix aggregation requires \inlinecode{combine} to be associative for a running time of $O(n)$, which is usually preferred, but a segment-tree/exclusive-combine variant can support a left-fold style interface in $O(n \log n)$.
+Given a tree DP that can answer one rooted query with a recursive \inlinecode{dfs(u, p)}, compute that same answer for every possible root. Rerooting DP first stores parent pointers and preorder from an arbitrary root. A bottom-up pass computes the usual child-to-parent DFS values, then a top-down pass uses prefix/suffix aggregation to compute the missing parent-to-child values. The prefix/suffix aggregation requires \inlinecode{combine} to be associative for a running time of $O(n)$, which is usually preferred, but a segment-tree/exclusive-combine variant can support a left-fold style interface in $O(n \log n)$.
 
 \begin{compactitem}
-  \item \inlinecode{RerootingTree(n)} constructs a tree with \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
-  \item \inlinecode{add\_edge(u, v)} adds an undirected edge between nodes \inlinecode{u} and \inlinecode{v}.
-  \item \inlinecode{build\_rooted\_tree(root = 0)} populates \inlinecode{parent}, \inlinecode{depth}, \inlinecode{subtree\_size}, \inlinecode{order}, \inlinecode{tin}, and \inlinecode{tout} for the tree rooted at \inlinecode{root}. This must be called only after the added edges define a connected tree of size \inlinecode{n}.
-  \item \inlinecode{is\_ancestor(u, v)} returns whether \inlinecode{u} is an ancestor of \inlinecode{v} in the last rooted tree.
-  \item \inlinecode{rerooting\_dp(identity, combine, finalize, lift)} returns the value that \inlinecode{dfs(root, p)} would produce for every possible \inlinecode{root} with sentinel parent $p = -1$. This must be called only after the added edges define a connected tree of size \inlinecode{n}.
+  \item \inlinecode{rerooting\_dp(identity, combine, finalize, lift)} returns the value that \inlinecode{dfs(root, p)} would produce for every possible \inlinecode{root} with sentinel parent $p = -1$. The global, bidirectionally pre-populated adjacency list \inlinecode{adj} must form a nonempty tree whose indices represent its nodes.
 \end{compactitem}
 
 The aggregation scheme for \inlinecode{rerooting\_dp()} is defined by the following pieces:
@@ -749,19 +729,12 @@ The aggregation scheme for \inlinecode{rerooting\_dp()} is defined by the follow
 
 This covers problems such as subtree sizes, sum/max of distances from every root, and rerooted polynomial/hash-like aggregates, as long as sibling contributions can be combined associatively. The usage example shows how to compute the sum of distances from every root: \inlinecode{Data} stores \inlinecode{sum}, the total distance from \inlinecode{u} to all nodes in \inlinecode{dfs(u, p)}, and \inlinecode{nodes}, the node count in that component. The node count is needed because \inlinecode{lift(acc, u, p)} crosses one edge, so every represented node becomes 1 farther from \inlinecode{p} and \inlinecode{sum} increases by \inlinecode{nodes}.
 
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(1)$ per call to \inlinecode{add\_edge()}.
-  \item $O(n)$ per call to \inlinecode{build\_rooted\_tree()}, where $n$ is the number of nodes.
-  \item $O(1)$ per call to \inlinecode{is\_ancestor()}.
-  \item $O(n)$ per call to \inlinecode{rerooting\_dp()}, assuming $O(1)$ callback functions.
-\end{compactitem}
+\textbf{Time Complexity}: $O(n)$ per call to \inlinecode{rerooting\_dp()}, assuming $O(1)$ callback functions.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ for the tree, metadata, and DP arrays.
+  \item $O(n)$ for the tree and auxiliary arrays.
   \item $O(n)$ auxiliary stack space for the recursive search.
 \end{compactitem}
 
@@ -769,94 +742,61 @@ This covers problems such as subtree sizes, sum/max of distances from every root
 #include <cstdint>
 #include <vector>
 
-class RerootingTree {
-  int timer;
+std::vector<std::vector<int>> adj;
 
-  void dfs_rooted(int u, int p) {
+template<typename Data, typename Combine, typename Finalize, typename Lift>
+std::vector<Data> rerooting_dp(
+    const Data &identity, Combine combine, Finalize finalize, Lift lift
+) {
+  int n = static_cast<int>(adj.size());
+  std::vector<int> parent(n, -1), order;
+  auto dfs = [&](auto &&dfs, int u, int p) -> void {
     parent[u] = p;
-    tin[u] = timer++;
     order.push_back(u);
-    subtree_size[u] = 1;
     for (int v : adj[u]) {
-      if (v == p) {
-        continue;
+      if (v != p) {
+        dfs(dfs, v, u);
       }
-      depth[v] = depth[u] + 1;
-      dfs_rooted(v, u);
-      subtree_size[u] += subtree_size[v];
     }
-    tout[u] = timer;
-  }
-
- public:
-  std::vector<std::vector<int>> adj;
-  std::vector<int> parent, depth, subtree_size, order, tin, tout;
-
-  explicit RerootingTree(int n) : timer(0), adj(n) {}
-
-  void add_edge(int u, int v) {
-    adj[u].push_back(v);
-    adj[v].push_back(u);
-  }
-
-  void build_rooted_tree(int root = 0) {
-    int n = static_cast<int>(adj.size());
-    parent.assign(n, -1);
-    depth.assign(n, 0);
-    subtree_size.assign(n, 0);
-    order.clear();
-    tin.assign(n, 0);
-    tout.assign(n, 0);
-    timer = 0;
-    dfs_rooted(root, -1);
-  }
-
-  bool is_ancestor(int u, int v) const { return tin[u] <= tin[v] && tout[v] <= tout[u]; }
-
-  template<typename Data, typename Combine, typename Finalize, typename Lift>
-  std::vector<Data> rerooting_dp(
-      const Data &identity, Combine combine, Finalize finalize, Lift lift
-  ) {
-    int n = static_cast<int>(adj.size());
-    std::vector<Data> down(n, identity), outside(n, identity), answer(n, identity);
-    build_rooted_tree();
-    for (int i = n - 1; i >= 0; i--) {
-      int u = order[i];
-      Data acc = identity;
-      for (int v : adj[u]) {
-        if (parent[v] == u) {
-          acc = combine(acc, lift(down[v], v, u));
-        }
+  };
+  dfs(dfs, 0, -1);
+  std::vector<Data> down(n, identity), outside(n, identity), answer(n, identity);
+  for (int i = n - 1; i >= 0; i--) {
+    int u = order[i];
+    Data acc = identity;
+    for (int v : adj[u]) {
+      if (parent[v] == u) {
+        acc = combine(acc, lift(down[v], v, u));
       }
-      down[u] = finalize(acc, u);
     }
-    for (int u : order) {
-      std::vector<Data> vals;
-      for (int v : adj[u]) {
-        if (parent[v] == u) {
-          vals.push_back(lift(down[v], v, u));
-        } else {
-          vals.push_back(outside[u]);
-        }
-      }
-      std::vector<Data> suffix(vals.size() + 1, identity);
-      for (int i = static_cast<int>(vals.size()) - 1; i >= 0; i--) {
-        suffix[i] = combine(vals[i], suffix[i + 1]);
-      }
-      Data prefix = identity;
-      for (int i = 0; i < static_cast<int>(adj[u].size()); i++) {
-        int v = adj[u][i];
-        if (parent[v] == u) {
-          Data without_child = finalize(combine(prefix, suffix[i + 1]), u);
-          outside[v] = lift(without_child, u, v);
-        }
-        prefix = combine(prefix, vals[i]);
-      }
-      answer[u] = finalize(prefix, u);
-    }
-    return answer;
+    down[u] = finalize(acc, u);
   }
-};
+  for (int u : order) {
+    std::vector<Data> vals;
+    for (int v : adj[u]) {
+      if (parent[v] == u) {
+        vals.push_back(lift(down[v], v, u));
+      } else {
+        vals.push_back(outside[u]);
+      }
+    }
+    std::vector<Data> suffix(vals.size() + 1, identity);
+    for (int i = static_cast<int>(vals.size()) - 1; i >= 0; i--) {
+      suffix[i] = combine(vals[i], suffix[i + 1]);
+    }
+    Data prefix = identity;
+    for (int i = 0; i < static_cast<int>(adj[u].size()); i++) {
+      int v = adj[u][i];
+      if (parent[v] == u) {
+        Data without_child = finalize(combine(prefix, suffix[i + 1]), u);
+        outside[v] = lift(without_child, u, v);
+      }
+      prefix = combine(prefix, vals[i]);
+    }
+    answer[u] = finalize(prefix, u);
+  }
+  return answer;
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -865,7 +805,7 @@ class RerootingTree {
 #include <string>
 using namespace std;
 
-vector<int64_t> sum_distances_all_roots(RerootingTree &tree) {
+vector<int64_t> sum_distances_all_roots() {
   struct DistanceData {
     int64_t sum = 0;
     int nodes = 0;
@@ -881,7 +821,7 @@ vector<int64_t> sum_distances_all_roots(RerootingTree &tree) {
     a.sum += a.nodes;
     return a;
   };
-  vector<DistanceData> dp = tree.rerooting_dp(DistanceData{}, combine, finalize, lift);
+  vector<DistanceData> dp = rerooting_dp(DistanceData{}, combine, finalize, lift);
   vector<int64_t> answer(dp.size());
   for (int i = 0; i < static_cast<int>(dp.size()); i++) {
     answer[i] = dp[i].sum;
@@ -893,27 +833,15 @@ int main() {
   // 0---1---2
   //     |
   //     3---4
-  RerootingTree tree(5);
-  tree.add_edge(0, 1);
-  tree.add_edge(1, 2);
-  tree.add_edge(1, 3);
-  tree.add_edge(3, 4);
-  tree.build_rooted_tree();
-  assert(tree.parent[4] == 3);
-  assert(tree.depth[4] == 3);
-  assert(tree.subtree_size[1] == 4);
-  assert(tree.is_ancestor(1, 4));
-  assert(!tree.is_ancestor(3, 2));
-  assert((sum_distances_all_roots(tree) == vector<int64_t>{8, 5, 8, 6, 9}));
+  adj = {{1}, {0, 2, 3}, {1}, {1, 4}, {3}};
+  assert((sum_distances_all_roots() == vector<int64_t>{8, 5, 8, 6, 9}));
 
   // Associative contributions retain adjacency-list order even when combine is not commutative.
-  RerootingTree ordered(3);
-  ordered.add_edge(1, 2);
-  ordered.add_edge(0, 1);  // adj[1] is [2, 0], while 0 is its parent in the initial rooting.
+  adj = {{1}, {2, 0}, {1}};  // adj[1] is [2, 0], while 0 is its initial parent.
   auto combine = [](string a, const string &b) { return a + b; };
   auto finalize = [](string a, int u) { return a + to_string(u); };
   auto lift = [](const string &a, int, int) { return a; };
-  assert(ordered.rerooting_dp(string{}, combine, finalize, lift)[1] == "201");
+  assert(rerooting_dp(string{}, combine, finalize, lift)[1] == "201");
   return 0;
 }
 \end{lstlisting}
@@ -1010,8 +938,7 @@ int main() {
 Given a tree, build its centroid decomposition. A centroid is a node whose removal splits the current subtree into connected components of size at most half of that subtree. Recursively choosing centroids creates a decomposition tree of height $O(\log n)$, which is useful for queries based on distances to marked nodes, nearest special node, and other ``path through a centroid'' problems.
 
 \begin{compactitem}
-  \item \inlinecode{CentroidDecomposition(adj)} builds the centroid decomposition of the tree given by a bidirectional adjacency list \inlinecode{adj}, which must form a valid tree and whose indices represent the nodes.
-  \item \inlinecode{parent(u)} returns the parent of node \inlinecode{u} in the centroid tree, or $-1$ if \inlinecode{u} is the root centroid.
+  \item \inlinecode{centroid\_decomposition()} uses the tree in the global bidirectional adjacency list \inlinecode{adj} and returns a vector \inlinecode{parent}, where \inlinecode{parent[u]} is the parent of node \inlinecode{u} in the centroid tree, or $-1$ if \inlinecode{u} is the root centroid.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ for construction, where $n$ is the number of nodes.
@@ -1026,52 +953,45 @@ Given a tree, build its centroid decomposition. A centroid is a node whose remov
 \begin{lstlisting}[language=C++]
 #include <vector>
 
-class CentroidDecomposition {
-  std::vector<std::vector<int>> adj;
-  std::vector<int> subtree_size, par;
-  std::vector<char> removed;
+std::vector<std::vector<int>> adj;
 
-  int get_size(int u, int p) {
+std::vector<int> centroid_decomposition() {
+  int n = static_cast<int>(adj.size());
+  std::vector<int> subtree_size(n), parent(n, -1);
+  std::vector<char> removed(n);
+  auto get_size = [&](auto &&get_size, int u, int p) -> int {
     subtree_size[u] = 1;
     for (int v : adj[u]) {
       if (v != p && !removed[v]) {
-        subtree_size[u] += get_size(v, u);
+        subtree_size[u] += get_size(get_size, v, u);
       }
     }
     return subtree_size[u];
-  }
-
-  int get_centroid(int u, int p, int total) {
+  };
+  auto get_centroid = [&](auto &&get_centroid, int u, int p, int total) -> int {
     for (int v : adj[u]) {
       if (v != p && !removed[v] && subtree_size[v] > total / 2) {
-        return get_centroid(v, u, total);
+        return get_centroid(get_centroid, v, u, total);
       }
     }
     return u;
-  }
-
-  void decompose(int entry, int parent) {
-    int total = get_size(entry, -1);
-    int centroid = get_centroid(entry, -1, total);
-    par[centroid] = parent;
+  };
+  auto decompose = [&](auto &&decompose, int entry, int p) -> void {
+    int total = get_size(get_size, entry, -1);
+    int centroid = get_centroid(get_centroid, entry, -1, total);
+    parent[centroid] = p;
     removed[centroid] = true;
     for (int v : adj[centroid]) {
       if (!removed[v]) {
-        decompose(v, centroid);
+        decompose(decompose, v, centroid);
       }
     }
+  };
+  if (n > 0) {
+    decompose(decompose, 0, -1);
   }
-
- public:
-  explicit CentroidDecomposition(const std::vector<std::vector<int>> &adj)
-      : adj(adj), subtree_size(adj.size()), par(adj.size(), -1), removed(adj.size()) {
-    if (adj.size() > 0) {
-      decompose(0, -1);
-    }
-  }
-
-  int parent(int u) const { return par[u]; }
-};
+  return parent;
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -1082,13 +1002,13 @@ class CentroidDecomposition {
 using namespace std;
 
 // Example-only distance helper; use LCA preprocessing for O(1) distances in a full solution.
-int tree_dist(const vector<vector<int>> &adj, int u, int target, int p = -1) {
+int tree_dist(int u, int target, int p = -1) {
   if (u == target) {
     return 0;
   }
   for (int v : adj[u]) {
     if (v != p) {
-      int d = tree_dist(adj, v, target, u);
+      int d = tree_dist(v, target, u);
       if (d != -1) {
         return d + 1;
       }
@@ -1101,38 +1021,21 @@ int main() {
   // 0---1---3---5---6
   //     |   |
   //     2   4
-  vector<vector<int>> adj(7);
-  auto add_edge = [&](int u, int v) {
-    adj[u].push_back(v);
-    adj[v].push_back(u);
-  };
-  add_edge(0, 1);
-  add_edge(1, 2);
-  add_edge(1, 3);
-  add_edge(3, 4);
-  add_edge(3, 5);
-  add_edge(5, 6);
-  CentroidDecomposition tree(adj);
-  vector<int> parent(7);
-  for (int u = 0; u < 7; u++) {
-    parent[u] = tree.parent(u);
-  }
+  adj = {{1}, {0, 2, 3}, {1}, {1, 4, 5}, {3}, {3, 6}, {5}};
+  vector<int> parent = centroid_decomposition();
   assert((parent == vector<int>{1, 3, 1, -1, 3, 3, 5}));
-  assert(tree.parent(3) == -1);
-  assert(tree.parent(1) == 3);
-  assert(tree.parent(5) == 3);
 
   const int INF = INT_MAX / 2;
   vector<int> best(7, INF);
   auto mark = [&](int u) {
-    for (int c = u; c != -1; c = tree.parent(c)) {
-      best[c] = min(best[c], tree_dist(adj, u, c));
+    for (int c = u; c != -1; c = parent[c]) {
+      best[c] = min(best[c], tree_dist(u, c));
     }
   };
   auto nearest_marked = [&](int u) {
     int answer = INF;
-    for (int c = u; c != -1; c = tree.parent(c)) {
-      answer = min(answer, best[c] + tree_dist(adj, u, c));
+    for (int c = u; c != -1; c = parent[c]) {
+      answer = min(answer, best[c] + tree_dist(u, c));
     }
     return answer;
   };
@@ -1718,25 +1621,25 @@ Given a directed graph, determine the strongly connected components (SCCs) using
 class KosarajuSCC {
   std::vector<std::vector<int>> adj, rev, scc;
   std::vector<int> component;
-  std::vector<char> visited;
+  std::vector<char> visit;
 
-  void dfs(const std::vector<std::vector<int>> &g, std::vector<int> &res, int u) {
-    visited[u] = true;
-    for (int v : g[u]) {
-      if (!visited[v]) {
-        dfs(g, res, v);
+  void dfs_order(int u, std::vector<int> &order) {
+    visit[u] = true;
+    for (int v : adj[u]) {
+      if (!visit[v]) {
+        dfs_order(v, order);
       }
     }
-    res.push_back(u);
+    order.push_back(u);
   }
 
-  void dfs_component(int u, int id, std::vector<int> &res) {
-    visited[u] = true;
-    component[u] = id;
-    res.push_back(u);
+  void dfs_component(int u) {
+    visit[u] = true;
+    component[u] = static_cast<int>(scc.size()) - 1;
+    scc.back().push_back(u);
     for (int v : rev[u]) {
-      if (!visited[v]) {
-        dfs_component(v, id, res);
+      if (!visit[v]) {
+        dfs_component(v);
       }
     }
   }
@@ -1751,24 +1654,22 @@ class KosarajuSCC {
 
   void build_scc() {
     int n = static_cast<int>(adj.size());
-    visited.assign(n, false);
+    visit.assign(n, false);
     std::vector<int> order;
     for (int i = 0; i < n; i++) {
-      if (!visited[i]) {
-        dfs(adj, order, i);
+      if (!visit[i]) {
+        dfs_order(i, order);
       }
     }
     std::reverse(order.begin(), order.end());
-    visited.assign(n, false);
+    visit.assign(n, false);
     component.assign(n, -1);
     scc.clear();
     for (int u : order) {
-      if (visited[u]) {
-        continue;
+      if (!visit[u]) {
+        scc.emplace_back();
+        dfs_component(u);
       }
-      std::vector<int> comp_nodes;
-      dfs_component(u, static_cast<int>(scc.size()), comp_nodes);
-      scc.push_back(comp_nodes);
     }
   }
 
@@ -1822,7 +1723,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Strongly Connected Components (Tarjan)}
-Given a directed graph, determine the strongly connected components (SCCs) using Tarjan's algorithm. A strongly connected component is a maximal set of nodes where every node can reach every other node. Condensing each SCC into one node produces a directed acyclic graph. A single depth-first search keeps visited nodes on a stack and tracks each node's low-link, the smallest entry time reachable from its subtree; a node whose low-link equals its own entry time roots a component, which is popped off the stack in one piece.
+Given a directed graph, determine the strongly connected components (SCCs) using Tarjan's algorithm. A strongly connected component is a maximal set of nodes where every node can reach every other node. Condensing each SCC into one node produces a directed acyclic graph. A single depth-first search keeps visit nodes on a stack and tracks each node's low-link, the smallest entry time reachable from its subtree; a node whose low-link equals its own entry time roots a component, which is popped off the stack in one piece.
 
 \begin{compactitem}
   \item \inlinecode{TarjanSCC(n = 0)} constructs a directed graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
@@ -1850,16 +1751,16 @@ class TarjanSCC {
   static const int INF = INT_MAX / 2;
   std::vector<std::vector<int>> adj, scc;
   std::vector<int> component, active, lowlink;
-  std::vector<char> visited;
+  std::vector<char> visit;
   int timer;
 
   void dfs(int u) {
     lowlink[u] = timer++;
-    visited[u] = true;
+    visit[u] = true;
     active.push_back(u);
     bool is_component_root = true;
     for (int v : adj[u]) {
-      if (!visited[v]) {
+      if (!visit[v]) {
         dfs(v);
       }
       if (lowlink[u] > lowlink[v]) {
@@ -1894,10 +1795,10 @@ class TarjanSCC {
     component.assign(n, -1);
     active.clear();
     lowlink.assign(n, 0);
-    visited.assign(n, false);
+    visit.assign(n, false);
     timer = 0;
     for (int i = 0; i < n; i++) {
-      if (!visited[i]) {
+      if (!visit[i]) {
         dfs(i);
       }
     }
@@ -1958,9 +1859,7 @@ Given a directed graph and a start node, find the immediate dominator of every n
 Lengauer-Tarjan's algorithm numbers nodes by DFS order, computes each reachable node's semidominator using a disjoint-set structure with path compression, and then resolves immediate dominators from semidominator buckets.
 
 \begin{compactitem}
-  \item \inlinecode{Dominators(n)} constructs a directed graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
-  \item \inlinecode{add\_edge(u, v)} adds a directed edge from \inlinecode{u} to \inlinecode{v}.
-  \item \inlinecode{find\_dominators(start)} returns a vector \inlinecode{idom} where \inlinecode{idom[start]} = \inlinecode{start}, \inlinecode{idom[v]} is the immediate dominator of reachable node \inlinecode{v}, and \inlinecode{idom[v]} $= -1$ if \inlinecode{v} is unreachable.
+  \item \inlinecode{find\_dominators(start)} uses the directed graph in the global adjacency list \inlinecode{adj} and returns a vector \inlinecode{idom} where \inlinecode{idom[start]} = \inlinecode{start}, \inlinecode{idom[v]} is the immediate dominator of reachable node \inlinecode{v}, and \inlinecode{idom[v]} $= -1$ if \inlinecode{v} is unreachable.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right) \log n)$ per call to \inlinecode{find\_dominators()} in this path-compressed implementation, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -1968,7 +1867,7 @@ Lengauer-Tarjan's algorithm numbers nodes by DFS order, computes each reachable 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for the graph and auxiliary heap arrays.
+  \item $O(\max\left(n, m\right))$ for the graph, result, and auxiliary heap arrays.
   \item $O(n)$ auxiliary stack space for the DFS.
 \end{compactitem}
 
@@ -1976,31 +1875,34 @@ Lengauer-Tarjan's algorithm numbers nodes by DFS order, computes each reachable 
 #include <algorithm>
 #include <vector>
 
-class Dominators {
-  std::vector<std::vector<int>> adj, pred, bucket;
-  std::vector<int> time, node_at_time, parent, sdom, idom_index, dsu_root, best;
-  int timer;
+std::vector<std::vector<int>> adj;
 
-  void dfs(int u) {
+std::vector<int> find_dominators(int start) {
+  int n = static_cast<int>(adj.size());
+  std::vector<std::vector<int>> pred(n + 1), bucket(n + 1);
+  std::vector<int> time(n), node_at_time(n + 1), parent(n + 1), sdom(n + 1);
+  std::vector<int> idom_index(n + 1), dsu_root(n + 1), best(n + 1);
+  int timer = 0;
+  auto dfs = [&](auto &&dfs, int u) -> void {
     time[u] = ++timer;
     node_at_time[timer] = u;
     sdom[timer] = dsu_root[timer] = best[timer] = timer;
     for (int v : adj[u]) {
       if (time[v] == 0) {
-        dfs(v);
+        dfs(dfs, v);
         parent[time[v]] = time[u];
       }
       if (time[v] != 0) {
         pred[time[v]].push_back(time[u]);
       }
     }
-  }
-
-  int find_best(int u, int depth = 0) {
+  };
+  dfs(dfs, start);
+  auto find_best = [&](auto &&find_best, int u, int depth) -> int {
     if (u == dsu_root[u]) {
       return depth == 0 ? u : -1;
     }
-    int root = find_best(dsu_root[u], depth + 1);
+    int root = find_best(find_best, dsu_root[u], depth + 1);
     if (root == -1) {
       return u;
     }
@@ -2009,52 +1911,32 @@ class Dominators {
     }
     dsu_root[u] = root;
     return depth == 0 ? best[u] : root;  // The outer call returns the label, recursion the root.
-  }
-
- public:
-  explicit Dominators(int n) : adj(n), timer(0) {}
-
-  void add_edge(int u, int v) { adj[u].push_back(v); }
-
-  std::vector<int> find_dominators(int start) {
-    int n = static_cast<int>(adj.size());
-    timer = 0;
-    time.assign(n, 0);
-    node_at_time.assign(n + 1, 0);
-    parent.assign(n + 1, 0);
-    sdom.assign(n + 1, 0);
-    idom_index.assign(n + 1, 0);
-    dsu_root.assign(n + 1, 0);
-    best.assign(n + 1, 0);
-    pred.assign(n + 1, {});
-    bucket.assign(n + 1, {});
-    dfs(start);
-    for (int i = timer; i >= 1; i--) {
-      for (int v : pred[i]) {
-        sdom[i] = std::min(sdom[i], sdom[find_best(v)]);
-      }
-      if (i > 1) {
-        bucket[sdom[i]].push_back(i);
-      }
-      for (int v : bucket[i]) {
-        int u = find_best(v);
-        idom_index[v] = (sdom[u] == sdom[v]) ? sdom[v] : u;
-      }
-      if (i > 1) {
-        dsu_root[i] = parent[i];
-      }
+  };
+  for (int i = timer; i >= 1; i--) {
+    for (int v : pred[i]) {
+      sdom[i] = std::min(sdom[i], sdom[find_best(find_best, v, 0)]);
     }
-    std::vector<int> idom(adj.size(), -1);
-    idom[start] = start;
-    for (int i = 2; i <= timer; i++) {
-      if (idom_index[i] != sdom[i]) {
-        idom_index[i] = idom_index[idom_index[i]];
-      }
-      idom[node_at_time[i]] = node_at_time[idom_index[i]];
+    if (i > 1) {
+      bucket[sdom[i]].push_back(i);
     }
-    return idom;
+    for (int v : bucket[i]) {
+      int u = find_best(find_best, v, 0);
+      idom_index[v] = (sdom[u] == sdom[v]) ? sdom[v] : u;
+    }
+    if (i > 1) {
+      dsu_root[i] = parent[i];
+    }
   }
-};
+  std::vector<int> idom(n, -1);
+  idom[start] = start;
+  for (int i = 2; i <= timer; i++) {
+    if (idom_index[i] != sdom[i]) {
+      idom_index[i] = idom_index[idom_index[i]];
+    }
+    idom[node_at_time[i]] = node_at_time[idom_index[i]];
+  }
+  return idom;
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -2068,16 +1950,8 @@ int main() {
     // |           |  /          |
     // v           v /           v
     // 2 --------> 3 ---> 5 ---> 6
-    Dominators g(7);
-    g.add_edge(0, 1);
-    g.add_edge(0, 2);
-    g.add_edge(1, 3);
-    g.add_edge(2, 3);
-    g.add_edge(3, 4);
-    g.add_edge(3, 5);
-    g.add_edge(4, 6);
-    g.add_edge(5, 6);
-    assert((g.find_dominators(0) == vector<int>{0, 0, 0, 0, 3, 3, 3}));
+    adj = {{1, 2}, {3}, {3}, {4, 5}, {6}, {6}, {}};
+    assert((find_dominators(0) == vector<int>{0, 0, 0, 0, 3, 3, 3}));
   }
   {
     // Node 3 is reachable through either 1 or 2, so neither one dominates it.
@@ -2086,15 +1960,8 @@ int main() {
     // |   /  |      |
     // v /    v      v
     // 0 ---> 2 ---> 3
-    Dominators g(5);
-    g.add_edge(0, 1);
-    g.add_edge(0, 2);
-    g.add_edge(1, 2);
-    g.add_edge(1, 3);
-    g.add_edge(2, 3);
-    g.add_edge(4, 0);
-    g.add_edge(4, 1);
-    assert((g.find_dominators(4) == vector<int>{4, 4, 4, 4, 4}));
+    adj = {{1, 2}, {2, 3}, {3}, {}, {0, 1}};
+    assert((find_dominators(4) == vector<int>{4, 4, 4, 4, 4}));
   }
   return 0;
 }
@@ -2131,7 +1998,7 @@ The block-cut forest is a bipartite forest with one node for each BCC and one no
 class BiconnectedComponents {
   std::vector<std::vector<int>> adj, bccs, forest;
   std::vector<int> lowlink, tin, forest_id, articulation;
-  std::vector<char> visited, is_articulation;
+  std::vector<char> visit, is_articulation;
   std::vector<std::pair<int, int>> edges;
   std::vector<int> edge_stack;
   int timer;
@@ -2155,7 +2022,7 @@ class BiconnectedComponents {
   }
 
   void dfs(int u, int p) {
-    visited[u] = true;
+    visit[u] = true;
     lowlink[u] = tin[u] = timer++;
     int children = 0;
     for (int id : adj[u]) {
@@ -2163,7 +2030,7 @@ class BiconnectedComponents {
         continue;
       }
       int v = other(id, u);
-      if (visited[v]) {
+      if (visit[v]) {
         if (tin[v] < tin[u]) {
           edge_stack.push_back(id);
           lowlink[u] = std::min(lowlink[u], tin[v]);
@@ -2203,11 +2070,11 @@ class BiconnectedComponents {
     edge_stack.clear();
     lowlink.assign(n, 0);
     tin.assign(n, 0);
-    visited.assign(n, false);
+    visit.assign(n, false);
     is_articulation.assign(n, false);
     timer = 0;
     for (int i = 0; i < n; i++) {
-      if (!visited[i]) {
+      if (!visit[i]) {
         dfs(i, -1);
       }
     }
@@ -2299,21 +2166,21 @@ After each 2-edge-connected component is condensed into one node, the original b
 class BridgeDecomposition {
   std::vector<std::vector<int>> adj, two_edge_components, forest;
   std::vector<int> lowlink, tin, component;
-  std::vector<char> visited, is_bridge_edge;
+  std::vector<char> visit, is_bridge_edge;
   std::vector<std::pair<int, int>> edges, bridge_edges;
   int timer;
 
   int other(int id, int u) const { return edges[id].first ^ edges[id].second ^ u; }
 
   void dfs_bridges(int u, int p) {
-    visited[u] = true;
+    visit[u] = true;
     lowlink[u] = tin[u] = timer++;
     for (int id : adj[u]) {
       if (id == p) {
         continue;
       }
       int v = other(id, u);
-      if (visited[v]) {
+      if (visit[v]) {
         lowlink[u] = std::min(lowlink[u], tin[v]);
       } else {
         dfs_bridges(v, id);
@@ -2352,11 +2219,11 @@ class BridgeDecomposition {
     bridge_edges.clear();
     lowlink.assign(n, 0);
     tin.assign(n, 0);
-    visited.assign(n, false);
+    visit.assign(n, false);
     is_bridge_edge.assign(edges.size(), false);
     timer = 0;
     for (int i = 0; i < n; i++) {
-      if (!visited[i]) {
+      if (!visit[i]) {
         dfs_bridges(i, -1);
       }
     }
@@ -2456,12 +2323,12 @@ class OnlineBridges {
 
   void merge_path(int u, int v) {
     lca_iteration++;
-    std::vector<int> path_a, path_b;
+    std::vector<int> upath, vpath;
     int lca = -1;
     while (lca == -1) {
       if (u != -1) {
         u = find_2ecc(u);
-        path_a.push_back(u);
+        upath.push_back(u);
         if (last_visit[u] == lca_iteration) {
           lca = u;
           break;
@@ -2471,7 +2338,7 @@ class OnlineBridges {
       }
       if (v != -1) {
         v = find_2ecc(v);
-        path_b.push_back(v);
+        vpath.push_back(v);
         if (last_visit[v] == lca_iteration) {
           lca = v;
           break;
@@ -2480,14 +2347,14 @@ class OnlineBridges {
         v = parent[v];
       }
     }
-    for (int a : path_a) {
+    for (int a : upath) {
       dsu_2ecc[a] = lca;
       if (a == lca) {
         break;
       }
       num_bridges--;
     }
-    for (int b : path_b) {
+    for (int b : vpath) {
       dsu_2ecc[b] = lca;
       if (b == lca) {
         break;
@@ -2514,18 +2381,12 @@ class OnlineBridges {
     if (u == -1) {
       return -1;
     }
-    if (dsu_2ecc[u] == u) {
-      return u;
-    }
-    return dsu_2ecc[u] = find_2ecc(dsu_2ecc[u]);
+    return dsu_2ecc[u] == u ? u : dsu_2ecc[u] = find_2ecc(dsu_2ecc[u]);
   }
 
   int find_cc(int u) {
     u = find_2ecc(u);
-    if (dsu_cc[u] == u) {
-      return u;
-    }
-    return dsu_cc[u] = find_cc(dsu_cc[u]);
+    return dsu_cc[u] == u ? u : dsu_cc[u] = find_cc(dsu_cc[u]);
   }
 
   void add_edge(int u, int v) {
@@ -2534,17 +2395,17 @@ class OnlineBridges {
     if (u == v) {
       return;
     }
-    int ca = find_cc(u), cb = find_cc(v);
-    if (ca != cb) {
+    int cu = find_cc(u), cv = find_cc(v);
+    if (cu != cv) {
       num_bridges++;
-      if (dsu_cc_size[ca] > dsu_cc_size[cb]) {
+      if (dsu_cc_size[cu] > dsu_cc_size[cv]) {
         std::swap(u, v);
-        std::swap(ca, cb);
+        std::swap(cu, cv);
       }
       make_root(u);
       parent[u] = v;
       dsu_cc[u] = v;
-      dsu_cc_size[cb] += dsu_cc_size[u];
+      dsu_cc_size[cv] += dsu_cc_size[u];
     } else {
       merge_path(u, v);
     }
@@ -2618,11 +2479,11 @@ class TwoSAT {
     rev[b].push_back(a);
   }
 
-  void dfs_order(int u, std::vector<char> &visited) {
-    visited[u] = true;
+  void dfs_order(int u, std::vector<char> &visit) {
+    visit[u] = true;
     for (int v : adj[u]) {
-      if (!visited[v]) {
-        dfs_order(v, visited);
+      if (!visit[v]) {
+        dfs_order(v, visit);
       }
     }
     order.push_back(u);
@@ -2656,10 +2517,10 @@ class TwoSAT {
   bool satisfiable() {
     order.clear();
     component.assign(2 * variables, -1);
-    std::vector<char> visited(2 * variables, false);
+    std::vector<char> visit(2 * variables, false);
     for (int i = 0; i < 2 * variables; i++) {
-      if (!visited[i]) {
-        dfs_order(i, visited);
+      if (!visit[i]) {
+        dfs_order(i, visit);
       }
     }
     std::reverse(order.begin(), order.end());
@@ -2752,10 +2613,10 @@ Building the structure peels away nodes of in-degree zero to expose the cycles (
 
 class FunctionalGraph {
   std::vector<std::vector<int>> up;  // up[k][i] = f applied 2^k times to i.
-  std::vector<char> on_cyc;
-  std::vector<int> to_cyc;  // Steps from i to the first cycle node.
-  std::vector<int> comp;    // Identifier of the cycle that i reaches.
-  std::vector<int> clen;    // clen[c] = length of cycle c.
+  std::vector<char> on_cyc;          // on_cyc[i] = true if i is on a cycle.
+  std::vector<int> to_cyc;           // Steps from i to the first cycle node.
+  std::vector<int> comp;             // Identifier of the cycle that i reaches.
+  std::vector<int> clen;             // clen[c] = length of cycle c.
 
   int jump(int i, int64_t steps) const {
     for (int k = 0; steps > 0; k++, steps >>= 1) {
@@ -3153,14 +3014,14 @@ int main() {
   adj[1].push_back(2);
   adj[1].push_back(3);
   adj[2].push_back(3);
-  int start = 0, dest = 3;
-  bfs(vector<int>{start});
-  assert(dist[dest] == 2);
-  assert((get_path(dest) == vector<int>{0, 1, 3}));
+  bfs(vector<int>{0});
+  assert((dist == vector<int>{0, 1, 2, 2}));
+  assert((pred == vector<int>{-1, 0, 1, 1}));
+  assert((get_path(3) == vector<int>{0, 1, 3}));
 
   bfs(vector<int>{0, 2});
-  assert(dist[2] == 0);
-  assert(dist[3] == 1);
+  assert((dist == vector<int>{0, 1, 0, 1}));
+  assert((pred == vector<int>{-1, 0, -1, 2}));
   assert((get_path(3) == vector<int>{2, 3}));
   return 0;
 }
@@ -3168,7 +3029,7 @@ int main() {
 \subsection{0-1 Shortest Path (Deque BFS)}
 Given one or more starting nodes in a weighted graph whose edge weights are only $0$ or $1$, compute the shortest distance from any start to every reachable node. Optionally, reconstruct the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred}.
 
-0-1 BFS is a specialized version of Dijkstra's algorithm. Because every relaxation changes the distance by either $0$ or $1$, a deque maintains nodes in nondecreasing distance order: push weight-0 relaxations to the front and weight-1 relaxations to the back.
+0-1 BFS is a specialized version of Dijkstra's algorithm. Because every relaxation changes the distance by either $0$ or $1$, a deque maintains nodes in nondecreasing distance order: push weight-$0$ relaxations to the front and weight-$1$ relaxations to the back.
 
 \begin{compactitem}
   \item \inlinecode{bfs\_zero\_one(starts)} populates \inlinecode{dist} and \inlinecode{pred} for shortest paths from the nodes in \inlinecode{starts}, assigning each node its minimum distance from any start. The global, pre-populated adjacency list \inlinecode{adj} uses its indices as nodes. Each edge is stored as (\inlinecode{neighbor}, \inlinecode{weight}), where \inlinecode{weight} is either $0$ or $1$. Pass a singleton vector for a single source.
@@ -3264,13 +3125,14 @@ int main() {
   adj[2].emplace_back(1, 0);
   adj[1].emplace_back(3, 1);
   adj[2].emplace_back(3, 1);
-  int start = 0, dest = 3;
-  bfs_zero_one(vector<int>{start});
-  assert(dist[dest] == 1);
-  assert((get_path(dest) == vector<int>{0, 2, 3}));
+  bfs_zero_one(vector<int>{0});
+  assert((dist == vector<int>{0, 0, 0, 1}));
+  assert((pred == vector<int>{-1, 2, 0, 2}));
+  assert((get_path(3) == vector<int>{0, 2, 3}));
 
   bfs_zero_one(vector<int>{1, 0});
-  assert(dist[3] == 1);
+  assert((dist == vector<int>{0, 0, 0, 1}));
+  assert((pred == vector<int>{-1, -1, 0, 1}));
   assert((get_path(3) == vector<int>{1, 3}));
   return 0;
 }
@@ -3371,10 +3233,10 @@ int main() {
   adj[1].emplace_back(2, 2);
   adj[1].emplace_back(3, 4);
   adj[2].emplace_back(3, 1);
-  int start = 0, dest = 3;
-  dijkstra(start);
-  assert(dist[dest] == 5);
-  assert((get_path(dest) == vector<int>{0, 1, 2, 3}));
+  dijkstra(0);
+  assert((dist == vector<int64_t>{0, 2, 4, 5}));
+  assert((pred == vector<int>{-1, 0, 1, 2}));
+  assert((get_path(3) == vector<int>{0, 1, 2, 3}));
   return 0;
 }
 \end{lstlisting}
@@ -3469,15 +3331,13 @@ int main() {
   edges.emplace_back(0, 1, 1);
   edges.emplace_back(1, 2, 2);
   edges.emplace_back(0, 2, 5);
-  int start = 0, dest = 2;
-  bool ok = bellman_ford(3, start);
-  assert(ok);
-  assert(dist[dest] == 3);
-  assert((get_path(dest) == vector<int>{0, 1, 2}));
+  assert(bellman_ford(3, 0));
+  assert((dist == vector<int64_t>{0, 1, 3}));
+  assert((pred == vector<int>{-1, 0, 1}));
+  assert((get_path(2) == vector<int>{0, 1, 2}));
 
   edges = {{0, 1, -1}, {1, 0, -1}};
-  ok = bellman_ford(2, 0);
-  assert(!ok);
+  assert(!bellman_ford(2, 0));
   return 0;
 }
 \end{lstlisting}
@@ -3581,13 +3441,13 @@ int main() {
   adj[0].emplace_back(2, 5);
   adj[1].emplace_back(2, -2);
   adj[2].emplace_back(3, 3);
-  int start = 0, dest = 3;
-  spfa(start);
-  assert(dist[dest] == 5);
-  assert((get_path(dest) == vector<int>{0, 1, 2, 3}));
+  spfa(0);
+  assert((dist == vector<int64_t>{0, 4, 2, 5}));
+  assert((pred == vector<int>{-1, 0, 1, 2}));
+  assert((get_path(3) == vector<int>{0, 1, 2, 3}));
 
   adj[3].emplace_back(1, -2);  // The cycle 1 -> 2 -> 3 -> 1 now has total weight -1.
-  assert(!spfa(start));
+  assert(!spfa(0));
   return 0;
 }
 \end{lstlisting}
@@ -3694,10 +3554,10 @@ int main() {
   adj[1].emplace_back(3, -2);  // A negative edge, which Dijkstra could not handle.
   adj[2].emplace_back(3, 1);
   adj[3].emplace_back(4, 3);
-  int start = 0, dest = 4;
-  dag_shortest_path(start);
-  assert(dist[dest] == 2);
-  assert((get_path(dest) == vector<int>{0, 1, 3, 4}));
+  dag_shortest_path(0);
+  assert((dist == vector<int64_t>{0, 1, 2, -1, 2}));
+  assert((pred == vector<int>{-1, 0, 1, 1, 3}));
+  assert((get_path(4) == vector<int>{0, 1, 3, 4}));
   return 0;
 }
 \end{lstlisting}
@@ -3802,16 +3662,13 @@ int main() {
   dist[0][1] = 1;
   dist[1][2] = 2;
   dist[0][2] = 5;
-  bool ok = floyd_warshall();
-  assert(ok);
-  int start = 0, dest = 2;
-  assert(dist[start][dest] == 3);
-  assert((get_path(start, dest) == vector<int>{0, 1, 2}));
+  assert(floyd_warshall());
+  assert((dist == vector<vector<int64_t>>{{0, 1, 3}, {INF, 0, 2}, {INF, INF, 0}}));
+  assert((get_path(0, 2) == vector<int>{0, 1, 2}));
 
   init_floyd(2);
   dist[0][1] = dist[1][0] = -1;
-  ok = floyd_warshall();
-  assert(!ok);
+  assert(!floyd_warshall());
   return 0;
 }
 \end{lstlisting}
@@ -3881,8 +3738,8 @@ bool johnson_all_pairs(int n) {
   }
   dist.assign(n, std::vector<int64_t>(n, INF));
   next_node.assign(n, std::vector<int>(n, -1));
-  using qnode = std::pair<int64_t, int>;  // (distance, node)
   for (int start = 0; start < n; start++) {
+    using qnode = std::pair<int64_t, int>;  // (distance, node)
     std::priority_queue<qnode, std::vector<qnode>, std::greater<>> pq;
     dist[start][start] = 0;
     next_node[start][start] = start;
@@ -3939,19 +3796,21 @@ int main() {
   // +---------------------+
   //         w=4
   edges = {{0, 1, 1}, {0, 2, 4}, {1, 2, -2}, {2, 3, 2}, {3, 1, 3}};
-  bool ok = johnson_all_pairs(5);  // Node 4 is isolated.
-  assert(ok);
-  assert((dist[0] == vector<int64_t>{0, 1, -1, 1, INF}));
-  assert((dist[1] == vector<int64_t>{INF, 0, -2, 0, INF}));
-  assert((dist[2] == vector<int64_t>{INF, 5, 0, 2, INF}));
-  assert((dist[3] == vector<int64_t>{INF, 3, 1, 0, INF}));
-  assert((dist[4] == vector<int64_t>{INF, INF, INF, INF, 0}));
+  assert(johnson_all_pairs(5));  // Node 4 is isolated.
+  assert(
+      (dist == vector<vector<int64_t>>{
+                   {0, 1, -1, 1, INF},
+                   {INF, 0, -2, 0, INF},
+                   {INF, 5, 0, 2, INF},
+                   {INF, 3, 1, 0, INF},
+                   {INF, INF, INF, INF, 0},
+               })
+  );
   assert((get_path(0, 3) == vector<int>{0, 1, 2, 3}));
   assert(get_path(0, 4).empty());
 
   edges = {{0, 1, -1}, {1, 0, -1}};
-  ok = johnson_all_pairs(2);
-  assert(!ok);
+  assert(!johnson_all_pairs(2));
   return 0;
 }
 \end{lstlisting}
@@ -4049,8 +3908,7 @@ int main() {
   add_edge(4, 5, 2);
   add_edge(5, 6, 3);
   add_edge(6, 4, 4);
-  int64_t total = prim_mst();
-  assert(total == 13);
+  assert(prim_mst() == 13);
   assert(
       (mst == vector<tuple<int, int, int>>{{0, 2, 3}, {0, 1, 4}, {3, 4, 1}, {4, 5, 2}, {5, 6, 3}})
   );
@@ -4141,8 +3999,7 @@ int main() {
   edges.emplace_back(2, 4, 5);
   edges.emplace_back(3, 5, 6);
   edges.emplace_back(4, 6, 4);
-  int64_t total = kruskal_mst(7);
-  assert(total == 13);
+  assert(kruskal_mst(7) == 13);
   assert((mst == vector<int>{3, 4, 2, 5, 0}));
   return 0;
 }
@@ -4179,8 +4036,7 @@ The input graph must be connected. Parallel edges are supported and are handled 
 
 class KruskalReconstructionTree {
   std::vector<int> dsu_root, dsu_tree_root, depth, tin, tout;
-  std::vector<std::vector<int>> up;
-  std::vector<std::vector<int>> tree;
+  std::vector<std::vector<int>> up, tree;
   std::vector<int64_t> value;
   int timer = 0, root_node = -1;
 
@@ -4273,9 +4129,7 @@ int main() {
   //  w=5 |   /
   //      | / w=9
   //      3
-  vector<tuple<int64_t, int, int>> edges{
-      {2, 0, 1}, {4, 1, 2}, {5, 1, 3}, {8, 0, 2}, {9, 2, 3}
-  };
+  vector<tuple<int64_t, int, int>> edges{{2, 0, 1}, {4, 1, 2}, {5, 1, 3}, {8, 0, 2}, {9, 2, 3}};
   KruskalReconstructionTree tree(4, edges);
 
   // Reconstruction tree; internal nodes are labeled with their joining edge weight.
@@ -4741,29 +4595,6 @@ class Dinic {
     return 0;
   }
 
-  bool find_path(
-      int u, int sink, std::vector<T> &rem, std::vector<char> &seen, std::vector<int> &path_nodes,
-      std::vector<int> &path_edges
-  ) const {
-    if (u == sink) {
-      return true;
-    }
-    seen[u] = true;
-    for (int id : adj[u]) {
-      const Edge &e = edges[id];
-      if (rem[id] > EPS && !seen[e.v]) {
-        path_edges.push_back(id);
-        path_nodes.push_back(e.v);
-        if (find_path(e.v, sink, rem, seen, path_nodes, path_edges)) {
-          return true;
-        }
-        path_nodes.pop_back();
-        path_edges.pop_back();
-      }
-    }
-    return false;
-  }
-
  public:
   struct FlowPath {
     T flow;
@@ -4833,7 +4664,26 @@ class Dinic {
     while (true) {
       FlowPath path{std::numeric_limits<T>::max(), {source}, {}};
       std::vector<char> seen(nodes);
-      if (!find_path(source, sink, rem, seen, path.nodes, path.edges)) {
+      auto dfs = [&](auto &&dfs, int u, int sink) -> bool {
+        if (u == sink) {
+          return true;
+        }
+        seen[u] = true;
+        for (int id : adj[u]) {
+          const Edge &e = edges[id];
+          if (rem[id] > EPS && !seen[e.v]) {
+            path.edges.push_back(id);
+            path.nodes.push_back(e.v);
+            if (dfs(dfs, e.v, sink)) {
+              return true;
+            }
+            path.nodes.pop_back();
+            path.edges.pop_back();
+          }
+        }
+        return false;
+      };
+      if (!dfs(dfs, source, sink)) {
         break;
       }
       for (int id : path.edges) {
@@ -5999,9 +5849,8 @@ Kuhn's algorithm builds the matching one left node at a time. For each, a depth-
 \begin{lstlisting}[language=C++]
 #include <vector>
 
-std::vector<int> match_left, match_right;
-std::vector<int> visit;
 std::vector<std::vector<int>> adj;
+std::vector<int> match_left, match_right, visit;
 int timer;
 
 bool dfs(int u) {
@@ -6059,8 +5908,7 @@ int main() {
   adj[1].push_back(2);
   adj[2].push_back(2);
   adj[2].push_back(3);
-  int pairs = bipartite_matching(n2);
-  assert(pairs == 3);
+  assert(bipartite_matching(n2) == 3);
   assert((match_right == vector<int>{1, 0, 2, -1}));
   return 0;
 }
@@ -6088,8 +5936,8 @@ Hopcroft-Karp augments along many shortest augmenting paths per phase. Each phas
 #include <vector>
 
 std::vector<std::vector<int>> adj;
-std::vector<char> used, visit;
 std::vector<int> match_left, match_right, dist;
+std::vector<char> used, visit;
 
 void bfs() {
   int n1 = static_cast<int>(adj.size());
@@ -6170,8 +6018,7 @@ int main() {
   adj[1].push_back(2);
   adj[2].push_back(2);
   adj[2].push_back(3);
-  int pairs = bipartite_matching_hk(n2);
-  assert(pairs == 3);
+  assert(bipartite_matching_hk(n2) == 3);
   assert((match_right == vector<int>{1, 0, 2, -1}));
   return 0;
 }
@@ -6200,8 +6047,7 @@ The adjacency list \inlinecode{adj} is shared with the matching routine: \inline
 #include <vector>
 
 std::vector<std::vector<int>> adj;
-std::vector<int> match_left, match_right;
-std::vector<int> visit;
+std::vector<int> match_left, match_right, visit;
 int timer;
 
 bool dfs(int u) {
@@ -6869,8 +6715,7 @@ int main() {
   g.add_edge(2, 3, 5);
   g.add_edge(3, 4, 6);
   g.add_edge(4, 0, 5);
-  int64_t weight = g.solve();
-  assert(weight == 12);  // Edges 1-2 and 3-4 with weights 6 + 6.
+  assert(g.solve() == 12);  // Edges 1-2 and 3-4 with weights 6 + 6.
   assert(g.partner(1) == 2 && g.partner(2) == 1);
   assert(g.partner(3) == 4 && g.partner(4) == 3);
   assert(g.partner(0) == -1);  // Node 0 is left unmatched.
@@ -7100,7 +6945,7 @@ The Bron-Kerbosch algorithm recursively extends a growing clique, tracking the s
 
 \begin{compactitem}
   \item \inlinecode{max\_clique()} returns the maximum clique size for a global, bidirectionally pre-populated adjacency matrix \inlinecode{adj}, whose row and column indices represent the nodes.
-  \item \inlinecode{max\_clique\_weighted()} additionally uses global \inlinecode{w} and returns the maximum clique weight.
+  \item \inlinecode{max\_clique\_weighted()} additionally uses the global weight array \inlinecode{w} and returns the maximum clique weight.
 \end{compactitem}
 
 These implementations use \inlinecode{Mask}, which is \inlinecode{uint64\_t} by default, so the number of nodes must be less than \inlinecode{MASK\_BITS}. Node weights must be nonnegative.
@@ -7174,8 +7019,7 @@ int64_t max_clique_weighted_rec(const std::vector<Mask> &g, int64_t curr, Mask p
   while (z != 0) {
     int u = __builtin_ctzll(z);
     int64_t next_weight = curr + w[u];  // Overflow warning.
-    int64_t next = max_clique_weighted_rec(g, next_weight, pool & g[u], excl & g[u]);
-    res = std::max(res, next);
+    res = std::max(res, max_clique_weighted_rec(g, next_weight, pool & g[u], excl & g[u]));
     pool ^= Mask{1} << u;
     excl |= Mask{1} << u;
     z &= z - 1;
@@ -7255,8 +7099,8 @@ This implementation finds the chromatic number by backtracking: nodes (ordered b
 #include <vector>
 
 std::vector<std::vector<char>> adj;
-int min_colors;
 std::vector<int> color, curr, order;
+int min_colors;
 
 void color_rec(int pos, int used_colors) {
   if (used_colors >= min_colors) {
@@ -7349,8 +7193,7 @@ int main() {
   add_edge(2, 3);
   add_edge(2, 4);
   add_edge(3, 4);
-  int colors = color_graph();
-  assert(colors == 3);
+  assert(color_graph() == 3);
   for (int u = 0; u < nodes; u++) {
     for (int v = u + 1; v < nodes; v++) {
       if (adj[u][v]) {
@@ -7637,13 +7480,10 @@ using namespace std;
 int main() {
   // Complete directed graph where 0->1->2->0 costs 1 + 2 + 3.
   // The reverse cycle is intentionally more expensive.
-  //         0 <-------+
-  //       ^ | \       |
-  //      /  |  \      |
-  //     /   |   \     |
-  // w=7| w=1|    \w=1 |w=3
+  //    +--> 0 <-------+
+  //    |    | \       |
+  // w=7| w=1|   \w=1  |w=3
   //    |    |     \   |
-  //    |    |      \  |
   //    |    v  w=2  v |
   //    +--- 1 ------> 2
   //          ^_______/
@@ -7656,11 +7496,9 @@ int main() {
   adj[1][2] = 2;
   adj[2][0] = 3;
   adj[2][1] = 5;
-  int64_t path_len = shortest_hamiltonian_path();
-  assert(path_len == 3);
+  assert(shortest_hamiltonian_path() == 3);
   assert((path == vector<int>{0, 1, 2}));
-  int64_t cycle_len = shortest_hamiltonian_cycle();
-  assert(cycle_len == 6);
+  assert(shortest_hamiltonian_cycle() == 6);
   assert((path == vector<int>{0, 1, 2}));
   return 0;
 }

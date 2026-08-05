@@ -26,26 +26,26 @@ submatrix, so the divisions are always exact and the arithmetic stays in integer
   elimination, with no rounding error. Stored entries are minors of `a`, but the products in each
   update can be larger. They use 128-bit intermediates when available; otherwise those products must
   fit in `int64_t`.
-- `invert(a, eps = 1e-10)` returns $0$ after assigning the $n$ by $n$ floating-point or exact-field
-  matrix `a` to its inverse. It leaves `a` unchanged and returns $-1$ if the matrix is singular;
-  floating-point pivots within `eps` of zero are treated as singular.
+- `inverse(a, eps = 1e-10)` returns the inverse of square matrix `a` with floating-point or
+  exact-field elements, or `std::nullopt` if the matrix is singular. Floating-point pivots within
+  `eps` of zero are treated as singular.
 
 Time Complexity:
 - O(n!) per call to `det_naive()`, where $n$ is the dimension of the matrix.
-- O(n^3) per call to `det()`, `det_bareiss()`, and `invert()` where $n$ is the dimension of the
+- O(n^3) per call to `det()`, `det_bareiss()`, and `inverse()` where $n$ is the dimension of the
   matrix.
 
 Space Complexity:
 - O(n) auxiliary stack space and O(n^3) auxiliary heap space for `det_naive()`, where $n$ is the
   dimension of the matrix.
-- O(n^2) auxiliary heap space for `det()`, `det_bareiss()`, and `invert()`.
+- O(n^2) auxiliary heap space for `det()`, `det_bareiss()`, and `inverse()`.
 
 */
 
 #include <cmath>
 #include <cstdint>
+#include <optional>
 #include <type_traits>
-#include <utility>
 #include <vector>
 
 template<typename SquareMatrix>
@@ -165,40 +165,38 @@ int64_t det_bareiss(std::vector<std::vector<int64_t>> a) {
 }
 
 template<typename SquareMatrix>
-int invert(SquareMatrix &a, double eps = 1e-10) {
+std::optional<SquareMatrix> inverse(SquareMatrix a, double eps = 1e-10) {
   using T = std::decay_t<decltype(a[0][0])>;
   int n = static_cast<int>(a.size());
-  SquareMatrix b(a);
   for (int i = 0; i < n; i++) {
-    b[i].resize(2 * n);
+    a[i].resize(2 * n);
     for (int j = n; j < n * 2; j++) {
-      b[i][j] = (i == j - n ? 1 : 0);
+      a[i][j] = (i == j - n ? 1 : 0);
     }
   }
   for (int i = 0; i < n; i++) {
-    int p = elimination_pivot(b, i, i, eps);
+    int p = elimination_pivot(a, i, i, eps);
     if (p == -1) {
-      return -1;
+      return std::nullopt;
     }
-    std::swap(b[p], b[i]);
-    T pivot = b[i][i];
+    std::swap(a[p], a[i]);
+    T pivot = a[i][i];
     for (int j = i; j < n * 2; j++) {
-      b[i][j] /= pivot;
+      a[i][j] /= pivot;
     }
     for (int j = 0; j < n; j++) {
       if (i != j) {
-        T factor = b[j][i];
+        T factor = a[j][i];
         for (int k = 0; k < n * 2; k++) {
-          b[j][k] -= factor * b[i][k];
+          a[j][k] -= factor * a[i][k];
         }
       }
     }
   }
   for (int i = 0; i < n; i++) {
-    b[i].erase(b[i].begin(), b[i].begin() + n);
+    a[i].erase(a[i].begin(), a[i].begin() + n);
   }
-  a = std::move(b);
-  return 0;
+  return a;
 }
 
 /*** Example Usage ***/
@@ -219,14 +217,13 @@ int main() {
   assert(det_bareiss(ai) == -306);
   assert(det_bareiss({{2, 0, 0}, {0, 3, 0}, {0, 0, 5}}) == 30);
   assert(det_bareiss({{1, 2}, {2, 4}}) == 0);  // Singular.
-  vector<vector<double>> inv = a;
-  assert(invert(inv) == 0);
-  vector<vector<double>> singular{{1, 2}, {2, 4}}, unchanged = singular;
-  assert(invert(singular) == -1 && singular == unchanged);
+  auto inv = inverse(a);
+  assert(inv);
+  assert(!inverse(vector<vector<double>>{{1, 2}, {2, 4}}));
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < n; j++) {
       for (int k = 0; k < n; k++) {
-        res[i][j] += a[i][k] * inv[k][j];
+        res[i][j] += a[i][k] * (*inv)[k][j];
       }
     }
   }

@@ -1966,14 +1966,21 @@ int main() {
   assert(
       EQ(in[1].first, Point(0.5, sqrt(3.0) / 2)) && EQ(in[1].second, Point(3.5, -sqrt(3.0) / 2))
   );
-
+  auto all = ext;
+  all.insert(all.end(), in.begin(), in.end());
+  assert(all_circle_tangents(a, 1, b, 1) == all);
   auto point_to_circle = circle_tangents(Point(0, 0), 0, Point(2, 0), 1);
   assert(point_to_circle.size() == 2);
-  assert(EQ(point_to_circle[0].first, Point(0, 0)));
-
+  assert(
+      EQ(point_to_circle[0].first, Point(0, 0)) &&
+      EQ(point_to_circle[0].second, Point(1.5, -sqrt(3.0) / 2))
+  );
+  assert(
+      EQ(point_to_circle[1].first, Point(0, 0)) &&
+      EQ(point_to_circle[1].second, Point(1.5, sqrt(3.0) / 2))
+  );
   assert(circle_tangents(Point(0, 0), 5, Point(1, 0), 1).empty());        // contained
   assert(circle_tangents(Point(0, 0), 2, Point(3, 0), 2, true).empty());  // overlapping
-  assert(all_circle_tangents(Point(0, 0), 1, Point(4, 0), 1).size() == 4);
   return 0;
 }
 \end{lstlisting}
@@ -1982,7 +1989,7 @@ int main() {
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Polygon Sorting and Area}
-Given a list of distinct points in two dimensions, order them into a valid polygon and determine the area. The sorting comparators order two points by the sign of their cross product around a chosen center, that is, by angle. The area functions use the shoelace formula, summing the cross products of consecutive vertex pairs. The functions are templated on the point type. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}, \inlinecode{PointD}, or \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields and \inlinecode{\textless{}} / \inlinecode{==} operators.
+Given a list of distinct points in two dimensions, order them into a valid polygon and determine the area. The sorting comparator orders two points by the sign of their cross product around a chosen center, that is, by angle. To form a simple polygon, choose a center inside the points' convex hull that differs from every input point; the arithmetic mean used in the example is usually convenient. The area functions use the shoelace formula, summing the cross products of consecutive vertex pairs. All functions accept \inlinecode{Point}, \inlinecode{PointI}, or \inlinecode{PointL} from 7.1.1, or any compatible point type with numeric \inlinecode{.x} and \inlinecode{.y} fields and the comparison operators used by the requested operation.
 
 \begin{compactitem}
   \item \inlinecode{cw\_comp(a, b, c)} returns whether point \inlinecode{a} compares clockwise before \inlinecode{b} about \inlinecode{c}.
@@ -2144,7 +2151,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Point-in-Polygon}
-Given a point \inlinecode{p} and a polygon, determines whether \inlinecode{p} lies inside using ray casting. A ray cast from \inlinecode{p} must cross the polygon's boundary an odd number of times exactly when \inlinecode{p} is inside, so the function counts crossings between a horizontal ray and each polygon edge. The function is templated on the point type \inlinecode{Pt}. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}, \inlinecode{PointD}, or \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. All comparisons are exact (no epsilon): the ray-crossing parity needs a consistent comparison to be correct, and the result is exact for integer-coordinate points.
+Given a point \inlinecode{p} and a polygon, determines whether \inlinecode{p} lies inside using ray casting. A ray cast from \inlinecode{p} must cross the polygon's boundary an odd number of times exactly when \inlinecode{p} is inside, so the function counts crossings between a horizontal ray and each polygon edge. The function is templated on the point type \inlinecode{Pt} and accepts \inlinecode{Point}, \inlinecode{PointI}, or \inlinecode{PointL} from 7.1.1, or any compatible type with numeric \inlinecode{.x} and \inlinecode{.y} fields. All comparisons are exact (no epsilon): the ray-crossing parity needs a consistent comparison to be correct, and the result is exact for integer-coordinate points.
 
 \begin{compactitem}
   \item \inlinecode{point\_in\_polygon(p, lo, hi, include\_boundary = true)} returns whether \inlinecode{p} lies within the polygon with vertices specified by the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of points in either clockwise or counter-clockwise order. The \inlinecode{include\_boundary} flag controls whether points exactly on an edge or vertex count as inside.
@@ -2343,8 +2350,8 @@ struct PointI {
 int main() {
   {
     vector<PointI> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
-  mt19937 rng(1234567);  // Fixed seed for reproducibility.
-  shuffle(v.begin(), v.end(), rng);
+    mt19937 rng(1234567);  // Fixed seed for reproducibility.
+    shuffle(v.begin(), v.end(), rng);
     vector<PointI> h{{-1, 3}, {0, 0}, {2, 1}, {1, 3}};
     assert(convex_hull(v.begin(), v.end()) == h);
   }
@@ -2720,7 +2727,7 @@ int main() {
 Given a list of points in two dimensions, finds the closest pair using a divide-and-conquer algorithm. The points are split in half by $x$-coordinate and each half is solved recursively; the combining step then only needs to examine points within the best distance so far of the dividing line, where each point in this strip is compared to a constant number of $y$-ordered neighbors.
 
 \begin{compactitem}
-  \item \inlinecode{closest\_pair(lo, hi, \&res)} returns the minimum squared distance between any two points in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators. The input range is reordered during the computation. If \inlinecode{res} is non-null, one closest pair is stored there in lexicographic order. With fewer than two points, the maximum value of the squared-distance type is returned and \inlinecode{res} is unchanged. The function is templated on the point type and works with any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members and a lexicographic \inlinecode{operator\textless{}}.
+  \item \inlinecode{closest\_pair(lo, hi, \&res)} returns the minimum squared distance between any two points in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ without modifying it, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators. If \inlinecode{res} is non-null, one closest pair is stored there in lexicographic order. With fewer than two points, the maximum value of the squared-distance type is returned and \inlinecode{res} is unchanged. The function is templated on the point type and works with any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members and a lexicographic \inlinecode{operator\textless{}}.
 \end{compactitem}
 
 The returned distance preserves the coordinate arithmetic type. For integer-coordinate inputs, the result is therefore an exact squared distance provided intermediate products do not overflow. The returned pair contains the original point type.
@@ -2806,10 +2813,13 @@ template<typename It, typename Pt = typename std::iterator_traits<It>::value_typ
 auto closest_pair(It lo, It hi, std::pair<Pt, Pt> *res = nullptr) {
   using T = decltype(sqdist(*lo, *lo));
   T best = std::numeric_limits<T>::max();
-  std::sort(lo, hi, [](const Pt &a, const Pt &b) { return a.x != b.x ? a.x < b.x : a.y < b.y; });
+  std::vector<Pt> p(lo, hi);
+  std::sort(p.begin(), p.end(), [](const Pt &a, const Pt &b) {
+    return a.x != b.x ? a.x < b.x : a.y < b.y;
+  });
   std::vector<Pt> tmp;
-  tmp.reserve(hi - lo);
-  closest_pair_rec(lo, hi, tmp, best, res);
+  tmp.reserve(p.size());
+  closest_pair_rec(p.begin(), p.end(), tmp, best, res);
   return best;
 }
 \end{lstlisting}
@@ -2860,7 +2870,7 @@ Given a list of line segments in two dimensions, determine whether any pair of s
 This implementation counts endpoint contacts as intersections. See 7.2.3 for pairwise intersection predicates when that distinction matters.
 
 \begin{compactitem}
-  \item \inlinecode{find\_intersection(lo, hi, \&res1, \&res2)} returns whether any pair of segments intersect given a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of segments, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators. If an intersection is found, then one such pair of segments is stored in \inlinecode{res1} and \inlinecode{res2}.
+  \item \inlinecode{find\_intersection(lo, hi, \&res1, \&res2)} returns whether any pair of segments intersect given a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of segments, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators. If an intersection is found, then one such pair of segments is stored in \inlinecode{res1} and \inlinecode{res2}. Constructing a \inlinecode{Segment} places its lexicographically smaller endpoint first, as required by the sweep. If no intersection is found, the output segments are unchanged.
 \end{compactitem}
 
 Overflow warning: \inlinecode{seg\_intersection} forms the usual quadratic cross products, but the $y$-ordering cross-multiplication (\inlinecode{ay * bdx}) is cubic in the coordinate magnitude. With 32-bit \inlinecode{int} endpoints this overflows once coordinates reach the low thousands, so use a 64-bit (\inlinecode{int64\_t}) coordinate type for any non-trivial integer inputs.
@@ -2872,7 +2882,9 @@ Overflow warning: \inlinecode{seg\_intersection} forms the usual quadratic cross
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
+#include <iterator>
 #include <set>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -2883,8 +2895,7 @@ bool seg_intersection(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   auto cross = [](const Pt &p, const Pt &q, const Pt &r) {
     return (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
   };
-  auto c1 = cross(a, b, c), c2 = cross(a, b, d);
-  auto c3 = cross(c, d, a), c4 = cross(c, d, b);
+  auto c1 = cross(a, b, c), c2 = cross(a, b, d), c3 = cross(c, d, a), c4 = cross(c, d, b);
   if (c1 == 0 && c2 == 0 && c3 == 0 && c4 == 0) {
     Pt p = std::max(std::min(a, b), std::min(c, d));
     Pt q = std::min(std::max(a, b), std::max(c, d));
@@ -2907,31 +2918,24 @@ bool intersects(const Segment<Pt> &s1, const Segment<Pt> &s2) {
   return seg_intersection(s1.p, s1.q, s2.p, s2.q);
 }
 
-// Deduce Seg from the outputs so their point type may differ from the input point type.
-template<typename It, typename Seg>
-bool find_intersection(It lo, It hi, Seg *res1, Seg *res2) {
+template<typename It>
+bool find_intersection(
+    It lo, It hi, typename std::iterator_traits<It>::value_type *res1,
+    typename std::iterator_traits<It>::value_type *res2
+) {
   using Pt = std::decay_t<decltype(lo->p)>;
   struct Event {
     Pt p;
-    int type;
+    bool is_end;
     It seg;
   };
   std::vector<Event> e;
   for (It it = lo; it != hi; ++it) {
-    if (it->p > it->q) {
-      std::swap(it->p, it->q);
-    }
-    e.push_back(Event{it->p, 1, it});
-    e.push_back(Event{it->q, -1, it});
+    e.push_back(Event{it->p, false, it});
+    e.push_back(Event{it->q, true, it});
   }
-  std::sort(e.begin(), e.end(), [lo](const Event &a, const Event &b) {
-    if (a.p.x != b.p.x) {
-      return a.p.x < b.p.x;
-    }
-    if (a.type != b.type) {
-      return b.type < a.type;
-    }
-    return a.p.y != b.p.y ? a.p.y < b.p.y : a.seg - lo < b.seg - lo;
+  std::sort(e.begin(), e.end(), [](const Event &a, const Event &b) {
+    return std::tie(a.p.x, a.is_end, a.p.y, a.seg) < std::tie(b.p.x, b.is_end, b.p.y, b.seg);
   });
   // Compare y-values at sweep coordinate x without division: y = (p.y*dx + dy*(x - p.x)) / dx.
   // Vertical segments use their lower endpoint.
@@ -2965,7 +2969,7 @@ bool find_intersection(It lo, It hi, Seg *res1, Seg *res2) {
   std::vector<typename ActiveSet::iterator> position(hi - lo);
   for (const auto &ev : e) {
     It seg = ev.seg;
-    if (ev.type == 1) {
+    if (!ev.is_end) {
       auto it = s.insert(seg).first;
       position[seg - lo] = it;
       auto next = it;
@@ -3039,7 +3043,7 @@ int main() {
     Segment<PointI> res1, res2;
     assert(find_intersection(v.begin(), v.end(), &res1, &res2));
 
-    vector<Segment<PointI>> disjoint{
+    const vector<Segment<PointI>> disjoint{
         Segment<PointI>({0, 0}, {1, 0}), Segment<PointI>({0, 5}, {1, 5})
     };
     assert(!find_intersection(disjoint.begin(), disjoint.end(), &res1, &res2));
@@ -3131,7 +3135,7 @@ Given points in the plane, produce a small set of candidate edges guaranteed to 
 
 \begin{compactitem}
   \item \inlinecode{manhattan\_mst\_edges(p)} returns $O(n)$ candidate edges as tuples (\inlinecode{weight}, \inlinecode{u}, \inlinecode{v}).
-  \item \inlinecode{manhattan\_mst\_weight(p)} is a small Kruskal wrapper that returns the MST weight.
+  \item \inlinecode{manhattan\_mst\_weight(p)} returns the MST weight by running Kruskal's algorithm on those candidate edges.
 \end{compactitem}
 
 Overflow warning: the sweeps form coordinate sums, negations, and differences such as \inlinecode{x + y} and \inlinecode{dx + dy}. With \inlinecode{int64\_t} coordinates, those intermediate values must fit in \inlinecode{int64\_t}.
@@ -3144,6 +3148,7 @@ Overflow warning: the sweeps form coordinate sums, negations, and differences su
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <cstdlib>
 #include <map>
 #include <numeric>
 #include <tuple>
@@ -3235,7 +3240,13 @@ int main() {
 
   vector<Point> p{{0, 0}, {2, 1}, {3, 4}, {-1, 2}, {5, 0}};
   assert(manhattan_mst_weight(p) == 14);
-  assert(manhattan_mst_edges(p).size() <= 4 * p.size());
+  auto edges = manhattan_mst_edges(p);
+  assert(edges.size() <= 4 * p.size());
+  for (auto [w, u, v] : edges) {
+    assert(0 <= u && u < static_cast<int>(p.size()));
+    assert(0 <= v && v < static_cast<int>(p.size()));
+    assert(w == abs(p[u].x - p[v].x) + abs(p[u].y - p[v].y));
+  }
   return 0;
 }
 \end{lstlisting}
@@ -3358,8 +3369,7 @@ int main() {
     vector<Point> v{{1, 3}, {2, 2}, {2, 1}, {0, 0}, {-1, 3}};
     // Cut using the vertical line through (0, 0).
     vector<Point> c{{-1, 3}, {0, 3}, {0, 0}};
-    vector<Point> cut = convex_cut(v.begin(), v.end(), Point(0, 0), Point(0, 1));
-    assert(EQ(cut, c));
+    assert(EQ(convex_cut(v.begin(), v.end(), Point(0, 0), Point(0, 1)), c));
   }
   {  // On a non-convex input, the result may be multiple disjoint polygons!
     vector<Point> v{{0, 0}, {2, 2}, {0, 4}, {3, 4}, {3, 0}};
@@ -3565,14 +3575,6 @@ struct Point {
   double cross(const Point &p) const { return x * p.y - y * p.x; }
 };
 
-double polygon_area_2x(const std::vector<Point> &p) {
-  double area = 0;
-  for (int i = 0, j = static_cast<int>(p.size()) - 1; i < static_cast<int>(p.size()); j = i++) {
-    area += p[j].cross(p[i]);
-  }
-  return area;
-}
-
 std::vector<Point> normalize(std::vector<Point> p) {
   while (p.size() > 1 && EQ(p.front(), p.back())) {
     p.pop_back();
@@ -3580,7 +3582,11 @@ std::vector<Point> normalize(std::vector<Point> p) {
   if (p.size() <= 1) {
     return p;
   }
-  if (polygon_area_2x(p) < 0) {
+  double area = 0;
+  for (int i = 0, j = static_cast<int>(p.size()) - 1; i < static_cast<int>(p.size()); j = i++) {
+    area += p[j].cross(p[i]);
+  }
+  if (area < 0) {
     std::reverse(p.begin(), p.end());
   }
   int start = 0;
@@ -3670,18 +3676,12 @@ int main() {
 
   vector<Point> square{{0, 0}, {1, 0}, {1, 1}, {0, 1}};
   vector<Point> tri{{0, 0}, {2, 0}, {0, 2}};
-  vector<Point> sum = minkowski_sum(square, tri);
   // The square thickens the triangle by one unit in the positive x/y directions.
-  vector<Point> expected{{0, 0}, {3, 0}, {3, 1}, {1, 3}, {0, 3}};
-  assert(sum == expected);
+  assert((minkowski_sum(square, tri) == vector<Point>{{0, 0}, {3, 0}, {3, 1}, {1, 3}, {0, 3}}));
 
-  vector<Point> shifted = minkowski_sum(square, {Point(2, 3)});
   // Adding a single point translates the polygon.
-  vector<Point> expected_shifted{{2, 3}, {3, 3}, {3, 4}, {2, 4}};
-  assert(shifted == expected_shifted);
-
-  vector<Point> point_sum = minkowski_sum({Point(1, 2)}, {Point(3, 4)});
-  assert((point_sum == vector<Point>{{4, 6}}));
+  assert((minkowski_sum(square, {Point(2, 3)}) == vector<Point>{{2, 3}, {3, 3}, {3, 4}, {2, 4}}));
+  assert((minkowski_sum({Point(1, 2)}, {Point(3, 4)}) == vector<Point>{{4, 6}}));
   return 0;
 }
 \end{lstlisting}
@@ -4098,7 +4098,7 @@ Given a set $P$ of distinct two-dimensional points, a Delaunay triangulation of 
 This implementation produces one valid triangulation using the Guibas-Stolfi divide-and-conquer algorithm with a quad-edge data structure. The point set is split in half, each half is triangulated recursively, and the halves are stitched together from the bottom up by a sequence of cross edges, with circumcircle tests deciding each connecting edge and deleting invalidated ones.
 
 \begin{compactitem}
-  \item \inlinecode{delaunay\_triangulation(p)} sorts \inlinecode{p} lexicographically and removes duplicate points in place (so the input vector is modified), then returns the triangles of one Delaunay triangulation as a vector of counterclockwise-oriented \inlinecode{Point\textless{}T\textgreater{}} triples (\inlinecode{std::tuple}). If fewer than three non-collinear unique points remain, the result is empty.
+  \item \inlinecode{delaunay\_triangulation(p)} returns the triangles of one Delaunay triangulation as a vector of counterclockwise-oriented \inlinecode{Point\textless{}T\textgreater{}} triples (\inlinecode{std::tuple}). Duplicate points are ignored. If fewer than three non-collinear unique points remain, the result is empty.
 \end{compactitem}
 
 The point type must provide exact lexicographic \inlinecode{operator\textless{}}; sorting and duplicate removal requires this strict ordering rather than epsilon equality. All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation.
@@ -4250,7 +4250,7 @@ bool in_circle(const Point<T> &a, const Point<T> &b, const Point<T> &c, const Po
 
 template<typename T>
 std::pair<Edge<T> *, Edge<T> *> build_triangulation(
-    std::vector<Point<T>> &p, int lo, int hi, QuadEdgePool<T> &pool
+    const std::vector<Point<T>> &p, int lo, int hi, QuadEdgePool<T> &pool
 ) {
   if (hi - lo == 1) {
     Edge<T> *a = pool.make_edge(p[lo], p[hi]);
@@ -4323,7 +4323,7 @@ std::pair<Edge<T> *, Edge<T> *> build_triangulation(
 }
 
 template<typename T>
-auto delaunay_triangulation(std::vector<Point<T>> &p) {
+auto delaunay_triangulation(std::vector<Point<T>> p) {
   using Pt = Point<T>;
   using Triangle = std::tuple<Pt, Pt, Pt>;
   // Rotates triangle vertices so that the lexicographically smallest comes first, preserving the
@@ -4677,24 +4677,31 @@ std::vector<Face> convex_hull_3d(const std::vector<Point3D> &p) {
 \begin{lstlisting}[language=C++]
 using namespace std;
 
+void assert_outward(const vector<Point3D> &p, const vector<Face> &faces) {
+  for (const Face &f : faces) {
+    assert(0 <= f.a && f.a < static_cast<int>(p.size()));
+    assert(0 <= f.b && f.b < static_cast<int>(p.size()));
+    assert(0 <= f.c && f.c < static_cast<int>(p.size()));
+    assert(f.a != f.b && f.b != f.c && f.c != f.a);
+    Point3D normal = (p[f.b] - p[f.a]).cross(p[f.c] - p[f.a]);
+    for (const Point3D &q : p) {
+      assert(normal.dot(q - p[f.a]) <= EPS);
+    }
+  }
+}
+
 int main() {
   vector<Point3D> tetra{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
   auto faces = convex_hull_3d(tetra);
   // A tetrahedron has four triangular faces.
   assert(faces.size() == 4);
-  for (const Face &f : faces) {
-    assert(f.a != f.b && f.b != f.c && f.c != f.a);
-  }
+  assert_outward(tetra, faces);
 
   tetra.push_back(Point3D(1, 1, 1));
   faces = convex_hull_3d(tetra);
   // Adding the opposite point makes a triangular bipyramid with six triangular faces.
   assert(faces.size() == 6);
-  for (const Face &f : faces) {
-    assert(0 <= f.a && f.a < static_cast<int>(tetra.size()));
-    assert(0 <= f.b && f.b < static_cast<int>(tetra.size()));
-    assert(0 <= f.c && f.c < static_cast<int>(tetra.size()));
-  }
+  assert_outward(tetra, faces);
   return 0;
 }
 \end{lstlisting}

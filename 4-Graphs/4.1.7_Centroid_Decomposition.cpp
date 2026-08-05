@@ -5,11 +5,9 @@ current subtree into connected components of size at most half of that subtree. 
 centroids creates a decomposition tree of height O(log n), which is useful for queries based on
 distances to marked nodes, nearest special node, and other "path through a centroid" problems.
 
-- `CentroidDecomposition(adj)` builds the centroid decomposition of the tree given by a
-  bidirectional adjacency list `adj`, which must form a valid tree and whose indices represent the
-  nodes.
-- `parent(u)` returns the parent of node `u` in the centroid tree, or $-1$ if `u` is the root
-  centroid.
+- `centroid_decomposition()` uses the tree in the global bidirectional adjacency list `adj` and
+  returns a vector `parent`, where `parent[u]` is the parent of node `u` in the centroid tree, or
+  $-1$ if `u` is the root centroid.
 
 Time Complexity:
 - O(n log n) for construction, where $n$ is the number of nodes.
@@ -22,52 +20,45 @@ Space Complexity:
 
 #include <vector>
 
-class CentroidDecomposition {
-  std::vector<std::vector<int>> adj;
-  std::vector<int> subtree_size, par;
-  std::vector<char> removed;
+std::vector<std::vector<int>> adj;
 
-  int get_size(int u, int p) {
+std::vector<int> centroid_decomposition() {
+  int n = static_cast<int>(adj.size());
+  std::vector<int> subtree_size(n), parent(n, -1);
+  std::vector<char> removed(n);
+  auto get_size = [&](auto &&get_size, int u, int p) -> int {
     subtree_size[u] = 1;
     for (int v : adj[u]) {
       if (v != p && !removed[v]) {
-        subtree_size[u] += get_size(v, u);
+        subtree_size[u] += get_size(get_size, v, u);
       }
     }
     return subtree_size[u];
-  }
-
-  int get_centroid(int u, int p, int total) {
+  };
+  auto get_centroid = [&](auto &&get_centroid, int u, int p, int total) -> int {
     for (int v : adj[u]) {
       if (v != p && !removed[v] && subtree_size[v] > total / 2) {
-        return get_centroid(v, u, total);
+        return get_centroid(get_centroid, v, u, total);
       }
     }
     return u;
-  }
-
-  void decompose(int entry, int parent) {
-    int total = get_size(entry, -1);
-    int centroid = get_centroid(entry, -1, total);
-    par[centroid] = parent;
+  };
+  auto decompose = [&](auto &&decompose, int entry, int p) -> void {
+    int total = get_size(get_size, entry, -1);
+    int centroid = get_centroid(get_centroid, entry, -1, total);
+    parent[centroid] = p;
     removed[centroid] = true;
     for (int v : adj[centroid]) {
       if (!removed[v]) {
-        decompose(v, centroid);
+        decompose(decompose, v, centroid);
       }
     }
+  };
+  if (n > 0) {
+    decompose(decompose, 0, -1);
   }
-
- public:
-  explicit CentroidDecomposition(const std::vector<std::vector<int>> &adj)
-      : adj(adj), subtree_size(adj.size()), par(adj.size(), -1), removed(adj.size()) {
-    if (adj.size() > 0) {
-      decompose(0, -1);
-    }
-  }
-
-  int parent(int u) const { return par[u]; }
-};
+  return parent;
+}
 
 /*** Example Usage ***/
 
@@ -77,13 +68,13 @@ class CentroidDecomposition {
 using namespace std;
 
 // Example-only distance helper; use LCA preprocessing for O(1) distances in a full solution.
-int tree_dist(const vector<vector<int>> &adj, int u, int target, int p = -1) {
+int tree_dist(int u, int target, int p = -1) {
   if (u == target) {
     return 0;
   }
   for (int v : adj[u]) {
     if (v != p) {
-      int d = tree_dist(adj, v, target, u);
+      int d = tree_dist(v, target, u);
       if (d != -1) {
         return d + 1;
       }
@@ -96,38 +87,21 @@ int main() {
   // 0---1---3---5---6
   //     |   |
   //     2   4
-  vector<vector<int>> adj(7);
-  auto add_edge = [&](int u, int v) {
-    adj[u].push_back(v);
-    adj[v].push_back(u);
-  };
-  add_edge(0, 1);
-  add_edge(1, 2);
-  add_edge(1, 3);
-  add_edge(3, 4);
-  add_edge(3, 5);
-  add_edge(5, 6);
-  CentroidDecomposition tree(adj);
-  vector<int> parent(7);
-  for (int u = 0; u < 7; u++) {
-    parent[u] = tree.parent(u);
-  }
+  adj = {{1}, {0, 2, 3}, {1}, {1, 4, 5}, {3}, {3, 6}, {5}};
+  vector<int> parent = centroid_decomposition();
   assert((parent == vector<int>{1, 3, 1, -1, 3, 3, 5}));
-  assert(tree.parent(3) == -1);
-  assert(tree.parent(1) == 3);
-  assert(tree.parent(5) == 3);
 
   const int INF = INT_MAX / 2;
   vector<int> best(7, INF);
   auto mark = [&](int u) {
-    for (int c = u; c != -1; c = tree.parent(c)) {
-      best[c] = min(best[c], tree_dist(adj, u, c));
+    for (int c = u; c != -1; c = parent[c]) {
+      best[c] = min(best[c], tree_dist(u, c));
     }
   };
   auto nearest_marked = [&](int u) {
     int answer = INF;
-    for (int c = u; c != -1; c = tree.parent(c)) {
-      answer = min(answer, best[c] + tree_dist(adj, u, c));
+    for (int c = u; c != -1; c = parent[c]) {
+      answer = min(answer, best[c] + tree_dist(u, c));
     }
     return answer;
   };

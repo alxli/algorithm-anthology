@@ -32,19 +32,6 @@ Space Complexity:
 
 const int64_t MOD = 998244353;
 
-void reduce(std::vector<int64_t> &p, const std::vector<int64_t> &c) {
-  int L = static_cast<int>(c.size());
-  for (int d = static_cast<int>(p.size()) - 1; d >= L; d--) {
-    if (p[d] != 0) {
-      for (int j = 0; j < L; j++) {
-        p[d - 1 - j] = (p[d - 1 - j] + p[d] * c[j]) % MOD;
-      }
-      p[d] = 0;
-    }
-  }
-  p.resize(L);
-}
-
 std::vector<int64_t> combine(
     const std::vector<int64_t> &a, const std::vector<int64_t> &b, const std::vector<int64_t> &c
 ) {
@@ -54,7 +41,15 @@ std::vector<int64_t> combine(
       res[i + j] = (res[i + j] + a[i] * b[j]) % MOD;
     }
   }
-  reduce(res, c);
+  int L = static_cast<int>(c.size());
+  for (int d = static_cast<int>(res.size()) - 1; d >= L; d--) {
+    if (res[d] != 0) {
+      for (int j = 0; j < L; j++) {
+        res[d - 1 - j] = (res[d - 1 - j] + res[d] * c[j]) % MOD;
+      }
+    }
+  }
+  res.resize(L);
   return res;
 }
 

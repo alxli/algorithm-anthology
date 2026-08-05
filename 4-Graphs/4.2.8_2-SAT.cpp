@@ -48,11 +48,11 @@ class TwoSAT {
     rev[b].push_back(a);
   }
 
-  void dfs_order(int u, std::vector<char> &visited) {
-    visited[u] = true;
+  void dfs_order(int u, std::vector<char> &visit) {
+    visit[u] = true;
     for (int v : adj[u]) {
-      if (!visited[v]) {
-        dfs_order(v, visited);
+      if (!visit[v]) {
+        dfs_order(v, visit);
       }
     }
     order.push_back(u);
@@ -86,10 +86,10 @@ class TwoSAT {
   bool satisfiable() {
     order.clear();
     component.assign(2 * variables, -1);
-    std::vector<char> visited(2 * variables, false);
+    std::vector<char> visit(2 * variables, false);
     for (int i = 0; i < 2 * variables; i++) {
-      if (!visited[i]) {
-        dfs_order(i, visited);
+      if (!visit[i]) {
+        dfs_order(i, visit);
       }
     }
     std::reverse(order.begin(), order.end());

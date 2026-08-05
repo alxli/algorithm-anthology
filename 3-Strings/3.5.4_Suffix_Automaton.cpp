@@ -9,7 +9,7 @@ value `st[v].len` is the maximum length represented by state `v`, while `st[v].l
 state representing the longest proper suffix of that class.
 
 More precisely, state `v` contributes one distinct substring for each length greater than
-`st[st[v].link].len` and at most `st[v].len`. When a character is appended, `extend()` creates a
+`st[st[v].link].len` and at most `st[v].len`. When a character is appended, `append()` creates a
 state for the new full string and walks suffix links from the previous `last`, adding missing
 transitions to it. If an existing transition leads to a state whose maximum length is too large, a
 shorter clone of that state is inserted and the affected transitions and suffix links are redirected
@@ -19,7 +19,7 @@ while longest common substring queries retreat through suffix links when a match
 
 - `SuffixAutomaton()` constructs an empty automaton.
 - `SuffixAutomaton(s)` constructs the automaton for string `s`.
-- `extend(c)` appends character `c` to the current string.
+- `append(c)` appends character `c` to the current string.
 - `contains(t)` returns whether string `t` occurs as a substring.
 - `first_occurrence(t)` returns the starting index of the first occurrence of `t`, or $-1$ if
   absent.
@@ -29,6 +29,7 @@ while longest common substring queries retreat through suffix links when a match
 
 Time Complexity:
 - O(n) expected per call to the constructor for a string of length $n$.
+- O(1) expected amortized per call to `append()`.
 - O(m) expected per call to `contains(t)`, `first_occurrence(t)`, or `longest_common_substring(t)`,
   where $m$ is the length of `t`.
 - O(n) per call to `count_distinct_substrings()`.
@@ -61,11 +62,11 @@ class SuffixAutomaton {
 
   explicit SuffixAutomaton(const string &s) : st(1), last(0) {
     for (char c : s) {
-      extend(c);
+      append(c);
     }
   }
 
-  void extend(char c) {
+  void append(char c) {
     int cur = static_cast<int>(st.size());
     st.emplace_back();
     st[cur].len = st[last].len + 1;
@@ -171,9 +172,9 @@ int main() {
   assert(sa.first_occurrence("abba") == -1);
 
   SuffixAutomaton online;
-  online.extend('a');
-  online.extend('b');
-  online.extend('c');
+  online.append('a');
+  online.append('b');
+  online.append('c');
   assert(online.contains("bc"));
   return 0;
 }

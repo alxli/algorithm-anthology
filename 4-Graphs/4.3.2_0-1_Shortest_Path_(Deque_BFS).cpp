@@ -6,12 +6,12 @@ path to a specific destination node using the shortest-path tree from the predec
 
 0-1 BFS is a specialized version of Dijkstra's algorithm. Because every relaxation changes the
 distance by either $0$ or $1$, a deque maintains nodes in nondecreasing distance order: push
-weight-0 relaxations to the front and weight-1 relaxations to the back.
+weight-$0$ relaxations to the front and weight-$1$ relaxations to the back.
 
 - `bfs_zero_one(starts)` populates `dist` and `pred` for shortest paths from the nodes in `starts`,
   assigning each node its minimum distance from any start. The global, pre-populated adjacency list
-  `adj` uses its indices as nodes. Each edge is stored as (`neighbor`, `weight`),
-  where `weight` is either $0$ or $1$. Pass a singleton vector for a single source.
+  `adj` uses its indices as nodes. Each edge is stored as (`neighbor`, `weight`), where `weight` is
+  either $0$ or $1$. Pass a singleton vector for a single source.
 - `get_path(dest)` returns the path from a nearest starting node to `dest`, or an empty vector if
   `dest` is unreachable, using the state left by the most recent call to `bfs_zero_one()`.
 
@@ -102,13 +102,14 @@ int main() {
   adj[2].emplace_back(1, 0);
   adj[1].emplace_back(3, 1);
   adj[2].emplace_back(3, 1);
-  int start = 0, dest = 3;
-  bfs_zero_one(vector<int>{start});
-  assert(dist[dest] == 1);
-  assert((get_path(dest) == vector<int>{0, 2, 3}));
+  bfs_zero_one(vector<int>{0});
+  assert((dist == vector<int>{0, 0, 0, 1}));
+  assert((pred == vector<int>{-1, 2, 0, 2}));
+  assert((get_path(3) == vector<int>{0, 2, 3}));
 
   bfs_zero_one(vector<int>{1, 0});
-  assert(dist[3] == 1);
+  assert((dist == vector<int>{0, 0, 0, 1}));
+  assert((pred == vector<int>{-1, -1, 0, 1}));
   assert((get_path(3) == vector<int>{1, 3}));
   return 0;
 }

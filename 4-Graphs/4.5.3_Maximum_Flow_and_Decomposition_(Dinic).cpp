@@ -96,29 +96,6 @@ class Dinic {
     return 0;
   }
 
-  bool find_path(
-      int u, int sink, std::vector<T> &rem, std::vector<char> &seen, std::vector<int> &path_nodes,
-      std::vector<int> &path_edges
-  ) const {
-    if (u == sink) {
-      return true;
-    }
-    seen[u] = true;
-    for (int id : adj[u]) {
-      const Edge &e = edges[id];
-      if (rem[id] > EPS && !seen[e.v]) {
-        path_edges.push_back(id);
-        path_nodes.push_back(e.v);
-        if (find_path(e.v, sink, rem, seen, path_nodes, path_edges)) {
-          return true;
-        }
-        path_nodes.pop_back();
-        path_edges.pop_back();
-      }
-    }
-    return false;
-  }
-
  public:
   struct FlowPath {
     T flow;
@@ -188,7 +165,26 @@ class Dinic {
     while (true) {
       FlowPath path{std::numeric_limits<T>::max(), {source}, {}};
       std::vector<char> seen(nodes);
-      if (!find_path(source, sink, rem, seen, path.nodes, path.edges)) {
+      auto dfs = [&](auto &&dfs, int u, int sink) -> bool {
+        if (u == sink) {
+          return true;
+        }
+        seen[u] = true;
+        for (int id : adj[u]) {
+          const Edge &e = edges[id];
+          if (rem[id] > EPS && !seen[e.v]) {
+            path.edges.push_back(id);
+            path.nodes.push_back(e.v);
+            if (dfs(dfs, e.v, sink)) {
+              return true;
+            }
+            path.nodes.pop_back();
+            path.edges.pop_back();
+          }
+        }
+        return false;
+      };
+      if (!dfs(dfs, source, sink)) {
         break;
       }
       for (int id : path.edges) {

@@ -8,8 +8,8 @@ This is useful for answer-search problems over unbounded or very large integer d
 predicate must become true before the exponentially growing probe overflows `Int`; otherwise, add an
 explicit limit.
 
-- `exponential_search_first_true(lo, pred)` returns the smallest integer `x` greater than or equal
-  to `lo` such that `pred(x)` is true.
+- `exponential_first_true(lo, pred)` returns the smallest integer `x` greater than or equal to `lo`
+  such that `pred(x)` is true.
 
 Time Complexity:
 - O(log n) calls to `pred()` per call, where $n$ is the distance from `lo` to the first true value.
@@ -22,7 +22,7 @@ Space Complexity:
 #include <cstdint>
 
 template<typename Int, typename Pred>
-Int exponential_search_first_true(Int lo, Pred pred) {  // 000[1]11
+Int exponential_first_true(Int lo, Pred pred) {  // 000[1]11
   if (pred(lo)) {
     return lo;
   }
@@ -49,10 +49,10 @@ Int exponential_search_first_true(Int lo, Pred pred) {  // 000[1]11
 
 int main() {
   auto at_least_1000 = [](int x) { return x >= 1000; };
-  assert(exponential_search_first_true(1000, at_least_1000) == 1000);
-  assert(exponential_search_first_true(0, at_least_1000) == 1000);
-  assert(exponential_search_first_true(5, at_least_1000) == 1000);
+  assert(exponential_first_true(1000, at_least_1000) == 1000);
+  assert(exponential_first_true(0, at_least_1000) == 1000);
+  assert(exponential_first_true(5, at_least_1000) == 1000);
   auto square_large_enough = [](int64_t x) { return x * x >= 123456789LL; };
-  assert(exponential_search_first_true(0LL, square_large_enough) == 11112);
+  assert(exponential_first_true(0LL, square_large_enough) == 11112);
   return 0;
 }

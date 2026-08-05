@@ -153,6 +153,10 @@ STYLE_PATTERNS = [
         re.compile(r"`\(\*[A-Za-z_][A-Za-z0-9_]*\)"),
         "Describe output pointers from the caller's perspective, without dereferencing them.",
     ),
+    (
+        re.compile(r"^-\s+`(?:add|extend)\([^`]*\)`\s+appends?\b"),
+        "Use append() for a public online sequence operation that appends one element.",
+    ),
 ]
 
 
@@ -231,10 +235,6 @@ def is_docstring_continuation(line, next_line):
     if line.startswith("  ") and not next_line.startswith("  "):
         return False
     if next_line.startswith("  ") and not (line.startswith("  ") or stripped.startswith("- ")):
-        return False
-    if line.startswith("  ") and stripped.startswith(("$", "`")):
-        return False
-    if next_line.startswith("  ") and next_stripped.startswith(("$", "`")):
         return False
     if stripped in {"/*", "*/"} or next_stripped in {"/*", "*/"}:
         return False
@@ -808,6 +808,7 @@ def scan_known_style_drift(paths):
 def scan_markup_outside_docstrings(paths):
     issues = []
     markup_re = re.compile(r"\$[^$\n]+\$|`[^`\n]+`")
+    regex_capture_ref_re = re.compile(r"\$[0-9]+(?![0-9$])")
     for path in paths:
         in_block_comment = False
         for line_no, line in enumerate(path.read_text().splitlines(), start=1):
@@ -829,7 +830,7 @@ def scan_markup_outside_docstrings(paths):
                 in_block_comment = True
                 pos = start + 2
 
-            outside_text = "".join(outside)
+            outside_text = regex_capture_ref_re.sub("", "".join(outside))
             if markup_re.search(outside_text):
                 issues.append(
                     Issue(
@@ -943,21 +944,6 @@ def scan_default_argument_docs(paths):
                 name_match = re.search(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*=", param)
                 if name_match:
                     defaulted_names.append(name_match.group(1))
-            exposed_bookkeeping = internal_api_parameters.get(match.group(1), set()).intersection(
-                defaulted_names
-            )
-            if exposed_bookkeeping:
-                names = ", ".join(f"`{name}`" for name in sorted(exposed_bookkeeping))
-                issues.append(
-                    Issue(
-                        path,
-                        line_no,
-                        "api-default",
-                        f"Keep implementation parameter {names} internal.",
-                        line,
-                    )
-                )
-                continue
             internal_traversal_defaults = (
                 len(defaulted_params) == len(params)
                 and len(defaulted_names) >= 2

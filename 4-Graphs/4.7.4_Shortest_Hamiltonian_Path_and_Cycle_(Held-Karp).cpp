@@ -131,13 +131,10 @@ using namespace std;
 int main() {
   // Complete directed graph where 0->1->2->0 costs 1 + 2 + 3.
   // The reverse cycle is intentionally more expensive.
-  //         0 <-------+
-  //       ^ | \       |
-  //      /  |  \      |
-  //     /   |   \     |
-  // w=7| w=1|    \w=1 |w=3
+  //    +--> 0 <-------+
+  //    |    | \       |
+  // w=7| w=1|   \w=1  |w=3
   //    |    |     \   |
-  //    |    |      \  |
   //    |    v  w=2  v |
   //    +--- 1 ------> 2
   //          ^_______/
@@ -150,11 +147,9 @@ int main() {
   adj[1][2] = 2;
   adj[2][0] = 3;
   adj[2][1] = 5;
-  int64_t path_len = shortest_hamiltonian_path();
-  assert(path_len == 3);
+  assert(shortest_hamiltonian_path() == 3);
   assert((path == vector<int>{0, 1, 2}));
-  int64_t cycle_len = shortest_hamiltonian_cycle();
-  assert(cycle_len == 6);
+  assert(shortest_hamiltonian_cycle() == 6);
   assert((path == vector<int>{0, 1, 2}));
   return 0;
 }
