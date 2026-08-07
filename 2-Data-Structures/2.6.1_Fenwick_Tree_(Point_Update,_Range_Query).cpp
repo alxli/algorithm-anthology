@@ -5,8 +5,6 @@ Maintain a numerical array while supporting point increments and range-sum queri
 the sum of a block of indices whose length is the lowest set bit of `i`. A point update touches
 O(log n) covering blocks, and a prefix-sum query combines O(log n) disjoint blocks.
 
-The value type `T` must represent $0$ and support addition and subtraction.
-
 When prefix sums are nondecreasing, `max_prefix(c)` answers prefix-boundary queries by binary
 lifting: it walks the implicit power-of-two block structure to find the longest prefix with sum at
 most `c`. This lets the same structure double as a dynamic multiset over a bounded integer domain,
@@ -21,8 +19,9 @@ useful for coordinate-compressed $k$-th element lookups and online rank queries.
 - `sum(hi)` returns the sum of all values at indices $[0, `hi`]$.
 - `sum(lo, hi)` returns the sum of all values at indices $[`lo`, `hi`]$.
 - `max_prefix(c)` returns the largest boundary `hi` such that `sum(0, hi - 1)` $\leq$ `c`, assuming
-  prefix sums are nondecreasing and `c` is nonnegative. It may return any boundary in $[0, n]$,
-  where $n$ is `size()`.
+  prefix sums are nondecreasing and `c` is nonnegative. It may return any boundary in $[0, `n`]$.
+
+The value type `T` must represent $0$ and support addition and subtraction.
 
 Time Complexity:
 - O(n) per call to the constructor, where $n$ is the size of the array.

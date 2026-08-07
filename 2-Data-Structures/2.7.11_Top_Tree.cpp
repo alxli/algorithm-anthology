@@ -1,18 +1,18 @@
 /*
 
-Maintain a dynamic forest while supporting both path aggregates and rooted-subtree aggregates. Top
-trees represent each tree as a hierarchy of clusters. A path cluster summarizes a contiguous path,
-while non-path clusters are raked onto nodes so that changing the preferred path only requires a
-logarithmic number of local rotations and recomputations.
+Maintain a dynamic forest with values on both nodes and edges, supporting connectivity, linking and
+cutting edges, rerooting, and path and rooted-subtree aggregate queries. A top tree represents each
+tree as a hierarchy of clusters, each with at most two boundary nodes. Path clusters summarize
+contiguous paths, while non-path clusters rake side subtrees into a boundary node. Changing the
+exposed path requires only a logarithmic number of local rotations and recomputations.
 
-This is an advanced alternative to link/cut trees. Link/cut trees are usually simpler for dynamic
-path queries; top trees are useful when the same dynamic forest also needs rooted-subtree queries.
+This is an advanced alternative to link/cut trees. Link/cut trees are usually simpler when only path
+queries are needed, but top trees handle when the dynamic forest also needs rooted-subtree queries.
 
-The aggregate operation is defined by an identity element `identity()` and an associative
-`combine(a, b)`. The default code below computes sums over node and edge values. For minimum
-queries, use `std::numeric_limits<T>::max()` as the identity and `std::min(a, b)` as the combine
-function. For non-commutative aggregates, store enough information in `T` to support reversing a
-path, and update `flip_path()` accordingly.
+The aggregate operation is defined by an associative `combine(a, b)`. The default code below
+computes sums over node and edge values. For minimum queries, use `std::min(a, b)`. For
+non-commutative aggregates, store enough information in `T` to support reversing a path, and update
+`flip_path()` accordingly.
 
 - `TopTree(n, value = T())` constructs a forest on nodes $[0, `n`)$ with every node value
   initialized to `value`.
@@ -53,40 +53,33 @@ Space Complexity:
 
 template<typename T>
 class TopTree {
-  static T identity() { return T(); }
   static T combine(const T &a, const T &b) { return a + b; }
 
   struct Node {
     Node *p;
-    std::array<Node *, 3> c;
+    std::array<Node *, 3> c;  // c[0] and c[1] are auxiliary children; c[2] is the raked path child.
     T value, path_value, subtree_value;
-    int graph_node_id, edge_id;
+    int graph_node_id;
     bool is_path, is_graph_node, lazy_flip_path, alive;
 
-    Node(const T &value, int graph_node_id, int edge_id)
+    Node(const T &value, int graph_node_id)
         : p(nullptr),
           c{nullptr, nullptr, nullptr},
           value(value),
           path_value(value),
           subtree_value(value),
           graph_node_id(graph_node_id),
-          edge_id(edge_id),
           is_path(graph_node_id != -1),
           is_graph_node(graph_node_id != -1),
           lazy_flip_path(false),
           alive(graph_node_id != -1) {}
 
-    static T path_value_of(Node *n) { return n == nullptr ? identity() : n->path_value; }
-    static T subtree_value_of(Node *n) { return n == nullptr ? identity() : n->subtree_value; }
-
     int dir() const {
       assert(p != nullptr);
-      if (this == p->c[0]) {
-        return 0;
-      } else if (this == p->c[1]) {
-        return 1;
-      } else if (this == p->c[2]) {
-        return 2;
+      for (int i = 0; i < 3; i++) {
+        if (this == p->c[i]) {
+          return i;
+        }
       }
       assert(false);
       return -1;
@@ -94,6 +87,22 @@ class TopTree {
 
     Node *&parent_child() const { return p->c[dir()]; }
     bool root_of_auxiliary_tree() const { return p == nullptr || p->is_path != is_path; }
+
+    void set_child(int i, Node *child) {
+      c[i] = child;
+      if (child != nullptr) {
+        child->p = this;
+      }
+    }
+
+    static void replace_in_parent(Node *old, Node *replacement) {
+      assert(replacement->p == old);
+      if (old->p != nullptr) {
+        old->parent_child() = replacement;
+      }
+      replacement->p = old->p;
+      old->p = nullptr;
+    }
 
     void flip_path() {
       assert(is_path);
@@ -129,19 +138,38 @@ class TopTree {
       return cur;
     }
 
+    void prepend_subtree(Node *n) {
+      if (n != nullptr) {
+        subtree_value = combine(n->subtree_value, subtree_value);
+      }
+    }
+
+    void append_subtree(Node *n) {
+      if (n != nullptr) {
+        subtree_value = combine(subtree_value, n->subtree_value);
+      }
+    }
+
     void pull() {
+      subtree_value = value;
       if (is_graph_node) {
         path_value = value;
-        subtree_value = combine(combine(value, subtree_value_of(c[0])), subtree_value_of(c[1]));
+        append_subtree(c[0]);
+        append_subtree(c[1]);
       } else if (is_path) {
-        path_value = combine(combine(path_value_of(c[0]), value), path_value_of(c[1]));
-        subtree_value = combine(combine(subtree_value_of(c[0]), value), subtree_value_of(c[1]));
+        path_value = value;
+        if (c[0] != nullptr) {
+          path_value = combine(c[0]->path_value, path_value);
+          prepend_subtree(c[0]);
+        }
+        if (c[1] != nullptr) {
+          path_value = combine(path_value, c[1]->path_value);
+          append_subtree(c[1]);
+        }
       } else {
-        path_value = identity();
-        subtree_value = combine(
-            combine(subtree_value_of(c[0]), value),
-            combine(subtree_value_of(c[2]), subtree_value_of(c[1]))
-        );
+        prepend_subtree(c[0]);
+        append_subtree(c[2]);
+        append_subtree(c[1]);
       }
     }
 
@@ -152,16 +180,9 @@ class TopTree {
       int x = dir();
       assert(x == 0 || x == 1);
       Node *child = c[!x];
-      if (parent->p != nullptr) {
-        parent->parent_child() = this;
-      }
-      p = parent->p;
-      parent->c[x] = child;
-      if (child != nullptr) {
-        child->p = parent;
-      }
-      c[!x] = parent;
-      parent->p = this;
+      replace_in_parent(parent, this);
+      parent->set_child(x, child);
+      set_child(!x, parent);
       parent->pull();
     }
 
@@ -178,17 +199,11 @@ class TopTree {
       int x = dir();
       assert(x == 0 || x == 1);
       assert(child_dir == !x);
-      Node *child = c[child_dir]->c[!x];
-      if (parent->p != nullptr) {
-        parent->parent_child() = this;
-      }
-      p = parent->p;
-      parent->c[x] = child;
-      if (child != nullptr) {
-        child->p = parent;
-      }
-      c[child_dir]->c[!x] = parent;
-      parent->p = c[child_dir];
+      Node *middle = c[child_dir];
+      Node *child = middle->c[!x];
+      replace_in_parent(parent, this);
+      parent->set_child(x, child);
+      middle->set_child(!x, parent);
       parent->pull();
     }
 
@@ -256,13 +271,13 @@ class TopTree {
       }
     }
 
-    Node *cut_right() {
+    void cut_right() {
       assert(is_graph_node && is_path);
       splay_graph_node();
       if (root_of_auxiliary_tree() || dir() == 1) {
         assert(root_of_auxiliary_tree() || (dir() == 1 && p->root_of_auxiliary_tree()));
         assert(c[0] == nullptr);
-        return nullptr;
+        return;
       }
       Node *parent = p;
       assert(
@@ -273,27 +288,16 @@ class TopTree {
       assert(parent->is_path);
       assert(parent->c[0] == this);
       assert(parent->c[2] == nullptr);
-      if (parent->p != nullptr) {
-        parent->parent_child() = this;
-      }
-      p = parent->p;
+      replace_in_parent(parent, this);
       parent->is_path = false;
-      parent->c[2] = parent->c[1];
-      parent->c[0] = c[0];
-      if (c[0] != nullptr) {
-        c[0]->p = parent;
-      }
-      parent->c[1] = c[1];
-      if (c[1] != nullptr) {
-        c[1]->p = parent;
-      }
-      c[0] = nullptr;
-      c[1] = parent;
-      parent->p = this;
+      parent->set_child(2, parent->c[1]);
+      parent->set_child(0, c[0]);
+      parent->set_child(1, c[1]);
+      set_child(0, nullptr);
+      set_child(1, parent);
       assert(c[2] == nullptr);
       assert(c[0] == nullptr);
       parent->pull();
-      return parent;
     }
 
     Node *splice_non_path() {
@@ -309,23 +313,13 @@ class TopTree {
       assert(p->root_of_auxiliary_tree() || (p->dir() == 1 && p->p->root_of_auxiliary_tree()));
       assert(p->c[dir()] == this && p->c[!dir()] == nullptr);
       Node *parent = p;
-      if (parent->p != nullptr) {
-        parent->parent_child() = this;
-      }
-      p = parent->p;
-      parent->c[0] = c[0];
-      if (c[0] != nullptr) {
-        c[0]->p = parent;
-      }
-      parent->c[1] = c[1];
-      if (c[1] != nullptr) {
-        c[1]->p = parent;
-      }
+      replace_in_parent(parent, this);
+      parent->set_child(0, c[0]);
+      parent->set_child(1, c[1]);
       assert(c[2] != nullptr && c[2]->is_path);
-      c[1] = c[2];
-      c[0] = parent;
-      parent->p = this;
-      c[2] = nullptr;
+      set_child(1, c[2]);
+      set_child(0, parent);
+      set_child(2, nullptr);
       is_path = true;
       parent->pull();
       return parent;
@@ -351,7 +345,7 @@ class TopTree {
       return res;
     }
 
-    Node *expose_edge() {
+    void expose_edge() {
       assert(!is_graph_node);
       push_all();
       Node *v = is_path ? c[1] : c[2];
@@ -360,12 +354,11 @@ class TopTree {
         v = v->c[0];
         v->push();
       }
-      Node *res = v->splice_all();
+      v->splice_all();
       v->cut_right();
       v->pull_all();
       assert(p == nullptr);
       assert(v == c[1]);
-      return res == v ? this : res;
     }
 
     Node *meld_path_end() {
@@ -391,13 +384,12 @@ class TopTree {
         }
         child->splay();
         assert(child->c[0] == nullptr);
-        child->c[0] = rt->c[0];
-        child->c[0]->p = child;
-        rt->c[0] = nullptr;
+        child->set_child(0, rt->c[0]);
+        rt->set_child(0, nullptr);
         child->pull();
       } else if (rt->c[0] != nullptr) {
-        rt->c[1] = rt->c[0];
-        rt->c[0] = nullptr;
+        rt->set_child(1, rt->c[0]);
+        rt->set_child(0, nullptr);
       }
       assert(rt->c[0] == nullptr);
       return rt->pull_all();
@@ -432,27 +424,24 @@ class TopTree {
     edge->is_path = true;
     edge->is_graph_node = false;
     edge->alive = true;
-    edge->c[0] = u;
-    u->p = edge;
-    edge->c[1] = v;
-    v->p = edge;
+    edge->set_child(0, u);
+    edge->set_child(1, v);
     edge->pull();
   }
 
-  static std::pair<Node *, Node *> cut_node(Node *edge) {
+  static void cut_node(Node *edge) {
     assert(edge != nullptr && edge->alive && !edge->is_graph_node);
     edge->expose_edge();
     assert(edge->p == nullptr);
     assert(edge->is_path);
     Node *l = edge->c[0], *r = edge->c[1];
     assert(l != nullptr && r != nullptr);
-    edge->c[0] = edge->c[1] = edge->c[2] = nullptr;
+    edge->c.fill(nullptr);
     l->p = r->p = nullptr;
-    l = l->meld_path_end();
+    l->meld_path_end();
     edge->is_path = false;
     edge->alive = false;
     edge->pull();
-    return {l, r};
   }
 
   static Node *get_path(Node *u, Node *v) {
@@ -473,11 +462,6 @@ class TopTree {
     return u;
   }
 
-  static Node *lca_same_component(Node *u, Node *v) {
-    u->expose();
-    return v->expose();
-  }
-
   static Node *maybe_lca_node(Node *u, Node *v) {
     u->expose();
     Node *up = u->p;
@@ -495,7 +479,7 @@ class TopTree {
     assert(n >= 0);
     graph_nodes.reserve(n);
     for (int i = 0; i < n; i++) {
-      graph_nodes.push_back(new Node(value, i, -1));
+      graph_nodes.push_back(new Node(value, i));
     }
   }
 
@@ -526,7 +510,7 @@ class TopTree {
       return -1;
     }
     int id = edges();
-    edge_nodes.push_back(new Node(value, -1, id));
+    edge_nodes.push_back(new Node(value, -1));
     link_nodes(edge_nodes.back(), graph_nodes[u], graph_nodes[v]);
     return id;
   }
@@ -568,7 +552,8 @@ class TopTree {
 
   int lca(int u, int v) {
     assert(connected(u, v));
-    return lca_same_component(graph_nodes[u], graph_nodes[v])->graph_node_id;
+    graph_nodes[u]->expose();
+    return graph_nodes[v]->expose()->graph_node_id;
   }
 
   int maybe_lca(int u, int v) {
@@ -584,16 +569,16 @@ class TopTree {
 using namespace std;
 
 int main() {
-  TopTree<int> tree(5);
+  TopTree<int> t(5);
   for (int i = 0; i < 5; i++) {
-    tree.set_node(i, i + 1);
+    t.set_node(i, i + 1);
   }
-  int e01 = tree.link(0, 1, 10);
-  int e12 = tree.link(1, 2, 20);
-  int e13 = tree.link(1, 3, 30);
-  int e34 = tree.link(3, 4, 40);
+  int e01 = t.link(0, 1, 10);
+  int e12 = t.link(1, 2, 20);
+  int e13 = t.link(1, 3, 30);
+  int e34 = t.link(3, 4, 40);
   assert(e01 == 0 && e12 == 1 && e13 == 2 && e34 == 3);
-  assert(tree.link(0, 4, 100) == -1);
+  assert(t.link(0, 4, 100) == -1);
 
   //       0
   //  v=10 |
@@ -602,11 +587,9 @@ int main() {
   //     2   3
   //         | v=40
   //         4
-  assert(tree.path_query(2, 4) == 104);
-  assert(tree.subtree_query(0, 3) == 49);
-  assert(tree.lca(2, 4) == 1);
-
-  tree.cut(e13);
+  assert(t.path_query(2, 4) == 104);
+  assert(t.subtree_query(0, 3) == 49);
+  assert(t.lca(2, 4) == 1);
 
   // Cut edge 1-3:
   //
@@ -615,10 +598,9 @@ int main() {
   //       1       3
   // v=20 /        | v=40
   //     2         4
-  assert(!tree.connected(2, 4));
-  assert(tree.maybe_lca(2, 4) == -1);
-  e13 = tree.link(2, 4, 30);
-  assert(e13 == 4);
+  t.cut(e13);
+  assert(!t.connected(2, 4));
+  assert(t.maybe_lca(2, 4) == -1);
 
   // Re-link 2-4 with value 30:
   //
@@ -628,10 +610,9 @@ int main() {
   // v=20 /         | v=40
   //     2----------4
   //         v=30
-  assert(tree.path_query(0, 3) == 115);
-
-  tree.set_edge(e34, 4);
-  tree.set_node(4, 50);
+  e13 = t.link(2, 4, 30);
+  assert(e13 == 4);
+  assert(t.path_query(0, 3) == 115);
 
   // Change edge 3-4 to value 4 and node 4 to value 50:
   //
@@ -641,7 +622,9 @@ int main() {
   // v=20 /         | v=4
   //     2----------4
   //        v=30   v=50
-  assert(tree.subtree_query(2, 4) == 58);
-  assert(tree.path_query(0, 3) == 124);
+  t.set_edge(e34, 4);
+  t.set_node(4, 50);
+  assert(t.subtree_query(2, 4) == 58);
+  assert(t.path_query(0, 3) == 124);
   return 0;
 }

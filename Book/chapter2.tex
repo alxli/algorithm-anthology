@@ -443,7 +443,7 @@ class BinaryHeap {
 
   void sift_down(int i) {
     while (true) {
-      int child = 2 * i + 1;
+      int child = i * 2 + 1;
       if (child >= static_cast<int>(heap.size())) {
         break;
       }
@@ -1183,13 +1183,6 @@ class Treap {
     }
   }
 
-  static std::optional<std::pair<K, V>> entry(Node *n) {
-    if (n == nullptr) {
-      return std::nullopt;
-    }
-    return std::pair<K, V>{n->key, n->value};
-  }
-
   static void clean_up(Node *n) {
     if (n != nullptr) {
       clean_up(n->left);
@@ -1262,7 +1255,7 @@ class Treap {
         n = n->right;
       }
     }
-    return entry(best);
+    return best ? std::make_optional(std::pair{best->key, best->value}) : std::nullopt;
   }
 
   std::optional<std::pair<K, V>> upper_bound(const K &k) const {
@@ -1275,7 +1268,7 @@ class Treap {
         n = n->right;
       }
     }
-    return entry(best);
+    return best ? std::make_optional(std::pair{best->key, best->value}) : std::nullopt;
   }
 
   std::optional<std::pair<K, V>> prev(const K &k) const {
@@ -1288,7 +1281,7 @@ class Treap {
         n = n->left;
       }
     }
-    return entry(best);
+    return best ? std::make_optional(std::pair{best->key, best->value}) : std::nullopt;
   }
 
   std::optional<std::pair<K, V>> next(const K &k) const { return upper_bound(k); }
@@ -3530,7 +3523,7 @@ The query operation is defined by an associative and idempotent function \inline
 \begin{compactitem}
   \item \inlinecode{SparseTable\textless{}T\textgreater{}(lo, hi)} builds the table over the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the size of the array.
-  \item \inlinecode{query(lo, hi)} returns \inlinecode{combine()} applied to all indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
+  \item \inlinecode{query(lo, hi)} returns the aggregate of the values at indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -3570,7 +3563,10 @@ class SparseTable {
     for (int i = 2; i <= len; i++) {
       log2[i] = log2[i >> 1] + 1;
     }
-    dp.assign(log2[len] + 1, std::vector<T>(len));
+    if (len == 0) {
+      return;
+    }
+    dp.assign(log2[len] + 1, std::vector<T>(len, a[0]));
     dp[0] = std::move(a);
     for (int j = 1; (1 << j) <= len; j++) {
       for (int i = 0; i + (1 << j) <= len; i++) {
@@ -3614,7 +3610,7 @@ The query operation is defined by an associative function \inlinecode{combine(a,
 \begin{compactitem}
   \item \inlinecode{DisjointSparseTable\textless{}T\textgreater{}(lo, hi)} builds the table over the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the size of the array.
-  \item \inlinecode{query(lo, hi)} returns \inlinecode{combine()} applied to all indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
+  \item \inlinecode{query(lo, hi)} returns the aggregate of the values at indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -3656,7 +3652,7 @@ class DisjointSparseTable {
     while ((1 << levels) < len) {
       levels++;
     }
-    fold.assign(levels, std::vector<T>(len));
+    fold.assign(levels, std::vector<T>(len, a[0]));
     for (int level = 0; level < levels; level++) {
       int range = 1 << (level + 1), half = 1 << level;
       for (int center = half; center < len + half; center += range) {
@@ -3721,7 +3717,7 @@ The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which 
   \item \inlinecode{SqrtDecomposition\textless{}T\textgreater{}(lo, hi)} constructs an array from the half-open random-access iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
-  \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
+  \item \inlinecode{query(lo, hi)} returns the aggregate of the values at indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{apply\_delta(v, d)}.
 \end{compactitem}
 
@@ -3868,7 +3864,7 @@ std::vector<decltype(std::declval<CurrentFn>()())> mos_algorithm(
     assert(0 <= lo && lo <= hi && hi < n);
   }
   int q = static_cast<int>(queries.size());
-  int block = std::max(1, static_cast<int>(n / std::max(1.0, std::sqrt(static_cast<double>(q)))));
+  int block = std::max(1, static_cast<int>(n / std::max(1.0, std::sqrt(q))));
   std::vector<int> order(q);
   std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [&](int x, int y) {
@@ -3927,13 +3923,13 @@ The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which 
   \item \inlinecode{SegTree\textless{}T\textgreater{}(lo, hi)} constructs an array from the half-open random-access iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
-  \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$. If \inlinecode{lo == hi}, then the single specified value is returned.
+  \item \inlinecode{query(lo, hi)} returns the aggregate of the values at indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$. If \inlinecode{lo == hi}, then the single specified value is returned.
   \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{apply\_delta(v, d)}.
-  \item \inlinecode{max\_right(lo, pred)} returns the largest boundary \inlinecode{hi} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies the monotonic predicate \inlinecode{pred()}. It returns \inlinecode{size()} if \inlinecode{pred()} remains true to the end.
-  \item \inlinecode{min\_left(hi, pred)} returns the smallest boundary \inlinecode{lo} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies the monotonic predicate \inlinecode{pred()}. It returns $0$ if \inlinecode{pred()} remains true to the beginning.
+  \item \inlinecode{max\_right(lo, pred)} returns the largest boundary \inlinecode{hi} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred()}. As \inlinecode{hi} increases, \inlinecode{pred()} applied to this aggregate may change only from true to false. The empty range is valid, and \inlinecode{size()} is returned if the predicate remains true to the end.
+  \item \inlinecode{min\_left(hi, pred)} returns the smallest boundary \inlinecode{lo} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred()}. As \inlinecode{lo} decreases, \inlinecode{pred()} applied to this aggregate may change only from true to false. The empty range is valid, and $0$ is returned if the predicate remains true to the beginning.
 \end{compactitem}
 
-For the boundary-search functions, \inlinecode{pred()} takes aggregate \inlinecode{T} values of candidate ranges. As a range grows, \inlinecode{pred()} may change from true to false but never back to true; the empty range is considered valid. E.g. for \inlinecode{combine = min}, use \inlinecode{pred(mn) = (mn \textgreater{} x)} to find the first value \inlinecode{\textless{}= x}, or for \inlinecode{combine = sum}, use \inlinecode{pred(sum) = (sum \textless{}= x)} with nonnegative values to find the longest range within the limit \inlinecode{x}.
+For the boundary-search functions, \inlinecode{pred()} takes aggregate \inlinecode{T} values. For \inlinecode{combine = min}, \inlinecode{pred(mn) = (mn \textgreater{} x)} makes \inlinecode{max\_right()} stop at the first value \inlinecode{\textless{}= x} when extending right, while \inlinecode{min\_left()} stops just after the first such value when extending left. With nonnegative values and \inlinecode{combine = sum}, \inlinecode{pred(sum) = (sum \textless{}= x)} finds the longest extension with sum at most \inlinecode{x}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -4049,14 +4045,16 @@ class SegTree {
   }
 
  public:
-  explicit SegTree(int n, const T &v = T()) : len(n), value(4 * len) {
+  explicit SegTree(int n, const T &v = T()) : len(n) {
     assert(len > 0);
+    value.assign(4 * len, v);
     build(0, 0, len - 1, [&](int) { return v; });
   }
 
   template<typename It>
-  SegTree(It lo, It hi) : len(hi - lo), value(4 * len) {
+  SegTree(It lo, It hi) : len(hi - lo) {
     assert(len > 0);
+    value.assign(4 * len, *lo);
     build(0, 0, len - 1, [&](int i) { return *(lo + i); });
   }
 
@@ -4129,14 +4127,14 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies
   \item \inlinecode{LazySegTree\textless{}T\textgreater{}(lo, hi)} constructs an array from the half-open random-access iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
-  \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$. If \inlinecode{lo == hi}, then the single specified value is returned.
+  \item \inlinecode{query(lo, hi)} returns the aggregate of the values at indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$. If \inlinecode{lo == hi}, then the single specified value is returned.
   \item \inlinecode{update(i, d)} modifies the value at index \inlinecode{i} by applying the delta \inlinecode{d}.
   \item \inlinecode{update(lo, hi, d)} modifies the value at each array index in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ by applying the delta \inlinecode{d} to each value.
-  \item \inlinecode{max\_right(lo, pred)} returns the largest boundary \inlinecode{hi} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies the monotonic predicate \inlinecode{pred()}. It returns \inlinecode{size()} if \inlinecode{pred()} remains true to the end.
-  \item \inlinecode{min\_left(hi, pred)} returns the smallest boundary \inlinecode{lo} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies the monotonic predicate \inlinecode{pred()}. It returns $0$ if \inlinecode{pred()} remains true to the beginning.
+  \item \inlinecode{max\_right(lo, pred)} returns the largest boundary \inlinecode{hi} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred()}. As \inlinecode{hi} increases, \inlinecode{pred()} applied to this aggregate may change only from true to false. The empty range is valid, and \inlinecode{size()} is returned if the predicate remains true to the end.
+  \item \inlinecode{min\_left(hi, pred)} returns the smallest boundary \inlinecode{lo} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred()}. As \inlinecode{lo} decreases, \inlinecode{pred()} applied to this aggregate may change only from true to false. The empty range is valid, and $0$ is returned if the predicate remains true to the beginning.
 \end{compactitem}
 
-For the boundary-search functions, \inlinecode{pred()} takes aggregate \inlinecode{T} values of candidate ranges. As a range grows, \inlinecode{pred()} may change from true to false but never back to true; the empty range is considered valid. E.g. for \inlinecode{combine = min}, use \inlinecode{pred(mn) = (mn \textgreater{} x)} to find the first value \inlinecode{\textless{}= x}, or for \inlinecode{combine = sum}, use \inlinecode{pred(sum) = (sum \textless{}= x)} with nonnegative values to find the longest range within the limit \inlinecode{x}.
+For the boundary-search functions, \inlinecode{pred()} takes aggregate \inlinecode{T} values. For \inlinecode{combine = min}, \inlinecode{pred(mn) = (mn \textgreater{} x)} makes \inlinecode{max\_right()} stop at the first value \inlinecode{\textless{}= x} when extending right, while \inlinecode{min\_left()} stops just after the first such value when extending left. With nonnegative values and \inlinecode{combine = sum}, \inlinecode{pred(sum) = (sum \textless{}= x)} finds the longest extension with sum at most \inlinecode{x}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -4187,7 +4185,7 @@ class LazySegTree {
     if (pending[i]) {
       value[i] = apply_delta(value[i], delta[i], hi - lo + 1);
       if (lo != hi) {
-        int l = 2 * i + 1, r = 2 * i + 2;
+        int l = i * 2 + 1, r = i * 2 + 2;
         delta[l] = pending[l] ? compose_deltas(delta[l], delta[i]) : delta[i];
         delta[r] = pending[r] ? compose_deltas(delta[r], delta[i]) : delta[i];
         pending[l] = pending[r] = true;
@@ -4225,9 +4223,9 @@ class LazySegTree {
       push_delta(i, lo, hi);
       return;
     }
-    update(2 * i + 1, lo, lo + (hi - lo) / 2, tgt_lo, tgt_hi, d);
-    update(2 * i + 2, lo + (hi - lo) / 2 + 1, hi, tgt_lo, tgt_hi, d);
-    value[i] = combine(value[2 * i + 1], value[2 * i + 2]);
+    update(i * 2 + 1, lo, lo + (hi - lo) / 2, tgt_lo, tgt_hi, d);
+    update(i * 2 + 2, lo + (hi - lo) / 2 + 1, hi, tgt_lo, tgt_hi, d);
+    value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
   template<typename Pred>
@@ -4273,16 +4271,18 @@ class LazySegTree {
   }
 
  public:
-  explicit LazySegTree(int n, const T &v = T())
-      : len(n), value(4 * len), delta(4 * len), pending(4 * len, false) {
+  explicit LazySegTree(int n, const T &v = T()) : len(n), pending(4 * len, false) {
     assert(len > 0);
+    value.assign(4 * len, v);
+    delta.assign(4 * len, v);
     build(0, 0, len - 1, [&](int) { return v; });
   }
 
   template<typename It>
-  LazySegTree(It lo, It hi)
-      : len(hi - lo), value(4 * len), delta(4 * len), pending(4 * len, false) {
+  LazySegTree(It lo, It hi) : len(hi - lo), pending(4 * len, false) {
     assert(len > 0);
+    value.assign(4 * len, *lo);
+    delta.assign(4 * len, *lo);
     build(0, 0, len - 1, [&](int i) { return *(lo + i); });
   }
 
@@ -4366,13 +4366,13 @@ The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which 
   \item \inlinecode{IterativeSegTree\textless{}T\textgreater{}(lo, hi)} constructs an array from the half-open random-access iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
-  \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$. If \inlinecode{lo == hi}, then the single specified value is returned.
+  \item \inlinecode{query(lo, hi)} returns the aggregate of the values at indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$. If \inlinecode{lo == hi}, then the single specified value is returned.
   \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{apply\_delta(v, d)}.
-  \item \inlinecode{max\_right(lo, pred)} returns the largest boundary \inlinecode{hi} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies the monotonic predicate \inlinecode{pred()}. It returns \inlinecode{size()} if \inlinecode{pred()} remains true to the end.
-  \item \inlinecode{min\_left(hi, pred)} returns the smallest boundary \inlinecode{lo} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies the monotonic predicate \inlinecode{pred()}. It returns $0$ if \inlinecode{pred()} remains true to the beginning.
+  \item \inlinecode{max\_right(lo, pred)} returns the largest boundary \inlinecode{hi} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred()}. As \inlinecode{hi} increases, \inlinecode{pred()} applied to this aggregate may change only from true to false. The empty range is valid, and \inlinecode{size()} is returned if the predicate remains true to the end.
+  \item \inlinecode{min\_left(hi, pred)} returns the smallest boundary \inlinecode{lo} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred()}. As \inlinecode{lo} decreases, \inlinecode{pred()} applied to this aggregate may change only from true to false. The empty range is valid, and $0$ is returned if the predicate remains true to the beginning.
 \end{compactitem}
 
-For the boundary-search functions, \inlinecode{pred()} takes aggregate \inlinecode{T} values of candidate ranges. As a range grows, \inlinecode{pred()} may change from true to false but never back to true; the empty range is considered valid. E.g. for \inlinecode{combine = min}, use \inlinecode{pred(mn) = (mn \textgreater{} x)} to find the first value \inlinecode{\textless{}= x}, or for \inlinecode{combine = sum}, use \inlinecode{pred(sum) = (sum \textless{}= x)} with nonnegative values to find the longest range within the limit \inlinecode{x}.
+For the boundary-search functions, \inlinecode{pred()} takes aggregate \inlinecode{T} values. For \inlinecode{combine = min}, \inlinecode{pred(mn) = (mn \textgreater{} x)} makes \inlinecode{max\_right()} stop at the first value \inlinecode{\textless{}= x} when extending right, while \inlinecode{min\_left()} stops just after the first such value when extending left. With nonnegative values and \inlinecode{combine = sum}, \inlinecode{pred(sum) = (sum \textless{}= x)} finds the longest extension with sum at most \inlinecode{x}.
 
 Both boundary searches are iterative to demonstrate how the flat-array layout can avoid recursion. They decompose the search range into $O(\log n)$ canonical nodes, scan those nodes in order while accumulating their aggregates, then descend inside the first node that makes \inlinecode{pred} false. A recursive descent like the one in 2.4.5 is equally valid and may be easier to adapt.
 
@@ -4411,8 +4411,8 @@ class IterativeSegTree {
     while (base < len) {
       base <<= 1;
     }
-    value.assign(2 * base, T());
-    for (int i = 0; i < len; i++) {
+    value.assign(2 * base, gen(0));
+    for (int i = 1; i < len; i++) {
       value[base + i] = gen(i);
     }
     for (int i = base - 1; i > 0; i--) {
@@ -4550,14 +4550,14 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies
   \item \inlinecode{IterativeLazySegTree\textless{}T\textgreater{}(lo, hi)} constructs an array from the half-open random-access iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
-  \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$. If \inlinecode{lo == hi}, then the single specified value is returned.
+  \item \inlinecode{query(lo, hi)} returns the aggregate of the values at indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$. If \inlinecode{lo == hi}, then the single specified value is returned.
   \item \inlinecode{update(i, d)} assigns the value at index \inlinecode{i} by applying the delta \inlinecode{d}.
   \item \inlinecode{update(lo, hi, d)} modifies the value at each array index in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ by applying the delta \inlinecode{d} to each value.
-  \item \inlinecode{max\_right(lo, pred)} returns the largest boundary \inlinecode{hi} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies the monotonic predicate \inlinecode{pred()}. It returns \inlinecode{size()} if \inlinecode{pred()} remains true to the end.
-  \item \inlinecode{min\_left(hi, pred)} returns the smallest boundary \inlinecode{lo} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies the monotonic predicate \inlinecode{pred()}. It returns $0$ if \inlinecode{pred()} remains true to the beginning.
+  \item \inlinecode{max\_right(lo, pred)} returns the largest boundary \inlinecode{hi} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred()}. As \inlinecode{hi} increases, \inlinecode{pred()} applied to this aggregate may change only from true to false. The empty range is valid, and \inlinecode{size()} is returned if the predicate remains true to the end.
+  \item \inlinecode{min\_left(hi, pred)} returns the smallest boundary \inlinecode{lo} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred()}. As \inlinecode{lo} decreases, \inlinecode{pred()} applied to this aggregate may change only from true to false. The empty range is valid, and $0$ is returned if the predicate remains true to the beginning.
 \end{compactitem}
 
-For the boundary-search functions, \inlinecode{pred()} takes aggregate \inlinecode{T} values of candidate ranges. As a range grows, \inlinecode{pred()} may change from true to false but never back to true; the empty range is considered valid. E.g. for \inlinecode{combine = min}, use \inlinecode{pred(mn) = (mn \textgreater{} x)} to find the first value \inlinecode{\textless{}= x}, or for \inlinecode{combine = sum}, use \inlinecode{pred(sum) = (sum \textless{}= x)} with nonnegative values to find the longest range within the limit \inlinecode{x}.
+For the boundary-search functions, \inlinecode{pred()} takes aggregate \inlinecode{T} values. For \inlinecode{combine = min}, \inlinecode{pred(mn) = (mn \textgreater{} x)} makes \inlinecode{max\_right()} stop at the first value \inlinecode{\textless{}= x} when extending right, while \inlinecode{min\_left()} stops just after the first such value when extending left. With nonnegative values and \inlinecode{combine = sum}, \inlinecode{pred(sum) = (sum \textless{}= x)} finds the longest extension with sum at most \inlinecode{x}.
 
 Both boundary searches are iterative to demonstrate how the flat-array layout can avoid recursion. They push lazy deltas along the endpoints, decompose the search range into $O(\log n)$ canonical nodes, scan those nodes in order while accumulating their aggregates, then push and descend inside the first node that makes \inlinecode{pred} false. A recursive descent like the one in 2.4.6 is equally valid and may be easier to adapt.
 
@@ -4602,14 +4602,15 @@ class IterativeLazySegTree {
       base <<= 1;
       height++;
     }
-    value.assign(2 * base, T());
-    delta.assign(2 * base, T());
+    T init = gen(0);
+    value.assign(2 * base, init);
+    delta.assign(2 * base, init);
     pending.assign(2 * base, false);
     seg_len.assign(2 * base, 1);
     for (int i = base - 1; i > 0; i--) {
       seg_len[i] = seg_len[i << 1] + seg_len[i << 1 | 1];
     }
-    for (int i = 0; i < len; i++) {
+    for (int i = 1; i < len; i++) {
       value[base + i] = gen(i);
     }
     for (int i = base - 1; i > 0; i--) {
@@ -4853,7 +4854,7 @@ class SegTreeBeats {
   std::vector<int> cnt;  // Number of entries in the node equal to max1.
 
   void pull(int i) {
-    int l = 2 * i + 1, r = 2 * i + 2;
+    int l = i * 2 + 1, r = i * 2 + 2;
     sum[i] = sum[l] + sum[r];
     if (max1[l] == max1[r]) {
       max1[i] = max1[l];
@@ -4878,7 +4879,7 @@ class SegTreeBeats {
   }
 
   void push(int i) {
-    for (int c : {2 * i + 1, 2 * i + 2}) {
+    for (int c : {i * 2 + 1, i * 2 + 2}) {
       if (max1[c] > max1[i]) {
         apply_chmin(c, max1[i]);
       }
@@ -5027,23 +5028,23 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Sparse Segment Tree}
-A sparse segment tree (also commonly called a dynamic or implicit segment tree) maintains an array over a large index range while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique. This implementation uses lazy initialization of nodes to conserve memory: only the nodes covering touched indices are ever allocated, so indices up to \inlinecode{N} are supported without preallocating the whole tree.
+A sparse segment tree (also commonly called a dynamic or implicit segment tree) maintains an array over a large index range while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique. This implementation uses lazy initialization of nodes to conserve memory: only the nodes covering touched indices are ever allocated, so a huge index range is supported without preallocating the whole tree.
 
 The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. Since untouched nodes are implicit, \inlinecode{repeat\_value(v, len)} must return the aggregate summary of \inlinecode{len} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For range-sum queries, \inlinecode{combine(a, b)} should return \inlinecode{a + b} and \inlinecode{repeat\_value(v, len)} should return \inlinecode{v * len}.
 
 Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
 \begin{compactitem}
-  \item \inlinecode{SparseSegTree\textless{}T, N\textgreater{}(v = T())} constructs an array over indices $[0, {\inlinecodemath{N}}]$, with every value implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
-  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} must be in $[0, {\inlinecodemath{N}}]$.
-  \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$. If \inlinecode{lo == hi}, then the single specified value is returned.
+  \item \inlinecode{SparseSegTree\textless{}T, N\textgreater{}(v = T())} constructs an array over indices $[0, {\inlinecodemath{N}})$, with every value implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
+  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} must be in $[0, {\inlinecodemath{N}})$.
+  \item \inlinecode{query(lo, hi)} returns the aggregate of the values at indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$. If \inlinecode{lo == hi}, then the single specified value is returned.
   \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{apply\_delta(v, d)}.
   \item \inlinecode{update(lo, hi, d)} modifies the value at each array index in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ by applying the delta \inlinecode{d} to each value.
-  \item \inlinecode{max\_right(lo, pred)} returns the largest boundary \inlinecode{hi} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies the monotonic predicate \inlinecode{pred()}. It returns $N + 1$ if \inlinecode{pred()} remains true to the end.
-  \item \inlinecode{min\_left(hi, pred)} returns the smallest boundary \inlinecode{lo} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies the monotonic predicate \inlinecode{pred()}. It returns $0$ if \inlinecode{pred()} remains true to the beginning.
+  \item \inlinecode{max\_right(lo, pred)} returns the largest boundary \inlinecode{hi} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred()}. As \inlinecode{hi} increases, \inlinecode{pred()} applied to this aggregate may change only from true to false. The empty range is valid, and \inlinecode{N} is returned if the predicate remains true to the end.
+  \item \inlinecode{min\_left(hi, pred)} returns the smallest boundary \inlinecode{lo} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred()}. As \inlinecode{lo} decreases, \inlinecode{pred()} applied to this aggregate may change only from true to false. The empty range is valid, and $0$ is returned if the predicate remains true to the beginning.
 \end{compactitem}
 
-For the boundary-search functions, \inlinecode{pred()} takes aggregate \inlinecode{T} values of candidate ranges. As a range grows, \inlinecode{pred()} may change from true to false but never back to true; the empty range is considered valid. E.g. for \inlinecode{combine = min}, use \inlinecode{pred(mn) = (mn \textgreater{} x)} to find the first value \inlinecode{\textless{}= x}, or for \inlinecode{combine = sum}, use \inlinecode{pred(sum) = (sum \textless{}= x)} with nonnegative values to find the longest range within the limit \inlinecode{x}.
+For the boundary-search functions, \inlinecode{pred()} takes aggregate \inlinecode{T} values. For \inlinecode{combine = min}, \inlinecode{pred(mn) = (mn \textgreater{} x)} makes \inlinecode{max\_right()} stop at the first value \inlinecode{\textless{}= x} when extending right, while \inlinecode{min\_left()} stops just after the first such value when extending left. With nonnegative values and \inlinecode{combine = sum}, \inlinecode{pred(sum) = (sum \textless{}= x)} finds the longest extension with sum at most \inlinecode{x}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -5063,13 +5064,12 @@ For the boundary-search functions, \inlinecode{pred()} takes aggregate \inlineco
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
-#include <limits>
 #include <optional>
 #include <vector>
 
-template<typename T, int N = 1000000000>
+template<typename T, int N = 1000000001>
 class SparseSegTree {
-  static_assert(0 <= N && N < std::numeric_limits<int>::max());
+  static_assert(N > 0);
 
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T repeat_value(const T &v, int64_t len) { return v; }
@@ -5221,38 +5221,38 @@ class SparseSegTree {
   SparseSegTree &operator=(const SparseSegTree &) = delete;
 
   T at(int i) {
-    assert(0 <= i && i <= N);
+    assert(0 <= i && i < N);
     return query(i, i);
   }
 
   T query(int lo, int hi) {
-    assert(0 <= lo && lo <= hi && hi <= N);
-    return query(root, 0, N, lo, hi);
+    assert(0 <= lo && lo <= hi && hi < N);
+    return query(root, 0, N - 1, lo, hi);
   }
 
   void update(int i, const T &d) {
-    assert(0 <= i && i <= N);
+    assert(0 <= i && i < N);
     update(i, i, d);
   }
 
   void update(int lo, int hi, const T &d) {
-    assert(0 <= lo && lo <= hi && hi <= N);
-    update(root, 0, N, lo, hi, d);
+    assert(0 <= lo && lo <= hi && hi < N);
+    update(root, 0, N - 1, lo, hi, d);
   }
 
   template<typename Pred>
   int max_right(int lo, const Pred &pred) {
-    assert(0 <= lo && lo <= N + 1);
+    assert(0 <= lo && lo <= N);
     std::optional<T> acc;
-    int res = max_right(root, 0, N, lo, pred, acc);
-    return res == -1 ? N + 1 : res;
+    int res = max_right(root, 0, N - 1, lo, pred, acc);
+    return res == -1 ? N : res;
   }
 
   template<typename Pred>
   int min_left(int hi, const Pred &pred) {
-    assert(0 <= hi && hi <= N + 1);
+    assert(0 <= hi && hi <= N);
     std::optional<T> acc;
-    int res = min_left(root, 0, N, hi, pred, acc);
+    int res = min_left(root, 0, N - 1, hi, pred, acc);
     return res == -1 ? 0 : res;
   }
 };
@@ -5302,7 +5302,7 @@ The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which 
   \item \inlinecode{size()} returns the size of every version of the array.
   \item \inlinecode{versions()} returns the number of stored versions. Versions are numbered starting from $0$.
   \item \inlinecode{at(version, i)} returns the value at index \inlinecode{i} in the specified version.
-  \item \inlinecode{query(version, lo, hi)} returns the result of \inlinecode{combine()} applied to all indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ in the specified version. If \inlinecode{lo == hi}, then the single specified value is returned.
+  \item \inlinecode{query(version, lo, hi)} returns the aggregate of the values at indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ in the specified version. If \inlinecode{lo == hi}, then the single specified value is returned.
   \item \inlinecode{update(version, i, d)} creates and returns a new version in which the value at index \inlinecode{i} is assigned to \inlinecode{apply\_delta(v, d)}. The specified version remains unchanged.
 \end{compactitem}
 
@@ -5486,31 +5486,31 @@ class MergeSortTree {
   int len;
   std::vector<std::vector<T>> tree;
 
-  void build(int node, int lo, int hi, const std::vector<T> &a) {
+  void build(int i, int lo, int hi, const std::vector<T> &a) {
     if (lo == hi) {
-      tree[node] = {a[lo]};
+      tree[i] = {a[lo]};
       return;
     }
     int mid = lo + (hi - lo) / 2;
-    build(2 * node, lo, mid, a);
-    build(2 * node + 1, mid + 1, hi, a);
+    build(i * 2, lo, mid, a);
+    build(i * 2 + 1, mid + 1, hi, a);
     std::merge(
-        tree[2 * node].begin(), tree[2 * node].end(), tree[2 * node + 1].begin(),
-        tree[2 * node + 1].end(), std::back_inserter(tree[node])
+        tree[i * 2].begin(), tree[i * 2].end(), tree[i * 2 + 1].begin(), tree[i * 2 + 1].end(),
+        std::back_inserter(tree[i])
     );
   }
 
   template<typename Fn>
-  int query(int node, int lo, int hi, int tgt_lo, int tgt_hi, const Fn &count_node) const {
+  int query(int i, int lo, int hi, int tgt_lo, int tgt_hi, const Fn &count_node) const {
     if (tgt_hi < lo || hi < tgt_lo) {
       return 0;
     }
     if (tgt_lo <= lo && hi <= tgt_hi) {
-      return count_node(tree[node]);
+      return count_node(tree[i]);
     }
     int mid = lo + (hi - lo) / 2;
-    return query(2 * node, lo, mid, tgt_lo, tgt_hi, count_node) +
-           query(2 * node + 1, mid + 1, hi, tgt_lo, tgt_hi, count_node);
+    return query(i * 2, lo, mid, tgt_lo, tgt_hi, count_node) +
+           query(i * 2 + 1, mid + 1, hi, tgt_lo, tgt_hi, count_node);
   }
 
  public:
@@ -5589,8 +5589,8 @@ All position ranges use 0-based indices and closed intervals $[{\inlinecodemath{
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
+#include <climits>
 #include <cstdint>
-#include <limits>
 #include <memory>
 #include <vector>
 
@@ -5599,8 +5599,8 @@ class WaveletTree {
   std::unique_ptr<WaveletTree> left, right;
   std::vector<int> b;  // b[i] = number of the first i elements that go to the left child.
 
-  WaveletTree(std::vector<int>::iterator lo, std::vector<int>::iterator hi, int x, int y)
-      : min_val(x), max_val(y) {
+  WaveletTree(std::vector<int>::iterator lo, std::vector<int>::iterator hi, int mn, int mx)
+      : min_val(mn), max_val(mx) {
     assert(min_val <= max_val);
     b.reserve((hi - lo) + 1);
     b.push_back(0);
@@ -5663,8 +5663,7 @@ class WaveletTree {
   int count_in(int lo, int hi, int x, int y) const {
     assert(0 <= lo && lo <= hi && hi < size());
     assert(x <= y);
-    int below_x = x == std::numeric_limits<int>::lowest() ? 0 : leq(lo + 1, hi + 1, x - 1);
-    return leq(lo + 1, hi + 1, y) - below_x;
+    return leq(lo + 1, hi + 1, y) - (x <= min_val ? 0 : leq(lo + 1, hi + 1, x - 1));
   }
 };
 \end{lstlisting}
@@ -5687,9 +5686,9 @@ int main() {
   assert(t.count_in(0, 6, 3, 8) == 4);  // 5, 8, 6, 3
   assert(t.count_in(1, 5, 2, 6) == 2);  // 2, 6
 
-  vector<int> extremes{numeric_limits<int>::lowest(), 0, numeric_limits<int>::max()};
-  WaveletTree extreme_tree(extremes, numeric_limits<int>::lowest(), numeric_limits<int>::max());
-  assert(extreme_tree.count_in(0, 2, numeric_limits<int>::lowest(), 0) == 2);
+  vector<int> extremes{INT_MIN, 0, INT_MAX};
+  WaveletTree extreme_tree(extremes, INT_MIN, INT_MAX);
+  assert(extreme_tree.count_in(0, 2, INT_MIN, 0) == 2);
   return 0;
 }
 \end{lstlisting}
@@ -5700,10 +5699,7 @@ With the default comparator, this gives a direct connection to range minimum que
 
 \begin{compactitem}
   \item \inlinecode{CartesianTree(a, comp = std::less\textless{}\textgreater{}())} constructs the tree for array \inlinecode{a}.
-  \item \inlinecode{size()} returns the size of the array.
-  \item \inlinecode{empty()} returns whether the array is empty.
-  \item \inlinecode{root()} returns the root index, or $-1$ if the array is empty.
-  \item \inlinecode{parent(i)}, \inlinecode{left(i)}, and \inlinecode{right(i)} return neighboring node indices, or $-1$ if absent.
+  \item \inlinecode{root} is the root index, or $-1$ if the array is empty. The arrays \inlinecode{parent}, \inlinecode{left}, and \inlinecode{right} store the neighboring node indices, using $-1$ when a neighbor is absent.
   \item \inlinecode{range\_min\_index(lo, hi)} returns the index of the first value in comparator order within $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
 \end{compactitem}
 
@@ -5711,7 +5707,6 @@ With the default comparator, this gives a direct connection to range minimum que
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to the constructor, where $n$ is the array size.
-  \item $O(1)$ per call to \inlinecode{size()}, \inlinecode{empty()}, \inlinecode{root()}, \inlinecode{parent()}, \inlinecode{left()}, and \inlinecode{right()}.
   \item $O(h)$ per call to \inlinecode{range\_min\_index()}, where $h$ is the tree height and may be $O(n)$.
 \end{compactitem}
 
@@ -5722,14 +5717,13 @@ With the default comparator, this gives a direct connection to range minimum que
 #include <functional>
 #include <vector>
 
-class CartesianTree {
-  int root_;
-  std::vector<int> parent_, left_, right_;
+struct CartesianTree {
+  int root;
+  std::vector<int> parent, left, right;
 
- public:
   template<typename T, typename Compare = std::less<>>
   explicit CartesianTree(const std::vector<T> &a, Compare comp = Compare())
-      : root_(-1), parent_(a.size(), -1), left_(a.size(), -1), right_(a.size(), -1) {
+      : root(-1), parent(a.size(), -1), left(a.size(), -1), right(a.size(), -1) {
     std::vector<int> st;
     for (int i = 0, n = static_cast<int>(a.size()); i < n; i++) {
       int last = -1;
@@ -5738,42 +5732,25 @@ class CartesianTree {
         st.pop_back();
       }
       if (!st.empty()) {
-        right_[st.back()] = i;
-        parent_[i] = st.back();
+        right[st.back()] = i;
+        parent[i] = st.back();
       }
       if (last != -1) {
-        left_[i] = last;
-        parent_[last] = i;
+        left[i] = last;
+        parent[last] = i;
       }
       st.push_back(i);
     }
-    root_ = st.empty() ? -1 : st[0];
+    root = st.empty() ? -1 : st[0];
   }
 
-  int size() const { return static_cast<int>(parent_.size()); }
-  bool empty() const { return parent_.empty(); }
-  int root() const { return root_; }
-
-  int parent(int i) const {
-    assert(0 <= i && i < size());
-    return parent_[i];
-  }
-
-  int left(int i) const {
-    assert(0 <= i && i < size());
-    return left_[i];
-  }
-
-  int right(int i) const {
-    assert(0 <= i && i < size());
-    return right_[i];
-  }
+  int size() const { return static_cast<int>(parent.size()); }
 
   int range_min_index(int lo, int hi) const {
-    assert(0 <= lo && lo <= hi && hi < size());
-    int i = root_;
+    assert(0 <= lo && lo <= hi && hi < static_cast<int>(parent.size()));
+    int i = root;
     while (i < lo || hi < i) {
-      i = i < lo ? right_[i] : left_[i];
+      i = i < lo ? right[i] : left[i];
     }
     return i;
   }
@@ -5787,11 +5764,11 @@ using namespace std;
 int main() {
   vector<int> a{3, 2, 6, 1, 9};
   CartesianTree t(a);
-  assert(t.size() == 5 && !t.empty());
-  assert(t.root() == 3);  // The global minimum is a[3] = 1.
-  assert(t.parent(1) == 3);
-  assert(t.left(3) == 1);
-  assert(t.right(3) == 4);
+  assert(t.size() == 5);
+  assert(t.root == 3);  // The global minimum is a[3] = 1.
+  assert(t.parent[1] == 3);
+  assert(t.left[3] == 1);
+  assert(t.right[3] == 4);
   assert(t.range_min_index(0, 2) == 1);  // min({3, 2, 6}) is a[1].
   assert(t.range_min_index(2, 4) == 3);  // min({6, 1, 9}) is a[3].
 
@@ -5800,7 +5777,7 @@ int main() {
   assert(equal_tree.range_min_index(1, 3) == 1);  // Earlier equal minima win ties.
 
   CartesianTree max_tree(a, greater<int>());
-  assert(max_tree.root() == 4);
+  assert(max_tree.root == 4);
   assert(max_tree.range_min_index(0, 2) == 2);  // First under greater<int>: the numeric maximum.
   return 0;
 }
@@ -5822,7 +5799,7 @@ Range reversal is also propagated lazily. Since \inlinecode{combine()} may be or
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{empty()} returns whether the array is empty.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
-  \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
+  \item \inlinecode{query(lo, hi)} returns the aggregate of the values at indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{update(lo, hi, d)} applies the delta \inlinecode{d} to every index in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{update(i, d)} applies the delta \inlinecode{d} to the single index \inlinecode{i}.
   \item \inlinecode{reverse(lo, hi)} reverses the order of the values in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
@@ -6165,7 +6142,7 @@ Point updates are defined by \inlinecode{apply\_delta(v, d)}, which applies delt
 Use this when the grid is small enough for $O(R \cdot C)$ storage and queries need an aggregate other than addition. For additive rectangle sums, a 2D Fenwick tree is simpler and has smaller constants. Use the sparse 2D segment tree in the next section when the coordinate range is too large to allocate dense storage.
 
 \begin{compactitem}
-  \item \inlinecode{SegTree2D\textless{}T\textgreater{}(rows, cols, value = T())} constructs a \inlinecode{rows} by \inlinecode{cols} array with all entries initialized to \inlinecode{value}.
+  \item \inlinecode{SegTree2D\textless{}T\textgreater{}(rows, cols, v = T())} constructs a \inlinecode{rows} by \inlinecode{cols} array with 0-based indices, with all entries initialized to \inlinecode{v}.
   \item \inlinecode{SegTree2D\textless{}T\textgreater{}(a)} constructs the tree from the matrix \inlinecode{a}.
   \item \inlinecode{num\_rows()} and \inlinecode{num\_cols()} return the dimensions of the array.
   \item \inlinecode{update(r, c, d)} applies delta \inlinecode{d} to the entry at index (\inlinecode{r}, \inlinecode{c}).
@@ -6204,7 +6181,7 @@ class SegTree2D {
 
   template<typename Gen>
   void build(const Gen &gen) {
-    tree.assign(2 * rows, std::vector<T>(2 * cols));
+    tree.assign(2 * rows, std::vector<T>(2 * cols, gen(0, 0)));
     for (int r = 0; r < rows; r++) {
       for (int c = 0; c < cols; c++) {
         tree[r + rows][c + cols] = gen(r, c);
@@ -6236,9 +6213,9 @@ class SegTree2D {
   }
 
  public:
-  SegTree2D(int rows, int cols, const T &value = T()) : rows(rows), cols(cols) {
+  SegTree2D(int rows, int cols, const T &v = T()) : rows(rows), cols(cols) {
     assert(rows > 0 && cols > 0);
-    build([&](int, int) { return value; });
+    build([&](int, int) { return v; });
   }
 
   explicit SegTree2D(const std::vector<std::vector<T>> &a)
@@ -6294,14 +6271,14 @@ class SegTree2D {
 using namespace std;
 
 int main() {
-  SegTree2D<int> tree(3, 4, 100);
-  tree.update(0, 1, 8);
-  tree.update(1, 2, 3);
-  tree.update(2, 0, 5);
-  assert(tree.num_rows() == 3 && tree.num_cols() == 4);
-  assert(tree.at(0, 1) == 8);
-  assert(tree.query(0, 0, 1, 3) == 3);
-  assert(tree.query(2, 0, 2, 3) == 5);
+  SegTree2D<int> t(3, 4, 100);
+  t.update(0, 1, 8);
+  t.update(1, 2, 3);
+  t.update(2, 0, 5);
+  assert(t.num_rows() == 3 && t.num_cols() == 4);
+  assert(t.at(0, 1) == 8);
+  assert(t.query(0, 0, 1, 3) == 3);
+  assert(t.query(2, 0, 2, 3) == 5);
 
   SegTree2D<int> from_matrix(vector<vector<int>>{{7, 2, 6}, {4, 9, 1}});
   assert(from_matrix.query(0, 0, 1, 1) == 2);
@@ -6321,7 +6298,7 @@ Rows and columns are split independently, so every rectangle query decomposes in
 Use the dense 2D segment tree in the previous section when the grid is modest enough for $O(R \cdot C)$ storage; it is simpler and faster. Use this sparse version when the coordinate range is huge but only a small fraction of cells are updated. For dense additive rectangle sums, prefer the 2D Fenwick tree in 2.6.5.
 
 \begin{compactitem}
-  \item \inlinecode{SparseSegTree2D\textless{}T, R, C\textgreater{}(v = T())} constructs a two-dimensional array with rows $[0, R]$ and columns $[0, C]$. All array values are implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
+  \item \inlinecode{SparseSegTree2D\textless{}T, R, C\textgreater{}(v = T())} constructs a two-dimensional array over rows $[0, {\inlinecodemath{R}})$ and columns $[0, {\inlinecodemath{C}})$. All array values are implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
   \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
   \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{combine()} applied to every value in the rectangular region consisting of rows in $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns in $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
   \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{apply\_delta(v, d)}.
@@ -6347,9 +6324,9 @@ Use the dense 2D segment tree in the previous section when the grid is modest en
 #include <cstdint>
 #include <optional>
 
-template<typename T, int R = 1000000000, int C = 1000000000>
+template<typename T, int R = 1000000001, int C = 1000000001>
 class SparseSegTree2D {
-  static_assert(R >= 0 && C >= 0);
+  static_assert(R > 0 && C > 0);
 
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T repeat_value(const T &v, int64_t area) { return v; }
@@ -6357,108 +6334,79 @@ class SparseSegTree2D {
 
   struct InnerNode {
     T value;
-    int low, high;
+    int lo, hi;
     InnerNode *left, *right;
 
     InnerNode(int lo, int hi, const T &v)
-        : value(v), low(lo), high(hi), left(nullptr), right(nullptr) {}
+        : value(v), lo(lo), hi(hi), left(nullptr), right(nullptr) {}
   };
 
   struct OuterNode {
-    InnerNode root;
-    int low, high;
+    InnerNode inner;
+    int lo, hi;
     OuterNode *left, *right;
 
     OuterNode(int lo, int hi, const T &v)
-        : root(0, C, v), low(lo), high(hi), left(nullptr), right(nullptr) {}
+        : inner(0, C - 1, v), lo(lo), hi(hi), left(nullptr), right(nullptr) {}
   } *root;
 
   T init;
 
-  // Helper variables for query() and update().
-  int tgt_c1, tgt_c2;
-  int64_t width;
-
   static int64_t length(int lo, int hi) { return hi - lo + 1LL; }
+  static void append_result(std::optional<T> &res, const T &v) { res = res ? combine(*res, v) : v; }
 
-  void append_result(std::optional<T> &res, const T &v) { res = res ? combine(*res, v) : v; }
-
-  T query(InnerNode *n, int qlo, int qhi, int64_t rows) {
+  template<typename Node, typename Get>
+  T query_nodes(const Node *n, int qlo, int qhi, int64_t span, const Get &get) const {
     if (n == nullptr) {
-      return repeat_value(init, rows * length(qlo, qhi));
+      return repeat_value(init, span * length(qlo, qhi));
     }
-    int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
+    int lo = n->lo, hi = n->hi, mid = lo + (hi - lo) / 2;
     std::optional<T> res;
     if (qlo < lo) {
-      int missing_hi = std::min(qhi, lo - 1);
-      append_result(res, repeat_value(init, rows * length(qlo, missing_hi)));
+      append_result(res, repeat_value(init, span * length(qlo, std::min(qhi, lo - 1))));
     }
-    int overlap_lo = std::max(qlo, lo), overlap_hi = std::min(qhi, hi);
-    if (overlap_lo <= overlap_hi) {
-      if (overlap_lo == lo && overlap_hi == hi) {
-        append_result(res, n->value);
+    int ql = std::max(qlo, lo), qr = std::min(qhi, hi);
+    if (ql <= qr) {
+      if (ql == lo && qr == hi) {
+        append_result(res, get(n));
       } else {
-        if (overlap_lo <= mid) {
-          append_result(res, query(n->left, overlap_lo, std::min(overlap_hi, mid), rows));
+        if (ql <= mid) {
+          append_result(res, query_nodes(n->left, ql, std::min(qr, mid), span, get));
         }
-        if (mid < overlap_hi) {
-          append_result(res, query(n->right, std::max(overlap_lo, mid + 1), overlap_hi, rows));
+        if (mid < qr) {
+          append_result(res, query_nodes(n->right, std::max(ql, mid + 1), qr, span, get));
         }
       }
     }
     if (hi < qhi) {
-      int missing_lo = std::max(qlo, hi + 1);
-      append_result(res, repeat_value(init, rows * length(missing_lo, qhi)));
+      append_result(res, repeat_value(init, span * length(std::max(qlo, hi + 1), qhi)));
     }
     return *res;
   }
 
-  T query(OuterNode *n, int qlo, int qhi) {
-    if (n == nullptr) {
-      return repeat_value(init, width * length(qlo, qhi));
-    }
-    int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
-    std::optional<T> res;
-    if (qlo < lo) {
-      int missing_hi = std::min(qhi, lo - 1);
-      append_result(res, repeat_value(init, width * length(qlo, missing_hi)));
-    }
-    int overlap_lo = std::max(qlo, lo), overlap_hi = std::min(qhi, hi);
-    if (overlap_lo <= overlap_hi) {
-      if (overlap_lo == lo && overlap_hi == hi) {
-        append_result(res, query(&(n->root), tgt_c1, tgt_c2, length(lo, hi)));
-      } else {
-        if (overlap_lo <= mid) {
-          append_result(res, query(n->left, overlap_lo, std::min(overlap_hi, mid)));
-        }
-        if (mid < overlap_hi) {
-          append_result(res, query(n->right, std::max(overlap_lo, mid + 1), overlap_hi));
-        }
-      }
-    }
-    if (hi < qhi) {
-      int missing_lo = std::max(qlo, hi + 1);
-      append_result(res, repeat_value(init, width * length(missing_lo, qhi)));
-    }
-    return *res;
+  T query_inner(const InnerNode *n, int c1, int c2, int64_t rows) const {
+    return query_nodes(n, c1, c2, rows, [](const InnerNode *node) { return node->value; });
   }
 
-  void update(InnerNode *n, int c, const T &d, bool leaf_row, int64_t rows) {
-    int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
+  T query_outer(const OuterNode *n, int r1, int r2, int c1, int c2) const {
+    return query_nodes(n, r1, r2, length(c1, c2), [&](const OuterNode *node) {
+      return query_inner(&node->inner, c1, c2, length(node->lo, node->hi));
+    });
+  }
+
+  template<typename Apply>
+  void update_inner(InnerNode *n, int c, int64_t rows, const Apply &apply) {
+    int lo = n->lo, hi = n->hi, mid = lo + (hi - lo) / 2;
     if (lo == hi) {
-      if (leaf_row) {
-        n->value = apply_delta(n->value, d);
-      } else {
-        n->value = d;
-      }
+      n->value = apply(n->value);
       return;
     }
     InnerNode *&target = (c <= mid) ? n->left : n->right;
     if (target == nullptr) {
       target = new InnerNode(c, c, repeat_value(init, rows));
     }
-    if (target->low <= c && c <= target->high) {
-      update(target, c, d, leaf_row, rows);
+    if (target->lo <= c && c <= target->hi) {
+      update_inner(target, c, rows, apply);
     } else {
       int split_lo = lo, split_hi = hi, split_mid = mid;
       do {
@@ -6468,52 +6416,50 @@ class SparseSegTree2D {
           split_lo = split_mid + 1;
         }
         split_mid = split_lo + (split_hi - split_lo) / 2;
-      } while ((c <= split_mid) == (target->low <= split_mid));
+      } while ((c <= split_mid) == (target->lo <= split_mid));
       InnerNode *tmp =
           new InnerNode(split_lo, split_hi, repeat_value(init, rows * length(split_lo, split_hi)));
-      if (target->low <= split_mid) {
+      if (target->lo <= split_mid) {
         tmp->left = target;
       } else {
         tmp->right = target;
       }
       target = tmp;
-      update(tmp, c, d, leaf_row, rows);
+      update_inner(tmp, c, rows, apply);
     }
-    T left_value =
-        (n->left != nullptr) ? n->left->value : repeat_value(init, rows * length(lo, mid));
-    T right_value =
+    T lval = (n->left != nullptr) ? n->left->value : repeat_value(init, rows * length(lo, mid));
+    T rval =
         (n->right != nullptr) ? n->right->value : repeat_value(init, rows * length(mid + 1, hi));
-    n->value = combine(left_value, right_value);
+    n->value = combine(lval, rval);
   }
 
   void update(OuterNode *n, int r, int c, const T &d) {
-    int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
+    int lo = n->lo, hi = n->hi, mid = lo + (hi - lo) / 2;
     int64_t rows = length(lo, hi);
     if (lo == hi) {
-      update(&(n->root), c, d, true, 1);
+      update_inner(&n->inner, c, 1, [&](const T &v) { return apply_delta(v, d); });
       return;
     }
     if (r <= mid) {
       if (n->left == nullptr) {
-        n->left = new OuterNode(lo, mid, repeat_value(init, length(lo, mid) * length(0, C)));
+        n->left = new OuterNode(lo, mid, repeat_value(init, length(lo, mid) * C));
       }
       update(n->left, r, c, d);
     } else {
       if (n->right == nullptr) {
-        n->right =
-            new OuterNode(mid + 1, hi, repeat_value(init, length(mid + 1, hi) * length(0, C)));
+        n->right = new OuterNode(mid + 1, hi, repeat_value(init, length(mid + 1, hi) * C));
       }
       update(n->right, r, c, d);
     }
     T value = repeat_value(init, rows);
     if (n->left != nullptr || n->right != nullptr) {
-      T left_value = (n->left != nullptr) ? query(&(n->left->root), c, c, length(lo, mid))
-                                          : repeat_value(init, length(lo, mid));
-      T right_value = (n->right != nullptr) ? query(&(n->right->root), c, c, length(mid + 1, hi))
-                                            : repeat_value(init, length(mid + 1, hi));
-      value = combine(left_value, right_value);
+      T lval = (n->left != nullptr) ? query_inner(&n->left->inner, c, c, length(lo, mid))
+                                    : repeat_value(init, length(lo, mid));
+      T rval = (n->right != nullptr) ? query_inner(&n->right->inner, c, c, length(mid + 1, hi))
+                                     : repeat_value(init, length(mid + 1, hi));
+      value = combine(lval, rval);
     }
-    update(&(n->root), c, value, false, rows);
+    update_inner(&n->inner, c, rows, [&](const T &) { return value; });
   }
 
   static void clean_up(InnerNode *n) {
@@ -6526,8 +6472,8 @@ class SparseSegTree2D {
 
   static void clean_up(OuterNode *n) {
     if (n != nullptr) {
-      clean_up(n->root.left);
-      clean_up(n->root.right);
+      clean_up(n->inner.left);
+      clean_up(n->inner.right);
       clean_up(n->left);
       clean_up(n->right);
       delete n;
@@ -6536,28 +6482,25 @@ class SparseSegTree2D {
 
  public:
   explicit SparseSegTree2D(const T &v = T())
-      : root(new OuterNode(0, R, repeat_value(v, length(0, R) * length(0, C)))), init(v) {}
+      : root(new OuterNode(0, R - 1, repeat_value(v, int64_t{R} * C))), init(v) {}
 
   ~SparseSegTree2D() { clean_up(root); }
   SparseSegTree2D(const SparseSegTree2D &) = delete;
   SparseSegTree2D &operator=(const SparseSegTree2D &) = delete;
 
-  T at(int r, int c) {
-    assert(0 <= r && r <= R && 0 <= c && c <= C);
+  T at(int r, int c) const {
+    assert(0 <= r && r < R && 0 <= c && c < C);
     return query(r, c, r, c);
   }
 
-  T query(int r1, int c1, int r2, int c2) {
-    assert(0 <= r1 && r1 <= r2 && r2 <= R);
-    assert(0 <= c1 && c1 <= c2 && c2 <= C);
-    tgt_c1 = c1;
-    tgt_c2 = c2;
-    width = length(c1, c2);
-    return query(root, r1, r2);
+  T query(int r1, int c1, int r2, int c2) const {
+    assert(0 <= r1 && r1 <= r2 && r2 < R);
+    assert(0 <= c1 && c1 <= c2 && c2 < C);
+    return query_outer(root, r1, r2, c1, c2);
   }
 
   void update(int r, int c, const T &d) {
-    assert(0 <= r && r <= R && 0 <= c && c <= C);
+    assert(0 <= r && r < R && 0 <= c && c < C);
     update(root, r, c, d);
   }
 };
@@ -6590,7 +6533,7 @@ int main() {
   t.update(500000000, 500000000, -100);
   assert(t.query(0, 0, 1000000000, 1000000000) == -100);
 
-  SparseSegTree2D<int, 0, 1> rectangular(0);
+  SparseSegTree2D<int, 1, 2> rectangular(0);
   rectangular.update(0, 0, 5);
   rectangular.update(0, 1, 6);
   assert(rectangular.query(0, 0, 0, 1) == 5);
@@ -6610,7 +6553,7 @@ Use this for static point-reporting queries when guaranteed worst-case bounds ar
 
 \begin{compactitem}
   \item \inlinecode{RangeTree\textless{}T\textgreater{}(lo, hi)} constructs a set of \inlinecode{std::pair} points from the half-open forward-iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
-  \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(i, p)} on each point whose $x$-coordinate is in $[{\inlinecodemath{x1}}, {\inlinecodemath{x2}}]$ and whose $y$-coordinate is in $[{\inlinecodemath{y1}}, {\inlinecodemath{y2}}]$. The first argument to \inlinecode{f} is the 0-based index of the point in the original range given to the constructor. The second argument is the point itself as an \inlinecode{std::pair}.
+  \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(i, x, y)} on each point whose $x$-coordinate is in $[{\inlinecodemath{x1}}, {\inlinecodemath{x2}}]$ and whose $y$-coordinate is in $[{\inlinecodemath{y1}}, {\inlinecodemath{y2}}]$. The first argument to \inlinecode{f} is the 0-based index of the point in the original range given to the constructor.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -6637,7 +6580,7 @@ Use this for static point-reporting queries when guaranteed worst-case bounds ar
 template<typename T>
 class RangeTree {
   struct IndexedPoint {
-    std::pair<T, T> value;
+    T x, y;
     int original_index;
   };
 
@@ -6645,9 +6588,9 @@ class RangeTree {
   std::vector<std::vector<std::pair<int, T>>> columns;
 
   void build(int n, int lo, int hi) {
-    if (points[lo].value.first == points[hi].value.first) {
+    if (points[lo].x == points[hi].x) {
       for (int i = lo; i <= hi; i++) {
-        columns[n].emplace_back(i, points[i].value.second);
+        columns[n].emplace_back(i, points[i].y);
       }
       return;
     }
@@ -6663,10 +6606,10 @@ class RangeTree {
 
   template<typename Fn>
   void query(int n, int lo, int hi, const T &x1, const T &y1, const T &x2, const T &y2, Fn &f) {
-    if (points[hi].value.first < x1 || x2 < points[lo].value.first) {
+    if (points[hi].x < x1 || x2 < points[lo].x) {
       return;
     }
-    if (!(points[lo].value.first < x1 || x2 < points[hi].value.first)) {
+    if (!(points[lo].x < x1 || x2 < points[hi].x)) {
       if (!columns[n].empty() && !(y2 < y1)) {
         auto it = std::lower_bound(
             columns[n].begin(), columns[n].end(), y1,
@@ -6674,7 +6617,7 @@ class RangeTree {
         );
         for (; it != columns[n].end() && it->second <= y2; ++it) {
           const IndexedPoint &p = points[it->first];
-          f(p.original_index, p.value);
+          f(p.original_index, p.x, p.y);
         }
       }
     } else if (lo != hi) {
@@ -6692,11 +6635,11 @@ class RangeTree {
     points.reserve(n);
     int index = 0;
     for (It it = lo; it != hi; ++it) {
-      points.push_back({*it, index++});
+      points.push_back({it->first, it->second, index++});
     }
     columns.resize(4 * n + 1);
     std::sort(points.begin(), points.end(), [](const IndexedPoint &a, const IndexedPoint &b) {
-      return a.value < b.value;
+      return a.x != b.x ? a.x < b.x : a.y < b.y;
     });
     build(0, 0, n - 1);
   }
@@ -6721,9 +6664,9 @@ int main() {
   RangeTree<int> t(v.begin(), v.end());
   vector<pair<int, int>> got;
   vector<int> indices;
-  auto collect = [&](int i, const pair<int, int> &p) {
+  auto collect = [&](int i, int x, int y) {
     indices.push_back(i);
-    got.push_back(p);
+    got.emplace_back(x, y);
   };
   t.query(-1, -1, 2, 5, collect);
   sort(got.begin(), got.end());
@@ -6767,7 +6710,6 @@ Use this for static point-reporting queries when $O(n)$ space and good average p
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <iterator>
 #include <utility>
 #include <vector>
 
@@ -6829,13 +6771,13 @@ class RangeKDTree {
 
  public:
   template<typename It>
-  RangeKDTree(It lo, It hi) : tree(lo, hi) {
-    int n = std::distance(lo, hi);
-    l_index.resize(n);
-    h_index.resize(n);
-    minp.resize(n);
-    maxp.resize(n);
-    build(0, n, true);
+  RangeKDTree(It lo, It hi)
+      : tree(lo, hi),
+        minp(tree.size()),
+        maxp(tree.size()),
+        l_index(tree.size()),
+        h_index(tree.size()) {
+    build(0, static_cast<int>(tree.size()), true);
   }
 
   template<typename Fn>
@@ -6899,7 +6841,6 @@ Use this for static nearest-neighbor queries on point sets in low dimensions. It
 #include <cassert>
 #include <cfloat>
 #include <climits>
-#include <iterator>
 #include <utility>
 #include <vector>
 
@@ -6938,52 +6879,45 @@ class NearestKDTree {
     build(mid + 1, hi);
   }
 
-  // Helper variables for nearest().
-  long double min_dist;
-  int id;
-
-  void nearest(int lo, int hi, const T &x, const T &y, bool can_equal) {
-    if (lo >= hi) {
-      return;
-    }
-    int mid = lo + (hi - lo) / 2;
-    long double dx = static_cast<long double>(x) - tree[mid].first;
-    long double dy = static_cast<long double>(y) - tree[mid].second;
-    long double d = dx * dx + dy * dy;
-    if (d < min_dist && (can_equal || d != 0)) {
-      min_dist = d;
-      id = mid;
-    }
-    if (lo + 1 == hi) {
-      return;
-    }
-    d = div_x[mid] ? dx : dy;
-    int l1 = lo, r1 = mid, l2 = mid + 1, r2 = hi;
-    if (d > 0) {
-      std::swap(l1, l2);
-      std::swap(r1, r2);
-    }
-    nearest(l1, r1, x, y, can_equal);
-    if (d * static_cast<long double>(d) < min_dist) {
-      nearest(l2, r2, x, y, can_equal);
-    }
-  }
-
  public:
   template<typename It>
-  NearestKDTree(It lo, It hi) : tree(lo, hi) {
-    int n = std::distance(lo, hi);
-    assert(n > 0);
-    div_x.resize(n);
-    build(0, n);
+  NearestKDTree(It lo, It hi) : tree(lo, hi), div_x(tree.size()) {
+    assert(!tree.empty());
+    build(0, static_cast<int>(tree.size()));
   }
 
-  std::pair<T, T> nearest(const T &x, const T &y, bool can_equal = true) {
-    min_dist = LDBL_MAX;
-    id = -1;
-    nearest(0, static_cast<int>(tree.size()), x, y, can_equal);
-    assert(id != -1);
-    return tree[id];
+  std::pair<T, T> nearest(const T &x, const T &y, bool can_equal = true) const {
+    long double best_dist = LDBL_MAX;
+    int best = -1;
+    auto rec = [&](auto &&rec, int lo, int hi) -> void {
+      if (lo >= hi) {
+        return;
+      }
+      int mid = lo + (hi - lo) / 2;
+      long double dx = static_cast<long double>(x) - tree[mid].first;
+      long double dy = static_cast<long double>(y) - tree[mid].second;
+      long double dist = dx * dx + dy * dy;
+      if (dist < best_dist && (can_equal || dist != 0)) {
+        best_dist = dist;
+        best = mid;
+      }
+      if (lo + 1 == hi) {
+        return;
+      }
+      long double axis_delta = div_x[mid] ? dx : dy;
+      int l1 = lo, r1 = mid, l2 = mid + 1, r2 = hi;
+      if (axis_delta > 0) {
+        std::swap(l1, l2);
+        std::swap(r1, r2);
+      }
+      rec(rec, l1, r1);
+      if (axis_delta * axis_delta < best_dist) {
+        rec(rec, l2, r2);
+      }
+    };
+    rec(rec, 0, static_cast<int>(tree.size()));
+    assert(best != -1);
+    return tree[best];
   }
 };
 \end{lstlisting}
@@ -7013,8 +6947,6 @@ int main() {
 \subsection{Fenwick Tree (Point Update, Range Query)}
 Maintain a numerical array while supporting point increments and range-sum queries. A Fenwick tree (also called a binary indexed tree) stores partial prefix sums: each internal entry \inlinecode{tree[i]} holds the sum of a block of indices whose length is the lowest set bit of \inlinecode{i}. A point update touches $O(\log n)$ covering blocks, and a prefix-sum query combines $O(\log n)$ disjoint blocks.
 
-The value type \inlinecode{T} must represent $0$ and support addition and subtraction.
-
 When prefix sums are nondecreasing, \inlinecode{max\_prefix(c)} answers prefix-boundary queries by binary lifting: it walks the implicit power-of-two block structure to find the longest prefix with sum at most \inlinecode{c}. This lets the same structure double as a dynamic multiset over a bounded integer domain, useful for coordinate-compressed $k$-th element lookups and online rank queries.
 
 \begin{compactitem}
@@ -7025,8 +6957,10 @@ When prefix sums are nondecreasing, \inlinecode{max\_prefix(c)} answers prefix-b
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{sum(hi)} returns the sum of all values at indices $[0, {\inlinecodemath{hi}}]$.
   \item \inlinecode{sum(lo, hi)} returns the sum of all values at indices $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
-  \item \inlinecode{max\_prefix(c)} returns the largest boundary \inlinecode{hi} such that \inlinecode{sum(0, hi - 1)} $\leq$ \inlinecode{c}, assuming prefix sums are nondecreasing and \inlinecode{c} is nonnegative. It may return any boundary in $[0, n]$, where $n$ is \inlinecode{size()}.
+  \item \inlinecode{max\_prefix(c)} returns the largest boundary \inlinecode{hi} such that \inlinecode{sum(0, hi - 1)} $\leq$ \inlinecode{c}, assuming prefix sums are nondecreasing and \inlinecode{c} is nonnegative. It may return any boundary in $[0, {\inlinecodemath{n}}]$.
 \end{compactitem}
+
+The value type \inlinecode{T} must represent $0$ and support addition and subtraction.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -7126,8 +7060,6 @@ int main() {
 \subsection{Fenwick Tree (Range Update, Point Query)}
 Maintain a numerical array while supporting range increments and point queries. This is done by storing the difference array in a Fenwick tree: adding \inlinecode{x} to $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ adds \inlinecode{+x} at \inlinecode{lo} and \inlinecode{-x} after \inlinecode{hi}, and the value at index \inlinecode{i} is the prefix sum of those differences through \inlinecode{i}.
 
-The value type \inlinecode{T} must represent $0$ and support addition and subtraction.
-
 \begin{compactitem}
   \item \inlinecode{FenwickRUPQ\textless{}T\textgreater{}(n)} constructs an array with 0-based indices $[0, {\inlinecodemath{n}})$, with all values initialized to $0$.
   \item \inlinecode{size()} returns the size of the array.
@@ -7135,6 +7067,8 @@ The value type \inlinecode{T} must represent $0$ and support addition and subtra
   \item \inlinecode{add(lo, hi, x)} adds \inlinecode{x} to the values at all indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
 \end{compactitem}
+
+The value type \inlinecode{T} must represent $0$ and support addition and subtraction.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -7217,8 +7151,6 @@ int main() {
 \subsection{Fenwick Tree (Range Update, Range Query)}
 Maintain a numerical array while supporting range increments and range-sum queries. This uses two Fenwick trees to recover prefix sums after difference-array updates: if the difference array stores range additions, then the prefix sum through \inlinecode{hi} can be written as \inlinecode{hi*sum(t1, hi) - sum(t2, hi)}.
 
-The value type \inlinecode{T} must represent $0$ and support addition, subtraction, and multiplication by an integer index.
-
 \begin{compactitem}
   \item \inlinecode{FenwickRURQ\textless{}T\textgreater{}(n)} constructs an array with 0-based indices $[0, {\inlinecodemath{n}})$, with all values initialized to $0$.
   \item \inlinecode{size()} returns the size of the array.
@@ -7228,8 +7160,12 @@ The value type \inlinecode{T} must represent $0$ and support addition, subtracti
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{sum(hi)} returns the sum of all values at indices $[0, {\inlinecodemath{hi}}]$.
   \item \inlinecode{sum(lo, hi)} returns the sum of all values at indices $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
-  \item \inlinecode{max\_prefix(c)} returns the largest boundary \inlinecode{hi} such that \inlinecode{sum(0, hi - 1)} $\leq$ \inlinecode{c}, assuming prefix sums are nondecreasing and \inlinecode{c} is nonnegative. It may return any boundary in $[0, n]$, where $n$ is \inlinecode{size()}.
+  \item \inlinecode{max\_prefix(c)} returns the largest boundary \inlinecode{hi} such that \inlinecode{sum(0, hi - 1)} $\leq$ \inlinecode{c}, assuming prefix sums are nondecreasing and \inlinecode{c} is nonnegative. It may return any boundary in $[0, {\inlinecodemath{n}}]$.
 \end{compactitem}
+
+The value type \inlinecode{T} must represent $0$ and support addition, subtraction, and multiplication by an integer index.
+
+Overflow warning: all index-weighted products and resulting sums must fit in \inlinecode{T}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -7354,8 +7290,6 @@ int main() {
 \subsection{Sparse Fenwick Tree (Range Update, Range Query)}
 Maintain a numerical array over a huge index range while supporting range increments and range-sum queries. This is the sparse version of the two-tree Fenwick range-update/range-query trick: only Fenwick nodes reached by previous operations are stored, using \inlinecode{std::unordered\_map} instead of dense vectors.
 
-The value type \inlinecode{T} must represent $0$ and support addition, subtraction, and multiplication by an integer index.
-
 \begin{compactitem}
   \item \inlinecode{SparseFenwick\textless{}T, N\textgreater{}()} constructs an array with 0-based indices $[0, {\inlinecodemath{N}})$, implicitly initialized to $0$.
   \item \inlinecode{add(i, x)} adds \inlinecode{x} to the value at index \inlinecode{i}.
@@ -7364,8 +7298,12 @@ The value type \inlinecode{T} must represent $0$ and support addition, subtracti
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{sum(hi)} returns the sum of all values at indices $[0, {\inlinecodemath{hi}}]$.
   \item \inlinecode{sum(lo, hi)} returns the sum of all values at indices $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
-  \item \inlinecode{max\_prefix(c)} returns the largest boundary \inlinecode{hi} such that \inlinecode{sum(0, hi - 1)} $\leq$ \inlinecode{c}, assuming prefix sums are nondecreasing and \inlinecode{c} is nonnegative. It may return any boundary in $[0, N]$.
+  \item \inlinecode{max\_prefix(c)} returns the largest boundary \inlinecode{hi} such that \inlinecode{sum(0, hi - 1)} $\leq$ \inlinecode{c}, assuming prefix sums are nondecreasing and \inlinecode{c} is nonnegative. It may return any boundary in $[0, {\inlinecodemath{N}}]$.
 \end{compactitem}
+
+The value type \inlinecode{T} must represent $0$ and support addition, subtraction, and multiplication by an integer index.
+
+Overflow warning: all products of values by indices up to \inlinecode{N}, and all resulting sums, must fit in \inlinecode{T}.
 
 \textbf{Time Complexity}: $O(\log N)$ expected per call to all member functions.
 
@@ -7489,8 +7427,6 @@ int main() {
 \subsection{2D Fenwick Tree}
 Maintain a two-dimensional numerical array while supporting point increments and rectangle-sum queries. This is the two-dimensional form of the standard Fenwick tree: each internal entry stores a rectangular block sum, and a prefix query combines $O(\log\left(R\right) \cdot \log\left(C\right))$ disjoint blocks.
 
-The value type \inlinecode{T} must represent $0$ and support addition and subtraction.
-
 Choose among the three 2D Fenwick trees by coordinate range and update style. Use this dense version when the rows and columns are small enough to allocate the full grid: it has the simplest code and the best constants, supporting point updates and rectangle sums. Use the sparse 2D Fenwick tree (next section) when the coordinates are too large to store densely and the updates arrive online; it relies on hashing and is the only one of the three that also supports rectangle updates. Use the offline 2D Fenwick tree when the coordinates are large but every updated cell is known before the queries begin, which lets it coordinate-compress instead of hashing for markedly better constants than the sparse version. For non-additive aggregates such as min/max with custom updates, use a 2D segment tree instead, since Fenwick-tree algebra relies on addition and subtraction.
 
 \begin{compactitem}
@@ -7502,6 +7438,8 @@ Choose among the three 2D Fenwick trees by coordinate range and update style. Us
   \item \inlinecode{sum(r, c)} returns the sum of the rectangle with rows $[0, {\inlinecodemath{r}}]$ and columns $[0, {\inlinecodemath{c}}]$.
   \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with rows $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
 \end{compactitem}
+
+The value type \inlinecode{T} must represent $0$ and support addition and subtraction.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -7586,12 +7524,10 @@ int main() {
 \subsection{Sparse 2D Fenwick Tree}
 Maintain a 2D numerical array over a huge index range while supporting rectangle increments and rectangle-sum queries. This is the sparse two-dimensional analogue of range-update/range-query Fenwick trees: four sparse trees store the inclusion-exclusion coefficients needed to recover any prefix rectangle sum.
 
-The value type \inlinecode{T} must represent $0$ and support addition, subtraction, and multiplication by integer coordinates.
-
 Choose this for huge sparse grids when the operation is additive: point or rectangle increments and rectangle sums. It avoids allocating the dense \inlinecode{R*C} table of the dense 2D Fenwick tree, and unlike the dense and offline variants it supports rectangle updates, not just point updates. Prefer it over the offline 2D Fenwick tree only when updates arrive online; if every updated cell is known in advance, that version compresses coordinates instead of hashing and runs with better constants. It is less general than the sparse 2D segment tree because Fenwick-tree algebra relies on addition and subtraction.
 
 \begin{compactitem}
-  \item \inlinecode{SparseFenwick2D\textless{}T, R, C\textgreater{}()} constructs a 2D array over rows $[0, R)$ and columns $[0, C)$. All values are implicitly initialized to $0$; nodes are allocated lazily as indices are touched.
+  \item \inlinecode{SparseFenwick2D\textless{}T, R, C\textgreater{}()} constructs a 2D array over rows $[0, {\inlinecodemath{R}})$ and columns $[0, {\inlinecodemath{C}})$. All values are implicitly initialized to $0$; nodes are allocated lazily as indices are touched.
   \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
   \item \inlinecode{add(r1, c1, r2, c2, x)} adds \inlinecode{x} to all indices in the rectangle with rows $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
   \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
@@ -7599,6 +7535,10 @@ Choose this for huge sparse grids when the operation is additive: point or recta
   \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with rows in $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns in $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
   \item \inlinecode{at(r, c)} returns the value at index (\inlinecode{r}, \inlinecode{c}).
 \end{compactitem}
+
+The value type \inlinecode{T} must represent $0$ and support addition, subtraction, and multiplication by integer coordinates.
+
+Overflow warning: all coordinate-weighted products and resulting sums must fit in \inlinecode{T}. In particular, \inlinecode{x * r * c} can overflow even \inlinecode{int64\_t} when both coordinates and values are large.
 
 \textbf{Time Complexity}: $O(\log\left(R\right) \cdot \log\left(C\right))$ expected per call to all member functions.
 
@@ -7724,8 +7664,6 @@ Values:
 \subsection{Offline 2D Fenwick Tree}
 Maintain a 2D numerical array over an arbitrary, possibly huge index range while supporting point increments and rectangle-sum queries, when every coordinate that will ever be updated is known in advance. This offline restriction is what makes the structure cheap: both coordinates are coordinate-compressed against the update points, so no hashing is required and the storage is exactly the set of cells each Fenwick node can ever touch.
 
-The value type \inlinecode{T} must represent $0$ and support addition and subtraction.
-
 The outer dimension is an ordinary Fenwick tree over the sorted distinct update rows. Each outer node owns an inner Fenwick tree over only those columns that reach it along an update path, again stored in a sorted vector. A prefix query maps its row argument to the number of update rows at or below it, walks the outer tree, and within each visited node maps its column argument to a rank by binary search. Compared with the online sparse 2D Fenwick tree backed by hash tables, this is deterministic and has markedly better constants, at the cost of requiring all update locations up front. Prefer the dense 2D Fenwick tree when the coordinates are small enough to allocate directly, and the sparse 2D Fenwick tree when update locations are not known ahead of time or rectangle updates are needed.
 
 Usage is two-phase. First declare every cell that will be updated with \inlinecode{register\_point()}; then call \inlinecode{build()} once; then issue \inlinecode{add()} updates and \inlinecode{sum()} / \inlinecode{at()} queries freely. Updates may only target registered cells. All row and column coordinates must exceed \inlinecode{INT\_MIN}, which is reserved so inclusive rectangle queries can form predecessor bounds.
@@ -7740,6 +7678,8 @@ Usage is two-phase. First declare every cell that will be updated with \inlineco
   \item \inlinecode{sum(r, c)} returns the sum over all registered rows at most \inlinecode{r} and columns at most \inlinecode{c}.
   \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with rows $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
 \end{compactitem}
+
+The value type \inlinecode{T} must represent $0$ and support addition and subtraction.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -8263,17 +8203,14 @@ class SparseTableLCA {
   }
 
  public:
-  explicit SparseTableLCA(const std::vector<std::vector<int>> &adj) : timer(0) {
+  explicit SparseTableLCA(const std::vector<std::vector<int>> &adj)
+      : tin(adj.size()), tout(adj.size()), depth(adj.size()), root(adj.size(), -1), timer(0) {
     int n = static_cast<int>(adj.size());
     len = 1;
     while ((1 << len) <= std::max(1, n)) {
       len++;
     }
     up.assign(n, std::vector<int>(len));
-    tin.assign(n, 0);
-    tout.assign(n, 0);
-    depth.assign(n, 0);
-    root.assign(n, -1);
     for (int u = 0; u < n; u++) {
       if (root[u] == -1) {
         dfs(adj, u, u, u, 0);
@@ -8330,22 +8267,20 @@ class SparseTableLCA {
 #include <cassert>
 using namespace std;
 
-void add_edge(vector<vector<int>> &adj, int u, int v) {
-  adj[u].push_back(v);
-  adj[v].push_back(u);
-}
-
 int main() {
   // 0---1---2    5---6
   // |   |
   // 4   3
   vector<vector<int>> adj(7);
-  add_edge(adj, 0, 1);
-  add_edge(adj, 0, 4);
-  add_edge(adj, 1, 2);
-  add_edge(adj, 1, 3);
-  add_edge(adj, 5, 6);
-
+  auto add_edge = [&](int u, int v) {
+    adj[u].push_back(v);
+    adj[v].push_back(u);
+  };
+  add_edge(0, 1);
+  add_edge(0, 4);
+  add_edge(1, 2);
+  add_edge(1, 3);
+  add_edge(5, 6);
   SparseTableLCA tree(adj);
   assert(tree.go_up(3, 1) == 1);
   assert(tree.go_up(3, 2) == 0);
@@ -8393,7 +8328,7 @@ This reduces LCA to a range-minimum query. An Euler tour of the forest records, 
 #include <vector>
 
 class SegTreeLCA {
-  std::vector<int> depth, order, first, root, minpos;
+  std::vector<int> root, depth, first, order, minpos;
   int len;
 
   void dfs(const std::vector<std::vector<int>> &adj, int u, int r, int d) {
@@ -8411,39 +8346,37 @@ class SegTreeLCA {
 
   int better(int a, int b) const { return depth[a] < depth[b] ? a : b; }
 
-  void build(int node, int lo, int hi) {
+  void build(int i, int lo, int hi) {
     if (lo == hi) {
-      minpos[node] = order[lo];
+      minpos[i] = order[lo];
       return;
     }
     int mid = lo + (hi - lo) / 2;
-    build(2 * node + 1, lo, mid);
-    build(2 * node + 2, mid + 1, hi);
-    minpos[node] = better(minpos[2 * node + 1], minpos[2 * node + 2]);
+    int l = i * 2 + 1, r = i * 2 + 2;
+    build(l, lo, mid);
+    build(r, mid + 1, hi);
+    minpos[i] = better(minpos[l], minpos[r]);
   }
 
-  int get_minpos(int a, int b, int node, int lo, int hi) const {
+  int get_minpos(int a, int b, int i, int lo, int hi) const {
     if (a == lo && b == hi) {
-      return minpos[node];
+      return minpos[i];
     }
     int mid = lo + (hi - lo) / 2;
+    int l = i * 2 + 1, r = i * 2 + 2;
     if (b <= mid) {
-      return get_minpos(a, b, 2 * node + 1, lo, mid);
+      return get_minpos(a, b, l, lo, mid);
     }
     if (mid < a) {
-      return get_minpos(a, b, 2 * node + 2, mid + 1, hi);
+      return get_minpos(a, b, r, mid + 1, hi);
     }
-    return better(
-        get_minpos(a, mid, 2 * node + 1, lo, mid), get_minpos(mid + 1, b, 2 * node + 2, mid + 1, hi)
-    );
+    return better(get_minpos(a, mid, l, lo, mid), get_minpos(mid + 1, b, r, mid + 1, hi));
   }
 
  public:
-  explicit SegTreeLCA(const std::vector<std::vector<int>> &adj) {
+  explicit SegTreeLCA(const std::vector<std::vector<int>> &adj)
+      : root(adj.size(), -1), depth(adj.size(), -1), first(adj.size(), -1) {
     int n = static_cast<int>(adj.size());
-    depth.assign(n, -1);
-    first.assign(n, -1);
-    root.assign(n, -1);
     for (int u = 0; u < n; u++) {
       if (depth[u] == -1) {
         dfs(adj, u, u, 0);
@@ -8477,22 +8410,20 @@ class SegTreeLCA {
 #include <cassert>
 using namespace std;
 
-void add_edge(vector<vector<int>> &adj, int u, int v) {
-  adj[u].push_back(v);
-  adj[v].push_back(u);
-}
-
 int main() {
   // 0---1---2    5---6
   // |   |
   // 4   3
   vector<vector<int>> adj(7);
-  add_edge(adj, 0, 1);
-  add_edge(adj, 0, 4);
-  add_edge(adj, 1, 2);
-  add_edge(adj, 1, 3);
-  add_edge(adj, 5, 6);
-
+  auto add_edge = [&](int u, int v) {
+    adj[u].push_back(v);
+    adj[v].push_back(u);
+  };
+  add_edge(0, 1);
+  add_edge(0, 4);
+  add_edge(1, 2);
+  add_edge(1, 3);
+  add_edge(5, 6);
   SegTreeLCA tree(adj);
   assert(tree.lca(3, 2) == 1);
   assert(tree.lca(2, 4) == 0);
@@ -8565,7 +8496,8 @@ class VirtualTree {
     std::vector<std::pair<int, int>> edges;  // (parent, child) in original node ids.
   };
 
-  VirtualTree(const std::vector<std::vector<int>> &adj, int root) {
+  VirtualTree(const std::vector<std::vector<int>> &adj, int root)
+      : tin(adj.size()), tout(adj.size()), depth(adj.size()), timer(0) {
     int n = static_cast<int>(adj.size());
     assert(0 <= root && root < n);
     len = 1;
@@ -8573,10 +8505,6 @@ class VirtualTree {
       len++;
     }
     up.assign(n, std::vector<int>(len));
-    tin.assign(n, 0);
-    tout.assign(n, 0);
-    depth.assign(n, 0);
-    timer = 0;
     dfs(adj, root, root, 0);
   }
 
@@ -8649,11 +8577,6 @@ class VirtualTree {
 #include <cassert>
 using namespace std;
 
-void add_edge(vector<vector<int>> &adj, int u, int v) {
-  adj[u].push_back(v);
-  adj[v].push_back(u);
-}
-
 int main() {
   //          0
   //        / |
@@ -8661,14 +8584,17 @@ int main() {
   //      /|  |
   //  6--3 4  5--7
   vector<vector<int>> adj(8);
-  add_edge(adj, 0, 1);
-  add_edge(adj, 0, 2);
-  add_edge(adj, 1, 3);
-  add_edge(adj, 1, 4);
-  add_edge(adj, 2, 5);
-  add_edge(adj, 3, 6);
-  add_edge(adj, 5, 7);
-
+  auto add_edge = [&](int u, int v) {
+    adj[u].push_back(v);
+    adj[v].push_back(u);
+  };
+  add_edge(0, 1);
+  add_edge(0, 2);
+  add_edge(1, 3);
+  add_edge(1, 4);
+  add_edge(2, 5);
+  add_edge(3, 6);
+  add_edge(5, 7);
   VirtualTree vt(adj, 0);
   assert(vt.lca(6, 4) == 1);
   assert(vt.lca(6, 7) == 0);
@@ -8677,10 +8603,9 @@ int main() {
   assert(vt.depth_of(7) - vt.depth_of(0) == 3);
 
   // Virtual tree of {6, 7}: their LCA is 0, so the tree is 0 -> {6, 7} with edges compressed.
-  //
   //      0
-  //   +--+--+
-  //   6     7
+  //    / |
+  //   6  7
   VirtualTree::Tree t = vt.build({6, 7});
   assert(t.root == 0);
   assert((t.nodes == vector<int>{0, 6, 7}));
@@ -8690,12 +8615,11 @@ int main() {
   }
 
   // Virtual tree of {6, 4, 7}: node 1 becomes a branch point (LCA of 6 and 4).
-  //
-  //      0
-  //   +--+--+
-  //   1     7
-  // +-+-+
-  // 6   4
+  //        0
+  //      / |
+  //     1  7
+  //   / |
+  //  6  4
   VirtualTree::Tree u = vt.build({6, 4, 7});
   assert(u.root == 0);
   assert((u.nodes == vector<int>{0, 1, 6, 4, 7}));
@@ -8713,16 +8637,16 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Weighted Tree Path Queries (Binary Lifting)}
-Given a tree or forest with weighted edges, aggregate the edge weights along the path between any two nodes in the same tree. The input is undirected; construction roots each component at the first unvisited node in index order. This builds on the same binary lifting table as LCA: alongside \inlinecode{up[u][i]}, the $2^i$-th ancestor of \inlinecode{u}, it stores \inlinecode{agg[u][i]}, the combined weight of the $2^i$ edges traversed by that jump. A path query splits the path \inlinecode{u}-\inlinecode{v} at their lowest common ancestor and merges the two upward climbs.
+Given a tree or forest with weighted edges, aggregate the edge weights along the path between any two nodes in the same tree. The input is undirected; construction roots each component at the first unvisited node in index order. This builds on the same binary lifting table as LCA: for every valid $2^i$-edge jump from \inlinecode{u}, it stores \inlinecode{agg[u][i]}, the combined weight of the edges traversed by that jump. A path query splits the path \inlinecode{u}-\inlinecode{v} at their lowest common ancestor and merges the two upward climbs.
 
-The aggregate is a commutative monoid defined by \inlinecode{combine()} and its identity \inlinecode{identity()}. The two must be edited together; the defaults below compute the maximum edge weight on the path. For the minimum, use \inlinecode{std::min} with \inlinecode{std::numeric\_limits\textless{}W\textgreater{}::max()}; for the sum (the path length), use \inlinecode{a + b} with \inlinecode{W()}. Commutativity is required because the two half-paths are merged without regard to orientation. For an invertible aggregate such as the sum, an alternative that avoids the \inlinecode{agg} table is to store each node's weighted depth \inlinecode{dw[u]} and return \inlinecode{dw[u] + dw[v] - 2*dw[lca]}.
+The aggregate is defined by a commutative, associative \inlinecode{combine()}. The default computes the maximum edge weight on the path. For minimum queries, use \inlinecode{std::min}; for sums, use \inlinecode{a + b}. Commutativity is required because the two half-paths are merged without regard to orientation. For an invertible aggregate such as the sum, an alternative that avoids the \inlinecode{agg} table is to store each node's weighted depth \inlinecode{dw[u]} and return \inlinecode{dw[u] + dw[v] - 2*dw[lca]}.
 
 \begin{compactitem}
   \item \inlinecode{WeightedTree\textless{}W\textgreater{}(adj)} builds the structure over a forest given by a weighted, bidirectional adjacency list \inlinecode{adj}, whose indices represent the nodes and where \inlinecode{adj[u]} holds pairs (\inlinecode{v}, \inlinecode{w}) for each edge \inlinecode{u}-\inlinecode{v} of weight \inlinecode{w}. Each connected component is rooted at its first node reached by the constructor's outer loop.
   \item \inlinecode{lca(u, v)} returns the lowest common ancestor of \inlinecode{u} and \inlinecode{v}, or $-1$ if they lie in different trees.
   \item \inlinecode{kth\_ancestor(u, k)} returns the $k$-th ancestor of \inlinecode{u}, stopping at that tree's root if \inlinecode{k} exceeds \inlinecode{u}'s depth.
   \item \inlinecode{is\_ancestor(parent, child)} returns whether \inlinecode{parent} is an ancestor of \inlinecode{child}.
-  \item \inlinecode{path\_query(u, v)} returns the combined weight of the edges on the path from \inlinecode{u} to \inlinecode{v}, or \inlinecode{identity()} if they lie in different trees. If \inlinecode{u} equals \inlinecode{v} then the path has no edges, so \inlinecode{identity()} is returned.
+  \item \inlinecode{path\_query(u, v)} returns the combined weight of the edges on the path from \inlinecode{u} to \inlinecode{v}. The nodes must be distinct and lie in the same tree.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -8744,14 +8668,13 @@ The aggregate is a commutative monoid defined by \inlinecode{combine()} and its 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <limits>
+#include <optional>
 #include <utility>
 #include <vector>
 
 template<typename W>
 class WeightedTree {
   static W combine(const W &a, const W &b) { return std::max(a, b); }
-  static W identity() { return std::numeric_limits<W>::lowest(); }
 
   std::vector<std::vector<int>> up;
   std::vector<std::vector<W>> agg;  // agg[u][i] = combined weight of the 2^i edges above u.
@@ -8765,11 +8688,13 @@ class WeightedTree {
     up[u][0] = p;
     for (int i = 1; i < len; i++) {
       up[u][i] = up[up[u][i - 1]][i - 1];
-      agg[u][i] = combine(agg[u][i - 1], agg[up[u][i - 1]][i - 1]);
+      if ((1 << i) <= d) {
+        agg[u].push_back(combine(agg[u][i - 1], agg[up[u][i - 1]][i - 1]));
+      }
     }
     for (const auto &[v, w] : adj[u]) {
       if (v != p) {
-        agg[v][0] = w;  // The edge into a child is stored on the child.
+        agg[v].push_back(w);  // The edge into a child is stored on the child.
         dfs(v, u, r, d + 1, adj);
       }
     }
@@ -8777,11 +8702,11 @@ class WeightedTree {
   }
 
   // Combined weight of the k edges on the upward path of k steps from u.
-  W climb(int u, int k) const {
-    W res = identity();
+  std::optional<W> climb(int u, int k) const {
+    std::optional<W> res;
     for (int i = 0; i < len; i++) {
       if ((k & (1 << i)) != 0) {
-        res = combine(res, agg[u][i]);
+        res = res ? combine(*res, agg[u][i]) : agg[u][i];
         u = up[u][i];
       }
     }
@@ -8789,18 +8714,19 @@ class WeightedTree {
   }
 
  public:
-  explicit WeightedTree(const std::vector<std::vector<std::pair<int, W>>> &adj) : timer(0) {
+  explicit WeightedTree(const std::vector<std::vector<std::pair<int, W>>> &adj)
+      : agg(adj.size()),
+        tin(adj.size()),
+        tout(adj.size()),
+        depth(adj.size()),
+        root(adj.size(), -1),
+        timer(0) {
     int n = static_cast<int>(adj.size());
     len = 1;
     while ((1 << len) <= std::max(1, n)) {
       len++;
     }
     up.assign(n, std::vector<int>(len));
-    agg.assign(n, std::vector<W>(len, identity()));
-    tin.assign(n, 0);
-    tout.assign(n, 0);
-    depth.assign(n, 0);
-    root.assign(n, -1);
     for (int u = 0; u < n; u++) {
       if (root[u] == -1) {
         dfs(u, u, u, 0, adj);
@@ -8847,10 +8773,16 @@ class WeightedTree {
 
   W path_query(int u, int v) const {
     int l = lca(u, v);
-    if (l == -1) {
-      return identity();
+    assert(l != -1 && u != v);
+    std::optional<W> left = climb(u, depth[u] - depth[l]);
+    std::optional<W> right = climb(v, depth[v] - depth[l]);
+    if (!left) {
+      return *right;
     }
-    return combine(climb(u, depth[u] - depth[l]), climb(v, depth[v] - depth[l]));
+    if (!right) {
+      return *left;
+    }
+    return combine(*left, *right);
   }
 };
 \end{lstlisting}
@@ -8860,11 +8792,6 @@ class WeightedTree {
 #include <cassert>
 using namespace std;
 
-void add_edge(vector<vector<pair<int, int>>> &adj, int u, int v, int w) {
-  adj[u].push_back({v, w});
-  adj[v].push_back({u, w});
-}
-
 int main() {
   //             0
   //     w=4 /       \ w=2
@@ -8872,32 +8799,32 @@ int main() {
   //  w=7 / \w=1   w=5/ \ w=3
   //     3   4       5   6
   vector<vector<pair<int, int>>> adj(7);
-  add_edge(adj, 0, 1, 4);
-  add_edge(adj, 0, 2, 2);
-  add_edge(adj, 1, 3, 7);
-  add_edge(adj, 1, 4, 1);
-  add_edge(adj, 2, 5, 5);
-  add_edge(adj, 2, 6, 3);
-  WeightedTree<int> tree(adj);
-
-  assert(tree.lca(3, 4) == 1);
-  assert(tree.lca(5, 6) == 2);
-  assert(tree.lca(3, 6) == 0);
-
-  assert(tree.kth_ancestor(3, 1) == 1);
-  assert(tree.kth_ancestor(3, 2) == 0);
-  assert(tree.kth_ancestor(3, 5) == 0);  // Clamped to the root.
-
+  auto add_edge = [&](int u, int v, int w) {
+    adj[u].emplace_back(v, w);
+    adj[v].emplace_back(u, w);
+  };
+  add_edge(0, 1, 4);
+  add_edge(0, 2, 2);
+  add_edge(1, 3, 7);
+  add_edge(1, 4, 1);
+  add_edge(2, 5, 5);
+  add_edge(2, 6, 3);
+  WeightedTree<int> t(adj);
+  assert(t.lca(3, 4) == 1);
+  assert(t.lca(5, 6) == 2);
+  assert(t.lca(3, 6) == 0);
+  assert(t.kth_ancestor(3, 1) == 1);
+  assert(t.kth_ancestor(3, 2) == 0);
+  assert(t.kth_ancestor(3, 5) == 0);  // Clamped to the root.
   // Default combine() reports the maximum edge weight on the path.
-  assert(tree.path_query(3, 4) == 7);  // 3-1 (7), 1-4 (1).
-  assert(tree.path_query(5, 6) == 5);  // 5-2 (5), 2-6 (3).
-  assert(tree.path_query(4, 5) == 5);  // 4-1 (1), 1-0 (4), 0-2 (2), 2-5 (5).
-  assert(tree.path_query(0, 3) == 7);  // 0-1 (4), 1-3 (7).
+  assert(t.path_query(3, 4) == 7);  // 3-1 (7), 1-4 (1).
+  assert(t.path_query(5, 6) == 5);  // 5-2 (5), 2-6 (3).
+  assert(t.path_query(4, 5) == 5);  // 4-1 (1), 1-0 (4), 0-2 (2), 2-5 (5).
+  assert(t.path_query(0, 3) == 7);  // 0-1 (4), 1-3 (7).
 
   vector<vector<pair<int, int>>> forest(2);
   WeightedTree<int> disconnected(forest);
   assert(disconnected.lca(0, 1) == -1);
-  assert(disconnected.path_query(0, 1) == numeric_limits<int>::lowest());
   return 0;
 }
 \end{lstlisting}
@@ -8909,7 +8836,7 @@ The query operation is defined by an associative \inlinecode{combine()} function
 The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{compose\_deltas()}. A delta must act on an aggregate summary of a path of length \inlinecode{len}: \inlinecode{apply\_delta(v, d, len)} returns the aggregate after applying update \inlinecode{d} to every element represented by aggregate \inlinecode{v}. Pending deltas are combined in chronological order by \inlinecode{compose\_deltas(old, d)}, meaning ``apply \inlinecode{old}, then apply \inlinecode{d}''. These hooks do not support arbitrary query/update pairings; the delta operation must distribute over \inlinecode{combine()}, and composed deltas must have the same effect as applying their updates sequentially. The default code below defines updates that ``set'' a path's edges or nodes to a new value. For range increment updates, \inlinecode{apply\_delta(v, d, len)} would return \inlinecode{v + d} for min/max queries, or \inlinecode{v + d * len} for sum queries, and \inlinecode{compose\_deltas(old, d)} would return \inlinecode{old + d}.
 
 \begin{compactitem}
-  \item \inlinecode{HeavyLight\textless{}T, VALUES\_ON\_EDGES = true\textgreater{}(adj, value)} constructs a new heavy light decomposition on a forest defined by the adjacency list \inlinecode{adj}, with all values initialized to \inlinecode{value}. Its entries must be valid indices into \inlinecode{adj}, and no duplicate edges should exist. Set \inlinecode{VALUES\_ON\_EDGES} to false to store values on nodes instead.
+  \item \inlinecode{HeavyLight\textless{}T, VALUES\_ON\_EDGES = true\textgreater{}(adj, v)} constructs a new heavy light decomposition on a forest defined by the adjacency list \inlinecode{adj}, with all values initialized to \inlinecode{v}. Its entries must be valid indices into \inlinecode{adj}, and no duplicate edges should exist. Set \inlinecode{VALUES\_ON\_EDGES} to false to store values on nodes instead.
   \item \inlinecode{query(u, v)} returns the result of \inlinecode{combine()} applied to all values on the path from node \inlinecode{u} to node \inlinecode{v}. The nodes must be in the same tree and, when values are on edges, must be distinct.
   \item \inlinecode{update(u, v, d)} modifies all values on the path from node \inlinecode{u} to node \inlinecode{v} by applying the delta \inlinecode{d}. The nodes must be in the same tree.
   \item \inlinecode{for\_each\_path(u, v, include\_lca, f)} decomposes the path from node \inlinecode{u} to node \inlinecode{v} into heavy path ranges and calls \inlinecode{f(path, lo, hi, up)} on each range, where \inlinecode{up} says the path segment is traversed upward from \inlinecode{u} toward the LCA. If \inlinecode{VALUES\_ON\_EDGES = true}, pass \inlinecode{include\_lca = false} to skip the LCA's node slot. Returns false if \inlinecode{u} and \inlinecode{v} are in different trees.
@@ -8934,6 +8861,7 @@ The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{c
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
+#include <optional>
 #include <tuple>
 #include <vector>
 
@@ -8944,8 +8872,8 @@ class HeavyLight {
   static T compose_deltas(const T &old, const T &d) { return d; }
 
   std::vector<std::vector<int>> adj;
-  std::vector<std::vector<T>> value, delta;
-  std::vector<std::vector<char>> pending;
+  std::vector<std::vector<T>> value;
+  std::vector<std::vector<std::optional<T>>> delta;
   std::vector<std::vector<int>> len;
   std::vector<int> size, parent, root, tin, tout, path, pathlen, pathpos, pathroot;
   int counter, paths;
@@ -8980,8 +8908,8 @@ class HeavyLight {
   }
 
   inline T applied_value(int path_id, int i) {
-    return pending[path_id][i] ? apply_delta(value[path_id][i], delta[path_id][i], len[path_id][i])
-                               : value[path_id][i];
+    return delta[path_id][i] ? apply_delta(value[path_id][i], *delta[path_id][i], len[path_id][i])
+                             : value[path_id][i];
   }
 
   void push_delta(int path_id, int i) {
@@ -8991,37 +8919,31 @@ class HeavyLight {
     }
     for (d -= 2; d >= 0; d--) {
       int l = (i >> d), r = (l ^ 1), n = l / 2;
-      if (pending[path_id][n]) {
+      if (delta[path_id][n]) {
         value[path_id][n] = applied_value(path_id, n);
-        delta[path_id][l] = pending[path_id][l]
-                                ? compose_deltas(delta[path_id][l], delta[path_id][n])
-                                : delta[path_id][n];
-        delta[path_id][r] = pending[path_id][r]
-                                ? compose_deltas(delta[path_id][r], delta[path_id][n])
-                                : delta[path_id][n];
-        pending[path_id][l] = pending[path_id][r] = true;
-        pending[path_id][n] = false;
+        const T &d = *delta[path_id][n];
+        delta[path_id][l] = delta[path_id][l] ? compose_deltas(*delta[path_id][l], d) : d;
+        delta[path_id][r] = delta[path_id][r] ? compose_deltas(*delta[path_id][r], d) : d;
+        delta[path_id][n].reset();
       }
     }
   }
 
-  bool query(int path_id, int u, int v, T *res) {
+  std::optional<T> query(int path_id, int u, int v) {
     push_delta(path_id, u += static_cast<int>(value[path_id].size()) / 2);
     push_delta(path_id, v += static_cast<int>(value[path_id].size()) / 2);
-    bool found = false;
+    std::optional<T> res;
     for (; u <= v; u = (u + 1) / 2, v = (v - 1) / 2) {
       if ((u & 1) != 0) {
         T part_value = applied_value(path_id, u);
-        *res = found ? combine(*res, part_value) : part_value;
-        found = true;
+        res = res ? combine(*res, part_value) : part_value;
       }
       if ((v & 1) == 0) {
         T part_value = applied_value(path_id, v);
-        *res = found ? combine(*res, part_value) : part_value;
-        found = true;
+        res = res ? combine(*res, part_value) : part_value;
       }
     }
-    return found;
+    return res;
   }
 
   void update(int path_id, int u, int v, const T &d) {
@@ -9030,15 +8952,13 @@ class HeavyLight {
     int tu = -1, tv = -1;
     for (; u <= v; u = (u + 1) / 2, v = (v - 1) / 2) {
       if ((u & 1) != 0) {
-        delta[path_id][u] = pending[path_id][u] ? compose_deltas(delta[path_id][u], d) : d;
-        pending[path_id][u] = true;
+        delta[path_id][u] = delta[path_id][u] ? compose_deltas(*delta[path_id][u], d) : d;
         if (tu == -1) {
           tu = u;
         }
       }
       if ((v & 1) == 0) {
-        delta[path_id][v] = pending[path_id][v] ? compose_deltas(delta[path_id][v], d) : d;
-        pending[path_id][v] = true;
+        delta[path_id][v] = delta[path_id][v] ? compose_deltas(*delta[path_id][v], d) : d;
         if (tv == -1) {
           tv = v;
         }
@@ -9057,7 +8977,7 @@ class HeavyLight {
   }
 
  public:
-  explicit HeavyLight(const std::vector<std::vector<int>> &adj, const T &initial_value = T())
+  explicit HeavyLight(const std::vector<std::vector<int>> &adj, const T &v = T())
       : adj(adj),
         size(adj.size()),
         parent(adj.size()),
@@ -9078,13 +8998,11 @@ class HeavyLight {
     }
     value.resize(paths);
     delta.resize(paths);
-    pending.resize(paths);
     len.resize(paths);
     for (int i = 0; i < paths; i++) {
       int m = pathlen[i];
-      value[i].assign(2 * m, initial_value);
+      value[i].assign(2 * m, v);
       delta[i].resize(2 * m);
-      pending[i].assign(2 * m, false);
       len[i].assign(2 * m, 1);
       for (int j = 2 * m - 1; j > 1; j -= 2) {
         value[i][j / 2] = combine(value[i][j], value[i][j ^ 1]);
@@ -9127,16 +9045,14 @@ class HeavyLight {
     assert(0 <= v && v < static_cast<int>(root.size()));
     assert(root[u] == root[v]);
     assert(!VALUES_ON_EDGES || u != v);
-    bool found = false;
-    T res = T(), part_value;
+    std::optional<T> res;
     for_each_path(u, v, !VALUES_ON_EDGES, [&](int path_id, int lo, int hi, bool) {
-      if (query(path_id, lo, hi, &part_value)) {
-        res = found ? combine(res, part_value) : part_value;
-        found = true;
+      if (auto part = query(path_id, lo, hi)) {
+        res = res ? combine(*res, *part) : *part;
       }
     });
-    assert(found);
-    return res;
+    assert(res);
+    return *res;
   }
 
   void update(int u, int v, const T &d) {
@@ -9157,11 +9073,6 @@ class HeavyLight {
 \begin{lstlisting}[language=C++]
 using namespace std;
 
-void add_edge(vector<vector<int>> &adj, int u, int v) {
-  adj[u].push_back(v);
-  adj[v].push_back(u);
-}
-
 int main() {
   //   v=40   v=20   v=10
   // 0------1------2------3    5------6
@@ -9169,11 +9080,15 @@ int main() {
   //               +------4
   //                 v=30
   vector<vector<int>> adj(7);
-  add_edge(adj, 0, 1);
-  add_edge(adj, 1, 2);
-  add_edge(adj, 2, 3);
-  add_edge(adj, 2, 4);
-  add_edge(adj, 5, 6);
+  auto add_edge = [&](int u, int v) {
+    adj[u].push_back(v);
+    adj[v].push_back(u);
+  };
+  add_edge(0, 1);
+  add_edge(1, 2);
+  add_edge(2, 3);
+  add_edge(2, 4);
+  add_edge(5, 6);
   HeavyLight<int> hld(adj, 0);
   hld.update(0, 1, 40);
   hld.update(1, 2, 20);
@@ -9181,7 +9096,6 @@ int main() {
   hld.update(2, 4, 30);
   assert(hld.query(0, 3) == 10);
   assert(hld.query(2, 4) == 30);
-  hld.update(3, 4, 5);
 
   // Update path 3-2-4 to value 5:
   //
@@ -9190,13 +9104,14 @@ int main() {
   //               |
   //               +------4
   //                  v=5
+  hld.update(3, 4, 5);
   assert(hld.query(1, 4) == 5);
-  hld.update(5, 6, 7);
 
   // The disconnected component can be updated independently:
   //
   // 5------6
   //   v=7
+  hld.update(5, 6, 7);
   assert(hld.query(5, 6) == 7);
   assert(!hld.for_each_path(0, 5, true, [](int, int, int, bool) {}));
 
@@ -9206,7 +9121,6 @@ int main() {
   //                 +------4
   //                      v=100
   HeavyLight<int, false> node_hld(adj, 100);
-  node_hld.update(1, 4, 8);
 
   // Update nodes on path 1-2-4 to value 8:
   //
@@ -9215,6 +9129,7 @@ int main() {
   //                 |
   //                 +------4
   //                       v=8
+  node_hld.update(1, 4, 8);
   assert(node_hld.query(0, 3) == 8);    // Min over nodes 0, 1, 2, 3.
   assert(node_hld.query(5, 5) == 100);  // Single-node paths are allowed.
   node_hld.update(5, 5, 7);
@@ -9270,21 +9185,18 @@ class EulerTourTree {
   int n;
   std::mt19937 rng;
   std::vector<std::unordered_map<int, Node *>> adj;
-  std::unordered_set<Node *> allocated;
 
   static int size(Node *t) { return t == nullptr ? 0 : t->size; }
-
-  static void set_parent(Node *t, Node *p) {
-    if (t != nullptr) {
-      t->parent = p;
-    }
-  }
 
   static void update(Node *t) {
     if (t != nullptr) {
       t->size = 1 + size(t->left) + size(t->right);
-      set_parent(t->left, t);
-      set_parent(t->right, t);
+      if (t->left != nullptr) {
+        t->left->parent = t;
+      }
+      if (t->right != nullptr) {
+        t->right->parent = t;
+      }
     }
   }
 
@@ -9336,14 +9248,12 @@ class EulerTourTree {
       auto [a, b] = split(t->left, left_size);
       t->left = b;
       update(t);
-      set_parent(a, nullptr);
       t->parent = nullptr;
       return {a, t};
     }
     auto [a, b] = split(t->right, left_size - size(t->left) - 1);
     t->right = a;
     update(t);
-    set_parent(b, nullptr);
     t->parent = nullptr;
     return {t, b};
   }
@@ -9362,12 +9272,7 @@ class EulerTourTree {
     return rest;
   }
 
-  Node *new_node(int u, int v) {
-    Node *node = new Node(u, v, std::uniform_int_distribution<int>()(rng));
-    allocated.insert(node);
-    return node;
-  }
-
+  Node *new_node(int u, int v) { return new Node(u, v, std::uniform_int_distribution<int>()(rng)); }
   Node *any_occurrence(int u) const { return adj[u].empty() ? nullptr : adj[u].begin()->second; }
 
   static void collect(Node *t, std::unordered_set<int> &out) {
@@ -9383,8 +9288,10 @@ class EulerTourTree {
   explicit EulerTourTree(int n) : n(n), rng(std::random_device{}()), adj(n) {}
 
   ~EulerTourTree() {
-    for (Node *node : allocated) {
-      delete node;
+    for (const auto &neighbors : adj) {
+      for (const auto &[_, n] : neighbors) {
+        delete n;
+      }
     }
   }
 
@@ -9440,8 +9347,6 @@ class EulerTourTree {
     remove_first(right);  // Remove vu.
     adj[u].erase(v);
     adj[v].erase(u);
-    allocated.erase(uv);
-    allocated.erase(vu);
     delete uv;
     delete vu;
     return true;
@@ -9470,11 +9375,10 @@ int main() {
   assert(!ett.connected(0, 1));
   assert(ett.connected(0, 0));
 
+  // 0---1---2    3---4    5
   assert(ett.link(0, 1));
   assert(ett.link(1, 2));
   assert(ett.link(3, 4));
-
-  // 0---1---2    3---4    5
   assert(ett.connected(0, 2));
   assert(!ett.connected(0, 4));
   assert(!ett.link(0, 2));  // Would create a cycle.
@@ -9482,18 +9386,16 @@ int main() {
   auto c = ett.component_nodes(1);
   sort(c.begin(), c.end());
   assert((c == vector<int>{0, 1, 2}));
-
   ett.reroot(2);
   assert(ett.connected(0, 2));
-  assert(ett.cut(1, 2));
 
   // 0---1     2    3---4    5
+  assert(ett.cut(1, 2));
   assert(!ett.connected(0, 2));
   assert((ett.component_nodes(2) == vector<int>{2}));
 
-  assert(ett.link(2, 3));
-
   // 0---1     2---3---4    5
+  assert(ett.link(2, 3));
   assert(ett.connected(0, 4) == false);
   assert(ett.connected(2, 4));
   assert(!ett.cut(0, 5));
@@ -9825,24 +9727,23 @@ int main() {
   lcf.reroot(4);
   assert(lcf.lca(0, 3) == 2);  // Rerooting at 4 changes the LCA of 0 and 3.
 
-  lcf.update(1, 1, 100);
-  lcf.update(2, 4, 100);
-
   // v=10     v=100     v=100      v=10
   //  0---------1---------2---------3
   //                      |
   //                      +---------4
   //                              v=100
+  lcf.update(1, 1, 100);
+  lcf.update(2, 4, 100);
   assert(lcf.query(4, 4) == 100);
   assert(lcf.query(0, 4) == 10);
   assert(lcf.query(3, 4) == 10);
-  lcf.cut(1, 2);
 
   // v=10     v=100     v=100      v=0
   //  0---------1         2---------3
   //                      |
   //                      +---------4
   //                              v=100
+  lcf.cut(1, 2);
   assert(lcf.trees() == 2);
   assert(!lcf.connected(1, 2));
   assert(!lcf.connected(0, 4));
@@ -9851,11 +9752,11 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Top Tree}
-Maintain a dynamic forest while supporting both path aggregates and rooted-subtree aggregates. Top trees represent each tree as a hierarchy of clusters. A path cluster summarizes a contiguous path, while non-path clusters are raked onto nodes so that changing the preferred path only requires a logarithmic number of local rotations and recomputations.
+Maintain a dynamic forest with values on both nodes and edges, supporting connectivity, linking and cutting edges, rerooting, and path and rooted-subtree aggregate queries. A top tree represents each tree as a hierarchy of clusters, each with at most two boundary nodes. Path clusters summarize contiguous paths, while non-path clusters rake side subtrees into a boundary node. Changing the exposed path requires only a logarithmic number of local rotations and recomputations.
 
-This is an advanced alternative to link/cut trees. Link/cut trees are usually simpler for dynamic path queries; top trees are useful when the same dynamic forest also needs rooted-subtree queries.
+This is an advanced alternative to link/cut trees. Link/cut trees are usually simpler when only path queries are needed, but top trees handle when the dynamic forest also needs rooted-subtree queries.
 
-The aggregate operation is defined by an identity element \inlinecode{identity()} and an associative \inlinecode{combine(a, b)}. The default code below computes sums over node and edge values. For minimum queries, use \inlinecode{std::numeric\_limits\textless{}T\textgreater{}::max()} as the identity and \inlinecode{std::min(a, b)} as the combine function. For non-commutative aggregates, store enough information in \inlinecode{T} to support reversing a path, and update \inlinecode{flip\_path()} accordingly.
+The aggregate operation is defined by an associative \inlinecode{combine(a, b)}. The default code below computes sums over node and edge values. For minimum queries, use \inlinecode{std::min(a, b)}. For non-commutative aggregates, store enough information in \inlinecode{T} to support reversing a path, and update \inlinecode{flip\_path()} accordingly.
 
 \begin{compactitem}
   \item \inlinecode{TopTree(n, value = T())} constructs a forest on nodes $[0, {\inlinecodemath{n}})$ with every node value initialized to \inlinecode{value}.
@@ -9895,40 +9796,33 @@ The aggregate operation is defined by an identity element \inlinecode{identity()
 
 template<typename T>
 class TopTree {
-  static T identity() { return T(); }
   static T combine(const T &a, const T &b) { return a + b; }
 
   struct Node {
     Node *p;
-    std::array<Node *, 3> c;
+    std::array<Node *, 3> c;  // c[0] and c[1] are auxiliary children; c[2] is the raked path child.
     T value, path_value, subtree_value;
-    int graph_node_id, edge_id;
+    int graph_node_id;
     bool is_path, is_graph_node, lazy_flip_path, alive;
 
-    Node(const T &value, int graph_node_id, int edge_id)
+    Node(const T &value, int graph_node_id)
         : p(nullptr),
           c{nullptr, nullptr, nullptr},
           value(value),
           path_value(value),
           subtree_value(value),
           graph_node_id(graph_node_id),
-          edge_id(edge_id),
           is_path(graph_node_id != -1),
           is_graph_node(graph_node_id != -1),
           lazy_flip_path(false),
           alive(graph_node_id != -1) {}
 
-    static T path_value_of(Node *n) { return n == nullptr ? identity() : n->path_value; }
-    static T subtree_value_of(Node *n) { return n == nullptr ? identity() : n->subtree_value; }
-
     int dir() const {
       assert(p != nullptr);
-      if (this == p->c[0]) {
-        return 0;
-      } else if (this == p->c[1]) {
-        return 1;
-      } else if (this == p->c[2]) {
-        return 2;
+      for (int i = 0; i < 3; i++) {
+        if (this == p->c[i]) {
+          return i;
+        }
       }
       assert(false);
       return -1;
@@ -9936,6 +9830,22 @@ class TopTree {
 
     Node *&parent_child() const { return p->c[dir()]; }
     bool root_of_auxiliary_tree() const { return p == nullptr || p->is_path != is_path; }
+
+    void set_child(int i, Node *child) {
+      c[i] = child;
+      if (child != nullptr) {
+        child->p = this;
+      }
+    }
+
+    static void replace_in_parent(Node *old, Node *replacement) {
+      assert(replacement->p == old);
+      if (old->p != nullptr) {
+        old->parent_child() = replacement;
+      }
+      replacement->p = old->p;
+      old->p = nullptr;
+    }
 
     void flip_path() {
       assert(is_path);
@@ -9971,19 +9881,38 @@ class TopTree {
       return cur;
     }
 
+    void prepend_subtree(Node *n) {
+      if (n != nullptr) {
+        subtree_value = combine(n->subtree_value, subtree_value);
+      }
+    }
+
+    void append_subtree(Node *n) {
+      if (n != nullptr) {
+        subtree_value = combine(subtree_value, n->subtree_value);
+      }
+    }
+
     void pull() {
+      subtree_value = value;
       if (is_graph_node) {
         path_value = value;
-        subtree_value = combine(combine(value, subtree_value_of(c[0])), subtree_value_of(c[1]));
+        append_subtree(c[0]);
+        append_subtree(c[1]);
       } else if (is_path) {
-        path_value = combine(combine(path_value_of(c[0]), value), path_value_of(c[1]));
-        subtree_value = combine(combine(subtree_value_of(c[0]), value), subtree_value_of(c[1]));
+        path_value = value;
+        if (c[0] != nullptr) {
+          path_value = combine(c[0]->path_value, path_value);
+          prepend_subtree(c[0]);
+        }
+        if (c[1] != nullptr) {
+          path_value = combine(path_value, c[1]->path_value);
+          append_subtree(c[1]);
+        }
       } else {
-        path_value = identity();
-        subtree_value = combine(
-            combine(subtree_value_of(c[0]), value),
-            combine(subtree_value_of(c[2]), subtree_value_of(c[1]))
-        );
+        prepend_subtree(c[0]);
+        append_subtree(c[2]);
+        append_subtree(c[1]);
       }
     }
 
@@ -9994,16 +9923,9 @@ class TopTree {
       int x = dir();
       assert(x == 0 || x == 1);
       Node *child = c[!x];
-      if (parent->p != nullptr) {
-        parent->parent_child() = this;
-      }
-      p = parent->p;
-      parent->c[x] = child;
-      if (child != nullptr) {
-        child->p = parent;
-      }
-      c[!x] = parent;
-      parent->p = this;
+      replace_in_parent(parent, this);
+      parent->set_child(x, child);
+      set_child(!x, parent);
       parent->pull();
     }
 
@@ -10020,17 +9942,11 @@ class TopTree {
       int x = dir();
       assert(x == 0 || x == 1);
       assert(child_dir == !x);
-      Node *child = c[child_dir]->c[!x];
-      if (parent->p != nullptr) {
-        parent->parent_child() = this;
-      }
-      p = parent->p;
-      parent->c[x] = child;
-      if (child != nullptr) {
-        child->p = parent;
-      }
-      c[child_dir]->c[!x] = parent;
-      parent->p = c[child_dir];
+      Node *middle = c[child_dir];
+      Node *child = middle->c[!x];
+      replace_in_parent(parent, this);
+      parent->set_child(x, child);
+      middle->set_child(!x, parent);
       parent->pull();
     }
 
@@ -10098,13 +10014,13 @@ class TopTree {
       }
     }
 
-    Node *cut_right() {
+    void cut_right() {
       assert(is_graph_node && is_path);
       splay_graph_node();
       if (root_of_auxiliary_tree() || dir() == 1) {
         assert(root_of_auxiliary_tree() || (dir() == 1 && p->root_of_auxiliary_tree()));
         assert(c[0] == nullptr);
-        return nullptr;
+        return;
       }
       Node *parent = p;
       assert(
@@ -10115,27 +10031,16 @@ class TopTree {
       assert(parent->is_path);
       assert(parent->c[0] == this);
       assert(parent->c[2] == nullptr);
-      if (parent->p != nullptr) {
-        parent->parent_child() = this;
-      }
-      p = parent->p;
+      replace_in_parent(parent, this);
       parent->is_path = false;
-      parent->c[2] = parent->c[1];
-      parent->c[0] = c[0];
-      if (c[0] != nullptr) {
-        c[0]->p = parent;
-      }
-      parent->c[1] = c[1];
-      if (c[1] != nullptr) {
-        c[1]->p = parent;
-      }
-      c[0] = nullptr;
-      c[1] = parent;
-      parent->p = this;
+      parent->set_child(2, parent->c[1]);
+      parent->set_child(0, c[0]);
+      parent->set_child(1, c[1]);
+      set_child(0, nullptr);
+      set_child(1, parent);
       assert(c[2] == nullptr);
       assert(c[0] == nullptr);
       parent->pull();
-      return parent;
     }
 
     Node *splice_non_path() {
@@ -10151,23 +10056,13 @@ class TopTree {
       assert(p->root_of_auxiliary_tree() || (p->dir() == 1 && p->p->root_of_auxiliary_tree()));
       assert(p->c[dir()] == this && p->c[!dir()] == nullptr);
       Node *parent = p;
-      if (parent->p != nullptr) {
-        parent->parent_child() = this;
-      }
-      p = parent->p;
-      parent->c[0] = c[0];
-      if (c[0] != nullptr) {
-        c[0]->p = parent;
-      }
-      parent->c[1] = c[1];
-      if (c[1] != nullptr) {
-        c[1]->p = parent;
-      }
+      replace_in_parent(parent, this);
+      parent->set_child(0, c[0]);
+      parent->set_child(1, c[1]);
       assert(c[2] != nullptr && c[2]->is_path);
-      c[1] = c[2];
-      c[0] = parent;
-      parent->p = this;
-      c[2] = nullptr;
+      set_child(1, c[2]);
+      set_child(0, parent);
+      set_child(2, nullptr);
       is_path = true;
       parent->pull();
       return parent;
@@ -10193,7 +10088,7 @@ class TopTree {
       return res;
     }
 
-    Node *expose_edge() {
+    void expose_edge() {
       assert(!is_graph_node);
       push_all();
       Node *v = is_path ? c[1] : c[2];
@@ -10202,12 +10097,11 @@ class TopTree {
         v = v->c[0];
         v->push();
       }
-      Node *res = v->splice_all();
+      v->splice_all();
       v->cut_right();
       v->pull_all();
       assert(p == nullptr);
       assert(v == c[1]);
-      return res == v ? this : res;
     }
 
     Node *meld_path_end() {
@@ -10233,13 +10127,12 @@ class TopTree {
         }
         child->splay();
         assert(child->c[0] == nullptr);
-        child->c[0] = rt->c[0];
-        child->c[0]->p = child;
-        rt->c[0] = nullptr;
+        child->set_child(0, rt->c[0]);
+        rt->set_child(0, nullptr);
         child->pull();
       } else if (rt->c[0] != nullptr) {
-        rt->c[1] = rt->c[0];
-        rt->c[0] = nullptr;
+        rt->set_child(1, rt->c[0]);
+        rt->set_child(0, nullptr);
       }
       assert(rt->c[0] == nullptr);
       return rt->pull_all();
@@ -10274,27 +10167,24 @@ class TopTree {
     edge->is_path = true;
     edge->is_graph_node = false;
     edge->alive = true;
-    edge->c[0] = u;
-    u->p = edge;
-    edge->c[1] = v;
-    v->p = edge;
+    edge->set_child(0, u);
+    edge->set_child(1, v);
     edge->pull();
   }
 
-  static std::pair<Node *, Node *> cut_node(Node *edge) {
+  static void cut_node(Node *edge) {
     assert(edge != nullptr && edge->alive && !edge->is_graph_node);
     edge->expose_edge();
     assert(edge->p == nullptr);
     assert(edge->is_path);
     Node *l = edge->c[0], *r = edge->c[1];
     assert(l != nullptr && r != nullptr);
-    edge->c[0] = edge->c[1] = edge->c[2] = nullptr;
+    edge->c.fill(nullptr);
     l->p = r->p = nullptr;
-    l = l->meld_path_end();
+    l->meld_path_end();
     edge->is_path = false;
     edge->alive = false;
     edge->pull();
-    return {l, r};
   }
 
   static Node *get_path(Node *u, Node *v) {
@@ -10315,11 +10205,6 @@ class TopTree {
     return u;
   }
 
-  static Node *lca_same_component(Node *u, Node *v) {
-    u->expose();
-    return v->expose();
-  }
-
   static Node *maybe_lca_node(Node *u, Node *v) {
     u->expose();
     Node *up = u->p;
@@ -10337,7 +10222,7 @@ class TopTree {
     assert(n >= 0);
     graph_nodes.reserve(n);
     for (int i = 0; i < n; i++) {
-      graph_nodes.push_back(new Node(value, i, -1));
+      graph_nodes.push_back(new Node(value, i));
     }
   }
 
@@ -10368,7 +10253,7 @@ class TopTree {
       return -1;
     }
     int id = edges();
-    edge_nodes.push_back(new Node(value, -1, id));
+    edge_nodes.push_back(new Node(value, -1));
     link_nodes(edge_nodes.back(), graph_nodes[u], graph_nodes[v]);
     return id;
   }
@@ -10410,7 +10295,8 @@ class TopTree {
 
   int lca(int u, int v) {
     assert(connected(u, v));
-    return lca_same_component(graph_nodes[u], graph_nodes[v])->graph_node_id;
+    graph_nodes[u]->expose();
+    return graph_nodes[v]->expose()->graph_node_id;
   }
 
   int maybe_lca(int u, int v) {
@@ -10427,16 +10313,16 @@ class TopTree {
 using namespace std;
 
 int main() {
-  TopTree<int> tree(5);
+  TopTree<int> t(5);
   for (int i = 0; i < 5; i++) {
-    tree.set_node(i, i + 1);
+    t.set_node(i, i + 1);
   }
-  int e01 = tree.link(0, 1, 10);
-  int e12 = tree.link(1, 2, 20);
-  int e13 = tree.link(1, 3, 30);
-  int e34 = tree.link(3, 4, 40);
+  int e01 = t.link(0, 1, 10);
+  int e12 = t.link(1, 2, 20);
+  int e13 = t.link(1, 3, 30);
+  int e34 = t.link(3, 4, 40);
   assert(e01 == 0 && e12 == 1 && e13 == 2 && e34 == 3);
-  assert(tree.link(0, 4, 100) == -1);
+  assert(t.link(0, 4, 100) == -1);
 
   //       0
   //  v=10 |
@@ -10445,11 +10331,9 @@ int main() {
   //     2   3
   //         | v=40
   //         4
-  assert(tree.path_query(2, 4) == 104);
-  assert(tree.subtree_query(0, 3) == 49);
-  assert(tree.lca(2, 4) == 1);
-
-  tree.cut(e13);
+  assert(t.path_query(2, 4) == 104);
+  assert(t.subtree_query(0, 3) == 49);
+  assert(t.lca(2, 4) == 1);
 
   // Cut edge 1-3:
   //
@@ -10458,10 +10342,9 @@ int main() {
   //       1       3
   // v=20 /        | v=40
   //     2         4
-  assert(!tree.connected(2, 4));
-  assert(tree.maybe_lca(2, 4) == -1);
-  e13 = tree.link(2, 4, 30);
-  assert(e13 == 4);
+  t.cut(e13);
+  assert(!t.connected(2, 4));
+  assert(t.maybe_lca(2, 4) == -1);
 
   // Re-link 2-4 with value 30:
   //
@@ -10471,10 +10354,9 @@ int main() {
   // v=20 /         | v=40
   //     2----------4
   //         v=30
-  assert(tree.path_query(0, 3) == 115);
-
-  tree.set_edge(e34, 4);
-  tree.set_node(4, 50);
+  e13 = t.link(2, 4, 30);
+  assert(e13 == 4);
+  assert(t.path_query(0, 3) == 115);
 
   // Change edge 3-4 to value 4 and node 4 to value 50:
   //
@@ -10484,8 +10366,10 @@ int main() {
   // v=20 /         | v=4
   //     2----------4
   //        v=30   v=50
-  assert(tree.subtree_query(2, 4) == 58);
-  assert(tree.path_query(0, 3) == 124);
+  t.set_edge(e34, 4);
+  t.set_node(4, 50);
+  assert(t.subtree_query(2, 4) == 58);
+  assert(t.path_query(0, 3) == 124);
   return 0;
 }
 \end{lstlisting}

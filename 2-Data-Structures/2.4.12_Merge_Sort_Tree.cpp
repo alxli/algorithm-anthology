@@ -36,31 +36,31 @@ class MergeSortTree {
   int len;
   std::vector<std::vector<T>> tree;
 
-  void build(int node, int lo, int hi, const std::vector<T> &a) {
+  void build(int i, int lo, int hi, const std::vector<T> &a) {
     if (lo == hi) {
-      tree[node] = {a[lo]};
+      tree[i] = {a[lo]};
       return;
     }
     int mid = lo + (hi - lo) / 2;
-    build(2 * node, lo, mid, a);
-    build(2 * node + 1, mid + 1, hi, a);
+    build(i * 2, lo, mid, a);
+    build(i * 2 + 1, mid + 1, hi, a);
     std::merge(
-        tree[2 * node].begin(), tree[2 * node].end(), tree[2 * node + 1].begin(),
-        tree[2 * node + 1].end(), std::back_inserter(tree[node])
+        tree[i * 2].begin(), tree[i * 2].end(), tree[i * 2 + 1].begin(), tree[i * 2 + 1].end(),
+        std::back_inserter(tree[i])
     );
   }
 
   template<typename Fn>
-  int query(int node, int lo, int hi, int tgt_lo, int tgt_hi, const Fn &count_node) const {
+  int query(int i, int lo, int hi, int tgt_lo, int tgt_hi, const Fn &count_node) const {
     if (tgt_hi < lo || hi < tgt_lo) {
       return 0;
     }
     if (tgt_lo <= lo && hi <= tgt_hi) {
-      return count_node(tree[node]);
+      return count_node(tree[i]);
     }
     int mid = lo + (hi - lo) / 2;
-    return query(2 * node, lo, mid, tgt_lo, tgt_hi, count_node) +
-           query(2 * node + 1, mid + 1, hi, tgt_lo, tgt_hi, count_node);
+    return query(i * 2, lo, mid, tgt_lo, tgt_hi, count_node) +
+           query(i * 2 + 1, mid + 1, hi, tgt_lo, tgt_hi, count_node);
   }
 
  public:

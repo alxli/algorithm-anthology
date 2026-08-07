@@ -130,11 +130,7 @@ int main() {
   add_edge(2, 3);
   add_edge(3, 4);
   add_edge(4, 2);
-  w[0] = 10;
-  w[1] = 20;
-  w[2] = 30;
-  w[3] = 40;
-  w[4] = 50;
+  w = {10, 20, 30, 40, 50};
   assert(max_clique() == 4);
   assert(max_clique_weighted() == 120);
   return 0;

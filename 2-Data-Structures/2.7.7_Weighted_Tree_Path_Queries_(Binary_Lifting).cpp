@@ -2,17 +2,16 @@
 
 Given a tree or forest with weighted edges, aggregate the edge weights along the path between any
 two nodes in the same tree. The input is undirected; construction roots each component at the first
-unvisited node in index order. This builds on the same binary lifting table as LCA: alongside
-`up[u][i]`, the $2^i$-th ancestor of `u`, it stores `agg[u][i]`, the combined weight of the $2^i$
-edges traversed by that jump. A path query splits the path `u`-`v` at their lowest common ancestor
-and merges the two upward climbs.
+unvisited node in index order. This builds on the same binary lifting table as LCA: for every valid
+$2^i$-edge jump from `u`, it stores `agg[u][i]`, the combined weight of the edges traversed by that
+jump. A path query splits the path `u`-`v` at their lowest common ancestor and merges the two upward
+climbs.
 
-The aggregate is a commutative monoid defined by `combine()` and its identity `identity()`. The two
-must be edited together; the defaults below compute the maximum edge weight on the path. For the
-minimum, use `std::min` with `std::numeric_limits<W>::max()`; for the sum (the path length), use
-`a + b` with `W()`. Commutativity is required because the two half-paths are merged without regard
-to orientation. For an invertible aggregate such as the sum, an alternative that avoids the `agg`
-table is to store each node's weighted depth `dw[u]` and return `dw[u] + dw[v] - 2*dw[lca]`.
+The aggregate is defined by a commutative, associative `combine()`. The default computes the maximum
+edge weight on the path. For minimum queries, use `std::min`; for sums, use `a + b`. Commutativity
+is required because the two half-paths are merged without regard to orientation. For an invertible
+aggregate such as the sum, an alternative that avoids the `agg` table is to store each node's
+weighted depth `dw[u]` and return `dw[u] + dw[v] - 2*dw[lca]`.
 
 - `WeightedTree<W>(adj)` builds the structure over a forest given by a weighted, bidirectional
   adjacency list `adj`, whose indices represent the nodes and where `adj[u]` holds pairs (`v`, `w`)
@@ -23,9 +22,8 @@ table is to store each node's weighted depth `dw[u]` and return `dw[u] + dw[v] -
 - `kth_ancestor(u, k)` returns the $k$-th ancestor of `u`, stopping at that tree's root if `k`
   exceeds `u`'s depth.
 - `is_ancestor(parent, child)` returns whether `parent` is an ancestor of `child`.
-- `path_query(u, v)` returns the combined weight of the edges on the path from `u` to `v`, or
-  `identity()` if they lie in different trees. If `u` equals `v` then the path has no edges, so
-  `identity()` is returned.
+- `path_query(u, v)` returns the combined weight of the edges on the path from `u` to `v`. The nodes
+  must be distinct and lie in the same tree.
 
 Time Complexity:
 - O(n log n) for construction, where $n$ is the number of nodes.
@@ -41,14 +39,13 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
-#include <limits>
+#include <optional>
 #include <utility>
 #include <vector>
 
 template<typename W>
 class WeightedTree {
   static W combine(const W &a, const W &b) { return std::max(a, b); }
-  static W identity() { return std::numeric_limits<W>::lowest(); }
 
   std::vector<std::vector<int>> up;
   std::vector<std::vector<W>> agg;  // agg[u][i] = combined weight of the 2^i edges above u.
@@ -62,11 +59,13 @@ class WeightedTree {
     up[u][0] = p;
     for (int i = 1; i < len; i++) {
       up[u][i] = up[up[u][i - 1]][i - 1];
-      agg[u][i] = combine(agg[u][i - 1], agg[up[u][i - 1]][i - 1]);
+      if ((1 << i) <= d) {
+        agg[u].push_back(combine(agg[u][i - 1], agg[up[u][i - 1]][i - 1]));
+      }
     }
     for (const auto &[v, w] : adj[u]) {
       if (v != p) {
-        agg[v][0] = w;  // The edge into a child is stored on the child.
+        agg[v].push_back(w);  // The edge into a child is stored on the child.
         dfs(v, u, r, d + 1, adj);
       }
     }
@@ -74,11 +73,11 @@ class WeightedTree {
   }
 
   // Combined weight of the k edges on the upward path of k steps from u.
-  W climb(int u, int k) const {
-    W res = identity();
+  std::optional<W> climb(int u, int k) const {
+    std::optional<W> res;
     for (int i = 0; i < len; i++) {
       if ((k & (1 << i)) != 0) {
-        res = combine(res, agg[u][i]);
+        res = res ? combine(*res, agg[u][i]) : agg[u][i];
         u = up[u][i];
       }
     }
@@ -86,18 +85,19 @@ class WeightedTree {
   }
 
  public:
-  explicit WeightedTree(const std::vector<std::vector<std::pair<int, W>>> &adj) : timer(0) {
+  explicit WeightedTree(const std::vector<std::vector<std::pair<int, W>>> &adj)
+      : agg(adj.size()),
+        tin(adj.size()),
+        tout(adj.size()),
+        depth(adj.size()),
+        root(adj.size(), -1),
+        timer(0) {
     int n = static_cast<int>(adj.size());
     len = 1;
     while ((1 << len) <= std::max(1, n)) {
       len++;
     }
     up.assign(n, std::vector<int>(len));
-    agg.assign(n, std::vector<W>(len, identity()));
-    tin.assign(n, 0);
-    tout.assign(n, 0);
-    depth.assign(n, 0);
-    root.assign(n, -1);
     for (int u = 0; u < n; u++) {
       if (root[u] == -1) {
         dfs(u, u, u, 0, adj);
@@ -144,10 +144,16 @@ class WeightedTree {
 
   W path_query(int u, int v) const {
     int l = lca(u, v);
-    if (l == -1) {
-      return identity();
+    assert(l != -1 && u != v);
+    std::optional<W> left = climb(u, depth[u] - depth[l]);
+    std::optional<W> right = climb(v, depth[v] - depth[l]);
+    if (!left) {
+      return *right;
     }
-    return combine(climb(u, depth[u] - depth[l]), climb(v, depth[v] - depth[l]));
+    if (!right) {
+      return *left;
+    }
+    return combine(*left, *right);
   }
 };
 
@@ -156,11 +162,6 @@ class WeightedTree {
 #include <cassert>
 using namespace std;
 
-void add_edge(vector<vector<pair<int, int>>> &adj, int u, int v, int w) {
-  adj[u].push_back({v, w});
-  adj[v].push_back({u, w});
-}
-
 int main() {
   //             0
   //     w=4 /       \ w=2
@@ -168,31 +169,31 @@ int main() {
   //  w=7 / \w=1   w=5/ \ w=3
   //     3   4       5   6
   vector<vector<pair<int, int>>> adj(7);
-  add_edge(adj, 0, 1, 4);
-  add_edge(adj, 0, 2, 2);
-  add_edge(adj, 1, 3, 7);
-  add_edge(adj, 1, 4, 1);
-  add_edge(adj, 2, 5, 5);
-  add_edge(adj, 2, 6, 3);
-  WeightedTree<int> tree(adj);
-
-  assert(tree.lca(3, 4) == 1);
-  assert(tree.lca(5, 6) == 2);
-  assert(tree.lca(3, 6) == 0);
-
-  assert(tree.kth_ancestor(3, 1) == 1);
-  assert(tree.kth_ancestor(3, 2) == 0);
-  assert(tree.kth_ancestor(3, 5) == 0);  // Clamped to the root.
-
+  auto add_edge = [&](int u, int v, int w) {
+    adj[u].emplace_back(v, w);
+    adj[v].emplace_back(u, w);
+  };
+  add_edge(0, 1, 4);
+  add_edge(0, 2, 2);
+  add_edge(1, 3, 7);
+  add_edge(1, 4, 1);
+  add_edge(2, 5, 5);
+  add_edge(2, 6, 3);
+  WeightedTree<int> t(adj);
+  assert(t.lca(3, 4) == 1);
+  assert(t.lca(5, 6) == 2);
+  assert(t.lca(3, 6) == 0);
+  assert(t.kth_ancestor(3, 1) == 1);
+  assert(t.kth_ancestor(3, 2) == 0);
+  assert(t.kth_ancestor(3, 5) == 0);  // Clamped to the root.
   // Default combine() reports the maximum edge weight on the path.
-  assert(tree.path_query(3, 4) == 7);  // 3-1 (7), 1-4 (1).
-  assert(tree.path_query(5, 6) == 5);  // 5-2 (5), 2-6 (3).
-  assert(tree.path_query(4, 5) == 5);  // 4-1 (1), 1-0 (4), 0-2 (2), 2-5 (5).
-  assert(tree.path_query(0, 3) == 7);  // 0-1 (4), 1-3 (7).
+  assert(t.path_query(3, 4) == 7);  // 3-1 (7), 1-4 (1).
+  assert(t.path_query(5, 6) == 5);  // 5-2 (5), 2-6 (3).
+  assert(t.path_query(4, 5) == 5);  // 4-1 (1), 1-0 (4), 0-2 (2), 2-5 (5).
+  assert(t.path_query(0, 3) == 7);  // 0-1 (4), 1-3 (7).
 
   vector<vector<pair<int, int>>> forest(2);
   WeightedTree<int> disconnected(forest);
   assert(disconnected.lca(0, 1) == -1);
-  assert(disconnected.path_query(0, 1) == numeric_limits<int>::lowest());
   return 0;
 }

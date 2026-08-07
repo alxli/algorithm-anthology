@@ -20,7 +20,7 @@ default code below returns the "min" of the range; for "gcd", `combine(a, b)` sh
 
 - `SparseTable<T>(lo, hi)` builds the table over the half-open iterator range $[`lo`, `hi`)$.
 - `size()` returns the size of the array.
-- `query(lo, hi)` returns `combine()` applied to all indices in $[`lo`, `hi`]$.
+- `query(lo, hi)` returns the aggregate of the values at indices in $[`lo`, `hi`]$.
 
 Time Complexity:
 - O(n log n) per call to the constructor, where $n$ is the size of the array.
@@ -54,7 +54,10 @@ class SparseTable {
     for (int i = 2; i <= len; i++) {
       log2[i] = log2[i >> 1] + 1;
     }
-    dp.assign(log2[len] + 1, std::vector<T>(len));
+    if (len == 0) {
+      return;
+    }
+    dp.assign(log2[len] + 1, std::vector<T>(len, a[0]));
     dp[0] = std::move(a);
     for (int j = 1; (1 << j) <= len; j++) {
       for (int i = 0; i + (1 << j) <= len; i++) {

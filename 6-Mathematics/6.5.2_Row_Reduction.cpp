@@ -41,7 +41,7 @@ const double EPS = 1e-9;
 template<typename T>
 bool rref_is_zero(const T &v) {
   if constexpr (std::is_floating_point_v<T>) {
-    return fabs(v) < EPS;
+    return std::fabs(v) < EPS;
   }
   return v == T(0);
 }
@@ -57,7 +57,7 @@ Matrix &row_reduce(Matrix &a) {
     int pivot = r;
     if constexpr (std::is_floating_point_v<T>) {
       for (int i = r + 1; i < rows; i++) {
-        if (fabs(a[i][lead]) > fabs(a[pivot][lead])) {
+        if (std::fabs(a[i][lead]) > std::fabs(a[pivot][lead])) {
           pivot = i;
         }
       }

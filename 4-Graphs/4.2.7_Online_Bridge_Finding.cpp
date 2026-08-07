@@ -89,14 +89,14 @@ class OnlineBridges {
   }
 
  public:
-  explicit OnlineBridges(int n = 0) {
-    dsu_2ecc.resize(n);
-    dsu_cc.resize(n);
-    dsu_cc_size.assign(n, 1);
-    parent.assign(n, -1);
-    last_visit.assign(n, 0);
-    lca_iteration = 0;
-    num_bridges = 0;
+  explicit OnlineBridges(int n = 0)
+      : dsu_2ecc(n),
+        dsu_cc(n),
+        dsu_cc_size(n, 1),
+        parent(n, -1),
+        last_visit(n, 0),
+        lca_iteration(0),
+        num_bridges(0) {
     for (int i = 0; i < n; i++) {
       dsu_2ecc[i] = dsu_cc[i] = i;
     }

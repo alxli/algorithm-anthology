@@ -26,9 +26,7 @@ Space Complexity:
 #include <stdexcept>
 
 template<typename Fn, typename Deriv>
-double newton_root(
-    Fn f, Deriv fprime, double x0, const double eps = 1e-15, const int iterations = 100
-) {
+double newton_root(Fn f, Deriv fprime, double x0, double eps = 1e-15, int iterations = 100) {
   double x = x0, error = eps + 1;
   for (int i = 0; std::isfinite(error) && error > eps && i < iterations; i++) {
     double fx = f(x);
@@ -46,9 +44,7 @@ double newton_root(
 }
 
 template<typename Fn>
-double secant_root(
-    Fn f, double x0, double x1, const double eps = 1e-15, const int iterations = 100
-) {
+double secant_root(Fn f, double x0, double x1, double eps = 1e-15, int iterations = 100) {
   double xold = x0, fxold = f(x0), x = x1, error = eps + 1;
   for (int i = 0; std::isfinite(error) && error > eps && i < iterations; i++) {
     double fx = f(x);

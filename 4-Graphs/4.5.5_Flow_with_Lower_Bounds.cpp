@@ -226,22 +226,22 @@ int main() {
   // [0,2] |                       | [0,2]
   //       v                       |
   //       2 ----------------------+
-  BoundedFlow network(4);
-  network.add_edge(0, 1, 1, 4);
-  network.add_edge(0, 2, 0, 2);
-  network.add_edge(1, 3, 1, 3);
-  network.add_edge(2, 3, 0, 2);
-  assert(network.max_flow(0, 3) == 5);
-  vector<int64_t> max_flow = network.edge_flows();
+  BoundedFlow g(4);
+  g.add_edge(0, 1, 1, 4);
+  g.add_edge(0, 2, 0, 2);
+  g.add_edge(1, 3, 1, 3);
+  g.add_edge(2, 3, 0, 2);
+  assert(g.max_flow(0, 3) == 5);
+  vector<int64_t> max_flow = g.edge_flows();
   assert(max_flow[0] + max_flow[1] == 5);
 
-  assert(network.min_flow(0, 3) == 1);
+  assert(g.min_flow(0, 3) == 1);
 
-  BoundedFlow reverse_flow(2);
-  reverse_flow.add_edge(1, 0, 1, 1);
-  assert(reverse_flow.max_flow(0, 1) == -1);
-  assert(reverse_flow.min_flow(0, 1) == -1);
-  assert((reverse_flow.edge_flows() == vector<int64_t>{1}));
+  BoundedFlow rev(2);
+  rev.add_edge(1, 0, 1, 1);
+  assert(rev.max_flow(0, 1) == -1);
+  assert(rev.min_flow(0, 1) == -1);
+  assert((rev.edge_flows() == vector<int64_t>{1}));
 
   //            [2,3]
   //       0 ----------> 1

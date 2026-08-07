@@ -871,9 +871,8 @@ class RollingHash {
     build(lo, hi);
   }
 
-  explicit RollingHash(const std::vector<T> &v, const Hash &hasher = Hash()) : hasher(hasher) {
-    build(v.begin(), v.end());
-  }
+  explicit RollingHash(const std::vector<T> &v, const Hash &hasher = Hash())
+      : RollingHash(v.begin(), v.end(), hasher) {}
 
   int size() const { return static_cast<int>(pref.size()) - 1; }
 
@@ -1004,12 +1003,6 @@ class HashDeque {
   static const uint64_t MOD1 = 1000000007, MOD2 = 1000000009;  // Distinct primes below 2^31.
   static const uint64_t BASE1 = 131, BASE2 = 137;              // Nonzero modulo MOD1 and MOD2.
 
-  Hash hasher;                  // Maps an element to its nonnegative integer digit.
-  std::deque<uint64_t> digits;  // Per-element digit values, retained so pops never re-hash.
-  uint64_t h1 = 0, h2 = 0;      // Hash of the current sequence modulo MOD1, MOD2.
-  uint64_t top1, top2;          // B^(len-1): weight of the front element (B^-1 while empty).
-  uint64_t inv1, inv2;          // Modular inverses of BASE1, BASE2, for pop_back().
-
   // Products and sums of residues below 2^30 stay under 2^60, so 64-bit arithmetic never overflows.
   static uint64_t powmod(uint64_t b, uint64_t e, uint64_t m) {
     uint64_t res = 1;
@@ -1022,13 +1015,16 @@ class HashDeque {
     return res;
   }
 
+  inline static const uint64_t INV1 = powmod(BASE1, MOD1 - 2, MOD1);
+  inline static const uint64_t INV2 = powmod(BASE2, MOD2 - 2, MOD2);
+
+  Hash hasher;                        // Maps an element to its nonnegative integer digit.
+  std::deque<uint64_t> digits;        // Per-element digit values, retained so pops never re-hash.
+  uint64_t h1 = 0, h2 = 0;            // Hash of the current sequence modulo MOD1, MOD2.
+  uint64_t top1 = INV1, top2 = INV2;  // B^(len-1), or B^-1 while empty.
+
  public:
-  explicit HashDeque(Hash hasher = Hash()) : hasher(hasher) {
-    inv1 = powmod(BASE1, MOD1 - 2, MOD1);
-    inv2 = powmod(BASE2, MOD2 - 2, MOD2);
-    top1 = inv1;  // B^(0-1) = B^-1, so the first push lifts the front weight to B^0 = 1.
-    top2 = inv2;
-  }
+  explicit HashDeque(Hash hasher = Hash()) : hasher(hasher) {}
 
   int size() const { return static_cast<int>(digits.size()); }
   bool empty() const { return digits.empty(); }
@@ -1057,18 +1053,18 @@ class HashDeque {
     uint64_t d = digits.front(), c1 = d % MOD1, c2 = d % MOD2;
     h1 = (h1 + MOD1 - c1 * top1 % MOD1) % MOD1;
     h2 = (h2 + MOD2 - c2 * top2 % MOD2) % MOD2;
-    top1 = top1 * inv1 % MOD1;
-    top2 = top2 * inv2 % MOD2;
+    top1 = top1 * INV1 % MOD1;
+    top2 = top2 * INV2 % MOD2;
     digits.pop_front();
   }
 
   void pop_back() {
     assert(!digits.empty());
     uint64_t d = digits.back(), c1 = d % MOD1, c2 = d % MOD2;
-    h1 = (h1 + MOD1 - c1) % MOD1 * inv1 % MOD1;
-    h2 = (h2 + MOD2 - c2) % MOD2 * inv2 % MOD2;
-    top1 = top1 * inv1 % MOD1;
-    top2 = top2 * inv2 % MOD2;
+    h1 = (h1 + MOD1 - c1) % MOD1 * INV1 % MOD1;
+    h2 = (h2 + MOD2 - c2) % MOD2 * INV2 % MOD2;
+    top1 = top1 * INV1 % MOD1;
+    top2 = top2 * INV2 % MOD2;
     digits.pop_back();
   }
 
@@ -1215,11 +1211,14 @@ class DynamicRollingHash {
 
  public:
   explicit DynamicRollingHash(const std::vector<int> &a)
-      : len(static_cast<int>(a.size())), cur(len, 0) {
-    pw1.resize(len + 1);
-    pw2.resize(len + 1);
-    ip1.resize(len + 1);
-    ip2.resize(len + 1);
+      : len(static_cast<int>(a.size())),
+        cur(len, 0),
+        pw1(len + 1),
+        pw2(len + 1),
+        ip1(len + 1),
+        ip2(len + 1),
+        ft1(len + 1),
+        ft2(len + 1) {
     pw1[0] = pw2[0] = ip1[0] = ip2[0] = 1;
     uint64_t invb1 = powmod(BASE1, MOD1 - 2, MOD1), invb2 = powmod(BASE2, MOD2 - 2, MOD2);
     for (int i = 1; i <= len; i++) {
@@ -1228,8 +1227,6 @@ class DynamicRollingHash {
       ip1[i] = ip1[i - 1] * invb1 % MOD1;
       ip2[i] = ip2[i - 1] * invb2 % MOD2;
     }
-    ft1.assign(len + 1, 0);
-    ft2.assign(len + 1, 0);
     for (int i = 0; i < len; i++) {
       set(i, a[i]);
     }
@@ -2698,6 +2695,7 @@ Maintain a map of strings to values using a compressed tree data structure. Each
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -2707,13 +2705,12 @@ using std::string;
 template<typename V>
 class RadixTree {
   struct Node {
-    V value;
-    bool is_terminal;
+    std::optional<V> value;
     int cnt;  // Optional: maintain count of terminal keys in this subtree for count_prefix queries.
     std::unordered_map<string, Node *> children;
 
-    Node(const V &value = V(), bool is_terminal = false)
-        : value(value), is_terminal(is_terminal), cnt(0) {}
+    Node() : cnt(0) {}
+    explicit Node(const V &value) : value(value), cnt(0) {}
   } *root;
 
   static int lcp_len(const string &s1, const string &s2, int s2start) {
@@ -2729,11 +2726,10 @@ class RadixTree {
 
   static bool insert(Node *n, const string &s, int i, const V &v) {
     if (i == static_cast<int>(s.size())) {
-      if (n->is_terminal) {
+      if (n->value) {
         return false;
       }
-      n->value = v;
-      n->is_terminal = true;
+      n->value.emplace(v);
       n->cnt++;
       return true;
     }
@@ -2757,8 +2753,7 @@ class RadixTree {
       n->children.erase(it);
       n->children[left] = tmp;
       if (len == static_cast<int>(s.size()) - i) {
-        tmp->value = v;
-        tmp->is_terminal = true;
+        tmp->value.emplace(v);
         tmp->cnt++;
       } else {
         insert(tmp, s, i + len, v);
@@ -2766,7 +2761,7 @@ class RadixTree {
       n->cnt++;
       return true;
     }
-    Node *leaf = new Node(v, true);
+    Node *leaf = new Node(v);
     leaf->cnt = 1;
     n->children[s.substr(i)] = leaf;
     n->cnt++;
@@ -2775,10 +2770,10 @@ class RadixTree {
 
   static bool erase(Node *n, const string &s, int i) {
     if (i == static_cast<int>(s.size())) {
-      if (!n->is_terminal) {
+      if (!n->value) {
         return false;
       }
-      n->is_terminal = false;
+      n->value.reset();
       n->cnt--;
       return true;
     }
@@ -2799,15 +2794,16 @@ class RadixTree {
       n->cnt--;
       // The merge below leaves counts intact: a non-terminal node with one child already has the
       // same subtree count as that child, so reusing the node keeps its cnt correct.
-      if (child->children.empty() && !child->is_terminal) {
+      if (child->children.empty() && !child->value) {
         delete child;
         n->children.erase(it);
       } else if (child->children.size() == 1) {
         Node *grandchild = child->children.begin()->second;
-        if (!child->is_terminal) {
+        if (!child->value) {
           string merged_key(it->first + child->children.begin()->first);
-          child->value = grandchild->value;
-          child->is_terminal = grandchild->is_terminal;
+          if (grandchild->value) {
+            child->value.emplace(*grandchild->value);
+          }
           child->children = grandchild->children;
           delete grandchild;
           n->children.erase(it);
@@ -2821,8 +2817,8 @@ class RadixTree {
 
   template<typename Fn>
   static void walk(Node *n, string &s, Fn f) {
-    if (n->is_terminal) {
-      f(s, n->value);
+    if (n->value) {
+      f(s, *n->value);
     }
     std::vector<std::pair<string, Node *>> children(n->children.begin(), n->children.end());
     std::sort(children.begin(), children.end());
@@ -2889,7 +2885,7 @@ class RadixTree {
         return nullptr;
       }
     }
-    return n->is_terminal ? &(n->value) : nullptr;
+    return n->value ? &*n->value : nullptr;
   }
 
   int count_prefix(const string &s) const {
@@ -3259,7 +3255,7 @@ class SuffixAutomaton {
  public:
   SuffixAutomaton() : st(1), last(0) {}
 
-  explicit SuffixAutomaton(const string &s) : st(1), last(0) {
+  explicit SuffixAutomaton(const string &s) : SuffixAutomaton() {
     for (char c : s) {
       append(c);
     }
@@ -3436,18 +3432,14 @@ class Eertree {
   }
 
  public:
-  Eertree() : tree(), str(), last(1) {
+  Eertree() : last(1) {
     tree.emplace_back(-1);
     tree.emplace_back(0);
     tree[0].link = 0;
     tree[1].link = 0;
   }
 
-  explicit Eertree(const string &s) : tree(), str(), last(1) {
-    tree.emplace_back(-1);
-    tree.emplace_back(0);
-    tree[0].link = 0;
-    tree[1].link = 0;
+  explicit Eertree(const string &s) : Eertree() {
     for (char c : s) {
       append(c);
     }

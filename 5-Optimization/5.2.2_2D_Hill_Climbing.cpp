@@ -27,7 +27,7 @@ Space Complexity:
 template<typename Fn>
 double hill_climb_min(
     Fn f, double x0, double y0, double *best_x = nullptr, double *best_y = nullptr,
-    const double step_min = 1e-9, const double step_max = 1e6
+    double step_min = 1e-9, double step_max = 1e6
 ) {
   static const double inv_sqrt2 = 0.7071067811865476;
   static const double dx[] = {1, inv_sqrt2, 0, -inv_sqrt2, -1, -inv_sqrt2, 0, inv_sqrt2};

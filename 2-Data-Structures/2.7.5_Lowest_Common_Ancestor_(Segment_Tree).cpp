@@ -32,7 +32,7 @@ Space Complexity:
 #include <vector>
 
 class SegTreeLCA {
-  std::vector<int> depth, order, first, root, minpos;
+  std::vector<int> root, depth, first, order, minpos;
   int len;
 
   void dfs(const std::vector<std::vector<int>> &adj, int u, int r, int d) {
@@ -50,39 +50,37 @@ class SegTreeLCA {
 
   int better(int a, int b) const { return depth[a] < depth[b] ? a : b; }
 
-  void build(int node, int lo, int hi) {
+  void build(int i, int lo, int hi) {
     if (lo == hi) {
-      minpos[node] = order[lo];
+      minpos[i] = order[lo];
       return;
     }
     int mid = lo + (hi - lo) / 2;
-    build(2 * node + 1, lo, mid);
-    build(2 * node + 2, mid + 1, hi);
-    minpos[node] = better(minpos[2 * node + 1], minpos[2 * node + 2]);
+    int l = i * 2 + 1, r = i * 2 + 2;
+    build(l, lo, mid);
+    build(r, mid + 1, hi);
+    minpos[i] = better(minpos[l], minpos[r]);
   }
 
-  int get_minpos(int a, int b, int node, int lo, int hi) const {
+  int get_minpos(int a, int b, int i, int lo, int hi) const {
     if (a == lo && b == hi) {
-      return minpos[node];
+      return minpos[i];
     }
     int mid = lo + (hi - lo) / 2;
+    int l = i * 2 + 1, r = i * 2 + 2;
     if (b <= mid) {
-      return get_minpos(a, b, 2 * node + 1, lo, mid);
+      return get_minpos(a, b, l, lo, mid);
     }
     if (mid < a) {
-      return get_minpos(a, b, 2 * node + 2, mid + 1, hi);
+      return get_minpos(a, b, r, mid + 1, hi);
     }
-    return better(
-        get_minpos(a, mid, 2 * node + 1, lo, mid), get_minpos(mid + 1, b, 2 * node + 2, mid + 1, hi)
-    );
+    return better(get_minpos(a, mid, l, lo, mid), get_minpos(mid + 1, b, r, mid + 1, hi));
   }
 
  public:
-  explicit SegTreeLCA(const std::vector<std::vector<int>> &adj) {
+  explicit SegTreeLCA(const std::vector<std::vector<int>> &adj)
+      : root(adj.size(), -1), depth(adj.size(), -1), first(adj.size(), -1) {
     int n = static_cast<int>(adj.size());
-    depth.assign(n, -1);
-    first.assign(n, -1);
-    root.assign(n, -1);
     for (int u = 0; u < n; u++) {
       if (depth[u] == -1) {
         dfs(adj, u, u, 0);
@@ -115,22 +113,20 @@ class SegTreeLCA {
 #include <cassert>
 using namespace std;
 
-void add_edge(vector<vector<int>> &adj, int u, int v) {
-  adj[u].push_back(v);
-  adj[v].push_back(u);
-}
-
 int main() {
   // 0---1---2    5---6
   // |   |
   // 4   3
   vector<vector<int>> adj(7);
-  add_edge(adj, 0, 1);
-  add_edge(adj, 0, 4);
-  add_edge(adj, 1, 2);
-  add_edge(adj, 1, 3);
-  add_edge(adj, 5, 6);
-
+  auto add_edge = [&](int u, int v) {
+    adj[u].push_back(v);
+    adj[v].push_back(u);
+  };
+  add_edge(0, 1);
+  add_edge(0, 4);
+  add_edge(1, 2);
+  add_edge(1, 3);
+  add_edge(5, 6);
   SegTreeLCA tree(adj);
   assert(tree.lca(3, 2) == 1);
   assert(tree.lca(2, 4) == 0);

@@ -89,11 +89,11 @@ int elimination_pivot(const SquareMatrix &a, int row, int col, double eps) {
   if constexpr (std::is_floating_point_v<T>) {
     int pivot = row;
     for (int r = row + 1; r < n; r++) {
-      if (fabs(a[r][col]) > fabs(a[pivot][col])) {
+      if (std::fabs(a[r][col]) > std::fabs(a[pivot][col])) {
         pivot = r;
       }
     }
-    return fabs(a[pivot][col]) < eps ? -1 : pivot;
+    return std::fabs(a[pivot][col]) < eps ? -1 : pivot;
   }
   for (int r = row; r < n; r++) {
     if (a[r][col] != T(0)) {

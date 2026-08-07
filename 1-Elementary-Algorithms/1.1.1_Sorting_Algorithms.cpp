@@ -21,6 +21,7 @@ algorithms can be concisely implemented in C++.
 */
 
 #include <algorithm>
+#include <climits>
 #include <functional>
 #include <iterator>
 #include <type_traits>
@@ -257,12 +258,12 @@ void radix_sort(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
   static_assert(std::is_integral<T>::value && !std::is_same<T, bool>::value);
   using U = typename std::make_unsigned<T>::type;
-  int num_bits = 8 * sizeof(T);  // 8 bits per byte
+  const int num_bits = sizeof(T) * CHAR_BIT;
   // Sort on an unsigned key. For signed types, flipping the sign bit sends the most negative value
   // to 0, mapping the signed order onto the unsigned order; logical shifts then extract each digit.
-  auto key = [](T x) -> U {
+  auto key = [num_bits](T x) -> U {
     U u = static_cast<U>(x);
-    return std::is_signed<T>::value ? (u ^ (U(1) << (8 * sizeof(T) - 1))) : u;
+    return std::is_signed<T>::value ? (u ^ (U(1) << (num_bits - 1))) : u;
   };
   std::vector<T> buf(hi - lo);
   for (int pos = 0; pos < num_bits; pos += radix_bits) {

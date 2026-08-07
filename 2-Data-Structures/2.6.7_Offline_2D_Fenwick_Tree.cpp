@@ -6,8 +6,6 @@ advance. This offline restriction is what makes the structure cheap: both coordi
 coordinate-compressed against the update points, so no hashing is required and the storage is
 exactly the set of cells each Fenwick node can ever touch.
 
-The value type `T` must represent $0$ and support addition and subtraction.
-
 The outer dimension is an ordinary Fenwick tree over the sorted distinct update rows. Each outer
 node owns an inner Fenwick tree over only those columns that reach it along an update path, again
 stored in a sorted vector. A prefix query maps its row argument to the number of update rows at or
@@ -34,6 +32,8 @@ inclusive rectangle queries can form predecessor bounds.
 - `sum(r, c)` returns the sum over all registered rows at most `r` and columns at most `c`.
 - `sum(r1, c1, r2, c2)` returns the sum of the rectangle with rows $[`r1`, `r2`]$ and columns
   $[`c1`, `c2`]$.
+
+The value type `T` must represent $0$ and support addition and subtraction.
 
 Time Complexity:
 - O(n log^2 n) per call to `build()`, where $n$ is the number of registered cells.

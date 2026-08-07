@@ -19,21 +19,22 @@ index to a new value. Another possible update operation is "increment", in which
   $[`lo`, `hi`)$.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.
-- `query(lo, hi)` returns the result of `combine()` applied to all indices in $[`lo`, `hi`]$. If
-  `lo == hi`, then the single specified value is returned.
+- `query(lo, hi)` returns the aggregate of the values at indices in $[`lo`, `hi`]$. If `lo == hi`,
+  then the single specified value is returned.
 - `update(i, d)` assigns the value `v` at index `i` to `apply_delta(v, d)`.
 - `max_right(lo, pred)` returns the largest boundary `hi` such that the aggregate over the half-open
-  range $[`lo`, `hi`)$ satisfies the monotonic predicate `pred()`. It returns `size()` if `pred()`
-  remains true to the end.
+  range $[`lo`, `hi`)$ satisfies `pred()`. As `hi` increases, `pred()` applied to this aggregate may
+  change only from true to false. The empty range is valid, and `size()` is returned if the
+  predicate remains true to the end.
 - `min_left(hi, pred)` returns the smallest boundary `lo` such that the aggregate over the half-open
-  range $[`lo`, `hi`)$ satisfies the monotonic predicate `pred()`. It returns $0$ if `pred()`
+  range $[`lo`, `hi`)$ satisfies `pred()`. As `lo` decreases, `pred()` applied to this aggregate may
+  change only from true to false. The empty range is valid, and $0$ is returned if the predicate
   remains true to the beginning.
 
-For the boundary-search functions, `pred()` takes aggregate `T` values of candidate ranges. As a
-range grows, `pred()` may change from true to false but never back to true; the empty range is
-considered valid. E.g. for `combine = min`, use `pred(mn) = (mn > x)` to find the first value
-`<= x`, or for `combine = sum`, use `pred(sum) = (sum <= x)` with nonnegative values to find the
-longest range within the limit `x`.
+For the boundary-search functions, `pred()` takes aggregate `T` values. For `combine = min`,
+`pred(mn) = (mn > x)` makes `max_right()` stop at the first value `<= x` when extending right, while
+`min_left()` stops just after the first such value when extending left. With nonnegative values and
+`combine = sum`, `pred(sum) = (sum <= x)` finds the longest extension with sum at most `x`.
 
 Time Complexity:
 - O(n) per call to both constructors, where $n$ is the size of the array.
@@ -144,14 +145,16 @@ class SegTree {
   }
 
  public:
-  explicit SegTree(int n, const T &v = T()) : len(n), value(4 * len) {
+  explicit SegTree(int n, const T &v = T()) : len(n) {
     assert(len > 0);
+    value.assign(4 * len, v);
     build(0, 0, len - 1, [&](int) { return v; });
   }
 
   template<typename It>
-  SegTree(It lo, It hi) : len(hi - lo), value(4 * len) {
+  SegTree(It lo, It hi) : len(hi - lo) {
     assert(len > 0);
+    value.assign(4 * len, *lo);
     build(0, 0, len - 1, [&](int i) { return *(lo + i); });
   }
 

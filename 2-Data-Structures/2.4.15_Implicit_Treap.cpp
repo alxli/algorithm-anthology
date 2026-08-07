@@ -34,7 +34,7 @@ children and these two aggregates before marking its descendants for later rever
 - `size()` returns the size of the array.
 - `empty()` returns whether the array is empty.
 - `at(i)` returns the value at index `i`.
-- `query(lo, hi)` returns the result of `combine()` applied to all indices in $[`lo`, `hi`]$.
+- `query(lo, hi)` returns the aggregate of the values at indices in $[`lo`, `hi`]$.
 - `update(lo, hi, d)` applies the delta `d` to every index in $[`lo`, `hi`]$.
 - `update(i, d)` applies the delta `d` to the single index `i`.
 - `reverse(lo, hi)` reverses the order of the values in $[`lo`, `hi`]$.

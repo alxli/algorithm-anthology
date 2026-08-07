@@ -83,11 +83,14 @@ class DynamicRollingHash {
 
  public:
   explicit DynamicRollingHash(const std::vector<int> &a)
-      : len(static_cast<int>(a.size())), cur(len, 0) {
-    pw1.resize(len + 1);
-    pw2.resize(len + 1);
-    ip1.resize(len + 1);
-    ip2.resize(len + 1);
+      : len(static_cast<int>(a.size())),
+        cur(len, 0),
+        pw1(len + 1),
+        pw2(len + 1),
+        ip1(len + 1),
+        ip2(len + 1),
+        ft1(len + 1),
+        ft2(len + 1) {
     pw1[0] = pw2[0] = ip1[0] = ip2[0] = 1;
     uint64_t invb1 = powmod(BASE1, MOD1 - 2, MOD1), invb2 = powmod(BASE2, MOD2 - 2, MOD2);
     for (int i = 1; i <= len; i++) {
@@ -96,8 +99,6 @@ class DynamicRollingHash {
       ip1[i] = ip1[i - 1] * invb1 % MOD1;
       ip2[i] = ip2[i - 1] * invb2 % MOD2;
     }
-    ft1.assign(len + 1, 0);
-    ft2.assign(len + 1, 0);
     for (int i = 0; i < len; i++) {
       set(i, a[i]);
     }

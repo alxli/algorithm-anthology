@@ -18,12 +18,12 @@ All functions below take a vector `a` of $n$ comparable values and return a vect
 "less" query uses a strictly smaller neighbor and a "greater" query uses a strictly larger one;
 changing the comparison from strict to non-strict (e.g. `>=` to `>`) toggles how ties are handled.
 
-- `previous_less(a)` returns, for each $i$, the largest index $j < i$ with $a[j] < a[i]$, or $-1$ if
+- `prev_less(a)` returns, for each $i$, the largest index $j < i$ with $a[j] < a[i]$, or $-1$ if
   there's no such index.
 - `next_less(a)` returns, for each $i$, the smallest index $j > i$ with $a[j] < a[i]$, or $n$ if
   there's no such index.
-- `previous_greater(a)` returns, for each $i$, the largest index $j < i$ with $a[j] > a[i]$, or $-1$
-  if there's no such index.
+- `prev_greater(a)` returns, for each $i$, the largest index $j < i$ with $a[j] > a[i]$, or $-1$ if
+  there's no such index.
 - `next_greater(a)` returns, for each $i$, the smallest index $j > i$ with $a[j] > a[i]$, or $n$ if
   there's no such index.
 - `largest_histogram_rectangle(heights)` returns the maximum area of an axis-aligned rectangle that
@@ -50,7 +50,7 @@ Space Complexity:
 #include <vector>
 
 template<typename T>
-std::vector<int> previous_less(const std::vector<T> &a) {
+std::vector<int> prev_less(const std::vector<T> &a) {
   int n = static_cast<int>(a.size());
   std::vector<int> res(n);
   std::stack<int> s;
@@ -80,7 +80,7 @@ std::vector<int> next_less(const std::vector<T> &a) {
 }
 
 template<typename T>
-std::vector<int> previous_greater(const std::vector<T> &a) {
+std::vector<int> prev_greater(const std::vector<T> &a) {
   int n = static_cast<int>(a.size());
   std::vector<int> res(n);
   std::stack<int> s;
@@ -112,7 +112,7 @@ std::vector<int> next_greater(const std::vector<T> &a) {
 template<typename T>
 T largest_histogram_rectangle(const std::vector<T> &heights) {
   int n = static_cast<int>(heights.size());
-  std::vector<int> left = previous_less(heights), right = next_less(heights);
+  std::vector<int> left = prev_less(heights), right = next_less(heights);
   T best = 0;
   for (int i = 0; i < n; i++) {
     T area = heights[i] * (right[i] - left[i] - 1);  // Overflow warning.
@@ -145,9 +145,9 @@ using namespace std;
 
 int main() {
   vector<int> a{2, 1, 4, 3};
-  assert((previous_less(a) == vector<int>{-1, -1, 1, 1}));
+  assert((prev_less(a) == vector<int>{-1, -1, 1, 1}));
   assert((next_less(a) == vector<int>{1, 4, 3, 4}));
-  assert((previous_greater(a) == vector<int>{-1, 0, -1, 2}));
+  assert((prev_greater(a) == vector<int>{-1, 0, -1, 2}));
   assert((next_greater(a) == vector<int>{2, 2, 4, 4}));
 
   vector<int> hist{2, 1, 5, 6, 2, 3};

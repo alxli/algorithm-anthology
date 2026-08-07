@@ -17,8 +17,8 @@ addition. For additive rectangle sums, a 2D Fenwick tree is simpler and has smal
 the sparse 2D segment tree in the next section when the coordinate range is too large to allocate
 dense storage.
 
-- `SegTree2D<T>(rows, cols, value = T())` constructs a `rows` by `cols` array with all entries
-  initialized to `value`.
+- `SegTree2D<T>(rows, cols, v = T())` constructs a `rows` by `cols` array with 0-based indices, with
+  all entries initialized to `v`.
 - `SegTree2D<T>(a)` constructs the tree from the matrix `a`.
 - `num_rows()` and `num_cols()` return the dimensions of the array.
 - `update(r, c, d)` applies delta `d` to the entry at index (`r`, `c`).
@@ -52,7 +52,7 @@ class SegTree2D {
 
   template<typename Gen>
   void build(const Gen &gen) {
-    tree.assign(2 * rows, std::vector<T>(2 * cols));
+    tree.assign(2 * rows, std::vector<T>(2 * cols, gen(0, 0)));
     for (int r = 0; r < rows; r++) {
       for (int c = 0; c < cols; c++) {
         tree[r + rows][c + cols] = gen(r, c);
@@ -84,9 +84,9 @@ class SegTree2D {
   }
 
  public:
-  SegTree2D(int rows, int cols, const T &value = T()) : rows(rows), cols(cols) {
+  SegTree2D(int rows, int cols, const T &v = T()) : rows(rows), cols(cols) {
     assert(rows > 0 && cols > 0);
-    build([&](int, int) { return value; });
+    build([&](int, int) { return v; });
   }
 
   explicit SegTree2D(const std::vector<std::vector<T>> &a)
@@ -141,14 +141,14 @@ class SegTree2D {
 using namespace std;
 
 int main() {
-  SegTree2D<int> tree(3, 4, 100);
-  tree.update(0, 1, 8);
-  tree.update(1, 2, 3);
-  tree.update(2, 0, 5);
-  assert(tree.num_rows() == 3 && tree.num_cols() == 4);
-  assert(tree.at(0, 1) == 8);
-  assert(tree.query(0, 0, 1, 3) == 3);
-  assert(tree.query(2, 0, 2, 3) == 5);
+  SegTree2D<int> t(3, 4, 100);
+  t.update(0, 1, 8);
+  t.update(1, 2, 3);
+  t.update(2, 0, 5);
+  assert(t.num_rows() == 3 && t.num_cols() == 4);
+  assert(t.at(0, 1) == 8);
+  assert(t.query(0, 0, 1, 3) == 3);
+  assert(t.query(2, 0, 2, 3) == 5);
 
   SegTree2D<int> from_matrix(vector<vector<int>>{{7, 2, 6}, {4, 9, 1}});
   assert(from_matrix.query(0, 0, 1, 1) == 2);

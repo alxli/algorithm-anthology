@@ -47,7 +47,7 @@ std::vector<decltype(std::declval<CurrentFn>()())> mos_algorithm(
     assert(0 <= lo && lo <= hi && hi < n);
   }
   int q = static_cast<int>(queries.size());
-  int block = std::max(1, static_cast<int>(n / std::max(1.0, std::sqrt(static_cast<double>(q)))));
+  int block = std::max(1, static_cast<int>(n / std::max(1.0, std::sqrt(q))));
   std::vector<int> order(q);
   std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [&](int x, int y) {

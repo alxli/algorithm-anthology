@@ -36,7 +36,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -54,7 +54,7 @@ template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
 
 template<typename Pt, typename T>
 bool point_in_rectangle(
-    const Pt &p, const Pt &v, const T &w, const T &h, const bool include_boundary = true
+    const Pt &p, const Pt &v, const T &w, const T &h, bool include_boundary = true
 ) {
   if (w < 0) {
     return point_in_rectangle(p, Pt(v.x + w, v.y), -w, h, include_boundary);
@@ -67,7 +67,7 @@ bool point_in_rectangle(
 }
 
 template<typename Pt>
-bool point_in_rectangle(const Pt &p, const Pt &a, const Pt &b, const bool include_boundary = true) {
+bool point_in_rectangle(const Pt &p, const Pt &a, const Pt &b, bool include_boundary = true) {
   auto xl = std::min(a.x, b.x), yl = std::min(a.y, b.y);
   auto xh = std::max(a.x, b.x), yh = std::max(a.y, b.y);
   return point_in_rectangle(p, Pt(xl, yl), xh - xl, yh - yl, include_boundary);

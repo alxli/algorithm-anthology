@@ -70,7 +70,8 @@ class VirtualTree {
     std::vector<std::pair<int, int>> edges;  // (parent, child) in original node ids.
   };
 
-  VirtualTree(const std::vector<std::vector<int>> &adj, int root) {
+  VirtualTree(const std::vector<std::vector<int>> &adj, int root)
+      : tin(adj.size()), tout(adj.size()), depth(adj.size()), timer(0) {
     int n = static_cast<int>(adj.size());
     assert(0 <= root && root < n);
     len = 1;
@@ -78,10 +79,6 @@ class VirtualTree {
       len++;
     }
     up.assign(n, std::vector<int>(len));
-    tin.assign(n, 0);
-    tout.assign(n, 0);
-    depth.assign(n, 0);
-    timer = 0;
     dfs(adj, root, root, 0);
   }
 
@@ -153,11 +150,6 @@ class VirtualTree {
 #include <cassert>
 using namespace std;
 
-void add_edge(vector<vector<int>> &adj, int u, int v) {
-  adj[u].push_back(v);
-  adj[v].push_back(u);
-}
-
 int main() {
   //          0
   //        / |
@@ -165,14 +157,17 @@ int main() {
   //      /|  |
   //  6--3 4  5--7
   vector<vector<int>> adj(8);
-  add_edge(adj, 0, 1);
-  add_edge(adj, 0, 2);
-  add_edge(adj, 1, 3);
-  add_edge(adj, 1, 4);
-  add_edge(adj, 2, 5);
-  add_edge(adj, 3, 6);
-  add_edge(adj, 5, 7);
-
+  auto add_edge = [&](int u, int v) {
+    adj[u].push_back(v);
+    adj[v].push_back(u);
+  };
+  add_edge(0, 1);
+  add_edge(0, 2);
+  add_edge(1, 3);
+  add_edge(1, 4);
+  add_edge(2, 5);
+  add_edge(3, 6);
+  add_edge(5, 7);
   VirtualTree vt(adj, 0);
   assert(vt.lca(6, 4) == 1);
   assert(vt.lca(6, 7) == 0);
@@ -181,10 +176,9 @@ int main() {
   assert(vt.depth_of(7) - vt.depth_of(0) == 3);
 
   // Virtual tree of {6, 7}: their LCA is 0, so the tree is 0 -> {6, 7} with edges compressed.
-  //
   //      0
-  //   +--+--+
-  //   6     7
+  //    / |
+  //   6  7
   VirtualTree::Tree t = vt.build({6, 7});
   assert(t.root == 0);
   assert((t.nodes == vector<int>{0, 6, 7}));
@@ -194,12 +188,11 @@ int main() {
   }
 
   // Virtual tree of {6, 4, 7}: node 1 becomes a branch point (LCA of 6 and 4).
-  //
-  //      0
-  //   +--+--+
-  //   1     7
-  // +-+-+
-  // 6   4
+  //        0
+  //      / |
+  //     1  7
+  //   / |
+  //  6  4
   VirtualTree::Tree u = vt.build({6, 4, 7});
   assert(u.root == 0);
   assert((u.nodes == vector<int>{0, 1, 6, 4, 7}));

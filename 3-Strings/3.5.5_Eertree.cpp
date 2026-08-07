@@ -60,18 +60,14 @@ class Eertree {
   }
 
  public:
-  Eertree() : tree(), str(), last(1) {
+  Eertree() : last(1) {
     tree.emplace_back(-1);
     tree.emplace_back(0);
     tree[0].link = 0;
     tree[1].link = 0;
   }
 
-  explicit Eertree(const string &s) : tree(), str(), last(1) {
-    tree.emplace_back(-1);
-    tree.emplace_back(0);
-    tree[0].link = 0;
-    tree[1].link = 0;
+  explicit Eertree(const string &s) : Eertree() {
     for (char c : s) {
       append(c);
     }

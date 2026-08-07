@@ -1,13 +1,21 @@
 /*
 
 Partition a range around a pivot, or select the element with a given sorted rank without fully
-sorting the range. The comparator `comp` defines the ordering and defaults to `std::less<>`.
-Three-way partitioning, also known as the Dutch National Flag algorithm, rearranges the elements
-into consecutive groups that precede, are equivalent to, and follow the pivot. A single pass
-maintains those three regions around an unclassified middle region. An element that precedes the
-pivot is swapped with `*lt` and advances both `lt` and `mid`; an equivalent element advances only
-`mid`; and a following element is swapped with `*--gt` without advancing `mid`, since the incoming
-element is still unclassified.
+sorting the range. A comparator `comp` defines the ordering (defaults to `std::less<>`). Three-way
+partitioning rearranges the elements into consecutive groups that precede, are equivalent to, and
+follow the pivot. `std::partition()` can be used to place elements satisfying a unary predicate
+before those that do not, but forms only two groups and does not preserve relative order. Forming
+three groups can be done by first partitioning by `comp(x, pivot)`, then partitioning the remaining
+suffix by `!comp(pivot, x)`; using `std::stable_partition()` for both calls preserves relative order
+within each group.
+
+`partition_three_way()` implements the Dutch National Flag algorithm, forming the three groups in
+one pass with O(1) auxiliary space. At every iteration, $[`lo`, `lt`)$ contains elements preceding
+the pivot, $[`lt`, `cur`)$ contains equivalent elements, $[`cur`, `gt`)$ remains unclassified, and
+$[`gt`, `hi`)$ contains elements following the pivot. The current element `*cur` is compared with
+the pivot. If it precedes the pivot, it is swapped with `*lt` and both `lt` and `cur` advance. If it
+is equivalent, only `cur` advances. Otherwise, it is swapped with `*--gt` without advancing `cur`,
+since the incoming element remains unclassified.
 
 Quickselect repeatedly applies this partition and continues only into the group containing the
 desired rank. This is the same task as `std::nth_element()`: after the call, `*nth` is the value
@@ -17,7 +25,8 @@ split avoids unnecessary work on duplicate-heavy inputs.
 
 - `partition_three_way(lo, hi, pivot, comp = std::less<>())` rearranges $[`lo`, `hi`)$ in-place and
   returns a pair of iterators (`mid1`, `mid2`). The three resulting ranges contain elements that
-  precede, are equivalent to, and follow `pivot` according to `comp`, respectively.
+  precede, are equivalent to, and follow `pivot` according to `comp`, respectively. The resulting
+  partition is not stable.
 - `nth_element2(lo, nth, hi, comp = std::less<>())` rearranges $[`lo`, `hi`)$ in-place around the
   0-based rank represented by iterator `nth` according to `comp`. This requires random-access
   iterators.
@@ -38,14 +47,14 @@ Space Complexity:
 
 template<typename It, typename T, typename Compare = std::less<>>
 std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot, Compare comp = Compare()) {
-  It lt = lo, mid = lo, gt = hi;
-  while (mid != gt) {
-    if (comp(*mid, pivot)) {
-      std::iter_swap(lt++, mid++);
-    } else if (comp(pivot, *mid)) {
-      std::iter_swap(mid, --gt);
+  It lt = lo, cur = lo, gt = hi;
+  while (cur != gt) {
+    if (comp(*cur, pivot)) {
+      std::iter_swap(lt++, cur++);
+    } else if (comp(pivot, *cur)) {
+      std::iter_swap(cur, --gt);
     } else {
-      ++mid;
+      ++cur;
     }
   }
   return {lt, gt};

@@ -19,6 +19,7 @@ The following functions are equivalent to \inlinecode{std::sort()}, taking rando
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <climits>
 #include <functional>
 #include <iterator>
 #include <type_traits>
@@ -212,12 +213,12 @@ void radix_sort(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
   static_assert(std::is_integral<T>::value && !std::is_same<T, bool>::value);
   using U = typename std::make_unsigned<T>::type;
-  int num_bits = 8 * sizeof(T);  // 8 bits per byte
+  const int num_bits = sizeof(T) * CHAR_BIT;
   // Sort on an unsigned key. For signed types, flipping the sign bit sends the most negative value
   // to 0, mapping the signed order onto the unsigned order; logical shifts then extract each digit.
-  auto key = [](T x) -> U {
+  auto key = [num_bits](T x) -> U {
     U u = static_cast<U>(x);
-    return std::is_signed<T>::value ? (u ^ (U(1) << (8 * sizeof(T) - 1))) : u;
+    return std::is_signed<T>::value ? (u ^ (U(1) << (num_bits - 1))) : u;
   };
   std::vector<T> buf(hi - lo);
   for (int pos = 0; pos < num_bits; pos += radix_bits) {
@@ -357,12 +358,14 @@ combsort():   0.365s
 radix_sort(): 0.016s
 \end{exampleoutput}
 \subsection{Partitioning and Selection}
-Partition a range around a pivot, or select the element with a given sorted rank without fully sorting the range. The comparator \inlinecode{comp} defines the ordering and defaults to \inlinecode{std::less\textless{}\textgreater{}}. Three-way partitioning, also known as the Dutch National Flag algorithm, rearranges the elements into consecutive groups that precede, are equivalent to, and follow the pivot. A single pass maintains those three regions around an unclassified middle region. An element that precedes the pivot is swapped with \inlinecode{*lt} and advances both \inlinecode{lt} and \inlinecode{mid}; an equivalent element advances only \inlinecode{mid}; and a following element is swapped with \inlinecode{*--gt} without advancing \inlinecode{mid}, since the incoming element is still unclassified.
+Partition a range around a pivot, or select the element with a given sorted rank without fully sorting the range. A comparator \inlinecode{comp} defines the ordering (defaults to \inlinecode{std::less\textless{}\textgreater{}}). Three-way partitioning rearranges the elements into consecutive groups that precede, are equivalent to, and follow the pivot. \inlinecode{std::partition()} can be used to place elements satisfying a unary predicate before those that do not, but forms only two groups and does not preserve relative order. Forming three groups can be done by first partitioning by \inlinecode{comp(x, pivot)}, then partitioning the remaining suffix by \inlinecode{!comp(pivot, x)}; using \inlinecode{std::stable\_partition()} for both calls preserves relative order within each group.
+
+\inlinecode{partition\_three\_way()} implements the Dutch National Flag algorithm, forming the three groups in one pass with $O(1)$ auxiliary space. At every iteration, $[{\inlinecodemath{lo}}, {\inlinecodemath{lt}})$ contains elements preceding the pivot, $[{\inlinecodemath{lt}}, {\inlinecodemath{cur}})$ contains equivalent elements, $[{\inlinecodemath{cur}}, {\inlinecodemath{gt}})$ remains unclassified, and $[{\inlinecodemath{gt}}, {\inlinecodemath{hi}})$ contains elements following the pivot. The current element \inlinecode{*cur} is compared with the pivot. If it precedes the pivot, it is swapped with \inlinecode{*lt} and both \inlinecode{lt} and \inlinecode{cur} advance. If it is equivalent, only \inlinecode{cur} advances. Otherwise, it is swapped with \inlinecode{*--gt} without advancing \inlinecode{cur}, since the incoming element remains unclassified.
 
 Quickselect repeatedly applies this partition and continues only into the group containing the desired rank. This is the same task as \inlinecode{std::nth\_element()}: after the call, \inlinecode{*nth} is the value that would appear there in comparator order, no earlier value follows it, and no later value precedes it. Choosing pivots uniformly at random gives expected linear time, while the three-way split avoids unnecessary work on duplicate-heavy inputs.
 
 \begin{compactitem}
-  \item \inlinecode{partition\_three\_way(lo, hi, pivot, comp = std::less\textless{}\textgreater{}())} rearranges $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ in-place and returns a pair of iterators (\inlinecode{mid1}, \inlinecode{mid2}). The three resulting ranges contain elements that precede, are equivalent to, and follow \inlinecode{pivot} according to \inlinecode{comp}, respectively.
+  \item \inlinecode{partition\_three\_way(lo, hi, pivot, comp = std::less\textless{}\textgreater{}())} rearranges $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ in-place and returns a pair of iterators (\inlinecode{mid1}, \inlinecode{mid2}). The three resulting ranges contain elements that precede, are equivalent to, and follow \inlinecode{pivot} according to \inlinecode{comp}, respectively. The resulting partition is not stable.
   \item \inlinecode{nth\_element2(lo, nth, hi, comp = std::less\textless{}\textgreater{}())} rearranges $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ in-place around the 0-based rank represented by iterator \inlinecode{nth} according to \inlinecode{comp}. This requires random-access iterators.
 \end{compactitem}
 
@@ -383,14 +386,14 @@ Quickselect repeatedly applies this partition and continues only into the group 
 
 template<typename It, typename T, typename Compare = std::less<>>
 std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot, Compare comp = Compare()) {
-  It lt = lo, mid = lo, gt = hi;
-  while (mid != gt) {
-    if (comp(*mid, pivot)) {
-      std::iter_swap(lt++, mid++);
-    } else if (comp(pivot, *mid)) {
-      std::iter_swap(mid, --gt);
+  It lt = lo, cur = lo, gt = hi;
+  while (cur != gt) {
+    if (comp(*cur, pivot)) {
+      std::iter_swap(lt++, cur++);
+    } else if (comp(pivot, *cur)) {
+      std::iter_swap(cur, --gt);
     } else {
-      ++mid;
+      ++cur;
     }
   }
   return {lt, gt};
@@ -1351,9 +1354,9 @@ For any histogram bar, the nearest strictly lower bars to its left and right are
 All functions below take a vector \inlinecode{a} of $n$ comparable values and return a vector of $n$ indices. A ``less'' query uses a strictly smaller neighbor and a ``greater'' query uses a strictly larger one; changing the comparison from strict to non-strict (e.g. \inlinecode{\textgreater{}=} to \inlinecode{\textgreater{}}) toggles how ties are handled.
 
 \begin{compactitem}
-  \item \inlinecode{previous\_less(a)} returns, for each $i$, the largest index $j < i$ with $a[j] < a[i]$, or $-1$ if there's no such index.
+  \item \inlinecode{prev\_less(a)} returns, for each $i$, the largest index $j < i$ with $a[j] < a[i]$, or $-1$ if there's no such index.
   \item \inlinecode{next\_less(a)} returns, for each $i$, the smallest index $j > i$ with $a[j] < a[i]$, or $n$ if there's no such index.
-  \item \inlinecode{previous\_greater(a)} returns, for each $i$, the largest index $j < i$ with $a[j] > a[i]$, or $-1$ if there's no such index.
+  \item \inlinecode{prev\_greater(a)} returns, for each $i$, the largest index $j < i$ with $a[j] > a[i]$, or $-1$ if there's no such index.
   \item \inlinecode{next\_greater(a)} returns, for each $i$, the smallest index $j > i$ with $a[j] > a[i]$, or $n$ if there's no such index.
   \item \inlinecode{largest\_histogram\_rectangle(heights)} returns the maximum area of an axis-aligned rectangle that fits under the given histogram, given an array of \inlinecode{heights} where each bar has width $1$.
   \item \inlinecode{largest\_zero\_submatrix(a)} returns the area of the largest all-zero rectangular submatrix of the 0/1 matrix \inlinecode{a}.
@@ -1383,7 +1386,7 @@ Histogram areas must fit in the height value type.
 #include <vector>
 
 template<typename T>
-std::vector<int> previous_less(const std::vector<T> &a) {
+std::vector<int> prev_less(const std::vector<T> &a) {
   int n = static_cast<int>(a.size());
   std::vector<int> res(n);
   std::stack<int> s;
@@ -1413,7 +1416,7 @@ std::vector<int> next_less(const std::vector<T> &a) {
 }
 
 template<typename T>
-std::vector<int> previous_greater(const std::vector<T> &a) {
+std::vector<int> prev_greater(const std::vector<T> &a) {
   int n = static_cast<int>(a.size());
   std::vector<int> res(n);
   std::stack<int> s;
@@ -1445,7 +1448,7 @@ std::vector<int> next_greater(const std::vector<T> &a) {
 template<typename T>
 T largest_histogram_rectangle(const std::vector<T> &heights) {
   int n = static_cast<int>(heights.size());
-  std::vector<int> left = previous_less(heights), right = next_less(heights);
+  std::vector<int> left = prev_less(heights), right = next_less(heights);
   T best = 0;
   for (int i = 0; i < n; i++) {
     T area = heights[i] * (right[i] - left[i] - 1);  // Overflow warning.
@@ -1479,9 +1482,9 @@ using namespace std;
 
 int main() {
   vector<int> a{2, 1, 4, 3};
-  assert((previous_less(a) == vector<int>{-1, -1, 1, 1}));
+  assert((prev_less(a) == vector<int>{-1, -1, 1, 1}));
   assert((next_less(a) == vector<int>{1, 4, 3, 4}));
-  assert((previous_greater(a) == vector<int>{-1, 0, -1, 2}));
+  assert((prev_greater(a) == vector<int>{-1, 0, -1, 2}));
   assert((next_greater(a) == vector<int>{2, 2, 4, 4}));
 
   vector<int> hist{2, 1, 5, 6, 2, 3};

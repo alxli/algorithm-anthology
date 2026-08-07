@@ -4,8 +4,6 @@ Maintain a two-dimensional numerical array while supporting point increments and
 queries. This is the two-dimensional form of the standard Fenwick tree: each internal entry stores a
 rectangular block sum, and a prefix query combines O(log(R)*log(C)) disjoint blocks.
 
-The value type `T` must represent $0$ and support addition and subtraction.
-
 Choose among the three 2D Fenwick trees by coordinate range and update style. Use this dense version
 when the rows and columns are small enough to allocate the full grid: it has the simplest code and
 the best constants, supporting point updates and rectangle sums. Use the sparse 2D Fenwick tree
@@ -25,6 +23,8 @@ segment tree instead, since Fenwick-tree algebra relies on addition and subtract
 - `sum(r, c)` returns the sum of the rectangle with rows $[0, `r`]$ and columns $[0, `c`]$.
 - `sum(r1, c1, r2, c2)` returns the sum of the rectangle with rows $[`r1`, `r2`]$ and columns
   $[`c1`, `c2`]$.
+
+The value type `T` must represent $0$ and support addition and subtraction.
 
 Time Complexity:
 - O(R*C) per call to the constructor, where $R$ and $C$ are the number of rows and columns.

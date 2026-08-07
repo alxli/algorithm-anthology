@@ -18,16 +18,13 @@ instead. The explicit tree is also useful for interval divide-and-conquer and tr
 largest-rectangle application is implemented directly with a monotone stack in 1.2.4.
 
 - `CartesianTree(a, comp = std::less<>())` constructs the tree for array `a`.
-- `size()` returns the size of the array.
-- `empty()` returns whether the array is empty.
-- `root()` returns the root index, or $-1$ if the array is empty.
-- `parent(i)`, `left(i)`, and `right(i)` return neighboring node indices, or $-1$ if absent.
+- `root` is the root index, or $-1$ if the array is empty. The arrays `parent`, `left`, and `right`
+  store the neighboring node indices, using $-1$ when a neighbor is absent.
 - `range_min_index(lo, hi)` returns the index of the first value in comparator order within
   $[`lo`, `hi`]$.
 
 Time Complexity:
 - O(n) per call to the constructor, where $n$ is the array size.
-- O(1) per call to `size()`, `empty()`, `root()`, `parent()`, `left()`, and `right()`.
 - O(h) per call to `range_min_index()`, where $h$ is the tree height and may be O(n).
 
 Space Complexity:
@@ -39,14 +36,13 @@ Space Complexity:
 #include <functional>
 #include <vector>
 
-class CartesianTree {
-  int root_;
-  std::vector<int> parent_, left_, right_;
+struct CartesianTree {
+  int root;
+  std::vector<int> parent, left, right;
 
- public:
   template<typename T, typename Compare = std::less<>>
   explicit CartesianTree(const std::vector<T> &a, Compare comp = Compare())
-      : root_(-1), parent_(a.size(), -1), left_(a.size(), -1), right_(a.size(), -1) {
+      : root(-1), parent(a.size(), -1), left(a.size(), -1), right(a.size(), -1) {
     std::vector<int> st;
     for (int i = 0, n = static_cast<int>(a.size()); i < n; i++) {
       int last = -1;
@@ -55,42 +51,25 @@ class CartesianTree {
         st.pop_back();
       }
       if (!st.empty()) {
-        right_[st.back()] = i;
-        parent_[i] = st.back();
+        right[st.back()] = i;
+        parent[i] = st.back();
       }
       if (last != -1) {
-        left_[i] = last;
-        parent_[last] = i;
+        left[i] = last;
+        parent[last] = i;
       }
       st.push_back(i);
     }
-    root_ = st.empty() ? -1 : st[0];
+    root = st.empty() ? -1 : st[0];
   }
 
-  int size() const { return static_cast<int>(parent_.size()); }
-  bool empty() const { return parent_.empty(); }
-  int root() const { return root_; }
-
-  int parent(int i) const {
-    assert(0 <= i && i < size());
-    return parent_[i];
-  }
-
-  int left(int i) const {
-    assert(0 <= i && i < size());
-    return left_[i];
-  }
-
-  int right(int i) const {
-    assert(0 <= i && i < size());
-    return right_[i];
-  }
+  int size() const { return static_cast<int>(parent.size()); }
 
   int range_min_index(int lo, int hi) const {
-    assert(0 <= lo && lo <= hi && hi < size());
-    int i = root_;
+    assert(0 <= lo && lo <= hi && hi < static_cast<int>(parent.size()));
+    int i = root;
     while (i < lo || hi < i) {
-      i = i < lo ? right_[i] : left_[i];
+      i = i < lo ? right[i] : left[i];
     }
     return i;
   }
@@ -103,11 +82,11 @@ using namespace std;
 int main() {
   vector<int> a{3, 2, 6, 1, 9};
   CartesianTree t(a);
-  assert(t.size() == 5 && !t.empty());
-  assert(t.root() == 3);  // The global minimum is a[3] = 1.
-  assert(t.parent(1) == 3);
-  assert(t.left(3) == 1);
-  assert(t.right(3) == 4);
+  assert(t.size() == 5);
+  assert(t.root == 3);  // The global minimum is a[3] = 1.
+  assert(t.parent[1] == 3);
+  assert(t.left[3] == 1);
+  assert(t.right[3] == 4);
   assert(t.range_min_index(0, 2) == 1);  // min({3, 2, 6}) is a[1].
   assert(t.range_min_index(2, 4) == 3);  // min({6, 1, 9}) is a[3].
 
@@ -116,7 +95,7 @@ int main() {
   assert(equal_tree.range_min_index(1, 3) == 1);  // Earlier equal minima win ties.
 
   CartesianTree max_tree(a, greater<int>());
-  assert(max_tree.root() == 4);
+  assert(max_tree.root == 4);
   assert(max_tree.range_min_index(0, 2) == 2);  // First under greater<int>: the numeric maximum.
   return 0;
 }

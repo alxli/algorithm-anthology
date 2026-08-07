@@ -60,7 +60,7 @@ class SuffixAutomaton {
  public:
   SuffixAutomaton() : st(1), last(0) {}
 
-  explicit SuffixAutomaton(const string &s) : st(1), last(0) {
+  explicit SuffixAutomaton(const string &s) : SuffixAutomaton() {
     for (char c : s) {
       append(c);
     }

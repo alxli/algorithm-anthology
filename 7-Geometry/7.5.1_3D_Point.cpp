@@ -38,7 +38,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -65,10 +65,10 @@ struct TPoint3 {
   T sqnorm() const { return x * x + y * y + z * z; }                     // Overflow warning.
 
   fp_t norm() const {
-    return hypot(hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)), static_cast<fp_t>(z));
+    return std::hypot(std::hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)), static_cast<fp_t>(z));
   }
 
-  fp_t phi() const { return atan2(static_cast<fp_t>(y), static_cast<fp_t>(x)); }
+  fp_t phi() const { return std::atan2(static_cast<fp_t>(y), static_cast<fp_t>(x)); }
   TPoint3<fp_t> unit() const { return *this / norm(); }
 
   TPoint3 cross(const TPoint3 &p) const {
@@ -78,11 +78,11 @@ struct TPoint3 {
   TPoint3<fp_t> normal(const TPoint3 &p) const { return cross(p).unit(); }
 
   fp_t theta() const {
-    return atan2(hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)), static_cast<fp_t>(z));
+    return std::atan2(std::hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)), static_cast<fp_t>(z));
   }
 
   TPoint3<fp_t> rotate(fp_t angle, const TPoint3 &axis) const {
-    fp_t s = sin(angle), c = cos(angle);
+    fp_t s = std::sin(angle), c = std::cos(angle);
     TPoint3<fp_t> u = axis.unit(), v((fp_t)x, (fp_t)y, (fp_t)z);
     return u * v.dot(u) * (1 - c) + v * c - v.cross(u) * s;
   }
@@ -94,6 +94,8 @@ using Point3D = TPoint3<double>;
 using Point3LD = TPoint3<long double>;
 
 /*** Example Usage ***/
+
+using namespace std;
 
 int main() {
   Point3I a(1, 0, 0), b(0, 1, 0);

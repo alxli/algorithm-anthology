@@ -71,12 +71,6 @@ class HashDeque {
   static const uint64_t MOD1 = 1000000007, MOD2 = 1000000009;  // Distinct primes below 2^31.
   static const uint64_t BASE1 = 131, BASE2 = 137;              // Nonzero modulo MOD1 and MOD2.
 
-  Hash hasher;                  // Maps an element to its nonnegative integer digit.
-  std::deque<uint64_t> digits;  // Per-element digit values, retained so pops never re-hash.
-  uint64_t h1 = 0, h2 = 0;      // Hash of the current sequence modulo MOD1, MOD2.
-  uint64_t top1, top2;          // B^(len-1): weight of the front element (B^-1 while empty).
-  uint64_t inv1, inv2;          // Modular inverses of BASE1, BASE2, for pop_back().
-
   // Products and sums of residues below 2^30 stay under 2^60, so 64-bit arithmetic never overflows.
   static uint64_t powmod(uint64_t b, uint64_t e, uint64_t m) {
     uint64_t res = 1;
@@ -89,13 +83,16 @@ class HashDeque {
     return res;
   }
 
+  inline static const uint64_t INV1 = powmod(BASE1, MOD1 - 2, MOD1);
+  inline static const uint64_t INV2 = powmod(BASE2, MOD2 - 2, MOD2);
+
+  Hash hasher;                        // Maps an element to its nonnegative integer digit.
+  std::deque<uint64_t> digits;        // Per-element digit values, retained so pops never re-hash.
+  uint64_t h1 = 0, h2 = 0;            // Hash of the current sequence modulo MOD1, MOD2.
+  uint64_t top1 = INV1, top2 = INV2;  // B^(len-1), or B^-1 while empty.
+
  public:
-  explicit HashDeque(Hash hasher = Hash()) : hasher(hasher) {
-    inv1 = powmod(BASE1, MOD1 - 2, MOD1);
-    inv2 = powmod(BASE2, MOD2 - 2, MOD2);
-    top1 = inv1;  // B^(0-1) = B^-1, so the first push lifts the front weight to B^0 = 1.
-    top2 = inv2;
-  }
+  explicit HashDeque(Hash hasher = Hash()) : hasher(hasher) {}
 
   int size() const { return static_cast<int>(digits.size()); }
   bool empty() const { return digits.empty(); }
@@ -124,18 +121,18 @@ class HashDeque {
     uint64_t d = digits.front(), c1 = d % MOD1, c2 = d % MOD2;
     h1 = (h1 + MOD1 - c1 * top1 % MOD1) % MOD1;
     h2 = (h2 + MOD2 - c2 * top2 % MOD2) % MOD2;
-    top1 = top1 * inv1 % MOD1;
-    top2 = top2 * inv2 % MOD2;
+    top1 = top1 * INV1 % MOD1;
+    top2 = top2 * INV2 % MOD2;
     digits.pop_front();
   }
 
   void pop_back() {
     assert(!digits.empty());
     uint64_t d = digits.back(), c1 = d % MOD1, c2 = d % MOD2;
-    h1 = (h1 + MOD1 - c1) % MOD1 * inv1 % MOD1;
-    h2 = (h2 + MOD2 - c2) % MOD2 * inv2 % MOD2;
-    top1 = top1 * inv1 % MOD1;
-    top2 = top2 * inv2 % MOD2;
+    h1 = (h1 + MOD1 - c1) % MOD1 * INV1 % MOD1;
+    h2 = (h2 + MOD2 - c2) % MOD2 * INV2 % MOD2;
+    top1 = top1 * INV1 % MOD1;
+    top2 = top2 * INV2 % MOD2;
     digits.pop_back();
   }
 

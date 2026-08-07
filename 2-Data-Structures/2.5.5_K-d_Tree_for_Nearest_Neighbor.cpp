@@ -31,7 +31,6 @@ Space Complexity:
 #include <cassert>
 #include <cfloat>
 #include <climits>
-#include <iterator>
 #include <utility>
 #include <vector>
 
@@ -70,52 +69,45 @@ class NearestKDTree {
     build(mid + 1, hi);
   }
 
-  // Helper variables for nearest().
-  long double min_dist;
-  int id;
-
-  void nearest(int lo, int hi, const T &x, const T &y, bool can_equal) {
-    if (lo >= hi) {
-      return;
-    }
-    int mid = lo + (hi - lo) / 2;
-    long double dx = static_cast<long double>(x) - tree[mid].first;
-    long double dy = static_cast<long double>(y) - tree[mid].second;
-    long double d = dx * dx + dy * dy;
-    if (d < min_dist && (can_equal || d != 0)) {
-      min_dist = d;
-      id = mid;
-    }
-    if (lo + 1 == hi) {
-      return;
-    }
-    d = div_x[mid] ? dx : dy;
-    int l1 = lo, r1 = mid, l2 = mid + 1, r2 = hi;
-    if (d > 0) {
-      std::swap(l1, l2);
-      std::swap(r1, r2);
-    }
-    nearest(l1, r1, x, y, can_equal);
-    if (d * static_cast<long double>(d) < min_dist) {
-      nearest(l2, r2, x, y, can_equal);
-    }
-  }
-
  public:
   template<typename It>
-  NearestKDTree(It lo, It hi) : tree(lo, hi) {
-    int n = std::distance(lo, hi);
-    assert(n > 0);
-    div_x.resize(n);
-    build(0, n);
+  NearestKDTree(It lo, It hi) : tree(lo, hi), div_x(tree.size()) {
+    assert(!tree.empty());
+    build(0, static_cast<int>(tree.size()));
   }
 
-  std::pair<T, T> nearest(const T &x, const T &y, bool can_equal = true) {
-    min_dist = LDBL_MAX;
-    id = -1;
-    nearest(0, static_cast<int>(tree.size()), x, y, can_equal);
-    assert(id != -1);
-    return tree[id];
+  std::pair<T, T> nearest(const T &x, const T &y, bool can_equal = true) const {
+    long double best_dist = LDBL_MAX;
+    int best = -1;
+    auto rec = [&](auto &&rec, int lo, int hi) -> void {
+      if (lo >= hi) {
+        return;
+      }
+      int mid = lo + (hi - lo) / 2;
+      long double dx = static_cast<long double>(x) - tree[mid].first;
+      long double dy = static_cast<long double>(y) - tree[mid].second;
+      long double dist = dx * dx + dy * dy;
+      if (dist < best_dist && (can_equal || dist != 0)) {
+        best_dist = dist;
+        best = mid;
+      }
+      if (lo + 1 == hi) {
+        return;
+      }
+      long double axis_delta = div_x[mid] ? dx : dy;
+      int l1 = lo, r1 = mid, l2 = mid + 1, r2 = hi;
+      if (axis_delta > 0) {
+        std::swap(l1, l2);
+        std::swap(r1, r2);
+      }
+      rec(rec, l1, r1);
+      if (axis_delta * axis_delta < best_dist) {
+        rec(rec, l2, r2);
+      }
+    };
+    rec(rec, 0, static_cast<int>(tree.size()));
+    assert(best != -1);
+    return tree[best];
   }
 };
 

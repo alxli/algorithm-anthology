@@ -127,9 +127,8 @@ class RollingHash {
     build(lo, hi);
   }
 
-  explicit RollingHash(const std::vector<T> &v, const Hash &hasher = Hash()) : hasher(hasher) {
-    build(v.begin(), v.end());
-  }
+  explicit RollingHash(const std::vector<T> &v, const Hash &hasher = Hash())
+      : RollingHash(v.begin(), v.end(), hasher) {}
 
   int size() const { return static_cast<int>(pref.size()) - 1; }
 

@@ -53,7 +53,7 @@ const double EPS = 1e-9;
 // or Rational, which therefore compose for all of the predicates below.
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -113,8 +113,8 @@ struct TPoint {
 
   // --- Floating-point operations: return fp_t or TPoint<fp_t> ---
 
-  fp_t norm() const { return hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)); }
-  fp_t arg() const { return atan2(static_cast<fp_t>(y), static_cast<fp_t>(x)); }
+  fp_t norm() const { return std::hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)); }
+  fp_t arg() const { return std::atan2(static_cast<fp_t>(y), static_cast<fp_t>(x)); }
 
   fp_t proj(const TPoint &p) const {
     return (static_cast<fp_t>(x) * p.x + static_cast<fp_t>(y) * p.y) / p.norm();
@@ -145,13 +145,13 @@ struct TPoint {
   // Returns (x, y) rotated t radians clockwise about the origin.
   TPoint<fp_t> rotateCW(fp_t t) const {
     fp_t fx = (fp_t)x, fy = (fp_t)y;
-    return {fx * cos(t) + fy * sin(t), fy * cos(t) - fx * sin(t)};
+    return {fx * std::cos(t) + fy * std::sin(t), fy * std::cos(t) - fx * std::sin(t)};
   }
 
   // Returns (x, y) rotated t radians counter-clockwise about the origin.
   TPoint<fp_t> rotateCCW(fp_t t) const {
     fp_t fx = (fp_t)x, fy = (fp_t)y;
-    return {fx * cos(t) - fy * sin(t), fx * sin(t) + fy * cos(t)};
+    return {fx * std::cos(t) - fy * std::sin(t), fx * std::sin(t) + fy * std::cos(t)};
   }
 
   // Returns (x, y) rotated t radians clockwise about point p.
@@ -216,7 +216,8 @@ struct TPoint {
 
   friend std::ostream &operator<<(std::ostream &out, const TPoint &p) {
     if constexpr (std::is_floating_point<T>::value) {
-      return out << "(" << (fabs(p.x) < EPS ? 0 : p.x) << "," << (fabs(p.y) < EPS ? 0 : p.y) << ")";
+      return out << "(" << (std::fabs(p.x) < EPS ? 0 : p.x) << ","
+                 << (std::fabs(p.y) < EPS ? 0 : p.y) << ")";
     }
     return out << "(" << p.x << "," << p.y << ")";
   }
@@ -237,6 +238,7 @@ using Point = PointD;  // Default point type is double.
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+using namespace std;
 
 const double PI = acos(-1.0);
 
@@ -334,7 +336,7 @@ const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 // or Rational, which therefore compose for all of the predicates below.
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -572,7 +574,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -776,7 +778,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -890,7 +892,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -906,7 +908,7 @@ template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
 
 template<typename Pt, typename T>
 bool point_in_rectangle(
-    const Pt &p, const Pt &v, const T &w, const T &h, const bool include_boundary = true
+    const Pt &p, const Pt &v, const T &w, const T &h, bool include_boundary = true
 ) {
   if (w < 0) {
     return point_in_rectangle(p, Pt(v.x + w, v.y), -w, h, include_boundary);
@@ -919,7 +921,7 @@ bool point_in_rectangle(
 }
 
 template<typename Pt>
-bool point_in_rectangle(const Pt &p, const Pt &a, const Pt &b, const bool include_boundary = true) {
+bool point_in_rectangle(const Pt &p, const Pt &a, const Pt &b, bool include_boundary = true) {
   auto xl = std::min(a.x, b.x), yl = std::min(a.y, b.y);
   auto xh = std::max(a.x, b.x), yh = std::max(a.y, b.y);
   return point_in_rectangle(p, Pt(xl, yl), xh - xl, yh - yl, include_boundary);
@@ -1036,7 +1038,7 @@ const double RAD = 180 / PI;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -1166,7 +1168,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -1362,7 +1364,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -1499,7 +1501,7 @@ int seg_intersection(
 // Alternatively, just call the version above and pass static_cast<Pt *>(nullptr) for p and q.
 template<typename Pt>
 int seg_intersection(
-    const Pt &a, const Pt &b, const Pt &c, const Pt &d, const bool include_boundary = true
+    const Pt &a, const Pt &b, const Pt &c, const Pt &d, bool include_boundary = true
 ) {
   auto ab_x = b.x - a.x, ab_y = b.y - a.y;
   auto ac_x = c.x - a.x, ac_y = c.y - a.y;
@@ -1638,7 +1640,7 @@ const double EPS = 1e-9, PI = acos(-1.0);
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -1887,7 +1889,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -1912,7 +1914,7 @@ struct Point {
 
 template<typename PtA, typename PtB>
 std::vector<std::pair<Point, Point>> circle_tangents(
-    const PtA &c1, double r1, const PtB &c2, double r2, const bool internal = false
+    const PtA &c1, double r1, const PtB &c2, double r2, bool internal = false
 ) {
   r1 = fabs(r1);
   r2 = fabs(r2);
@@ -2022,7 +2024,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -2426,7 +2428,7 @@ bool on_segment(const Pt &p, const Pt &a, const Pt &b) {
 
 template<typename Pt>
 bool point_in_convex_polygon(
-    const std::vector<Pt> &poly, const Pt &p, const bool include_boundary = true
+    const std::vector<Pt> &poly, const Pt &p, bool include_boundary = true
 ) {
   int n = static_cast<int>(poly.size());
   if (n == 0) {
@@ -2591,7 +2593,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -3277,7 +3279,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -3406,7 +3408,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -3561,7 +3563,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -3709,7 +3711,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -3826,6 +3828,14 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
     double x, y;
   };  // For line intersection with the sweep line.
   std::vector<It> poly_lo{lo1, lo2}, poly_hi{hi1, hi2};
+  int orientation[2];
+  for (int poly = 0; poly < 2; poly++) {
+    double area = 0;
+    for (It i = poly_lo[poly], j = poly_hi[poly] - 1; i != poly_hi[poly]; j = i++) {
+      area += (static_cast<double>(j->x) - i->x) * (static_cast<double>(j->y) + i->y);
+    }
+    orientation[poly] = (area < 0 ? 1 : (area > 0 ? -1 : 0));
+  }
   std::vector<double> x_coords;
   for (It it = lo1; it != hi1; ++it) {
     x_coords.push_back(it->x);
@@ -3842,7 +3852,10 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
     }
   }
   std::sort(x_coords.begin(), x_coords.end());
-  x_coords.erase(std::unique(x_coords.begin(), x_coords.end()), x_coords.end());
+  x_coords.erase(
+      std::unique(x_coords.begin(), x_coords.end(), [](double a, double b) { return EQ(a, b); }),
+      x_coords.end()
+  );
   double res = 0;
   for (int k = 0; k + 1 < static_cast<int>(x_coords.size()); k++) {
     double x = (x_coords[k] + x_coords[k + 1]) / 2;
@@ -3850,19 +3863,14 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
     std::vector<Event> events;
     for (int poly = 0; poly < 2; poly++) {
       It lo = poly_lo[poly], hi = poly_hi[poly];
-      double area = 0;
-      for (It i = lo, j = hi - 1; i != hi; j = i++) {
-        area += (static_cast<double>(j->x) - i->x) * (static_cast<double>(j->y) + i->y);
-      }
       for (It j = lo, i = hi - 1; j != hi; i = j++) {
         double px, py;
         if (line_intersection1(*j, *i, sweep0, sweep1, &px, &py) == 0) {
           double y = py, x0 = i->x, x1 = j->x;
-          int sgn_area = (area < 0 ? 1 : (area > 0 ? -1 : 0));
           if (x0 < x && x1 > x) {
-            events.emplace_back(y, sgn_area * (1 << poly));
+            events.emplace_back(y, orientation[poly] * (1 << poly));
           } else if (x0 > x && x1 < x) {
-            events.emplace_back(y, -sgn_area * (1 << poly));
+            events.emplace_back(y, -orientation[poly] * (1 << poly));
           }
         }
       }
@@ -3975,7 +3983,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -4127,7 +4135,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -4431,7 +4439,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -4458,10 +4466,10 @@ struct TPoint3 {
   T sqnorm() const { return x * x + y * y + z * z; }                     // Overflow warning.
 
   fp_t norm() const {
-    return hypot(hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)), static_cast<fp_t>(z));
+    return std::hypot(std::hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)), static_cast<fp_t>(z));
   }
 
-  fp_t phi() const { return atan2(static_cast<fp_t>(y), static_cast<fp_t>(x)); }
+  fp_t phi() const { return std::atan2(static_cast<fp_t>(y), static_cast<fp_t>(x)); }
   TPoint3<fp_t> unit() const { return *this / norm(); }
 
   TPoint3 cross(const TPoint3 &p) const {
@@ -4471,11 +4479,11 @@ struct TPoint3 {
   TPoint3<fp_t> normal(const TPoint3 &p) const { return cross(p).unit(); }
 
   fp_t theta() const {
-    return atan2(hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)), static_cast<fp_t>(z));
+    return std::atan2(std::hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)), static_cast<fp_t>(z));
   }
 
   TPoint3<fp_t> rotate(fp_t angle, const TPoint3 &axis) const {
-    fp_t s = sin(angle), c = cos(angle);
+    fp_t s = std::sin(angle), c = std::cos(angle);
     TPoint3<fp_t> u = axis.unit(), v((fp_t)x, (fp_t)y, (fp_t)z);
     return u * v.dot(u) * (1 - c) + v * c - v.cross(u) * s;
   }
@@ -4489,6 +4497,8 @@ using Point3LD = TPoint3<long double>;
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+using namespace std;
+
 int main() {
   Point3I a(1, 0, 0), b(0, 1, 0);
   assert(a.dot(b) == 0);

@@ -45,7 +45,7 @@ Space Complexity:
 template<typename State, typename Energy, typename Neighbor>
 std::pair<double, State> anneal_min(
     State initial, Energy energy, Neighbor rand_neighbor, std::mt19937 &rng,
-    const double temp_start = 1000, const double temp_end = 1e-6, const double cooling_rate = 0.995
+    double temp_start = 1000, double temp_end = 1e-6, double cooling_rate = 0.995
 ) {
   assert(0 < temp_end && temp_end < temp_start);
   assert(0 < cooling_rate && cooling_rate < 1);
@@ -98,15 +98,14 @@ int main() {
     }
     return length;
   };
-  auto reverse_segment = [](const vector<int> &tour, double, mt19937 &gen) {
-    vector<int> next = tour;
+  auto reverse_segment = [](vector<int> tour, double, mt19937 &gen) {
     uniform_int_distribution<int> pick(0, static_cast<int>(tour.size()) - 1);
     int lo = pick(gen), hi = pick(gen);
     if (lo > hi) {
       swap(lo, hi);
     }
-    reverse(next.begin() + lo, next.begin() + hi + 1);
-    return next;
+    reverse(tour.begin() + lo, tour.begin() + hi + 1);
+    return tour;
   };
   vector<int> initial_tour{0, 4, 2, 6, 1, 5, 3, 7};
   auto [best_length, best_tour] =

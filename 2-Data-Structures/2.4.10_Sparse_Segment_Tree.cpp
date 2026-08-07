@@ -3,14 +3,14 @@
 A sparse segment tree (also commonly called a dynamic or implicit segment tree) maintains an array
 over a large index range while supporting both dynamic queries and updates of contiguous subarrays
 via the lazy propagation technique. This implementation uses lazy initialization of nodes to
-conserve memory: only the nodes covering touched indices are ever allocated, so indices up to `N`
-are supported without preallocating the whole tree.
+conserve memory: only the nodes covering touched indices are ever allocated, so a huge index range
+is supported without preallocating the whole tree.
 
 The query operation is defined by an associative aggregate function `combine(a, b)`. Since untouched
-nodes are implicit, `repeat_value(v, len)` must return the aggregate summary of `len` copies of the
+nodes are implicit, `combine_n(v, len)` must return the aggregate summary of `len` copies of the
 initial value `v`. The default code below assumes a numerical array type, defining queries for the
 "min" of the target range. For range-sum queries, `combine(a, b)` should return `a + b` and
-`repeat_value(v, len)` should return `v * len`.
+`combine_n(v, len)` should return `v * len`.
 
 Range updates are defined by `apply_delta(v, d, len)`, which applies an update delta `d` to an
 aggregate summary `v` representing `len` array values, and by `compose_deltas(old, d)`, which
@@ -21,26 +21,27 @@ performing their updates sequentially. The default code below defines range assi
 increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, len)` should return
 `v + d` for range-min/range-max queries, and `v + d * len` for range-sum queries.
 
-- `SparseSegTree<T, N>(v = T())` constructs an array over indices $[0, `N`]$, with every value
+- `SparseSegTree<T, N>(v = T())` constructs an array over indices $[0, `N`)$, with every value
   implicitly initialized to `v`. Nodes are allocated lazily as indices are touched.
-- `at(i)` returns the value at index `i`, where `i` must be in $[0, `N`]$.
-- `query(lo, hi)` returns the result of `combine()` applied to all indices in $[`lo`, `hi`]$. If
-  `lo == hi`, then the single specified value is returned.
+- `at(i)` returns the value at index `i`, where `i` must be in $[0, `N`)$.
+- `query(lo, hi)` returns the aggregate of the values at indices in $[`lo`, `hi`]$. If `lo == hi`,
+  then the single specified value is returned.
 - `update(i, d)` assigns the value `v` at index `i` to `apply_delta(v, d)`.
 - `update(lo, hi, d)` modifies the value at each array index in $[`lo`, `hi`]$ by applying the delta
   `d` to each value.
 - `max_right(lo, pred)` returns the largest boundary `hi` such that the aggregate over the half-open
-  range $[`lo`, `hi`)$ satisfies the monotonic predicate `pred()`. It returns $N + 1$ if `pred()`
+  range $[`lo`, `hi`)$ satisfies `pred()`. As `hi` increases, `pred()` applied to this aggregate may
+  change only from true to false. The empty range is valid, and `N` is returned if the predicate
   remains true to the end.
 - `min_left(hi, pred)` returns the smallest boundary `lo` such that the aggregate over the half-open
-  range $[`lo`, `hi`)$ satisfies the monotonic predicate `pred()`. It returns $0$ if `pred()`
+  range $[`lo`, `hi`)$ satisfies `pred()`. As `lo` decreases, `pred()` applied to this aggregate may
+  change only from true to false. The empty range is valid, and $0$ is returned if the predicate
   remains true to the beginning.
 
-For the boundary-search functions, `pred()` takes aggregate `T` values of candidate ranges. As a
-range grows, `pred()` may change from true to false but never back to true; the empty range is
-considered valid. E.g. for `combine = min`, use `pred(mn) = (mn > x)` to find the first value
-`<= x`, or for `combine = sum`, use `pred(sum) = (sum <= x)` with nonnegative values to find the
-longest range within the limit `x`.
+For the boundary-search functions, `pred()` takes aggregate `T` values. For `combine = min`,
+`pred(mn) = (mn > x)` makes `max_right()` stop at the first value `<= x` when extending right, while
+`min_left()` stops just after the first such value when extending left. With nonnegative values and
+`combine = sum`, `pred(sum) = (sum <= x)` finds the longest extension with sum at most `x`.
 
 Time Complexity:
 - O(1) per call to the constructor.
@@ -55,16 +56,15 @@ Space Complexity:
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
-#include <limits>
 #include <optional>
 #include <vector>
 
-template<typename T, int N = 1000000000>
+template<typename T, int N = 1000000001>
 class SparseSegTree {
-  static_assert(0 <= N && N < std::numeric_limits<int>::max());
+  static_assert(N > 0);
 
   static T combine(const T &a, const T &b) { return std::min(a, b); }
-  static T repeat_value(const T &v, int64_t len) { return v; }
+  static T combine_n(const T &v, int64_t len) { return v; }
   static T apply_delta(const T &v, const T &d, int64_t len) { return d; }
   static T compose_deltas(const T &d1, const T &d2) { return d2; }
 
@@ -80,7 +80,7 @@ class SparseSegTree {
 
   void update_delta(Node *&n, const T &d, int64_t len) {
     if (n == nullptr) {
-      n = new Node(repeat_value(init, len));
+      n = new Node(combine_n(init, len));
     }
     n->delta = n->pending ? compose_deltas(n->delta, d) : d;
     n->pending = true;
@@ -103,7 +103,7 @@ class SparseSegTree {
 
   T query(Node *n, int lo, int hi, int tgt_lo, int tgt_hi) {
     if (n == nullptr) {
-      return repeat_value(init, tgt_hi - tgt_lo + 1);
+      return combine_n(init, tgt_hi - tgt_lo + 1);
     }
     push_delta(n, lo, hi);
     if (lo == tgt_lo && hi == tgt_hi) {
@@ -127,7 +127,7 @@ class SparseSegTree {
       if (hi < tgt_lo || lo > tgt_hi) {
         return;
       }
-      n = new Node(repeat_value(init, hi - lo + 1));
+      n = new Node(combine_n(init, hi - lo + 1));
     } else {
       push_delta(n, lo, hi);
     }
@@ -143,8 +143,8 @@ class SparseSegTree {
     int mid = lo + (hi - lo) / 2;
     update(n->left, lo, mid, tgt_lo, tgt_hi, d);
     update(n->right, mid + 1, hi, tgt_lo, tgt_hi, d);
-    T left_value = (n->left != nullptr) ? n->left->value : repeat_value(init, mid - lo + 1);
-    T right_value = (n->right != nullptr) ? n->right->value : repeat_value(init, hi - mid);
+    T left_value = (n->left != nullptr) ? n->left->value : combine_n(init, mid - lo + 1);
+    T right_value = (n->right != nullptr) ? n->right->value : combine_n(init, hi - mid);
     n->value = combine(left_value, right_value);
   }
 
@@ -156,7 +156,7 @@ class SparseSegTree {
     if (n != nullptr) {
       push_delta(n, lo, hi);
     }
-    T node_value = n != nullptr ? n->value : repeat_value(init, hi - lo + 1);
+    T node_value = n != nullptr ? n->value : combine_n(init, hi - lo + 1);
     if (tgt_lo <= lo) {
       T next = acc ? combine(*acc, node_value) : node_value;
       if (pred(next)) {
@@ -181,7 +181,7 @@ class SparseSegTree {
     if (n != nullptr) {
       push_delta(n, lo, hi);
     }
-    T node_value = n != nullptr ? n->value : repeat_value(init, hi - lo + 1);
+    T node_value = n != nullptr ? n->value : combine_n(init, hi - lo + 1);
     if (hi < tgt_hi) {
       T next = acc ? combine(node_value, *acc) : node_value;
       if (pred(next)) {
@@ -213,38 +213,38 @@ class SparseSegTree {
   SparseSegTree &operator=(const SparseSegTree &) = delete;
 
   T at(int i) {
-    assert(0 <= i && i <= N);
+    assert(0 <= i && i < N);
     return query(i, i);
   }
 
   T query(int lo, int hi) {
-    assert(0 <= lo && lo <= hi && hi <= N);
-    return query(root, 0, N, lo, hi);
+    assert(0 <= lo && lo <= hi && hi < N);
+    return query(root, 0, N - 1, lo, hi);
   }
 
   void update(int i, const T &d) {
-    assert(0 <= i && i <= N);
+    assert(0 <= i && i < N);
     update(i, i, d);
   }
 
   void update(int lo, int hi, const T &d) {
-    assert(0 <= lo && lo <= hi && hi <= N);
-    update(root, 0, N, lo, hi, d);
+    assert(0 <= lo && lo <= hi && hi < N);
+    update(root, 0, N - 1, lo, hi, d);
   }
 
   template<typename Pred>
   int max_right(int lo, const Pred &pred) {
-    assert(0 <= lo && lo <= N + 1);
+    assert(0 <= lo && lo <= N);
     std::optional<T> acc;
-    int res = max_right(root, 0, N, lo, pred, acc);
-    return res == -1 ? N + 1 : res;
+    int res = max_right(root, 0, N - 1, lo, pred, acc);
+    return res == -1 ? N : res;
   }
 
   template<typename Pred>
   int min_left(int hi, const Pred &pred) {
-    assert(0 <= hi && hi <= N + 1);
+    assert(0 <= hi && hi <= N);
     std::optional<T> acc;
-    int res = min_left(root, 0, N, hi, pred, acc);
+    int res = min_left(root, 0, N - 1, hi, pred, acc);
     return res == -1 ? 0 : res;
   }
 };

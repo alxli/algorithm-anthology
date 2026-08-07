@@ -21,9 +21,8 @@ index to a new value. Another possible update operation is "increment", in which
 - `size()` returns the size of every version of the array.
 - `versions()` returns the number of stored versions. Versions are numbered starting from $0$.
 - `at(version, i)` returns the value at index `i` in the specified version.
-- `query(version, lo, hi)` returns the result of `combine()` applied to all indices in
-  $[`lo`, `hi`]$ in the specified version. If `lo == hi`, then the single specified value is
-  returned.
+- `query(version, lo, hi)` returns the aggregate of the values at indices in $[`lo`, `hi`]$ in the
+  specified version. If `lo == hi`, then the single specified value is returned.
 - `update(version, i, d)` creates and returns a new version in which the value at index `i` is
   assigned to `apply_delta(v, d)`. The specified version remains unchanged.
 

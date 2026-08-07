@@ -115,7 +115,7 @@ class Modular {
   }
 
  public:
-  Modular(wide_t x = 0) { v = normalize(x); }
+  Modular(wide_t x = 0) : v(normalize(x)) {}
 
   static T mod() { return MOD; }
   T value() const { return v; }

@@ -50,7 +50,7 @@ Space Complexity:
 #include <vector>
 
 template<typename Matrix>
-int lu_decompose(Matrix &a, std::vector<int> *perm = nullptr, const double eps = 1e-10) {
+int lu_decompose(Matrix &a, std::vector<int> *perm = nullptr, double eps = 1e-10) {
   int rows = static_cast<int>(a.size());
   int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
   int parity = 0;
@@ -61,11 +61,11 @@ int lu_decompose(Matrix &a, std::vector<int> *perm = nullptr, const double eps =
   for (int i = 0; i < rows && i < cols; i++) {
     int pi = i;
     for (int k = i + 1; k < rows; k++) {
-      if (fabs(a[k][i]) > fabs(a[pi][i])) {
+      if (std::fabs(a[k][i]) > std::fabs(a[pi][i])) {
         pi = k;
       }
     }
-    if (fabs(a[pi][i]) < eps) {
+    if (std::fabs(a[pi][i]) < eps) {
       return -1;
     }
     if (pi != i) {
@@ -98,9 +98,7 @@ auto getu(const Matrix &lu, int i, int j) {
 }
 
 template<typename Matrix, typename T>
-int solve_system(
-    const Matrix &a, const std::vector<T> &b, std::vector<T> *x, const double eps = 1e-10
-) {
+int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x, double eps = 1e-10) {
   int rows = static_cast<int>(a.size());
   int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
   if (x == nullptr || a.empty() || a.size() != b.size() || rows < cols) {
@@ -132,7 +130,7 @@ int solve_system(
     }
     // Mixed absolute/relative tolerance: dividing by b[i] alone would skip the check for negative
     // b[i] (ratio goes negative) and divide by zero when b[i] == 0.
-    if (fabs(val - b[i]) > eps * (1.0 + fabs(b[i]))) {
+    if (std::fabs(val - b[i]) > eps * (1.0 + std::fabs(b[i]))) {
       return -1;
     }
   }

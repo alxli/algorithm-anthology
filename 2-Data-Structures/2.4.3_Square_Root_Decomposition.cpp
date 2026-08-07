@@ -22,7 +22,7 @@ index to a new value. Another possible update operation is "increment", in which
   $[`lo`, `hi`)$.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.
-- `query(lo, hi)` returns the result of `combine()` applied to all indices in $[`lo`, `hi`]$.
+- `query(lo, hi)` returns the aggregate of the values at indices in $[`lo`, `hi`]$.
 - `update(i, d)` assigns the value `v` at index `i` to `apply_delta(v, d)`.
 
 The supported operations are identical to those of the point-update segment tree in this section.

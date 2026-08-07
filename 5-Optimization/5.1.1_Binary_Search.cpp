@@ -92,6 +92,7 @@ double first_true_real(double lo, double hi, Pred pred) {  // 000[1]11
 #include <cassert>
 #include <cmath>
 #include <vector>
+using namespace std;
 
 int main() {
   assert(first_true(0, 7, [](int x) { return x >= 3; }) == 3);
@@ -104,7 +105,7 @@ int main() {
   assert(last_true(0, 7, [](int x) { return false; }) == -1);
   assert(last_true(4, 4, [](int x) { return x <= 4; }) == 3);
 
-  std::vector<int> a{1, 2, 2, 4, 7};
+  vector<int> a{1, 2, 2, 4, 7};
   int n = static_cast<int>(a.size());
   assert(first_true(0, n, [&](int i) { return a[i] >= 2; }) == 1);  // lower_bound(2)
   assert(first_true(0, n, [&](int i) { return a[i] > 2; }) == 3);   // upper_bound(2)

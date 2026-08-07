@@ -38,8 +38,8 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
+#include <climits>
 #include <cstdint>
-#include <limits>
 #include <memory>
 #include <vector>
 
@@ -48,8 +48,8 @@ class WaveletTree {
   std::unique_ptr<WaveletTree> left, right;
   std::vector<int> b;  // b[i] = number of the first i elements that go to the left child.
 
-  WaveletTree(std::vector<int>::iterator lo, std::vector<int>::iterator hi, int x, int y)
-      : min_val(x), max_val(y) {
+  WaveletTree(std::vector<int>::iterator lo, std::vector<int>::iterator hi, int mn, int mx)
+      : min_val(mn), max_val(mx) {
     assert(min_val <= max_val);
     b.reserve((hi - lo) + 1);
     b.push_back(0);
@@ -112,8 +112,7 @@ class WaveletTree {
   int count_in(int lo, int hi, int x, int y) const {
     assert(0 <= lo && lo <= hi && hi < size());
     assert(x <= y);
-    int below_x = x == std::numeric_limits<int>::lowest() ? 0 : leq(lo + 1, hi + 1, x - 1);
-    return leq(lo + 1, hi + 1, y) - below_x;
+    return leq(lo + 1, hi + 1, y) - (x <= min_val ? 0 : leq(lo + 1, hi + 1, x - 1));
   }
 };
 
@@ -135,8 +134,8 @@ int main() {
   assert(t.count_in(0, 6, 3, 8) == 4);  // 5, 8, 6, 3
   assert(t.count_in(1, 5, 2, 6) == 2);  // 2, 6
 
-  vector<int> extremes{numeric_limits<int>::lowest(), 0, numeric_limits<int>::max()};
-  WaveletTree extreme_tree(extremes, numeric_limits<int>::lowest(), numeric_limits<int>::max());
-  assert(extreme_tree.count_in(0, 2, numeric_limits<int>::lowest(), 0) == 2);
+  vector<int> extremes{INT_MIN, 0, INT_MAX};
+  WaveletTree extreme_tree(extremes, INT_MIN, INT_MAX);
+  assert(extreme_tree.count_in(0, 2, INT_MIN, 0) == 2);
   return 0;
 }

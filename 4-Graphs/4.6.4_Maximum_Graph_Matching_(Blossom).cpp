@@ -142,9 +142,9 @@ int matching_size(const vector<int> &match) {
 
 int main() {
   {
-    // 0---1---2
-    //  \      |
-    //   +-----3
+    // 0---1
+    // |   |
+    // 3---2
     int nodes = 4;
     adj.assign(nodes, {});
     add_edge(0, 1);
@@ -157,8 +157,8 @@ int main() {
   }
   {
     // 3---0---1---4
-    //     |   |
-    //     +---2
+    //      \ /
+    //       2
     int nodes = 5;
     adj.assign(nodes, {});
     add_edge(0, 1);

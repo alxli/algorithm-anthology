@@ -145,13 +145,6 @@ class Treap {
     }
   }
 
-  static std::optional<std::pair<K, V>> entry(Node *n) {
-    if (n == nullptr) {
-      return std::nullopt;
-    }
-    return std::pair<K, V>{n->key, n->value};
-  }
-
   static void clean_up(Node *n) {
     if (n != nullptr) {
       clean_up(n->left);
@@ -224,7 +217,7 @@ class Treap {
         n = n->right;
       }
     }
-    return entry(best);
+    return best ? std::make_optional(std::pair{best->key, best->value}) : std::nullopt;
   }
 
   std::optional<std::pair<K, V>> upper_bound(const K &k) const {
@@ -237,7 +230,7 @@ class Treap {
         n = n->right;
       }
     }
-    return entry(best);
+    return best ? std::make_optional(std::pair{best->key, best->value}) : std::nullopt;
   }
 
   std::optional<std::pair<K, V>> prev(const K &k) const {
@@ -250,7 +243,7 @@ class Treap {
         n = n->left;
       }
     }
-    return entry(best);
+    return best ? std::make_optional(std::pair{best->key, best->value}) : std::nullopt;
   }
 
   std::optional<std::pair<K, V>> next(const K &k) const { return upper_bound(k); }

@@ -56,7 +56,7 @@ bool on_segment(const Pt &p, const Pt &a, const Pt &b) {
 
 template<typename Pt>
 bool point_in_convex_polygon(
-    const std::vector<Pt> &poly, const Pt &p, const bool include_boundary = true
+    const std::vector<Pt> &poly, const Pt &p, bool include_boundary = true
 ) {
   int n = static_cast<int>(poly.size());
   if (n == 0) {

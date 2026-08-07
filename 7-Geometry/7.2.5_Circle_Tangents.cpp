@@ -32,7 +32,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -57,7 +57,7 @@ struct Point {
 
 template<typename PtA, typename PtB>
 std::vector<std::pair<Point, Point>> circle_tangents(
-    const PtA &c1, double r1, const PtB &c2, double r2, const bool internal = false
+    const PtA &c1, double r1, const PtB &c2, double r2, bool internal = false
 ) {
   r1 = fabs(r1);
   r2 = fabs(r2);

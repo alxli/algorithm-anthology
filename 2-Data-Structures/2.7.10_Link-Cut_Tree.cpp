@@ -340,24 +340,23 @@ int main() {
   lcf.reroot(4);
   assert(lcf.lca(0, 3) == 2);  // Rerooting at 4 changes the LCA of 0 and 3.
 
-  lcf.update(1, 1, 100);
-  lcf.update(2, 4, 100);
-
   // v=10     v=100     v=100      v=10
   //  0---------1---------2---------3
   //                      |
   //                      +---------4
   //                              v=100
+  lcf.update(1, 1, 100);
+  lcf.update(2, 4, 100);
   assert(lcf.query(4, 4) == 100);
   assert(lcf.query(0, 4) == 10);
   assert(lcf.query(3, 4) == 10);
-  lcf.cut(1, 2);
 
   // v=10     v=100     v=100      v=0
   //  0---------1         2---------3
   //                      |
   //                      +---------4
   //                              v=100
+  lcf.cut(1, 2);
   assert(lcf.trees() == 2);
   assert(!lcf.connected(1, 2));
   assert(!lcf.connected(0, 4));

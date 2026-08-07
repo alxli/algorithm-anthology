@@ -14,10 +14,9 @@ its pruning is more distribution-dependent.
 
 - `RangeTree<T>(lo, hi)` constructs a set of `std::pair` points from the half-open forward-iterator
   range $[`lo`, `hi`)$.
-- `query(x1, y1, x2, y2, f)` calls the function `f(i, p)` on each point whose $x$-coordinate is in
-  $[`x1`, `x2`]$ and whose $y$-coordinate is in $[`y1`, `y2`]$. The first argument to `f` is the
-  0-based index of the point in the original range given to the constructor. The second argument is
-  the point itself as an `std::pair`.
+- `query(x1, y1, x2, y2, f)` calls the function `f(i, x, y)` on each point whose $x$-coordinate is
+  in $[`x1`, `x2`]$ and whose $y$-coordinate is in $[`y1`, `y2`]$. The first argument to `f` is the
+  0-based index of the point in the original range given to the constructor.
 
 Time Complexity:
 - O(n log n) per call to the constructor, where $n$ is the number of points.
@@ -39,7 +38,7 @@ Space Complexity:
 template<typename T>
 class RangeTree {
   struct IndexedPoint {
-    std::pair<T, T> value;
+    T x, y;
     int original_index;
   };
 
@@ -47,9 +46,9 @@ class RangeTree {
   std::vector<std::vector<std::pair<int, T>>> columns;
 
   void build(int n, int lo, int hi) {
-    if (points[lo].value.first == points[hi].value.first) {
+    if (points[lo].x == points[hi].x) {
       for (int i = lo; i <= hi; i++) {
-        columns[n].emplace_back(i, points[i].value.second);
+        columns[n].emplace_back(i, points[i].y);
       }
       return;
     }
@@ -65,10 +64,10 @@ class RangeTree {
 
   template<typename Fn>
   void query(int n, int lo, int hi, const T &x1, const T &y1, const T &x2, const T &y2, Fn &f) {
-    if (points[hi].value.first < x1 || x2 < points[lo].value.first) {
+    if (points[hi].x < x1 || x2 < points[lo].x) {
       return;
     }
-    if (!(points[lo].value.first < x1 || x2 < points[hi].value.first)) {
+    if (!(points[lo].x < x1 || x2 < points[hi].x)) {
       if (!columns[n].empty() && !(y2 < y1)) {
         auto it = std::lower_bound(
             columns[n].begin(), columns[n].end(), y1,
@@ -76,7 +75,7 @@ class RangeTree {
         );
         for (; it != columns[n].end() && it->second <= y2; ++it) {
           const IndexedPoint &p = points[it->first];
-          f(p.original_index, p.value);
+          f(p.original_index, p.x, p.y);
         }
       }
     } else if (lo != hi) {
@@ -94,11 +93,11 @@ class RangeTree {
     points.reserve(n);
     int index = 0;
     for (It it = lo; it != hi; ++it) {
-      points.push_back({*it, index++});
+      points.push_back({it->first, it->second, index++});
     }
     columns.resize(4 * n + 1);
     std::sort(points.begin(), points.end(), [](const IndexedPoint &a, const IndexedPoint &b) {
-      return a.value < b.value;
+      return a.x != b.x ? a.x < b.x : a.y < b.y;
     });
     build(0, 0, n - 1);
   }
@@ -122,9 +121,9 @@ int main() {
   RangeTree<int> t(v.begin(), v.end());
   vector<pair<int, int>> got;
   vector<int> indices;
-  auto collect = [&](int i, const pair<int, int> &p) {
+  auto collect = [&](int i, int x, int y) {
     indices.push_back(i);
-    got.push_back(p);
+    got.emplace_back(x, y);
   };
   t.query(-1, -1, 2, 5, collect);
   sort(got.begin(), got.end());

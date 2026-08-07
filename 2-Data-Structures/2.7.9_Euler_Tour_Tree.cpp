@@ -49,21 +49,18 @@ class EulerTourTree {
   int n;
   std::mt19937 rng;
   std::vector<std::unordered_map<int, Node *>> adj;
-  std::unordered_set<Node *> allocated;
 
   static int size(Node *t) { return t == nullptr ? 0 : t->size; }
-
-  static void set_parent(Node *t, Node *p) {
-    if (t != nullptr) {
-      t->parent = p;
-    }
-  }
 
   static void update(Node *t) {
     if (t != nullptr) {
       t->size = 1 + size(t->left) + size(t->right);
-      set_parent(t->left, t);
-      set_parent(t->right, t);
+      if (t->left != nullptr) {
+        t->left->parent = t;
+      }
+      if (t->right != nullptr) {
+        t->right->parent = t;
+      }
     }
   }
 
@@ -115,14 +112,12 @@ class EulerTourTree {
       auto [a, b] = split(t->left, left_size);
       t->left = b;
       update(t);
-      set_parent(a, nullptr);
       t->parent = nullptr;
       return {a, t};
     }
     auto [a, b] = split(t->right, left_size - size(t->left) - 1);
     t->right = a;
     update(t);
-    set_parent(b, nullptr);
     t->parent = nullptr;
     return {t, b};
   }
@@ -141,12 +136,7 @@ class EulerTourTree {
     return rest;
   }
 
-  Node *new_node(int u, int v) {
-    Node *node = new Node(u, v, std::uniform_int_distribution<int>()(rng));
-    allocated.insert(node);
-    return node;
-  }
-
+  Node *new_node(int u, int v) { return new Node(u, v, std::uniform_int_distribution<int>()(rng)); }
   Node *any_occurrence(int u) const { return adj[u].empty() ? nullptr : adj[u].begin()->second; }
 
   static void collect(Node *t, std::unordered_set<int> &out) {
@@ -162,8 +152,10 @@ class EulerTourTree {
   explicit EulerTourTree(int n) : n(n), rng(std::random_device{}()), adj(n) {}
 
   ~EulerTourTree() {
-    for (Node *node : allocated) {
-      delete node;
+    for (const auto &neighbors : adj) {
+      for (const auto &[_, n] : neighbors) {
+        delete n;
+      }
     }
   }
 
@@ -219,8 +211,6 @@ class EulerTourTree {
     remove_first(right);  // Remove vu.
     adj[u].erase(v);
     adj[v].erase(u);
-    allocated.erase(uv);
-    allocated.erase(vu);
     delete uv;
     delete vu;
     return true;
@@ -248,11 +238,10 @@ int main() {
   assert(!ett.connected(0, 1));
   assert(ett.connected(0, 0));
 
+  // 0---1---2    3---4    5
   assert(ett.link(0, 1));
   assert(ett.link(1, 2));
   assert(ett.link(3, 4));
-
-  // 0---1---2    3---4    5
   assert(ett.connected(0, 2));
   assert(!ett.connected(0, 4));
   assert(!ett.link(0, 2));  // Would create a cycle.
@@ -260,18 +249,16 @@ int main() {
   auto c = ett.component_nodes(1);
   sort(c.begin(), c.end());
   assert((c == vector<int>{0, 1, 2}));
-
   ett.reroot(2);
   assert(ett.connected(0, 2));
-  assert(ett.cut(1, 2));
 
   // 0---1     2    3---4    5
+  assert(ett.cut(1, 2));
   assert(!ett.connected(0, 2));
   assert((ett.component_nodes(2) == vector<int>{2}));
 
-  assert(ett.link(2, 3));
-
   // 0---1     2---3---4    5
+  assert(ett.link(2, 3));
   assert(ett.connected(0, 4) == false);
   assert(ett.connected(2, 4));
   assert(!ett.cut(0, 5));

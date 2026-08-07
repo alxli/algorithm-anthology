@@ -55,7 +55,7 @@ const double EPS = 1e-9;
 // or Rational, which therefore compose for all of the predicates below.
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -117,8 +117,8 @@ struct TPoint {
 
   // --- Floating-point operations: return fp_t or TPoint<fp_t> ---
 
-  fp_t norm() const { return hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)); }
-  fp_t arg() const { return atan2(static_cast<fp_t>(y), static_cast<fp_t>(x)); }
+  fp_t norm() const { return std::hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)); }
+  fp_t arg() const { return std::atan2(static_cast<fp_t>(y), static_cast<fp_t>(x)); }
 
   fp_t proj(const TPoint &p) const {
     return (static_cast<fp_t>(x) * p.x + static_cast<fp_t>(y) * p.y) / p.norm();
@@ -149,13 +149,13 @@ struct TPoint {
   // Returns (x, y) rotated t radians clockwise about the origin.
   TPoint<fp_t> rotateCW(fp_t t) const {
     fp_t fx = (fp_t)x, fy = (fp_t)y;
-    return {fx * cos(t) + fy * sin(t), fy * cos(t) - fx * sin(t)};
+    return {fx * std::cos(t) + fy * std::sin(t), fy * std::cos(t) - fx * std::sin(t)};
   }
 
   // Returns (x, y) rotated t radians counter-clockwise about the origin.
   TPoint<fp_t> rotateCCW(fp_t t) const {
     fp_t fx = (fp_t)x, fy = (fp_t)y;
-    return {fx * cos(t) - fy * sin(t), fx * sin(t) + fy * cos(t)};
+    return {fx * std::cos(t) - fy * std::sin(t), fx * std::sin(t) + fy * std::cos(t)};
   }
 
   // Returns (x, y) rotated t radians clockwise about point p.
@@ -222,7 +222,8 @@ struct TPoint {
 
   friend std::ostream &operator<<(std::ostream &out, const TPoint &p) {
     if constexpr (std::is_floating_point<T>::value) {
-      return out << "(" << (fabs(p.x) < EPS ? 0 : p.x) << "," << (fabs(p.y) < EPS ? 0 : p.y) << ")";
+      return out << "(" << (std::fabs(p.x) < EPS ? 0 : p.x) << ","
+                 << (std::fabs(p.y) < EPS ? 0 : p.y) << ")";
     }
     return out << "(" << p.x << "," << p.y << ")";
   }
@@ -242,6 +243,7 @@ using Point = PointD;  // Default point type is double.
 /*** Example Usage ***/
 
 #include <cassert>
+using namespace std;
 
 const double PI = acos(-1.0);
 

@@ -36,12 +36,12 @@ Space Complexity:
 #include <vector>
 
 #ifndef M_PI
-const double M_PI = acos(-1.0);  // or std::numbers::pi and std::numbers::pi_v<> in C++20 and later
+const double M_PI = std::acos(-1.0);  // Or std::numbers::pi in C++20 and later.
 #endif
 #ifndef M_E
-const double M_E = exp(1.0);  // or std::numbers::e and std::numbers::e_v<> in C++20 and later
+const double M_E = std::exp(1.0);  // or std::numbers::e and std::numbers::e_v<> in C++20 and later
 #endif
-const double M_PHI = (1.0 + sqrt(5.0)) / 2.0;
+const double M_PHI = (1.0 + std::sqrt(5.0)) / 2.0;
 const double M_INF = std::numeric_limits<double>::infinity();
 const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 
@@ -72,7 +72,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -96,7 +96,7 @@ bool rEQ(T ref, U val) {
   if constexpr (std::is_floating_point_v<C>) {
     if (!std::isfinite(x) || !std::isfinite(y)) return false;
   }
-  return fabs(x - y) <= EPS * fabs(x);
+  return std::fabs(x - y) <= EPS * std::fabs(x);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
@@ -106,7 +106,7 @@ bool rEQ_sym(T x, U y) {
   if constexpr (std::is_floating_point_v<C>) {
     if (!std::isfinite(a) || !std::isfinite(b)) return false;
   }
-  return fabs(a - b) <= EPS * std::max(fabs(a), fabs(b));
+  return std::fabs(a - b) <= EPS * std::max(std::fabs(a), std::fabs(b));
 }
 
 /*
@@ -137,7 +137,7 @@ bool signbit_(Double x) {
 
 template<typename Double>
 Double copysign_(Double x, Double y) {
-  return signbit_(y) ? -fabs(x) : fabs(x);
+  return signbit_(y) ? -std::fabs(x) : std::fabs(x);
 }
 
 /*
@@ -166,35 +166,35 @@ Rounding Functions:
 
 template<typename Double>
 Double floor0(const Double &x) {
-  Double res = floor(fabs(x));
+  Double res = std::floor(std::fabs(x));
   return (x < 0.0) ? -res : res;
 }
 
 template<typename Double>
 Double ceil0(const Double &x) {
-  Double res = ceil(fabs(x));
+  Double res = std::ceil(std::fabs(x));
   return (x < 0.0) ? -res : res;
 }
 
 template<typename Double>
 Double round_half_up(const Double &x) {
-  return floor(x + 0.5);
+  return std::floor(x + 0.5);
 }
 
 template<typename Double>
 Double round_half_down(const Double &x) {
-  return ceil(x - 0.5);
+  return std::ceil(x - 0.5);
 }
 
 template<typename Double>
 Double round_half_to0(const Double &x) {
-  Double res = round_half_down(fabs(x));
+  Double res = round_half_down(std::fabs(x));
   return (x < 0.0) ? -res : res;
 }
 
 template<typename Double>
 Double round_half_from0(const Double &x) {
-  Double res = round_half_up(fabs(x));
+  Double res = round_half_up(std::fabs(x));
   return (x < 0.0) ? -res : res;
 }
 
@@ -204,9 +204,9 @@ Double round_half_even(const Double &x, const Double &eps = 1e-9) {
     return -round_half_even(-x, eps);
   }
   Double ipart;
-  modf(x, &ipart);
-  if (fabs(x - (ipart + 0.5)) < eps) {  // exactly halfway: break the tie towards even
-    return (fmod(ipart, 2.0) < eps) ? ipart : ceil0(ipart + 0.5);
+  std::modf(x, &ipart);
+  if (std::fabs(x - (ipart + 0.5)) < eps) {  // exactly halfway: break the tie towards even
+    return (std::fmod(ipart, 2.0) < eps) ? ipart : ceil0(ipart + 0.5);
   }
   return round_half_from0(x);
 }
@@ -243,7 +243,7 @@ Double round_half_random(const Double &x) {
 
 template<typename Double, typename RoundFn>
 Double round_n_places(const Double &x, unsigned int n, RoundFn round) {
-  Double scale = pow(10, n);
+  Double scale = std::pow(Double(10), n);
   return round(x * scale) / scale;
 }
 

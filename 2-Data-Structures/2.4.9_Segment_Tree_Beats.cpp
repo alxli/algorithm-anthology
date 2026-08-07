@@ -58,7 +58,7 @@ class SegTreeBeats {
   std::vector<int> cnt;  // Number of entries in the node equal to max1.
 
   void pull(int i) {
-    int l = 2 * i + 1, r = 2 * i + 2;
+    int l = i * 2 + 1, r = i * 2 + 2;
     sum[i] = sum[l] + sum[r];
     if (max1[l] == max1[r]) {
       max1[i] = max1[l];
@@ -83,7 +83,7 @@ class SegTreeBeats {
   }
 
   void push(int i) {
-    for (int c : {2 * i + 1, 2 * i + 2}) {
+    for (int c : {i * 2 + 1, i * 2 + 2}) {
       if (max1[c] > max1[i]) {
         apply_chmin(c, max1[i]);
       }

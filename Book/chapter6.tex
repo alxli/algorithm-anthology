@@ -38,12 +38,12 @@ Common mathematic constants and functions, most of which already have standard S
 #include <vector>
 
 #ifndef M_PI
-const double M_PI = acos(-1.0);  // or std::numbers::pi and std::numbers::pi_v<> in C++20 and later
+const double M_PI = std::acos(-1.0);  // Or std::numbers::pi in C++20 and later.
 #endif
 #ifndef M_E
-const double M_E = exp(1.0);  // or std::numbers::e and std::numbers::e_v<> in C++20 and later
+const double M_E = std::exp(1.0);  // or std::numbers::e and std::numbers::e_v<> in C++20 and later
 #endif
-const double M_PHI = (1.0 + sqrt(5.0)) / 2.0;
+const double M_PHI = (1.0 + std::sqrt(5.0)) / 2.0;
 const double M_INF = std::numeric_limits<double>::infinity();
 const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 \end{lstlisting}
@@ -60,7 +60,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -82,7 +82,7 @@ bool rEQ(T ref, U val) {
   if constexpr (std::is_floating_point_v<C>) {
     if (!std::isfinite(x) || !std::isfinite(y)) return false;
   }
-  return fabs(x - y) <= EPS * fabs(x);
+  return std::fabs(x - y) <= EPS * std::fabs(x);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
@@ -92,7 +92,7 @@ bool rEQ_sym(T x, U y) {
   if constexpr (std::is_floating_point_v<C>) {
     if (!std::isfinite(a) || !std::isfinite(b)) return false;
   }
-  return fabs(a - b) <= EPS * std::max(fabs(a), fabs(b));
+  return std::fabs(a - b) <= EPS * std::max(std::fabs(a), std::fabs(b));
 }
 \end{lstlisting}
 Sign Functions:
@@ -116,7 +116,7 @@ bool signbit_(Double x) {
 
 template<typename Double>
 Double copysign_(Double x, Double y) {
-  return signbit_(y) ? -fabs(x) : fabs(x);
+  return signbit_(y) ? -std::fabs(x) : std::fabs(x);
 }
 \end{lstlisting}
 Rounding Functions:
@@ -138,35 +138,35 @@ Rounding Functions:
 \begin{lstlisting}[language=C++]
 template<typename Double>
 Double floor0(const Double &x) {
-  Double res = floor(fabs(x));
+  Double res = std::floor(std::fabs(x));
   return (x < 0.0) ? -res : res;
 }
 
 template<typename Double>
 Double ceil0(const Double &x) {
-  Double res = ceil(fabs(x));
+  Double res = std::ceil(std::fabs(x));
   return (x < 0.0) ? -res : res;
 }
 
 template<typename Double>
 Double round_half_up(const Double &x) {
-  return floor(x + 0.5);
+  return std::floor(x + 0.5);
 }
 
 template<typename Double>
 Double round_half_down(const Double &x) {
-  return ceil(x - 0.5);
+  return std::ceil(x - 0.5);
 }
 
 template<typename Double>
 Double round_half_to0(const Double &x) {
-  Double res = round_half_down(fabs(x));
+  Double res = round_half_down(std::fabs(x));
   return (x < 0.0) ? -res : res;
 }
 
 template<typename Double>
 Double round_half_from0(const Double &x) {
-  Double res = round_half_up(fabs(x));
+  Double res = round_half_up(std::fabs(x));
   return (x < 0.0) ? -res : res;
 }
 
@@ -176,9 +176,9 @@ Double round_half_even(const Double &x, const Double &eps = 1e-9) {
     return -round_half_even(-x, eps);
   }
   Double ipart;
-  modf(x, &ipart);
-  if (fabs(x - (ipart + 0.5)) < eps) {  // exactly halfway: break the tie towards even
-    return (fmod(ipart, 2.0) < eps) ? ipart : ceil0(ipart + 0.5);
+  std::modf(x, &ipart);
+  if (std::fabs(x - (ipart + 0.5)) < eps) {  // exactly halfway: break the tie towards even
+    return (std::fmod(ipart, 2.0) < eps) ? ipart : ceil0(ipart + 0.5);
   }
   return round_half_from0(x);
 }
@@ -215,7 +215,7 @@ Double round_half_random(const Double &x) {
 
 template<typename Double, typename RoundFn>
 Double round_n_places(const Double &x, unsigned int n, RoundFn round) {
-  Double scale = pow(10, n);
+  Double scale = std::pow(Double(10), n);
   return round(x * scale) / scale;
 }
 \end{lstlisting}
@@ -2166,7 +2166,7 @@ class Modular {
   }
 
  public:
-  Modular(wide_t x = 0) { v = normalize(x); }
+  Modular(wide_t x = 0) : v(normalize(x)) {}
 
   static T mod() { return MOD; }
   T value() const { return v; }
@@ -5238,7 +5238,7 @@ const double EPS = 1e-9;
 template<typename T>
 bool rref_is_zero(const T &v) {
   if constexpr (std::is_floating_point_v<T>) {
-    return fabs(v) < EPS;
+    return std::fabs(v) < EPS;
   }
   return v == T(0);
 }
@@ -5254,7 +5254,7 @@ Matrix &row_reduce(Matrix &a) {
     int pivot = r;
     if constexpr (std::is_floating_point_v<T>) {
       for (int i = r + 1; i < rows; i++) {
-        if (fabs(a[i][lead]) > fabs(a[pivot][lead])) {
+        if (std::fabs(a[i][lead]) > std::fabs(a[pivot][lead])) {
           pivot = i;
         }
       }
@@ -5441,11 +5441,11 @@ int elimination_pivot(const SquareMatrix &a, int row, int col, double eps) {
   if constexpr (std::is_floating_point_v<T>) {
     int pivot = row;
     for (int r = row + 1; r < n; r++) {
-      if (fabs(a[r][col]) > fabs(a[pivot][col])) {
+      if (std::fabs(a[r][col]) > std::fabs(a[pivot][col])) {
         pivot = r;
       }
     }
-    return fabs(a[pivot][col]) < eps ? -1 : pivot;
+    return std::fabs(a[pivot][col]) < eps ? -1 : pivot;
   }
   for (int r = row; r < n; r++) {
     if (a[r][col] != T(0)) {
@@ -5623,7 +5623,7 @@ The LU decomposition of a matrix $a$ with row-partial pivoting is a factorizatio
 #include <vector>
 
 template<typename Matrix>
-int lu_decompose(Matrix &a, std::vector<int> *perm = nullptr, const double eps = 1e-10) {
+int lu_decompose(Matrix &a, std::vector<int> *perm = nullptr, double eps = 1e-10) {
   int rows = static_cast<int>(a.size());
   int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
   int parity = 0;
@@ -5634,11 +5634,11 @@ int lu_decompose(Matrix &a, std::vector<int> *perm = nullptr, const double eps =
   for (int i = 0; i < rows && i < cols; i++) {
     int pi = i;
     for (int k = i + 1; k < rows; k++) {
-      if (fabs(a[k][i]) > fabs(a[pi][i])) {
+      if (std::fabs(a[k][i]) > std::fabs(a[pi][i])) {
         pi = k;
       }
     }
-    if (fabs(a[pi][i]) < eps) {
+    if (std::fabs(a[pi][i]) < eps) {
       return -1;
     }
     if (pi != i) {
@@ -5671,9 +5671,7 @@ auto getu(const Matrix &lu, int i, int j) {
 }
 
 template<typename Matrix, typename T>
-int solve_system(
-    const Matrix &a, const std::vector<T> &b, std::vector<T> *x, const double eps = 1e-10
-) {
+int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x, double eps = 1e-10) {
   int rows = static_cast<int>(a.size());
   int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
   if (x == nullptr || a.empty() || a.size() != b.size() || rows < cols) {
@@ -5705,7 +5703,7 @@ int solve_system(
     }
     // Mixed absolute/relative tolerance: dividing by b[i] alone would skip the check for negative
     // b[i] (ratio goes negative) and divide by zero when b[i] == 0.
-    if (fabs(val - b[i]) > eps * (1.0 + fabs(b[i]))) {
+    if (std::fabs(val - b[i]) > eps * (1.0 + std::fabs(b[i]))) {
       return -1;
     }
   }
@@ -6763,7 +6761,7 @@ The code aliases one modular field element as \inlinecode{Coeff} and one coeffic
   \item \inlinecode{subtract(a, b)} returns \inlinecode{a - b}.
   \item \inlinecode{multiply(a, b)} returns \inlinecode{a * b}.
   \item \inlinecode{derivative(a)} returns the formal derivative of \inlinecode{a}.
-  \item \inlinecode{integral(a)} returns the formal antiderivative of \inlinecode{a} with constant term zero.
+  \item \inlinecode{antiderivative(a)} returns the formal antiderivative of \inlinecode{a} with constant term zero.
   \item \inlinecode{inverse(a, n)} returns the first \inlinecode{n} coefficients of \inlinecode{1 / a}, requiring \inlinecode{a[0]} to be nonzero.
   \item \inlinecode{series\_divide(a, b, n)} returns the first \inlinecode{n} coefficients of the formal power series \inlinecode{a / b}, requiring \inlinecode{b[0]} to be nonzero.
   \item \inlinecode{log(a, n)} returns the first \inlinecode{n} coefficients of $\log a$, requiring \inlinecode{a[0]} to be $1$.
@@ -6781,7 +6779,7 @@ The logarithm follows from $(\log a)' = a'/a$, integrating the truncated quotien
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to \inlinecode{eval()}, \inlinecode{add()}, \inlinecode{subtract()}, \inlinecode{derivative()}, and \inlinecode{integral()}.
+  \item $O(n)$ per call to \inlinecode{eval()}, \inlinecode{add()}, \inlinecode{subtract()}, \inlinecode{derivative()}, and \inlinecode{antiderivative()}.
   \item $O(|a||b|)$ per call to \inlinecode{multiply()} on small inputs and $O(n \log n)$ otherwise, where $n$ is the padded transform length.
   \item $O(n \log n)$ per call to \inlinecode{inverse()} and \inlinecode{series\_divide()}, where $n$ is the requested length.
   \item $O(n \log n)$ per call to \inlinecode{log()}, \inlinecode{exp()}, and \inlinecode{sqrt()}, where $n$ is the requested length. The exponential carries the largest constant, since every Newton round computes a logarithm.
@@ -6935,7 +6933,7 @@ Poly derivative(const Poly &a) {
   return res;
 }
 
-Poly integral(const Poly &a) {
+Poly antiderivative(const Poly &a) {
   Poly res(a.size() + 1);
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
     res[i + 1] = a[i] * powmod(i + 1, MOD - 2) % MOD;
@@ -6982,7 +6980,7 @@ Poly log(const Poly &a, int n) {
   Poly cut(a.begin(), a.begin() + std::min(static_cast<int>(a.size()), n));
   Poly res = multiply(derivative(cut), inverse(cut, n));
   res.resize(n - 1);
-  res = integral(res);
+  res = antiderivative(res);
   res.resize(n);
   return res;
 }
@@ -7116,7 +7114,7 @@ int main() {
 
   // d/dx (5 + 7x + 11x^2) = 7 + 22x; integrating back chooses constant term 0.
   assert((derivative(p) == Poly{7, 22}));
-  assert((integral(derivative(p)) == Poly{0, 7, 11}));
+  assert((antiderivative(derivative(p)) == Poly{0, 7, 11}));
 
   // (1 - x)^-1 = 1 + x + x^2 + x^3 + ... modulo x^6.
   assert((inverse({1, MOD - 1}, 6) == Poly{1, 1, 1, 1, 1, 1}));

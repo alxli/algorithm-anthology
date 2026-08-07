@@ -15,7 +15,7 @@ coefficients must lie in $[0, `MOD`)$.
 - `subtract(a, b)` returns `a - b`.
 - `multiply(a, b)` returns `a * b`.
 - `derivative(a)` returns the formal derivative of `a`.
-- `integral(a)` returns the formal antiderivative of `a` with constant term zero.
+- `antiderivative(a)` returns the formal antiderivative of `a` with constant term zero.
 - `inverse(a, n)` returns the first `n` coefficients of `1 / a`, requiring `a[0]` to be nonzero.
 - `series_divide(a, b, n)` returns the first `n` coefficients of the formal power series `a / b`,
   requiring `b[0]` to be nonzero.
@@ -41,7 +41,7 @@ constant term is not $1$, factor `a[0]` out and multiply back one of its modular
 factors $a = x^t c b$, where $b(0) = 1$, and uses $a^k = x^{tk} c^k \exp(k \log b)$.
 
 Time Complexity:
-- O(n) per call to `eval()`, `add()`, `subtract()`, `derivative()`, and `integral()`.
+- O(n) per call to `eval()`, `add()`, `subtract()`, `derivative()`, and `antiderivative()`.
 - O(|a||b|) per call to `multiply()` on small inputs and O(n log n) otherwise, where $n$ is the
   padded transform length.
 - O(n log n) per call to `inverse()` and `series_divide()`, where $n$ is the requested length.
@@ -198,7 +198,7 @@ Poly derivative(const Poly &a) {
   return res;
 }
 
-Poly integral(const Poly &a) {
+Poly antiderivative(const Poly &a) {
   Poly res(a.size() + 1);
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
     res[i + 1] = a[i] * powmod(i + 1, MOD - 2) % MOD;
@@ -245,7 +245,7 @@ Poly log(const Poly &a, int n) {
   Poly cut(a.begin(), a.begin() + std::min(static_cast<int>(a.size()), n));
   Poly res = multiply(derivative(cut), inverse(cut, n));
   res.resize(n - 1);
-  res = integral(res);
+  res = antiderivative(res);
   res.resize(n);
   return res;
 }
@@ -378,7 +378,7 @@ int main() {
 
   // d/dx (5 + 7x + 11x^2) = 7 + 22x; integrating back chooses constant term 0.
   assert((derivative(p) == Poly{7, 22}));
-  assert((integral(derivative(p)) == Poly{0, 7, 11}));
+  assert((antiderivative(derivative(p)) == Poly{0, 7, 11}));
 
   // (1 - x)^-1 = 1 + x + x^2 + x^3 + ... modulo x^6.
   assert((inverse({1, MOD - 1}, 6) == Poly{1, 1, 1, 1, 1, 1}));

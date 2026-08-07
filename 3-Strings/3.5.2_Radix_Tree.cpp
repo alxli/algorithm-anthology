@@ -41,6 +41,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -50,13 +51,12 @@ using std::string;
 template<typename V>
 class RadixTree {
   struct Node {
-    V value;
-    bool is_terminal;
+    std::optional<V> value;
     int cnt;  // Optional: maintain count of terminal keys in this subtree for count_prefix queries.
     std::unordered_map<string, Node *> children;
 
-    Node(const V &value = V(), bool is_terminal = false)
-        : value(value), is_terminal(is_terminal), cnt(0) {}
+    Node() : cnt(0) {}
+    explicit Node(const V &value) : value(value), cnt(0) {}
   } *root;
 
   static int lcp_len(const string &s1, const string &s2, int s2start) {
@@ -72,11 +72,10 @@ class RadixTree {
 
   static bool insert(Node *n, const string &s, int i, const V &v) {
     if (i == static_cast<int>(s.size())) {
-      if (n->is_terminal) {
+      if (n->value) {
         return false;
       }
-      n->value = v;
-      n->is_terminal = true;
+      n->value.emplace(v);
       n->cnt++;
       return true;
     }
@@ -100,8 +99,7 @@ class RadixTree {
       n->children.erase(it);
       n->children[left] = tmp;
       if (len == static_cast<int>(s.size()) - i) {
-        tmp->value = v;
-        tmp->is_terminal = true;
+        tmp->value.emplace(v);
         tmp->cnt++;
       } else {
         insert(tmp, s, i + len, v);
@@ -109,7 +107,7 @@ class RadixTree {
       n->cnt++;
       return true;
     }
-    Node *leaf = new Node(v, true);
+    Node *leaf = new Node(v);
     leaf->cnt = 1;
     n->children[s.substr(i)] = leaf;
     n->cnt++;
@@ -118,10 +116,10 @@ class RadixTree {
 
   static bool erase(Node *n, const string &s, int i) {
     if (i == static_cast<int>(s.size())) {
-      if (!n->is_terminal) {
+      if (!n->value) {
         return false;
       }
-      n->is_terminal = false;
+      n->value.reset();
       n->cnt--;
       return true;
     }
@@ -142,15 +140,16 @@ class RadixTree {
       n->cnt--;
       // The merge below leaves counts intact: a non-terminal node with one child already has the
       // same subtree count as that child, so reusing the node keeps its cnt correct.
-      if (child->children.empty() && !child->is_terminal) {
+      if (child->children.empty() && !child->value) {
         delete child;
         n->children.erase(it);
       } else if (child->children.size() == 1) {
         Node *grandchild = child->children.begin()->second;
-        if (!child->is_terminal) {
+        if (!child->value) {
           string merged_key(it->first + child->children.begin()->first);
-          child->value = grandchild->value;
-          child->is_terminal = grandchild->is_terminal;
+          if (grandchild->value) {
+            child->value.emplace(*grandchild->value);
+          }
           child->children = grandchild->children;
           delete grandchild;
           n->children.erase(it);
@@ -164,8 +163,8 @@ class RadixTree {
 
   template<typename Fn>
   static void walk(Node *n, string &s, Fn f) {
-    if (n->is_terminal) {
-      f(s, n->value);
+    if (n->value) {
+      f(s, *n->value);
     }
     std::vector<std::pair<string, Node *>> children(n->children.begin(), n->children.end());
     std::sort(children.begin(), children.end());
@@ -232,7 +231,7 @@ class RadixTree {
         return nullptr;
       }
     }
-    return n->is_terminal ? &(n->value) : nullptr;
+    return n->value ? &*n->value : nullptr;
   }
 
   int count_prefix(const string &s) const {

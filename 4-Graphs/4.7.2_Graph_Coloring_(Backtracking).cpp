@@ -104,11 +104,11 @@ void add_edge(int u, int v) {
 }
 
 int main() {
-  //      0
-  //    /  |
-  //   1---4---2
-  //    \ /   /
-  //     3---+
+  //     0
+  //   / |
+  // 1---4---2
+  //   \ | /
+  //     3
   int nodes = 5;
   adj.assign(nodes, vector<char>(nodes));
   add_edge(0, 1);

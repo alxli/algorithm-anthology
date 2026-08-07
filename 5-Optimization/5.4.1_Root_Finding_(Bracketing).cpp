@@ -29,7 +29,7 @@ Space Complexity:
 #include <cassert>
 
 template<typename Fn>
-double bisection_root(Fn f, double a, double b, const int iterations = 100) {
+double bisection_root(Fn f, double a, double b, int iterations = 100) {
   double fa = f(a), fb = f(b);
   assert(a <= b && ((fa <= 0 && fb >= 0) || (fa >= 0 && fb <= 0)));
   if (fa == 0) {
@@ -56,7 +56,7 @@ double bisection_root(Fn f, double a, double b, const int iterations = 100) {
 }
 
 template<typename Fn>
-double falsi_illinois_root(Fn f, double a, double b, const int iterations = 100) {
+double falsi_illinois_root(Fn f, double a, double b, int iterations = 100) {
   double fa = f(a), fb = f(b);
   assert(a <= b && ((fa <= 0 && fb >= 0) || (fa >= 0 && fb <= 0)));
   if (fa == 0) {

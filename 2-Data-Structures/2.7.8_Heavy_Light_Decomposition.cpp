@@ -25,10 +25,10 @@ The default code below defines updates that "set" a path's edges or nodes to a n
 increment updates, `apply_delta(v, d, len)` would return `v + d` for min/max queries, or
 `v + d * len` for sum queries, and `compose_deltas(old, d)` would return `old + d`.
 
-- `HeavyLight<T, VALUES_ON_EDGES = true>(adj, value)` constructs a new heavy light decomposition on
-  a forest defined by the adjacency list `adj`, with all values initialized to `value`. Its entries
-  must be valid indices into `adj`, and no duplicate edges should exist. Set `VALUES_ON_EDGES` to
-  false to store values on nodes instead.
+- `HeavyLight<T, VALUES_ON_EDGES = true>(adj, v)` constructs a new heavy light decomposition on a
+  forest defined by the adjacency list `adj`, with all values initialized to `v`. Its entries must
+  be valid indices into `adj`, and no duplicate edges should exist. Set `VALUES_ON_EDGES` to false
+  to store values on nodes instead.
 - `query(u, v)` returns the result of `combine()` applied to all values on the path from node `u` to
   node `v`. The nodes must be in the same tree and, when values are on edges, must be distinct.
 - `update(u, v, d)` modifies all values on the path from node `u` to node `v` by applying the delta
@@ -52,6 +52,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
+#include <optional>
 #include <tuple>
 #include <vector>
 
@@ -62,8 +63,8 @@ class HeavyLight {
   static T compose_deltas(const T &old, const T &d) { return d; }
 
   std::vector<std::vector<int>> adj;
-  std::vector<std::vector<T>> value, delta;
-  std::vector<std::vector<char>> pending;
+  std::vector<std::vector<T>> value;
+  std::vector<std::vector<std::optional<T>>> delta;
   std::vector<std::vector<int>> len;
   std::vector<int> size, parent, root, tin, tout, path, pathlen, pathpos, pathroot;
   int counter, paths;
@@ -98,8 +99,8 @@ class HeavyLight {
   }
 
   inline T applied_value(int path_id, int i) {
-    return pending[path_id][i] ? apply_delta(value[path_id][i], delta[path_id][i], len[path_id][i])
-                               : value[path_id][i];
+    return delta[path_id][i] ? apply_delta(value[path_id][i], *delta[path_id][i], len[path_id][i])
+                             : value[path_id][i];
   }
 
   void push_delta(int path_id, int i) {
@@ -109,37 +110,31 @@ class HeavyLight {
     }
     for (d -= 2; d >= 0; d--) {
       int l = (i >> d), r = (l ^ 1), n = l / 2;
-      if (pending[path_id][n]) {
+      if (delta[path_id][n]) {
         value[path_id][n] = applied_value(path_id, n);
-        delta[path_id][l] = pending[path_id][l]
-                                ? compose_deltas(delta[path_id][l], delta[path_id][n])
-                                : delta[path_id][n];
-        delta[path_id][r] = pending[path_id][r]
-                                ? compose_deltas(delta[path_id][r], delta[path_id][n])
-                                : delta[path_id][n];
-        pending[path_id][l] = pending[path_id][r] = true;
-        pending[path_id][n] = false;
+        const T &d = *delta[path_id][n];
+        delta[path_id][l] = delta[path_id][l] ? compose_deltas(*delta[path_id][l], d) : d;
+        delta[path_id][r] = delta[path_id][r] ? compose_deltas(*delta[path_id][r], d) : d;
+        delta[path_id][n].reset();
       }
     }
   }
 
-  bool query(int path_id, int u, int v, T *res) {
+  std::optional<T> query(int path_id, int u, int v) {
     push_delta(path_id, u += static_cast<int>(value[path_id].size()) / 2);
     push_delta(path_id, v += static_cast<int>(value[path_id].size()) / 2);
-    bool found = false;
+    std::optional<T> res;
     for (; u <= v; u = (u + 1) / 2, v = (v - 1) / 2) {
       if ((u & 1) != 0) {
         T part_value = applied_value(path_id, u);
-        *res = found ? combine(*res, part_value) : part_value;
-        found = true;
+        res = res ? combine(*res, part_value) : part_value;
       }
       if ((v & 1) == 0) {
         T part_value = applied_value(path_id, v);
-        *res = found ? combine(*res, part_value) : part_value;
-        found = true;
+        res = res ? combine(*res, part_value) : part_value;
       }
     }
-    return found;
+    return res;
   }
 
   void update(int path_id, int u, int v, const T &d) {
@@ -148,15 +143,13 @@ class HeavyLight {
     int tu = -1, tv = -1;
     for (; u <= v; u = (u + 1) / 2, v = (v - 1) / 2) {
       if ((u & 1) != 0) {
-        delta[path_id][u] = pending[path_id][u] ? compose_deltas(delta[path_id][u], d) : d;
-        pending[path_id][u] = true;
+        delta[path_id][u] = delta[path_id][u] ? compose_deltas(*delta[path_id][u], d) : d;
         if (tu == -1) {
           tu = u;
         }
       }
       if ((v & 1) == 0) {
-        delta[path_id][v] = pending[path_id][v] ? compose_deltas(delta[path_id][v], d) : d;
-        pending[path_id][v] = true;
+        delta[path_id][v] = delta[path_id][v] ? compose_deltas(*delta[path_id][v], d) : d;
         if (tv == -1) {
           tv = v;
         }
@@ -175,7 +168,7 @@ class HeavyLight {
   }
 
  public:
-  explicit HeavyLight(const std::vector<std::vector<int>> &adj, const T &initial_value = T())
+  explicit HeavyLight(const std::vector<std::vector<int>> &adj, const T &v = T())
       : adj(adj),
         size(adj.size()),
         parent(adj.size()),
@@ -196,13 +189,11 @@ class HeavyLight {
     }
     value.resize(paths);
     delta.resize(paths);
-    pending.resize(paths);
     len.resize(paths);
     for (int i = 0; i < paths; i++) {
       int m = pathlen[i];
-      value[i].assign(2 * m, initial_value);
+      value[i].assign(2 * m, v);
       delta[i].resize(2 * m);
-      pending[i].assign(2 * m, false);
       len[i].assign(2 * m, 1);
       for (int j = 2 * m - 1; j > 1; j -= 2) {
         value[i][j / 2] = combine(value[i][j], value[i][j ^ 1]);
@@ -245,16 +236,14 @@ class HeavyLight {
     assert(0 <= v && v < static_cast<int>(root.size()));
     assert(root[u] == root[v]);
     assert(!VALUES_ON_EDGES || u != v);
-    bool found = false;
-    T res = T(), part_value;
+    std::optional<T> res;
     for_each_path(u, v, !VALUES_ON_EDGES, [&](int path_id, int lo, int hi, bool) {
-      if (query(path_id, lo, hi, &part_value)) {
-        res = found ? combine(res, part_value) : part_value;
-        found = true;
+      if (auto part = query(path_id, lo, hi)) {
+        res = res ? combine(*res, *part) : *part;
       }
     });
-    assert(found);
-    return res;
+    assert(res);
+    return *res;
   }
 
   void update(int u, int v, const T &d) {
@@ -274,11 +263,6 @@ class HeavyLight {
 
 using namespace std;
 
-void add_edge(vector<vector<int>> &adj, int u, int v) {
-  adj[u].push_back(v);
-  adj[v].push_back(u);
-}
-
 int main() {
   //   v=40   v=20   v=10
   // 0------1------2------3    5------6
@@ -286,11 +270,15 @@ int main() {
   //               +------4
   //                 v=30
   vector<vector<int>> adj(7);
-  add_edge(adj, 0, 1);
-  add_edge(adj, 1, 2);
-  add_edge(adj, 2, 3);
-  add_edge(adj, 2, 4);
-  add_edge(adj, 5, 6);
+  auto add_edge = [&](int u, int v) {
+    adj[u].push_back(v);
+    adj[v].push_back(u);
+  };
+  add_edge(0, 1);
+  add_edge(1, 2);
+  add_edge(2, 3);
+  add_edge(2, 4);
+  add_edge(5, 6);
   HeavyLight<int> hld(adj, 0);
   hld.update(0, 1, 40);
   hld.update(1, 2, 20);
@@ -298,7 +286,6 @@ int main() {
   hld.update(2, 4, 30);
   assert(hld.query(0, 3) == 10);
   assert(hld.query(2, 4) == 30);
-  hld.update(3, 4, 5);
 
   // Update path 3-2-4 to value 5:
   //
@@ -307,13 +294,14 @@ int main() {
   //               |
   //               +------4
   //                  v=5
+  hld.update(3, 4, 5);
   assert(hld.query(1, 4) == 5);
-  hld.update(5, 6, 7);
 
   // The disconnected component can be updated independently:
   //
   // 5------6
   //   v=7
+  hld.update(5, 6, 7);
   assert(hld.query(5, 6) == 7);
   assert(!hld.for_each_path(0, 5, true, [](int, int, int, bool) {}));
 
@@ -323,7 +311,6 @@ int main() {
   //                 +------4
   //                      v=100
   HeavyLight<int, false> node_hld(adj, 100);
-  node_hld.update(1, 4, 8);
 
   // Update nodes on path 1-2-4 to value 8:
   //
@@ -332,6 +319,7 @@ int main() {
   //                 |
   //                 +------4
   //                       v=8
+  node_hld.update(1, 4, 8);
   assert(node_hld.query(0, 3) == 8);    // Min over nodes 0, 1, 2, 3.
   assert(node_hld.query(5, 5) == 100);  // Single-node paths are allowed.
   node_hld.update(5, 5, 7);

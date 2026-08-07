@@ -17,8 +17,9 @@ scales may require rescaling the input or using multiprecision arithmetic.
   relative error (whichever is reached first), and zero roots are removed exactly before the
   simultaneous iteration starts.
 
-Root-finding inputs must contain at least one nonzero coefficient; trailing near-zero coefficients
-are discarded. `eval_with_derivative()` requires a nonempty coefficient vector.
+Root-finding inputs must contain at least one nonzero coefficient. After normalization, trailing
+coefficients no larger than `ZERO_EPS` relative to the largest coefficient are discarded.
+`eval_with_derivative()` requires a nonempty coefficient vector.
 
 Time Complexity:
 - O(n) per call to `eval_with_derivative()`, where $n$ is the degree of the polynomial.
@@ -41,13 +42,18 @@ using dbl = long double;
 using cdbl = std::complex<dbl>;
 using cpoly = std::vector<cdbl>;
 
-const dbl PI = acosl(-1.0L);
-const dbl ZERO_EPS = 1e-30L;   // Treat coefficients and denominators this small as zero.
+const dbl PI = std::acos(dbl(-1));
+const dbl ZERO_EPS = 1e-30L;   // Treat normalized coefficients and denominators this small as zero.
 const dbl ROOT_EPS = 1e-18L;   // Stop once root updates are this small relative to the root.
 const dbl CHECK_EPS = 1e-12L;  // Residual tolerance used by the example assertions.
 
-bool is_zero(const cdbl &z) { return std::abs(z) <= ZERO_EPS; }
-bool is_finite(const cdbl &z) { return std::isfinite(z.real()) && std::isfinite(z.imag()); }
+bool is_zero(const cdbl &z) {
+  return std::abs(z) <= ZERO_EPS;
+}
+
+bool is_finite(const cdbl &z) {
+  return std::isfinite(z.real()) && std::isfinite(z.imag());
+}
 
 std::pair<cdbl, cdbl> eval_with_derivative(const cpoly &p, const cdbl &x) {
   cdbl value = p.back(), derivative = 0;
@@ -64,13 +70,26 @@ dbl root_bound(const cpoly &p) {
   for (int i = 0; i < n; i++) {
     dbl ratio = std::abs(p[i] / p.back());
     if (ratio > 0) {
-      res = std::max(res, powl(ratio, 1.0L / (n - i)));
+      res = std::max(res, std::pow(ratio, dbl(1) / (n - i)));
     }
   }
-  return 2 * std::max(static_cast<dbl>(1), res);
+  return 2 * std::max(dbl(1), res);
 }
 
-cpoly find_all_roots(cpoly p, const dbl eps = ROOT_EPS, const int iterations = 2000) {
+cpoly find_all_roots(cpoly p, dbl eps = ROOT_EPS, int iterations = 2000) {
+  while (!p.empty() && p.back() == cdbl(0)) {
+    p.pop_back();
+  }
+  if (p.size() <= 1) {
+    return {};
+  }
+  dbl scale = 0;
+  for (const cdbl &c : p) {
+    scale = std::max(scale, std::abs(c));
+  }
+  for (cdbl &c : p) {
+    c /= scale;
+  }
   while (!p.empty() && is_zero(p.back())) {
     p.pop_back();
   }
@@ -82,13 +101,6 @@ cpoly find_all_roots(cpoly p, const dbl eps = ROOT_EPS, const int iterations = 2
   if (p.size() <= 1) {
     return roots;
   }
-  dbl scale = 0;
-  for (int i = 0; i < static_cast<int>(p.size()); i++) {
-    scale = std::max(scale, std::abs(p[i]));
-  }
-  for (int i = 0; i < static_cast<int>(p.size()); i++) {
-    p[i] /= scale;
-  }
   int n = static_cast<int>(p.size()) - 1;
   if (n == 1) {
     roots.push_back(-p[0] / p[1]);
@@ -99,7 +111,7 @@ cpoly find_all_roots(cpoly p, const dbl eps = ROOT_EPS, const int iterations = 2
   dbl max_radius = 2 * radius;
   for (int i = 0; i < n; i++) {
     dbl angle = offset + 2 * PI * i / n;
-    z[i] = radius * cdbl(cosl(angle), sinl(angle));
+    z[i] = radius * cdbl(std::cos(angle), std::sin(angle));
   }
   for (int it = 0; it < iterations; it++) {
     bool done = true;
@@ -115,7 +127,7 @@ cpoly find_all_roots(cpoly p, const dbl eps = ROOT_EPS, const int iterations = 2
           cdbl diff = z[i] - z[j];
           if (std::abs(diff) <= eps * eps) {
             dbl angle = 2 * PI * (i + 1) / (n + 1);
-            diff = eps * (1 + std::abs(z[i])) * cdbl(cosl(angle), sinl(angle));
+            diff = eps * (1 + std::abs(z[i])) * cdbl(std::cos(angle), std::sin(angle));
           }
           repulsion += cdbl(1) / diff;
         }
@@ -150,7 +162,7 @@ cpoly find_all_roots(cpoly p, const dbl eps = ROOT_EPS, const int iterations = 2
         done = false;
       }
     }
-    z = next;
+    z = std::move(next);
     if (done) {
       break;
     }
@@ -165,10 +177,9 @@ cpoly find_all_roots(cpoly p, const dbl eps = ROOT_EPS, const int iterations = 2
 }
 
 std::vector<cdbl> find_all_roots(
-    const std::vector<dbl> &p, const dbl eps = ROOT_EPS, const int iterations = 2000
+    const std::vector<dbl> &p, dbl eps = ROOT_EPS, int iterations = 2000
 ) {
-  cpoly q(p.begin(), p.end());
-  return find_all_roots(q, eps, iterations);
+  return find_all_roots(cpoly(p.begin(), p.end()), eps, iterations);
 }
 
 /*** Example Usage ***/
@@ -198,12 +209,16 @@ void assert_roots(const vector<cdbl> &actual, const vector<cdbl> &expected) {
 
 int main() {
   {  // -1 + 2x - 6x^2 + 2x^3
-    vector<dbl> p{-1.0, 2.0, -6.0, 2.0};
+    vector<dbl> p{-1, 2, -6, 2};
     vector<cdbl> roots = find_all_roots(p);
     assert(roots.size() == 3);
     for (const auto &root : roots) {
       assert(abs(eval(cpoly(p.begin(), p.end()), root)) < CHECK_EPS);
     }
+  }
+  {  // Scaling all coefficients does not change the roots.
+    vector<dbl> p{-6e-40L, 1e-40L};
+    assert_roots(find_all_roots(p), {6});
   }
   {  // (-24+36i) + (-26+12i)x + (-30+40i)x^2 + (-26+12i)x^3 + (-6+4i)x^4
     // = ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):

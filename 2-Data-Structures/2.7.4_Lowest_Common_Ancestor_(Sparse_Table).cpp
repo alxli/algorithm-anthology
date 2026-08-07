@@ -58,17 +58,14 @@ class SparseTableLCA {
   }
 
  public:
-  explicit SparseTableLCA(const std::vector<std::vector<int>> &adj) : timer(0) {
+  explicit SparseTableLCA(const std::vector<std::vector<int>> &adj)
+      : tin(adj.size()), tout(adj.size()), depth(adj.size()), root(adj.size(), -1), timer(0) {
     int n = static_cast<int>(adj.size());
     len = 1;
     while ((1 << len) <= std::max(1, n)) {
       len++;
     }
     up.assign(n, std::vector<int>(len));
-    tin.assign(n, 0);
-    tout.assign(n, 0);
-    depth.assign(n, 0);
-    root.assign(n, -1);
     for (int u = 0; u < n; u++) {
       if (root[u] == -1) {
         dfs(adj, u, u, u, 0);
@@ -124,22 +121,20 @@ class SparseTableLCA {
 #include <cassert>
 using namespace std;
 
-void add_edge(vector<vector<int>> &adj, int u, int v) {
-  adj[u].push_back(v);
-  adj[v].push_back(u);
-}
-
 int main() {
   // 0---1---2    5---6
   // |   |
   // 4   3
   vector<vector<int>> adj(7);
-  add_edge(adj, 0, 1);
-  add_edge(adj, 0, 4);
-  add_edge(adj, 1, 2);
-  add_edge(adj, 1, 3);
-  add_edge(adj, 5, 6);
-
+  auto add_edge = [&](int u, int v) {
+    adj[u].push_back(v);
+    adj[v].push_back(u);
+  };
+  add_edge(0, 1);
+  add_edge(0, 4);
+  add_edge(1, 2);
+  add_edge(1, 3);
+  add_edge(5, 6);
   SparseTableLCA tree(adj);
   assert(tree.go_up(3, 1) == 1);
   assert(tree.go_up(3, 2) == 0);

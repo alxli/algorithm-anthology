@@ -38,8 +38,7 @@ Space Complexity:
 
 int simplex_solve(
     const std::vector<std::vector<double>> &a, const std::vector<double> &b,
-    const std::vector<double> &c, std::vector<double> *x, const bool maximize = true,
-    const double eps = 1e-10
+    const std::vector<double> &c, std::vector<double> *x, bool maximize = true, double eps = 1e-10
 ) {
   int m = static_cast<int>(a.size()), n = static_cast<int>(c.size());
   assert(x != nullptr && n > 0 && b.size() == a.size());

@@ -75,6 +75,8 @@ Prefer code that a strong contestant can adapt quickly after skimming:
   use `using namespace std;` by default; keep explicit `std::` only where the contrast carries
   meaning, as in 8.3 alongside `__gnu_pbds`.
 - Prefer `static_cast<int>(container.size())` before mixing sizes with `int` indices.
+- Omit top-level `const` from by-value parameters; it does not affect callers and makes signatures
+  noisier.
 - For read-only structured bindings of small pairs or tuples, prefer copying with `auto [...]`;
   use `const auto &` when copying the bound object would be material.
 - Prefer a self-passing generic lambda for local recursion in C++17, especially when a file-scope
@@ -111,6 +113,9 @@ Prefer code that a strong contestant can adapt quickly after skimming:
   and STL-style `first`/`last`.
 - Compile-time template knobs and named constants are uppercase:
   `VALUES_ON_EDGES`, `CANONICALIZE`, `EXACT`, `EPS`, `INF`, `NAIVE_CUTOFF`.
+- For zero-based fixed-domain data structures, compile-time dimensions denote counts: `N` defines
+  indices $[0, `N`)$, while `R` and `C` define rows $[0, `R`)$ and columns $[0, `C`)$. This does not
+  require range-query APIs themselves to use half-open intervals.
 - For graph code, use `u` and `v` for edge endpoints. Use `w` or `weight` for edge weights, and
   avoid using `v` to mean a vertex value when it can be confused with endpoint `v`.
 - For line/geometry examples involving two objects, prefer `l1`, `l2`, `p1`, `p2` over ambiguous
@@ -258,9 +263,10 @@ sections elsewhere, include both `Time Complexity:` and `Space Complexity:`.
 
 ## Precision And Numeric Code
 
-- Use plain `fabs()` rather than `std::fabs()` to match the anthology's compact convention for
-  `<cmath>` functions. In the templated `EQ()` and `LT()` helpers, use `EPS` directly instead of
-  `static_cast<C>(EPS)`; the floating-point expression converts it implicitly.
+- Use plain `fabs()` for known-`double` code to match the anthology's compact convention. In generic
+  or `long double` code, qualify `<cmath>` calls such as `std::fabs()` so overload resolution
+  preserves the argument type on GCC. In the templated `EQ()` and `LT()` helpers, use `EPS` directly
+  instead of `static_cast<C>(EPS)`; the floating-point expression converts it implicitly.
 - Floating-point tolerance constants are usually named `EPS` and kept as uppercase constants.
 - Runtime tolerance parameters are lowercase `eps`.
 - Use `include_boundary` for geometry flags that control whether boundary points or boundary-only
@@ -343,7 +349,8 @@ them as a convention. The current code-consistency pass in `scan_quality.py` che
   examples reproducible;
 - fixed literal seeds in reusable randomized code, which should seed at runtime instead;
 - C `rand()`/`srand()` usage, which should be replaced by a C++ random engine and distribution;
-- `std::fabs()` usage, which should follow the anthology's plain `fabs()` convention;
+- unqualified `<cmath>` calls in generic or `long double` code that could select a narrowing global
+  overload;
 - `static_cast<C>(EPS)` in floating-point comparison helpers, where direct `EPS` is clearer;
 - `include_boundary` naming drift in geometry boundary flags;
 - `Overflow warning.` comment punctuation.
@@ -359,10 +366,12 @@ In prose, use math mode for mathematical variables and numeric constants (`$n$`,
 backticks for code identifiers or parameters (`n`, `MOD`). If a bound is a purely mathematical
 quantity in explanatory prose, use a plain math interval such as `$[0, n)$`. In API bullets, keep
 backticks for parameter-bounded domains; for example, a `SegTree<T>(n)` bullet should write the
-index domain with backticked `n` inside the math interval. Keep backticks inside tuple notation when
-the entries are code-facing return-field names or parameters, but use plain math tuples like
-`$(i, j)$` in conceptual prose. If a sentence defines a math symbol from code, such as "$n$ is
-`size()`", keep later uses of that symbol in math notation, e.g. `$[0, n]$`.
+index domain with backticked `n` inside the math interval. A later method bullet may likewise retain
+a constructor parameter in code mode when it refers to that same class-level domain, even if the
+parameter is not repeated by the method. Keep backticks inside tuple notation when the entries are
+code-facing return-field names or parameters, but use plain math tuples like `$(i, j)$` in
+conceptual prose. If a sentence defines a math symbol from code, such as "$n$ is `size()`", keep
+later uses of that symbol in math notation, e.g. `$[0, n]$`.
 Do not introduce a code-styled size variable solely to restate a container's size, such as
 "$[0, `n`)$, where `n` is `adj.size()`"; say that the indices of `adj` represent the nodes instead.
 When a prose sentence is explicitly explaining code-index formulas, code-style intervals such as

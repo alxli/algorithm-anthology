@@ -39,8 +39,7 @@ void subtree_small_to_large_merge(
 ) {
   int n = static_cast<int>(adj.size());
   assert(0 <= root && root < n);
-  using Summary = decltype(init(0));
-  std::vector<Summary> summary(n);
+  std::vector<decltype(init(0))> summary(n);
   auto dfs = [&](auto &&dfs, int u, int p) -> int {
     int keep = u;
     summary[u] = init(u);

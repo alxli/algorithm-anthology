@@ -27,6 +27,18 @@ EXAMPLE_STD_QUALIFICATION_ALLOWLIST = {
     Path("6-Mathematics/6.2.3_Enumerating_Permutations.cpp"): {"next_permutation"},
 }
 
+TYPE_PRESERVING_CMATH_FILES = {
+    Path("5-Optimization/5.4.3_Polynomial_Root_Finding_(Differentiation).cpp"),
+    Path("5-Optimization/5.4.4_Polynomial_Root_Finding_(Laguerre).cpp"),
+    Path("5-Optimization/5.4.5_Polynomial_Root_Finding_(Ehrlich-Aberth).cpp"),
+    Path("6-Mathematics/6.1_Math_Utilities.cpp"),
+    Path("6-Mathematics/6.5.2_Row_Reduction.cpp"),
+    Path("6-Mathematics/6.5.3_Determinant_and_Inverse.cpp"),
+    Path("6-Mathematics/6.5.4_LU_Decomposition.cpp"),
+    Path("7-Geometry/7.1.1_Point.cpp"),
+    Path("7-Geometry/7.5.1_3D_Point.cpp"),
+}
+
 EXAMPLE_HELPER_RE = re.compile(
     r"(?m)^(?:template<[^>\n]+>\n)?"
     r"(?:[A-Za-z_][\w:<>,&* ]+\s+)+"
@@ -35,9 +47,17 @@ EXAMPLE_HELPER_RE = re.compile(
 C_RAND_RE = re.compile(
     r"((?<![A-Za-z0-9_])::rand\s*\(|(?<!::)\brand\s*\(\s*\)\s*%|\bsrand\s*\()"
 )
-QUALIFIED_FABS_RE = re.compile(r"\bstd::fabs\b")
+UNQUALIFIED_CMATH_RE = re.compile(
+    r"(?<![A-Za-z0-9_:])(?:fabs|sqrt|hypot|atan2|acos|asin|cos|sin|floor|ceil|pow|exp|log|"
+    r"modf|fmod)l?\s*\("
+)
+UNQUALIFIED_GENERIC_FABS_RE = re.compile(r"(?<![A-Za-z0-9_:])fabs\(C\(")
 CAST_EPS_RE = re.compile(r"\bstatic_cast<C>\(EPS\)")
 LEGACY_BOUNDARY_FLAG_RE = re.compile(r"\b(?:edge_is_inside|touch_is_intersect)\b")
+CONST_VALUE_PARAMETER_RE = re.compile(
+    r"(?:\(|,)\s*const\s+[A-Za-z_][A-Za-z0-9_:<>]*\s+"
+    r"[A-Za-z_][A-Za-z0-9_]*\s*(?==|,|\))"
+)
 FIXED_ENGINE_SEED_RE = re.compile(
     r"(?:std::)?(?:mt19937|mt19937_64)\s+[A-Za-z_][A-Za-z0-9_]*"
     r"\s*\(\s*([0-9]+)[uUlL]*\s*\)"
@@ -475,10 +495,14 @@ def scan_example_markers(paths):
 def scan_code_consistency(paths):
     issues = []
     for path in paths:
+        rel = path.relative_to(ROOT)
         text = path.read_text()
         lines = text.splitlines()
         in_block_comment = False
+        in_example = False
         for line_no, line in enumerate(lines, start=1):
+            if line.startswith("/*** Example Usage"):
+                in_example = True
             code, in_block_comment = strip_cpp_comments_and_strings(line, in_block_comment)
             if C_RAND_RE.search(line):
                 issues.append(
@@ -490,13 +514,17 @@ def scan_code_consistency(paths):
                         line,
                     )
                 )
-            if QUALIFIED_FABS_RE.search(code):
+            if UNQUALIFIED_GENERIC_FABS_RE.search(code) or (
+                not in_example
+                and rel in TYPE_PRESERVING_CMATH_FILES
+                and UNQUALIFIED_CMATH_RE.search(code)
+            ):
                 issues.append(
                     Issue(
                         path,
                         line_no,
                         "code-consistency",
-                        "Use plain fabs() to match the anthology's <cmath> convention.",
+                        "Qualify <cmath> overloads when the function must preserve long double.",
                         line,
                     )
                 )
@@ -517,6 +545,16 @@ def scan_code_consistency(paths):
                         line_no,
                         "code-consistency",
                         "Use include_boundary consistently for geometry boundary flags.",
+                        line,
+                    )
+                )
+            if CONST_VALUE_PARAMETER_RE.search(code):
+                issues.append(
+                    Issue(
+                        path,
+                        line_no,
+                        "code-consistency",
+                        "Omit top-level const from by-value parameters.",
                         line,
                     )
                 )
@@ -570,22 +608,26 @@ def scan_code_consistency(paths):
         example = text[marker:]
         example_start_line = text[:marker].count("\n") + 1
         imports_std = "using namespace std;" in example
+        allowed = EXAMPLE_STD_QUALIFICATION_ALLOWLIST.get(path.relative_to(ROOT), set())
         in_block_comment = False
         for offset, line in enumerate(example.splitlines(), start=0):
             code, in_block_comment = strip_cpp_comments_and_strings(line, in_block_comment)
-            if imports_std:
-                allowed = EXAMPLE_STD_QUALIFICATION_ALLOWLIST.get(path.relative_to(ROOT), set())
-                for name in re.findall(r"\bstd::([A-Za-z_][A-Za-z0-9_]*)", code):
-                    if name not in allowed:
-                        issues.append(
-                            Issue(
-                                path,
-                                example_start_line + offset,
-                                "code-consistency",
-                                "Drop redundant std:: qualification in an example that imports std.",
-                                line,
-                            )
+            for name in re.findall(r"\bstd::([A-Za-z_][A-Za-z0-9_]*)", code):
+                if name not in allowed:
+                    message = (
+                        "Drop redundant std:: qualification in an example that imports std."
+                        if imports_std
+                        else "Import std in the example and drop the explicit qualification."
+                    )
+                    issues.append(
+                        Issue(
+                            path,
+                            example_start_line + offset,
+                            "code-consistency",
+                            message,
+                            line,
                         )
+                    )
             if re.search(r"(?:std::)?random_device\s*\{\s*\}", code):
                 issues.append(
                     Issue(
@@ -944,6 +986,9 @@ def scan_default_argument_docs(paths):
                 name_match = re.search(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*=", param)
                 if name_match:
                     defaulted_names.append(name_match.group(1))
+            internal_names = internal_api_parameters.get(match.group(1), set())
+            if defaulted_names and set(defaulted_names) <= internal_names:
+                continue
             internal_traversal_defaults = (
                 len(defaulted_params) == len(params)
                 and len(defaulted_names) >= 2
@@ -1401,8 +1446,8 @@ def scan_repeated_literal_defaults(paths):
 def scan_contextual_math_style(paths):
     issues = []
     api_signature_re = re.compile(r"-\s+`([^`]*)`")
-    bare_bound_re = re.compile(r"\$\[[0-9]+, ([a-z])[\]\)]\$")
-    code_bound_re = re.compile(r"\$\[[0-9]+, `([a-z])`[\]\)]\$")
+    bare_bound_re = re.compile(r"\$\[[0-9]+, ([A-Za-z_][A-Za-z0-9_]*)[\]\)]\$")
+    code_bound_re = re.compile(r"\$\[[0-9]+, `([A-Za-z_][A-Za-z0-9_]*)`[\]\)]\$")
     prose_bound_re = re.compile(r"\$\[[^\]]*`[a-z]`[^\]]*[\]\)]\$")
     prose_math_name = r"(?:[a-z]|[A-Za-z][A-Za-z0-9]*_[A-Za-z0-9_]+)"
     prose_tuple_re = re.compile(r"\$\(`" + prose_math_name + r"`, `" + prose_math_name + r"`\)\$")
@@ -1512,12 +1557,14 @@ def scan_contextual_math_style(paths):
         in_doc = False
         in_api_bullet = False
         api_params = set()
+        constructor_params = set()
         for index, line in enumerate(lines):
             line_no = index + 1
             if "/*" in line:
                 in_doc = True
                 in_api_bullet = False
                 api_params = set()
+                constructor_params = set()
             if not in_doc:
                 continue
 
@@ -1527,10 +1574,21 @@ def scan_contextual_math_style(paths):
                 signature = api_signature_re.search(stripped)
                 api_params = set()
                 if signature:
+                    signature_params = set()
                     for param in split_parameters(call_parameters(signature.group(1))):
-                        name = re.search(r"\b([a-z])\b(?:\s*=.*)?$", param.strip())
-                        if name:
-                            api_params.add(name.group(1))
+                        name = param.split("=", 1)[0].strip().lstrip("&*")
+                        if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name):
+                            signature_params.add(name)
+                    api_params.update(signature_params)
+                    template_prefix = signature.group(1).split("(", 1)[0]
+                    api_params.update(
+                        re.findall(r"(?<![A-Za-z0-9_])([A-Z][A-Z0-9_]*)\b", template_prefix)
+                    )
+                    call_name = re.search(
+                        r"([A-Za-z_][A-Za-z0-9_]*)(?:<[^`]*>)?\s*\(", signature.group(1)
+                    )
+                    if call_name and call_name.group(1)[0].isupper():
+                        constructor_params.update(signature_params)
             elif stripped.startswith("- "):
                 in_api_bullet = False
                 api_params = set()
@@ -1568,7 +1626,7 @@ def scan_contextual_math_style(paths):
             if (
                 in_api_bullet
                 and bare_bound
-                and bare_bound.group(1) in api_params
+                and (bare_bound.group(1) in api_params or bare_bound.group(1)[0].isupper())
                 and not api_param_bound_is_math_dominant(bare_bound.group(1), local_context)
             ):
                 issues.append(
@@ -1592,6 +1650,8 @@ def scan_contextual_math_style(paths):
                 in_api_bullet
                 and code_bound
                 and code_bound.group(1) not in api_params
+                and code_bound.group(1) not in constructor_params
+                and not code_bound.group(1)[0].isupper()
                 and not code_bound_is_explained
             ):
                 issues.append(

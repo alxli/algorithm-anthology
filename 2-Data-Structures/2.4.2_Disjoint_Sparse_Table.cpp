@@ -19,7 +19,7 @@ returns the "min" of the range; for "sum", `combine(a, b)` should return `a + b`
 - `DisjointSparseTable<T>(lo, hi)` builds the table over the half-open iterator range
   $[`lo`, `hi`)$.
 - `size()` returns the size of the array.
-- `query(lo, hi)` returns `combine()` applied to all indices in $[`lo`, `hi`]$.
+- `query(lo, hi)` returns the aggregate of the values at indices in $[`lo`, `hi`]$.
 
 Time Complexity:
 - O(n log n) per call to the constructor, where $n$ is the size of the array.
@@ -55,7 +55,7 @@ class DisjointSparseTable {
     while ((1 << levels) < len) {
       levels++;
     }
-    fold.assign(levels, std::vector<T>(len));
+    fold.assign(levels, std::vector<T>(len, a[0]));
     for (int level = 0; level < levels; level++) {
       int range = 1 << (level + 1), half = 1 << level;
       for (int center = half; center < len + half; center += range) {

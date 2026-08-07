@@ -27,23 +27,24 @@ increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, 
   range $[`lo`, `hi`)$.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.
-- `query(lo, hi)` returns the result of `combine()` applied to all indices in $[`lo`, `hi`]$. If
-  `lo == hi`, then the single specified value is returned.
+- `query(lo, hi)` returns the aggregate of the values at indices in $[`lo`, `hi`]$. If `lo == hi`,
+  then the single specified value is returned.
 - `update(i, d)` assigns the value at index `i` by applying the delta `d`.
 - `update(lo, hi, d)` modifies the value at each array index in $[`lo`, `hi`]$ by applying the delta
   `d` to each value.
 - `max_right(lo, pred)` returns the largest boundary `hi` such that the aggregate over the half-open
-  range $[`lo`, `hi`)$ satisfies the monotonic predicate `pred()`. It returns `size()` if `pred()`
-  remains true to the end.
+  range $[`lo`, `hi`)$ satisfies `pred()`. As `hi` increases, `pred()` applied to this aggregate may
+  change only from true to false. The empty range is valid, and `size()` is returned if the
+  predicate remains true to the end.
 - `min_left(hi, pred)` returns the smallest boundary `lo` such that the aggregate over the half-open
-  range $[`lo`, `hi`)$ satisfies the monotonic predicate `pred()`. It returns $0$ if `pred()`
+  range $[`lo`, `hi`)$ satisfies `pred()`. As `lo` decreases, `pred()` applied to this aggregate may
+  change only from true to false. The empty range is valid, and $0$ is returned if the predicate
   remains true to the beginning.
 
-For the boundary-search functions, `pred()` takes aggregate `T` values of candidate ranges. As a
-range grows, `pred()` may change from true to false but never back to true; the empty range is
-considered valid. E.g. for `combine = min`, use `pred(mn) = (mn > x)` to find the first value
-`<= x`, or for `combine = sum`, use `pred(sum) = (sum <= x)` with nonnegative values to find the
-longest range within the limit `x`.
+For the boundary-search functions, `pred()` takes aggregate `T` values. For `combine = min`,
+`pred(mn) = (mn > x)` makes `max_right()` stop at the first value `<= x` when extending right, while
+`min_left()` stops just after the first such value when extending left. With nonnegative values and
+`combine = sum`, `pred(sum) = (sum <= x)` finds the longest extension with sum at most `x`.
 
 Both boundary searches are iterative to demonstrate how the flat-array layout can avoid recursion.
 They push lazy deltas along the endpoints, decompose the search range into O(log n) canonical nodes,
@@ -87,14 +88,15 @@ class IterativeLazySegTree {
       base <<= 1;
       height++;
     }
-    value.assign(2 * base, T());
-    delta.assign(2 * base, T());
+    T init = gen(0);
+    value.assign(2 * base, init);
+    delta.assign(2 * base, init);
     pending.assign(2 * base, false);
     seg_len.assign(2 * base, 1);
     for (int i = base - 1; i > 0; i--) {
       seg_len[i] = seg_len[i << 1] + seg_len[i << 1 | 1];
     }
-    for (int i = 0; i < len; i++) {
+    for (int i = 1; i < len; i++) {
       value[base + i] = gen(i);
     }
     for (int i = base - 1; i > 0; i--) {

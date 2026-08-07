@@ -38,7 +38,7 @@ const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || fabs(C(a) - C(b)) <= EPS;
+  if constexpr (std::is_floating_point_v<C>) return C(a) == C(b) || std::fabs(C(a) - C(b)) <= EPS;
   return C(a) == C(b);
 }
 
@@ -155,6 +155,14 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
     double x, y;
   };  // For line intersection with the sweep line.
   std::vector<It> poly_lo{lo1, lo2}, poly_hi{hi1, hi2};
+  int orientation[2];
+  for (int poly = 0; poly < 2; poly++) {
+    double area = 0;
+    for (It i = poly_lo[poly], j = poly_hi[poly] - 1; i != poly_hi[poly]; j = i++) {
+      area += (static_cast<double>(j->x) - i->x) * (static_cast<double>(j->y) + i->y);
+    }
+    orientation[poly] = (area < 0 ? 1 : (area > 0 ? -1 : 0));
+  }
   std::vector<double> x_coords;
   for (It it = lo1; it != hi1; ++it) {
     x_coords.push_back(it->x);
@@ -171,7 +179,10 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
     }
   }
   std::sort(x_coords.begin(), x_coords.end());
-  x_coords.erase(std::unique(x_coords.begin(), x_coords.end()), x_coords.end());
+  x_coords.erase(
+      std::unique(x_coords.begin(), x_coords.end(), [](double a, double b) { return EQ(a, b); }),
+      x_coords.end()
+  );
   double res = 0;
   for (int k = 0; k + 1 < static_cast<int>(x_coords.size()); k++) {
     double x = (x_coords[k] + x_coords[k + 1]) / 2;
@@ -179,19 +190,14 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
     std::vector<Event> events;
     for (int poly = 0; poly < 2; poly++) {
       It lo = poly_lo[poly], hi = poly_hi[poly];
-      double area = 0;
-      for (It i = lo, j = hi - 1; i != hi; j = i++) {
-        area += (static_cast<double>(j->x) - i->x) * (static_cast<double>(j->y) + i->y);
-      }
       for (It j = lo, i = hi - 1; j != hi; i = j++) {
         double px, py;
         if (line_intersection1(*j, *i, sweep0, sweep1, &px, &py) == 0) {
           double y = py, x0 = i->x, x1 = j->x;
-          int sgn_area = (area < 0 ? 1 : (area > 0 ? -1 : 0));
           if (x0 < x && x1 > x) {
-            events.emplace_back(y, sgn_area * (1 << poly));
+            events.emplace_back(y, orientation[poly] * (1 << poly));
           } else if (x0 > x && x1 < x) {
-            events.emplace_back(y, -sgn_area * (1 << poly));
+            events.emplace_back(y, -orientation[poly] * (1 << poly));
           }
         }
       }

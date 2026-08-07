@@ -41,7 +41,7 @@ class BinaryHeap {
 
   void sift_down(int i) {
     while (true) {
-      int child = 2 * i + 1;
+      int child = i * 2 + 1;
       if (child >= static_cast<int>(heap.size())) {
         break;
       }

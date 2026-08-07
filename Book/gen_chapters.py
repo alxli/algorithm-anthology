@@ -44,7 +44,7 @@ SECTION_NAMES = {
     (3, 6): 'Sequence Dynamic Programming',
     (3, 7): 'Expression Parsing',
     (3, 8): 'Encoding and Compression',
-    (4, 1): 'DFS and Tree Algorithms',
+    (4, 1): 'DFS and Trees',
     (4, 2): 'Connectivity',
     (4, 3): 'Shortest Paths',
     (4, 4): 'Spanning Trees',

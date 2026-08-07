@@ -30,7 +30,6 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
-#include <iterator>
 #include <utility>
 #include <vector>
 
@@ -92,13 +91,13 @@ class RangeKDTree {
 
  public:
   template<typename It>
-  RangeKDTree(It lo, It hi) : tree(lo, hi) {
-    int n = std::distance(lo, hi);
-    l_index.resize(n);
-    h_index.resize(n);
-    minp.resize(n);
-    maxp.resize(n);
-    build(0, n, true);
+  RangeKDTree(It lo, It hi)
+      : tree(lo, hi),
+        minp(tree.size()),
+        maxp(tree.size()),
+        l_index(tree.size()),
+        h_index(tree.size()) {
+    build(0, static_cast<int>(tree.size()), true);
   }
 
   template<typename Fn>
