@@ -20,7 +20,7 @@ of nodes. The node count should be kept modest, as the algorithm uses dense stor
 Overflow warning: labels and the returned matching weight are stored in `int64_t`; all doubled
 weights, label sums, and the total matching weight must fit.
 
-- `WeightedGeneralMatching(n)` creates a graph of `n` nodes numbered $[0, `n`)$.
+- `MaxWeightMatching(n)` creates a graph of `n` nodes numbered $[0, `n`)$.
 - `add_edge(u, v, w)` adds an undirected edge of positive weight `w` between `u` and `v`. If several
   edges join the same pair, only the maximum weight is retained.
 - `solve()` computes a maximum-weight matching and returns its total weight.
@@ -41,7 +41,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-class WeightedGeneralMatching {
+class MaxWeightMatching {
   struct Edge {
     int u, v;
     int64_t w;
@@ -322,7 +322,7 @@ class WeightedGeneralMatching {
   }
 
  public:
-  explicit WeightedGeneralMatching(int n)
+  explicit MaxWeightMatching(int n)
       : n(n),
         nx(n),
         g(2 * n + 1, std::vector<Edge>(2 * n + 1)),
@@ -396,7 +396,7 @@ int main() {
   // 0-----1-----2-----3-----4
   //  \_____________________/
   //            w=5
-  WeightedGeneralMatching g(5);
+  MaxWeightMatching g(5);
   g.add_edge(0, 1, 5);
   g.add_edge(1, 2, 6);
   g.add_edge(2, 3, 5);
@@ -411,7 +411,7 @@ int main() {
   // 0-----1-----2-----3
   //  \_________/
   //      w=3
-  WeightedGeneralMatching t(4);
+  MaxWeightMatching t(4);
   t.add_edge(0, 1, 3);
   t.add_edge(1, 2, 3);
   t.add_edge(0, 2, 3);
@@ -419,7 +419,7 @@ int main() {
   t.add_edge(2, 3, 1);     // A lighter parallel edge does not replace the heavier one.
   assert(t.solve() == 8);  // Edges 0-1 and 2-3 with weights 3 + 5.
 
-  WeightedGeneralMatching star(4);
+  MaxWeightMatching star(4);
   star.add_edge(0, 1, 12);
   star.add_edge(0, 2, 29);
   star.add_edge(0, 3, 29);

@@ -12,8 +12,8 @@ structure requires no fixed coordinate domain and its complexity depends on the 
 rather than the domain width. Prefer it when the domain is unknown or very large, or when maximum
 queries are needed; a Li Chao tree is often simpler when a manageable domain is known.
 
-- `HullOptimizer(query_max = false)` constructs an empty hull. By default, `query(x)` minimizes; if
-  `query_max` is true, `query(x)` maximizes.
+- `FullyDynamicCHT(query_max = false)` constructs an empty hull. By default, `query(x)` minimizes;
+  if `query_max` is true, `query(x)` maximizes.
 - `add_line(m, b)` inserts line $y = mx + b$. Lines may be added in any order.
 - `query(x)` returns the best $y$-value among all inserted lines at coordinate `x`. At least one
   line must have been inserted, and query coordinates may be supplied in any order.
@@ -35,7 +35,7 @@ Space Complexity:
 #include <cstdint>
 #include <set>
 
-class HullOptimizer {
+class FullyDynamicCHT {
   struct Line {
     int64_t m, b;
     mutable int64_t xhi;
@@ -67,7 +67,7 @@ class HullOptimizer {
   }
 
  public:
-  explicit HullOptimizer(bool query_max = false) : query_max(query_max) {}
+  explicit FullyDynamicCHT(bool query_max = false) : query_max(query_max) {}
 
   void add_line(int64_t m, int64_t b) {
     if (!query_max) {
@@ -102,7 +102,7 @@ class HullOptimizer {
 #include <cassert>
 
 int main() {
-  HullOptimizer h;
+  FullyDynamicCHT h;
   h.add_line(3, 0);
   h.add_line(0, 6);
   h.add_line(1, 2);
@@ -113,7 +113,7 @@ int main() {
   assert(h.query(1) == 3);
   assert(h.query(3) == 5);
 
-  HullOptimizer mx(true);
+  FullyDynamicCHT mx(true);
   mx.add_line(3, 0);
   mx.add_line(0, 6);
   mx.add_line(1, 2);

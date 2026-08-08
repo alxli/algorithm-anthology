@@ -5030,7 +5030,7 @@ int main() {
 \subsection{Sparse Segment Tree}
 A sparse segment tree (also commonly called a dynamic or implicit segment tree) maintains an array over a large index range while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique. This implementation uses lazy initialization of nodes to conserve memory: only the nodes covering touched indices are ever allocated, so a huge index range is supported without preallocating the whole tree.
 
-The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. Since untouched nodes are implicit, \inlinecode{repeat\_value(v, len)} must return the aggregate summary of \inlinecode{len} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For range-sum queries, \inlinecode{combine(a, b)} should return \inlinecode{a + b} and \inlinecode{repeat\_value(v, len)} should return \inlinecode{v * len}.
+The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. Since untouched nodes are implicit, \inlinecode{combine\_n(v, len)} must return the aggregate summary of \inlinecode{len} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For range-sum queries, \inlinecode{combine(a, b)} should return \inlinecode{a + b} and \inlinecode{combine\_n(v, len)} should return \inlinecode{v * len}.
 
 Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
@@ -5072,7 +5072,7 @@ class SparseSegTree {
   static_assert(N > 0);
 
   static T combine(const T &a, const T &b) { return std::min(a, b); }
-  static T repeat_value(const T &v, int64_t len) { return v; }
+  static T combine_n(const T &v, int64_t len) { return v; }
   static T apply_delta(const T &v, const T &d, int64_t len) { return d; }
   static T compose_deltas(const T &d1, const T &d2) { return d2; }
 
@@ -5088,7 +5088,7 @@ class SparseSegTree {
 
   void update_delta(Node *&n, const T &d, int64_t len) {
     if (n == nullptr) {
-      n = new Node(repeat_value(init, len));
+      n = new Node(combine_n(init, len));
     }
     n->delta = n->pending ? compose_deltas(n->delta, d) : d;
     n->pending = true;
@@ -5111,7 +5111,7 @@ class SparseSegTree {
 
   T query(Node *n, int lo, int hi, int tgt_lo, int tgt_hi) {
     if (n == nullptr) {
-      return repeat_value(init, tgt_hi - tgt_lo + 1);
+      return combine_n(init, tgt_hi - tgt_lo + 1);
     }
     push_delta(n, lo, hi);
     if (lo == tgt_lo && hi == tgt_hi) {
@@ -5135,7 +5135,7 @@ class SparseSegTree {
       if (hi < tgt_lo || lo > tgt_hi) {
         return;
       }
-      n = new Node(repeat_value(init, hi - lo + 1));
+      n = new Node(combine_n(init, hi - lo + 1));
     } else {
       push_delta(n, lo, hi);
     }
@@ -5151,8 +5151,8 @@ class SparseSegTree {
     int mid = lo + (hi - lo) / 2;
     update(n->left, lo, mid, tgt_lo, tgt_hi, d);
     update(n->right, mid + 1, hi, tgt_lo, tgt_hi, d);
-    T left_value = (n->left != nullptr) ? n->left->value : repeat_value(init, mid - lo + 1);
-    T right_value = (n->right != nullptr) ? n->right->value : repeat_value(init, hi - mid);
+    T left_value = (n->left != nullptr) ? n->left->value : combine_n(init, mid - lo + 1);
+    T right_value = (n->right != nullptr) ? n->right->value : combine_n(init, hi - mid);
     n->value = combine(left_value, right_value);
   }
 
@@ -5164,7 +5164,7 @@ class SparseSegTree {
     if (n != nullptr) {
       push_delta(n, lo, hi);
     }
-    T node_value = n != nullptr ? n->value : repeat_value(init, hi - lo + 1);
+    T node_value = n != nullptr ? n->value : combine_n(init, hi - lo + 1);
     if (tgt_lo <= lo) {
       T next = acc ? combine(*acc, node_value) : node_value;
       if (pred(next)) {
@@ -5189,7 +5189,7 @@ class SparseSegTree {
     if (n != nullptr) {
       push_delta(n, lo, hi);
     }
-    T node_value = n != nullptr ? n->value : repeat_value(init, hi - lo + 1);
+    T node_value = n != nullptr ? n->value : combine_n(init, hi - lo + 1);
     if (hi < tgt_hi) {
       T next = acc ? combine(node_value, *acc) : node_value;
       if (pred(next)) {
@@ -6289,7 +6289,7 @@ int main() {
 \subsection{Sparse 2D Segment Tree}
 Maintain a two-dimensional array over a huge grid while supporting dynamic queries of rectangular subarrays and dynamic updates of individual indices. This is a sparse (a.k.a. dynamic or implicit) 2D segment tree: row and column nodes are allocated lazily as cells are touched, so large coordinate bounds are supported without allocating the full grid.
 
-The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return \inlinecode{a + b} and \inlinecode{repeat\_value(v, area)} should return \inlinecode{v * area}.
+The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{combine\_n(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return \inlinecode{a + b} and \inlinecode{combine\_n(v, area)} should return \inlinecode{v * area}.
 
 The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at one updated cell. The default code below defines updates that ``set'' the chosen cell to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return \inlinecode{v + d}.
 
@@ -6329,7 +6329,7 @@ class SparseSegTree2D {
   static_assert(R > 0 && C > 0);
 
   static T combine(const T &a, const T &b) { return std::min(a, b); }
-  static T repeat_value(const T &v, int64_t area) { return v; }
+  static T combine_n(const T &v, int64_t area) { return v; }
   static T apply_delta(const T &v, const T &d) { return d; }
 
   struct InnerNode {
@@ -6358,12 +6358,12 @@ class SparseSegTree2D {
   template<typename Node, typename Get>
   T query_nodes(const Node *n, int qlo, int qhi, int64_t span, const Get &get) const {
     if (n == nullptr) {
-      return repeat_value(init, span * length(qlo, qhi));
+      return combine_n(init, span * length(qlo, qhi));
     }
     int lo = n->lo, hi = n->hi, mid = lo + (hi - lo) / 2;
     std::optional<T> res;
     if (qlo < lo) {
-      append_result(res, repeat_value(init, span * length(qlo, std::min(qhi, lo - 1))));
+      append_result(res, combine_n(init, span * length(qlo, std::min(qhi, lo - 1))));
     }
     int ql = std::max(qlo, lo), qr = std::min(qhi, hi);
     if (ql <= qr) {
@@ -6379,7 +6379,7 @@ class SparseSegTree2D {
       }
     }
     if (hi < qhi) {
-      append_result(res, repeat_value(init, span * length(std::max(qlo, hi + 1), qhi)));
+      append_result(res, combine_n(init, span * length(std::max(qlo, hi + 1), qhi)));
     }
     return *res;
   }
@@ -6403,7 +6403,7 @@ class SparseSegTree2D {
     }
     InnerNode *&target = (c <= mid) ? n->left : n->right;
     if (target == nullptr) {
-      target = new InnerNode(c, c, repeat_value(init, rows));
+      target = new InnerNode(c, c, combine_n(init, rows));
     }
     if (target->lo <= c && c <= target->hi) {
       update_inner(target, c, rows, apply);
@@ -6418,7 +6418,7 @@ class SparseSegTree2D {
         split_mid = split_lo + (split_hi - split_lo) / 2;
       } while ((c <= split_mid) == (target->lo <= split_mid));
       InnerNode *tmp =
-          new InnerNode(split_lo, split_hi, repeat_value(init, rows * length(split_lo, split_hi)));
+          new InnerNode(split_lo, split_hi, combine_n(init, rows * length(split_lo, split_hi)));
       if (target->lo <= split_mid) {
         tmp->left = target;
       } else {
@@ -6427,9 +6427,8 @@ class SparseSegTree2D {
       target = tmp;
       update_inner(tmp, c, rows, apply);
     }
-    T lval = (n->left != nullptr) ? n->left->value : repeat_value(init, rows * length(lo, mid));
-    T rval =
-        (n->right != nullptr) ? n->right->value : repeat_value(init, rows * length(mid + 1, hi));
+    T lval = (n->left != nullptr) ? n->left->value : combine_n(init, rows * length(lo, mid));
+    T rval = (n->right != nullptr) ? n->right->value : combine_n(init, rows * length(mid + 1, hi));
     n->value = combine(lval, rval);
   }
 
@@ -6442,21 +6441,21 @@ class SparseSegTree2D {
     }
     if (r <= mid) {
       if (n->left == nullptr) {
-        n->left = new OuterNode(lo, mid, repeat_value(init, length(lo, mid) * C));
+        n->left = new OuterNode(lo, mid, combine_n(init, length(lo, mid) * C));
       }
       update(n->left, r, c, d);
     } else {
       if (n->right == nullptr) {
-        n->right = new OuterNode(mid + 1, hi, repeat_value(init, length(mid + 1, hi) * C));
+        n->right = new OuterNode(mid + 1, hi, combine_n(init, length(mid + 1, hi) * C));
       }
       update(n->right, r, c, d);
     }
-    T value = repeat_value(init, rows);
+    T value = combine_n(init, rows);
     if (n->left != nullptr || n->right != nullptr) {
       T lval = (n->left != nullptr) ? query_inner(&n->left->inner, c, c, length(lo, mid))
-                                    : repeat_value(init, length(lo, mid));
+                                    : combine_n(init, length(lo, mid));
       T rval = (n->right != nullptr) ? query_inner(&n->right->inner, c, c, length(mid + 1, hi))
-                                     : repeat_value(init, length(mid + 1, hi));
+                                     : combine_n(init, length(mid + 1, hi));
       value = combine(lval, rval);
     }
     update_inner(&n->inner, c, rows, [&](const T &) { return value; });
@@ -6482,7 +6481,7 @@ class SparseSegTree2D {
 
  public:
   explicit SparseSegTree2D(const T &v = T())
-      : root(new OuterNode(0, R - 1, repeat_value(v, int64_t{R} * C))), init(v) {}
+      : root(new OuterNode(0, R - 1, combine_n(v, int64_t{R} * C))), init(v) {}
 
   ~SparseSegTree2D() { clean_up(root); }
   SparseSegTree2D(const SparseSegTree2D &) = delete;
@@ -7287,7 +7286,7 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Sparse Fenwick Tree (Range Update, Range Query)}
+\subsection{Sparse Fenwick Tree}
 Maintain a numerical array over a huge index range while supporting range increments and range-sum queries. This is the sparse version of the two-tree Fenwick range-update/range-query trick: only Fenwick nodes reached by previous operations are stored, using \inlinecode{std::unordered\_map} instead of dense vectors.
 
 \begin{compactitem}
@@ -8147,13 +8146,13 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Lowest Common Ancestor (Sparse Table)}
+\subsection{Lowest Common Ancestor (Binary Lifting)}
 Given a rooted tree or forest, determine the lowest common ancestor of any two nodes in the same tree. The lowest common ancestor of two nodes $u$ and $v$ is the node that has the greatest depth while having both $u$ and $v$ as descendants. A node is considered to be a descendant of itself.
 
 This implementation preprocesses binary ancestor jumps. During depth-first search, it records entry and exit times so ancestry can be tested in $O(1)$, records each node's depth and root, and stores \inlinecode{up[u][i]}, the $2^i$-th ancestor of each node \inlinecode{u}. To answer \inlinecode{lca(u, v)}, it first handles the case where one node is already an ancestor of the other, then jumps \inlinecode{u} upward by decreasing powers of two until its parent is the lowest common ancestor.
 
 \begin{compactitem}
-  \item \inlinecode{SparseTableLCA(adj)} builds the structure over a forest represented by the bidirectional adjacency list \inlinecode{adj}, whose indices represent the nodes.
+  \item \inlinecode{BinaryLiftingLCA(adj)} builds the structure over a forest represented by the bidirectional adjacency list \inlinecode{adj}, whose indices represent the nodes.
   \item \inlinecode{go\_up(u, k)} returns the \inlinecode{k}-th ancestor of node \inlinecode{u}, stopping at that tree's root if \inlinecode{k} is larger than \inlinecode{u}'s depth.
   \item \inlinecode{lca(u, v)} returns the lowest common ancestor of nodes \inlinecode{u} and \inlinecode{v}, or $-1$ if they are in different trees.
   \item \inlinecode{is\_ancestor(parent, child)} returns whether \inlinecode{parent} is an ancestor of \inlinecode{child}.
@@ -8181,7 +8180,7 @@ This implementation preprocesses binary ancestor jumps. During depth-first searc
 #include <cassert>
 #include <vector>
 
-class SparseTableLCA {
+class BinaryLiftingLCA {
   std::vector<std::vector<int>> up;
   std::vector<int> tin, tout, depth, root;
   int len, timer;
@@ -8203,7 +8202,7 @@ class SparseTableLCA {
   }
 
  public:
-  explicit SparseTableLCA(const std::vector<std::vector<int>> &adj)
+  explicit BinaryLiftingLCA(const std::vector<std::vector<int>> &adj)
       : tin(adj.size()), tout(adj.size()), depth(adj.size()), root(adj.size(), -1), timer(0) {
     int n = static_cast<int>(adj.size());
     len = 1;
@@ -8281,7 +8280,7 @@ int main() {
   add_edge(1, 2);
   add_edge(1, 3);
   add_edge(5, 6);
-  SparseTableLCA tree(adj);
+  BinaryLiftingLCA tree(adj);
   assert(tree.go_up(3, 1) == 1);
   assert(tree.go_up(3, 2) == 0);
   assert(tree.go_up(3, 10) == 0);
@@ -8296,13 +8295,13 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Lowest Common Ancestor (Segment Tree)}
+\subsection{Lowest Common Ancestor (Euler Tour)}
 Given a rooted tree or forest, determine the lowest common ancestor of any two nodes in the same tree. The lowest common ancestor of two nodes $u$ and $v$ is the node that has the greatest depth while having both $u$ and $v$ as descendants. A node is considered to be a descendant of itself.
 
 This reduces LCA to a range-minimum query. An Euler tour of the forest records, at each visit to a node, that node's depth; the lowest common ancestor of $u$ and $v$ in the same tree is the shallowest node visited between their first occurrences in the tour, found by a range-minimum query over the depth sequence. This version answers those queries with a segment tree.
 
 \begin{compactitem}
-  \item \inlinecode{SegTreeLCA(adj)} builds the structure over a forest represented by the bidirectional adjacency list \inlinecode{adj}, whose indices represent the nodes.
+  \item \inlinecode{EulerTourLCA(adj)} builds the structure over a forest represented by the bidirectional adjacency list \inlinecode{adj}, whose indices represent the nodes.
   \item \inlinecode{lca(u, v)} returns the lowest common ancestor of nodes \inlinecode{u} and \inlinecode{v}, or $-1$ if they are in different trees.
   \item \inlinecode{dist(u, v)} returns the number of edges on the path between nodes \inlinecode{u} and \inlinecode{v}, or $-1$ if they are in different trees.
 \end{compactitem}
@@ -8327,7 +8326,7 @@ This reduces LCA to a range-minimum query. An Euler tour of the forest records, 
 #include <cassert>
 #include <vector>
 
-class SegTreeLCA {
+class EulerTourLCA {
   std::vector<int> root, depth, first, order, minpos;
   int len;
 
@@ -8374,7 +8373,7 @@ class SegTreeLCA {
   }
 
  public:
-  explicit SegTreeLCA(const std::vector<std::vector<int>> &adj)
+  explicit EulerTourLCA(const std::vector<std::vector<int>> &adj)
       : root(adj.size(), -1), depth(adj.size(), -1), first(adj.size(), -1) {
     int n = static_cast<int>(adj.size());
     for (int u = 0; u < n; u++) {
@@ -8424,7 +8423,7 @@ int main() {
   add_edge(1, 2);
   add_edge(1, 3);
   add_edge(5, 6);
-  SegTreeLCA tree(adj);
+  EulerTourLCA tree(adj);
   assert(tree.lca(3, 2) == 1);
   assert(tree.lca(2, 4) == 0);
   assert(tree.lca(2, 6) == -1);
@@ -8636,13 +8635,13 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Weighted Tree Path Queries (Binary Lifting)}
+\subsection{Weighted Tree Path Queries}
 Given a tree or forest with weighted edges, aggregate the edge weights along the path between any two nodes in the same tree. The input is undirected; construction roots each component at the first unvisited node in index order. This builds on the same binary lifting table as LCA: for every valid $2^i$-edge jump from \inlinecode{u}, it stores \inlinecode{agg[u][i]}, the combined weight of the edges traversed by that jump. A path query splits the path \inlinecode{u}-\inlinecode{v} at their lowest common ancestor and merges the two upward climbs.
 
 The aggregate is defined by a commutative, associative \inlinecode{combine()}. The default computes the maximum edge weight on the path. For minimum queries, use \inlinecode{std::min}; for sums, use \inlinecode{a + b}. Commutativity is required because the two half-paths are merged without regard to orientation. For an invertible aggregate such as the sum, an alternative that avoids the \inlinecode{agg} table is to store each node's weighted depth \inlinecode{dw[u]} and return \inlinecode{dw[u] + dw[v] - 2*dw[lca]}.
 
 \begin{compactitem}
-  \item \inlinecode{WeightedTree\textless{}W\textgreater{}(adj)} builds the structure over a forest given by a weighted, bidirectional adjacency list \inlinecode{adj}, whose indices represent the nodes and where \inlinecode{adj[u]} holds pairs (\inlinecode{v}, \inlinecode{w}) for each edge \inlinecode{u}-\inlinecode{v} of weight \inlinecode{w}. Each connected component is rooted at its first node reached by the constructor's outer loop.
+  \item \inlinecode{TreePathQueries\textless{}W\textgreater{}(adj)} builds the structure over a forest given by a weighted, bidirectional adjacency list \inlinecode{adj}, whose indices represent the nodes and where \inlinecode{adj[u]} holds pairs (\inlinecode{v}, \inlinecode{w}) for each edge \inlinecode{u}-\inlinecode{v} of weight \inlinecode{w}. Each connected component is rooted at its first node reached by the constructor's outer loop.
   \item \inlinecode{lca(u, v)} returns the lowest common ancestor of \inlinecode{u} and \inlinecode{v}, or $-1$ if they lie in different trees.
   \item \inlinecode{kth\_ancestor(u, k)} returns the $k$-th ancestor of \inlinecode{u}, stopping at that tree's root if \inlinecode{k} exceeds \inlinecode{u}'s depth.
   \item \inlinecode{is\_ancestor(parent, child)} returns whether \inlinecode{parent} is an ancestor of \inlinecode{child}.
@@ -8673,7 +8672,7 @@ The aggregate is defined by a commutative, associative \inlinecode{combine()}. T
 #include <vector>
 
 template<typename W>
-class WeightedTree {
+class TreePathQueries {
   static W combine(const W &a, const W &b) { return std::max(a, b); }
 
   std::vector<std::vector<int>> up;
@@ -8714,7 +8713,7 @@ class WeightedTree {
   }
 
  public:
-  explicit WeightedTree(const std::vector<std::vector<std::pair<int, W>>> &adj)
+  explicit TreePathQueries(const std::vector<std::vector<std::pair<int, W>>> &adj)
       : agg(adj.size()),
         tin(adj.size()),
         tout(adj.size()),
@@ -8809,7 +8808,7 @@ int main() {
   add_edge(1, 4, 1);
   add_edge(2, 5, 5);
   add_edge(2, 6, 3);
-  WeightedTree<int> t(adj);
+  TreePathQueries<int> t(adj);
   assert(t.lca(3, 4) == 1);
   assert(t.lca(5, 6) == 2);
   assert(t.lca(3, 6) == 0);
@@ -8823,7 +8822,7 @@ int main() {
   assert(t.path_query(0, 3) == 7);  // 0-1 (4), 1-3 (7).
 
   vector<vector<pair<int, int>>> forest(2);
-  WeightedTree<int> disconnected(forest);
+  TreePathQueries<int> disconnected(forest);
   assert(disconnected.lca(0, 1) == -1);
   return 0;
 }

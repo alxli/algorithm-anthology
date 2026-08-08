@@ -152,8 +152,7 @@ class SparseSegTree2D {
       update_inner(tmp, c, rows, apply);
     }
     T lval = (n->left != nullptr) ? n->left->value : combine_n(init, rows * length(lo, mid));
-    T rval =
-        (n->right != nullptr) ? n->right->value : combine_n(init, rows * length(mid + 1, hi));
+    T rval = (n->right != nullptr) ? n->right->value : combine_n(init, rows * length(mid + 1, hi));
     n->value = combine(lval, rval);
   }
 

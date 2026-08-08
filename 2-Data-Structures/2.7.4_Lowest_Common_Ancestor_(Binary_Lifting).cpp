@@ -10,7 +10,7 @@ and exit times so ancestry can be tested in O(1), records each node's depth and 
 where one node is already an ancestor of the other, then jumps `u` upward by decreasing powers of
 two until its parent is the lowest common ancestor.
 
-- `SparseTableLCA(adj)` builds the structure over a forest represented by the bidirectional
+- `BinaryLiftingLCA(adj)` builds the structure over a forest represented by the bidirectional
   adjacency list `adj`, whose indices represent the nodes.
 - `go_up(u, k)` returns the `k`-th ancestor of node `u`, stopping at that tree's root if `k` is
   larger than `u`'s depth.
@@ -36,7 +36,7 @@ Space Complexity:
 #include <cassert>
 #include <vector>
 
-class SparseTableLCA {
+class BinaryLiftingLCA {
   std::vector<std::vector<int>> up;
   std::vector<int> tin, tout, depth, root;
   int len, timer;
@@ -58,7 +58,7 @@ class SparseTableLCA {
   }
 
  public:
-  explicit SparseTableLCA(const std::vector<std::vector<int>> &adj)
+  explicit BinaryLiftingLCA(const std::vector<std::vector<int>> &adj)
       : tin(adj.size()), tout(adj.size()), depth(adj.size()), root(adj.size(), -1), timer(0) {
     int n = static_cast<int>(adj.size());
     len = 1;
@@ -135,7 +135,7 @@ int main() {
   add_edge(1, 2);
   add_edge(1, 3);
   add_edge(5, 6);
-  SparseTableLCA tree(adj);
+  BinaryLiftingLCA tree(adj);
   assert(tree.go_up(3, 1) == 1);
   assert(tree.go_up(3, 2) == 0);
   assert(tree.go_up(3, 10) == 0);

@@ -1901,99 +1901,93 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Minimum Excluded Value}
-Given a multiset of integers, find the minimum excluded nonnegative value (MEX), i.e. the smallest integer $x \geq 0$ not present in the multiset. MEX often appears in array problems, game theory with Grundy numbers, and dynamic programming states. Since the MEX of $n$ values never exceeds $n$, the one-shot version tracks seen values in $[0, n]$ before scanning to find the first missing.
+\subsection{Paths on Grids}
+Solves basic dynamic programming problems on a rectangular grid. In grid DP, each cell represents a state and transitions usually come from already-computed neighboring cells, most commonly the cell above and the cell to the left. Processing rows from top to bottom and columns from left to right therefore makes every predecessor available when a state is computed.
+
+For path-counting, \inlinecode{dp[r][c]} stores the number of ways to reach cell $(r, c)$. For minimum-cost paths, \inlinecode{dp[r][c]} stores the cheapest cost to reach that cell, and a predecessor direction reconstructs one optimal path. The helpers below assume movement only down or right.
 
 \begin{compactitem}
-  \item \inlinecode{mex(lo, hi)} returns the MEX of the values in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
+  \item \inlinecode{count\_grid\_paths(blocked)} returns the number of paths from the upper-left cell to the lower-right cell, moving only down or right and avoiding blocked cells marked nonzero.
+  \item \inlinecode{min\_cost\_grid\_path(cost)} returns a pair (\inlinecode{min\_cost}, \inlinecode{path}) containing the minimum cost of a down/right path from the upper-left cell to the lower-right cell and the cells of one optimal path in order. If the grid is empty, \inlinecode{min\_cost} is $0$ and \inlinecode{path} is empty.
 \end{compactitem}
 
-The MEX of a dynamic multiset can be computed using counts of present values and maintaining an ordered set of currently missing candidates.
+Path counts and path costs must fit in \inlinecode{int64\_t}.
 
-\begin{compactitem}
-  \item \inlinecode{DynamicMex()} maintains the MEX of a multiset of nonnegative integers.
-  \item \inlinecode{add(x)} inserts one copy of value \inlinecode{x} if \inlinecode{x} $\geq 0$.
-  \item \inlinecode{remove(x)} removes one copy of value \inlinecode{x} if present.
-  \item \inlinecode{mex()} returns the current MEX.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(n)$ per call to \inlinecode{mex(lo, hi)}, where $n$ is the number of values.
-  \item $O(\log n)$ expected per call to \inlinecode{add(x)} and \inlinecode{remove(x)} for \inlinecode{DynamicMex}, and $O(n)$ in the collision-heavy worst case for the hash table.
-  \item $O(1)$ per call to \inlinecode{mex()} for \inlinecode{DynamicMex}.
-\end{compactitem}
+\textbf{Time Complexity}: $O(R \cdot C)$ per call to \inlinecode{count\_grid\_paths(blocked)} and \inlinecode{min\_cost\_grid\_path(cost)}, where $R$ and $C$ are the grid dimensions.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ auxiliary for \inlinecode{mex(lo, hi)}.
-  \item $O(n)$ storage for \inlinecode{DynamicMex}.
+  \item $O(C)$ auxiliary for \inlinecode{count\_grid\_paths(blocked)}.
+  \item $O(R \cdot C)$ auxiliary and $O(R + C)$ for the returned path from \inlinecode{min\_cost\_grid\_path(cost)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <iterator>
-#include <set>
-#include <unordered_map>
+#include <algorithm>
+#include <cstdint>
+#include <utility>
 #include <vector>
 
-template<typename It>
-int mex(It lo, It hi) {
-  int n = std::distance(lo, hi);
-  std::vector<char> seen(n + 1, false);
-  for (It it = lo; it != hi; ++it) {
-    if (0 <= *it && *it <= n) {
-      seen[*it] = true;
+int64_t count_grid_paths(const std::vector<std::vector<char>> &blocked) {
+  int rows = static_cast<int>(blocked.size());
+  int cols = rows == 0 ? 0 : static_cast<int>(blocked[0].size());
+  if (rows == 0 || cols == 0 || blocked[0][0] || blocked[rows - 1][cols - 1]) {
+    return 0;
+  }
+  std::vector<int64_t> dp(cols, 0);
+  dp[0] = 1;
+  for (int r = 0; r < rows; r++) {
+    for (int c = 0; c < cols; c++) {
+      if (blocked[r][c]) {
+        dp[c] = 0;
+      } else if (c > 0) {
+        dp[c] += dp[c - 1];  // Overflow warning.
+      }
     }
   }
-  for (int x = 0; x <= n; x++) {
-    if (!seen[x]) {
-      return x;
-    }
-  }
-  return n + 1;
+  return dp[cols - 1];
 }
 
-class DynamicMex {
-  std::unordered_map<int, int> count;
-  std::set<int> missing;  // Missing candidates in [0, size].
-  int size = 0;
-
- public:
-  DynamicMex() { missing.insert(0); }
-
-  void add(int x) {
-    if (x < 0) {
-      return;
-    }
-    if (!count.count(size + 1)) {
-      missing.insert(size + 1);
-    }
-    if (count[x]++ == 0) {
-      missing.erase(x);
-    }
-    size++;
+std::pair<int64_t, std::vector<std::pair<int, int>>> min_cost_grid_path(
+    const std::vector<std::vector<int>> &cost
+) {
+  int rows = static_cast<int>(cost.size());
+  int cols = rows == 0 ? 0 : static_cast<int>(cost[0].size());
+  if (rows == 0 || cols == 0) {
+    return {0, {}};
   }
-
-  void remove(int x) {
-    auto it = count.find(x);
-    if (it == count.end()) {
-      return;
-    }
-    bool removed_last = --it->second == 0;
-    if (removed_last) {
-      count.erase(it);
-    }
-    size--;
-    missing.erase(size + 1);
-    if (removed_last && x <= size) {
-      missing.insert(x);
+  std::vector<std::vector<int64_t>> dp(rows, std::vector<int64_t>(cols));
+  std::vector<std::vector<char>> parent(rows, std::vector<char>(cols, 0));
+  dp[0][0] = cost[0][0];
+  for (int r = 0; r < rows; r++) {
+    for (int c = 0; c < cols; c++) {
+      if (r == 0 && c == 0) {
+        continue;
+      }
+      if (c == 0 || (r > 0 && dp[r - 1][c] <= dp[r][c - 1])) {
+        dp[r][c] = dp[r - 1][c] + cost[r][c];  // Overflow warning.
+        parent[r][c] = 'U';
+      } else {
+        dp[r][c] = dp[r][c - 1] + cost[r][c];
+        parent[r][c] = 'L';
+      }
     }
   }
-
-  int mex() const { return *missing.begin(); }
-};
+  std::vector<std::pair<int, int>> path;
+  for (int r = rows - 1, c = cols - 1;;) {
+    path.emplace_back(r, c);
+    if (r == 0 && c == 0) {
+      break;
+    }
+    if (parent[r][c] == 'U') {
+      r--;
+    } else {
+      c--;
+    }
+  }
+  std::reverse(path.begin(), path.end());
+  return {dp[rows - 1][cols - 1], path};
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -2002,151 +1996,21 @@ class DynamicMex {
 using namespace std;
 
 int main() {
-  vector<int> a{0, 1, 4, 2, 1};
-  assert(mex(a.begin(), a.end()) == 3);
-  vector<int> b{-1, 0, 1, 2};
-  assert(mex(b.begin(), b.end()) == 3);  // Negative values are ignored.
+  vector<vector<char>> blocked{
+      {0, 0, 0},
+      {0, 1, 0},
+      {0, 0, 0},
+  };
+  assert(count_grid_paths(blocked) == 2);
 
-  DynamicMex m;
-  m.add(0);
-  m.add(1);
-  m.add(1);
-  m.add(3);
-  assert(m.mex() == 2);
-  m.add(2);
-  assert(m.mex() == 4);
-  m.remove(1);
-  assert(m.mex() == 4);  // One copy of 1 remains.
-  m.remove(1);
-  assert(m.mex() == 1);
-  m.remove(100);
-  assert(m.mex() == 1);
-  return 0;
-}
-\end{lstlisting}
-\subsection{Iterated Function Cycle Detection}
-Given a function $f$ mapping a finite set to itself and a starting value $x_0$, return the entry value, position, and length of the cycle reached by repeatedly applying $f$. Formally, the sequence $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$ must eventually repeat some value. If $x_i = x_j$ for $i < j$, then the sequence from $x_i$ to $x_{j - 1}$ repeats forever. This is useful for detecting cycles in functional graphs (see 4.2.9), pseudo-random generators, Pollard rho style algorithms, degenerate linked lists, and arrays where each index points to the next index. For example, if an array $a_0, \ldots, a_{n+1}$ contains only values in $[1, n]$, with exactly one value occurring more than once, then $f(i) = a_i$ forms a functional graph; the duplicate value is the entry point of the cycle reached from $0$.
-
-Floyd's cycle-finding algorithm, a.k.a. the ``tortoise and the hare algorithm'', is a space-efficient default choice: it moves two pointers through the sequence at different speeds, finds a meeting point inside the cycle, then locates the cycle start. Brent's algorithm is a compact variant that usually calls $f$ fewer times by only resetting the tortoise at powers of two; prefer it when evaluating $f$ is expensive and constant factors matter. In the detection phase, Brent advances one pointer with one call to $f$ per step, while Floyd advances the tortoise once and the hare twice, using three calls to $f$ per step.
-
-For Floyd's algorithm, suppose the tail has length $m$ and the cycle has length $n$. At a meeting, the hare has traveled twice as far as the tortoise, so the tortoise's distance is a multiple of $n$. Consequently, the distance from the meeting point around the cycle to its entry is congruent to $m$ modulo $n$. Resetting one pointer to $x_0$ and advancing both one step at a time makes them meet at the cycle entry after $m$ steps. Brent first determines $n$, then advances one pointer $n$ steps; moving both together from that fixed separation likewise makes them meet at the entry.
-
-\begin{compactitem}
-  \item \inlinecode{find\_cycle\_floyd(f, x0)} repeatedly applies \inlinecode{f} starting from \inlinecode{x0} and returns the reached cycle as a tuple (\inlinecode{entry}, \inlinecode{start}, \inlinecode{length}), where \inlinecode{entry} is the first cycle value, \inlinecode{start} is its index in the sequence, and \inlinecode{length} is the number of distinct values in the cycle.
-  \item \inlinecode{find\_cycle\_brent(f, x0)} does the same with fewer calls to \inlinecode{f} in many cases.
-\end{compactitem}
-
-\textbf{Time Complexity}: $O(m + n)$ per call, where $m$ is the first index in the cycle and $n$ is the cycle length.
-
-\textbf{Space Complexity}: $O(1)$ auxiliary.
-
-\begin{lstlisting}[language=C++]
-#include <tuple>
-
-template<typename Fn, typename T>
-std::tuple<T, int, int> find_cycle_floyd(Fn f, T x0) {
-  // Find a meeting point inside the cycle.
-  T tortoise = f(x0), hare = f(f(x0));
-  while (tortoise != hare) {
-    tortoise = f(tortoise);
-    hare = f(f(hare));
-  }
-  // Find the cycle entry.
-  int start = 0;
-  tortoise = x0;
-  while (tortoise != hare) {
-    tortoise = f(tortoise);
-    hare = f(hare);
-    start++;
-  }
-  // Measure the cycle length.
-  int length = 1;
-  hare = f(tortoise);
-  while (tortoise != hare) {
-    hare = f(hare);
-    length++;
-  }
-  return {tortoise, start, length};
-}
-
-template<typename Fn, typename T>
-std::tuple<T, int, int> find_cycle_brent(Fn f, T x0) {
-  // Find the cycle length by doubling the search block.
-  int power = 1, length = 1;
-  T tortoise = x0, hare = f(x0);
-  while (tortoise != hare) {
-    if (power == length) {
-      tortoise = hare;
-      power *= 2;
-      length = 0;
-    }
-    hare = f(hare);
-    length++;
-  }
-  // Separate the pointers by one cycle length.
-  hare = x0;
-  for (int i = 0; i < length; i++) {
-    hare = f(hare);
-  }
-  // Find the cycle entry.
-  int start = 0;
-  tortoise = x0;
-  while (tortoise != hare) {
-    tortoise = f(tortoise);
-    hare = f(hare);
-    start++;
-  }
-  return {tortoise, start, length};
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-#include <set>
-#include <vector>
-using namespace std;
-
-int f(int x) {
-  return (123 * x * x + 4567890) % 1337;
-}
-
-void verify(int x0, int start, int length) {
-  set<int> s;
-  int x = x0;
-  for (int i = 0; i < start; i++) {
-    assert(!s.count(x));
-    s.insert(x);
-    x = f(x);
-  }
-  int startx = x;
-  s.clear();
-  for (int i = 0; i < length; i++) {
-    assert(!s.count(x));
-    s.insert(x);
-    x = f(x);
-  }
-  assert(startx == x);
-}
-
-// Given n + 1 integers within [1, n], where one value in [1, n] is present 2 or more times (but
-// other values in [1, n] are present at most once), find the duplicate without modifying the array.
-// Interpret each value as a pointer to the next index; the duplicate is the cycle entry.
-int find_duplicate_integer(const vector<int> &a) {
-  return get<0>(find_cycle_floyd([&](int i) { return a[i]; }, 0));
-}
-
-int main() {
-  int x0 = 0;
-  auto [floyd_entry, floyd_start, floyd_len] = find_cycle_floyd(f, x0);
-  assert(floyd_start == 4 && floyd_len == 2);
-  verify(x0, floyd_start, floyd_len);
-
-  auto [brent_entry, brent_start, brent_len] = find_cycle_brent(f, x0);
-  assert(brent_entry == floyd_entry && brent_start == floyd_start && brent_len == floyd_len);
-
-  assert(find_duplicate_integer({1, 3, 4, 2, 2}) == 2);
-  assert(find_duplicate_integer({3, 1, 3, 4, 2}) == 3);
+  vector<vector<int>> cost{
+      {1, 3, 1},
+      {1, 5, 1},
+      {4, 2, 1},
+  };
+  auto [min_cost, path] = min_cost_grid_path(cost);
+  assert(min_cost == 7);
+  assert((path == vector<pair<int, int>>{{0, 0}, {0, 1}, {0, 2}, {1, 2}, {2, 2}}));
   return 0;
 }
 \end{lstlisting}
@@ -2343,270 +2207,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Subset Sum}
-Given a collection of integers and a target, the subset sum problem asks for the maximum sum of any subset that does not exceed the target. Two algorithms below solve this problem in complementary regimes, and which one wins depends on whether the bottleneck is the number of items or the size of the weights.
-
-The meet-in-the-middle method splits the collection in half, enumerates every subset sum for each half, sorts one side, and binary searches for the best compatible partner. It makes no assumption about the sign or size of the values, so it handles negative inputs, and it is the method of choice when the number of items $n$ is small (up to roughly $40$).
-
-Pisinger's algorithm targets the opposite regime: nonnegative weights whose maximum value is small, with possibly many items. Let $W$ be the largest weight. It greedily takes a maximal prefix with sum $s$ that fits the target; because the next weight is at most $W$ and does not fit, $s$ is greater than \inlinecode{target} $- W$. The prefix itself is feasible, so the optimum lies between $s$ and \inlinecode{target} and only that width-$W$ window matters. A balanced sweep explores exchanges that add later items to sums below the target and remove earlier items from sums above it. For each sum, it retains the farthest prefix boundary reached, which dominates smaller boundaries because it permits at least the same future exchanges. This gives a running time linear in the number of items times $W$, independent of the target beyond that window. This routine is sometimes called ``fast knapsack,'' a slight misnomer: it maximizes a subset sum rather than packing items with distinct values, so it is really the bounded-weight case of subset sum rather than the 0-1 value knapsack.
-
-\begin{compactitem}
-  \item \inlinecode{max\_subset\_sum\_at\_most(lo, hi, target)} returns a pair (\inlinecode{sum}, \inlinecode{items}) containing that maximum sum and the selected item indices relative to \inlinecode{lo}. Values may be negative. The range is supplied as random-access iterators, and \inlinecode{target} must be nonnegative.
-  \item \inlinecode{max\_subset\_sum\_bounded(lo, hi, target)} returns the maximum sum of any subset of the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ that does not exceed \inlinecode{target}. All weights and \inlinecode{target} must be nonnegative integers. This is faster than meet-in-the-middle when the largest weight is small relative to $2^{n/2}$.
-\end{compactitem}
-
-All subset sums and intermediate differences in \inlinecode{max\_subset\_sum\_at\_most()} must fit in \inlinecode{int64\_t}.
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(2^{n/2})$ per call to \inlinecode{max\_subset\_sum\_at\_most()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
-  \item $O(n \cdot W)$ per call to \inlinecode{max\_subset\_sum\_bounded()}, where $n$ is the number of items and $W$ is the largest weight.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(2^{n/2})$ auxiliary for \inlinecode{max\_subset\_sum\_at\_most()}.
-  \item $O(W)$ auxiliary for \inlinecode{max\_subset\_sum\_bounded()}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <cassert>
-#include <climits>
-#include <cstdint>
-#include <utility>
-#include <vector>
-
-template<typename It>
-std::pair<int64_t, std::vector<int>> max_subset_sum_at_most(It lo, It hi, int64_t target) {
-  int n = static_cast<int>(hi - lo);
-  assert(target >= 0 && n >= 0 && n / 2 < 63 && n - n / 2 < 63);
-  int64_t llen = 1LL << (n / 2), rlen = 1LL << (n - n / 2);
-  std::vector<int64_t> lsum(llen);
-  std::vector<std::pair<int64_t, int64_t>> rsum(rlen);
-  for (int64_t mask = 1; mask < llen; mask++) {
-    int bit = __builtin_ctzll(mask);
-    lsum[mask] = lsum[mask ^ (1LL << bit)] + *(lo + bit);  // Overflow warning.
-  }
-  for (int64_t mask = 1; mask < rlen; mask++) {
-    int bit = __builtin_ctzll(mask);
-    rsum[mask].first = rsum[mask ^ (1LL << bit)].first + *(lo + n / 2 + bit);
-    rsum[mask].second = mask;
-  }
-  std::sort(rsum.begin(), rsum.end());
-  int64_t best = INT64_MIN, lmask = 0, rmask = 0;
-  for (int64_t mask = 0; mask < llen; mask++) {
-    int64_t limit = target - lsum[mask];  // Overflow warning.
-    auto it = std::upper_bound(rsum.begin(), rsum.end(), std::make_pair(limit, INT64_MAX));
-    if (it != rsum.begin()) {
-      --it;
-      int64_t candidate = lsum[mask] + it->first;
-      if (best < candidate) {
-        best = candidate;
-        lmask = mask;
-        rmask = it->second;
-      }
-    }
-  }
-  std::vector<int> items;
-  for (int i = 0; i < n / 2; i++) {
-    if ((lmask >> i) & 1) {
-      items.push_back(i);
-    }
-  }
-  for (int i = 0; i < n - n / 2; i++) {
-    if ((rmask >> i) & 1) {
-      items.push_back(n / 2 + i);
-    }
-  }
-  return {best, items};
-}
-
-template<typename It>
-int64_t max_subset_sum_bounded(It lo, It hi, int target) {
-  int n = static_cast<int>(hi - lo);
-  assert(target >= 0 && n >= 0);
-  for (It it = lo; it != hi; ++it) {
-    int64_t weight = *it;
-    assert(0 <= weight && weight <= INT_MAX);
-  }
-  // Greedily take a prefix while it still fits; the optimum then lies within one weight of target.
-  int sum = 0, b = 0;
-  while (b < n && static_cast<int>(*(lo + b)) <= target - sum) {
-    sum += static_cast<int>(*(lo + b++));
-  }
-  if (b == n) {
-    return sum;  // Every item fits, so the whole collection is the best subset.
-  }
-  int m = 0;
-  for (It it = lo; it != hi; ++it) {
-    m = std::max(m, static_cast<int>(*it));
-  }
-  // reach[s - target + m] = largest prefix boundary that can realize a balanced subset of sum s.
-  // Only sums within m of target are tracked, which is where the optimum must lie.
-  std::vector<int> reach(2 * m, -1);
-  reach[sum - target + m] = b;
-  for (int i = b; i < n; i++) {
-    std::vector<int> prev = reach;
-    int wi = static_cast<int>(*(lo + i));
-    for (int x = 0; x < m; x++) {  // Add item i to sums currently below target.
-      reach[x + wi] = std::max(reach[x + wi], prev[x]);
-    }
-    for (int x = 2 * m - 1; x > m; x--) {  // Drop an earlier item from sums above target.
-      for (int j = std::max(0, prev[x]); j < reach[x]; j++) {
-        int wj = static_cast<int>(*(lo + j));
-        reach[x - wj] = std::max(reach[x - wj], j);
-      }
-    }
-  }
-  int s = target;
-  while (reach[s - target + m] < 0) {
-    s--;
-  }
-  return s;
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-using namespace std;
-
-int main() {
-  vector<int> a{9, 1, 5, 0, 1, 11, 5};
-  auto [sum, items] = max_subset_sum_at_most(a.begin(), a.end(), 8);
-  int64_t selected_sum = 0;
-  for (int i : items) {
-    selected_sum += a[i];
-  }
-  assert(sum == 7 && selected_sum == sum);
-  vector<int> b{-7, -3, -2, 5, 8};
-  assert(max_subset_sum_at_most(b.begin(), b.end(), 0).first == 0);
-
-  // The bounded-weight method agrees with meet-in-the-middle on nonnegative inputs.
-  assert(max_subset_sum_bounded(a.begin(), a.end(), 8) == 7);
-  vector<int> c{3, 34, 4, 12, 5, 2};
-  assert(max_subset_sum_bounded(c.begin(), c.end(), 9) == 9);     // 4 + 5.
-  assert(max_subset_sum_bounded(c.begin(), c.end(), 10) == 10);   // 3 + 5 + 2.
-  assert(max_subset_sum_bounded(c.begin(), c.end(), 100) == 60);  // All items fit.
-  return 0;
-}
-\end{lstlisting}
-\subsection{Grid Dynamic Programming}
-Solves basic dynamic programming problems on a rectangular grid. In grid DP, each cell represents a state and transitions usually come from already-computed neighboring cells, most commonly the cell above and the cell to the left. Processing rows from top to bottom and columns from left to right therefore makes every predecessor available when a state is computed.
-
-For path-counting, \inlinecode{dp[r][c]} stores the number of ways to reach cell $(r, c)$. For minimum-cost paths, \inlinecode{dp[r][c]} stores the cheapest cost to reach that cell, and a predecessor direction reconstructs one optimal path. The helpers below assume movement only down or right.
-
-\begin{compactitem}
-  \item \inlinecode{count\_grid\_paths(blocked)} returns the number of paths from the upper-left cell to the lower-right cell, moving only down or right and avoiding blocked cells marked nonzero.
-  \item \inlinecode{min\_cost\_grid\_path(cost)} returns a pair (\inlinecode{min\_cost}, \inlinecode{path}) containing the minimum cost of a down/right path from the upper-left cell to the lower-right cell and the cells of one optimal path in order. If the grid is empty, \inlinecode{min\_cost} is $0$ and \inlinecode{path} is empty.
-\end{compactitem}
-
-Path counts and path costs must fit in \inlinecode{int64\_t}.
-
-\textbf{Time Complexity}: $O(R \cdot C)$ per call to \inlinecode{count\_grid\_paths(blocked)} and \inlinecode{min\_cost\_grid\_path(cost)}, where $R$ and $C$ are the grid dimensions.
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(C)$ auxiliary for \inlinecode{count\_grid\_paths(blocked)}.
-  \item $O(R \cdot C)$ auxiliary and $O(R + C)$ for the returned path from \inlinecode{min\_cost\_grid\_path(cost)}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <cstdint>
-#include <utility>
-#include <vector>
-
-int64_t count_grid_paths(const std::vector<std::vector<char>> &blocked) {
-  int rows = static_cast<int>(blocked.size());
-  int cols = rows == 0 ? 0 : static_cast<int>(blocked[0].size());
-  if (rows == 0 || cols == 0 || blocked[0][0] || blocked[rows - 1][cols - 1]) {
-    return 0;
-  }
-  std::vector<int64_t> dp(cols, 0);
-  dp[0] = 1;
-  for (int r = 0; r < rows; r++) {
-    for (int c = 0; c < cols; c++) {
-      if (blocked[r][c]) {
-        dp[c] = 0;
-      } else if (c > 0) {
-        dp[c] += dp[c - 1];  // Overflow warning.
-      }
-    }
-  }
-  return dp[cols - 1];
-}
-
-std::pair<int64_t, std::vector<std::pair<int, int>>> min_cost_grid_path(
-    const std::vector<std::vector<int>> &cost
-) {
-  int rows = static_cast<int>(cost.size());
-  int cols = rows == 0 ? 0 : static_cast<int>(cost[0].size());
-  if (rows == 0 || cols == 0) {
-    return {0, {}};
-  }
-  std::vector<std::vector<int64_t>> dp(rows, std::vector<int64_t>(cols));
-  std::vector<std::vector<char>> parent(rows, std::vector<char>(cols, 0));
-  dp[0][0] = cost[0][0];
-  for (int r = 0; r < rows; r++) {
-    for (int c = 0; c < cols; c++) {
-      if (r == 0 && c == 0) {
-        continue;
-      }
-      if (c == 0 || (r > 0 && dp[r - 1][c] <= dp[r][c - 1])) {
-        dp[r][c] = dp[r - 1][c] + cost[r][c];  // Overflow warning.
-        parent[r][c] = 'U';
-      } else {
-        dp[r][c] = dp[r][c - 1] + cost[r][c];
-        parent[r][c] = 'L';
-      }
-    }
-  }
-  std::vector<std::pair<int, int>> path;
-  for (int r = rows - 1, c = cols - 1;;) {
-    path.emplace_back(r, c);
-    if (r == 0 && c == 0) {
-      break;
-    }
-    if (parent[r][c] == 'U') {
-      r--;
-    } else {
-      c--;
-    }
-  }
-  std::reverse(path.begin(), path.end());
-  return {dp[rows - 1][cols - 1], path};
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-using namespace std;
-
-int main() {
-  vector<vector<char>> blocked{
-      {0, 0, 0},
-      {0, 1, 0},
-      {0, 0, 0},
-  };
-  assert(count_grid_paths(blocked) == 2);
-
-  vector<vector<int>> cost{
-      {1, 3, 1},
-      {1, 5, 1},
-      {4, 2, 1},
-  };
-  auto [min_cost, path] = min_cost_grid_path(cost);
-  assert(min_cost == 7);
-  assert((path == vector<pair<int, int>>{{0, 0}, {0, 1}, {0, 2}, {1, 2}, {2, 2}}));
-  return 0;
-}
-\end{lstlisting}
 \subsection{Matrix Chain Parenthesization}
 Given a fixed-order chain of compatible matrices, finds a parenthesization that minimizes the number of scalar multiplications needed to compute their product. The algorithm examines only the matrix dimensions; it does not multiply matrix entries. Matrix multiplication is associative, but multiplying an $a$-by-$b$ matrix with a $b$-by-$c$ matrix costs $abc$ scalar multiplications, so different parenthesizations can have very different costs. This is a canonical example of interval dynamic programming.
 
@@ -2673,6 +2273,80 @@ int main() {
 
   auto [single_operations, single_parenthesization] = matrix_chain_order({3, 5});
   assert(single_operations == 0 && single_parenthesization == "A0");
+  return 0;
+}
+\end{lstlisting}
+\subsection{Digit DP}
+Digit dynamic programming counts integers in a large bounded range whose decimal representations satisfy a digit-based property. The concrete routine below counts integers with a specified digit sum and provides the standard template to adapt for other finite-state properties.
+
+To count valid integers in $[0, x]$, process the digits of $x$ from left to right. The state records the current position, accumulated digit sum, and whether the chosen prefix still equals the prefix of $x$. Once that ``tight'' condition is false, the remaining choices depend only on the position and sum, so those states can be memoized. Subtracting the prefix counts for \inlinecode{hi} and \inlinecode{lo - 1} gives the answer for the requested range.
+
+Leading zeros do not affect a digit sum, so every integer can be treated as a zero-padded string of the same length as the bound. For properties where leading zeros matter, add a \inlinecode{started} flag to the state. More generally, the sum can be replaced by any small state with a transition for appending a digit.
+
+\begin{compactitem}
+  \item \inlinecode{count\_digit\_sum(lo, hi, target)} returns the number of integers in the inclusive range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ whose decimal digits sum to \inlinecode{target}. The bounds and \inlinecode{target} must be nonnegative.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(d \cdot s)$ per call, where $d$ is the number of digits in \inlinecode{hi} and $s$ is \inlinecode{target}.
+
+\textbf{Space Complexity}: $O(d \cdot s)$ auxiliary heap space and $O(d)$ call stack space.
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cstdint>
+#include <string>
+#include <vector>
+
+int64_t count_digit_sum(int64_t lo, int64_t hi, int target) {
+  assert(0 <= lo && lo <= hi && target >= 0);
+  auto count_up_to = [&](int64_t bound) {
+    if (bound < 0) {
+      return int64_t{0};
+    }
+    std::string digits = std::to_string(bound);
+    int n = static_cast<int>(digits.size());
+    if (target > 9 * n) {
+      return int64_t{0};
+    }
+    std::vector<std::vector<int64_t>> memo(n, std::vector<int64_t>(target + 1, -1));
+    auto rec = [&](auto &&rec, int pos, int sum, bool tight) -> int64_t {
+      if (sum > target || sum + 9 * (n - pos) < target) {
+        return 0;
+      }
+      if (pos == n) {
+        return sum == target;
+      }
+      if (!tight && memo[pos][sum] != -1) {
+        return memo[pos][sum];
+      }
+      int bound_digit = digits[pos] - '0';
+      int limit = tight ? bound_digit : 9;
+      int64_t res = 0;
+      for (int digit = 0; digit <= limit; digit++) {
+        res += rec(rec, pos + 1, sum + digit, tight && digit == bound_digit);
+      }
+      if (!tight) {
+        memo[pos][sum] = res;
+      }
+      return res;
+    };
+    return rec(rec, 0, 0, true);
+  };
+  return count_up_to(hi) - count_up_to(lo - 1);
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  assert(count_digit_sum(0, 20, 2) == 3);   // 2, 11, and 20.
+  assert(count_digit_sum(10, 30, 3) == 3);  // 12, 21, and 30.
+  assert(count_digit_sum(0, 99, 9) == 10);
+  assert(count_digit_sum(0, 0, 0) == 1);
+  assert(count_digit_sum(0, 999, 28) == 0);
   return 0;
 }
 \end{lstlisting}
@@ -2899,6 +2573,111 @@ int main() {
   auto [touching_weight, touching_selected] = select_weighted_intervals(touching);
   assert(touching_weight == 11);
   assert((touching_selected == vector<int>{0, 1}));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Interval Merging and Covering}
+Two fundamental interval problems ask either for the union of a collection of intervals or for a minimum-size subcollection that covers a target interval. For the union, sorting by start time makes all intervals that overlap the current merged interval consecutive, so one scan can extend its finish or begin the next disjoint interval.
+
+For minimum covering, maintain the rightmost point covered so far. Among every interval starting at or before that frontier, greedily select one with the farthest finish. Any feasible cover must next use one of those intervals, and replacing that choice with the farthest-reaching one cannot make the remaining target harder to cover. This is different from interval scheduling, which selects the compatible interval with the earliest finish.
+
+Intervals are represented as half-open ranges $[{\inlinecodemath{start}}, {\inlinecodemath{finish}})$. Touching intervals may be merged because their union is another half-open interval with no gap.
+
+\begin{compactitem}
+  \item \inlinecode{merge\_intervals(intervals)} returns the union as disjoint intervals sorted by start. Every input interval must satisfy \inlinecode{start} \textless{} \inlinecode{finish}.
+  \item \inlinecode{cover\_interval(intervals, lo, hi)} returns a minimum-size list of original input indices whose intervals cover $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, in the order selected, or \inlinecode{std::nullopt} if coverage is impossible. Every input interval must satisfy \inlinecode{start} \textless{} \inlinecode{finish}, and \inlinecode{lo} must not exceed \inlinecode{hi}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n \log n)$ per call due to sorting, where $n$ is the number of intervals.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary and $O(n)$ for the returned intervals or indices.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <numeric>
+#include <optional>
+#include <vector>
+
+struct Interval {
+  int start, finish;
+};
+
+std::vector<Interval> merge_intervals(std::vector<Interval> intervals) {
+  for (const auto &iv : intervals) {
+    assert(iv.start < iv.finish);
+  }
+  std::sort(intervals.begin(), intervals.end(), [](const Interval &a, const Interval &b) {
+    return a.start != b.start ? a.start < b.start : a.finish < b.finish;
+  });
+  std::vector<Interval> merged;
+  for (const auto &iv : intervals) {
+    if (merged.empty() || merged.back().finish < iv.start) {
+      merged.push_back(iv);
+    } else {
+      merged.back().finish = std::max(merged.back().finish, iv.finish);
+    }
+  }
+  return merged;
+}
+
+std::optional<std::vector<int>> cover_interval(
+    const std::vector<Interval> &intervals, int lo, int hi
+) {
+  assert(lo <= hi);
+  int n = static_cast<int>(intervals.size());
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
+  for (const auto &iv : intervals) {
+    assert(iv.start < iv.finish);
+  }
+  std::sort(order.begin(), order.end(), [&](int i, int j) {
+    if (intervals[i].start != intervals[j].start) {
+      return intervals[i].start < intervals[j].start;
+    }
+    return intervals[i].finish != intervals[j].finish ? intervals[i].finish > intervals[j].finish
+                                                      : i < j;
+  });
+  std::vector<int> selected;
+  int pos = 0, frontier = lo;
+  while (frontier < hi) {
+    int best = -1, best_finish = frontier;
+    while (pos < n && intervals[order[pos]].start <= frontier) {
+      int i = order[pos++];
+      if (best_finish < intervals[i].finish ||
+          (best_finish == intervals[i].finish && best != -1 && i < best)) {
+        best = i;
+        best_finish = intervals[i].finish;
+      }
+    }
+    if (best == -1) {
+      return std::nullopt;
+    }
+    selected.push_back(best);
+    frontier = best_finish;
+  }
+  return selected;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <vector>
+using namespace std;
+
+int main() {
+  vector<Interval> intervals{{8, 10}, {1, 3}, {2, 6}, {15, 18}, {10, 12}};
+  auto merged = merge_intervals(intervals);
+  assert(merged.size() == 3);
+  assert(merged[0].start == 1 && merged[0].finish == 6);
+  assert(merged[1].start == 8 && merged[1].finish == 12);
+  assert(merged[2].start == 15 && merged[2].finish == 18);
+
+  vector<Interval> cover{{0, 2}, {1, 5}, {4, 7}, {6, 10}, {2, 6}, {8, 11}};
+  assert(cover_interval(cover, 0, 10) == vector<int>({0, 4, 3}));
+  assert(!cover_interval({{0, 2}, {3, 5}}, 0, 5));
+  assert(cover_interval({}, 4, 4) == vector<int>());
   return 0;
 }
 \end{lstlisting}
@@ -4619,6 +4398,586 @@ int main() {
 
   // Overlapping masks contribute nothing at all to a subset convolution.
   assert((subset_convolve(one_mask, one_mask) == vector<int64_t>{0, 0, 0, 0}));
+  return 0;
+}
+\end{lstlisting}
+
+\section{\texorpdfstring{Miscellaneous Problems}{1.6 Miscellaneous Problems}}
+\setcounter{section}{6}
+\setcounter{subsection}{0}
+\subsection{Minimum Excluded Value}
+Given a multiset of integers, find the minimum excluded nonnegative value (MEX), i.e. the smallest integer $x \geq 0$ not present in the multiset. MEX often appears in array problems, game theory with Grundy numbers, and dynamic programming states. Since the MEX of $n$ values never exceeds $n$, the one-shot version tracks seen values in $[0, n]$ before scanning to find the first missing.
+
+\begin{compactitem}
+  \item \inlinecode{mex(lo, hi)} returns the MEX of the values in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
+\end{compactitem}
+
+The MEX of a dynamic multiset can be computed using counts of present values and maintaining an ordered set of currently missing candidates.
+
+\begin{compactitem}
+  \item \inlinecode{DynamicMex()} maintains the MEX of a multiset of nonnegative integers.
+  \item \inlinecode{add(x)} inserts one copy of value \inlinecode{x} if \inlinecode{x} $\geq 0$.
+  \item \inlinecode{remove(x)} removes one copy of value \inlinecode{x} if present.
+  \item \inlinecode{mex()} returns the current MEX.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to \inlinecode{mex(lo, hi)}, where $n$ is the number of values.
+  \item $O(\log n)$ expected per call to \inlinecode{add(x)} and \inlinecode{remove(x)} for \inlinecode{DynamicMex}, and $O(n)$ in the collision-heavy worst case for the hash table.
+  \item $O(1)$ per call to \inlinecode{mex()} for \inlinecode{DynamicMex}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary for \inlinecode{mex(lo, hi)}.
+  \item $O(n)$ storage for \inlinecode{DynamicMex}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <iterator>
+#include <set>
+#include <unordered_map>
+#include <vector>
+
+template<typename It>
+int mex(It lo, It hi) {
+  int n = std::distance(lo, hi);
+  std::vector<char> seen(n + 1, false);
+  for (It it = lo; it != hi; ++it) {
+    if (0 <= *it && *it <= n) {
+      seen[*it] = true;
+    }
+  }
+  for (int x = 0; x <= n; x++) {
+    if (!seen[x]) {
+      return x;
+    }
+  }
+  return n + 1;
+}
+
+class DynamicMex {
+  std::unordered_map<int, int> count;
+  std::set<int> missing;  // Missing candidates in [0, size].
+  int size = 0;
+
+ public:
+  DynamicMex() { missing.insert(0); }
+
+  void add(int x) {
+    if (x < 0) {
+      return;
+    }
+    if (!count.count(size + 1)) {
+      missing.insert(size + 1);
+    }
+    if (count[x]++ == 0) {
+      missing.erase(x);
+    }
+    size++;
+  }
+
+  void remove(int x) {
+    auto it = count.find(x);
+    if (it == count.end()) {
+      return;
+    }
+    bool removed_last = --it->second == 0;
+    if (removed_last) {
+      count.erase(it);
+    }
+    size--;
+    missing.erase(size + 1);
+    if (removed_last && x <= size) {
+      missing.insert(x);
+    }
+  }
+
+  int mex() const { return *missing.begin(); }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<int> a{0, 1, 4, 2, 1};
+  assert(mex(a.begin(), a.end()) == 3);
+  vector<int> b{-1, 0, 1, 2};
+  assert(mex(b.begin(), b.end()) == 3);  // Negative values are ignored.
+
+  DynamicMex m;
+  m.add(0);
+  m.add(1);
+  m.add(1);
+  m.add(3);
+  assert(m.mex() == 2);
+  m.add(2);
+  assert(m.mex() == 4);
+  m.remove(1);
+  assert(m.mex() == 4);  // One copy of 1 remains.
+  m.remove(1);
+  assert(m.mex() == 1);
+  m.remove(100);
+  assert(m.mex() == 1);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Josephus Problem}
+The Josephus problem arranges $n$ people, numbered $[0, n)$, in a circle and repeatedly removes every $k$-th remaining person until one survives. Counting starts at person $0$, which counts as the first person. After the first removal, relabeling the smaller circle from the next person gives the same problem on $n - 1$ people. Mapping its survivor back to the original labels yields the recurrence $J(1, k) = 0$ and $J(n, k) = (J(n - 1, k) + k) \bmod n$.
+
+When $k$ is small, several removals can be processed at once. One complete pass removes $\lfloor n/k \rfloor$ people; recursively solving the compressed circle and undoing the resulting index shift reduces the running time to $O(k \log n)$. To recover the full elimination order, a Fenwick tree stores which labels remain and selects each next victim by rank.
+
+\begin{compactitem}
+  \item \inlinecode{josephus(n, k)} returns the zero-based label of the survivor, where \inlinecode{n} and \inlinecode{k} must be positive.
+  \item \inlinecode{josephus\_small\_k(n, k)} returns the same survivor using the batched recurrence. It is preferable when $k$ is small relative to $n$.
+  \item \inlinecode{josephus\_order(n, k)} returns all labels in elimination order, ending with the survivor.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to \inlinecode{josephus()}.
+  \item $O(\min\left(n, k \log n\right))$ per call to \inlinecode{josephus\_small\_k()}.
+  \item $O(n \log n)$ per call to \inlinecode{josephus\_order()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ auxiliary for \inlinecode{josephus()}.
+  \item $O(\min\left(n, k \log n\right))$ call stack space for \inlinecode{josephus\_small\_k()}.
+  \item $O(n)$ auxiliary and $O(n)$ for the returned elimination order from \inlinecode{josephus\_order()}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cstdint>
+#include <vector>
+
+int josephus(int n, int k) {
+  assert(n > 0 && k > 0);
+  int survivor = 0;
+  for (int size = 2; size <= n; size++) {
+    survivor = static_cast<int>((static_cast<int64_t>(survivor) + k) % size);
+  }
+  return survivor;
+}
+
+int josephus_small_k(int n, int k) {
+  assert(n > 0 && k > 0);
+  if (n == 1) {
+    return 0;
+  }
+  if (k == 1) {
+    return n - 1;
+  }
+  if (k > n) {
+    return josephus(n, k);
+  }
+  int removed = n / k;
+  int survivor = josephus_small_k(n - removed, k);
+  survivor -= n % k;
+  if (survivor < 0) {
+    survivor += n;
+  } else {
+    survivor += survivor / (k - 1);
+  }
+  return survivor;
+}
+
+std::vector<int> josephus_order(int n, int k) {
+  assert(n > 0 && k > 0);
+  std::vector<int> bit(n + 1), order;
+  order.reserve(n);
+  for (int i = 1; i <= n; i++) {
+    bit[i] = i & -i;  // Initially every label is alive.
+  }
+  int max_step = 1;
+  while (max_step <= n / 2) {
+    max_step *= 2;
+  }
+  auto find_by_rank = [&](int rank) {
+    int pos = 0;
+    for (int step = max_step; step > 0; step /= 2) {
+      int next = pos + step;
+      if (next <= n && bit[next] <= rank) {
+        pos = next;
+        rank -= bit[next];
+      }
+    }
+    return pos;
+  };
+  int rank = 0;
+  for (int remaining = n; remaining > 0; remaining--) {
+    rank = static_cast<int>((static_cast<int64_t>(rank) + k - 1) % remaining);
+    int removed = find_by_rank(rank);
+    order.push_back(removed);
+    for (int i = removed + 1; i <= n; i += i & -i) {
+      bit[i]--;
+    }
+    if (remaining > 1) {
+      rank %= remaining - 1;
+    }
+  }
+  return order;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <vector>
+using namespace std;
+
+int main() {
+  assert(josephus(1, 5) == 0);
+  assert(josephus(7, 3) == 3);
+  assert(josephus(10, 1) == 9);
+  for (int n = 1; n <= 30; n++) {
+    for (int k = 1; k <= 30; k++) {
+      assert(josephus_small_k(n, k) == josephus(n, k));
+      assert(josephus_order(n, k).back() == josephus(n, k));
+    }
+  }
+  assert(josephus_order(7, 3) == vector<int>({2, 5, 1, 6, 4, 0, 3}));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Iterated Function Cycle Detection}
+Given a function $f$ mapping a finite set to itself and a starting value $x_0$, return the entry value, position, and length of the cycle reached by repeatedly applying $f$. Formally, the sequence $x_0$, $x_1 = f(x_0)$, $x_2 = f(x_1)$, $\ldots$, $x_n = f(x_{n - 1})$, $\ldots$ must eventually repeat some value. If $x_i = x_j$ for $i < j$, then the sequence from $x_i$ to $x_{j - 1}$ repeats forever. This is useful for detecting cycles in functional graphs (see 4.2.9), pseudo-random generators, Pollard rho style algorithms, degenerate linked lists, and arrays where each index points to the next index. For example, if an array $a_0, \ldots, a_{n+1}$ contains only values in $[1, n]$, with exactly one value occurring more than once, then $f(i) = a_i$ forms a functional graph; the duplicate value is the entry point of the cycle reached from $0$.
+
+Floyd's cycle-finding algorithm, a.k.a. the ``tortoise and the hare algorithm'', is a space-efficient default choice: it moves two pointers through the sequence at different speeds, finds a meeting point inside the cycle, then locates the cycle start. Brent's algorithm is a compact variant that usually calls $f$ fewer times by only resetting the tortoise at powers of two; prefer it when evaluating $f$ is expensive and constant factors matter. In the detection phase, Brent advances one pointer with one call to $f$ per step, while Floyd advances the tortoise once and the hare twice, using three calls to $f$ per step.
+
+For Floyd's algorithm, suppose the tail has length $m$ and the cycle has length $n$. At a meeting, the hare has traveled twice as far as the tortoise, so the tortoise's distance is a multiple of $n$. Consequently, the distance from the meeting point around the cycle to its entry is congruent to $m$ modulo $n$. Resetting one pointer to $x_0$ and advancing both one step at a time makes them meet at the cycle entry after $m$ steps. Brent first determines $n$, then advances one pointer $n$ steps; moving both together from that fixed separation likewise makes them meet at the entry.
+
+\begin{compactitem}
+  \item \inlinecode{find\_cycle\_floyd(f, x0)} repeatedly applies \inlinecode{f} starting from \inlinecode{x0} and returns the reached cycle as a tuple (\inlinecode{entry}, \inlinecode{start}, \inlinecode{length}), where \inlinecode{entry} is the first cycle value, \inlinecode{start} is its index in the sequence, and \inlinecode{length} is the number of distinct values in the cycle.
+  \item \inlinecode{find\_cycle\_brent(f, x0)} does the same with fewer calls to \inlinecode{f} in many cases.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(m + n)$ per call, where $m$ is the first index in the cycle and $n$ is the cycle length.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <tuple>
+
+template<typename Fn, typename T>
+std::tuple<T, int, int> find_cycle_floyd(Fn f, T x0) {
+  // Find a meeting point inside the cycle.
+  T tortoise = f(x0), hare = f(f(x0));
+  while (tortoise != hare) {
+    tortoise = f(tortoise);
+    hare = f(f(hare));
+  }
+  // Find the cycle entry.
+  int start = 0;
+  tortoise = x0;
+  while (tortoise != hare) {
+    tortoise = f(tortoise);
+    hare = f(hare);
+    start++;
+  }
+  // Measure the cycle length.
+  int length = 1;
+  hare = f(tortoise);
+  while (tortoise != hare) {
+    hare = f(hare);
+    length++;
+  }
+  return {tortoise, start, length};
+}
+
+template<typename Fn, typename T>
+std::tuple<T, int, int> find_cycle_brent(Fn f, T x0) {
+  // Find the cycle length by doubling the search block.
+  int power = 1, length = 1;
+  T tortoise = x0, hare = f(x0);
+  while (tortoise != hare) {
+    if (power == length) {
+      tortoise = hare;
+      power *= 2;
+      length = 0;
+    }
+    hare = f(hare);
+    length++;
+  }
+  // Separate the pointers by one cycle length.
+  hare = x0;
+  for (int i = 0; i < length; i++) {
+    hare = f(hare);
+  }
+  // Find the cycle entry.
+  int start = 0;
+  tortoise = x0;
+  while (tortoise != hare) {
+    tortoise = f(tortoise);
+    hare = f(hare);
+    start++;
+  }
+  return {tortoise, start, length};
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <set>
+#include <vector>
+using namespace std;
+
+int f(int x) {
+  return (123 * x * x + 4567890) % 1337;
+}
+
+void verify(int x0, int start, int length) {
+  set<int> s;
+  int x = x0;
+  for (int i = 0; i < start; i++) {
+    assert(!s.count(x));
+    s.insert(x);
+    x = f(x);
+  }
+  int startx = x;
+  s.clear();
+  for (int i = 0; i < length; i++) {
+    assert(!s.count(x));
+    s.insert(x);
+    x = f(x);
+  }
+  assert(startx == x);
+}
+
+// Given n + 1 integers within [1, n], where one value in [1, n] is present 2 or more times (but
+// other values in [1, n] are present at most once), find the duplicate without modifying the array.
+// Interpret each value as a pointer to the next index; the duplicate is the cycle entry.
+int find_duplicate_integer(const vector<int> &a) {
+  return get<0>(find_cycle_floyd([&](int i) { return a[i]; }, 0));
+}
+
+int main() {
+  int x0 = 0;
+  auto [floyd_entry, floyd_start, floyd_len] = find_cycle_floyd(f, x0);
+  assert(floyd_start == 4 && floyd_len == 2);
+  verify(x0, floyd_start, floyd_len);
+
+  auto [brent_entry, brent_start, brent_len] = find_cycle_brent(f, x0);
+  assert(brent_entry == floyd_entry && brent_start == floyd_start && brent_len == floyd_len);
+
+  assert(find_duplicate_integer({1, 3, 4, 2, 2}) == 2);
+  assert(find_duplicate_integer({3, 1, 3, 4, 2}) == 3);
+  return 0;
+}
+\end{lstlisting}
+\subsection{N-Queens}
+The N-queens problem asks for a placement of $n$ queens on an $n$-by-$n$ chessboard such that no two share a row, column, or diagonal. Backtracking places one queen in each successive row and tracks which columns and diagonals are occupied. A conflicting placement is rejected immediately; after a failed recursive branch, its column and diagonals are released before trying the next column.
+
+\begin{compactitem}
+  \item \inlinecode{n\_queens(n)} returns a placement as a vector \inlinecode{cols} of length \inlinecode{n}, where \inlinecode{cols[row]} is the queen's column in that row. It returns an empty vector if no placement exists.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n!)$ per call.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary and $O(n)$ for the returned placement.
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <vector>
+
+std::vector<int> n_queens(int n) {
+  assert(n > 0);
+  std::vector<int> cols(n);
+  std::vector<char> used_col(n), used_diag1(2 * n - 1), used_diag2(2 * n - 1);
+  auto rec = [&](auto &&rec, int row) -> bool {
+    if (row == n) {
+      return true;
+    }
+    for (int col = 0; col < n; col++) {
+      int diag1 = row - col + n - 1, diag2 = row + col;
+      if (used_col[col] || used_diag1[diag1] || used_diag2[diag2]) {
+        continue;
+      }
+      cols[row] = col;
+      used_col[col] = used_diag1[diag1] = used_diag2[diag2] = true;
+      if (rec(rec, row + 1)) {
+        return true;
+      }
+      used_col[col] = used_diag1[diag1] = used_diag2[diag2] = false;
+      cols[row] = -1;
+    }
+    return false;
+  };
+  return rec(rec, 0) ? cols : std::vector<int>{};
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <vector>
+using namespace std;
+
+int main() {
+  assert(n_queens(4) == vector<int>({1, 3, 0, 2}));
+  assert(n_queens(2).empty());
+  assert(n_queens(1) == vector<int>({0}));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Subset Sum}
+Given a collection of integers and a target, the subset sum problem asks for the maximum sum of any subset that does not exceed the target. Two algorithms below solve this problem in complementary regimes, and which one wins depends on whether the bottleneck is the number of items or the size of the weights.
+
+The meet-in-the-middle method splits the collection in half, enumerates every subset sum for each half, sorts one side, and binary searches for the best compatible partner. It makes no assumption about the sign or size of the values, so it handles negative inputs, and it is the method of choice when the number of items $n$ is small (up to roughly $40$).
+
+Pisinger's algorithm targets the opposite regime: nonnegative weights whose maximum value is small, with possibly many items. Let $W$ be the largest weight. It greedily takes a maximal prefix with sum $s$ that fits the target; because the next weight is at most $W$ and does not fit, $s$ is greater than \inlinecode{target} $- W$. The prefix itself is feasible, so the optimum lies between $s$ and \inlinecode{target} and only that width-$W$ window matters. A balanced sweep explores exchanges that add later items to sums below the target and remove earlier items from sums above it. For each sum, it retains the farthest prefix boundary reached, which dominates smaller boundaries because it permits at least the same future exchanges. This gives a running time linear in the number of items times $W$, independent of the target beyond that window. This routine is sometimes called ``fast knapsack,'' a slight misnomer: it maximizes a subset sum rather than packing items with distinct values, so it is really the bounded-weight case of subset sum rather than the 0-1 value knapsack.
+
+\begin{compactitem}
+  \item \inlinecode{max\_subset\_sum\_at\_most(lo, hi, target)} returns a pair (\inlinecode{sum}, \inlinecode{items}) containing that maximum sum and the selected item indices relative to \inlinecode{lo}. Values may be negative. The range is supplied as random-access iterators, and \inlinecode{target} must be nonnegative.
+  \item \inlinecode{max\_subset\_sum\_bounded(lo, hi, target)} returns the maximum sum of any subset of the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ that does not exceed \inlinecode{target}. All weights and \inlinecode{target} must be nonnegative integers. This is faster than meet-in-the-middle when the largest weight is small relative to $2^{n/2}$.
+\end{compactitem}
+
+All subset sums and intermediate differences in \inlinecode{max\_subset\_sum\_at\_most()} must fit in \inlinecode{int64\_t}.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(2^{n/2})$ per call to \inlinecode{max\_subset\_sum\_at\_most()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+  \item $O(n \cdot W)$ per call to \inlinecode{max\_subset\_sum\_bounded()}, where $n$ is the number of items and $W$ is the largest weight.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(2^{n/2})$ auxiliary for \inlinecode{max\_subset\_sum\_at\_most()}.
+  \item $O(W)$ auxiliary for \inlinecode{max\_subset\_sum\_bounded()}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <climits>
+#include <cstdint>
+#include <utility>
+#include <vector>
+
+template<typename It>
+std::pair<int64_t, std::vector<int>> max_subset_sum_at_most(It lo, It hi, int64_t target) {
+  int n = static_cast<int>(hi - lo);
+  assert(target >= 0 && n >= 0 && n / 2 < 63 && n - n / 2 < 63);
+  int64_t llen = 1LL << (n / 2), rlen = 1LL << (n - n / 2);
+  std::vector<int64_t> lsum(llen);
+  std::vector<std::pair<int64_t, int64_t>> rsum(rlen);
+  for (int64_t mask = 1; mask < llen; mask++) {
+    int bit = __builtin_ctzll(mask);
+    lsum[mask] = lsum[mask ^ (1LL << bit)] + *(lo + bit);  // Overflow warning.
+  }
+  for (int64_t mask = 1; mask < rlen; mask++) {
+    int bit = __builtin_ctzll(mask);
+    rsum[mask].first = rsum[mask ^ (1LL << bit)].first + *(lo + n / 2 + bit);
+    rsum[mask].second = mask;
+  }
+  std::sort(rsum.begin(), rsum.end());
+  int64_t best = INT64_MIN, lmask = 0, rmask = 0;
+  for (int64_t mask = 0; mask < llen; mask++) {
+    int64_t limit = target - lsum[mask];  // Overflow warning.
+    auto it = std::upper_bound(rsum.begin(), rsum.end(), std::make_pair(limit, INT64_MAX));
+    if (it != rsum.begin()) {
+      --it;
+      int64_t candidate = lsum[mask] + it->first;
+      if (best < candidate) {
+        best = candidate;
+        lmask = mask;
+        rmask = it->second;
+      }
+    }
+  }
+  std::vector<int> items;
+  for (int i = 0; i < n / 2; i++) {
+    if ((lmask >> i) & 1) {
+      items.push_back(i);
+    }
+  }
+  for (int i = 0; i < n - n / 2; i++) {
+    if ((rmask >> i) & 1) {
+      items.push_back(n / 2 + i);
+    }
+  }
+  return {best, items};
+}
+
+template<typename It>
+int64_t max_subset_sum_bounded(It lo, It hi, int target) {
+  int n = static_cast<int>(hi - lo);
+  assert(target >= 0 && n >= 0);
+  for (It it = lo; it != hi; ++it) {
+    int64_t weight = *it;
+    assert(0 <= weight && weight <= INT_MAX);
+  }
+  // Greedily take a prefix while it still fits; the optimum then lies within one weight of target.
+  int sum = 0, b = 0;
+  while (b < n && static_cast<int>(*(lo + b)) <= target - sum) {
+    sum += static_cast<int>(*(lo + b++));
+  }
+  if (b == n) {
+    return sum;  // Every item fits, so the whole collection is the best subset.
+  }
+  int m = 0;
+  for (It it = lo; it != hi; ++it) {
+    m = std::max(m, static_cast<int>(*it));
+  }
+  // reach[s - target + m] = largest prefix boundary that can realize a balanced subset of sum s.
+  // Only sums within m of target are tracked, which is where the optimum must lie.
+  std::vector<int> reach(2 * m, -1);
+  reach[sum - target + m] = b;
+  for (int i = b; i < n; i++) {
+    std::vector<int> prev = reach;
+    int wi = static_cast<int>(*(lo + i));
+    for (int x = 0; x < m; x++) {  // Add item i to sums currently below target.
+      reach[x + wi] = std::max(reach[x + wi], prev[x]);
+    }
+    for (int x = 2 * m - 1; x > m; x--) {  // Drop an earlier item from sums above target.
+      for (int j = std::max(0, prev[x]); j < reach[x]; j++) {
+        int wj = static_cast<int>(*(lo + j));
+        reach[x - wj] = std::max(reach[x - wj], j);
+      }
+    }
+  }
+  int s = target;
+  while (reach[s - target + m] < 0) {
+    s--;
+  }
+  return s;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<int> a{9, 1, 5, 0, 1, 11, 5};
+  auto [sum, items] = max_subset_sum_at_most(a.begin(), a.end(), 8);
+  int64_t selected_sum = 0;
+  for (int i : items) {
+    selected_sum += a[i];
+  }
+  assert(sum == 7 && selected_sum == sum);
+  vector<int> b{-7, -3, -2, 5, 8};
+  assert(max_subset_sum_at_most(b.begin(), b.end(), 0).first == 0);
+
+  // The bounded-weight method agrees with meet-in-the-middle on nonnegative inputs.
+  assert(max_subset_sum_bounded(a.begin(), a.end(), 8) == 7);
+  vector<int> c{3, 34, 4, 12, 5, 2};
+  assert(max_subset_sum_bounded(c.begin(), c.end(), 9) == 9);     // 4 + 5.
+  assert(max_subset_sum_bounded(c.begin(), c.end(), 10) == 10);   // 3 + 5 + 2.
+  assert(max_subset_sum_bounded(c.begin(), c.end(), 100) == 60);  // All items fit.
   return 0;
 }
 \end{lstlisting}

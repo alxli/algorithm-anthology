@@ -146,7 +146,7 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Local Minimum (Binary Search)}
+\subsection{Local Minimum}
 Finds a non-strict local minimum in an array, that is, an index $i$ whose value is no greater than the values at its existing neighbors. Unlike ternary search, this does not require the array to be unimodal, but the result is only a local minimum and need not be the global minimum.
 
 Compare the middle element with its right neighbor. If the sequence slopes downward, the right half contains a local minimum; otherwise, the middle element or the left half contains one. Each comparison therefore discards half of the remaining indices.
@@ -948,7 +948,7 @@ Maintains a dynamic set of lines $y = mx + b$ and answers minimum value queries 
 This fully dynamic convex hull stores the envelope in a self-balancing binary search tree (\inlinecode{std::set}). Inserting a line removes any neighbors it dominates, and each remaining line records the last coordinate where it is optimal, so a query is one tree lookup. Unlike a Li Chao tree, this structure requires no fixed coordinate domain and its complexity depends on the number of lines rather than the domain width. Prefer it when the domain is unknown or very large, or when maximum queries are needed; a Li Chao tree is often simpler when a manageable domain is known.
 
 \begin{compactitem}
-  \item \inlinecode{HullOptimizer(query\_max = false)} constructs an empty hull. By default, \inlinecode{query(x)} minimizes; if \inlinecode{query\_max} is true, \inlinecode{query(x)} maximizes.
+  \item \inlinecode{FullyDynamicCHT(query\_max = false)} constructs an empty hull. By default, \inlinecode{query(x)} minimizes; if \inlinecode{query\_max} is true, \inlinecode{query(x)} maximizes.
   \item \inlinecode{add\_line(m, b)} inserts line $y = mx + b$. Lines may be added in any order.
   \item \inlinecode{query(x)} returns the best $y$-value among all inserted lines at coordinate \inlinecode{x}. At least one line must have been inserted, and query coordinates may be supplied in any order.
 \end{compactitem}
@@ -969,7 +969,7 @@ Overflow warning: minimization negates the coefficients, border updates subtract
 #include <cstdint>
 #include <set>
 
-class HullOptimizer {
+class FullyDynamicCHT {
   struct Line {
     int64_t m, b;
     mutable int64_t xhi;
@@ -1001,7 +1001,7 @@ class HullOptimizer {
   }
 
  public:
-  explicit HullOptimizer(bool query_max = false) : query_max(query_max) {}
+  explicit FullyDynamicCHT(bool query_max = false) : query_max(query_max) {}
 
   void add_line(int64_t m, int64_t b) {
     if (!query_max) {
@@ -1037,7 +1037,7 @@ class HullOptimizer {
 #include <cassert>
 
 int main() {
-  HullOptimizer h;
+  FullyDynamicCHT h;
   h.add_line(3, 0);
   h.add_line(0, 6);
   h.add_line(1, 2);
@@ -1048,7 +1048,7 @@ int main() {
   assert(h.query(1) == 3);
   assert(h.query(3) == 5);
 
-  HullOptimizer mx(true);
+  FullyDynamicCHT mx(true);
   mx.add_line(3, 0);
   mx.add_line(0, 6);
   mx.add_line(1, 2);

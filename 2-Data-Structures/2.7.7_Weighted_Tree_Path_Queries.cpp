@@ -13,7 +13,7 @@ is required because the two half-paths are merged without regard to orientation.
 aggregate such as the sum, an alternative that avoids the `agg` table is to store each node's
 weighted depth `dw[u]` and return `dw[u] + dw[v] - 2*dw[lca]`.
 
-- `WeightedTree<W>(adj)` builds the structure over a forest given by a weighted, bidirectional
+- `TreePathQueries<W>(adj)` builds the structure over a forest given by a weighted, bidirectional
   adjacency list `adj`, whose indices represent the nodes and where `adj[u]` holds pairs (`v`, `w`)
   for each edge `u`-`v` of weight `w`. Each connected component is rooted at its first node reached
   by the constructor's outer loop.
@@ -44,7 +44,7 @@ Space Complexity:
 #include <vector>
 
 template<typename W>
-class WeightedTree {
+class TreePathQueries {
   static W combine(const W &a, const W &b) { return std::max(a, b); }
 
   std::vector<std::vector<int>> up;
@@ -85,7 +85,7 @@ class WeightedTree {
   }
 
  public:
-  explicit WeightedTree(const std::vector<std::vector<std::pair<int, W>>> &adj)
+  explicit TreePathQueries(const std::vector<std::vector<std::pair<int, W>>> &adj)
       : agg(adj.size()),
         tin(adj.size()),
         tout(adj.size()),
@@ -179,7 +179,7 @@ int main() {
   add_edge(1, 4, 1);
   add_edge(2, 5, 5);
   add_edge(2, 6, 3);
-  WeightedTree<int> t(adj);
+  TreePathQueries<int> t(adj);
   assert(t.lca(3, 4) == 1);
   assert(t.lca(5, 6) == 2);
   assert(t.lca(3, 6) == 0);
@@ -193,7 +193,7 @@ int main() {
   assert(t.path_query(0, 3) == 7);  // 0-1 (4), 1-3 (7).
 
   vector<vector<pair<int, int>>> forest(2);
-  WeightedTree<int> disconnected(forest);
+  TreePathQueries<int> disconnected(forest);
   assert(disconnected.lca(0, 1) == -1);
   return 0;
 }
