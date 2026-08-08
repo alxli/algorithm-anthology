@@ -429,6 +429,11 @@ def render_listing(text, language='C++'):
     text = '\n'.join(
         line.rstrip() for line in text.splitlines()
         if not re.match(r'\s*//\s*clang-format\s+(off|on)\s*$', line)
+        and line.strip() not in {
+            '#define main bigint_example',
+            '#include "6.4.2_Big_Integer.cpp"',
+            '#undef main',
+        }
     )
     options = 'language={}'.format(language) if language else 'language={},numbers=none'
     return '\\begin{{lstlisting}}[{}]\n{}\n\\end{{lstlisting}}\n'.format(
