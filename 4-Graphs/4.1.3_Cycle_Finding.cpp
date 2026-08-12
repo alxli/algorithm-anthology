@@ -35,7 +35,7 @@ std::vector<int> find_cycle_undirected(const std::vector<std::vector<int>> &adj)
   if (n == 0) {
     return {};
   }
-  std::vector<char> visit(n, false);
+  std::vector<char> visit(n);
   std::vector<int> parent(n, -1);
   int cycle_start = -1, cycle_end = -1;
   auto dfs = [&](auto &&dfs, int u, int p) -> bool {
@@ -77,7 +77,7 @@ std::vector<int> find_cycle_directed(const std::vector<std::vector<int>> &adj) {
   if (n == 0) {
     return {};
   }
-  std::vector<char> state(n, 0);  // 0 = unvisited, 1 = currently on DFS stack, 2 = finished.
+  std::vector<char> state(n);  // 0 = unvisited, 1 = currently on DFS stack, 2 = finished.
   std::vector<int> parent(n, -1);
   int cycle_start = -1, cycle_end = -1;
   auto dfs = [&](auto &&dfs, int u) -> bool {

@@ -94,7 +94,7 @@ auto getl(const Matrix &lu, int i, int j) {
 template<typename Matrix>
 auto getu(const Matrix &lu, int i, int j) {
   using T = std::decay_t<decltype(lu[0][0])>;
-  return i <= j ? lu[i][j] : T(0);
+  return i <= j ? lu[i][j] : T{0};
 }
 
 template<typename Matrix, typename T>
@@ -145,7 +145,7 @@ auto det(const Matrix &a) {
   Matrix lu(a);
   int status = lu_decompose(lu);
   if (status < 0) {
-    return T(0);
+    return T{0};
   }
   T res = 1;
   for (int i = 0; i < n; i++) {
@@ -215,7 +215,7 @@ int main() {
     vector<vector<double>> a{{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
     auto inv = inverse(a);
     int n = static_cast<int>(a.size());
-    vector<vector<double>> res(n, vector<double>(n, 0));
+    vector<vector<double>> res(n, vector<double>(n));
     assert(inv);
     for (int i = 0; i < n; i++) {
       for (int j = 0; j < n; j++) {

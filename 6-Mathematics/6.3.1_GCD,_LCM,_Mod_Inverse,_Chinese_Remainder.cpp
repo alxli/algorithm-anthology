@@ -34,8 +34,9 @@ Common number theory operations relating to modular arithmetic.
 - `garner_restore_mod(a, p, m)` returns that same CRT solution modulo `m`. This is the right variant
   when the product of the moduli is too large to fit in `int64_t`.
 
-Every intermediate and result of the templated signed-integer helpers must be representable by
-`Int`; in particular, the minimum value of `Int` cannot be negated or divided by $-1$.
+Overflow warning: Every intermediate and result of the templated signed-integer helpers must be
+representable by `Int`; in particular, the minimum value of `Int` cannot be negated or divided by
+$-1$.
 
 Time Complexity:
 - O(log M) per call to `gcd()`, `lcm()`, `extended_euclid()`, `diophantine()`, `mod_inverse()`, and
@@ -255,9 +256,9 @@ int main() {
   }
   {
     vector<int> a{2, 3, 1}, m{3, 4, 5};
-    int n = static_cast<int>(a.size());
     int x = garner_restore(a, m);
     assert(x == garner_restore_mod(a, m, 1000000007));
+    int n = static_cast<int>(a.size());
     for (int i = 0; i < n; i++) {
       assert(mod(x, m[i]) == a[i]);
     }
@@ -267,7 +268,7 @@ int main() {
   {  // Garner modulo another number works even when the product of CRT moduli is too large.
     vector<int> p{1000000007, 1000000009, 1000000033};
     __extension__ typedef __int128 int128_t;
-    int128_t x = (static_cast<int128_t>(1) << 80) + 123456789;
+    int128_t x = (int128_t{1} << 80) + 123456789;
     vector<int> a;
     for (int m : p) {
       a.push_back(static_cast<int>(x % m));

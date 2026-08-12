@@ -1,17 +1,15 @@
 /*
 
-Perform exact decimal arithmetic using a `BigInt` coefficient and a nonnegative scale. Unlike binary
-floating point, every parsed decimal is represented exactly: for example, `BigDecimal("1.20")`
-stores coefficient $120$ with scale $2$. Addition and subtraction preserve the larger operand scale,
-multiplication adds the scales, and formatting preserves trailing zeros unless `normalized()` is
-called. Only finite, well-formed decimal strings are supported; `NaN` and infinities are not
-represented.
+Performs exact decimal arithmetic using the full `BigInt` implementation from 6.4.2 as its
+coefficient type, together with a nonnegative scale. Unlike binary floating point, every parsed
+decimal is represented exactly: for example, `BigDecimal("1.20")` stores coefficient $120$ with
+scale $2$. Addition and subtraction preserve the larger operand scale, multiplication adds the
+scales, and formatting preserves trailing zeros unless `normalized()` is called. Only finite,
+well-formed decimal strings are supported; `NaN` and infinities are not represented.
 
 Division and square root generally have nonterminating decimal expansions, so both operations
 require an explicit result scale. The rounding mode defaults to `HalfAway`, which rounds ties away
-from zero. The other modes are `TowardZero`, `AwayFromZero`, `Floor`, `Ceil`, and `HalfEven`. This
-section imports the full `BigInt` implementation from 6.4.2 rather than duplicating its
-arbitrary-precision arithmetic.
+from zero. The other modes are `TowardZero`, `AwayFromZero`, `Floor`, `Ceil`, and `HalfEven`.
 
 - `BigDecimal(n = 0)` constructs a decimal from integer `n`.
 - `BigDecimal(s)` parses decimal string `s`, optionally written in scientific notation, and
@@ -236,6 +234,8 @@ class BigDecimal {
 
 /*** Example Usage ***/
 
+using namespace std;
+
 int main() {
   using Round = BigDecimal::Round;
 
@@ -295,7 +295,7 @@ int main() {
     assert(BigDecimal(i * i).sqrt(0) == BigDecimal(i));
   }
 
-  std::stringstream in("-12.340"), out;
+  stringstream in("-12.340"), out;
   BigDecimal streamed;
   in >> streamed;
   out << streamed;

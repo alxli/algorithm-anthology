@@ -28,7 +28,7 @@ Range reversal is also propagated lazily. Since `combine()` may be order-sensiti
 the aggregate of its subtree in both forward and reverse order. Reversing a subtree then swaps its
 children and these two aggregates before marking its descendants for later reversal.
 
-- `ImplicitTreap<T>(n = 0, v = T())` constructs an array of size `n` with indices $[0, `n`)$, with
+- `ImplicitTreap<T>(n = 0, v = T{})` constructs an array of size `n` with indices $[0, `n`)$, with
   all values initialized to `v`.
 - `ImplicitTreap<T>(lo, hi)` constructs an array from the half-open iterator range $[`lo`, `hi`)$.
 - `size()` returns the size of the array.
@@ -231,7 +231,7 @@ class ImplicitTreap {
   }
 
  public:
-  explicit ImplicitTreap(int n = 0, const T &v = T()) : root(nullptr) {
+  explicit ImplicitTreap(int n = 0, const T &v = T{}) : root(nullptr) {
     assert(n >= 0);
     for (int i = 0; i < n; i++) {
       push_back(v);

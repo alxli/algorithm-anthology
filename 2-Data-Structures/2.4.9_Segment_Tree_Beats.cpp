@@ -21,7 +21,7 @@ the generic lazy segment tree, this structure cannot be reduced to a pluggable `
 `apply`, because a clamp acts on only the maximal entries of a node rather than uniformly on all of
 them, so each operation set must be hand-written and its amortized bound argued separately.
 
-- `SegTreeBeats<T>(n, v = T())` constructs an array of size `n`, indices $[0, `n`)$, all equal to
+- `SegTreeBeats<T>(n, v = T{})` constructs an array of size `n`, indices $[0, `n`)$, all equal to
   `v`.
 - `SegTreeBeats<T>(lo, hi)` constructs an array from the half-open random-access iterator range
   $[`lo`, `hi`)$.
@@ -148,7 +148,7 @@ class SegTreeBeats {
   }
 
  public:
-  explicit SegTreeBeats(int n, const T &v = T())
+  explicit SegTreeBeats(int n, const T &v = T{})
       : len(n), max1(4 * n), max2(4 * n), sum(4 * n), cnt(4 * n) {
     assert(len > 0);
     build(0, 0, len - 1, [&](int) { return v; });

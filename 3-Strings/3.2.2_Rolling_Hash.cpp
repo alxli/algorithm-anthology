@@ -117,17 +117,17 @@ class RollingHash {
   }
 
  public:
-  explicit RollingHash(const Hash &hasher = Hash()) : hasher(hasher) {
+  explicit RollingHash(const Hash &hasher = Hash{}) : hasher(hasher) {
     ensure_powers(0);
     pref.push_back(0);
   }
 
   template<typename It>
-  RollingHash(It lo, It hi, const Hash &hasher = Hash()) : hasher(hasher) {
+  RollingHash(It lo, It hi, const Hash &hasher = Hash{}) : hasher(hasher) {
     build(lo, hi);
   }
 
-  explicit RollingHash(const std::vector<T> &v, const Hash &hasher = Hash())
+  explicit RollingHash(const std::vector<T> &v, const Hash &hasher = Hash{})
       : RollingHash(v.begin(), v.end(), hasher) {}
 
   int size() const { return static_cast<int>(pref.size()) - 1; }
@@ -138,12 +138,12 @@ class RollingHash {
   }
 
   template<typename It>
-  static uint64_t hash(It lo, It hi, const Hash &hasher = Hash()) {
+  static uint64_t hash(It lo, It hi, const Hash &hasher = Hash{}) {
     RollingHash<T, Hash> h(lo, hi, hasher);
     return h.hash(0, h.size());
   }
 
-  static uint64_t hash(const std::vector<T> &v, const Hash &hasher = Hash()) {
+  static uint64_t hash(const std::vector<T> &v, const Hash &hasher = Hash{}) {
     RollingHash<T, Hash> h(v, hasher);
     return h.hash(0, h.size());
   }

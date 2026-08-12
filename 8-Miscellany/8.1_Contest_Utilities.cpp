@@ -88,10 +88,12 @@ struct RNG {
   template<typename T>
   T uniform_int(T lo, T hi) {
     static_assert(std::is_integral<T>::value, "uniform_int() requires an integral type");
+    assert(lo <= hi);
     return std::uniform_int_distribution<T>(lo, hi)(gen);
   }
 
   double uniform_real(double lo = 0.0, double hi = 1.0) {
+    assert(lo < hi);
     return std::uniform_real_distribution<double>(lo, hi)(gen);
   }
 

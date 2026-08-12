@@ -23,7 +23,9 @@ producing the smallest larger integer with the same number of set bits.
 - `subset_sum_transform(f)` overwrites `f` (indexed by mask over `n` bits) so that `f[m]` becomes
   the sum of the original `f[s]` over all submasks `s` of `m`. This "sum over subsets" (SOS) DP is
   the bitmask analog of a prefix sum, accumulating one bit dimension at a time. The value type must
-  support `+=`, and all intermediate sums must be representable.
+  support `+=`.
+
+Overflow warning: All intermediate sums must be representable in the value type.
 
 Time Complexity:
 - O(2^p) per call to `submasks(m)`, where $p$ is `popcount(m)`.
@@ -60,8 +62,9 @@ std::vector<Mask> submasks(Mask m) {
 }
 
 Mask next_popcount(Mask x) {
+  assert(x != 0);
   Mask c = x & (Mask{0} - x), r = x + c;
-  assert(x != 0 && r != 0);
+  assert(r != 0);
   return r | (((x ^ r) >> 2) / c);
 }
 

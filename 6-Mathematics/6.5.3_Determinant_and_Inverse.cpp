@@ -23,12 +23,14 @@ submatrix, so the divisions are always exact and the arithmetic stays in integer
   matrix `a` using Gaussian elimination. Floating-point pivots within `eps` of zero are treated as
   singular; exact fields use equality with zero.
 - `det_bareiss(a)` returns the exact determinant of an integer matrix `a` using fraction-free
-  elimination, with no rounding error. Stored entries are minors of `a`, but the products in each
-  update can be larger. They use 128-bit intermediates when available; otherwise those products must
-  fit in `int64_t`.
+  elimination, with no rounding error.
 - `inverse(a, eps = 1e-10)` returns the inverse of square matrix `a` with floating-point or
   exact-field elements, or `std::nullopt` if the matrix is singular. Floating-point pivots within
   `eps` of zero are treated as singular.
+
+Overflow warning: In `det_bareiss()`, stored entries are minors of `a`, but the products in each
+update can be larger. They use 128-bit intermediates when available; otherwise those products must
+fit in `int64_t`.
 
 Time Complexity:
 - O(n!) per call to `det_naive()`, where $n$ is the dimension of the matrix.
@@ -53,7 +55,7 @@ auto det_naive(const SquareMatrix &a) {
   using T = std::decay_t<decltype(a[0][0])>;
   int n = static_cast<int>(a.size());
   if (n == 0) {
-    return T(1);
+    return T{1};
   }
   if (n == 1) {
     return a[0][0];
@@ -96,7 +98,7 @@ int elimination_pivot(const SquareMatrix &a, int row, int col, double eps) {
     return std::fabs(a[pivot][col]) < eps ? -1 : pivot;
   }
   for (int r = row; r < n; r++) {
-    if (a[r][col] != T(0)) {
+    if (a[r][col] != T{0}) {
       return r;
     }
   }
@@ -112,11 +114,11 @@ auto det(const SquareMatrix &a, double eps = 1e-10) {
   for (int i = 0; i < n; i++) {
     int p = elimination_pivot(b, i, i, eps);
     if (p == -1) {
-      return T(0);
+      return T{0};
     }
     if (p != i) {
       std::swap(b[p], b[i]);
-      res = T(0) - res;
+      res = T{0} - res;
     }
     res *= b[i][i];
     for (int j = i + 1; j < n; j++) {
@@ -207,7 +209,7 @@ using namespace std;
 int main() {
   vector<vector<double>> a{{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
   int n = static_cast<int>(a.size());
-  vector<vector<double>> res(n, vector<double>(n, 0));
+  vector<vector<double>> res(n, vector<double>(n));
   assert(fabs(det(a) - det_naive(a)) < 1e-10);
 
   // Bareiss gives the determinant of an integer matrix exactly, with no rounding.

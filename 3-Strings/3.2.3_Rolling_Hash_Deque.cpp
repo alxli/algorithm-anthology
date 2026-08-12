@@ -92,7 +92,7 @@ class HashDeque {
   uint64_t top1 = INV1, top2 = INV2;  // B^(len-1), or B^-1 while empty.
 
  public:
-  explicit HashDeque(Hash hasher = Hash()) : hasher(hasher) {}
+  explicit HashDeque(Hash hasher = Hash{}) : hasher(hasher) {}
 
   int size() const { return static_cast<int>(digits.size()); }
   bool empty() const { return digits.empty(); }

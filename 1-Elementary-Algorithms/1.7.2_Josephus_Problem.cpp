@@ -11,7 +11,7 @@ $\lfloor n/k \rfloor$ people; recursively solving the compressed circle and undo
 index shift reduces the running time to O(k log n). To recover the full elimination order, a Fenwick
 tree stores which labels remain and selects each next victim by rank.
 
-- `josephus(n, k)` returns the zero-based label of the survivor, where `n` and `k` must be positive.
+- `josephus(n, k)` returns the 0-based label of the survivor, where `n` and `k` must be positive.
 - `josephus_small_k(n, k)` returns the same survivor using the batched recurrence. It is preferable
   when $k$ is small relative to $n$.
 - `josephus_order(n, k)` returns all labels in elimination order, ending with the survivor.

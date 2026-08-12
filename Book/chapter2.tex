@@ -4,7 +4,7 @@
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Singly Linked List}
-Implements common singly linked list operations using raw nodes. Linked lists are rarely the best contest choice compared with arrays, vectors, and \inlinecode{std::list}, but the pointer patterns are useful for interview-style problems and for understanding constant-time splicing.
+Implements common singly linked list operations using raw nodes. Manual linked list implementations are rarely the best practical choice over arrays, vectors, or \inlinecode{std::list}, but the pointer patterns are useful for interview-style problems and understanding constant-time splicing.
 
 For production C++, prefer containers such as \inlinecode{std::list}, \inlinecode{std::forward\_list}, or \inlinecode{std::vector} when they fit the problem. Use the raw-node style below when the problem statement already gives nodes, or when manual pointer manipulation is the point of the exercise.
 
@@ -460,10 +460,10 @@ class BinaryHeap {
   }
 
  public:
-  explicit BinaryHeap(Compare comp = Compare()) : comp(std::move(comp)) {}
+  explicit BinaryHeap(Compare comp = Compare{}) : comp(std::move(comp)) {}
 
   template<typename It>
-  BinaryHeap(It lo, It hi, Compare comp = Compare()) : heap(lo, hi), comp(std::move(comp)) {
+  BinaryHeap(It lo, It hi, Compare comp = Compare{}) : heap(lo, hi), comp(std::move(comp)) {
     for (int i = static_cast<int>(heap.size()) / 2 - 1; i >= 0; i--) {
       sift_down(i);
     }
@@ -604,11 +604,11 @@ class LeftistHeap {
   }
 
  public:
-  explicit LeftistHeap(Compare comp = Compare())
+  explicit LeftistHeap(Compare comp = Compare{})
       : root(nullptr), num_nodes(0), comp(std::move(comp)) {}
 
   template<typename It>
-  LeftistHeap(It lo, It hi, Compare comp = Compare())
+  LeftistHeap(It lo, It hi, Compare comp = Compare{})
       : root(nullptr), num_nodes(0), comp(std::move(comp)) {
     while (lo != hi) {
       push(*(lo++));
@@ -750,11 +750,11 @@ class SkewHeap {
   }
 
  public:
-  explicit SkewHeap(Compare comp = Compare())
+  explicit SkewHeap(Compare comp = Compare{})
       : root(nullptr), num_nodes(0), comp(std::move(comp)) {}
 
   template<typename It>
-  SkewHeap(It lo, It hi, Compare comp = Compare())
+  SkewHeap(It lo, It hi, Compare comp = Compare{})
       : root(nullptr), num_nodes(0), comp(std::move(comp)) {
     while (lo != hi) {
       push(*(lo++));
@@ -938,11 +938,11 @@ class PairingHeap {
   }
 
  public:
-  explicit PairingHeap(Compare comp = Compare())
+  explicit PairingHeap(Compare comp = Compare{})
       : root(nullptr), num_nodes(0), comp(std::move(comp)) {}
 
   template<typename It>
-  PairingHeap(It lo, It hi, Compare comp = Compare())
+  PairingHeap(It lo, It hi, Compare comp = Compare{})
       : root(nullptr), num_nodes(0), comp(std::move(comp)) {
     while (lo != hi) {
       push(*(lo++));
@@ -1192,7 +1192,7 @@ class Treap {
   }
 
  public:
-  explicit Treap(Compare comp = Compare()) : root(nullptr), num_nodes(0), comp(std::move(comp)) {}
+  explicit Treap(Compare comp = Compare{}) : root(nullptr), num_nodes(0), comp(std::move(comp)) {}
 
   ~Treap() { clean_up(root); }
   Treap(const Treap &) = delete;
@@ -1496,7 +1496,7 @@ class AVLTree {
   }
 
  public:
-  explicit AVLTree(Compare comp = Compare()) : root(nullptr), num_nodes(0), comp(std::move(comp)) {}
+  explicit AVLTree(Compare comp = Compare{}) : root(nullptr), num_nodes(0), comp(std::move(comp)) {}
 
   ~AVLTree() { clean_up(root); }
   AVLTree(const AVLTree &) = delete;
@@ -1790,8 +1790,8 @@ class RedBlackTree {
   }
 
  public:
-  explicit RedBlackTree(Compare comp = Compare()) : num_nodes(0), comp(std::move(comp)) {
-    root = LEAF_NIL = new Node(K(), V(), BLACK);
+  explicit RedBlackTree(Compare comp = Compare{}) : num_nodes(0), comp(std::move(comp)) {
+    root = LEAF_NIL = new Node(K{}, V{}, BLACK);
     LEAF_NIL->left = LEAF_NIL->right = LEAF_NIL;
   }
 
@@ -2107,7 +2107,7 @@ class SplayTree {
   }
 
  public:
-  explicit SplayTree(Compare comp = Compare())
+  explicit SplayTree(Compare comp = Compare{})
       : root(nullptr), num_nodes(0), comp(std::move(comp)) {}
 
   ~SplayTree() { clean_up(root); }
@@ -2358,7 +2358,7 @@ class SBTree {
   }
 
  public:
-  explicit SBTree(Compare comp = Compare()) : root(nullptr), comp(std::move(comp)) {}
+  explicit SBTree(Compare comp = Compare{}) : root(nullptr), comp(std::move(comp)) {}
 
   ~SBTree() { clean_up(root); }
   SBTree(const SBTree &) = delete;
@@ -2787,7 +2787,7 @@ class ChainingHashMap {
   void grow_and_rehash() {
     auto old = std::move(table);
     table_size = 2 * table_size;
-    table.assign(table_size, std::list<HashNode>());
+    table.assign(table_size, std::list<HashNode>{});
     for (auto &chain : old) {
       while (!chain.empty()) {
         auto it = chain.begin();
@@ -2798,7 +2798,7 @@ class ChainingHashMap {
   }
 
  public:
-  explicit ChainingHashMap(int buckets = 128, Hash hash = Hash(), KeyEqual equal = KeyEqual())
+  explicit ChainingHashMap(int buckets = 128, Hash hash = Hash{}, KeyEqual equal = KeyEqual{})
       : table_size(buckets), num_entries(0), hash(std::move(hash)), equal(std::move(equal)) {
     assert(buckets > 0);
     table.resize(buckets);
@@ -2854,7 +2854,7 @@ class ChainingHashMap {
       grow_and_rehash();
     }
     int i = bucket(k);
-    table[i].emplace_back(k, V());
+    table[i].emplace_back(k, V{});
     num_entries++;
     return table[i].back().value;
   }
@@ -2887,8 +2887,8 @@ struct Hasher {
   inline static const uint64_t RAND_SEED = chrono::steady_clock::now().time_since_epoch().count();
 
   // Signed -> unsigned delegates.
-  uint32_t operator()(int k) const { return Hasher()(static_cast<uint32_t>(k)); }
-  uint32_t operator()(int64_t k) const { return Hasher()(static_cast<uint64_t>(k)); }
+  uint32_t operator()(int k) const { return Hasher{}(static_cast<uint32_t>(k)); }
+  uint32_t operator()(int64_t k) const { return Hasher{}(static_cast<uint64_t>(k)); }
 
   // Knuth's multiplicative method. Fast, but affine: an additive RAND_SEED only shifts all buckets
   // uniformly and won't stop crafted collisions (unlike the non-linear hashers below). To harden
@@ -2925,7 +2925,7 @@ struct AbsHash {
 };
 
 struct AbsEqual {
-  bool operator()(int a, int b) const { return AbsHash()(a) == AbsHash()(b); }
+  bool operator()(int a, int b) const { return AbsHash{}(a) == AbsHash{}(b); }
 };
 
 int main() {
@@ -2963,7 +2963,7 @@ int main() {
   defaults["answer"] = 42;
   assert(*defaults.find("answer") == 42);
 
-  ChainingHashMap<int, char, AbsHash, AbsEqual> absolute(128, AbsHash(7), AbsEqual());
+  ChainingHashMap<int, char, AbsHash, AbsEqual> absolute(128, AbsHash(7), AbsEqual{});
   assert(absolute.insert(-2, 'x'));
   assert(!absolute.insert(2, 'y') && *absolute.find(2) == 'x');
   return 0;
@@ -3044,8 +3044,7 @@ class ProbingHashMap {
 
   int next_bucket(int i, int probes) const {
     return (i + 1) % table_size;  // Linear probing.
-
-    // Quadratic probing for power-of-two table sizes (cumulative offsets 1, 3, 6, 10, ...):
+    // Or use quadratic probing (cumulative offsets 1, 3, 6, 10, ...) for power-of-2 table sizes.
     // return (i + probes + 1) & (table_size - 1);
   }
 
@@ -3072,7 +3071,7 @@ class ProbingHashMap {
   }
 
  public:
-  explicit ProbingHashMap(int buckets = 128, Hash hash = Hash(), KeyEqual equal = KeyEqual())
+  explicit ProbingHashMap(int buckets = 128, Hash hash = Hash{}, KeyEqual equal = KeyEqual{})
       : table_size(buckets),
         num_entries(0),
         num_tombstones(0),
@@ -3167,7 +3166,7 @@ class ProbingHashMap {
         }
       } else if (state[i] == State::EMPTY) {
         int dest = first_deleted == table_size ? i : first_deleted;
-        table[dest].emplace(k, V());
+        table[dest].emplace(k, V{});
         if (state[dest] == State::DELETED) {
           num_tombstones--;
         }
@@ -3209,8 +3208,8 @@ struct Hasher {
   inline static const uint64_t RAND_SEED = chrono::steady_clock::now().time_since_epoch().count();
 
   // Signed -> unsigned delegates.
-  uint32_t operator()(int k) const { return Hasher()(static_cast<uint32_t>(k)); }
-  uint32_t operator()(int64_t k) const { return Hasher()(static_cast<uint64_t>(k)); }
+  uint32_t operator()(int k) const { return Hasher{}(static_cast<uint32_t>(k)); }
+  uint32_t operator()(int64_t k) const { return Hasher{}(static_cast<uint64_t>(k)); }
 
   // Knuth's multiplicative method. Fast, but affine: an additive RAND_SEED only shifts all buckets
   // uniformly and won't stop crafted collisions (unlike the non-linear hashers below). To harden
@@ -3247,7 +3246,7 @@ struct AbsHash {
 };
 
 struct AbsEqual {
-  bool operator()(int a, int b) const { return AbsHash()(a) == AbsHash()(b); }
+  bool operator()(int a, int b) const { return AbsHash{}(a) == AbsHash{}(b); }
 };
 
 int main() {
@@ -3285,7 +3284,7 @@ int main() {
   defaults["answer"] = 42;
   assert(*defaults.find("answer") == 42);
 
-  ProbingHashMap<int, char, AbsHash, AbsEqual> absolute(128, AbsHash(7), AbsEqual());
+  ProbingHashMap<int, char, AbsHash, AbsEqual> absolute(128, AbsHash(7), AbsEqual{});
   assert(absolute.insert(-2, 'x'));
   assert(!absolute.insert(2, 'y') && *absolute.find(2) == 'x');
   return 0;
@@ -3375,8 +3374,8 @@ class SkipList {
   }
 
  public:
-  explicit SkipList(Compare comp = Compare())
-      : head(new Node(K(), V(), MAX_LEVELS)), num_nodes(0), comp(std::move(comp)) {
+  explicit SkipList(Compare comp = Compare{})
+      : head(new Node(K{}, V{}, MAX_LEVELS)), num_nodes(0), comp(std::move(comp)) {
     for (auto &ptr : head->next) {
       ptr = nullptr;
     }
@@ -3456,7 +3455,7 @@ class SkipList {
     if (n != nullptr) {
       return n->value;
     }
-    insert(k, V());
+    insert(k, V{});
     return find_node(k)->value;
   }
 
@@ -3713,7 +3712,7 @@ The query operation is defined by an associative aggregate function \inlinecode{
 The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at a single updated index. The default definition below supports updates that ``set'' the chosen array index to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return \inlinecode{v + d}.
 
 \begin{compactitem}
-  \item \inlinecode{SqrtDecomposition\textless{}T\textgreater{}(n, v = T())} constructs an array of size \inlinecode{n} with indices $[0, {\inlinecodemath{n}})$, and all values initialized to \inlinecode{v}.
+  \item \inlinecode{SqrtDecomposition\textless{}T\textgreater{}(n, v = T\{\})} constructs an array of size \inlinecode{n} with indices $[0, {\inlinecodemath{n}})$, and all values initialized to \inlinecode{v}.
   \item \inlinecode{SqrtDecomposition\textless{}T\textgreater{}(lo, hi)} constructs an array from the half-open random-access iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
@@ -3766,7 +3765,7 @@ class SqrtDecomposition {
   }
 
  public:
-  explicit SqrtDecomposition(int n, const T &v = T()) : len(n), value(n, v) { init(); }
+  explicit SqrtDecomposition(int n, const T &v = T{}) : len(n), value(n, v) { init(); }
 
   template<typename It>
   SqrtDecomposition(It lo, It hi) : len(hi - lo), value(lo, hi) {
@@ -3895,7 +3894,7 @@ using namespace std;
 int main() {
   // Answer "number of distinct values in [l, r]" for several ranges.
   vector<int> a{1, 1, 2, 1, 3, 2, 3};
-  vector<int> freq(4, 0);
+  vector<int> freq(4);
   int distinct = 0;
   auto add = [&](int i) {
     if (freq[a[i]]++ == 0) distinct++;
@@ -3919,7 +3918,7 @@ The query operation is defined by an associative aggregate function \inlinecode{
 The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at a single updated index. The default definition below supports updates that ``set'' the chosen array index to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return \inlinecode{v + d}.
 
 \begin{compactitem}
-  \item \inlinecode{SegTree\textless{}T\textgreater{}(n, v = T())} constructs an array of size \inlinecode{n} with indices $[0, {\inlinecodemath{n}})$, and all values initialized to \inlinecode{v}.
+  \item \inlinecode{SegTree\textless{}T\textgreater{}(n, v = T\{\})} constructs an array of size \inlinecode{n} with indices $[0, {\inlinecodemath{n}})$, and all values initialized to \inlinecode{v}.
   \item \inlinecode{SegTree\textless{}T\textgreater{}(lo, hi)} constructs an array from the half-open random-access iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
@@ -4045,7 +4044,7 @@ class SegTree {
   }
 
  public:
-  explicit SegTree(int n, const T &v = T()) : len(n) {
+  explicit SegTree(int n, const T &v = T{}) : len(n) {
     assert(len > 0);
     value.assign(4 * len, v);
     build(0, 0, len - 1, [&](int) { return v; });
@@ -4123,7 +4122,7 @@ The query operation is defined by an associative aggregate function \inlinecode{
 Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
 \begin{compactitem}
-  \item \inlinecode{LazySegTree\textless{}T\textgreater{}(n, v = T())} constructs an array of size \inlinecode{n} with indices $[0, {\inlinecodemath{n}})$, and all values initialized to \inlinecode{v}.
+  \item \inlinecode{LazySegTree\textless{}T\textgreater{}(n, v = T\{\})} constructs an array of size \inlinecode{n} with indices $[0, {\inlinecodemath{n}})$, and all values initialized to \inlinecode{v}.
   \item \inlinecode{LazySegTree\textless{}T\textgreater{}(lo, hi)} constructs an array from the half-open random-access iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
@@ -4271,7 +4270,7 @@ class LazySegTree {
   }
 
  public:
-  explicit LazySegTree(int n, const T &v = T()) : len(n), pending(4 * len, false) {
+  explicit LazySegTree(int n, const T &v = T{}) : len(n), pending(4 * len, false) {
     assert(len > 0);
     value.assign(4 * len, v);
     delta.assign(4 * len, v);
@@ -4362,7 +4361,7 @@ The query operation is defined by an associative aggregate function \inlinecode{
 The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at a single updated index. The default definition below supports updates that ``set'' the chosen array index to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return \inlinecode{v + d}.
 
 \begin{compactitem}
-  \item \inlinecode{IterativeSegTree\textless{}T\textgreater{}(n, v = T())} constructs an array of size \inlinecode{n} with indices $[0, {\inlinecodemath{n}})$, and all values initialized to \inlinecode{v}.
+  \item \inlinecode{IterativeSegTree\textless{}T\textgreater{}(n, v = T\{\})} constructs an array of size \inlinecode{n} with indices $[0, {\inlinecodemath{n}})$, and all values initialized to \inlinecode{v}.
   \item \inlinecode{IterativeSegTree\textless{}T\textgreater{}(lo, hi)} constructs an array from the half-open random-access iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
@@ -4421,7 +4420,7 @@ class IterativeSegTree {
   }
 
  public:
-  explicit IterativeSegTree(int n, const T &v = T()) : len(n) {
+  explicit IterativeSegTree(int n, const T &v = T{}) : len(n) {
     assert(len > 0);
     build([&](int) { return v; });
   }
@@ -4546,7 +4545,7 @@ The query operation is defined by an associative aggregate function \inlinecode{
 Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
 \begin{compactitem}
-  \item \inlinecode{IterativeLazySegTree\textless{}T\textgreater{}(n, v = T())} constructs an array of size \inlinecode{n} with indices $[0, {\inlinecodemath{n}})$, and all values initialized to \inlinecode{v}.
+  \item \inlinecode{IterativeLazySegTree\textless{}T\textgreater{}(n, v = T\{\})} constructs an array of size \inlinecode{n} with indices $[0, {\inlinecodemath{n}})$, and all values initialized to \inlinecode{v}.
   \item \inlinecode{IterativeLazySegTree\textless{}T\textgreater{}(lo, hi)} constructs an array from the half-open random-access iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
@@ -4643,7 +4642,7 @@ class IterativeLazySegTree {
   }
 
  public:
-  explicit IterativeLazySegTree(int n, const T &v = T()) : len(n) {
+  explicit IterativeLazySegTree(int n, const T &v = T{}) : len(n) {
     assert(len > 0);
     build([&](int) { return v; });
   }
@@ -4813,7 +4812,7 @@ Maintain a fixed-size array under the range ``chmin'' update \inlinecode{a[i] = 
 The break condition is what makes this efficient: a potential-function argument on the number of distinct values along root-to-leaf paths shows the total work over any sequence of clamps is amortized $O(\log^{2} n)$ each, even though a single clamp can momentarily descend deep. The same scheme extends to range ``chmax'' by tracking the symmetric minimum trio, and to mixed clamp-and-add workloads by carrying an additional add tag; only the chmin / sum / max core is shown here. Unlike the generic lazy segment tree, this structure cannot be reduced to a pluggable \inlinecode{combine} and \inlinecode{apply}, because a clamp acts on only the maximal entries of a node rather than uniformly on all of them, so each operation set must be hand-written and its amortized bound argued separately.
 
 \begin{compactitem}
-  \item \inlinecode{SegTreeBeats\textless{}T\textgreater{}(n, v = T())} constructs an array of size \inlinecode{n}, indices $[0, {\inlinecodemath{n}})$, all equal to \inlinecode{v}.
+  \item \inlinecode{SegTreeBeats\textless{}T\textgreater{}(n, v = T\{\})} constructs an array of size \inlinecode{n}, indices $[0, {\inlinecodemath{n}})$, all equal to \inlinecode{v}.
   \item \inlinecode{SegTreeBeats\textless{}T\textgreater{}(lo, hi)} constructs an array from the half-open random-access iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{chmin(lo, hi, t)} replaces \inlinecode{a[i]} with \inlinecode{min(a[i], t)} for every \inlinecode{i} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
@@ -4944,7 +4943,7 @@ class SegTreeBeats {
   }
 
  public:
-  explicit SegTreeBeats(int n, const T &v = T())
+  explicit SegTreeBeats(int n, const T &v = T{})
       : len(n), max1(4 * n), max2(4 * n), sum(4 * n), cnt(4 * n) {
     assert(len > 0);
     build(0, 0, len - 1, [&](int) { return v; });
@@ -5035,7 +5034,7 @@ The query operation is defined by an associative aggregate function \inlinecode{
 Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
 \begin{compactitem}
-  \item \inlinecode{SparseSegTree\textless{}T, N\textgreater{}(v = T())} constructs an array over indices $[0, {\inlinecodemath{N}})$, with every value implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
+  \item \inlinecode{SparseSegTree\textless{}T, N\textgreater{}(v = T\{\})} constructs an array over indices $[0, {\inlinecodemath{N}})$, with every value implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} must be in $[0, {\inlinecodemath{N}})$.
   \item \inlinecode{query(lo, hi)} returns the aggregate of the values at indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$. If \inlinecode{lo == hi}, then the single specified value is returned.
   \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{apply\_delta(v, d)}.
@@ -5214,7 +5213,7 @@ class SparseSegTree {
   }
 
  public:
-  explicit SparseSegTree(const T &v = T()) : root(nullptr), init(v) {}
+  explicit SparseSegTree(const T &v = T{}) : root(nullptr), init(v) {}
 
   ~SparseSegTree() { clean_up(root); }
   SparseSegTree(const SparseSegTree &) = delete;
@@ -5297,7 +5296,7 @@ The query operation is defined by an associative aggregate function \inlinecode{
 The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at a single updated index. The default definition below supports updates that ``set'' the chosen array index to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return \inlinecode{v + d}.
 
 \begin{compactitem}
-  \item \inlinecode{PersistentSegTree\textless{}T\textgreater{}(n, v = T())} constructs version $0$ of an array of size \inlinecode{n} with indices $[0, {\inlinecodemath{n}})$, and all values initialized to \inlinecode{v}.
+  \item \inlinecode{PersistentSegTree\textless{}T\textgreater{}(n, v = T\{\})} constructs version $0$ of an array of size \inlinecode{n} with indices $[0, {\inlinecodemath{n}})$, and all values initialized to \inlinecode{v}.
   \item \inlinecode{PersistentSegTree\textless{}T\textgreater{}(lo, hi)} constructs version $0$ from the half-open random-access iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the size of every version of the array.
   \item \inlinecode{versions()} returns the number of stored versions. Versions are numbered starting from $0$.
@@ -5376,13 +5375,13 @@ class PersistentSegTree {
     return query(nodes[i].right, mid + 1, hi, tgt_lo, tgt_hi);
   }
 
-  int update(int cur, int lo, int hi, int target, const T &d) {
+  int update(int i, int lo, int hi, int target, const T &d) {
     if (lo == hi) {
-      nodes.emplace_back(apply_delta(nodes[cur].value, d));
+      nodes.emplace_back(apply_delta(nodes[i].value, d));
       return static_cast<int>(nodes.size()) - 1;
     }
     int mid = lo + (hi - lo) / 2;
-    int left = nodes[cur].left, right = nodes[cur].right;
+    int left = nodes[i].left, right = nodes[i].right;
     if (target <= mid) {
       left = update(left, lo, mid, target, d);
     } else {
@@ -5393,7 +5392,7 @@ class PersistentSegTree {
   }
 
  public:
-  explicit PersistentSegTree(int n, const T &v = T()) : len(n) {
+  explicit PersistentSegTree(int n, const T &v = T{}) : len(n) {
     assert(len > 0);
     roots.push_back(build(0, len - 1, [&](int) { return v; }));
   }
@@ -5722,7 +5721,7 @@ struct CartesianTree {
   std::vector<int> parent, left, right;
 
   template<typename T, typename Compare = std::less<>>
-  explicit CartesianTree(const std::vector<T> &a, Compare comp = Compare())
+  explicit CartesianTree(const std::vector<T> &a, Compare comp = Compare{})
       : root(-1), parent(a.size(), -1), left(a.size(), -1), right(a.size(), -1) {
     std::vector<int> st;
     for (int i = 0, n = static_cast<int>(a.size()); i < n; i++) {
@@ -5794,7 +5793,7 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies
 Range reversal is also propagated lazily. Since \inlinecode{combine()} may be order-sensitive, each node stores the aggregate of its subtree in both forward and reverse order. Reversing a subtree then swaps its children and these two aggregates before marking its descendants for later reversal.
 
 \begin{compactitem}
-  \item \inlinecode{ImplicitTreap\textless{}T\textgreater{}(n = 0, v = T())} constructs an array of size \inlinecode{n} with indices $[0, {\inlinecodemath{n}})$, with all values initialized to \inlinecode{v}.
+  \item \inlinecode{ImplicitTreap\textless{}T\textgreater{}(n = 0, v = T\{\})} constructs an array of size \inlinecode{n} with indices $[0, {\inlinecodemath{n}})$, with all values initialized to \inlinecode{v}.
   \item \inlinecode{ImplicitTreap\textless{}T\textgreater{}(lo, hi)} constructs an array from the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{empty()} returns whether the array is empty.
@@ -5999,7 +5998,7 @@ class ImplicitTreap {
   }
 
  public:
-  explicit ImplicitTreap(int n = 0, const T &v = T()) : root(nullptr) {
+  explicit ImplicitTreap(int n = 0, const T &v = T{}) : root(nullptr) {
     assert(n >= 0);
     for (int i = 0; i < n; i++) {
       push_back(v);
@@ -6142,7 +6141,7 @@ Point updates are defined by \inlinecode{apply\_delta(v, d)}, which applies delt
 Use this when the grid is small enough for $O(R \cdot C)$ storage and queries need an aggregate other than addition. For additive rectangle sums, a 2D Fenwick tree is simpler and has smaller constants. Use the sparse 2D segment tree in the next section when the coordinate range is too large to allocate dense storage.
 
 \begin{compactitem}
-  \item \inlinecode{SegTree2D\textless{}T\textgreater{}(rows, cols, v = T())} constructs a \inlinecode{rows} by \inlinecode{cols} array with 0-based indices, with all entries initialized to \inlinecode{v}.
+  \item \inlinecode{SegTree2D\textless{}T\textgreater{}(rows, cols, v = T\{\})} constructs a \inlinecode{rows} by \inlinecode{cols} array with 0-based indices, with all entries initialized to \inlinecode{v}.
   \item \inlinecode{SegTree2D\textless{}T\textgreater{}(a)} constructs the tree from the matrix \inlinecode{a}.
   \item \inlinecode{num\_rows()} and \inlinecode{num\_cols()} return the dimensions of the array.
   \item \inlinecode{update(r, c, d)} applies delta \inlinecode{d} to the entry at index (\inlinecode{r}, \inlinecode{c}).
@@ -6213,7 +6212,7 @@ class SegTree2D {
   }
 
  public:
-  SegTree2D(int rows, int cols, const T &v = T()) : rows(rows), cols(cols) {
+  SegTree2D(int rows, int cols, const T &v = T{}) : rows(rows), cols(cols) {
     assert(rows > 0 && cols > 0);
     build([&](int, int) { return v; });
   }
@@ -6298,7 +6297,7 @@ Rows and columns are split independently, so every rectangle query decomposes in
 Use the dense 2D segment tree in the previous section when the grid is modest enough for $O(R \cdot C)$ storage; it is simpler and faster. Use this sparse version when the coordinate range is huge but only a small fraction of cells are updated. For dense additive rectangle sums, prefer the 2D Fenwick tree in 2.6.5.
 
 \begin{compactitem}
-  \item \inlinecode{SparseSegTree2D\textless{}T, R, C\textgreater{}(v = T())} constructs a two-dimensional array over rows $[0, {\inlinecodemath{R}})$ and columns $[0, {\inlinecodemath{C}})$. All array values are implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
+  \item \inlinecode{SparseSegTree2D\textless{}T, R, C\textgreater{}(v = T\{\})} constructs a two-dimensional array over rows $[0, {\inlinecodemath{R}})$ and columns $[0, {\inlinecodemath{C}})$. All array values are implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
   \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
   \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{combine()} applied to every value in the rectangular region consisting of rows in $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns in $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
   \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{apply\_delta(v, d)}.
@@ -6480,7 +6479,7 @@ class SparseSegTree2D {
   }
 
  public:
-  explicit SparseSegTree2D(const T &v = T())
+  explicit SparseSegTree2D(const T &v = T{})
       : root(new OuterNode(0, R - 1, combine_n(v, int64_t{R} * C))), init(v) {}
 
   ~SparseSegTree2D() { clean_up(root); }
@@ -6812,7 +6811,7 @@ int main() {
 \subsection{K-d Tree for Nearest Neighbor}
 Maintain a static set of two-dimensional points while supporting nearest-neighbor queries. A k-d tree recursively splits points by the coordinate with larger spread, searches the more promising side first, and only explores the other side when its splitting plane can still improve the answer.
 
-This implementation uses \inlinecode{std::pair} to represent points, requiring \inlinecode{operator\textless{}} and \inlinecode{long double} casting to be defined on the numeric template type.
+This implementation uses \inlinecode{std::pair} to represent points. The numeric template type must support \inlinecode{operator\textless{}} and conversion to \inlinecode{int64\_t} for integral types or \inlinecode{long double} otherwise.
 
 Use this for static nearest-neighbor queries on point sets in low dimensions. It is a geometric search tree rather than an aggregate structure: for rectangle reporting use the range k-d tree or 2D range tree, and for grid cell updates or rectangle sums/minima use a Fenwick tree or segment tree.
 
@@ -6820,6 +6819,8 @@ Use this for static nearest-neighbor queries on point sets in low dimensions. It
   \item \inlinecode{NearestKDTree\textless{}T\textgreater{}(lo, hi)} constructs a set of \inlinecode{std::pair} points from the half-open forward-iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{nearest(x, y, can\_equal = true)} returns a point in the set that is closest to (\inlinecode{x}, \inlinecode{y}) by Euclidean distance. This may be equal to (\inlinecode{x}, \inlinecode{y}) only if \inlinecode{can\_equal} is \inlinecode{true}; at least one eligible point must exist.
 \end{compactitem}
+
+Overflow warning: For integral coordinate types, every coordinate difference, squared difference, and sum of squared differences must fit in \inlinecode{int64\_t}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -6838,13 +6839,16 @@ Use this for static nearest-neighbor queries on point sets in low dimensions. It
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <cfloat>
-#include <climits>
+#include <cstdint>
+#include <limits>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 template<typename T>
 class NearestKDTree {
+  using Dist = std::conditional_t<std::is_integral_v<T>, int64_t, long double>;
+
   std::vector<std::pair<T, T>> tree;
   std::vector<char> div_x;
 
@@ -6862,8 +6866,8 @@ class NearestKDTree {
       maxx = std::max(maxx, tree[i].first);
       maxy = std::max(maxy, tree[i].second);
     }
-    long double x_span = static_cast<long double>(maxx) - minx;
-    long double y_span = static_cast<long double>(maxy) - miny;
+    Dist x_span = static_cast<Dist>(maxx) - static_cast<Dist>(minx);
+    Dist y_span = static_cast<Dist>(maxy) - static_cast<Dist>(miny);
     div_x[mid] = !(x_span < y_span);
     std::nth_element(
         tree.begin() + lo, tree.begin() + mid, tree.begin() + hi,
@@ -6886,16 +6890,16 @@ class NearestKDTree {
   }
 
   std::pair<T, T> nearest(const T &x, const T &y, bool can_equal = true) const {
-    long double best_dist = LDBL_MAX;
+    Dist best_dist = std::numeric_limits<Dist>::max();
     int best = -1;
     auto rec = [&](auto &&rec, int lo, int hi) -> void {
       if (lo >= hi) {
         return;
       }
       int mid = lo + (hi - lo) / 2;
-      long double dx = static_cast<long double>(x) - tree[mid].first;
-      long double dy = static_cast<long double>(y) - tree[mid].second;
-      long double dist = dx * dx + dy * dy;
+      Dist dx = static_cast<Dist>(x) - static_cast<Dist>(tree[mid].first);
+      Dist dy = static_cast<Dist>(y) - static_cast<Dist>(tree[mid].second);
+      Dist dist = dx * dx + dy * dy;  // Overflow warning.
       if (dist < best_dist && (can_equal || dist != 0)) {
         best_dist = dist;
         best = mid;
@@ -6903,7 +6907,7 @@ class NearestKDTree {
       if (lo + 1 == hi) {
         return;
       }
-      long double axis_delta = div_x[mid] ? dx : dy;
+      Dist axis_delta = div_x[mid] ? dx : dy;
       int l1 = lo, r1 = mid, l2 = mid + 1, r2 = hi;
       if (axis_delta > 0) {
         std::swap(l1, l2);
@@ -6933,9 +6937,9 @@ int main() {
   assert(t.nearest(0, 0) == (pair<int, int>{-1, 0}));
   assert(t.nearest(-10000, 0) == (pair<int, int>{-1, 0}));
 
-  vector<pair<int, int>> extremes{{INT_MIN, 0}, {INT_MAX, 0}};
-  NearestKDTree<int> extreme_tree(extremes.begin(), extremes.end());
-  assert(extreme_tree.nearest(0, 0) == (pair<int, int>{INT_MAX, 0}));
+  vector<pair<int, int>> large{{-1000000000, 1}, {1000000000, 0}};
+  NearestKDTree<int> large_tree(large.begin(), large.end());
+  assert(large_tree.nearest(0, 0) == (pair<int, int>{1000000000, 0}));
   return 0;
 }
 \end{lstlisting}
@@ -7210,7 +7214,6 @@ class FenwickRURQ {
   explicit FenwickRURQ(int n) : len(n), t1(n + 2), t2(n + 2) {}
 
   int size() const { return len; }
-
   void add(int i, const T &x) { add(i, i, x); }
 
   void add(int lo, int hi, const T &x) {
@@ -7562,7 +7565,7 @@ class SparseFenwick2D {
   template<typename Map>
   static T get(const Map &tree, int r, int c) {
     auto it = tree.find(static_cast<int64_t>(r) * (C + 1) + c);
-    return it == tree.end() ? T() : it->second;
+    return it == tree.end() ? T{} : it->second;
   }
 
   template<typename Map>
@@ -7755,7 +7758,7 @@ class OfflineFenwick2D {
     for (int x = 1; x <= m; x++) {
       std::sort(ys[x].begin(), ys[x].end());
       ys[x].erase(std::unique(ys[x].begin(), ys[x].end()), ys[x].end());
-      tree[x].assign(ys[x].size() + 1, T());
+      tree[x].assign(ys[x].size() + 1, T{});
     }
     pending.clear();
   }
@@ -7774,7 +7777,7 @@ class OfflineFenwick2D {
 
   T sum(int r, int c) const {
     assert(built);
-    T res = T();
+    T res{};
     for (int i = row_rank(r); i > 0; i -= i & -i) {
       for (int j = col_rank(i, c); j > 0; j -= j & -j) {
         res += tree[i][j];
@@ -8976,7 +8979,7 @@ class HeavyLight {
   }
 
  public:
-  explicit HeavyLight(const std::vector<std::vector<int>> &adj, const T &v = T())
+  explicit HeavyLight(const std::vector<std::vector<int>> &adj, const T &v = T{})
       : adj(adj),
         size(adj.size()),
         parent(adj.size()),
@@ -9412,7 +9415,7 @@ The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{c
   \item \inlinecode{LinkCut\textless{}T\textgreater{}()} constructs an empty forest.
   \item \inlinecode{size()} returns the number of nodes in the forest.
   \item \inlinecode{trees()} returns the number of trees in the forest.
-  \item \inlinecode{add\_node(u, value = T())} adds a new single-node tree to the forest, labeled with the integer \inlinecode{u} and with value initialized to \inlinecode{value}.
+  \item \inlinecode{add\_node(u, value = T\{\})} adds a new single-node tree to the forest, labeled with the integer \inlinecode{u} and with value initialized to \inlinecode{value}.
   \item \inlinecode{connected(u, v)} returns whether nodes \inlinecode{u} and \inlinecode{v} are connected.
   \item \inlinecode{link(u, v)} adds an edge between the nodes \inlinecode{u} and \inlinecode{v}, both of which must exist and not be connected.
   \item \inlinecode{cut(u, v)} removes the edge between the nodes \inlinecode{u} and \inlinecode{v}, both of which must exist and be connected.
@@ -9603,7 +9606,7 @@ class LinkCut {
   int size() const { return static_cast<int>(nodes.size()); }
   int trees() const { return num_trees; }
 
-  void add_node(int u, const T &value = T()) {
+  void add_node(int u, const T &value = T{}) {
     assert(nodes.find(u) == nodes.end());
     Node *n = new Node(u, value);
     expose(n);
@@ -9758,11 +9761,11 @@ This is an advanced alternative to link/cut trees. Link/cut trees are usually si
 The aggregate operation is defined by an associative \inlinecode{combine(a, b)}. The default code below computes sums over node and edge values. For minimum queries, use \inlinecode{std::min(a, b)}. For non-commutative aggregates, store enough information in \inlinecode{T} to support reversing a path, and update \inlinecode{flip\_path()} accordingly.
 
 \begin{compactitem}
-  \item \inlinecode{TopTree(n, value = T())} constructs a forest on nodes $[0, {\inlinecodemath{n}})$ with every node value initialized to \inlinecode{value}.
+  \item \inlinecode{TopTree(n, value = T\{\})} constructs a forest on nodes $[0, {\inlinecodemath{n}})$ with every node value initialized to \inlinecode{value}.
   \item \inlinecode{size()} returns the number of nodes in the forest.
   \item \inlinecode{edges()} returns the number of edge nodes that have been created.
   \item \inlinecode{connected(u, v)} returns whether nodes \inlinecode{u} and \inlinecode{v} are in the same tree.
-  \item \inlinecode{link(u, v, value = T())} adds an edge with value \inlinecode{value} between different trees, returning its edge id or $-1$ if the edge would create a cycle.
+  \item \inlinecode{link(u, v, value = T\{\})} adds an edge with value \inlinecode{value} between different trees, returning its edge id or $-1$ if the edge would create a cycle.
   \item \inlinecode{cut(e)} removes edge id \inlinecode{e}. The edge id must currently be present.
   \item \inlinecode{set\_node(u, value)} changes node \inlinecode{u}'s value to \inlinecode{value}.
   \item \inlinecode{set\_edge(e, value)} changes edge \inlinecode{e}'s value to \inlinecode{value}. The edge id must currently be present.
@@ -10217,7 +10220,7 @@ class TopTree {
   }
 
  public:
-  explicit TopTree(int n, const T &value = T()) {
+  explicit TopTree(int n, const T &value = T{}) {
     assert(n >= 0);
     graph_nodes.reserve(n);
     for (int i = 0; i < n; i++) {
@@ -10245,7 +10248,7 @@ class TopTree {
     return u == v || maybe_lca_node(graph_nodes[u], graph_nodes[v]) != nullptr;
   }
 
-  int link(int u, int v, const T &value = T()) {
+  int link(int u, int v, const T &value = T{}) {
     assert(0 <= u && u < size());
     assert(0 <= v && v < size());
     if (connected(u, v)) {

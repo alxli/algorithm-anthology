@@ -27,7 +27,7 @@ Type aliases:
   \item \inlinecode{PointI = TPoint\textless{}int\textgreater{}}: exact integer geometry (small coordinates only; see overflow warning)
   \item \inlinecode{PointL = TPoint\textless{}long long\textgreater{}}: exact integer geometry for large coordinates
   \item \inlinecode{PointD = TPoint\textless{}double\textgreater{}}: standard floating-point
-  \item \inlinecode{PointLD = TPoint\textless{}long double\textgreater{}}: extra precision
+  \item \inlinecode{PointLD = TPoint\textless{}long double\textgreater{}}: extra precision (where supported)
   \item \inlinecode{Point = PointD}: default point type is double
 \end{compactitem}
 
@@ -123,7 +123,7 @@ struct TPoint {
   TPoint<fp_t> normalize() const {
     fp_t n = norm();
     if (n < static_cast<fp_t>(1e-30)) {  // guard against dividing by a near-zero norm, not a
-      return {fp_t(0), fp_t(0)};         // geometric tolerance (EPS is too coarse here)
+      return {fp_t{0}, fp_t{0}};         // geometric tolerance (EPS is too coarse here)
     }
     return {static_cast<fp_t>(x) / n, static_cast<fp_t>(y) / n};
   }
@@ -303,7 +303,7 @@ Type aliases:
   \item \inlinecode{LineI = TLine\textless{}int\textgreater{}}: exact integer-coefficient lines (small values only; see overflow warning)
   \item \inlinecode{LineL = TLine\textless{}int64\_t\textgreater{}}: exact integer-coefficient lines for large coordinates
   \item \inlinecode{LineD = TLine\textless{}double\textgreater{}}: standard floating-point
-  \item \inlinecode{LineLD = TLine\textless{}long double\textgreater{}}: extra precision
+  \item \inlinecode{LineLD = TLine\textless{}long double\textgreater{}}: extra precision (where supported)
   \item \inlinecode{Line = LineD}: default line type is double
 \end{compactitem}
 
@@ -355,9 +355,9 @@ struct TLine {
   void canonicalize() {
     if constexpr (EXACT) {
       auto gcd = [](T x, T y) {
-        if (x < T(0)) x = -x;
-        if (y < T(0)) y = -y;
-        while (y != T(0)) {
+        if (x < T{0}) x = -x;
+        if (y < T{0}) y = -y;
+        while (y != T{0}) {
           x %= y;
           std::swap(x, y);
         }
@@ -374,14 +374,14 @@ struct TLine {
         b = -b;
         c = -c;
       }
-    } else if (!EQ(b, T(0))) {
+    } else if (!EQ(b, T{0})) {
       a /= b;
       c /= b;
-      b = T(1);
-    } else if (!EQ(a, T(0))) {
+      b = T{1};
+    } else if (!EQ(a, T{0})) {
       c /= a;
-      a = T(1);
-      b = T(0);
+      a = T{1};
+      b = T{0};
     }
   }
 
@@ -458,8 +458,11 @@ struct TLine {
   }
 
   friend std::ostream &operator<<(std::ostream &out, const TLine &l) {
-    auto clean = [](T v) -> double {
-      return fabs(static_cast<double>(v)) < EPS ? 0 : static_cast<double>(v);
+    auto clean = [](T v) {
+      if constexpr (std::is_floating_point_v<T>) {
+        return std::fabs(v) < EPS ? T{0} : v;
+      }
+      return v;
     };
     auto flags = out.flags();
     out << clean(l.a) << "x" << std::showpos << clean(l.b) << "y" << clean(l.c) << "=0";
@@ -701,8 +704,8 @@ int in_circumcircle(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
           (bdx * bdx + bdy * bdy) * (cdx * ady - adx * cdy) +
           (cdx * cdx + cdy * cdy) * (adx * bdy - bdx * ady);
   W orient = ((W)b.x - a.x) * ((W)c.y - a.y) - ((W)b.y - a.y) * ((W)c.x - a.x);
-  W val = W(0) < orient ? det : -det;
-  return EQ(val, W(0)) ? 0 : (W(0) < val ? 1 : -1);
+  W val = W{0} < orient ? det : -det;
+  return EQ(val, W{0}) ? 0 : (W{0} < val ? 1 : -1);
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -877,7 +880,9 @@ Common axis-aligned rectangle calculations in two dimensions. The functions are 
   \item \inlinecode{rectangle\_intersection(a1, b1, a2, b2, \&p, \&q, include\_boundary = true)} finds the intersection of two axis-aligned rectangles, where \inlinecode{a1}/\inlinecode{b1} and \inlinecode{a2}/\inlinecode{b2} are opposite-corner pairs. Returns $-1$ if the rectangles are disjoint, $0$ if they partially intersect, $1$ if the first rectangle is completely inside the second, and $2$ if the second rectangle is completely inside the first. If an intersection exists, its lower-left and upper-right corners are stored in \inlinecode{p} and \inlinecode{q} when those pointers are non-null. The \inlinecode{include\_boundary} flag controls whether boundary-only contact counts as intersecting.
 \end{compactitem}
 
-For integer-coordinate inputs, comparisons are exact as long as intermediate coordinate additions, subtractions, and min/max values do not overflow. Floating-point inputs use EPS-based comparisons.
+Floating-point inputs use EPS-based comparisons.
+
+Overflow warning: For integer-coordinate inputs, comparisons are exact as long as intermediate coordinate additions, subtractions, and min/max values do not overflow.
 
 \textbf{Time Complexity}: $O(1)$ per operation.
 
@@ -2061,13 +2066,13 @@ template<typename It>
 auto polygon_area_2x(It lo, It hi) {
   using T = decltype(lo->x * lo->y);
   if (lo == hi) {
-    return T(0);
+    return T{0};
   }
   T area = 0;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
     area += static_cast<T>(j->x - i->x) * static_cast<T>(j->y + i->y);  // Overflow warning.
   }
-  return area < T(0) ? -area : area;
+  return area < T{0} ? -area : area;
 }
 
 template<typename It>
@@ -2391,7 +2396,9 @@ Given a convex polygon in counter-clockwise order, answer containment and tangen
   \item \inlinecode{convex\_polygon\_tangents(poly, p)} returns the two tangent vertex indices from an outside point \inlinecode{p} as (\inlinecode{left}, \inlinecode{right}). The left tangent has all polygon vertices on or to the left of the directed line \inlinecode{p} $\to$ \inlinecode{poly[left]}; the right tangent is analogous for the right side.
 \end{compactitem}
 
-For integer-coordinate inputs, all orientation tests are exact provided the cross products do not overflow. When a line crosses two sides, their returned order is determined using a floating-point line parameter.
+When a line crosses two sides, their returned order is determined using a floating-point line parameter.
+
+Overflow warning: For integer-coordinate inputs, all orientation tests are exact provided the cross products do not overflow.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -2417,7 +2424,7 @@ auto cross(const Pt &a, const Pt &b, const Pt &o) {
 
 template<typename T>
 int sgn(const T &x) {
-  return (T(0) < x) - (x < T(0));
+  return (T{0} < x) - (x < T{0});
 }
 
 template<typename Pt>
@@ -3263,7 +3270,9 @@ Given a convex polygon and a directed line from \inlinecode{p} to \inlinecode{q}
   \item \inlinecode{convex\_cut(lo, hi, p, q)} returns the portion of the polygon lying on or to the left of the directed line from \inlinecode{p} to \inlinecode{q}. The input range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ must contain the vertices of a convex polygon in boundary order, either clockwise or counterclockwise. The returned polygon preserves that boundary order. The points \inlinecode{p} and \inlinecode{q} must differ.
 \end{compactitem}
 
-The function is templated on the input point type. Side classification is done with cross products. For integer-coordinate inputs, classification is exact only if the intermediate products do not overflow. Edge-line intersection points are computed in floating point, and the returned polygon uses \inlinecode{Point} with \inlinecode{double} coordinates.
+The function is templated on the input point type. Side classification is done with cross products. Edge-line intersection points are computed in floating point, and the returned polygon uses \inlinecode{Point} with \inlinecode{double} coordinates.
+
+Overflow warning: For integer-coordinate inputs, classification is exact only if the intermediate products do not overflow.
 
 \textbf{Time Complexity}: $O(n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 

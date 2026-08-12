@@ -418,7 +418,7 @@ int main() {
 
   SparseMatrix<int64_t> scaled = p * 3;
   assert(scaled.get(0, 0) == 3 && scaled.get(0, 1) == 6 && scaled.get(1, 1) == 3);
-  assert((p * static_cast<int64_t>(0)).nonzeros() == 0);
+  assert((p * int64_t{0}).nonzeros() == 0);
 
   SparseMatrix<int64_t> acc = p;
   acc += q;

@@ -42,8 +42,8 @@ std::pair<int64_t, std::string> matrix_chain_order(const std::vector<int> &dimen
     assert(d > 0);
   }
   int n = static_cast<int>(dimensions.size()) - 1;
-  std::vector<std::vector<int64_t>> dp(n, std::vector<int64_t>(n, 0));
-  std::vector<std::vector<int>> split(n, std::vector<int>(n, 0));
+  std::vector<std::vector<int64_t>> dp(n, std::vector<int64_t>(n));
+  std::vector<std::vector<int>> split(n, std::vector<int>(n));
   for (int length = 2; length <= n; length++) {
     for (int lo = 0; lo + length <= n; lo++) {
       int hi = lo + length - 1;
@@ -58,6 +58,7 @@ std::pair<int64_t, std::string> matrix_chain_order(const std::vector<int> &dimen
       }
     }
   }
+  // Optional: reconstruct one optimal parenthesization.
   auto rec = [&](auto &&rec, int lo, int hi) -> std::string {
     if (lo == hi) {
       return "A" + std::to_string(lo);
@@ -73,11 +74,11 @@ std::pair<int64_t, std::string> matrix_chain_order(const std::vector<int> &dimen
 using namespace std;
 
 int main() {
-  auto [operations, parenthesization] = matrix_chain_order({40, 20, 30, 10, 30});
-  assert(operations == 26000);
+  auto [ops, parenthesization] = matrix_chain_order({40, 20, 30, 10, 30});
+  assert(ops == 26000);
   assert(parenthesization == "((A0 * (A1 * A2)) * A3)");
 
-  auto [single_operations, single_parenthesization] = matrix_chain_order({3, 5});
-  assert(single_operations == 0 && single_parenthesization == "A0");
+  auto [single_ops, single_parenthesization] = matrix_chain_order({3, 5});
+  assert(single_ops == 0 && single_parenthesization == "A0");
   return 0;
 }

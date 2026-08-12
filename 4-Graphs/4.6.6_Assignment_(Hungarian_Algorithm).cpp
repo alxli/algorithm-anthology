@@ -85,6 +85,7 @@ std::pair<T, std::vector<int>> min_assignment(const std::vector<std::vector<T>> 
       j0 = j1;
     } while (j0 != 0);
   }
+  // Optional: reconstruct one optimal assignment.
   std::vector<int> assignment(n, -1);
   for (int j = 1; j <= m; j++) {
     if (p[j] != 0) {

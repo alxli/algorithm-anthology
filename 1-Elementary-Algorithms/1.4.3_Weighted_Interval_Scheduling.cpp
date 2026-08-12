@@ -15,7 +15,7 @@ if the next interval's `start` is at least the previous interval's `finish`.
   best answer using the first `i` intervals after sorting by finish time. Each interval must satisfy
   `start` < `finish`. The empty subset is allowed, so nonpositive weights need not be selected.
 
-Accumulated weights must fit in `int64_t`.
+Overflow warning: Accumulated weights must fit in `int64_t`.
 
 Time Complexity:
 - O(n log n) per call due to sorting and binary searching compatible intervals.
@@ -40,12 +40,12 @@ struct WeightedInterval {
 std::pair<int64_t, std::vector<int>> select_weighted_intervals(
     const std::vector<WeightedInterval> &intervals
 ) {
-  int n = static_cast<int>(intervals.size());
-  std::vector<int> order(n), finish(n), prev(n);
-  std::iota(order.begin(), order.end(), 0);
   for (const auto &iv : intervals) {
     assert(iv.start < iv.finish);
   }
+  int n = static_cast<int>(intervals.size());
+  std::vector<int> order(n), finish(n), prev(n);
+  std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [&](int i, int j) {
     return intervals[i].finish != intervals[j].finish ? intervals[i].finish < intervals[j].finish
                                                       : intervals[i].start < intervals[j].start;
@@ -53,8 +53,8 @@ std::pair<int64_t, std::vector<int>> select_weighted_intervals(
   for (int i = 0; i < n; i++) {
     finish[i] = intervals[order[i]].finish;
   }
-  std::vector<int64_t> dp(n + 1, 0);
-  std::vector<char> take(n + 1, false);
+  std::vector<int64_t> dp(n + 1);
+  std::vector<char> take(n + 1);
   for (int i = 1; i <= n; i++) {
     int j =
         std::upper_bound(finish.begin(), finish.begin() + i - 1, intervals[order[i - 1]].start) -
@@ -68,6 +68,7 @@ std::pair<int64_t, std::vector<int>> select_weighted_intervals(
       dp[i] = dp[i - 1];
     }
   }
+  // Optional: reconstruct one optimal subset of intervals.
   std::vector<int> selected;
   for (int i = n; i > 0;) {
     if (take[i]) {

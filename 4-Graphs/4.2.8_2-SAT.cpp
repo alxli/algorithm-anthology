@@ -86,7 +86,7 @@ class TwoSAT {
   bool satisfiable() {
     order.clear();
     component.assign(2 * variables, -1);
-    std::vector<char> visit(2 * variables, false);
+    std::vector<char> visit(2 * variables);
     for (int i = 0; i < 2 * variables; i++) {
       if (!visit[i]) {
         dfs_order(i, visit);

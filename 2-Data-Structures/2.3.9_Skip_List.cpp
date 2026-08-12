@@ -91,8 +91,8 @@ class SkipList {
   }
 
  public:
-  explicit SkipList(Compare comp = Compare())
-      : head(new Node(K(), V(), MAX_LEVELS)), num_nodes(0), comp(std::move(comp)) {
+  explicit SkipList(Compare comp = Compare{})
+      : head(new Node(K{}, V{}, MAX_LEVELS)), num_nodes(0), comp(std::move(comp)) {
     for (auto &ptr : head->next) {
       ptr = nullptr;
     }
@@ -172,7 +172,7 @@ class SkipList {
     if (n != nullptr) {
       return n->value;
     }
-    insert(k, V());
+    insert(k, V{});
     return find_node(k)->value;
   }
 

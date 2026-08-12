@@ -154,7 +154,7 @@ class Treap {
   }
 
  public:
-  explicit Treap(Compare comp = Compare()) : root(nullptr), num_nodes(0), comp(std::move(comp)) {}
+  explicit Treap(Compare comp = Compare{}) : root(nullptr), num_nodes(0), comp(std::move(comp)) {}
 
   ~Treap() { clean_up(root); }
   Treap(const Treap &) = delete;

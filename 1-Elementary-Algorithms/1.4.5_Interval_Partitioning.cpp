@@ -39,12 +39,12 @@ struct Interval {
 };
 
 std::pair<int, std::vector<int>> partition_intervals(const std::vector<Interval> &intervals) {
-  int n = static_cast<int>(intervals.size());
-  std::vector<int> order(n);
-  std::iota(order.begin(), order.end(), 0);
   for (const auto &iv : intervals) {
     assert(iv.start < iv.finish);
   }
+  int n = static_cast<int>(intervals.size());
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [&](int i, int j) {
     return intervals[i].start != intervals[j].start ? intervals[i].start < intervals[j].start
                                                     : intervals[i].finish < intervals[j].finish;

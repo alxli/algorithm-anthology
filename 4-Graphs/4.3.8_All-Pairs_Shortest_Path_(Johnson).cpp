@@ -50,7 +50,7 @@ std::vector<std::vector<int64_t>> dist;
 std::vector<std::vector<int>> next_node;
 
 bool johnson_all_pairs(int n) {
-  std::vector<int64_t> potential(n, 0);
+  std::vector<int64_t> potential(n);
   for (int i = 0; i < n; i++) {
     bool changed = false;
     for (auto [u, v, w] : edges) {

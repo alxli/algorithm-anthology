@@ -52,7 +52,7 @@ class SparseFenwick2D {
   template<typename Map>
   static T get(const Map &tree, int r, int c) {
     auto it = tree.find(static_cast<int64_t>(r) * (C + 1) + c);
-    return it == tree.end() ? T() : it->second;
+    return it == tree.end() ? T{} : it->second;
   }
 
   template<typename Map>

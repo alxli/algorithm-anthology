@@ -82,11 +82,11 @@ class LeftistHeap {
   }
 
  public:
-  explicit LeftistHeap(Compare comp = Compare())
+  explicit LeftistHeap(Compare comp = Compare{})
       : root(nullptr), num_nodes(0), comp(std::move(comp)) {}
 
   template<typename It>
-  LeftistHeap(It lo, It hi, Compare comp = Compare())
+  LeftistHeap(It lo, It hi, Compare comp = Compare{})
       : root(nullptr), num_nodes(0), comp(std::move(comp)) {
     while (lo != hi) {
       push(*(lo++));

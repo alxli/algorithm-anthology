@@ -25,7 +25,7 @@ dynamic programming recurrence.
 
 - `two_sum_sorted(a, target)` returns two indices whose values sum to `target`, or $(-1, -1)$ if no
   such pair exists. The input array must be sorted.
-- `three_sum(a, target)` returns three original indices whose values sum to `target`, or
+- `three_sum(a, target)` returns a tuple of three original indices whose values sum to `target`, or
   $(-1, -1, -1)$ if none exist.
 - `min_subarray_at_least(a, target)` returns a tuple (`length`, `lo`, `hi`), the minimum length and
   inclusive endpoints of a contiguous subarray with sum at least `target`, or length $-1$ if none
@@ -54,7 +54,6 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <array>
 #include <cassert>
 #include <cstdint>
 #include <deque>
@@ -65,20 +64,20 @@ Space Complexity:
 #include <vector>
 
 std::pair<int, int> two_sum_sorted(const std::vector<int> &a, int64_t target) {
-  for (int l = 0, r = static_cast<int>(a.size()) - 1; l < r;) {
-    int64_t sum = static_cast<int64_t>(a[l]) + a[r];
+  for (int lo = 0, hi = static_cast<int>(a.size()) - 1; lo < hi;) {
+    int64_t sum = static_cast<int64_t>(a[lo]) + a[hi];
     if (sum == target) {
-      return {l, r};
+      return {lo, hi};
     } else if (sum < target) {
-      l++;
+      lo++;
     } else {
-      r--;
+      hi--;
     }
   }
   return {-1, -1};
 }
 
-std::array<int, 3> three_sum(const std::vector<int> &a, int64_t target) {
+std::tuple<int, int, int> three_sum(const std::vector<int> &a, int64_t target) {
   int n = static_cast<int>(a.size());
   std::vector<std::pair<int, int>> sorted;
   sorted.reserve(a.size());
@@ -87,15 +86,15 @@ std::array<int, 3> three_sum(const std::vector<int> &a, int64_t target) {
   }
   std::sort(sorted.begin(), sorted.end());
   for (int i = 0; i < n; i++) {
-    int l = i + 1, r = n - 1;
-    while (l < r) {
-      int64_t sum = static_cast<int64_t>(sorted[i].first) + sorted[l].first + sorted[r].first;
+    int lo = i + 1, hi = n - 1;
+    while (lo < hi) {
+      int64_t sum = static_cast<int64_t>(sorted[i].first) + sorted[lo].first + sorted[hi].first;
       if (sum == target) {
-        return {sorted[i].second, sorted[l].second, sorted[r].second};
+        return {sorted[i].second, sorted[lo].second, sorted[hi].second};
       } else if (sum < target) {
-        l++;
+        lo++;
       } else {
-        r--;
+        hi--;
       }
     }
   }
@@ -108,15 +107,15 @@ std::tuple<int, int, int> min_subarray_at_least(const std::vector<int> &a, int64
   }
   int best = static_cast<int>(a.size()) + 1, best_lo = 0, best_hi = -1;
   int64_t sum = 0;
-  for (int l = 0, r = 0; r < static_cast<int>(a.size()); r++) {
-    sum += a[r];  // Overflow warning.
+  for (int lo = 0, hi = 0; hi < static_cast<int>(a.size()); hi++) {
+    sum += a[hi];  // Overflow warning.
     while (sum >= target) {
-      if (r - l + 1 < best) {
-        best = r - l + 1;
-        best_lo = l;
-        best_hi = r;
+      if (hi - lo + 1 < best) {
+        best = hi - lo + 1;
+        best_lo = lo;
+        best_hi = hi;
       }
-      sum -= a[l++];
+      sum -= a[lo++];
     }
   }
   if (best == static_cast<int>(a.size()) + 1) {
@@ -131,25 +130,25 @@ std::tuple<int, int, int> max_subarray_at_most_k_distinct(const std::vector<int>
   }
   std::unordered_map<int, int> count;
   int best = 0, best_lo = 0, best_hi = -1;
-  for (int l = 0, r = 0; r < static_cast<int>(a.size()); r++) {
-    count[a[r]]++;
+  for (int lo = 0, hi = 0; hi < static_cast<int>(a.size()); hi++) {
+    count[a[hi]]++;
     while (static_cast<int>(count.size()) > k) {
-      if (--count[a[l]] == 0) {
-        count.erase(a[l]);
+      if (--count[a[lo]] == 0) {
+        count.erase(a[lo]);
       }
-      l++;
+      lo++;
     }
-    if (best < r - l + 1) {
-      best = r - l + 1;
-      best_lo = l;
-      best_hi = r;
+    if (best < hi - lo + 1) {
+      best = hi - lo + 1;
+      best_lo = lo;
+      best_hi = hi;
     }
   }
   return {best, best_lo, best_hi};
 }
 
 template<typename T, typename Compare = std::less<>>
-std::vector<T> sliding_window_extrema(const std::vector<T> &a, int k, Compare comp = Compare()) {
+std::vector<T> sliding_window_extrema(const std::vector<T> &a, int k, Compare comp = Compare{}) {
   int n = static_cast<int>(a.size());
   assert(1 <= k && k <= n);
   std::deque<int> window;
@@ -177,13 +176,16 @@ This is useful for dynamic programming recurrences where each transition may onl
 the last $w$ states, such as $dp(i) = a_i + \min_{j \in [i - w, i - 1]} dp(j)$.
 
 The queue stores candidate (`index`, `value`) pairs in monotone order. Expired indices are removed
-from the front, and dominated values are removed from the back before inserting a new candidate.
+from the front, and dominated values are removed from the back before inserting a new candidate. An
+index is an ordered `int` timestamp used only for expiration: indices need not be contiguous or
+nonnegative, but they must be pushed in strictly increasing order, and expiration thresholds must
+not decrease.
 
 - `MonotoneQueue<T>()` constructs an empty queue for minimum queries. Instantiate
   `MonotoneQueue<T, std::greater<T>>` for maximum queries.
-- `push(index, value)` inserts candidate `value` at position `index`, removing dominated candidates
-  from the back.
-- `expire(first_valid)` removes candidates with index less than `first_valid`.
+- `push(index, value)` inserts candidate `value` with timestamp `index`, removing dominated
+  candidates from the back.
+- `expire(first_valid)` removes candidates whose indices are less than `first_valid`.
 - `top()` returns the best active (`index`, `value`) pair. The queue must be nonempty.
 - `empty()` returns whether the queue has no active candidates.
 
@@ -235,9 +237,9 @@ int main() {
   assert(two_sum_sorted(c, 100) == make_pair(-1, -1));
 
   vector<int> d{4, -1, 8, 2, -3, 11};
-  array<int, 3> triple = three_sum(d, 9);
-  assert(d[triple[0]] + d[triple[1]] + d[triple[2]] == 9);
-  assert((three_sum(d, 30) == array<int, 3>{-1, -1, -1}));
+  auto [i, j, k] = three_sum(d, 9);
+  assert(d[i] + d[j] + d[k] == 9);
+  assert((three_sum(d, 30) == make_tuple(-1, -1, -1)));
 
   vector<int> a{2, 3, 1, 2, 4, 3};
   auto [length, lo, hi] = min_subarray_at_least(a, 7);
@@ -256,19 +258,19 @@ int main() {
   assert((sliding_window_extrema(e, 3) == vector<int>{-1, -3, -3, -3, 3, 3}));
   assert((sliding_window_extrema(e, 3, greater<>()) == vector<int>{3, 3, 5, 5, 6, 7}));
 
-  // Toy DP: dp[i] = f[i] + min(dp[j]) for j in [i - max_jump, i - 1].
-  // Scanning the window costs O(max_jump) per state; the monotone queue makes it O(1) amortized.
+  // Toy DP: dp[i] = f[i] + min(dp[j]) for j in [i - w, i - 1].
+  // Scanning the window costs O(w) per state; the monotone queue makes it O(1) amortized.
   vector<int> f{4, 2, 7, 1, 3, 6};
-  int max_jump = 3;
+  int w = 3;
   vector<int> dp(f.size());
-  MonotoneQueue<int> best;
+  MonotoneQueue<int> mq;
   dp[0] = f[0];
-  best.push(0, dp[0]);
+  mq.push(0, dp[0]);
   for (int i = 1; i < static_cast<int>(f.size()); i++) {
-    best.expire(i - max_jump);
-    dp[i] = f[i] + best.top().second;
-    best.push(i, dp[i]);
+    mq.expire(i - w);
+    dp[i] = f[i] + mq.top().second;
+    mq.push(i, dp[i]);
   }
-  assert(dp[5] == 11);
+  assert((dp == vector<int>{4, 6, 11, 5, 8, 11}));
   return 0;
 }

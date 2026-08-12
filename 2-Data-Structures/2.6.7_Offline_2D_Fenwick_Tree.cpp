@@ -105,7 +105,7 @@ class OfflineFenwick2D {
     for (int x = 1; x <= m; x++) {
       std::sort(ys[x].begin(), ys[x].end());
       ys[x].erase(std::unique(ys[x].begin(), ys[x].end()), ys[x].end());
-      tree[x].assign(ys[x].size() + 1, T());
+      tree[x].assign(ys[x].size() + 1, T{});
     }
     pending.clear();
   }
@@ -124,7 +124,7 @@ class OfflineFenwick2D {
 
   T sum(int r, int c) const {
     assert(built);
-    T res = T();
+    T res{};
     for (int i = row_rank(r); i > 0; i -= i & -i) {
       for (int j = col_rank(i, c); j > 0; j -= j & -j) {
         res += tree[i][j];

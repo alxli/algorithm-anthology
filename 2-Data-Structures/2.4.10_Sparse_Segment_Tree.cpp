@@ -21,7 +21,7 @@ performing their updates sequentially. The default code below defines range assi
 increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, len)` should return
 `v + d` for range-min/range-max queries, and `v + d * len` for range-sum queries.
 
-- `SparseSegTree<T, N>(v = T())` constructs an array over indices $[0, `N`)$, with every value
+- `SparseSegTree<T, N>(v = T{})` constructs an array over indices $[0, `N`)$, with every value
   implicitly initialized to `v`. Nodes are allocated lazily as indices are touched.
 - `at(i)` returns the value at index `i`, where `i` must be in $[0, `N`)$.
 - `query(lo, hi)` returns the aggregate of the values at indices in $[`lo`, `hi`]$. If `lo == hi`,
@@ -206,7 +206,7 @@ class SparseSegTree {
   }
 
  public:
-  explicit SparseSegTree(const T &v = T()) : root(nullptr), init(v) {}
+  explicit SparseSegTree(const T &v = T{}) : root(nullptr), init(v) {}
 
   ~SparseSegTree() { clean_up(root); }
   SparseSegTree(const SparseSegTree &) = delete;

@@ -64,6 +64,7 @@ int64_t shortest_hamiltonian_path() {
   for (int i = 0; i < n; i++) {
     res = std::min(res, dp[max_mask][i]);
   }
+  // Optional: reconstruct one shortest Hamiltonian path.
   int mask = max_mask, old = -1;
   for (int i = n - 1; i >= 0; i--) {
     int best = -1;
@@ -108,6 +109,7 @@ int64_t shortest_hamiltonian_cycle() {
   for (int i = 1; i < n; i++) {
     res = std::min(res, dp[max_mask][i] + adj[i][0]);  // Overflow warning.
   }
+  // Optional: reconstruct one shortest Hamiltonian cycle.
   int mask = max_mask, old = 0;
   for (int i = n - 1; i >= 1; i--) {
     int best = -1;

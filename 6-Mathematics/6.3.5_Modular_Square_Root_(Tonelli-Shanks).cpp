@@ -90,7 +90,7 @@ int64_t mod_sqrt(int64_t a, int64_t p) {
     if (order == 0) {
       return x < p - x ? x : p - x;
     }
-    int64_t gs = powmod(g, static_cast<int64_t>(1) << (r - order - 1), p);
+    int64_t gs = powmod(g, int64_t{1} << (r - order - 1), p);
     g = mulmod(gs, gs, p);
     x = mulmod(x, gs, p);
     b = mulmod(b, g, p);

@@ -14,7 +14,7 @@ single updated index. The default definition below supports updates that "set" t
 index to a new value. Another possible update operation is "increment", in which case
 `apply_delta(v, d)` should return `v + d`.
 
-- `PersistentSegTree<T>(n, v = T())` constructs version $0$ of an array of size `n` with indices
+- `PersistentSegTree<T>(n, v = T{})` constructs version $0$ of an array of size `n` with indices
   $[0, `n`)$, and all values initialized to `v`.
 - `PersistentSegTree<T>(lo, hi)` constructs version $0$ from the half-open random-access iterator
   range $[`lo`, `hi`)$.
@@ -93,13 +93,13 @@ class PersistentSegTree {
     return query(nodes[i].right, mid + 1, hi, tgt_lo, tgt_hi);
   }
 
-  int update(int cur, int lo, int hi, int target, const T &d) {
+  int update(int i, int lo, int hi, int target, const T &d) {
     if (lo == hi) {
-      nodes.emplace_back(apply_delta(nodes[cur].value, d));
+      nodes.emplace_back(apply_delta(nodes[i].value, d));
       return static_cast<int>(nodes.size()) - 1;
     }
     int mid = lo + (hi - lo) / 2;
-    int left = nodes[cur].left, right = nodes[cur].right;
+    int left = nodes[i].left, right = nodes[i].right;
     if (target <= mid) {
       left = update(left, lo, mid, target, d);
     } else {
@@ -110,7 +110,7 @@ class PersistentSegTree {
   }
 
  public:
-  explicit PersistentSegTree(int n, const T &v = T()) : len(n) {
+  explicit PersistentSegTree(int n, const T &v = T{}) : len(n) {
     assert(len > 0);
     roots.push_back(build(0, len - 1, [&](int) { return v; }));
   }

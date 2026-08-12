@@ -69,7 +69,7 @@ class EdmondsKarp {
   T max_flow(int source, int sink) {
     assert(source != sink);
     while (true) {
-      std::vector<Edge *> pred(nodes, nullptr);
+      std::vector<Edge *> pred(nodes);
       std::queue<int> q;
       q.push(source);
       while (!q.empty() && pred[sink] == nullptr) {

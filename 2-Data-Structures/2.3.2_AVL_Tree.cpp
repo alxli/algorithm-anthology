@@ -171,7 +171,7 @@ class AVLTree {
   }
 
  public:
-  explicit AVLTree(Compare comp = Compare()) : root(nullptr), num_nodes(0), comp(std::move(comp)) {}
+  explicit AVLTree(Compare comp = Compare{}) : root(nullptr), num_nodes(0), comp(std::move(comp)) {}
 
   ~AVLTree() { clean_up(root); }
   AVLTree(const AVLTree &) = delete;

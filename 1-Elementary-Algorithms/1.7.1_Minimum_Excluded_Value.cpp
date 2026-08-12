@@ -35,7 +35,7 @@ Space Complexity:
 template<typename It>
 int mex(It lo, It hi) {
   int n = std::distance(lo, hi);
-  std::vector<char> seen(n + 1, false);
+  std::vector<char> seen(n + 1);
   for (It it = lo; it != hi; ++it) {
     if (0 <= *it && *it <= n) {
       seen[*it] = true;

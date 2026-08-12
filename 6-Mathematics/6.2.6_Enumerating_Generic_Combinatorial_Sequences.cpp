@@ -20,7 +20,7 @@ own conventional constructor names, such as `n` and `k` for combinations.
   lexicographically increasing order, where `lo` and `hi` are two random-access iterators to a range
   $[`lo`, `hi`)$ of integers.
 
-All exact counts and ranks must fit in `int64_t`.
+Overflow warning: All exact counts and ranks must fit in `int64_t`.
 
 Time Complexity:
 - O(A*L) calls to `count()` per call to `to_rank()` and `from_rank()`.

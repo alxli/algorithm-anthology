@@ -25,7 +25,7 @@ Space Complexity:
 #include <vector>
 
 int mex(const std::vector<int> &values) {
-  std::vector<char> seen(values.size() + 1, false);
+  std::vector<char> seen(values.size() + 1);
   for (int v : values) {
     if (0 <= v && v < static_cast<int>(seen.size())) {
       seen[v] = true;
@@ -40,7 +40,7 @@ int mex(const std::vector<int> &values) {
 }
 
 std::vector<int> subtraction_game_grundy(int max_stones, const std::vector<int> &moves) {
-  std::vector<int> grundy(max_stones + 1, 0);
+  std::vector<int> grundy(max_stones + 1);
   for (int stones = 1; stones <= max_stones; stones++) {
     std::vector<int> reachable;
     for (int m : moves) {

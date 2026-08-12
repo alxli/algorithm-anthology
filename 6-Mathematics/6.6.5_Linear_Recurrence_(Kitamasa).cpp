@@ -35,7 +35,7 @@ const int64_t MOD = 998244353;
 std::vector<int64_t> combine(
     const std::vector<int64_t> &a, const std::vector<int64_t> &b, const std::vector<int64_t> &c
 ) {
-  std::vector<int64_t> res(a.size() + b.size() - 1, 0);
+  std::vector<int64_t> res(a.size() + b.size() - 1);
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
     for (int j = 0; j < static_cast<int>(b.size()); j++) {
       res[i + j] = (res[i + j] + a[i] * b[j]) % MOD;
@@ -66,7 +66,7 @@ int64_t kth_term(const std::vector<int64_t> &rec, const std::vector<int64_t> &in
   if (L == 0) {
     return 0;
   }
-  std::vector<int64_t> result(L, 0), base(L, 0);
+  std::vector<int64_t> result(L), base(L);
   result[0] = 1;  // The polynomial 1 = x^0.
   if (L == 1) {
     base[0] = c[0];  // x is congruent to c_0 modulo f.

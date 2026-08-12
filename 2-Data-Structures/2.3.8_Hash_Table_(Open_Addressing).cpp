@@ -90,8 +90,7 @@ class ProbingHashMap {
 
   int next_bucket(int i, int probes) const {
     return (i + 1) % table_size;  // Linear probing.
-
-    // Quadratic probing for power-of-two table sizes (cumulative offsets 1, 3, 6, 10, ...):
+    // Or use quadratic probing (cumulative offsets 1, 3, 6, 10, ...) for power-of-2 table sizes.
     // return (i + probes + 1) & (table_size - 1);
   }
 
@@ -118,7 +117,7 @@ class ProbingHashMap {
   }
 
  public:
-  explicit ProbingHashMap(int buckets = 128, Hash hash = Hash(), KeyEqual equal = KeyEqual())
+  explicit ProbingHashMap(int buckets = 128, Hash hash = Hash{}, KeyEqual equal = KeyEqual{})
       : table_size(buckets),
         num_entries(0),
         num_tombstones(0),
@@ -213,7 +212,7 @@ class ProbingHashMap {
         }
       } else if (state[i] == State::EMPTY) {
         int dest = first_deleted == table_size ? i : first_deleted;
-        table[dest].emplace(k, V());
+        table[dest].emplace(k, V{});
         if (state[dest] == State::DELETED) {
           num_tombstones--;
         }
@@ -254,8 +253,8 @@ struct Hasher {
   inline static const uint64_t RAND_SEED = chrono::steady_clock::now().time_since_epoch().count();
 
   // Signed -> unsigned delegates.
-  uint32_t operator()(int k) const { return Hasher()(static_cast<uint32_t>(k)); }
-  uint32_t operator()(int64_t k) const { return Hasher()(static_cast<uint64_t>(k)); }
+  uint32_t operator()(int k) const { return Hasher{}(static_cast<uint32_t>(k)); }
+  uint32_t operator()(int64_t k) const { return Hasher{}(static_cast<uint64_t>(k)); }
 
   // Knuth's multiplicative method. Fast, but affine: an additive RAND_SEED only shifts all buckets
   // uniformly and won't stop crafted collisions (unlike the non-linear hashers below). To harden
@@ -292,7 +291,7 @@ struct AbsHash {
 };
 
 struct AbsEqual {
-  bool operator()(int a, int b) const { return AbsHash()(a) == AbsHash()(b); }
+  bool operator()(int a, int b) const { return AbsHash{}(a) == AbsHash{}(b); }
 };
 
 int main() {
@@ -330,7 +329,7 @@ int main() {
   defaults["answer"] = 42;
   assert(*defaults.find("answer") == 42);
 
-  ProbingHashMap<int, char, AbsHash, AbsEqual> absolute(128, AbsHash(7), AbsEqual());
+  ProbingHashMap<int, char, AbsHash, AbsEqual> absolute(128, AbsHash(7), AbsEqual{});
   assert(absolute.insert(-2, 'x'));
   assert(!absolute.insert(2, 'y') && *absolute.find(2) == 'x');
   return 0;

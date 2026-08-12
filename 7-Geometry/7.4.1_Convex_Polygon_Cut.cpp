@@ -10,9 +10,11 @@ are kept, and whenever an edge crosses the line, the intersection point is appen
   preserves that boundary order. The points `p` and `q` must differ.
 
 The function is templated on the input point type. Side classification is done with cross products.
-For integer-coordinate inputs, classification is exact only if the intermediate products do not
-overflow. Edge-line intersection points are computed in floating point, and the returned polygon
-uses `Point` with `double` coordinates.
+Edge-line intersection points are computed in floating point, and the returned polygon uses `Point`
+with `double` coordinates.
+
+Overflow warning: For integer-coordinate inputs, classification is exact only if the intermediate
+products do not overflow.
 
 Time Complexity:
 - O(n) per call, where $n$ is the distance between `lo` and `hi`.

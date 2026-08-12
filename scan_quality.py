@@ -53,6 +53,24 @@ UNQUALIFIED_CMATH_RE = re.compile(
 )
 UNQUALIFIED_GENERIC_FABS_RE = re.compile(r"(?<![A-Za-z0-9_:])fabs\(C\(")
 CAST_EPS_RE = re.compile(r"\bstatic_cast<C>\(EPS\)")
+FUNCTION_LITERAL_CAST_RE = re.compile(
+    r"\b(?:T|U|W|C|Mask|mask_t|Mint|dbl|cdbl|fp_t|u?int(?:8|16|32|64)_t|"
+    r"int128_t|uint128_t)\s*\([01]\)"
+)
+STATIC_LITERAL_CAST_RE = re.compile(
+    r"\bstatic_cast<(?:T|U|W|C|Mask|mask_t|Mint|dbl|cdbl|fp_t|"
+    r"u?int(?:8|16|32|64)_t|int128_t|uint128_t)>\([01]\)"
+)
+EMPTY_DEPENDENT_CONSTRUCTION_RE = re.compile(
+    r"\b(?:T|U|W|C|K|V|Mask|mask_t|Mint|dbl|cdbl|fp_t|Compare|Hash|KeyEqual|"
+    r"Hasher|AbsHash|AbsEqual)\(\)|\b(?:std::hash|GenericHasher)<[^>]+>\(\)"
+)
+AUTO_DEREF_COPY_RE = re.compile(r"\bauto\s+[A-Za-z_][A-Za-z0-9_]*\s*=\s*\*")
+VECTOR_TYPE_RE = re.compile(r"(?:std::)?vector\s*<")
+DEFAULT_VECTOR_FILL_RE = re.compile(
+    r"(?:0(?:\.0+|[uUlLfF]+)?|false|nullptr|'\\0'|[A-Za-z_][A-Za-z0-9_]*\{\}|\{\})"
+)
+OPTIONAL_RECONSTRUCTION_RE = re.compile(r"^\s*// Optional: reconstruct one .+\.$")
 LEGACY_BOUNDARY_FLAG_RE = re.compile(r"\b(?:edge_is_inside|touch_is_intersect)\b")
 CONST_VALUE_PARAMETER_RE = re.compile(
     r"(?:\(|,)\s*const\s+[A-Za-z_][A-Za-z0-9_:<>]*\s+"
@@ -75,6 +93,51 @@ UNWRAPPED_INTERVAL_RE = re.compile(
     r"(?:\b(?:range|window)\s+|\bvalues?\s+in\s+|^\s*in\s+)"
     r"\[(?=(?:`[A-Za-z_][A-Za-z0-9_]*`|`?[0-9]+`?))"
 )
+
+
+def matching_delimiter(text, start, opening, closing):
+    depth = 0
+    for i in range(start, len(text)):
+        if text[i] == opening:
+            depth += 1
+        elif text[i] == closing and not (closing == ">" and i > 0 and text[i - 1] == "-"):
+            depth -= 1
+            if depth == 0:
+                return i
+    return -1
+
+
+def vector_has_redundant_fill(code):
+    for match in VECTOR_TYPE_RE.finditer(code):
+        type_end = matching_delimiter(code, match.end() - 1, "<", ">")
+        if type_end == -1:
+            continue
+        pos = type_end + 1
+        while pos < len(code) and code[pos].isspace():
+            pos += 1
+        name = re.match(r"[A-Za-z_][A-Za-z0-9_]*", code[pos:])
+        if name:
+            pos += name.end()
+            while pos < len(code) and code[pos].isspace():
+                pos += 1
+        if pos >= len(code) or code[pos] != "(":
+            continue
+        call_end = matching_delimiter(code, pos, "(", ")")
+        if call_end == -1:
+            continue
+        args = code[pos + 1 : call_end]
+        depth = 0
+        commas = []
+        for i, char in enumerate(args):
+            if char in "([{<":
+                depth += 1
+            elif char in ")]}>":
+                depth -= 1
+            elif char == "," and depth == 0:
+                commas.append(i)
+        if len(commas) == 1 and DEFAULT_VECTOR_FILL_RE.fullmatch(args[commas[0] + 1 :].strip()):
+            return True
+    return False
 
 STYLE_PATTERNS = [
     (
@@ -399,6 +462,86 @@ def scan_docstrings(paths):
     return issues
 
 
+def scan_overflow_warning_labels(paths):
+    issues = []
+    representability_re = re.compile(r"\b(?:must fit|must be representable)\b", re.IGNORECASE)
+    exactness_re = re.compile(r"\bdo(?:es)? not overflow\b", re.IGNORECASE)
+    for path in paths:
+        lines = path.read_text().splitlines()
+        for start, end in docstring_ranges(lines):
+            if lines[start].startswith("/***"):
+                continue
+            has_labeled_warning = any(
+                line.strip().startswith("Overflow warning:") for line in lines[start + 1 : end]
+            )
+            paragraph = []
+            paragraph_line = 0
+
+            def check_paragraph():
+                if not paragraph:
+                    return
+                text = " ".join(line.strip() for line in paragraph)
+                if (
+                    not text.startswith("- ")
+                    and not text.startswith("Overflow warning:")
+                    and (
+                        representability_re.search(text)
+                        or (exactness_re.search(text) and not has_labeled_warning)
+                    )
+                ):
+                    issues.append(
+                        Issue(
+                            path,
+                            paragraph_line,
+                            "overflow-warning-label",
+                            "Lead standalone arithmetic limits with `Overflow warning:`.",
+                            lines[paragraph_line - 1],
+                        )
+                    )
+
+            for i in range(start + 1, end):
+                stripped = lines[i].strip()
+                if not stripped:
+                    check_paragraph()
+                    paragraph = []
+                    continue
+                if not paragraph:
+                    paragraph_line = i + 1
+                paragraph.append(lines[i])
+            check_paragraph()
+    return issues
+
+
+def scan_size_declaration_order(paths):
+    issues = []
+    size_decl_re = re.compile(r"^\s+int n\s*=.*\.size\(\).*;$")
+    for path in paths:
+        lines = path.read_text().splitlines()
+        for i, line in enumerate(lines):
+            if not size_decl_re.match(line):
+                continue
+            validation_before_use = False
+            for j in range(i + 1, len(lines)):
+                code = lines[j].split("//", 1)[0]
+                if re.search(r"\bn\b", code):
+                    if validation_before_use:
+                        issues.append(
+                            Issue(
+                                path,
+                                i + 1,
+                                "precondition-order",
+                                "Declare n after validation unless a precondition uses it.",
+                                line,
+                            )
+                        )
+                    break
+                if "assert(" in code:
+                    validation_before_use = True
+                if lines[j].startswith("}"):
+                    break
+    return issues
+
+
 def scan_time_complexity_scope(paths):
     issues = []
     aggregate_scope_re = re.compile(
@@ -535,6 +678,60 @@ def scan_code_consistency(paths):
                         line_no,
                         "code-consistency",
                         "Use EPS directly; floating-point comparisons convert it implicitly.",
+                        line,
+                    )
+                )
+            if FUNCTION_LITERAL_CAST_RE.search(code) or STATIC_LITERAL_CAST_RE.search(code):
+                issues.append(
+                    Issue(
+                        path,
+                        line_no,
+                        "code-consistency",
+                        "Use braces to construct typed zero and one constants, e.g. T{0} or U{1}.",
+                        line,
+                    )
+                )
+            if EMPTY_DEPENDENT_CONSTRUCTION_RE.search(code):
+                issues.append(
+                    Issue(
+                        path,
+                        line_no,
+                        "code-consistency",
+                        "Use braces to value-initialize dependent types, e.g. T{} or Compare{}.",
+                        line,
+                    )
+                )
+            if AUTO_DEREF_COPY_RE.search(code):
+                issues.append(
+                    Issue(
+                        path,
+                        line_no,
+                        "code-consistency",
+                        "Materialize iterator value_type; auto may retain a proxy reference.",
+                        line,
+                    )
+                )
+            if vector_has_redundant_fill(code):
+                issues.append(
+                    Issue(
+                        path,
+                        line_no,
+                        "code-consistency",
+                        "Omit a vector fill argument that merely repeats value initialization.",
+                        line,
+                    )
+                )
+            if (
+                "Optional:" in line
+                and "reconstruct" in line
+                and not OPTIONAL_RECONSTRUCTION_RE.match(line)
+            ):
+                issues.append(
+                    Issue(
+                        path,
+                        line_no,
+                        "code-consistency",
+                        "Use `// Optional: reconstruct one ... .` for optional witness extraction.",
                         line,
                     )
                 )
@@ -1720,6 +1917,8 @@ def main():
     paths = list(cpp_files())
     issues = []
     issues.extend(scan_docstrings(paths))
+    issues.extend(scan_overflow_warning_labels(paths))
+    issues.extend(scan_size_declaration_order(paths))
     issues.extend(scan_time_complexity_scope(paths))
     issues.extend(scan_atomic_inline_wrapping(paths))
     issues.extend(scan_example_markers(paths))

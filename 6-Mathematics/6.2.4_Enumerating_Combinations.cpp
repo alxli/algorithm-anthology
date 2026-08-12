@@ -34,7 +34,7 @@ rank. Bitmask successors use the same order as increasing integers with a fixed 
   sorted. Note that there is a total of $n \mathbin{\text{multichoose}} k$ combinations if
   repetition is allowed, where $n \mathbin{\text{multichoose}} k = \binom{n + k - 1}{k}$.
 
-Exact counts and ranks used by the ranking operations must fit in `int64_t`.
+Overflow warning: Exact counts and ranks used by the ranking operations must fit in `int64_t`.
 
 Time Complexity:
 - O(n) per call to `next_combination(lo, mid, hi)`, where $n$ is the distance between `lo` and `hi`.
@@ -52,12 +52,14 @@ Space Complexity:
 #include <algorithm>
 #include <cstdint>
 #include <functional>
+#include <iterator>
 #include <numeric>
 #include <utility>
 #include <vector>
 
 template<typename It, typename Compare = std::less<>>
-bool next_combination(It lo, It mid, It hi, Compare comp = Compare()) {
+bool next_combination(It lo, It mid, It hi, Compare comp = Compare{}) {
+  using T = typename std::iterator_traits<It>::value_type;
   if (lo == mid || mid == hi) {
     return false;
   }
@@ -91,7 +93,7 @@ bool next_combination(It lo, It mid, It hi, Compare comp = Compare()) {
     for (int i = 0; i < gcd; i++) {
       It curr = (i < len1) ? (l + i) : (h + (i - len1));
       int k = i;
-      auto prev = *curr;
+      T prev = *curr;
       for (int j = 0; j < skip; j++) {
         k = (k + len1) % total;
         It next = (k < len1) ? (l + k) : (h + (k - len1));

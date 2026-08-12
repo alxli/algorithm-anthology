@@ -37,7 +37,7 @@ using std::string;
 
 string longest_common_subsequence(const string &s1, const string &s2) {
   int n = static_cast<int>(s1.size()), m = static_cast<int>(s2.size());
-  std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1, 0));
+  std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1));
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= m; j++) {
       if (s1[i - 1] == s2[j - 1]) {
@@ -47,6 +47,7 @@ string longest_common_subsequence(const string &s1, const string &s2) {
       }
     }
   }
+  // Optional: reconstruct one longest common subsequence.
   string res;
   for (int i = n, j = m; i > 0 && j > 0;) {
     if (s1[i - 1] == s2[j - 1]) {

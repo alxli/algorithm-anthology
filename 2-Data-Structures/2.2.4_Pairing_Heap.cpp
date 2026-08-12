@@ -119,11 +119,11 @@ class PairingHeap {
   }
 
  public:
-  explicit PairingHeap(Compare comp = Compare())
+  explicit PairingHeap(Compare comp = Compare{})
       : root(nullptr), num_nodes(0), comp(std::move(comp)) {}
 
   template<typename It>
-  PairingHeap(It lo, It hi, Compare comp = Compare())
+  PairingHeap(It lo, It hi, Compare comp = Compare{})
       : root(nullptr), num_nodes(0), comp(std::move(comp)) {
     while (lo != hi) {
       push(*(lo++));

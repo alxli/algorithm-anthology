@@ -81,7 +81,7 @@ std::vector<int> phi_table(int lo, int hi) {
     root++;
   }
   // Sieve the primes up to sqrt(hi); any larger prime divisor is the one leftover factor.
-  std::vector<char> composite(root + 1, false);
+  std::vector<char> composite(root + 1);
   std::vector<int> primes;
   for (int i = 2; i <= root; i++) {
     if (!composite[i]) {

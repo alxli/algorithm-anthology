@@ -2,8 +2,7 @@
 
 The following functions implement common operations in combinatorics. All size and count inputs must
 be nonnegative, and all moduli must be positive. All return values and table entries are computed as
-64-bit integers modulo an input argument $m$ or $p$. Modular products use ordinary `int64_t`
-multiplication, so the square of the chosen modulus must fit in `int64_t`.
+64-bit integers modulo an input argument $m$ or $p$.
 
 - `factorial(n, m = MOD)` returns $n! \bmod m$.
 - `factorial_without_p(n, p = MOD)` returns $n!$ modulo the prime $p$ after removing every factor of
@@ -23,6 +22,9 @@ multiplication, so the square of the chosen modulus must fit in `int64_t`.
   $n > k$.
 - `eulerian2(n, k, m = MOD)` returns the $(n, k)$ Eulerian number of the 2nd kind mod $m$, where
   $n > k$.
+
+Overflow warning: Modular products use ordinary `int64_t` multiplication, so the square of the
+chosen modulus must fit in `int64_t`.
 
 Time Complexity:
 - O(n) per call to `factorial()`.
@@ -137,7 +139,7 @@ int64_t catalan(int n, int64_t p = MOD) {
 }
 
 int64_t partitions(int n, int64_t m = MOD) {
-  std::vector<int64_t> t(n + 1, 0);
+  std::vector<int64_t> t(n + 1);
   t[0] = 1;
   for (int i = 1; i <= n; i++) {
     for (int j = i; j <= n; j++) {
@@ -148,7 +150,7 @@ int64_t partitions(int n, int64_t m = MOD) {
 }
 
 int64_t partitions(int n, int k, int64_t m = MOD) {
-  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 0));
+  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
     for (int j = 1, h = k < i ? k : i; j <= h; j++) {
@@ -159,7 +161,7 @@ int64_t partitions(int n, int k, int64_t m = MOD) {
 }
 
 int64_t stirling1(int n, int k, int64_t m = MOD) {
-  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 0));
+  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= k; j++) {
@@ -171,7 +173,7 @@ int64_t stirling1(int n, int k, int64_t m = MOD) {
 }
 
 int64_t stirling2(int n, int k, int64_t m = MOD) {
-  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 0));
+  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= k; j++) {

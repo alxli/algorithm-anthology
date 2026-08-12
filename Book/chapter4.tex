@@ -64,7 +64,7 @@ class Graph {
 
   template<typename Fn>
   void dfs(int start, Fn f) const {
-    std::vector<char> visit(adj.size(), false);
+    std::vector<char> visit(adj.size());
     auto dfs = [&](auto &&dfs, int u) -> void {
       f(u);
       visit[u] = true;
@@ -79,7 +79,7 @@ class Graph {
 
   bool has_cycle() const {
     int n = static_cast<int>(adj.size());
-    std::vector<char> visit(n, false), onstack(n, false);
+    std::vector<char> visit(n), onstack(n);
     auto dfs = [&](auto &&dfs, int u, int p) -> bool {
       visit[u] = true;
       onstack[u] = true;
@@ -324,7 +324,7 @@ std::vector<int> find_cycle_undirected(const std::vector<std::vector<int>> &adj)
   if (n == 0) {
     return {};
   }
-  std::vector<char> visit(n, false);
+  std::vector<char> visit(n);
   std::vector<int> parent(n, -1);
   int cycle_start = -1, cycle_end = -1;
   auto dfs = [&](auto &&dfs, int u, int p) -> bool {
@@ -366,7 +366,7 @@ std::vector<int> find_cycle_directed(const std::vector<std::vector<int>> &adj) {
   if (n == 0) {
     return {};
   }
-  std::vector<char> state(n, 0);  // 0 = unvisited, 1 = currently on DFS stack, 2 = finished.
+  std::vector<char> state(n);  // 0 = unvisited, 1 = currently on DFS stack, 2 = finished.
   std::vector<int> parent(n, -1);
   int cycle_start = -1, cycle_end = -1;
   auto dfs = [&](auto &&dfs, int u) -> bool {
@@ -1405,7 +1405,7 @@ class EulerianGraph {
     if (start == -1) {
       start = choose_start();
     }
-    std::vector<char> used(m, false);
+    std::vector<char> used(m);
     std::vector<int> ptr(n), node_stack{start}, edge_stack{-1}, trail_edges;
     while (!node_stack.empty()) {
       int u = node_stack.back();
@@ -2516,7 +2516,7 @@ class TwoSAT {
   bool satisfiable() {
     order.clear();
     component.assign(2 * variables, -1);
-    std::vector<char> visit(2 * variables, false);
+    std::vector<char> visit(2 * variables);
     for (int i = 0; i < 2 * variables; i++) {
       if (!visit[i]) {
         dfs_order(i, visit);
@@ -2640,11 +2640,11 @@ class FunctionalGraph {
       }
     }
     // Peel nodes of in-degree zero; the survivors are exactly the cycle nodes.
-    std::vector<int> indeg(n, 0);
+    std::vector<int> indeg(n);
     for (int i = 0; i < n; i++) {
       indeg[f[i]]++;
     }
-    std::vector<char> removed(n, false);
+    std::vector<char> removed(n);
     std::vector<int> st;
     for (int i = 0; i < n; i++) {
       if (indeg[i] == 0) {
@@ -3381,8 +3381,8 @@ bool spfa(int start) {
   int n = static_cast<int>(adj.size());
   dist.assign(n, INF);
   pred.assign(n, -1);
-  std::vector<int> path_edges(n, 0);
-  std::vector<char> in_queue(n, false);
+  std::vector<int> path_edges(n);
+  std::vector<char> in_queue(n);
   std::queue<int> q;
   dist[start] = 0;
   q.push(start);
@@ -3488,7 +3488,7 @@ std::vector<int> pred;
 
 void dag_shortest_path(int start) {
   int n = static_cast<int>(adj.size());
-  std::vector<char> visit(n, false);
+  std::vector<char> visit(n);
   std::vector<int> order;
   auto dfs = [&](auto &&dfs, int u) -> void {
     visit[u] = true;
@@ -3713,7 +3713,7 @@ std::vector<std::vector<int64_t>> dist;
 std::vector<std::vector<int>> next_node;
 
 bool johnson_all_pairs(int n) {
-  std::vector<int64_t> potential(n, 0);
+  std::vector<int64_t> potential(n);
   for (int i = 0; i < n; i++) {
     bool changed = false;
     for (auto [u, v, w] : edges) {
@@ -4307,8 +4307,8 @@ int64_t dfs(int u, int64_t f, int sink) {
 }
 
 int64_t max_flow(int source, int sink) {
-  int n = static_cast<int>(cap.size());
   assert(source != sink);
+  int n = static_cast<int>(cap.size());
   int64_t total = 0;
   while (true) {
     visit.assign(n, false);
@@ -4417,7 +4417,7 @@ class EdmondsKarp {
   T max_flow(int source, int sink) {
     assert(source != sink);
     while (true) {
-      std::vector<Edge *> pred(nodes, nullptr);
+      std::vector<Edge *> pred(nodes);
       std::queue<int> q;
       q.push(source);
       while (!q.empty() && pred[sink] == nullptr) {
@@ -4804,11 +4804,11 @@ std::vector<std::vector<int64_t>> cap;
 std::vector<std::vector<int64_t>> f;
 
 int64_t push_relabel(int source, int sink) {
-  int n = static_cast<int>(cap.size());
   assert(source != sink);
-  f.assign(n, std::vector<int64_t>(n, 0));
-  std::vector<int64_t> excess(n, 0);
-  std::vector<int> height(n, 0), max_height(n, 0);
+  int n = static_cast<int>(cap.size());
+  f.assign(n, std::vector<int64_t>(n));
+  std::vector<int64_t> excess(n);
+  std::vector<int> height(n), max_height(n);
   height[source] = n - 1;
   for (int i = 0; i < n; i++) {
     f[source][i] = cap[source][i];
@@ -5642,7 +5642,7 @@ using Edge = std::tuple<int, int, T>;
 template<typename T>
 std::vector<Edge<T>> gomory_hu(int n, const std::vector<Edge<T>> &edges) {
   assert(n >= 1);
-  std::vector<int> parent(n, 0);
+  std::vector<int> parent(n);
   std::vector<T> cut_value(n);
   for (int s = 1; s < n; s++) {
     int t = parent[s];
@@ -6165,7 +6165,7 @@ Edmonds' blossom algorithm extends augmenting-path search to general (non-bipart
 The graph must be simple: self-loops and parallel edges are not supported.
 
 \begin{compactitem}
-  \item \inlinecode{maximum\_matching(adj)} returns a matching for a bidirectionally pre-populated adjacency list \inlinecode{adj}, whose indices represent the nodes. The returned vector \inlinecode{match} has \inlinecode{match[u] == v} and \inlinecode{match[v] == u} when \inlinecode{u} and \inlinecode{v} are matched, or \inlinecode{match[u]} is $-1$ when \inlinecode{u} is unmatched.
+  \item \inlinecode{max\_matching(adj)} returns a matching for a bidirectionally pre-populated adjacency list \inlinecode{adj}, whose indices represent the nodes. The returned vector \inlinecode{match} has \inlinecode{match[u] == v} and \inlinecode{match[v] == u} when \inlinecode{u} and \inlinecode{v} are matched, or \inlinecode{match[u]} is $-1$ when \inlinecode{u} is unmatched.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n^{3})$ per call, where $n$ is the number of nodes.
@@ -6184,7 +6184,7 @@ The graph must be simple: self-loops and parallel edges are not supported.
 #include <utility>
 #include <vector>
 
-std::vector<int> maximum_matching(const std::vector<std::vector<int>> &adj) {
+std::vector<int> max_matching(const std::vector<std::vector<int>> &adj) {
   int n = static_cast<int>(adj.size());
   std::vector<int> match(n, -1), label(n), parent(n), base(n), aux(n, -1);
   std::queue<int> q;
@@ -6305,7 +6305,7 @@ int main() {
     add_edge(1, 2);
     add_edge(2, 3);
     add_edge(3, 0);
-    vector<int> match = maximum_matching(adj);
+    vector<int> match = max_matching(adj);
     assert(matching_size(match) == 2);
     assert((match == vector<int>{1, 0, 3, 2}));
   }
@@ -6320,7 +6320,7 @@ int main() {
     add_edge(2, 0);
     add_edge(0, 3);
     add_edge(1, 4);
-    assert(matching_size(maximum_matching(adj)) == 2);
+    assert(matching_size(max_matching(adj)) == 2);
   }
   return 0;
 }
@@ -6638,7 +6638,7 @@ class MaxWeightMatching {
         nx(n),
         g(2 * n + 1, std::vector<Edge>(2 * n + 1)),
         flo(2 * n + 1),
-        flo_from(2 * n + 1, std::vector<int>(n + 1, 0)),
+        flo_from(2 * n + 1, std::vector<int>(n + 1)),
         lab(2 * n + 1, 0),
         match_(2 * n + 1, 0),
         slack(2 * n + 1, 0),
@@ -6816,6 +6816,7 @@ std::pair<T, std::vector<int>> min_assignment(const std::vector<std::vector<T>> 
       j0 = j1;
     } while (j0 != 0);
   }
+  // Optional: reconstruct one optimal assignment.
   std::vector<int> assignment(n, -1);
   for (int j = 1; j <= m; j++) {
     if (p[j] != 0) {
@@ -6894,7 +6895,7 @@ std::vector<int> stable_marriage(
       rank[w][women_pref[w][i]] = i;  // How woman w ranks each man (smaller is better).
     }
   }
-  std::vector<int> next_proposal(n, 0), husband(n, -1), wife(n, -1);
+  std::vector<int> next_proposal(n), husband(n, -1), wife(n, -1);
   std::queue<int> free_men;
   for (int m = 0; m < n; m++) {
     free_men.push(m);
@@ -7273,7 +7274,7 @@ class EdgeColoring {
   void add_edge(int u, int v) {
     // Build a maximal fan of u starting at v: fan[0] = v, and color(u, fan[i+1]) is free at fan[i].
     std::vector<int> fan{v};
-    std::vector<char> used(n, false);
+    std::vector<char> used(n);
     used[v] = true;
     while (true) {
       int last = fan.back(), next = -1;
@@ -7406,6 +7407,7 @@ int64_t shortest_hamiltonian_path() {
   for (int i = 0; i < n; i++) {
     res = std::min(res, dp[max_mask][i]);
   }
+  // Optional: reconstruct one shortest Hamiltonian path.
   int mask = max_mask, old = -1;
   for (int i = n - 1; i >= 0; i--) {
     int best = -1;
@@ -7450,6 +7452,7 @@ int64_t shortest_hamiltonian_cycle() {
   for (int i = 1; i < n; i++) {
     res = std::min(res, dp[max_mask][i] + adj[i][0]);  // Overflow warning.
   }
+  // Optional: reconstruct one shortest Hamiltonian cycle.
   int mask = max_mask, old = 0;
   for (int i = n - 1; i >= 1; i--) {
     int best = -1;

@@ -10,11 +10,11 @@ accepted job must be removed. Removing the longest one leaves the most remaining
 the same number of removed jobs, so it is never worse than removing a shorter accepted job.
 Repeating this repair after each deadline leaves a largest feasible accepted set.
 
-- `select_on_time_jobs(jobs)` returns the selected jobs as original input indices in a feasible
+- `max_on_time_jobs(jobs)` returns the selected jobs as original input indices in a feasible
   earliest-deadline-first execution order, for an input vector of `TimedJob` with fields `duration`
   and `deadline`. Durations and deadlines must be nonnegative integers.
 
-The total duration must fit in `int64_t`.
+Overflow warning: The total duration must fit in `int64_t`.
 
 Time Complexity:
 - O(n log n) per call due to sorting and heap operations.
@@ -36,19 +36,19 @@ struct TimedJob {
   int duration, deadline;
 };
 
-std::vector<int> select_on_time_jobs(const std::vector<TimedJob> &jobs) {
-  int n = static_cast<int>(jobs.size());
-  std::vector<int> order(n);
-  std::iota(order.begin(), order.end(), 0);
+std::vector<int> max_on_time_jobs(const std::vector<TimedJob> &jobs) {
   for (const auto &job : jobs) {
     assert(job.duration >= 0 && job.deadline >= 0);
   }
+  int n = static_cast<int>(jobs.size());
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [&](int i, int j) {
     return jobs[i].deadline != jobs[j].deadline ? jobs[i].deadline < jobs[j].deadline
                                                 : jobs[i].duration < jobs[j].duration;
   });
   std::priority_queue<std::pair<int, int>> accepted;
-  std::vector<char> selected(n, false);
+  std::vector<char> selected(n);
   int64_t time = 0;
   for (int i : order) {
     time += jobs[i].duration;  // Overflow warning.
@@ -76,6 +76,6 @@ using namespace std;
 
 int main() {
   vector<TimedJob> jobs{{3, 4}, {2, 3}, {1, 2}, {2, 7}};
-  assert((select_on_time_jobs(jobs) == vector<int>{2, 1, 3}));
+  assert((max_on_time_jobs(jobs) == vector<int>{2, 1, 3}));
   return 0;
 }

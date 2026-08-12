@@ -42,11 +42,12 @@ Space Complexity:
 
 #include <algorithm>
 #include <functional>
+#include <iterator>
 #include <random>
 #include <utility>
 
 template<typename It, typename T, typename Compare = std::less<>>
-std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot, Compare comp = Compare()) {
+std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot, Compare comp = Compare{}) {
   It lt = lo, cur = lo, gt = hi;
   while (cur != gt) {
     if (comp(*cur, pivot)) {
@@ -61,11 +62,12 @@ std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot, Compare comp
 }
 
 template<typename It, typename Compare = std::less<>>
-void nth_element2(It lo, It nth, It hi, Compare comp = Compare()) {
+void nth_element2(It lo, It nth, It hi, Compare comp = Compare{}) {
+  using T = typename std::iterator_traits<It>::value_type;
   static std::mt19937 rng(std::random_device{}());
   while (hi - lo > 1) {
     std::uniform_int_distribution<int> dist(0, hi - lo - 1);
-    auto pivot = *(lo + dist(rng));
+    T pivot = *(lo + dist(rng));
     auto [lt, gt] = partition_three_way(lo, hi, pivot, comp);
     if (nth < lt) {
       hi = lt;

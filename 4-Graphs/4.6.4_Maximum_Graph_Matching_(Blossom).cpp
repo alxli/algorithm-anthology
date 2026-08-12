@@ -11,8 +11,8 @@ matching in general graphs, use the weighted blossom algorithm in the next secti
 
 The graph must be simple: self-loops and parallel edges are not supported.
 
-- `maximum_matching(adj)` returns a matching for a bidirectionally pre-populated adjacency list
-  `adj`, whose indices represent the nodes. The returned vector `match` has `match[u] == v` and
+- `max_matching(adj)` returns a matching for a bidirectionally pre-populated adjacency list `adj`,
+  whose indices represent the nodes. The returned vector `match` has `match[u] == v` and
   `match[v] == u` when `u` and `v` are matched, or `match[u]` is $-1$ when `u` is unmatched.
 
 Time Complexity:
@@ -31,7 +31,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-std::vector<int> maximum_matching(const std::vector<std::vector<int>> &adj) {
+std::vector<int> max_matching(const std::vector<std::vector<int>> &adj) {
   int n = static_cast<int>(adj.size());
   std::vector<int> match(n, -1), label(n), parent(n), base(n), aux(n, -1);
   std::queue<int> q;
@@ -151,7 +151,7 @@ int main() {
     add_edge(1, 2);
     add_edge(2, 3);
     add_edge(3, 0);
-    vector<int> match = maximum_matching(adj);
+    vector<int> match = max_matching(adj);
     assert(matching_size(match) == 2);
     assert((match == vector<int>{1, 0, 3, 2}));
   }
@@ -166,7 +166,7 @@ int main() {
     add_edge(2, 0);
     add_edge(0, 3);
     add_edge(1, 4);
-    assert(matching_size(maximum_matching(adj)) == 2);
+    assert(matching_size(max_matching(adj)) == 2);
   }
   return 0;
 }

@@ -53,7 +53,7 @@ Space Complexity:
 #include <vector>
 
 template<typename It, typename Compare = std::less<>>
-void compress1(It lo, It hi, Compare comp = Compare()) {
+void compress1(It lo, It hi, Compare comp = Compare{}) {
   using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> v(lo, hi);
   std::sort(v.begin(), v.end(), comp);
@@ -69,7 +69,7 @@ void compress1(It lo, It hi, Compare comp = Compare()) {
 }
 
 template<typename It, typename Compare = std::less<>>
-void compress2(It lo, It hi, Compare comp = Compare()) {
+void compress2(It lo, It hi, Compare comp = Compare{}) {
   using T = typename std::iterator_traits<It>::value_type;
   std::map<T, int, Compare> m(comp);
   for (It it = lo; it != hi; ++it) {
@@ -90,10 +90,10 @@ class CoordinateCompressor {
   std::vector<T> values;
 
  public:
-  explicit CoordinateCompressor(Compare comp = Compare()) : comp(std::move(comp)) {}
+  explicit CoordinateCompressor(Compare comp = Compare{}) : comp(std::move(comp)) {}
 
   template<typename It>
-  CoordinateCompressor(It lo, It hi, Compare comp = Compare())
+  CoordinateCompressor(It lo, It hi, Compare comp = Compare{})
       : comp(std::move(comp)), values(lo, hi) {
     build();
   }

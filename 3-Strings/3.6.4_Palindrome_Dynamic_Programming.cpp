@@ -34,7 +34,7 @@ string longest_palindromic_subsequence(const string &s) {
   if (n == 0) {
     return "";
   }
-  std::vector<std::vector<int>> dp(n, std::vector<int>(n, 0));
+  std::vector<std::vector<int>> dp(n, std::vector<int>(n));
   for (int len = 1; len <= n; len++) {
     for (int l = 0, r = len - 1; r < n; l++, r++) {
       if (l == r) {
@@ -46,6 +46,7 @@ string longest_palindromic_subsequence(const string &s) {
       }
     }
   }
+  // Optional: reconstruct one longest palindromic subsequence.
   string left, right;
   for (int l = 0, r = n - 1; l <= r;) {
     if (l == r) {
@@ -67,7 +68,7 @@ string longest_palindromic_subsequence(const string &s) {
 
 int min_insertions_palindrome(const string &s) {
   int n = static_cast<int>(s.size());
-  std::vector<int> dp(n, 0);
+  std::vector<int> dp(n);
   for (int l = n - 1; l >= 0; l--) {
     int inside = 0;
     for (int r = l + 1; r < n; r++) {

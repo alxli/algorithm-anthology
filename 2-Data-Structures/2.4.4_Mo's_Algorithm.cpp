@@ -77,7 +77,7 @@ using namespace std;
 int main() {
   // Answer "number of distinct values in [l, r]" for several ranges.
   vector<int> a{1, 1, 2, 1, 3, 2, 3};
-  vector<int> freq(4, 0);
+  vector<int> freq(4);
   int distinct = 0;
   auto add = [&](int i) {
     if (freq[a[i]]++ == 0) distinct++;

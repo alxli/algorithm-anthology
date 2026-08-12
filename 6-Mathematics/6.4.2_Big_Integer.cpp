@@ -263,7 +263,7 @@ class BigInt {
     while ((1 << k) < n) {
       k++;
     }
-    std::vector<int> rev(n, 0);
+    std::vector<int> rev(n);
     for (int i = 1; i < n; i++) {
       if (!(i & (i - 1))) {
         high1++;
@@ -451,7 +451,9 @@ class BigInt {
     a.resize(n, 0);
     b.resize(n, 0);
     vint64 c;
-    if (n >= FFT_CUTOFF) {
+    if (n < FFT_CUTOFF) {
+      c = karatsuba(a.begin(), a.end(), b.begin(), b.end());
+    } else {
       auto at = fft(a.begin(), a.end()), bt = fft(b.begin(), b.end());
       for (int i = 0; i < n; i++) {
         at[i] *= bt[i];
@@ -461,8 +463,6 @@ class BigInt {
       for (int i = 0; i < n; i++) {
         c[i] = at[i].real() + 0.5;
       }
-    } else {
-      c = karatsuba(a.begin(), a.end(), b.begin(), b.end());
     }
     BigInt res;
     res.sign = u.sign * v.sign;
@@ -628,8 +628,8 @@ class BigInt {
       BigInt root = magnitude.comp(BigInt(p).pow(n)) < 0 ? p - 1 : p;
       return sign == -1 ? -root : root;
     }
-    BigInt lo(BigInt(10).pow(static_cast<int>(ceil(static_cast<double>(size()) / n)) - 1)),
-        hi(lo * 10), mid;
+    BigInt lo(BigInt(10).pow(static_cast<int>(ceil(static_cast<double>(size()) / n)) - 1));
+    BigInt hi(lo * 10), mid;
     while (lo < hi) {
       mid = (lo + hi) / 2;
       int cmp = comp(digits, mid.pow(n).digits, 1, 1);
@@ -665,6 +665,8 @@ class BigInt {
 };
 
 /*** Example Usage ***/
+
+using namespace std;
 
 int main() {
   BigInt a("-9899819294989142124"), b("12398124981294214");
@@ -702,14 +704,14 @@ int main() {
       }
     }
   }
-  std::mt19937 rng(1234567);  // Fixed seed for reproducibility.
-  std::uniform_int_distribution<int> length_dist(1, 100);
+  mt19937 rng(1234567);  // Fixed seed for reproducibility.
+  uniform_int_distribution<int> length_dist(1, 100);
   for (int i = 0; i < 20; i++) {
     int n = length_dist(rng);
     BigInt value(BigInt::rand(n)), root(value.sqrt()), lower(root * root), upper(root + 1);
     upper *= upper;
     assert(lower <= value && value < upper);
-    std::uniform_int_distribution<int> divisor_length_dist(1, n);
+    uniform_int_distribution<int> divisor_length_dist(1, n);
     BigInt divisor(BigInt::rand(divisor_length_dist(rng)) + 1), quotient(value / divisor);
     lower = quotient * divisor;
     upper = divisor * (quotient + 1);

@@ -20,15 +20,6 @@ constructible from $0$ and $1$ and support the arithmetic operators used by the 
   `uint64_t` power `p`.
 - `power_sum(a, p)` returns the power sum of a square matrix `a` up to a `uint64_t` power `p`, that
   is, $a + a^2 + \ldots + a^p$.
-- `transpose(a)` returns the transpose of an $m$ by $n$ matrix `a`, that is, a new $n$ by $m$ matrix
-  $b$ such that `a[i][j]` = `b[j][i]` for every `i` $\in [0, m)$ and `j` $\in [0, n)$.
-- `transpose_in_place(a)` assigns the square matrix `a` to its transpose, returning a reference to
-  the modified argument itself.
-- `rotate(a, d = 90)` returns the matrix `a` rotated `d` degrees clockwise. A negative `d` specifies
-  a counter-clockwise rotation, and `d` must be a multiple of 90.
-- `rotate_in_place(a, d = 90)` assigns the square matrix `a` to its rotation by `d` degrees
-  clockwise, returning a reference to the modified argument itself. A negative `d` specifies a
-  counter-clockwise rotation, and `d` must be a multiple of 90.
 
 Exponentiation uses the usual iterative binary exponentiation pattern: keep an accumulated result,
 square the base each round, and multiply the result when the current exponent bit is set. The power
@@ -43,25 +34,20 @@ Time Complexity:
 - O(n^3 log p) per exponentiation of an $n$ by $n$ matrix to power $p$.
 - O(n^3 log p) per call to `power_sum()` for an $n$ by $n$ matrix and power $p$.
 - O(m*n*k) per multiplication of an $m$ by $n$ matrix by an $n$ by $k$ matrix.
-- O(m*n) per call to `transpose()`, `transpose_in_place()`, `rotate()`, and `rotate_in_place()` on
-  an $m$ by $n$ matrix.
 
 Space Complexity:
 - O(1) auxiliary for `rows()`, `columns()`, `a[i][j]` access, comparison and scalar compound
-  operators, `transpose_in_place()`, and `rotate_in_place()`.
+  operators.
 - O(n^2) auxiliary for exponentiation of an $n$ by $n$ matrix to power $p$.
 - O(n^2) auxiliary for `power_sum()` of an $n$ by $n$ matrix up to power $p$.
-- O(m*n) auxiliary for all non-in-place operations returning an $m$ by $n$ matrix, `transpose()`,
-  and `rotate()`.
+- O(m*n) auxiliary for all non-in-place operations returning an $m$ by $n$ matrix.
 
 */
 
-#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <iomanip>
 #include <ostream>
-#include <utility>
 #include <vector>
 
 template<typename T>
@@ -288,135 +274,12 @@ Matrix<T> power_sum(const Matrix<T> &a, uint64_t p) {
   return res;
 }
 
-template<typename T>
-Matrix<T> transpose(const Matrix<T> &a) {
-  Matrix<T> res = make_matrix<T>(columns(a), rows(a));
-  for (int i = 0; i < rows(res); i++) {
-    for (int j = 0; j < columns(res); j++) {
-      res[i][j] = a[j][i];
-    }
-  }
-  return res;
-}
-
-template<typename T>
-Matrix<T> &transpose_in_place(Matrix<T> &a) {
-  assert(rows(a) == columns(a));
-  for (int i = 0; i < rows(a); i++) {
-    for (int j = i + 1; j < columns(a); j++) {
-      std::swap(a[i][j], a[j][i]);
-    }
-  }
-  return a;
-}
-
-template<typename T>
-Matrix<T> rotate(const Matrix<T> &a, int degrees = 90) {
-  assert(degrees % 90 == 0);
-  if (degrees < 0) {
-    degrees = 360 - ((-degrees) % 360);
-  }
-  Matrix<T> res;
-  switch (degrees % 360) {
-    case 90: {
-      res = make_matrix<T>(columns(a), rows(a));
-      for (int i = 0; i < columns(a); i++) {
-        for (int j = 0; j < rows(a); j++) {
-          res[i][j] = a[rows(a) - j - 1][i];
-        }
-      }
-      break;
-    }
-    case 180: {
-      res = make_matrix<T>(rows(a), columns(a));
-      for (int i = 0; i < rows(a); i++) {
-        for (int j = 0; j < columns(a); j++) {
-          res[i][j] = a[rows(a) - i - 1][columns(a) - j - 1];
-        }
-      }
-      break;
-    }
-    case 270: {
-      res = make_matrix<T>(columns(a), rows(a));
-      for (int i = 0; i < columns(a); i++) {
-        for (int j = 0; j < rows(a); j++) {
-          res[i][j] = a[j][columns(a) - i - 1];
-        }
-      }
-      break;
-    }
-    default: {
-      res = a;
-    }
-  }
-  return res;
-}
-
-template<typename T>
-Matrix<T> &rotate_in_place(Matrix<T> &a, int degrees = 90) {
-  assert(degrees % 90 == 0);
-  assert(degrees % 180 == 0 || rows(a) == columns(a));
-  if (degrees < 0) {
-    degrees = 360 - ((-degrees) % 360);
-  }
-  int n = rows(a);
-  switch (degrees % 360) {
-    case 90: {
-      transpose_in_place(a);
-      for (auto &row : a) {
-        std::reverse(row.begin(), row.end());
-      }
-      break;
-    }
-    case 180: {
-      // A 180-degree rotation is a horizontal flip (reverse each row) followed by a vertical flip
-      // (reverse the row order). This works for non-square matrices too, unlike a row/column index
-      // scheme keyed on a single dimension.
-      for (auto &row : a) {
-        std::reverse(row.begin(), row.end());
-      }
-      std::reverse(a.begin(), a.end());
-      break;
-    }
-    case 270: {
-      transpose_in_place(a);
-      for (int j = 0; j < n; j++) {
-        for (int i = 0, k = columns(a) - 1; i < k; i++, k--) {
-          std::swap(a[i][j], a[k][j]);
-        }
-      }
-      break;
-    }
-  }
-  return a;
-}
-
 /*** Example Usage ***/
 
 using namespace std;
 
 int main() {
   using matrix = Matrix<int>;
-  matrix a{{1, 2, 3}, {4, 5, 6}};
-  matrix a90{{4, 1}, {5, 2}, {6, 3}};
-  matrix a180{{6, 5, 4}, {3, 2, 1}};
-  matrix a270{{3, 6}, {2, 5}, {1, 4}};
-  assert(rotate(a, -270) == a90);
-  assert(rotate(a, -180) == a180);
-  assert(rotate(a, -90) == a270);
-  assert(rotate(a, 0) == a);
-  assert(rotate(a, 90) == a90);
-  assert(rotate(a, 180) == a180);
-  assert(rotate(a, 270) == a270);
-  assert(rotate(a, 360) == a);
-  assert(rotate(a, 450) == a90);
-
-  matrix b{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
-  for (int d = -360; d <= 360; d += 90) {
-    matrix m = b;
-    assert(rotate_in_place(m, d) == rotate(b, d));
-  }
-
   matrix m = make_matrix(5, 5, 10) + 10;
   vector<int> v{1, 2, 3, 4, 5};
   matrix mv{{300}, {300}, {300}, {300}, {300}};

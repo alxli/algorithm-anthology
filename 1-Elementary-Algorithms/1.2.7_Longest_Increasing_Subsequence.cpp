@@ -25,7 +25,7 @@ Space Complexity:
 #include <vector>
 
 template<typename It, typename Compare = std::less<>>
-std::vector<int> longest_increasing_subsequence(It lo, It hi, Compare comp = Compare()) {
+std::vector<int> longest_increasing_subsequence(It lo, It hi, Compare comp = Compare{}) {
   int n = static_cast<int>(hi - lo);
   if (n == 0) {
     return {};
@@ -50,6 +50,7 @@ std::vector<int> longest_increasing_subsequence(It lo, It hi, Compare comp = Com
     prev[i] = pos > 0 ? tail[pos - 1] : -1;
     tail[pos] = i;
   }
+  // Optional: reconstruct one longest increasing subsequence.
   std::vector<int> res(len);
   for (int i = tail[len - 1]; i != -1; i = prev[i]) {
     res[--len] = i;

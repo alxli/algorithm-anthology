@@ -47,8 +47,8 @@ bool spfa(int start) {
   int n = static_cast<int>(adj.size());
   dist.assign(n, INF);
   pred.assign(n, -1);
-  std::vector<int> path_edges(n, 0);
-  std::vector<char> in_queue(n, false);
+  std::vector<int> path_edges(n);
+  std::vector<char> in_queue(n);
   std::queue<int> q;
   dist[start] = 0;
   q.push(start);

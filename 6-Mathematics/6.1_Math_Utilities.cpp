@@ -127,7 +127,7 @@ Sign Functions:
 
 template<typename T>
 int sgn(const T &x) {
-  return (T(0) < x) - (x < T(0));
+  return (T{0} < x) - (x < T{0});
 }
 
 template<typename Double>
@@ -323,7 +323,9 @@ Base Conversion:
 - `convert_base(d, a, b)` converts an integer in base `a` as a vector `d` of digits (where `d[0]` is
   the least significant digit) to base `b` as a vector of digits (again with index 0 holding the
   least significant digit). This uses repeated long division, so the value itself does not need to
-  fit in a machine integer. Each intermediate `rem*a + digit` must fit in `uint64_t`.
+  fit in a machine integer.
+
+Overflow warning: Each intermediate `rem*a + digit` must fit in `uint64_t`.
 
 */
 

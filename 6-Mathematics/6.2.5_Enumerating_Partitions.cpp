@@ -117,7 +117,7 @@ void generate_increasing_partitions(int left, int prev, int i, std::vector<int> 
 
 template<typename Fn>
 void generate_increasing_partitions(int n, Fn f) {
-  std::vector<int> p(n, 0);
+  std::vector<int> p(n);
   generate_increasing_partitions(n, 0, 0, p, f);
 }
 

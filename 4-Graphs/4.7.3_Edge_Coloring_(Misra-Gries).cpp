@@ -82,7 +82,7 @@ class EdgeColoring {
   void add_edge(int u, int v) {
     // Build a maximal fan of u starting at v: fan[0] = v, and color(u, fan[i+1]) is free at fan[i].
     std::vector<int> fan{v};
-    std::vector<char> used(n, false);
+    std::vector<char> used(n);
     used[v] = true;
     while (true) {
       int last = fan.back(), next = -1;

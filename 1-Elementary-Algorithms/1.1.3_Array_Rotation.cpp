@@ -106,7 +106,6 @@ int main() {
   rotate3(no_op.begin(), no_op.begin(), no_op.end());
   assert((no_op == vector<int>{1, 2, 3}));
 
-  // Example from: http://en.cppreference.com/w/cpp/algorithm/rotate
   vector<int> a{2, 4, 2, 0, 5, 10, 7, 3, 7, 1};
 
   // Insertion sort.

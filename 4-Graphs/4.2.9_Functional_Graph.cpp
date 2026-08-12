@@ -68,11 +68,11 @@ class FunctionalGraph {
       }
     }
     // Peel nodes of in-degree zero; the survivors are exactly the cycle nodes.
-    std::vector<int> indeg(n, 0);
+    std::vector<int> indeg(n);
     for (int i = 0; i < n; i++) {
       indeg[f[i]]++;
     }
-    std::vector<char> removed(n, false);
+    std::vector<char> removed(n);
     std::vector<int> st;
     for (int i = 0; i < n; i++) {
       if (indeg[i] == 0) {

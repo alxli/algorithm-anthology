@@ -81,13 +81,13 @@ template<typename It>
 auto polygon_area_2x(It lo, It hi) {
   using T = decltype(lo->x * lo->y);
   if (lo == hi) {
-    return T(0);
+    return T{0};
   }
   T area = 0;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
     area += static_cast<T>(j->x - i->x) * static_cast<T>(j->y + i->y);  // Overflow warning.
   }
-  return area < T(0) ? -area : area;
+  return area < T{0} ? -area : area;
 }
 
 template<typename It>

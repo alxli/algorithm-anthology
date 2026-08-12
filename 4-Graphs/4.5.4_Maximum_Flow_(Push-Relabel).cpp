@@ -37,11 +37,11 @@ std::vector<std::vector<int64_t>> cap;
 std::vector<std::vector<int64_t>> f;
 
 int64_t push_relabel(int source, int sink) {
-  int n = static_cast<int>(cap.size());
   assert(source != sink);
-  f.assign(n, std::vector<int64_t>(n, 0));
-  std::vector<int64_t> excess(n, 0);
-  std::vector<int> height(n, 0), max_height(n, 0);
+  int n = static_cast<int>(cap.size());
+  f.assign(n, std::vector<int64_t>(n));
+  std::vector<int64_t> excess(n);
+  std::vector<int> height(n), max_height(n);
   height[source] = n - 1;
   for (int i = 0; i < n; i++) {
     f[source][i] = cap[source][i];

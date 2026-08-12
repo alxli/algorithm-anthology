@@ -122,7 +122,7 @@ struct FastInput {
       c = get_char();
     }
     if constexpr (std::is_signed<T>::value) {
-      x = neg ? T(U(0) - val) : T(val);
+      x = neg ? T(U{0} - val) : T(val);
     } else {
       x = T(val);
     }
@@ -201,7 +201,7 @@ struct FastOutput {
     if constexpr (std::is_signed<T>::value) {
       if (x < 0) {
         put_char('-');
-        val = U(0) - U(x);
+        val = U{0} - U(x);
       } else {
         val = U(x);
       }

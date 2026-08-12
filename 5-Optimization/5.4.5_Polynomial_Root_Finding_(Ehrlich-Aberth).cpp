@@ -44,7 +44,7 @@ using cpoly = std::vector<cdbl>;
 
 const dbl PI = std::acos(dbl(-1));
 const dbl ZERO_EPS = 1e-30L;   // Treat normalized coefficients and denominators this small as zero.
-const dbl ROOT_EPS = 1e-18L;   // Stop once root updates are this small relative to the root.
+const dbl ROOT_EPS = 1e-15L;   // Stop once root updates are this small relative to the root.
 const dbl CHECK_EPS = 1e-12L;  // Residual tolerance used by the example assertions.
 
 bool is_zero(const cdbl &z) {
@@ -70,14 +70,14 @@ dbl root_bound(const cpoly &p) {
   for (int i = 0; i < n; i++) {
     dbl ratio = std::abs(p[i] / p.back());
     if (ratio > 0) {
-      res = std::max(res, std::pow(ratio, dbl(1) / (n - i)));
+      res = std::max(res, std::pow(ratio, dbl{1} / (n - i)));
     }
   }
-  return 2 * std::max(dbl(1), res);
+  return 2 * std::max(dbl{1}, res);
 }
 
 cpoly find_all_roots(cpoly p, dbl eps = ROOT_EPS, int iterations = 2000) {
-  while (!p.empty() && p.back() == cdbl(0)) {
+  while (!p.empty() && p.back() == cdbl{0}) {
     p.pop_back();
   }
   if (p.size() <= 1) {
@@ -129,7 +129,7 @@ cpoly find_all_roots(cpoly p, dbl eps = ROOT_EPS, int iterations = 2000) {
             dbl angle = 2 * PI * (i + 1) / (n + 1);
             diff = eps * (1 + std::abs(z[i])) * cdbl(std::cos(angle), std::sin(angle));
           }
-          repulsion += cdbl(1) / diff;
+          repulsion += cdbl{1} / diff;
         }
       }
       cdbl denom = dfx - fx * repulsion;

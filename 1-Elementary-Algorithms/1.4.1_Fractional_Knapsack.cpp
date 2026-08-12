@@ -33,18 +33,18 @@ std::pair<double, std::vector<double>> fractional_knapsack(
 ) {
   int n = static_cast<int>(weight.size());
   assert(static_cast<int>(value.size()) == n && capacity >= 0);
-  std::vector<int> order(n);
-  std::iota(order.begin(), order.end(), 0);
   for (int i = 0; i < n; i++) {
     assert(weight[i] > 0 && value[i] >= 0);
   }
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [&](int i, int j) {
     int64_t lhs = static_cast<int64_t>(value[i]) * weight[j];
     int64_t rhs = static_cast<int64_t>(value[j]) * weight[i];
     return lhs != rhs ? lhs > rhs : i < j;
   });
   double best_value = 0;
-  std::vector<double> fraction(n, 0);
+  std::vector<double> fraction(n);
   for (int i : order) {
     int taken = std::min(capacity, weight[i]);
     fraction[i] = static_cast<double>(taken) / weight[i];

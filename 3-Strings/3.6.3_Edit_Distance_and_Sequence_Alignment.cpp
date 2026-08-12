@@ -66,7 +66,7 @@ std::pair<string, string> align_sequences(
     const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1
 ) {
   int n = static_cast<int>(s1.size()), m = static_cast<int>(s2.size());
-  std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1, 0));
+  std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1));
   for (int i = 0; i <= n; i++) {
     dp[i][0] = i * gap_cost;
   }
@@ -82,6 +82,7 @@ std::pair<string, string> align_sequences(
                                             );
     }
   }
+  // Optional: reconstruct one minimum-cost alignment.
   string res1, res2;
   int i = n, j = m;
   while (i > 0 && j > 0) {

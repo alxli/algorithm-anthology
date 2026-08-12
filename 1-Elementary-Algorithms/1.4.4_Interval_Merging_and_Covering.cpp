@@ -58,12 +58,12 @@ std::optional<std::vector<int>> cover_interval(
     const std::vector<Interval> &intervals, int lo, int hi
 ) {
   assert(lo <= hi);
-  int n = static_cast<int>(intervals.size());
-  std::vector<int> order(n);
-  std::iota(order.begin(), order.end(), 0);
   for (const auto &iv : intervals) {
     assert(iv.start < iv.finish);
   }
+  int n = static_cast<int>(intervals.size());
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [&](int i, int j) {
     if (intervals[i].start != intervals[j].start) {
       return intervals[i].start < intervals[j].start;

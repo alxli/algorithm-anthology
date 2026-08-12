@@ -327,7 +327,7 @@ class MaxWeightMatching {
         nx(n),
         g(2 * n + 1, std::vector<Edge>(2 * n + 1)),
         flo(2 * n + 1),
-        flo_from(2 * n + 1, std::vector<int>(n + 1, 0)),
+        flo_from(2 * n + 1, std::vector<int>(n + 1)),
         lab(2 * n + 1, 0),
         match_(2 * n + 1, 0),
         slack(2 * n + 1, 0),

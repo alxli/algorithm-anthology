@@ -14,7 +14,7 @@ links it to the next candidate slot `t - 1`.
   vector of `Job` with fields `deadline` and `profit`. Deadlines are positive integers, and assigned
   slots are numbered starting from $1$. Jobs with nonpositive profit are not selected.
 
-The total profit must fit in `int64_t`.
+Overflow warning: The total profit must fit in `int64_t`.
 
 Time Complexity:
 - O(n log n) per call due to sorting, with near-constant disjoint-set operations.
@@ -47,12 +47,12 @@ class SlotDSU {
 };
 
 std::pair<int64_t, std::vector<int>> select_deadline_jobs(const std::vector<Job> &jobs) {
-  int n = static_cast<int>(jobs.size());
-  std::vector<int> order(n);
-  std::iota(order.begin(), order.end(), 0);
   for (const auto &job : jobs) {
     assert(job.deadline > 0);
   }
+  int n = static_cast<int>(jobs.size());
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [&](int i, int j) {
     return jobs[i].profit != jobs[j].profit ? jobs[i].profit > jobs[j].profit
                                             : jobs[i].deadline < jobs[j].deadline;

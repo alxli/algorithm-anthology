@@ -52,7 +52,7 @@ template<typename It>
 auto max_subarray_sum(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
   if (lo == hi) {
-    return std::tuple{T(), 0, -1};
+    return std::tuple{T{}, 0, -1};
   }
   int curr_begin = 0, begin = 0, end = -1;
   T sum = 0, max_sum = 0;
@@ -105,7 +105,7 @@ template<typename It>
 auto max_product_subarray(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
   if (lo == hi) {
-    return std::tuple{T(), 0, -1};
+    return std::tuple{T{}, 0, -1};
   }
   T max_ending = *lo, min_ending = *lo, best = *lo;
   int max_begin = 0, min_begin = 0, begin = 0, end = 0;
@@ -141,13 +141,13 @@ auto max_product_subarray(It lo, It hi) {
 template<typename T>
 std::tuple<T, int, int, int, int> max_submatrix_sum(const std::vector<std::vector<T>> &a) {
   if (a.empty() || a[0].empty()) {
-    return {T(), 0, 0, -1, -1};
+    return {T{}, 0, 0, -1, -1};
   }
   int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
   int r1 = 0, c1 = 0, r2 = -1, c2 = -1;
   T max_sum = 0;
   for (int clo = 0; clo < cols; clo++) {
-    std::vector<T> sums(rows, 0);
+    std::vector<T> sums(rows);
     for (int chi = clo; chi < cols; chi++) {
       for (int i = 0; i < rows; i++) {
         sums[i] += a[i][chi];  // Overflow warning.
@@ -193,15 +193,16 @@ int main() {
       cout << a[i] << " ";
     }
     cout << endl;
-
-    vector<int> circular{5, -3, 5};
-    auto [circular_sum, circular_begin, circular_end] =
-        max_circular_subarray_sum(circular.begin(), circular.end());
-    assert(circular_sum == 10 && circular_begin == 2 && circular_end == 0);
-
-    vector<int> b{2, 3, -2, 4};
-    auto [product, product_begin, product_end] = max_product_subarray(b.begin(), b.end());
-    assert(product == 6 && product_begin == 0 && product_end == 1);
+  }
+  {
+    vector<int> a{5, -3, 5};
+    auto [sum, begin, end] = max_circular_subarray_sum(a.begin(), a.end());
+    assert(sum == 10 && begin == 2 && end == 0);
+  }
+  {
+    vector<int> a{2, 3, -2, 4};
+    auto [product, begin, end] = max_product_subarray(a.begin(), a.end());
+    assert(product == 6 && begin == 0 && end == 1);
   }
   {
     // clang-format off

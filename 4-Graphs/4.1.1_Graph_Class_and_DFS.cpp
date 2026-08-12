@@ -65,7 +65,7 @@ class Graph {
 
   template<typename Fn>
   void dfs(int start, Fn f) const {
-    std::vector<char> visit(adj.size(), false);
+    std::vector<char> visit(adj.size());
     auto dfs = [&](auto &&dfs, int u) -> void {
       f(u);
       visit[u] = true;
@@ -80,7 +80,7 @@ class Graph {
 
   bool has_cycle() const {
     int n = static_cast<int>(adj.size());
-    std::vector<char> visit(n, false), onstack(n, false);
+    std::vector<char> visit(n), onstack(n);
     auto dfs = [&](auto &&dfs, int u, int p) -> bool {
       visit[u] = true;
       onstack[u] = true;

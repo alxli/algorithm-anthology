@@ -55,6 +55,11 @@ Prefer code that a strong contestant can adapt quickly after skimming:
   expression.
 - Mark single-argument constructors `explicit` unless implicit conversion is an intentional part of
   a mathematical value type or another established API.
+- When saving a dereferenced generic iterator across mutations, materialize its `value_type`;
+  `auto` may retain a proxy reference such as `std::vector<bool>::reference`.
+- Omit a `std::vector` fill argument when it merely repeats value initialization, such as `0`,
+  `false`, `nullptr`, or `T{}`. Keep explicit non-default values and semantic sentinels such as
+  `-1`, `INF`, or named states.
 - Delete copying for classes whose buffered or resource-owning state cannot be copied meaningfully.
 - Assume nested-vector matrices and grids are rectangular; do not scan every row with assertions to
   validate their shape. Keep assertions for compatibility between separate inputs, such as matrix
@@ -97,8 +102,16 @@ Prefer code that a strong contestant can adapt quickly after skimming:
   successor-mask arithmetic can otherwise invoke undefined behavior.
 - Check intermediate arithmetic as well as the final mathematical result for overflow. Rearrange or
   reduce products before division when an intermediate can exceed the result type.
+- Put parameter preconditions and validation-only loops at the beginning of a function, before
+  allocations, initialization passes, sorting, mutation, callbacks, or algorithmic work. A cheap
+  derived scalar such as `n` may come first only when the checks use it; otherwise, declare it after
+  validation, immediately before its first use. Keep assertions on computed results and internal
+  invariants where they are established.
 - Keep comments sparse and useful. Explain invariants, tricky transitions, precision choices,
   overflow risks, and non-obvious contest assumptions; do not narrate obvious assignments.
+- When an optimization or DP routine computes its objective before a separate witness-extraction
+  block, introduce that block with `// Optional: reconstruct one ...`. Do not add this comment to
+  standalone reconstruction helpers or algorithms whose primary result is itself a traversal.
 
 ## Naming Conventions
 
@@ -279,7 +292,8 @@ sections elsewhere, include both `Time Complexity:` and `Space Complexity:`.
 - Call out overflow and representation assumptions explicitly, especially for products, squared
   norms, modular arithmetic, big integers, and floating-point normalization. Lead such a docstring
   note with `Overflow warning:` so it stays greppable; the in-code comment form is
-  `// Overflow warning.`.
+  `// Overflow warning.`. Keep operation-specific representability preconditions in their API
+  bullets, but use a separate labeled paragraph for a general arithmetic limit.
 - Avoid `std::is_integral_v<T>` as a proxy for "exact integer-like" when custom types such as
   `BigInt`, `Rational`, or `Modular` may be relevant. Prefer branching on floating-point behavior
   when the issue is really precision/metric support.
@@ -352,6 +366,12 @@ them as a convention. The current code-consistency pass in `scan_quality.py` che
 - unqualified `<cmath>` calls in generic or `long double` code that could select a narrowing global
   overload;
 - `static_cast<C>(EPS)` in floating-point comparison helpers, where direct `EPS` is clearer;
+- function-style or `static_cast` construction of typed zero and one constants, where direct-list
+  initialization such as `T{0}`, `U{1}`, or `Mask{1}` is clearer and rejects narrowing;
+- empty function-style construction of dependent values and policy objects, where direct-list
+  initialization such as `T{}`, `Compare{}`, or `Hash{}` is clearer and also supports aggregates;
+- redundant `std::vector` fill arguments such as `0`, `false`, `nullptr`, and `T{}`, which already
+  result from value-initializing a vector by size;
 - `include_boundary` naming drift in geometry boundary flags;
 - `Overflow warning.` comment punctuation.
 

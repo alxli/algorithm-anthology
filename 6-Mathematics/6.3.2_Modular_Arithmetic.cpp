@@ -210,7 +210,7 @@ class ModCombinatorics {
   }
 
  public:
-  ModCombinatorics() : fact(1, Mint(1)), inv_fact(1, Mint(1)) {}
+  ModCombinatorics() : fact(1, Mint{1}), inv_fact(1, Mint{1}) {}
 
   Mint factorial(int n) {
     ensure(n);

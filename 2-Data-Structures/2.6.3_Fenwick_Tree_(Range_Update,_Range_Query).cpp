@@ -60,7 +60,6 @@ class FenwickRURQ {
   explicit FenwickRURQ(int n) : len(n), t1(n + 2), t2(n + 2) {}
 
   int size() const { return len; }
-
   void add(int i, const T &x) { add(i, i, x); }
 
   void add(int lo, int hi, const T &x) {

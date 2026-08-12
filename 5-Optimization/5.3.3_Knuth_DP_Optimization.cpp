@@ -35,8 +35,8 @@ template<typename Cost>
 std::vector<std::vector<int64_t>> knuth_interval_dp(
     int n, Cost cost, std::vector<std::vector<int>> *opt_out = nullptr
 ) {
-  std::vector<std::vector<int64_t>> dp(n + 1, std::vector<int64_t>(n + 1, 0));
-  std::vector<std::vector<int>> opt(n + 1, std::vector<int>(n + 1, 0));
+  std::vector<std::vector<int64_t>> dp(n + 1, std::vector<int64_t>(n + 1));
+  std::vector<std::vector<int>> opt(n + 1, std::vector<int>(n + 1));
   // Empty and one-item intervals have cost 0.
   for (int i = 0; i <= n; i++) {
     opt[i][i] = i;

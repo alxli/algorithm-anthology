@@ -27,7 +27,7 @@ horizontal ($1 \times 2$) or vertical ($2 \times 1$).
 - `count_domino_tilings(rows, cols)` returns the number of ways to tile a `rows` by `cols` rectangle
   with $1 \times 2$ and $2 \times 1$ dominoes.
 
-All accumulated costs and tiling counts must fit in `int64_t`.
+Overflow warning: All accumulated costs and tiling counts must fit in `int64_t`.
 
 Time Complexity:
 - O(n^2*2^n) per call to `assignment_min_cost()`, where $n$ is the number of workers and jobs.
@@ -75,6 +75,7 @@ std::pair<int64_t, std::vector<int>> assignment_min_cost(
       }
     }
   }
+  // Optional: reconstruct one optimal assignment.
   std::vector<int> job(n);
   for (int mask = states - 1, worker = n - 1; worker >= 0; worker--) {
     job[worker] = parent[mask];
@@ -87,12 +88,12 @@ std::pair<int, std::vector<int>> minimum_set_cover(
     const std::vector<int> &sets, int universe_size
 ) {
   assert(0 <= universe_size && universe_size < 31);
-  int n = static_cast<int>(sets.size());
   int states = 1 << universe_size;
   int full = states - 1;
   for (int subset : sets) {
     assert((subset & ~full) == 0);
   }
+  int n = static_cast<int>(sets.size());
   int inf = n + 1;
   std::vector<int> dp(states, inf), parent(states, -1), prev(states, -1);
   dp[0] = 0;
@@ -112,6 +113,7 @@ std::pair<int, std::vector<int>> minimum_set_cover(
   if (dp[full] == inf) {
     return {-1, {}};
   }
+  // Optional: reconstruct one minimum set cover.
   std::vector<int> chosen;
   for (int mask = full; mask != 0; mask = prev[mask]) {
     int i = parent[mask];
@@ -142,7 +144,7 @@ int64_t count_domino_tilings(int rows, int cols) {
   }
   assert(cols < 31);
   int states = 1 << cols;
-  std::vector<int64_t> dp(states, 0), next(states, 0);
+  std::vector<int64_t> dp(states), next(states);
   dp[0] = 1;
   for (int r = 0; r < rows; r++) {
     for (int c = 0; c < cols; c++) {

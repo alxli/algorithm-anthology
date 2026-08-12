@@ -18,9 +18,11 @@ semantics in one place.
   `p` as (`left`, `right`). The left tangent has all polygon vertices on or to the left of the
   directed line `p` $\to$ `poly[left]`; the right tangent is analogous for the right side.
 
-For integer-coordinate inputs, all orientation tests are exact provided the cross products do not
-overflow. When a line crosses two sides, their returned order is determined using a floating-point
-line parameter.
+When a line crosses two sides, their returned order is determined using a floating-point line
+parameter.
+
+Overflow warning: For integer-coordinate inputs, all orientation tests are exact provided the cross
+products do not overflow.
 
 Time Complexity:
 - O(log n) per call to `point_in_convex_polygon()`, where $n$ is the number of polygon vertices.
@@ -45,7 +47,7 @@ auto cross(const Pt &a, const Pt &b, const Pt &o) {
 
 template<typename T>
 int sgn(const T &x) {
-  return (T(0) < x) - (x < T(0));
+  return (T{0} < x) - (x < T{0});
 }
 
 template<typename Pt>

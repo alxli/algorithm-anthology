@@ -58,10 +58,10 @@ class BinaryHeap {
   }
 
  public:
-  explicit BinaryHeap(Compare comp = Compare()) : comp(std::move(comp)) {}
+  explicit BinaryHeap(Compare comp = Compare{}) : comp(std::move(comp)) {}
 
   template<typename It>
-  BinaryHeap(It lo, It hi, Compare comp = Compare()) : heap(lo, hi), comp(std::move(comp)) {
+  BinaryHeap(It lo, It hi, Compare comp = Compare{}) : heap(lo, hi), comp(std::move(comp)) {
     for (int i = static_cast<int>(heap.size()) / 2 - 1; i >= 0; i--) {
       sift_down(i);
     }

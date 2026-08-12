@@ -17,7 +17,7 @@ addition. For additive rectangle sums, a 2D Fenwick tree is simpler and has smal
 the sparse 2D segment tree in the next section when the coordinate range is too large to allocate
 dense storage.
 
-- `SegTree2D<T>(rows, cols, v = T())` constructs a `rows` by `cols` array with 0-based indices, with
+- `SegTree2D<T>(rows, cols, v = T{})` constructs a `rows` by `cols` array with 0-based indices, with
   all entries initialized to `v`.
 - `SegTree2D<T>(a)` constructs the tree from the matrix `a`.
 - `num_rows()` and `num_cols()` return the dimensions of the array.
@@ -84,7 +84,7 @@ class SegTree2D {
   }
 
  public:
-  SegTree2D(int rows, int cols, const T &v = T()) : rows(rows), cols(cols) {
+  SegTree2D(int rows, int cols, const T &v = T{}) : rows(rows), cols(cols) {
     assert(rows > 0 && cols > 0);
     build([&](int, int) { return v; });
   }

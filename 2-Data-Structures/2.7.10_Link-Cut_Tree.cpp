@@ -25,7 +25,7 @@ queries, and `compose_deltas(old, d)` would return `old + d`.
 - `LinkCut<T>()` constructs an empty forest.
 - `size()` returns the number of nodes in the forest.
 - `trees()` returns the number of trees in the forest.
-- `add_node(u, value = T())` adds a new single-node tree to the forest, labeled with the integer `u`
+- `add_node(u, value = T{})` adds a new single-node tree to the forest, labeled with the integer `u`
   and with value initialized to `value`.
 - `connected(u, v)` returns whether nodes `u` and `v` are connected.
 - `link(u, v)` adds an edge between the nodes `u` and `v`, both of which must exist and not be
@@ -218,7 +218,7 @@ class LinkCut {
   int size() const { return static_cast<int>(nodes.size()); }
   int trees() const { return num_trees; }
 
-  void add_node(int u, const T &value = T()) {
+  void add_node(int u, const T &value = T{}) {
     assert(nodes.find(u) == nodes.end());
     Node *n = new Node(u, value);
     expose(n);

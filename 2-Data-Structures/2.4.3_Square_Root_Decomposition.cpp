@@ -16,7 +16,7 @@ single updated index. The default definition below supports updates that "set" t
 index to a new value. Another possible update operation is "increment", in which case
 `apply_delta(v, d)` should return `v + d`.
 
-- `SqrtDecomposition<T>(n, v = T())` constructs an array of size `n` with indices $[0, `n`)$, and
+- `SqrtDecomposition<T>(n, v = T{})` constructs an array of size `n` with indices $[0, `n`)$, and
   all values initialized to `v`.
 - `SqrtDecomposition<T>(lo, hi)` constructs an array from the half-open random-access iterator range
   $[`lo`, `hi`)$.
@@ -65,7 +65,7 @@ class SqrtDecomposition {
   }
 
  public:
-  explicit SqrtDecomposition(int n, const T &v = T()) : len(n), value(n, v) { init(); }
+  explicit SqrtDecomposition(int n, const T &v = T{}) : len(n), value(n, v) { init(); }
 
   template<typename It>
   SqrtDecomposition(It lo, It hi) : len(hi - lo), value(lo, hi) {

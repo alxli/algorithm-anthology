@@ -25,7 +25,7 @@ storage; it is simpler and faster. Use this sparse version when the coordinate r
 only a small fraction of cells are updated. For dense additive rectangle sums, prefer the 2D Fenwick
 tree in 2.6.5.
 
-- `SparseSegTree2D<T, R, C>(v = T())` constructs a two-dimensional array over rows $[0, `R`)$ and
+- `SparseSegTree2D<T, R, C>(v = T{})` constructs a two-dimensional array over rows $[0, `R`)$ and
   columns $[0, `C`)$. All array values are implicitly initialized to `v`. Nodes are allocated lazily
   as indices are touched.
 - `at(r, c)` returns the value at row `r`, column `c`.
@@ -204,7 +204,7 @@ class SparseSegTree2D {
   }
 
  public:
-  explicit SparseSegTree2D(const T &v = T())
+  explicit SparseSegTree2D(const T &v = T{})
       : root(new OuterNode(0, R - 1, combine_n(v, int64_t{R} * C))), init(v) {}
 
   ~SparseSegTree2D() { clean_up(root); }

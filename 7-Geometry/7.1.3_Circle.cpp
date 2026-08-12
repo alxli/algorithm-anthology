@@ -179,8 +179,8 @@ int in_circumcircle(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
           (bdx * bdx + bdy * bdy) * (cdx * ady - adx * cdy) +
           (cdx * cdx + cdy * cdy) * (adx * bdy - bdx * ady);
   W orient = ((W)b.x - a.x) * ((W)c.y - a.y) - ((W)b.y - a.y) * ((W)c.x - a.x);
-  W val = W(0) < orient ? det : -det;
-  return EQ(val, W(0)) ? 0 : (W(0) < val ? 1 : -1);
+  W val = W{0} < orient ? det : -det;
+  return EQ(val, W{0}) ? 0 : (W{0} < val ? 1 : -1);
 }
 
 /*** Example Usage ***/

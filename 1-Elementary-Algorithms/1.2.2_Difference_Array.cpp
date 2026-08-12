@@ -16,7 +16,7 @@ grid.
   and columns $[`c1`, `c2`]$.
 - `build()` returns the final grid after all rectangle updates.
 
-All stored differences and reconstructed values must fit in `int64_t`.
+Overflow warning: All stored differences and reconstructed values must fit in `int64_t`.
 
 Time Complexity:
 - O(1) per call to `add()` of either version.
@@ -66,7 +66,7 @@ class DifferenceArray2D {
  public:
   DifferenceArray2D(int rows, int cols) {
     assert(rows >= 0 && cols >= 0);
-    diff.assign(rows + 1, std::vector<int64_t>(cols + 1, 0));
+    diff.assign(rows + 1, std::vector<int64_t>(cols + 1));
   }
 
   void add(int r1, int c1, int r2, int c2, int64_t delta) {

@@ -50,7 +50,7 @@ std::pair<int64_t, std::vector<int>> unbounded_knapsack(
   for (int w : weight) {
     assert(w > 0);
   }
-  std::vector<int64_t> dp(capacity + 1, 0);
+  std::vector<int64_t> dp(capacity + 1);
   std::vector<int> choice(capacity + 1, -1);
   for (int w = 1; w <= capacity; w++) {
     for (int i = 0; i < n; i++) {
@@ -63,7 +63,8 @@ std::pair<int64_t, std::vector<int>> unbounded_knapsack(
       }
     }
   }
-  std::vector<int> count(n, 0);
+  // Optional: reconstruct one optimal multiset of items.
+  std::vector<int> count(n);
   for (int w = capacity; choice[w] != -1; w -= weight[choice[w]]) {
     count[choice[w]]++;
   }
@@ -72,7 +73,7 @@ std::pair<int64_t, std::vector<int>> unbounded_knapsack(
 
 int64_t count_coin_change(const std::vector<int> &coins, int target) {
   assert(target >= 0);
-  std::vector<int64_t> dp(target + 1, 0);
+  std::vector<int64_t> dp(target + 1);
   dp[0] = 1;
   for (int coin : coins) {
     assert(coin > 0);
@@ -102,7 +103,8 @@ std::pair<int, std::vector<int>> min_coin_change(const std::vector<int> &coins, 
   if (dp[target] == inf) {
     return {-1, {}};
   }
-  std::vector<int> used(coins.size(), 0);
+  // Optional: reconstruct one minimum-size multiset of coins.
+  std::vector<int> used(coins.size());
   for (int sum = target; sum > 0; sum -= coins[choice[sum]]) {
     used[choice[sum]]++;
   }

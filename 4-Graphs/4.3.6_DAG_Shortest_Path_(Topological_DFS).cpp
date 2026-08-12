@@ -42,7 +42,7 @@ std::vector<int> pred;
 
 void dag_shortest_path(int start) {
   int n = static_cast<int>(adj.size());
-  std::vector<char> visit(n, false);
+  std::vector<char> visit(n);
   std::vector<int> order;
   auto dfs = [&](auto &&dfs, int u) -> void {
     visit[u] = true;

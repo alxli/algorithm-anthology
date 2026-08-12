@@ -11,10 +11,12 @@ binary operators left-associative, while recursively restarting at the loosest l
 parentheses enforces grouping.
 
 Literals must be nonnegative decimal integers, although unary signs may precede them. The input must
-be valid and contain no whitespace. Division truncates toward zero, every divisor must be nonzero,
-and all intermediate results must fit in `int`.
+be valid and contain no whitespace. Division truncates toward zero, and every divisor must be
+nonzero.
 
 - `eval(s)` returns an evaluation of the arithmetic expression `s`.
+
+Overflow warning: All intermediate results must fit in `int`.
 
 Time Complexity:
 - O(n) per call, where $n$ is the length of `s`.

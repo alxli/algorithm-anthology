@@ -26,12 +26,14 @@ changing the comparison from strict to non-strict (e.g. `>=` to `>`) toggles how
   there's no such index.
 - `next_greater(a)` returns, for each $i$, the smallest index $j > i$ with $a[j] > a[i]$, or $n$ if
   there's no such index.
-- `largest_histogram_rectangle(heights)` returns the maximum area of an axis-aligned rectangle that
-  fits under the given histogram, given an array of `heights` where each bar has width $1$.
-- `largest_zero_submatrix(a)` returns the area of the largest all-zero rectangular submatrix of the
-  0/1 matrix `a`.
+- `largest_histogram_rectangle(heights)` returns the maximum area and its inclusive left and right
+  endpoints in a histogram where each bar has width $1$.
+- `largest_zero_submatrix(a)` returns the maximum area and its inclusive top, left, bottom, and
+  right boundaries among all-zero rectangular submatrices of the 0/1 matrix `a`.
 
-Histogram areas must fit in the height value type.
+Histogram heights must be nonnegative.
+
+Overflow warning: Histogram areas must fit in the height value type.
 
 Time Complexity:
 - O(n) per call to all one-dimensional functions, where $n$ is the size of the input.
@@ -47,6 +49,7 @@ Space Complexity:
 #include <algorithm>
 #include <cassert>
 #include <stack>
+#include <tuple>
 #include <vector>
 
 template<typename T>
@@ -110,33 +113,45 @@ std::vector<int> next_greater(const std::vector<T> &a) {
 }
 
 template<typename T>
-T largest_histogram_rectangle(const std::vector<T> &heights) {
+std::tuple<T, int, int> largest_histogram_rectangle(const std::vector<T> &heights) {
   int n = static_cast<int>(heights.size());
   std::vector<int> left = prev_less(heights), right = next_less(heights);
-  T best = 0;
+  T best{};
+  int lo = 0, hi = -1;
   for (int i = 0; i < n; i++) {
     T area = heights[i] * (right[i] - left[i] - 1);  // Overflow warning.
     if (area > best) {
       best = area;
+      lo = left[i] + 1;
+      hi = right[i] - 1;
     }
   }
-  return best;
+  return {best, lo, hi};
 }
 
-int largest_zero_submatrix(const std::vector<std::vector<char>> &a) {
+std::tuple<int, int, int, int, int> largest_zero_submatrix(
+    const std::vector<std::vector<char>> &a
+) {
   if (a.empty()) {
-    return 0;
+    return {0, 0, 0, -1, -1};
   }
   int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
-  int best = 0;
-  std::vector<int> height(cols, 0);
+  int best = 0, rlo = 0, clo = 0, rhi = -1, chi = -1;
+  std::vector<int> height(cols);
   for (int i = 0; i < rows; i++) {
     for (int j = 0; j < cols; j++) {
       height[j] = a[i][j] ? 0 : height[j] + 1;
     }
-    best = std::max(best, largest_histogram_rectangle(height));
+    auto [area, lo, hi] = largest_histogram_rectangle(height);
+    if (area > best) {
+      best = area;
+      rlo = i - area / (hi - lo + 1) + 1;
+      clo = lo;
+      rhi = i;
+      chi = hi;
+    }
   }
-  return best;
+  return {best, rlo, clo, rhi, chi};
 }
 
 /*** Example Usage ***/
@@ -152,7 +167,8 @@ int main() {
 
   vector<int> hist{2, 1, 5, 6, 2, 3};
   // The best histogram rectangle uses bars 2 and 3: min height 5 times width 2.
-  assert(largest_histogram_rectangle(hist) == 10);
+  assert((largest_histogram_rectangle(hist) == make_tuple(10, 2, 3)));
+  assert((largest_histogram_rectangle(vector<int>{}) == make_tuple(0, 0, -1)));
 
   vector<vector<char>> grid{
       {1, 0, 1, 1, 0, 0},
@@ -162,6 +178,7 @@ int main() {
       {1, 0, 1, 0, 0, 1}
   };
   // The largest zero rectangle has 3 rows and 2 columns.
-  assert(largest_zero_submatrix(grid) == 6);
+  assert((largest_zero_submatrix(grid) == make_tuple(6, 1, 1, 3, 2)));
+  assert((largest_zero_submatrix({}) == make_tuple(0, 0, 0, -1, -1)));
   return 0;
 }

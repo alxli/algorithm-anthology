@@ -48,7 +48,7 @@ int64_t count_spanning_trees(int n, const std::vector<std::pair<int, int>> &edge
   }
   // Build the Laplacian, then drop the last row and column to form an (n-1) by (n-1) cofactor.
   int m = n - 1;
-  std::vector<std::vector<int64_t>> lap(m, std::vector<int64_t>(m, 0));
+  std::vector<std::vector<int64_t>> lap(m, std::vector<int64_t>(m));
   for (const auto &e : edges) {
     int u = e.first, v = e.second;
     if (u == v) {

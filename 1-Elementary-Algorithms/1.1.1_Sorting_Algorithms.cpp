@@ -46,9 +46,10 @@ Stable?: No.
 */
 
 template<typename It, typename Compare = std::less<>>
-void quicksort(It lo, It hi, Compare comp = Compare()) {
+void quicksort(It lo, It hi, Compare comp = Compare{}) {
+  using T = typename std::iterator_traits<It>::value_type;
   while (hi - lo >= 2) {
-    auto pivot = *(lo + (hi - lo) / 2);
+    T pivot = *(lo + (hi - lo) / 2);
     It lt = lo, mid = lo, gt = hi;
     while (mid != gt) {
       if (comp(*mid, pivot)) {
@@ -88,7 +89,7 @@ Stable?: Yes.
 */
 
 template<typename It, typename Compare = std::less<>>
-void mergesort(It lo, It hi, Compare comp = Compare()) {
+void mergesort(It lo, It hi, Compare comp = Compare{}) {
   if (hi - lo < 2) {
     return;
   }
@@ -116,10 +117,9 @@ than quicksort and also a better space complexity than merge sort.
 The C++ standard library equivalent is calling `std::make_heap(lo, hi)`, followed by
 `std::sort_heap(lo, hi)`.
 
-The loop below has two modes controlled by whether `i > lo`. While `i > lo`, it is heapifying
-(Floyd's O(n) bottom-up heap build: sift down each non-leaf from right to left). Once `i == lo`, the
-heap is built, and the loop switches to extraction: repeatedly swap the root to the back of the
-unsorted region (`*j`) and sift down the new root.
+`sift_down()` restores the heap property below one node. The first loop applies it to each non-leaf
+from right to left, which builds the heap in O(n) time. The second loop repeatedly moves the maximum
+to the back of the unsorted range and restores the heap among the remaining elements.
 
 Time Complexity: O(n log n) in all cases.
 Space Complexity: O(1) auxiliary.
@@ -128,36 +128,33 @@ Stable?: No.
 */
 
 template<typename It, typename Compare = std::less<>>
-void heapsort(It lo, It hi, Compare comp = Compare()) {
+void heapsort(It lo, It hi, Compare comp = Compare{}) {
   if (hi - lo < 2) {
     return;
   }
   using T = typename std::iterator_traits<It>::value_type;
-  T tmp = *lo;
-  It i = lo + (hi - lo) / 2, j = hi, parent;
-  while (true) {
-    if (i <= lo) {
-      if (--j == lo) {
-        return;
-      }
-      tmp = *j;
-      *j = *lo;
-    } else {
-      tmp = *(--i);
-    }
-    parent = i;
-    while (2 * (parent - lo) + 1 < j - lo) {
-      It child = lo + 2 * (parent - lo) + 1;
-      if (child + 1 < j && comp(*child, *(child + 1))) {
+  auto sift_down = [&](It root, It end) {
+    T value = *root;
+    auto parent = root - lo, n = end - lo;
+    while (2 * parent + 1 < n) {
+      auto child = 2 * parent + 1;
+      if (child + 1 < n && comp(*(lo + child), *(lo + child + 1))) {
         child++;
       }
-      if (!comp(tmp, *child)) {
+      if (!comp(value, *(lo + child))) {
         break;
       }
-      *parent = *child;
+      *(lo + parent) = *(lo + child);
       parent = child;
     }
-    *parent = tmp;
+    *(lo + parent) = value;
+  };
+  for (It root = lo + (hi - lo) / 2; root != lo;) {
+    sift_down(--root, hi);
+  }
+  for (It end = hi; --end != lo;) {
+    std::iter_swap(lo, end);
+    sift_down(lo, end);
   }
 }
 
@@ -183,7 +180,7 @@ Stable?: Yes.
 */
 
 template<typename It, typename Compare = std::less<>>
-void insertion_sort(It lo, It hi, Compare comp = Compare()) {
+void insertion_sort(It lo, It hi, Compare comp = Compare{}) {
   using T = typename std::iterator_traits<It>::value_type;
   for (It i = lo; i != hi; ++i) {
     T key = *i;
@@ -210,7 +207,7 @@ Stable?: No.
 */
 
 template<typename It, typename Compare = std::less<>>
-void combsort(It lo, It hi, Compare comp = Compare()) {
+void combsort(It lo, It hi, Compare comp = Compare{}) {
   int gap = static_cast<int>(hi - lo);
   bool swapped = true;
   while (gap > 1 || swapped) {
@@ -261,9 +258,9 @@ void radix_sort(It lo, It hi) {
   const int num_bits = sizeof(T) * CHAR_BIT;
   // Sort on an unsigned key. For signed types, flipping the sign bit sends the most negative value
   // to 0, mapping the signed order onto the unsigned order; logical shifts then extract each digit.
-  auto key = [num_bits](T x) -> U {
+  auto key = [](T x) -> U {
     U u = static_cast<U>(x);
-    return std::is_signed<T>::value ? (u ^ (U(1) << (num_bits - 1))) : u;
+    return std::is_signed<T>::value ? (u ^ (U{1} << (num_bits - 1))) : u;
   };
   std::vector<T> buf(hi - lo);
   for (int pos = 0; pos < num_bits; pos += radix_bits) {
@@ -331,14 +328,14 @@ int main() {
     heapsort(a.rbegin(), a.rend());
     assert(is_sorted(a.rbegin(), a.rend()));
   }
-  {  // We can sort doubles just as well.
-    vector<double> a{1.1, -5.0, 6.23, 4.123, 155.2};
-    combsort(a.begin(), a.end());
-    assert(is_sorted(a.begin(), a.end()));
-  }
   {  // Insertion sort is adaptive: an already-sorted range is left untouched in O(n).
     vector<int> a{12, 26, 32, 33, 45, 53, 71, 80};
     insertion_sort(a.begin(), a.end());
+    assert(is_sorted(a.begin(), a.end()));
+  }
+  {  // We can sort doubles just as well.
+    vector<double> a{1.1, -5.0, 6.23, 4.123, 155.2};
+    combsort(a.begin(), a.end());
     assert(is_sorted(a.begin(), a.end()));
   }
   {  // radix_sort() handles signed integers (including negatives), unlike a plain counting sort.
@@ -358,7 +355,7 @@ int main() {
     assert(empty.empty() && single[0] == 42);
   }
 
-  // Example from: http://www.cplusplus.com/reference/algorithm/stable_sort
+  // Stable sort.
   const vector<double> a{3.14, 1.41, 2.72, 4.67, 1.73, 1.32, 1.62, 2.58};
   {
     vector<double> v(a);
@@ -383,8 +380,6 @@ int main() {
   }
   cout << "Sorting five million integers..." << endl;
   cout.precision(3);
-
-  // Lambdas resolve each function template once benchmark() supplies the iterator types.
   auto benchmark = [&](const string &name, auto sort) {
     vector<int> v = data;
     clock_t start = clock();

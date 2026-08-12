@@ -26,7 +26,7 @@ std::vector<int> grundy_on_dag(const std::vector<std::vector<int>> &g) {
     if (memo[u] != -1) {
       return;
     }
-    std::vector<char> seen(g[u].size() + 1, false);
+    std::vector<char> seen(g[u].size() + 1);
     for (int v : g[u]) {
       dfs(dfs, v);
       int x = memo[v];

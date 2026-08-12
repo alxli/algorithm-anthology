@@ -41,7 +41,7 @@ struct CartesianTree {
   std::vector<int> parent, left, right;
 
   template<typename T, typename Compare = std::less<>>
-  explicit CartesianTree(const std::vector<T> &a, Compare comp = Compare())
+  explicit CartesianTree(const std::vector<T> &a, Compare comp = Compare{})
       : root(-1), parent(a.size(), -1), left(a.size(), -1), right(a.size(), -1) {
     std::vector<int> st;
     for (int i = 0, n = static_cast<int>(a.size()); i < n; i++) {

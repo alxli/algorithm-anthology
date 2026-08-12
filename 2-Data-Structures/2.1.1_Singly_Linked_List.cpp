@@ -1,8 +1,8 @@
 /*
 
-Implements common singly linked list operations using raw nodes. Linked lists are rarely the best
-contest choice compared with arrays, vectors, and `std::list`, but the pointer patterns are useful
-for interview-style problems and for understanding constant-time splicing.
+Implements common singly linked list operations using raw nodes. Manual linked list implementations
+are rarely the best practical choice over arrays, vectors, or `std::list`, but the pointer patterns
+are useful for interview-style problems and understanding constant-time splicing.
 
 For production C++, prefer containers such as `std::list`, `std::forward_list`, or `std::vector`
 when they fit the problem. Use the raw-node style below when the problem statement already gives

@@ -51,8 +51,8 @@ int64_t dfs(int u, int64_t f, int sink) {
 }
 
 int64_t max_flow(int source, int sink) {
-  int n = static_cast<int>(cap.size());
   assert(source != sink);
+  int n = static_cast<int>(cap.size());
   int64_t total = 0;
   while (true) {
     visit.assign(n, false);

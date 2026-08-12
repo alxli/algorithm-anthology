@@ -60,7 +60,7 @@ class HuffmanTree {
 
  public:
   explicit HuffmanTree(const string &text) : root(-1), code(256) {
-    std::vector<int> freq(256, 0);
+    std::vector<int> freq(256);
     for (unsigned char c : text) {
       freq[c]++;
     }

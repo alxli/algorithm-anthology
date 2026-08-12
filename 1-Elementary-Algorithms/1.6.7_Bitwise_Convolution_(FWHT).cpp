@@ -32,8 +32,10 @@ The in-place transforms require a nonempty array whose length is a power of two.
 returns empty if either input is empty; otherwise, both inputs are padded with zeros to the smallest
 power of two at least their maximum length, which is also the output length. For exact integer XOR
 convolution, the inverse divisions are exact; for modular arithmetic, replace the division by
-multiplication with the modular inverse of the transform length. All intermediate sums, differences,
-and products must be representable in the value type.
+multiplication with the modular inverse of the transform length.
+
+Overflow warning: All intermediate sums, differences, and products must be representable in the
+value type.
 
 Time Complexity:
 - O(n log n) per transform or bitwise convolution, where $n$ is the padded power-of-two length.

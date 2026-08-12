@@ -73,11 +73,11 @@ class SkewHeap {
   }
 
  public:
-  explicit SkewHeap(Compare comp = Compare())
+  explicit SkewHeap(Compare comp = Compare{})
       : root(nullptr), num_nodes(0), comp(std::move(comp)) {}
 
   template<typename It>
-  SkewHeap(It lo, It hi, Compare comp = Compare())
+  SkewHeap(It lo, It hi, Compare comp = Compare{})
       : root(nullptr), num_nodes(0), comp(std::move(comp)) {
     while (lo != hi) {
       push(*(lo++));

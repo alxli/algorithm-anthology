@@ -14,12 +14,12 @@ computes sums over node and edge values. For minimum queries, use `std::min(a, b
 non-commutative aggregates, store enough information in `T` to support reversing a path, and update
 `flip_path()` accordingly.
 
-- `TopTree(n, value = T())` constructs a forest on nodes $[0, `n`)$ with every node value
+- `TopTree(n, value = T{})` constructs a forest on nodes $[0, `n`)$ with every node value
   initialized to `value`.
 - `size()` returns the number of nodes in the forest.
 - `edges()` returns the number of edge nodes that have been created.
 - `connected(u, v)` returns whether nodes `u` and `v` are in the same tree.
-- `link(u, v, value = T())` adds an edge with value `value` between different trees, returning its
+- `link(u, v, value = T{})` adds an edge with value `value` between different trees, returning its
   edge id or $-1$ if the edge would create a cycle.
 - `cut(e)` removes edge id `e`. The edge id must currently be present.
 - `set_node(u, value)` changes node `u`'s value to `value`.
@@ -475,7 +475,7 @@ class TopTree {
   }
 
  public:
-  explicit TopTree(int n, const T &value = T()) {
+  explicit TopTree(int n, const T &value = T{}) {
     assert(n >= 0);
     graph_nodes.reserve(n);
     for (int i = 0; i < n; i++) {
@@ -503,7 +503,7 @@ class TopTree {
     return u == v || maybe_lca_node(graph_nodes[u], graph_nodes[v]) != nullptr;
   }
 
-  int link(int u, int v, const T &value = T()) {
+  int link(int u, int v, const T &value = T{}) {
     assert(0 <= u && u < size());
     assert(0 <= v && v < size());
     if (connected(u, v)) {

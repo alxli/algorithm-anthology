@@ -47,7 +47,7 @@ Space Complexity:
 #include <vector>
 
 template<typename It, typename Compare = std::less<>>
-bool next_permutation2(It lo, It hi, Compare comp = Compare()) {
+bool next_permutation2(It lo, It hi, Compare comp = Compare{}) {
   if (lo == hi) {
     return false;
   }
@@ -75,7 +75,7 @@ bool next_permutation2(It lo, It hi, Compare comp = Compare()) {
 }
 
 template<typename T, typename Compare = std::less<>>
-bool next_permutation(std::vector<T> &a, Compare comp = Compare()) {
+bool next_permutation(std::vector<T> &a, Compare comp = Compare{}) {
   int n = static_cast<int>(a.size());
   for (int i = n - 2; i >= 0; i--) {
     if (comp(a[i], a[i + 1])) {

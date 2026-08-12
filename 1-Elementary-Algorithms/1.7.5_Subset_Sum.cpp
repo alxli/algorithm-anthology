@@ -30,7 +30,8 @@ bounded-weight case of subset sum rather than the 0-1 value knapsack.
   integers. This is faster than meet-in-the-middle when the largest weight is small relative to
   $2^{n/2}$.
 
-All subset sums and intermediate differences in `max_subset_sum_at_most()` must fit in `int64_t`.
+Overflow warning: All subset sums and intermediate differences in `max_subset_sum_at_most()` must
+fit in `int64_t`.
 
 Time Complexity:
 - O(2^{n/2}) per call to `max_subset_sum_at_most()`, where $n$ is the distance between `lo` and
@@ -82,6 +83,7 @@ std::pair<int64_t, std::vector<int>> max_subset_sum_at_most(It lo, It hi, int64_
       }
     }
   }
+  // Optional: reconstruct one optimal subset.
   std::vector<int> items;
   for (int i = 0; i < n / 2; i++) {
     if ((lmask >> i) & 1) {

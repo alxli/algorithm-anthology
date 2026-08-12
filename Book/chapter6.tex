@@ -106,7 +106,7 @@ Sign Functions:
 \begin{lstlisting}[language=C++]
 template<typename T>
 int sgn(const T &x) {
-  return (T(0) < x) - (x < T(0));
+  return (T{0} < x) - (x < T{0});
 }
 
 template<typename Double>
@@ -281,8 +281,10 @@ Base Conversion:
 \begin{compactitem}
   \item \inlinecode{to\_base(x, b = 10)} returns the digits of the unsigned integer \inlinecode{x} in base \inlinecode{b}, where index 0 of the result stores the least significant digit.
   \item \inlinecode{to\_roman(x)} returns the Roman numeral representation of the unsigned integer \inlinecode{x} as a string.
-  \item \inlinecode{convert\_base(d, a, b)} converts an integer in base \inlinecode{a} as a vector \inlinecode{d} of digits (where \inlinecode{d[0]} is the least significant digit) to base \inlinecode{b} as a vector of digits (again with index 0 holding the least significant digit). This uses repeated long division, so the value itself does not need to fit in a machine integer. Each intermediate \inlinecode{rem*a + digit} must fit in \inlinecode{uint64\_t}.
+  \item \inlinecode{convert\_base(d, a, b)} converts an integer in base \inlinecode{a} as a vector \inlinecode{d} of digits (where \inlinecode{d[0]} is the least significant digit) to base \inlinecode{b} as a vector of digits (again with index 0 holding the least significant digit). This uses repeated long division, so the value itself does not need to fit in a machine integer.
 \end{compactitem}
+
+Overflow warning: Each intermediate \inlinecode{rem*a + digit} must fit in \inlinecode{uint64\_t}.
 
 \begin{lstlisting}[language=C++]
 std::vector<int> to_base(unsigned int x, int b = 10) {
@@ -405,7 +407,7 @@ int main() {
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Combinatorial Calculations}
-The following functions implement common operations in combinatorics. All size and count inputs must be nonnegative, and all moduli must be positive. All return values and table entries are computed as 64-bit integers modulo an input argument $m$ or $p$. Modular products use ordinary \inlinecode{int64\_t} multiplication, so the square of the chosen modulus must fit in \inlinecode{int64\_t}.
+The following functions implement common operations in combinatorics. All size and count inputs must be nonnegative, and all moduli must be positive. All return values and table entries are computed as 64-bit integers modulo an input argument $m$ or $p$.
 
 \begin{compactitem}
   \item \inlinecode{factorial(n, m = MOD)} returns $n! \bmod m$.
@@ -422,6 +424,8 @@ The following functions implement common operations in combinatorics. All size a
   \item \inlinecode{eulerian1(n, k, m = MOD)} returns the $(n, k)$ Eulerian number of the 1st kind mod $m$, where $n > k$.
   \item \inlinecode{eulerian2(n, k, m = MOD)} returns the $(n, k)$ Eulerian number of the 2nd kind mod $m$, where $n > k$.
 \end{compactitem}
+
+Overflow warning: Modular products use ordinary \inlinecode{int64\_t} multiplication, so the square of the chosen modulus must fit in \inlinecode{int64\_t}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -539,7 +543,7 @@ int64_t catalan(int n, int64_t p = MOD) {
 }
 
 int64_t partitions(int n, int64_t m = MOD) {
-  std::vector<int64_t> t(n + 1, 0);
+  std::vector<int64_t> t(n + 1);
   t[0] = 1;
   for (int i = 1; i <= n; i++) {
     for (int j = i; j <= n; j++) {
@@ -550,7 +554,7 @@ int64_t partitions(int n, int64_t m = MOD) {
 }
 
 int64_t partitions(int n, int k, int64_t m = MOD) {
-  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 0));
+  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
     for (int j = 1, h = k < i ? k : i; j <= h; j++) {
@@ -561,7 +565,7 @@ int64_t partitions(int n, int k, int64_t m = MOD) {
 }
 
 int64_t stirling1(int n, int k, int64_t m = MOD) {
-  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 0));
+  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= k; j++) {
@@ -573,7 +577,7 @@ int64_t stirling1(int n, int k, int64_t m = MOD) {
 }
 
 int64_t stirling2(int n, int k, int64_t m = MOD) {
-  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 0));
+  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= k; j++) {
@@ -852,7 +856,7 @@ The lexicographic successor is found by locating the rightmost ascent, increasin
 #include <vector>
 
 template<typename It, typename Compare = std::less<>>
-bool next_permutation2(It lo, It hi, Compare comp = Compare()) {
+bool next_permutation2(It lo, It hi, Compare comp = Compare{}) {
   if (lo == hi) {
     return false;
   }
@@ -880,7 +884,7 @@ bool next_permutation2(It lo, It hi, Compare comp = Compare()) {
 }
 
 template<typename T, typename Compare = std::less<>>
-bool next_permutation(std::vector<T> &a, Compare comp = Compare()) {
+bool next_permutation(std::vector<T> &a, Compare comp = Compare{}) {
   int n = static_cast<int>(a.size());
   for (int i = n - 2; i >= 0; i--) {
     if (comp(a[i], a[i + 1])) {
@@ -1073,7 +1077,7 @@ The lexicographic successor advances the rightmost chosen position that can stil
   \item \inlinecode{next\_combination\_with\_repeats(n, a)} rearranges \inlinecode{a} to become the next lexicographically greater combination of not necessarily distinct integers in the range $[0, {\inlinecodemath{n}})$. The vector \inlinecode{a} must be sorted. Note that there is a total of $n \mathbin{\text{multichoose}} k$ combinations if repetition is allowed, where $n \mathbin{\text{multichoose}} k = \binom{n + k - 1}{k}$.
 \end{compactitem}
 
-Exact counts and ranks used by the ranking operations must fit in \inlinecode{int64\_t}.
+Overflow warning: Exact counts and ranks used by the ranking operations must fit in \inlinecode{int64\_t}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -1095,12 +1099,14 @@ Exact counts and ranks used by the ranking operations must fit in \inlinecode{in
 #include <algorithm>
 #include <cstdint>
 #include <functional>
+#include <iterator>
 #include <numeric>
 #include <utility>
 #include <vector>
 
 template<typename It, typename Compare = std::less<>>
-bool next_combination(It lo, It mid, It hi, Compare comp = Compare()) {
+bool next_combination(It lo, It mid, It hi, Compare comp = Compare{}) {
+  using T = typename std::iterator_traits<It>::value_type;
   if (lo == mid || mid == hi) {
     return false;
   }
@@ -1134,7 +1140,7 @@ bool next_combination(It lo, It mid, It hi, Compare comp = Compare()) {
     for (int i = 0; i < gcd; i++) {
       It curr = (i < len1) ? (l + i) : (h + (i - len1));
       int k = i;
-      auto prev = *curr;
+      T prev = *curr;
       for (int j = 0; j < skip; j++) {
         k = (k + len1) % total;
         It next = (k < len1) ? (l + k) : (h + (k - len1));
@@ -1439,7 +1445,7 @@ void generate_increasing_partitions(int left, int prev, int i, std::vector<int> 
 
 template<typename Fn>
 void generate_increasing_partitions(int n, Fn f) {
-  std::vector<int> p(n, 0);
+  std::vector<int> p(n);
   generate_increasing_partitions(n, 0, 0, p, f);
 }
 \end{lstlisting}
@@ -1511,7 +1517,7 @@ Let $A$ be the number of candidate values considered at each position (the base 
   \item \inlinecode{enumerate(f)} calls the function \inlinecode{f(lo, hi)} on every specified combinatorial sequence in lexicographically increasing order, where \inlinecode{lo} and \inlinecode{hi} are two random-access iterators to a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of integers.
 \end{compactitem}
 
-All exact counts and ranks must fit in \inlinecode{int64\_t}.
+Overflow warning: All exact counts and ranks must fit in \inlinecode{int64\_t}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -1784,7 +1790,7 @@ Common number theory operations relating to modular arithmetic.
   \item \inlinecode{garner\_restore\_mod(a, p, m)} returns that same CRT solution modulo \inlinecode{m}. This is the right variant when the product of the moduli is too large to fit in \inlinecode{int64\_t}.
 \end{compactitem}
 
-Every intermediate and result of the templated signed-integer helpers must be representable by \inlinecode{Int}; in particular, the minimum value of \inlinecode{Int} cannot be negated or divided by $-1$.
+Overflow warning: Every intermediate and result of the templated signed-integer helpers must be representable by \inlinecode{Int}; in particular, the minimum value of \inlinecode{Int} cannot be negated or divided by $-1$.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -2009,9 +2015,9 @@ int main() {
   }
   {
     vector<int> a{2, 3, 1}, m{3, 4, 5};
-    int n = static_cast<int>(a.size());
     int x = garner_restore(a, m);
     assert(x == garner_restore_mod(a, m, 1000000007));
+    int n = static_cast<int>(a.size());
     for (int i = 0; i < n; i++) {
       assert(mod(x, m[i]) == a[i]);
     }
@@ -2021,7 +2027,7 @@ int main() {
   {  // Garner modulo another number works even when the product of CRT moduli is too large.
     vector<int> p{1000000007, 1000000009, 1000000033};
     __extension__ typedef __int128 int128_t;
-    int128_t x = (static_cast<int128_t>(1) << 80) + 123456789;
+    int128_t x = (int128_t{1} << 80) + 123456789;
     vector<int> a;
     for (int m : p) {
       a.push_back(static_cast<int>(x % m));
@@ -2259,7 +2265,7 @@ class ModCombinatorics {
   }
 
  public:
-  ModCombinatorics() : fact(1, Mint(1)), inv_fact(1, Mint(1)) {}
+  ModCombinatorics() : fact(1, Mint{1}), inv_fact(1, Mint{1}) {}
 
   Mint factorial(int n) {
     ensure(n);
@@ -2647,7 +2653,7 @@ int64_t mod_sqrt(int64_t a, int64_t p) {
     if (order == 0) {
       return x < p - x ? x : p - x;
     }
-    int64_t gs = powmod(g, static_cast<int64_t>(1) << (r - order - 1), p);
+    int64_t gs = powmod(g, int64_t{1} << (r - order - 1), p);
     g = mulmod(gs, gs, p);
     x = mulmod(x, gs, p);
     b = mulmod(b, g, p);
@@ -2856,7 +2862,7 @@ std::vector<int> linear_sieve(int n, std::vector<int> *least_out = nullptr) {
     }
     return {};
   }
-  std::vector<int> least(n + 1, 0), primes;
+  std::vector<int> least(n + 1), primes;
   for (int i = 2; i <= n; i++) {
     if (least[i] == 0) {
       least[i] = i;
@@ -3486,7 +3492,7 @@ std::vector<int> phi_table(int lo, int hi) {
     root++;
   }
   // Sieve the primes up to sqrt(hi); any larger prime divisor is the one leftover factor.
-  std::vector<char> composite(root + 1, false);
+  std::vector<char> composite(root + 1);
   std::vector<int> primes;
   for (int i = 2; i <= root; i++) {
     if (!composite[i]) {
@@ -3603,8 +3609,8 @@ int mobius(int n) {
 }
 
 std::vector<int> mobius_sieve(int n) {
-  std::vector<int> mu(n + 1, 0), primes;
-  std::vector<char> composite(n + 1, false);
+  std::vector<int> mu(n + 1), primes;
+  std::vector<char> composite(n + 1);
   if (n >= 1) {
     mu[1] = 1;
   }
@@ -4131,7 +4137,7 @@ class BigInt {
     while ((1 << k) < n) {
       k++;
     }
-    std::vector<int> rev(n, 0);
+    std::vector<int> rev(n);
     for (int i = 1; i < n; i++) {
       if (!(i & (i - 1))) {
         high1++;
@@ -4319,7 +4325,9 @@ class BigInt {
     a.resize(n, 0);
     b.resize(n, 0);
     vint64 c;
-    if (n >= FFT_CUTOFF) {
+    if (n < FFT_CUTOFF) {
+      c = karatsuba(a.begin(), a.end(), b.begin(), b.end());
+    } else {
       auto at = fft(a.begin(), a.end()), bt = fft(b.begin(), b.end());
       for (int i = 0; i < n; i++) {
         at[i] *= bt[i];
@@ -4329,8 +4337,6 @@ class BigInt {
       for (int i = 0; i < n; i++) {
         c[i] = at[i].real() + 0.5;
       }
-    } else {
-      c = karatsuba(a.begin(), a.end(), b.begin(), b.end());
     }
     BigInt res;
     res.sign = u.sign * v.sign;
@@ -4494,8 +4500,8 @@ class BigInt {
       BigInt root = magnitude.comp(BigInt(p).pow(n)) < 0 ? p - 1 : p;
       return sign == -1 ? -root : root;
     }
-    BigInt lo(BigInt(10).pow(static_cast<int>(ceil(static_cast<double>(size()) / n)) - 1)),
-        hi(lo * 10), mid;
+    BigInt lo(BigInt(10).pow(static_cast<int>(ceil(static_cast<double>(size()) / n)) - 1));
+    BigInt hi(lo * 10), mid;
     while (lo < hi) {
       mid = (lo + hi) / 2;
       int cmp = comp(digits, mid.pow(n).digits, 1, 1);
@@ -4533,6 +4539,8 @@ class BigInt {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+using namespace std;
+
 int main() {
   BigInt a("-9899819294989142124"), b("12398124981294214");
   assert(a + b == "-9887421170007847910");
@@ -4569,14 +4577,14 @@ int main() {
       }
     }
   }
-  std::mt19937 rng(1234567);  // Fixed seed for reproducibility.
-  std::uniform_int_distribution<int> length_dist(1, 100);
+  mt19937 rng(1234567);  // Fixed seed for reproducibility.
+  uniform_int_distribution<int> length_dist(1, 100);
   for (int i = 0; i < 20; i++) {
     int n = length_dist(rng);
     BigInt value(BigInt::rand(n)), root(value.sqrt()), lower(root * root), upper(root + 1);
     upper *= upper;
     assert(lower <= value && value < upper);
-    std::uniform_int_distribution<int> divisor_length_dist(1, n);
+    uniform_int_distribution<int> divisor_length_dist(1, n);
     BigInt divisor(BigInt::rand(divisor_length_dist(rng)) + 1), quotient(value / divisor);
     lower = quotient * divisor;
     upper = divisor * (quotient + 1);
@@ -4600,9 +4608,9 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Big Decimal}
-Perform exact decimal arithmetic using a \inlinecode{BigInt} coefficient and a nonnegative scale. Unlike binary floating point, every parsed decimal is represented exactly: for example, \inlinecode{BigDecimal("1.20")} stores coefficient $120$ with scale $2$. Addition and subtraction preserve the larger operand scale, multiplication adds the scales, and formatting preserves trailing zeros unless \inlinecode{normalized()} is called. Only finite, well-formed decimal strings are supported; \inlinecode{NaN} and infinities are not represented.
+Performs exact decimal arithmetic using the full \inlinecode{BigInt} implementation from 6.4.2 as its coefficient type, together with a nonnegative scale. Unlike binary floating point, every parsed decimal is represented exactly: for example, \inlinecode{BigDecimal("1.20")} stores coefficient $120$ with scale $2$. Addition and subtraction preserve the larger operand scale, multiplication adds the scales, and formatting preserves trailing zeros unless \inlinecode{normalized()} is called. Only finite, well-formed decimal strings are supported; \inlinecode{NaN} and infinities are not represented.
 
-Division and square root generally have nonterminating decimal expansions, so both operations require an explicit result scale. The rounding mode defaults to \inlinecode{HalfAway}, which rounds ties away from zero. The other modes are \inlinecode{TowardZero}, \inlinecode{AwayFromZero}, \inlinecode{Floor}, \inlinecode{Ceil}, and \inlinecode{HalfEven}. This section imports the full \inlinecode{BigInt} implementation from 6.4.2 rather than duplicating its arbitrary-precision arithmetic.
+Division and square root generally have nonterminating decimal expansions, so both operations require an explicit result scale. The rounding mode defaults to \inlinecode{HalfAway}, which rounds ties away from zero. The other modes are \inlinecode{TowardZero}, \inlinecode{AwayFromZero}, \inlinecode{Floor}, \inlinecode{Ceil}, and \inlinecode{HalfEven}.
 
 \begin{compactitem}
   \item \inlinecode{BigDecimal(n = 0)} constructs a decimal from integer \inlinecode{n}.
@@ -4815,6 +4823,8 @@ class BigDecimal {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+using namespace std;
+
 int main() {
   using Round = BigDecimal::Round;
 
@@ -4874,7 +4884,7 @@ int main() {
     assert(BigDecimal(i * i).sqrt(0) == BigDecimal(i));
   }
 
-  std::stringstream in("-12.340"), out;
+  stringstream in("-12.340"), out;
   BigDecimal streamed;
   in >> streamed;
   out << streamed;
@@ -4885,7 +4895,9 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Rational Numbers}
-Perform operations on rational numbers internally represented as two integers: a numerator and a denominator. The template integer type must support streamed input/output, comparisons, and arithmetic operations. Overflow is not checked for in internal operations: comparisons and arithmetic cross-multiply numerators and denominators, so instantiate with a wider integer type (such as \inlinecode{\_\_int128}, or even \inlinecode{BigInt}) if the values may grow large.
+Perform operations on rational numbers internally represented as two integers: a numerator and a denominator. The template integer type must support streamed input/output, comparisons, and arithmetic operations.
+
+Overflow warning: Internal operations do not check for overflow. Comparisons and arithmetic cross-multiply numerators and denominators, so instantiate with a wider integer type (such as \inlinecode{\_\_int128}, or even \inlinecode{BigInt}) if the values may grow large.
 
 \begin{compactitem}
   \item \inlinecode{Rational\textless{}Int\textgreater{}(n)} constructs a rational number with numerator \inlinecode{n} and denominator $1$.
@@ -5065,7 +5077,7 @@ int main() {
 \section{\texorpdfstring{Linear Algebra}{6.5 Linear Algebra}}
 \setcounter{section}{5}
 \setcounter{subsection}{0}
-\subsection{Matrix Utilities}
+\subsection{Matrix Operations}
 Basic matrix operations defined on a two-dimensional vector of numeric values. Matrix arithmetic also supports modular value types such as \inlinecode{Modular\textless{}MOD\textgreater{}} from 6.3.2. The element type must be constructible from $0$ and $1$ and support the arithmetic operators used by the requested operation.
 
 \begin{compactitem}
@@ -5079,10 +5091,6 @@ Basic matrix operations defined on a two-dimensional vector of numeric values. M
   \item Operators \inlinecode{*} and \inlinecode{*=} define vector and matrix multiplication.
   \item Operators \inlinecode{\textasciicircum{}} and \inlinecode{\textasciicircum{}=} define iterative binary matrix exponentiation of a square matrix \inlinecode{a} by a \inlinecode{uint64\_t} power \inlinecode{p}.
   \item \inlinecode{power\_sum(a, p)} returns the power sum of a square matrix \inlinecode{a} up to a \inlinecode{uint64\_t} power \inlinecode{p}, that is, $a + a^2 + \ldots + a^p$.
-  \item \inlinecode{transpose(a)} returns the transpose of an $m$ by $n$ matrix \inlinecode{a}, that is, a new $n$ by $m$ matrix $b$ such that \inlinecode{a[i][j]} = \inlinecode{b[j][i]} for every \inlinecode{i} $\in [0, m)$ and \inlinecode{j} $\in [0, n)$.
-  \item \inlinecode{transpose\_in\_place(a)} assigns the square matrix \inlinecode{a} to its transpose, returning a reference to the modified argument itself.
-  \item \inlinecode{rotate(a, d = 90)} returns the matrix \inlinecode{a} rotated \inlinecode{d} degrees clockwise. A negative \inlinecode{d} specifies a counter-clockwise rotation, and \inlinecode{d} must be a multiple of 90.
-  \item \inlinecode{rotate\_in\_place(a, d = 90)} assigns the square matrix \inlinecode{a} to its rotation by \inlinecode{d} degrees clockwise, returning a reference to the modified argument itself. A negative \inlinecode{d} specifies a counter-clockwise rotation, and \inlinecode{d} must be a multiple of 90.
 \end{compactitem}
 
 Exponentiation uses the usual iterative binary exponentiation pattern: keep an accumulated result, square the base each round, and multiply the result when the current exponent bit is set. The power sum uses a block matrix identity that $\begin{bmatrix} A & A \\ 0 & I \end{bmatrix}^p$ has $A + A^2 + \dots + A^p$ in its upper-right block.
@@ -5096,25 +5104,22 @@ Exponentiation uses the usual iterative binary exponentiation pattern: keep an a
   \item $O(n^{3} \log p)$ per exponentiation of an $n$ by $n$ matrix to power $p$.
   \item $O(n^{3} \log p)$ per call to \inlinecode{power\_sum()} for an $n$ by $n$ matrix and power $p$.
   \item $O(m \cdot n \cdot k)$ per multiplication of an $m$ by $n$ matrix by an $n$ by $k$ matrix.
-  \item $O(m \cdot n)$ per call to \inlinecode{transpose()}, \inlinecode{transpose\_in\_place()}, \inlinecode{rotate()}, and \inlinecode{rotate\_in\_place()} on an $m$ by $n$ matrix.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(1)$ auxiliary for \inlinecode{rows()}, \inlinecode{columns()}, \inlinecode{a[i][j]} access, comparison and scalar compound operators, \inlinecode{transpose\_in\_place()}, and \inlinecode{rotate\_in\_place()}.
+  \item $O(1)$ auxiliary for \inlinecode{rows()}, \inlinecode{columns()}, \inlinecode{a[i][j]} access, comparison and scalar compound operators.
   \item $O(n^{2})$ auxiliary for exponentiation of an $n$ by $n$ matrix to power $p$.
   \item $O(n^{2})$ auxiliary for \inlinecode{power\_sum()} of an $n$ by $n$ matrix up to power $p$.
-  \item $O(m \cdot n)$ auxiliary for all non-in-place operations returning an $m$ by $n$ matrix, \inlinecode{transpose()}, and \inlinecode{rotate()}.
+  \item $O(m \cdot n)$ auxiliary for all non-in-place operations returning an $m$ by $n$ matrix.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <iomanip>
 #include <ostream>
-#include <utility>
 #include <vector>
 
 template<typename T>
@@ -5338,109 +5343,6 @@ Matrix<T> power_sum(const Matrix<T> &a, uint64_t p) {
   }
   return res;
 }
-
-template<typename T>
-Matrix<T> transpose(const Matrix<T> &a) {
-  Matrix<T> res = make_matrix<T>(columns(a), rows(a));
-  for (int i = 0; i < rows(res); i++) {
-    for (int j = 0; j < columns(res); j++) {
-      res[i][j] = a[j][i];
-    }
-  }
-  return res;
-}
-
-template<typename T>
-Matrix<T> &transpose_in_place(Matrix<T> &a) {
-  assert(rows(a) == columns(a));
-  for (int i = 0; i < rows(a); i++) {
-    for (int j = i + 1; j < columns(a); j++) {
-      std::swap(a[i][j], a[j][i]);
-    }
-  }
-  return a;
-}
-
-template<typename T>
-Matrix<T> rotate(const Matrix<T> &a, int degrees = 90) {
-  assert(degrees % 90 == 0);
-  if (degrees < 0) {
-    degrees = 360 - ((-degrees) % 360);
-  }
-  Matrix<T> res;
-  switch (degrees % 360) {
-    case 90: {
-      res = make_matrix<T>(columns(a), rows(a));
-      for (int i = 0; i < columns(a); i++) {
-        for (int j = 0; j < rows(a); j++) {
-          res[i][j] = a[rows(a) - j - 1][i];
-        }
-      }
-      break;
-    }
-    case 180: {
-      res = make_matrix<T>(rows(a), columns(a));
-      for (int i = 0; i < rows(a); i++) {
-        for (int j = 0; j < columns(a); j++) {
-          res[i][j] = a[rows(a) - i - 1][columns(a) - j - 1];
-        }
-      }
-      break;
-    }
-    case 270: {
-      res = make_matrix<T>(columns(a), rows(a));
-      for (int i = 0; i < columns(a); i++) {
-        for (int j = 0; j < rows(a); j++) {
-          res[i][j] = a[j][columns(a) - i - 1];
-        }
-      }
-      break;
-    }
-    default: {
-      res = a;
-    }
-  }
-  return res;
-}
-
-template<typename T>
-Matrix<T> &rotate_in_place(Matrix<T> &a, int degrees = 90) {
-  assert(degrees % 90 == 0);
-  assert(degrees % 180 == 0 || rows(a) == columns(a));
-  if (degrees < 0) {
-    degrees = 360 - ((-degrees) % 360);
-  }
-  int n = rows(a);
-  switch (degrees % 360) {
-    case 90: {
-      transpose_in_place(a);
-      for (auto &row : a) {
-        std::reverse(row.begin(), row.end());
-      }
-      break;
-    }
-    case 180: {
-      // A 180-degree rotation is a horizontal flip (reverse each row) followed by a vertical flip
-      // (reverse the row order). This works for non-square matrices too, unlike a row/column index
-      // scheme keyed on a single dimension.
-      for (auto &row : a) {
-        std::reverse(row.begin(), row.end());
-      }
-      std::reverse(a.begin(), a.end());
-      break;
-    }
-    case 270: {
-      transpose_in_place(a);
-      for (int j = 0; j < n; j++) {
-        for (int i = 0, k = columns(a) - 1; i < k; i++, k--) {
-          std::swap(a[i][j], a[k][j]);
-        }
-      }
-      break;
-    }
-  }
-  return a;
-}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -5449,26 +5351,6 @@ using namespace std;
 
 int main() {
   using matrix = Matrix<int>;
-  matrix a{{1, 2, 3}, {4, 5, 6}};
-  matrix a90{{4, 1}, {5, 2}, {6, 3}};
-  matrix a180{{6, 5, 4}, {3, 2, 1}};
-  matrix a270{{3, 6}, {2, 5}, {1, 4}};
-  assert(rotate(a, -270) == a90);
-  assert(rotate(a, -180) == a180);
-  assert(rotate(a, -90) == a270);
-  assert(rotate(a, 0) == a);
-  assert(rotate(a, 90) == a90);
-  assert(rotate(a, 180) == a180);
-  assert(rotate(a, 270) == a270);
-  assert(rotate(a, 360) == a);
-  assert(rotate(a, 450) == a90);
-
-  matrix b{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
-  for (int d = -360; d <= 360; d += 90) {
-    matrix m = b;
-    assert(rotate_in_place(m, d) == rotate(b, d));
-  }
-
   matrix m = make_matrix(5, 5, 10) + 10;
   vector<int> v{1, 2, 3, 4, 5};
   matrix mv{{300}, {300}, {300}, {300}, {300}};
@@ -5523,7 +5405,7 @@ bool rref_is_zero(const T &v) {
   if constexpr (std::is_floating_point_v<T>) {
     return std::fabs(v) < EPS;
   }
-  return v == T(0);
+  return v == T{0};
 }
 
 template<typename Matrix>
@@ -5658,9 +5540,11 @@ Floating-point matrices use the largest-magnitude pivot in each column, although
 \begin{compactitem}
   \item \inlinecode{det\_naive(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a}, using the classic divide-and-conquer algorithm by Laplace expansions. It is division-free and computes in the matrix's element type, so an integer matrix yields an exact integer determinant; but at $O(n!)$ it is only practical for tiny $n$, so prefer \inlinecode{det\_bareiss} for exact integer determinants.
   \item \inlinecode{det(a, eps = 1e-10)} returns the determinant of an $n$ by $n$ floating-point or exact-field matrix \inlinecode{a} using Gaussian elimination. Floating-point pivots within \inlinecode{eps} of zero are treated as singular; exact fields use equality with zero.
-  \item \inlinecode{det\_bareiss(a)} returns the exact determinant of an integer matrix \inlinecode{a} using fraction-free elimination, with no rounding error. Stored entries are minors of \inlinecode{a}, but the products in each update can be larger. They use 128-bit intermediates when available; otherwise those products must fit in \inlinecode{int64\_t}.
+  \item \inlinecode{det\_bareiss(a)} returns the exact determinant of an integer matrix \inlinecode{a} using fraction-free elimination, with no rounding error.
   \item \inlinecode{inverse(a, eps = 1e-10)} returns the inverse of square matrix \inlinecode{a} with floating-point or exact-field elements, or \inlinecode{std::nullopt} if the matrix is singular. Floating-point pivots within \inlinecode{eps} of zero are treated as singular.
 \end{compactitem}
+
+Overflow warning: In \inlinecode{det\_bareiss()}, stored entries are minors of \inlinecode{a}, but the products in each update can be larger. They use 128-bit intermediates when available; otherwise those products must fit in \inlinecode{int64\_t}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -5688,7 +5572,7 @@ auto det_naive(const SquareMatrix &a) {
   using T = std::decay_t<decltype(a[0][0])>;
   int n = static_cast<int>(a.size());
   if (n == 0) {
-    return T(1);
+    return T{1};
   }
   if (n == 1) {
     return a[0][0];
@@ -5731,7 +5615,7 @@ int elimination_pivot(const SquareMatrix &a, int row, int col, double eps) {
     return std::fabs(a[pivot][col]) < eps ? -1 : pivot;
   }
   for (int r = row; r < n; r++) {
-    if (a[r][col] != T(0)) {
+    if (a[r][col] != T{0}) {
       return r;
     }
   }
@@ -5747,11 +5631,11 @@ auto det(const SquareMatrix &a, double eps = 1e-10) {
   for (int i = 0; i < n; i++) {
     int p = elimination_pivot(b, i, i, eps);
     if (p == -1) {
-      return T(0);
+      return T{0};
     }
     if (p != i) {
       std::swap(b[p], b[i]);
-      res = T(0) - res;
+      res = T{0} - res;
     }
     res *= b[i][i];
     for (int j = i + 1; j < n; j++) {
@@ -5843,7 +5727,7 @@ using namespace std;
 int main() {
   vector<vector<double>> a{{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
   int n = static_cast<int>(a.size());
-  vector<vector<double>> res(n, vector<double>(n, 0));
+  vector<vector<double>> res(n, vector<double>(n));
   assert(fabs(det(a) - det_naive(a)) < 1e-10);
 
   // Bareiss gives the determinant of an integer matrix exactly, with no rounding.
@@ -5950,7 +5834,7 @@ auto getl(const Matrix &lu, int i, int j) {
 template<typename Matrix>
 auto getu(const Matrix &lu, int i, int j) {
   using T = std::decay_t<decltype(lu[0][0])>;
-  return i <= j ? lu[i][j] : T(0);
+  return i <= j ? lu[i][j] : T{0};
 }
 
 template<typename Matrix, typename T>
@@ -6001,7 +5885,7 @@ auto det(const Matrix &a) {
   Matrix lu(a);
   int status = lu_decompose(lu);
   if (status < 0) {
-    return T(0);
+    return T{0};
   }
   T res = 1;
   for (int i = 0; i < n; i++) {
@@ -6072,7 +5956,7 @@ int main() {
     vector<vector<double>> a{{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
     auto inv = inverse(a);
     int n = static_cast<int>(a.size());
-    vector<vector<double>> res(n, vector<double>(n, 0));
+    vector<vector<double>> res(n, vector<double>(n));
     assert(inv);
     for (int i = 0; i < n; i++) {
       for (int j = 0; j < n; j++) {
@@ -6248,7 +6132,7 @@ int64_t count_spanning_trees(int n, const std::vector<std::pair<int, int>> &edge
   }
   // Build the Laplacian, then drop the last row and column to form an (n-1) by (n-1) cofactor.
   int m = n - 1;
-  std::vector<std::vector<int64_t>> lap(m, std::vector<int64_t>(m, 0));
+  std::vector<std::vector<int64_t>> lap(m, std::vector<int64_t>(m));
   for (const auto &e : edges) {
     int u = e.first, v = e.second;
     if (u == v) {
@@ -6736,7 +6620,7 @@ int main() {
 
   SparseMatrix<int64_t> scaled = p * 3;
   assert(scaled.get(0, 0) == 3 && scaled.get(0, 1) == 6 && scaled.get(1, 1) == 3);
-  assert((p * static_cast<int64_t>(0)).nonzeros() == 0);
+  assert((p * int64_t{0}).nonzeros() == 0);
 
   SparseMatrix<int64_t> acc = p;
   acc += q;
@@ -6919,8 +6803,10 @@ The trade-off is precision. Complex arithmetic in double precision accumulates r
 
 \begin{compactitem}
   \item \inlinecode{fft(a, invert)} transforms the complex vector \inlinecode{a} in place, whose length must be a power of two. The forward transform uses \inlinecode{invert = false}; the inverse uses \inlinecode{invert = true}.
-  \item \inlinecode{convolve(a, b)} returns the convolution of two integer sequences \inlinecode{a} and \inlinecode{b}, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length ${\inlinecodemath{a.size()}} + {\inlinecodemath{b.size()}} - 1$, or is empty if either input is empty, with each entry rounded to the nearest integer. Small inputs use direct multiplication to avoid FFT overhead. The exact coefficients and the direct branch's intermediate products and sums must fit in \inlinecode{int64\_t}.
+  \item \inlinecode{convolve(a, b)} returns the convolution of two integer sequences \inlinecode{a} and \inlinecode{b}, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length ${\inlinecodemath{a.size()}} + {\inlinecodemath{b.size()}} - 1$, or is empty if either input is empty, with each entry rounded to the nearest integer. Small inputs use direct multiplication to avoid FFT overhead.
 \end{compactitem}
+
+Overflow warning: The exact coefficients and the direct branch's intermediate products and sums must fit in \inlinecode{int64\_t}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -7560,7 +7446,7 @@ const int64_t MOD = 998244353;
 std::vector<int64_t> combine(
     const std::vector<int64_t> &a, const std::vector<int64_t> &b, const std::vector<int64_t> &c
 ) {
-  std::vector<int64_t> res(a.size() + b.size() - 1, 0);
+  std::vector<int64_t> res(a.size() + b.size() - 1);
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
     for (int j = 0; j < static_cast<int>(b.size()); j++) {
       res[i + j] = (res[i + j] + a[i] * b[j]) % MOD;
@@ -7591,7 +7477,7 @@ int64_t kth_term(const std::vector<int64_t> &rec, const std::vector<int64_t> &in
   if (L == 0) {
     return 0;
   }
-  std::vector<int64_t> result(L, 0), base(L, 0);
+  std::vector<int64_t> result(L), base(L);
   result[0] = 1;  // The polynomial 1 = x^0.
   if (L == 1) {
     base[0] = c[0];  // x is congruent to c_0 modulo f.
@@ -7676,8 +7562,8 @@ int64_t submod(int64_t a, int64_t b) { return modnorm(modnorm(a) - modnorm(b)); 
 int64_t inv(int64_t a) { return powmod(modnorm(a), MOD - 2, MOD); }
 
 std::vector<int64_t> interpolate(std::vector<int64_t> x, std::vector<int64_t> y) {
-  int n = static_cast<int>(x.size());
   assert(x.size() == y.size());
+  int n = static_cast<int>(x.size());
   for (int i = 0; i < n; i++) {
     x[i] = modnorm(x[i]);
     y[i] = modnorm(y[i]);
@@ -7689,7 +7575,7 @@ std::vector<int64_t> interpolate(std::vector<int64_t> x, std::vector<int64_t> y)
     }
   }
   // Expand the Newton basis into ordinary coefficients.
-  std::vector<int64_t> res(n, 0), temp(n, 0);
+  std::vector<int64_t> res(n), temp(n);
   temp[0] = 1;
   for (int k = 0; k < n; k++) {
     int64_t last = 0;
@@ -7705,8 +7591,8 @@ std::vector<int64_t> interpolate(std::vector<int64_t> x, std::vector<int64_t> y)
 }
 
 int64_t interpolate_at(const std::vector<int64_t> &x, const std::vector<int64_t> &y, int64_t t) {
-  int n = static_cast<int>(x.size());
   assert(x.size() == y.size());
+  int n = static_cast<int>(x.size());
   t = modnorm(t);
   int64_t res = 0;
   for (int k = 0; k < n; k++) {
@@ -7847,7 +7733,7 @@ const bool nim_product_init = [] {
   for (int i = 0; i < 64; i++) {
     for (int j = 0; j < 64; j++) {
       if ((i & j) == 0) {
-        bit_prod[i][j] = uint64_t(1) << (i | j);  // Distinct Fermat powers multiply like 2^(i|j).
+        bit_prod[i][j] = uint64_t{1} << (i | j);  // Distinct Fermat powers multiply like 2^(i|j).
       } else {
         int a = (i & j) & -(i & j);  // Lowest Fermat power shared by both exponents.
         bit_prod[i][j] = bit_prod[i ^ a][j] ^ bit_prod[(i ^ a) | (a - 1)][(j ^ a) | (i & (a - 1))];
@@ -7946,7 +7832,7 @@ For a sum of independent impartial games, the combined Grundy number is the XOR 
 #include <vector>
 
 int mex(const std::vector<int> &values) {
-  std::vector<char> seen(values.size() + 1, false);
+  std::vector<char> seen(values.size() + 1);
   for (int v : values) {
     if (0 <= v && v < static_cast<int>(seen.size())) {
       seen[v] = true;
@@ -7961,7 +7847,7 @@ int mex(const std::vector<int> &values) {
 }
 
 std::vector<int> subtraction_game_grundy(int max_stones, const std::vector<int> &moves) {
-  std::vector<int> grundy(max_stones + 1, 0);
+  std::vector<int> grundy(max_stones + 1);
   for (int stones = 1; stones <= max_stones; stones++) {
     std::vector<int> reachable;
     for (int m : moves) {
@@ -8022,7 +7908,7 @@ std::vector<int> grundy_on_dag(const std::vector<std::vector<int>> &g) {
     if (memo[u] != -1) {
       return;
     }
-    std::vector<char> seen(g[u].size() + 1, false);
+    std::vector<char> seen(g[u].size() + 1);
     for (int v : g[u]) {
       dfs(dfs, v);
       int x = memo[v];

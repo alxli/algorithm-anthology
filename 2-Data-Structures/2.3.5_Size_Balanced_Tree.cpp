@@ -199,7 +199,7 @@ class SBTree {
   }
 
  public:
-  explicit SBTree(Compare comp = Compare()) : root(nullptr), comp(std::move(comp)) {}
+  explicit SBTree(Compare comp = Compare{}) : root(nullptr), comp(std::move(comp)) {}
 
   ~SBTree() { clean_up(root); }
   SBTree(const SBTree &) = delete;

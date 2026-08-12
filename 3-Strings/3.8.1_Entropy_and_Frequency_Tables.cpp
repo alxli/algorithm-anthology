@@ -50,7 +50,7 @@ Space Complexity:
 using std::string;
 
 std::vector<int> byte_frequencies(const string &s) {
-  std::vector<int> freq(256, 0);
+  std::vector<int> freq(256);
   for (unsigned char c : s) {
     freq[c]++;
   }
@@ -136,7 +136,7 @@ int main() {
   assert(EQ(entropy(freq), 1.0));
   assert(EQ(entropy("aaaa"), 0.0));
 
-  vector<int> length(256, 0);
+  vector<int> length(256);
   length['a'] = 1;
   length['b'] = 1;
   assert(EQ(expected_code_length(freq, length), 1.0));

@@ -124,7 +124,7 @@ using Edge = std::tuple<int, int, T>;
 template<typename T>
 std::vector<Edge<T>> gomory_hu(int n, const std::vector<Edge<T>> &edges) {
   assert(n >= 1);
-  std::vector<int> parent(n, 0);
+  std::vector<int> parent(n);
   std::vector<T> cut_value(n);
   for (int s = 1; s < n; s++) {
     int t = parent[s];

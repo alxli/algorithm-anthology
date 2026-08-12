@@ -42,7 +42,7 @@ std::vector<int> stable_marriage(
       rank[w][women_pref[w][i]] = i;  // How woman w ranks each man (smaller is better).
     }
   }
-  std::vector<int> next_proposal(n, 0), husband(n, -1), wife(n, -1);
+  std::vector<int> next_proposal(n), husband(n, -1), wife(n, -1);
   std::queue<int> free_men;
   for (int m = 0; m < n; m++) {
     free_men.push(m);

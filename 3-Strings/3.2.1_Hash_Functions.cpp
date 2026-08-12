@@ -169,7 +169,7 @@ struct ScalarHasher {
     if constexpr (std::is_integral_v<T>) {
       return IntHasher<T>{}(x);
     }
-    return std::hash<T>()(x);
+    return std::hash<T>{}(x);
   }
 };
 
@@ -192,8 +192,8 @@ template<typename A, typename B>
 struct PairHasher {
   std::size_t operator()(const std::pair<A, B> &p) const {
     uint64_t h = 0;
-    h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<A>()(p.first)));
-    h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<B>()(p.second)));
+    h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<A>{}(p.first)));
+    h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<B>{}(p.second)));
     return static_cast<std::size_t>(h);
   }
 };
@@ -203,7 +203,7 @@ struct VectorHasher {
   std::size_t operator()(const std::vector<T> &v) const {
     uint64_t h = 0;
     for (const auto &x : v) {
-      h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<T>()(x)));
+      h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<T>{}(x)));
     }
     h = hash_combine64(h, v.size());  // Mix in the length so different sizes (e.g. empty) separate.
     return static_cast<std::size_t>(h);
@@ -216,7 +216,7 @@ struct TupleHasher {
     uint64_t h = 0;
     std::apply(
         [&](const Ts &...xs) {
-          ((h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<Ts>()(xs)))), ...);
+          ((h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<Ts>{}(xs)))), ...);
         },
         t
     );

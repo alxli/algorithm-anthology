@@ -170,7 +170,7 @@ class SplayTree {
   }
 
  public:
-  explicit SplayTree(Compare comp = Compare())
+  explicit SplayTree(Compare comp = Compare{})
       : root(nullptr), num_nodes(0), comp(std::move(comp)) {}
 
   ~SplayTree() { clean_up(root); }

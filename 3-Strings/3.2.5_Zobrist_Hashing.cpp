@@ -63,7 +63,7 @@ class ZobristHash {
   template<typename It>
   std::vector<uint64_t> distinct_prefix_hashes(It lo, It hi) {
     std::unordered_set<T> seen;
-    std::vector<uint64_t> res(1, 0);
+    std::vector<uint64_t> res(1);
     uint64_t h = 0;
     for (It it = lo; it != hi; ++it) {
       if (seen.insert(*it).second) {

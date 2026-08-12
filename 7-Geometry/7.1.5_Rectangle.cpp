@@ -17,8 +17,10 @@ numeric `.x` and `.y` fields.
   those pointers are non-null. The `include_boundary` flag controls whether boundary-only contact
   counts as intersecting.
 
-For integer-coordinate inputs, comparisons are exact as long as intermediate coordinate additions,
-subtractions, and min/max values do not overflow. Floating-point inputs use EPS-based comparisons.
+Floating-point inputs use EPS-based comparisons.
+
+Overflow warning: For integer-coordinate inputs, comparisons are exact as long as intermediate
+coordinate additions, subtractions, and min/max values do not overflow.
 
 Time Complexity:
 - O(1) per operation.

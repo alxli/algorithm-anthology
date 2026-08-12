@@ -31,7 +31,7 @@ Type aliases:
 - `PointI = TPoint<int>`: exact integer geometry (small coordinates only; see overflow warning)
 - `PointL = TPoint<long long>`: exact integer geometry for large coordinates
 - `PointD = TPoint<double>`: standard floating-point
-- `PointLD = TPoint<long double>`: extra precision
+- `PointLD = TPoint<long double>`: extra precision (where supported)
 - `Point = PointD`: default point type is double
 
 Time Complexity:
@@ -127,7 +127,7 @@ struct TPoint {
   TPoint<fp_t> normalize() const {
     fp_t n = norm();
     if (n < static_cast<fp_t>(1e-30)) {  // guard against dividing by a near-zero norm, not a
-      return {fp_t(0), fp_t(0)};         // geometric tolerance (EPS is too coarse here)
+      return {fp_t{0}, fp_t{0}};         // geometric tolerance (EPS is too coarse here)
     }
     return {static_cast<fp_t>(x) / n, static_cast<fp_t>(y) / n};
   }

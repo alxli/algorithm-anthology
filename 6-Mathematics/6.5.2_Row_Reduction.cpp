@@ -43,7 +43,7 @@ bool rref_is_zero(const T &v) {
   if constexpr (std::is_floating_point_v<T>) {
     return std::fabs(v) < EPS;
   }
-  return v == T(0);
+  return v == T{0};
 }
 
 template<typename Matrix>

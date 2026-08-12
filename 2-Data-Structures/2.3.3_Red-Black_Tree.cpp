@@ -223,8 +223,8 @@ class RedBlackTree {
   }
 
  public:
-  explicit RedBlackTree(Compare comp = Compare()) : num_nodes(0), comp(std::move(comp)) {
-    root = LEAF_NIL = new Node(K(), V(), BLACK);
+  explicit RedBlackTree(Compare comp = Compare{}) : num_nodes(0), comp(std::move(comp)) {
+    root = LEAF_NIL = new Node(K{}, V{}, BLACK);
     LEAF_NIL->left = LEAF_NIL->right = LEAF_NIL;
   }
 

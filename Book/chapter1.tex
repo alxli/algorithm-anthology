@@ -37,9 +37,10 @@ The pivot chosen in this implementation is always a middle element of the range 
 
 \begin{lstlisting}[language=C++]
 template<typename It, typename Compare = std::less<>>
-void quicksort(It lo, It hi, Compare comp = Compare()) {
+void quicksort(It lo, It hi, Compare comp = Compare{}) {
+  using T = typename std::iterator_traits<It>::value_type;
   while (hi - lo >= 2) {
-    auto pivot = *(lo + (hi - lo) / 2);
+    T pivot = *(lo + (hi - lo) / 2);
     It lt = lo, mid = lo, gt = hi;
     while (mid != gt) {
       if (comp(*mid, pivot)) {
@@ -72,7 +73,7 @@ An analogous function in the C++ standard library is \inlinecode{std::stable\_so
 
 \begin{lstlisting}[language=C++]
 template<typename It, typename Compare = std::less<>>
-void mergesort(It lo, It hi, Compare comp = Compare()) {
+void mergesort(It lo, It hi, Compare comp = Compare{}) {
   if (hi - lo < 2) {
     return;
   }
@@ -94,7 +95,7 @@ Heapsort first rearranges an array to satisfy the max-heap property. Then, it re
 
 The C++ standard library equivalent is calling \inlinecode{std::make\_heap(lo, hi)}, followed by \inlinecode{std::sort\_heap(lo, hi)}.
 
-The loop below has two modes controlled by whether \inlinecode{i \textgreater{} lo}. While \inlinecode{i \textgreater{} lo}, it is heapifying (Floyd's $O(n)$ bottom-up heap build: sift down each non-leaf from right to left). Once \inlinecode{i == lo}, the heap is built, and the loop switches to extraction: repeatedly swap the root to the back of the unsorted region (\inlinecode{*j}) and sift down the new root.
+\inlinecode{sift\_down()} restores the heap property below one node. The first loop applies it to each non-leaf from right to left, which builds the heap in $O(n)$ time. The second loop repeatedly moves the maximum to the back of the unsorted range and restores the heap among the remaining elements.
 
 \textbf{Time Complexity}: $O(n \log n)$ in all cases.
 
@@ -104,36 +105,33 @@ The loop below has two modes controlled by whether \inlinecode{i \textgreater{} 
 
 \begin{lstlisting}[language=C++]
 template<typename It, typename Compare = std::less<>>
-void heapsort(It lo, It hi, Compare comp = Compare()) {
+void heapsort(It lo, It hi, Compare comp = Compare{}) {
   if (hi - lo < 2) {
     return;
   }
   using T = typename std::iterator_traits<It>::value_type;
-  T tmp = *lo;
-  It i = lo + (hi - lo) / 2, j = hi, parent;
-  while (true) {
-    if (i <= lo) {
-      if (--j == lo) {
-        return;
-      }
-      tmp = *j;
-      *j = *lo;
-    } else {
-      tmp = *(--i);
-    }
-    parent = i;
-    while (2 * (parent - lo) + 1 < j - lo) {
-      It child = lo + 2 * (parent - lo) + 1;
-      if (child + 1 < j && comp(*child, *(child + 1))) {
+  auto sift_down = [&](It root, It end) {
+    T value = *root;
+    auto parent = root - lo, n = end - lo;
+    while (2 * parent + 1 < n) {
+      auto child = 2 * parent + 1;
+      if (child + 1 < n && comp(*(lo + child), *(lo + child + 1))) {
         child++;
       }
-      if (!comp(tmp, *child)) {
+      if (!comp(value, *(lo + child))) {
         break;
       }
-      *parent = *child;
+      *(lo + parent) = *(lo + child);
       parent = child;
     }
-    *parent = tmp;
+    *(lo + parent) = value;
+  };
+  for (It root = lo + (hi - lo) / 2; root != lo;) {
+    sift_down(--root, hi);
+  }
+  for (It end = hi; --end != lo;) {
+    std::iter_swap(lo, end);
+    sift_down(lo, end);
   }
 }
 \end{lstlisting}
@@ -151,7 +149,7 @@ The comparison \inlinecode{comp(key, *(j - 1))} is strict, so an element never m
 
 \begin{lstlisting}[language=C++]
 template<typename It, typename Compare = std::less<>>
-void insertion_sort(It lo, It hi, Compare comp = Compare()) {
+void insertion_sort(It lo, It hi, Compare comp = Compare{}) {
   using T = typename std::iterator_traits<It>::value_type;
   for (It i = lo; i != hi; ++i) {
     T key = *i;
@@ -174,7 +172,7 @@ Comb sort is an improved bubble sort. While bubble sort compares only adjacent e
 
 \begin{lstlisting}[language=C++]
 template<typename It, typename Compare = std::less<>>
-void combsort(It lo, It hi, Compare comp = Compare()) {
+void combsort(It lo, It hi, Compare comp = Compare{}) {
   int gap = static_cast<int>(hi - lo);
   bool swapped = true;
   while (gap > 1 || swapped) {
@@ -216,9 +214,9 @@ void radix_sort(It lo, It hi) {
   const int num_bits = sizeof(T) * CHAR_BIT;
   // Sort on an unsigned key. For signed types, flipping the sign bit sends the most negative value
   // to 0, mapping the signed order onto the unsigned order; logical shifts then extract each digit.
-  auto key = [num_bits](T x) -> U {
+  auto key = [](T x) -> U {
     U u = static_cast<U>(x);
-    return std::is_signed<T>::value ? (u ^ (U(1) << (num_bits - 1))) : u;
+    return std::is_signed<T>::value ? (u ^ (U{1} << (num_bits - 1))) : u;
   };
   std::vector<T> buf(hi - lo);
   for (int pos = 0; pos < num_bits; pos += radix_bits) {
@@ -274,14 +272,14 @@ int main() {
     heapsort(a.rbegin(), a.rend());
     assert(is_sorted(a.rbegin(), a.rend()));
   }
-  {  // We can sort doubles just as well.
-    vector<double> a{1.1, -5.0, 6.23, 4.123, 155.2};
-    combsort(a.begin(), a.end());
-    assert(is_sorted(a.begin(), a.end()));
-  }
   {  // Insertion sort is adaptive: an already-sorted range is left untouched in O(n).
     vector<int> a{12, 26, 32, 33, 45, 53, 71, 80};
     insertion_sort(a.begin(), a.end());
+    assert(is_sorted(a.begin(), a.end()));
+  }
+  {  // We can sort doubles just as well.
+    vector<double> a{1.1, -5.0, 6.23, 4.123, 155.2};
+    combsort(a.begin(), a.end());
     assert(is_sorted(a.begin(), a.end()));
   }
   {  // radix_sort() handles signed integers (including negatives), unlike a plain counting sort.
@@ -301,7 +299,7 @@ int main() {
     assert(empty.empty() && single[0] == 42);
   }
 
-  // Example from: http://www.cplusplus.com/reference/algorithm/stable_sort
+  // Stable sort.
   const vector<double> a{3.14, 1.41, 2.72, 4.67, 1.73, 1.32, 1.62, 2.58};
   {
     vector<double> v(a);
@@ -326,8 +324,6 @@ int main() {
   }
   cout << "Sorting five million integers..." << endl;
   cout.precision(3);
-
-  // Lambdas resolve each function template once benchmark() supplies the iterator types.
   auto benchmark = [&](const string &name, auto sort) {
     vector<int> v = data;
     clock_t start = clock();
@@ -381,11 +377,12 @@ Quickselect repeatedly applies this partition and continues only into the group 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <functional>
+#include <iterator>
 #include <random>
 #include <utility>
 
 template<typename It, typename T, typename Compare = std::less<>>
-std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot, Compare comp = Compare()) {
+std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot, Compare comp = Compare{}) {
   It lt = lo, cur = lo, gt = hi;
   while (cur != gt) {
     if (comp(*cur, pivot)) {
@@ -400,11 +397,12 @@ std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot, Compare comp
 }
 
 template<typename It, typename Compare = std::less<>>
-void nth_element2(It lo, It nth, It hi, Compare comp = Compare()) {
+void nth_element2(It lo, It nth, It hi, Compare comp = Compare{}) {
+  using T = typename std::iterator_traits<It>::value_type;
   static std::mt19937 rng(std::random_device{}());
   while (hi - lo > 1) {
     std::uniform_int_distribution<int> dist(0, hi - lo - 1);
-    auto pivot = *(lo + dist(rng));
+    T pivot = *(lo + dist(rng));
     auto [lt, gt] = partition_three_way(lo, hi, pivot, comp);
     if (nth < lt) {
       hi = lt;
@@ -555,7 +553,6 @@ int main() {
   rotate3(no_op.begin(), no_op.begin(), no_op.end());
   assert((no_op == vector<int>{1, 2, 3}));
 
-  // Example from: http://en.cppreference.com/w/cpp/algorithm/rotate
   vector<int> a{2, 4, 2, 0, 5, 10, 7, 3, 7, 1};
 
   // Insertion sort.
@@ -620,7 +617,7 @@ All implementations below take ranges as ForwardIterators. The comparator \inlin
 #include <vector>
 
 template<typename It, typename Compare = std::less<>>
-void compress1(It lo, It hi, Compare comp = Compare()) {
+void compress1(It lo, It hi, Compare comp = Compare{}) {
   using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> v(lo, hi);
   std::sort(v.begin(), v.end(), comp);
@@ -636,7 +633,7 @@ void compress1(It lo, It hi, Compare comp = Compare()) {
 }
 
 template<typename It, typename Compare = std::less<>>
-void compress2(It lo, It hi, Compare comp = Compare()) {
+void compress2(It lo, It hi, Compare comp = Compare{}) {
   using T = typename std::iterator_traits<It>::value_type;
   std::map<T, int, Compare> m(comp);
   for (It it = lo; it != hi; ++it) {
@@ -657,10 +654,10 @@ class CoordinateCompressor {
   std::vector<T> values;
 
  public:
-  explicit CoordinateCompressor(Compare comp = Compare()) : comp(std::move(comp)) {}
+  explicit CoordinateCompressor(Compare comp = Compare{}) : comp(std::move(comp)) {}
 
   template<typename It>
-  CoordinateCompressor(It lo, It hi, Compare comp = Compare())
+  CoordinateCompressor(It lo, It hi, Compare comp = Compare{})
       : comp(std::move(comp)), values(lo, hi) {
     build();
   }
@@ -774,7 +771,7 @@ The number of inversions for a sequence $a$ is the number of ordered pairs $(i, 
 #include <vector>
 
 template<typename It, typename Compare = std::less<>>
-int64_t inversions(It lo, It hi, Compare comp = Compare()) {
+int64_t inversions(It lo, It hi, Compare comp = Compare{}) {
   int n = static_cast<int>(hi - lo);
   if (n < 2) {
     return 0;
@@ -812,7 +809,7 @@ int64_t inversions(const std::vector<int> &a) {
   std::vector<int> values(a);
   std::sort(values.begin(), values.end());
   values.resize(std::unique(values.begin(), values.end()) - values.begin());
-  std::vector<int> bit(values.size() + 1, 0);
+  std::vector<int> bit(values.size() + 1);
   int64_t res = 0;
   for (int i = n - 1; i >= 0; i--) {
     int id =
@@ -868,7 +865,7 @@ Prefix sums can also be combined with a frequency table to count subarrays havin
   \item \inlinecode{count\_subarrays\_with\_sum(a, target)} returns the number of contiguous subarrays whose sum is \inlinecode{target}.
 \end{compactitem}
 
-All prefix sums, target differences, inclusion-exclusion results, and returned counts must fit in \inlinecode{int64\_t}.
+Overflow warning: All prefix sums, target differences, inclusion-exclusion results, and returned counts must fit in \inlinecode{int64\_t}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -895,7 +892,7 @@ All prefix sums, target differences, inclusion-exclusion results, and returned c
 #include <vector>
 
 std::vector<int64_t> prefix_sums(const std::vector<int> &a) {
-  std::vector<int64_t> pref(a.size() + 1, 0);
+  std::vector<int64_t> pref(a.size() + 1);
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
     pref[i + 1] = pref[i] + a[i];
   }
@@ -910,7 +907,7 @@ int64_t range_sum(const std::vector<int64_t> &pref, int lo, int hi) {
 std::vector<std::vector<int64_t>> prefix_sums_2d(const std::vector<std::vector<int>> &a) {
   int rows = static_cast<int>(a.size());
   int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
-  std::vector<std::vector<int64_t>> pref(rows + 1, std::vector<int64_t>(cols + 1, 0));
+  std::vector<std::vector<int64_t>> pref(rows + 1, std::vector<int64_t>(cols + 1));
   for (int i = 0; i < rows; i++) {
     for (int j = 0; j < cols; j++) {
       pref[i + 1][j + 1] = a[i][j] + pref[i][j + 1] + pref[i + 1][j] - pref[i][j];
@@ -981,7 +978,7 @@ Applies many range-add updates to an array in linear total time using a differen
   \item \inlinecode{build()} returns the final grid after all rectangle updates.
 \end{compactitem}
 
-All stored differences and reconstructed values must fit in \inlinecode{int64\_t}.
+Overflow warning: All stored differences and reconstructed values must fit in \inlinecode{int64\_t}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -1035,7 +1032,7 @@ class DifferenceArray2D {
  public:
   DifferenceArray2D(int rows, int cols) {
     assert(rows >= 0 && cols >= 0);
-    diff.assign(rows + 1, std::vector<int64_t>(cols + 1, 0));
+    diff.assign(rows + 1, std::vector<int64_t>(cols + 1));
   }
 
   void add(int r1, int c1, int r2, int c2, int64_t delta) {
@@ -1103,7 +1100,7 @@ The examples below cover sorted 2-sum/3-sum variants, finding the shortest subar
 
 \begin{compactitem}
   \item \inlinecode{two\_sum\_sorted(a, target)} returns two indices whose values sum to \inlinecode{target}, or $(-1, -1)$ if no such pair exists. The input array must be sorted.
-  \item \inlinecode{three\_sum(a, target)} returns three original indices whose values sum to \inlinecode{target}, or $(-1, -1, -1)$ if none exist.
+  \item \inlinecode{three\_sum(a, target)} returns a tuple of three original indices whose values sum to \inlinecode{target}, or $(-1, -1, -1)$ if none exist.
   \item \inlinecode{min\_subarray\_at\_least(a, target)} returns a tuple (\inlinecode{length}, \inlinecode{lo}, \inlinecode{hi}), the minimum length and inclusive endpoints of a contiguous subarray with sum at least \inlinecode{target}, or length $-1$ if none exists. Values in \inlinecode{a} must be nonnegative. If \inlinecode{target} is nonpositive, it returns the empty subarray.
   \item \inlinecode{max\_subarray\_at\_most\_k\_distinct(a, k)} returns a tuple (\inlinecode{length}, \inlinecode{lo}, \inlinecode{hi}), the maximum length and inclusive endpoints of a contiguous subarray containing at most \inlinecode{k} distinct values. If \inlinecode{k} is nonpositive, it returns the empty subarray.
   \item \inlinecode{sliding\_window\_extrema(a, k, comp = std::less\textless{}\textgreater{})} returns the extreme value in each window of length \inlinecode{k}. With the default \inlinecode{less\textless{}\textgreater{}} comparator it returns minimums; passing \inlinecode{greater\textless{}\textgreater{}} returns maximums.
@@ -1130,7 +1127,6 @@ The examples below cover sorted 2-sum/3-sum variants, finding the shortest subar
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
-#include <array>
 #include <cassert>
 #include <cstdint>
 #include <deque>
@@ -1141,20 +1137,20 @@ The examples below cover sorted 2-sum/3-sum variants, finding the shortest subar
 #include <vector>
 
 std::pair<int, int> two_sum_sorted(const std::vector<int> &a, int64_t target) {
-  for (int l = 0, r = static_cast<int>(a.size()) - 1; l < r;) {
-    int64_t sum = static_cast<int64_t>(a[l]) + a[r];
+  for (int lo = 0, hi = static_cast<int>(a.size()) - 1; lo < hi;) {
+    int64_t sum = static_cast<int64_t>(a[lo]) + a[hi];
     if (sum == target) {
-      return {l, r};
+      return {lo, hi};
     } else if (sum < target) {
-      l++;
+      lo++;
     } else {
-      r--;
+      hi--;
     }
   }
   return {-1, -1};
 }
 
-std::array<int, 3> three_sum(const std::vector<int> &a, int64_t target) {
+std::tuple<int, int, int> three_sum(const std::vector<int> &a, int64_t target) {
   int n = static_cast<int>(a.size());
   std::vector<std::pair<int, int>> sorted;
   sorted.reserve(a.size());
@@ -1163,15 +1159,15 @@ std::array<int, 3> three_sum(const std::vector<int> &a, int64_t target) {
   }
   std::sort(sorted.begin(), sorted.end());
   for (int i = 0; i < n; i++) {
-    int l = i + 1, r = n - 1;
-    while (l < r) {
-      int64_t sum = static_cast<int64_t>(sorted[i].first) + sorted[l].first + sorted[r].first;
+    int lo = i + 1, hi = n - 1;
+    while (lo < hi) {
+      int64_t sum = static_cast<int64_t>(sorted[i].first) + sorted[lo].first + sorted[hi].first;
       if (sum == target) {
-        return {sorted[i].second, sorted[l].second, sorted[r].second};
+        return {sorted[i].second, sorted[lo].second, sorted[hi].second};
       } else if (sum < target) {
-        l++;
+        lo++;
       } else {
-        r--;
+        hi--;
       }
     }
   }
@@ -1184,15 +1180,15 @@ std::tuple<int, int, int> min_subarray_at_least(const std::vector<int> &a, int64
   }
   int best = static_cast<int>(a.size()) + 1, best_lo = 0, best_hi = -1;
   int64_t sum = 0;
-  for (int l = 0, r = 0; r < static_cast<int>(a.size()); r++) {
-    sum += a[r];  // Overflow warning.
+  for (int lo = 0, hi = 0; hi < static_cast<int>(a.size()); hi++) {
+    sum += a[hi];  // Overflow warning.
     while (sum >= target) {
-      if (r - l + 1 < best) {
-        best = r - l + 1;
-        best_lo = l;
-        best_hi = r;
+      if (hi - lo + 1 < best) {
+        best = hi - lo + 1;
+        best_lo = lo;
+        best_hi = hi;
       }
-      sum -= a[l++];
+      sum -= a[lo++];
     }
   }
   if (best == static_cast<int>(a.size()) + 1) {
@@ -1207,25 +1203,25 @@ std::tuple<int, int, int> max_subarray_at_most_k_distinct(const std::vector<int>
   }
   std::unordered_map<int, int> count;
   int best = 0, best_lo = 0, best_hi = -1;
-  for (int l = 0, r = 0; r < static_cast<int>(a.size()); r++) {
-    count[a[r]]++;
+  for (int lo = 0, hi = 0; hi < static_cast<int>(a.size()); hi++) {
+    count[a[hi]]++;
     while (static_cast<int>(count.size()) > k) {
-      if (--count[a[l]] == 0) {
-        count.erase(a[l]);
+      if (--count[a[lo]] == 0) {
+        count.erase(a[lo]);
       }
-      l++;
+      lo++;
     }
-    if (best < r - l + 1) {
-      best = r - l + 1;
-      best_lo = l;
-      best_hi = r;
+    if (best < hi - lo + 1) {
+      best = hi - lo + 1;
+      best_lo = lo;
+      best_hi = hi;
     }
   }
   return {best, best_lo, best_hi};
 }
 
 template<typename T, typename Compare = std::less<>>
-std::vector<T> sliding_window_extrema(const std::vector<T> &a, int k, Compare comp = Compare()) {
+std::vector<T> sliding_window_extrema(const std::vector<T> &a, int k, Compare comp = Compare{}) {
   int n = static_cast<int>(a.size());
   assert(1 <= k && k <= n);
   std::deque<int> window;
@@ -1248,12 +1244,12 @@ std::vector<T> sliding_window_extrema(const std::vector<T> &a, int k, Compare co
 \end{lstlisting}
 A monotone queue can be used to maintain the minimum or maximum value in an online sliding window. This is useful for dynamic programming recurrences where each transition may only come from one of the last $w$ states, such as $dp(i) = a_i + \min_{j \in [i - w, i - 1]} dp(j)$.
 
-The queue stores candidate (\inlinecode{index}, \inlinecode{value}) pairs in monotone order. Expired indices are removed from the front, and dominated values are removed from the back before inserting a new candidate.
+The queue stores candidate (\inlinecode{index}, \inlinecode{value}) pairs in monotone order. Expired indices are removed from the front, and dominated values are removed from the back before inserting a new candidate. An index is an ordered \inlinecode{int} timestamp used only for expiration: indices need not be contiguous or nonnegative, but they must be pushed in strictly increasing order, and expiration thresholds must not decrease.
 
 \begin{compactitem}
   \item \inlinecode{MonotoneQueue\textless{}T\textgreater{}()} constructs an empty queue for minimum queries. Instantiate \inlinecode{MonotoneQueue\textless{}T, std::greater\textless{}T\textgreater{}\textgreater{}} for maximum queries.
-  \item \inlinecode{push(index, value)} inserts candidate \inlinecode{value} at position \inlinecode{index}, removing dominated candidates from the back.
-  \item \inlinecode{expire(first\_valid)} removes candidates with index less than \inlinecode{first\_valid}.
+  \item \inlinecode{push(index, value)} inserts candidate \inlinecode{value} with timestamp \inlinecode{index}, removing dominated candidates from the back.
+  \item \inlinecode{expire(first\_valid)} removes candidates whose indices are less than \inlinecode{first\_valid}.
   \item \inlinecode{top()} returns the best active (\inlinecode{index}, \inlinecode{value}) pair. The queue must be nonempty.
   \item \inlinecode{empty()} returns whether the queue has no active candidates.
 \end{compactitem}
@@ -1308,9 +1304,9 @@ int main() {
   assert(two_sum_sorted(c, 100) == make_pair(-1, -1));
 
   vector<int> d{4, -1, 8, 2, -3, 11};
-  array<int, 3> triple = three_sum(d, 9);
-  assert(d[triple[0]] + d[triple[1]] + d[triple[2]] == 9);
-  assert((three_sum(d, 30) == array<int, 3>{-1, -1, -1}));
+  auto [i, j, k] = three_sum(d, 9);
+  assert(d[i] + d[j] + d[k] == 9);
+  assert((three_sum(d, 30) == make_tuple(-1, -1, -1)));
 
   vector<int> a{2, 3, 1, 2, 4, 3};
   auto [length, lo, hi] = min_subarray_at_least(a, 7);
@@ -1329,20 +1325,20 @@ int main() {
   assert((sliding_window_extrema(e, 3) == vector<int>{-1, -3, -3, -3, 3, 3}));
   assert((sliding_window_extrema(e, 3, greater<>()) == vector<int>{3, 3, 5, 5, 6, 7}));
 
-  // Toy DP: dp[i] = f[i] + min(dp[j]) for j in [i - max_jump, i - 1].
-  // Scanning the window costs O(max_jump) per state; the monotone queue makes it O(1) amortized.
+  // Toy DP: dp[i] = f[i] + min(dp[j]) for j in [i - w, i - 1].
+  // Scanning the window costs O(w) per state; the monotone queue makes it O(1) amortized.
   vector<int> f{4, 2, 7, 1, 3, 6};
-  int max_jump = 3;
+  int w = 3;
   vector<int> dp(f.size());
-  MonotoneQueue<int> best;
+  MonotoneQueue<int> mq;
   dp[0] = f[0];
-  best.push(0, dp[0]);
+  mq.push(0, dp[0]);
   for (int i = 1; i < static_cast<int>(f.size()); i++) {
-    best.expire(i - max_jump);
-    dp[i] = f[i] + best.top().second;
-    best.push(i, dp[i]);
+    mq.expire(i - w);
+    dp[i] = f[i] + mq.top().second;
+    mq.push(i, dp[i]);
   }
-  assert(dp[5] == 11);
+  assert((dp == vector<int>{4, 6, 11, 5, 8, 11}));
   return 0;
 }
 \end{lstlisting}
@@ -1358,11 +1354,13 @@ All functions below take a vector \inlinecode{a} of $n$ comparable values and re
   \item \inlinecode{next\_less(a)} returns, for each $i$, the smallest index $j > i$ with $a[j] < a[i]$, or $n$ if there's no such index.
   \item \inlinecode{prev\_greater(a)} returns, for each $i$, the largest index $j < i$ with $a[j] > a[i]$, or $-1$ if there's no such index.
   \item \inlinecode{next\_greater(a)} returns, for each $i$, the smallest index $j > i$ with $a[j] > a[i]$, or $n$ if there's no such index.
-  \item \inlinecode{largest\_histogram\_rectangle(heights)} returns the maximum area of an axis-aligned rectangle that fits under the given histogram, given an array of \inlinecode{heights} where each bar has width $1$.
-  \item \inlinecode{largest\_zero\_submatrix(a)} returns the area of the largest all-zero rectangular submatrix of the 0/1 matrix \inlinecode{a}.
+  \item \inlinecode{largest\_histogram\_rectangle(heights)} returns the maximum area and its inclusive left and right endpoints in a histogram where each bar has width $1$.
+  \item \inlinecode{largest\_zero\_submatrix(a)} returns the maximum area and its inclusive top, left, bottom, and right boundaries among all-zero rectangular submatrices of the 0/1 matrix \inlinecode{a}.
 \end{compactitem}
 
-Histogram areas must fit in the height value type.
+Histogram heights must be nonnegative.
+
+Overflow warning: Histogram areas must fit in the height value type.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -1383,6 +1381,7 @@ Histogram areas must fit in the height value type.
 #include <algorithm>
 #include <cassert>
 #include <stack>
+#include <tuple>
 #include <vector>
 
 template<typename T>
@@ -1446,33 +1445,45 @@ std::vector<int> next_greater(const std::vector<T> &a) {
 }
 
 template<typename T>
-T largest_histogram_rectangle(const std::vector<T> &heights) {
+std::tuple<T, int, int> largest_histogram_rectangle(const std::vector<T> &heights) {
   int n = static_cast<int>(heights.size());
   std::vector<int> left = prev_less(heights), right = next_less(heights);
-  T best = 0;
+  T best{};
+  int lo = 0, hi = -1;
   for (int i = 0; i < n; i++) {
     T area = heights[i] * (right[i] - left[i] - 1);  // Overflow warning.
     if (area > best) {
       best = area;
+      lo = left[i] + 1;
+      hi = right[i] - 1;
     }
   }
-  return best;
+  return {best, lo, hi};
 }
 
-int largest_zero_submatrix(const std::vector<std::vector<char>> &a) {
+std::tuple<int, int, int, int, int> largest_zero_submatrix(
+    const std::vector<std::vector<char>> &a
+) {
   if (a.empty()) {
-    return 0;
+    return {0, 0, 0, -1, -1};
   }
   int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
-  int best = 0;
-  std::vector<int> height(cols, 0);
+  int best = 0, rlo = 0, clo = 0, rhi = -1, chi = -1;
+  std::vector<int> height(cols);
   for (int i = 0; i < rows; i++) {
     for (int j = 0; j < cols; j++) {
       height[j] = a[i][j] ? 0 : height[j] + 1;
     }
-    best = std::max(best, largest_histogram_rectangle(height));
+    auto [area, lo, hi] = largest_histogram_rectangle(height);
+    if (area > best) {
+      best = area;
+      rlo = i - area / (hi - lo + 1) + 1;
+      clo = lo;
+      rhi = i;
+      chi = hi;
+    }
   }
-  return best;
+  return {best, rlo, clo, rhi, chi};
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -1489,7 +1500,8 @@ int main() {
 
   vector<int> hist{2, 1, 5, 6, 2, 3};
   // The best histogram rectangle uses bars 2 and 3: min height 5 times width 2.
-  assert(largest_histogram_rectangle(hist) == 10);
+  assert((largest_histogram_rectangle(hist) == make_tuple(10, 2, 3)));
+  assert((largest_histogram_rectangle(vector<int>{}) == make_tuple(0, 0, -1)));
 
   vector<vector<char>> grid{
       {1, 0, 1, 1, 0, 0},
@@ -1499,7 +1511,8 @@ int main() {
       {1, 0, 1, 0, 0, 1}
   };
   // The largest zero rectangle has 3 rows and 2 columns.
-  assert(largest_zero_submatrix(grid) == 6);
+  assert((largest_zero_submatrix(grid) == make_tuple(6, 1, 1, 3, 2)));
+  assert((largest_zero_submatrix({}) == make_tuple(0, 0, 0, -1, -1)));
   return 0;
 }
 \end{lstlisting}
@@ -1666,7 +1679,7 @@ template<typename It>
 auto max_subarray_sum(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
   if (lo == hi) {
-    return std::tuple{T(), 0, -1};
+    return std::tuple{T{}, 0, -1};
   }
   int curr_begin = 0, begin = 0, end = -1;
   T sum = 0, max_sum = 0;
@@ -1719,7 +1732,7 @@ template<typename It>
 auto max_product_subarray(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
   if (lo == hi) {
-    return std::tuple{T(), 0, -1};
+    return std::tuple{T{}, 0, -1};
   }
   T max_ending = *lo, min_ending = *lo, best = *lo;
   int max_begin = 0, min_begin = 0, begin = 0, end = 0;
@@ -1755,13 +1768,13 @@ auto max_product_subarray(It lo, It hi) {
 template<typename T>
 std::tuple<T, int, int, int, int> max_submatrix_sum(const std::vector<std::vector<T>> &a) {
   if (a.empty() || a[0].empty()) {
-    return {T(), 0, 0, -1, -1};
+    return {T{}, 0, 0, -1, -1};
   }
   int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
   int r1 = 0, c1 = 0, r2 = -1, c2 = -1;
   T max_sum = 0;
   for (int clo = 0; clo < cols; clo++) {
-    std::vector<T> sums(rows, 0);
+    std::vector<T> sums(rows);
     for (int chi = clo; chi < cols; chi++) {
       for (int i = 0; i < rows; i++) {
         sums[i] += a[i][chi];  // Overflow warning.
@@ -1798,15 +1811,16 @@ int main() {
       cout << a[i] << " ";
     }
     cout << endl;
-
-    vector<int> circular{5, -3, 5};
-    auto [circular_sum, circular_begin, circular_end] =
-        max_circular_subarray_sum(circular.begin(), circular.end());
-    assert(circular_sum == 10 && circular_begin == 2 && circular_end == 0);
-
-    vector<int> b{2, 3, -2, 4};
-    auto [product, product_begin, product_end] = max_product_subarray(b.begin(), b.end());
-    assert(product == 6 && product_begin == 0 && product_end == 1);
+  }
+  {
+    vector<int> a{5, -3, 5};
+    auto [sum, begin, end] = max_circular_subarray_sum(a.begin(), a.end());
+    assert(sum == 10 && begin == 2 && end == 0);
+  }
+  {
+    vector<int> a{2, 3, -2, 4};
+    auto [product, begin, end] = max_product_subarray(a.begin(), a.end());
+    assert(product == 6 && begin == 0 && end == 1);
   }
   {
     vector<vector<int>> a{{0, -2, -7, 0, 5},
@@ -1852,7 +1866,7 @@ Given a range of elements, determine a longest subsequence where all elements ar
 #include <vector>
 
 template<typename It, typename Compare = std::less<>>
-std::vector<int> longest_increasing_subsequence(It lo, It hi, Compare comp = Compare()) {
+std::vector<int> longest_increasing_subsequence(It lo, It hi, Compare comp = Compare{}) {
   int n = static_cast<int>(hi - lo);
   if (n == 0) {
     return {};
@@ -1877,6 +1891,7 @@ std::vector<int> longest_increasing_subsequence(It lo, It hi, Compare comp = Com
     prev[i] = pos > 0 ? tail[pos - 1] : -1;
     tail[pos] = i;
   }
+  // Optional: reconstruct one longest increasing subsequence.
   std::vector<int> res(len);
   for (int i = tail[len - 1]; i != -1; i = prev[i]) {
     res[--len] = i;
@@ -1898,119 +1913,6 @@ int main() {
   assert(
       (longest_increasing_subsequence(b.begin(), b.end(), greater<int>()) == vector<int>{1, 2, 3})
   );
-  return 0;
-}
-\end{lstlisting}
-\subsection{Paths on Grids}
-Solves basic dynamic programming problems on a rectangular grid. In grid DP, each cell represents a state and transitions usually come from already-computed neighboring cells, most commonly the cell above and the cell to the left. Processing rows from top to bottom and columns from left to right therefore makes every predecessor available when a state is computed.
-
-For path-counting, \inlinecode{dp[r][c]} stores the number of ways to reach cell $(r, c)$. For minimum-cost paths, \inlinecode{dp[r][c]} stores the cheapest cost to reach that cell, and a predecessor direction reconstructs one optimal path. The helpers below assume movement only down or right.
-
-\begin{compactitem}
-  \item \inlinecode{count\_grid\_paths(blocked)} returns the number of paths from the upper-left cell to the lower-right cell, moving only down or right and avoiding blocked cells marked nonzero.
-  \item \inlinecode{min\_cost\_grid\_path(cost)} returns a pair (\inlinecode{min\_cost}, \inlinecode{path}) containing the minimum cost of a down/right path from the upper-left cell to the lower-right cell and the cells of one optimal path in order. If the grid is empty, \inlinecode{min\_cost} is $0$ and \inlinecode{path} is empty.
-\end{compactitem}
-
-Path counts and path costs must fit in \inlinecode{int64\_t}.
-
-\textbf{Time Complexity}: $O(R \cdot C)$ per call to \inlinecode{count\_grid\_paths(blocked)} and \inlinecode{min\_cost\_grid\_path(cost)}, where $R$ and $C$ are the grid dimensions.
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(C)$ auxiliary for \inlinecode{count\_grid\_paths(blocked)}.
-  \item $O(R \cdot C)$ auxiliary and $O(R + C)$ for the returned path from \inlinecode{min\_cost\_grid\_path(cost)}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <cstdint>
-#include <utility>
-#include <vector>
-
-int64_t count_grid_paths(const std::vector<std::vector<char>> &blocked) {
-  int rows = static_cast<int>(blocked.size());
-  int cols = rows == 0 ? 0 : static_cast<int>(blocked[0].size());
-  if (rows == 0 || cols == 0 || blocked[0][0] || blocked[rows - 1][cols - 1]) {
-    return 0;
-  }
-  std::vector<int64_t> dp(cols, 0);
-  dp[0] = 1;
-  for (int r = 0; r < rows; r++) {
-    for (int c = 0; c < cols; c++) {
-      if (blocked[r][c]) {
-        dp[c] = 0;
-      } else if (c > 0) {
-        dp[c] += dp[c - 1];  // Overflow warning.
-      }
-    }
-  }
-  return dp[cols - 1];
-}
-
-std::pair<int64_t, std::vector<std::pair<int, int>>> min_cost_grid_path(
-    const std::vector<std::vector<int>> &cost
-) {
-  int rows = static_cast<int>(cost.size());
-  int cols = rows == 0 ? 0 : static_cast<int>(cost[0].size());
-  if (rows == 0 || cols == 0) {
-    return {0, {}};
-  }
-  std::vector<std::vector<int64_t>> dp(rows, std::vector<int64_t>(cols));
-  std::vector<std::vector<char>> parent(rows, std::vector<char>(cols, 0));
-  dp[0][0] = cost[0][0];
-  for (int r = 0; r < rows; r++) {
-    for (int c = 0; c < cols; c++) {
-      if (r == 0 && c == 0) {
-        continue;
-      }
-      if (c == 0 || (r > 0 && dp[r - 1][c] <= dp[r][c - 1])) {
-        dp[r][c] = dp[r - 1][c] + cost[r][c];  // Overflow warning.
-        parent[r][c] = 'U';
-      } else {
-        dp[r][c] = dp[r][c - 1] + cost[r][c];
-        parent[r][c] = 'L';
-      }
-    }
-  }
-  std::vector<std::pair<int, int>> path;
-  for (int r = rows - 1, c = cols - 1;;) {
-    path.emplace_back(r, c);
-    if (r == 0 && c == 0) {
-      break;
-    }
-    if (parent[r][c] == 'U') {
-      r--;
-    } else {
-      c--;
-    }
-  }
-  std::reverse(path.begin(), path.end());
-  return {dp[rows - 1][cols - 1], path};
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-using namespace std;
-
-int main() {
-  vector<vector<char>> blocked{
-      {0, 0, 0},
-      {0, 1, 0},
-      {0, 0, 0},
-  };
-  assert(count_grid_paths(blocked) == 2);
-
-  vector<vector<int>> cost{
-      {1, 3, 1},
-      {1, 5, 1},
-      {4, 2, 1},
-  };
-  auto [min_cost, path] = min_cost_grid_path(cost);
-  assert(min_cost == 7);
-  assert((path == vector<pair<int, int>>{{0, 0}, {0, 1}, {0, 2}, {1, 2}, {2, 2}}));
   return 0;
 }
 \end{lstlisting}
@@ -2042,8 +1944,8 @@ std::pair<int64_t, std::vector<int>> knapsack_01(
   for (int i = 0; i < n; i++) {
     assert(weight[i] >= 0 && value[i] >= 0);
   }
-  std::vector<int64_t> dp(capacity + 1, 0);
-  std::vector<std::vector<char>> take(n, std::vector<char>(capacity + 1, false));
+  std::vector<int64_t> dp(capacity + 1);
+  std::vector<std::vector<char>> take(n, std::vector<char>(capacity + 1));
   for (int i = 0; i < n; i++) {
     for (int w = capacity; w >= weight[i]; w--) {
       int64_t candidate = dp[w - weight[i]] + value[i];  // Overflow warning.
@@ -2053,7 +1955,7 @@ std::pair<int64_t, std::vector<int>> knapsack_01(
       }
     }
   }
-  // Optional: reconstruct the selected items.
+  // Optional: reconstruct one optimal subset.
   std::vector<int> items;
   for (int i = n - 1, w = capacity; i >= 0; i--) {
     if (take[i][w]) {
@@ -2074,7 +1976,6 @@ using namespace std;
 int main() {
   vector<int> weight{3, 4, 5, 9};
   vector<int64_t> value{4, 5, 7, 10};
-
   auto [best_value, items] = knapsack_01(weight, value, 8);
   assert(best_value == 11);
   assert((items == vector<int>{0, 2}));
@@ -2123,7 +2024,7 @@ std::pair<int64_t, std::vector<int>> unbounded_knapsack(
   for (int w : weight) {
     assert(w > 0);
   }
-  std::vector<int64_t> dp(capacity + 1, 0);
+  std::vector<int64_t> dp(capacity + 1);
   std::vector<int> choice(capacity + 1, -1);
   for (int w = 1; w <= capacity; w++) {
     for (int i = 0; i < n; i++) {
@@ -2136,7 +2037,8 @@ std::pair<int64_t, std::vector<int>> unbounded_knapsack(
       }
     }
   }
-  std::vector<int> count(n, 0);
+  // Optional: reconstruct one optimal multiset of items.
+  std::vector<int> count(n);
   for (int w = capacity; choice[w] != -1; w -= weight[choice[w]]) {
     count[choice[w]]++;
   }
@@ -2145,7 +2047,7 @@ std::pair<int64_t, std::vector<int>> unbounded_knapsack(
 
 int64_t count_coin_change(const std::vector<int> &coins, int target) {
   assert(target >= 0);
-  std::vector<int64_t> dp(target + 1, 0);
+  std::vector<int64_t> dp(target + 1);
   dp[0] = 1;
   for (int coin : coins) {
     assert(coin > 0);
@@ -2175,7 +2077,8 @@ std::pair<int, std::vector<int>> min_coin_change(const std::vector<int> &coins, 
   if (dp[target] == inf) {
     return {-1, {}};
   }
-  std::vector<int> used(coins.size(), 0);
+  // Optional: reconstruct one minimum-size multiset of coins.
+  std::vector<int> used(coins.size());
   for (int sum = target; sum > 0; sum -= coins[choice[sum]]) {
     used[choice[sum]]++;
   }
@@ -2235,8 +2138,8 @@ std::pair<int64_t, std::string> matrix_chain_order(const std::vector<int> &dimen
     assert(d > 0);
   }
   int n = static_cast<int>(dimensions.size()) - 1;
-  std::vector<std::vector<int64_t>> dp(n, std::vector<int64_t>(n, 0));
-  std::vector<std::vector<int>> split(n, std::vector<int>(n, 0));
+  std::vector<std::vector<int64_t>> dp(n, std::vector<int64_t>(n));
+  std::vector<std::vector<int>> split(n, std::vector<int>(n));
   for (int length = 2; length <= n; length++) {
     for (int lo = 0; lo + length <= n; lo++) {
       int hi = lo + length - 1;
@@ -2251,6 +2154,7 @@ std::pair<int64_t, std::string> matrix_chain_order(const std::vector<int> &dimen
       }
     }
   }
+  // Optional: reconstruct one optimal parenthesization.
   auto rec = [&](auto &&rec, int lo, int hi) -> std::string {
     if (lo == hi) {
       return "A" + std::to_string(lo);
@@ -2267,12 +2171,12 @@ std::pair<int64_t, std::string> matrix_chain_order(const std::vector<int> &dimen
 using namespace std;
 
 int main() {
-  auto [operations, parenthesization] = matrix_chain_order({40, 20, 30, 10, 30});
-  assert(operations == 26000);
+  auto [ops, parenthesization] = matrix_chain_order({40, 20, 30, 10, 30});
+  assert(ops == 26000);
   assert(parenthesization == "((A0 * (A1 * A2)) * A3)");
 
-  auto [single_operations, single_parenthesization] = matrix_chain_order({3, 5});
-  assert(single_operations == 0 && single_parenthesization == "A0");
+  auto [single_ops, single_parenthesization] = matrix_chain_order({3, 5});
+  assert(single_ops == 0 && single_parenthesization == "A0");
   return 0;
 }
 \end{lstlisting}
@@ -2351,8 +2255,419 @@ int main() {
 }
 \end{lstlisting}
 
-\section{\texorpdfstring{Greedy and Scheduling}{1.3 Greedy and Scheduling}}
+\section{\texorpdfstring{Grid Algorithms}{1.3 Grid Algorithms}}
 \setcounter{section}{3}
+\setcounter{subsection}{0}
+\subsection{Grid Transformations}
+Transforms a rectangular grid by transposing, rotating, or reflecting its cells. Transposition exchanges rows and columns. Rotation is clockwise by default, while a negative angle rotates counter-clockwise; the angle must be a multiple of $90$ degrees. Together, rotations and reflections generate all eight symmetries of a square grid.
+
+\begin{compactitem}
+  \item \inlinecode{transpose(a)} returns the transpose of grid \inlinecode{a}, so each output cell $(c, r)$ equals input cell $(r, c)$.
+  \item \inlinecode{transpose\_in\_place(a)} transposes the square grid \inlinecode{a} in place and returns a reference to it.
+  \item \inlinecode{rotate(a, degrees = 90)} returns \inlinecode{a} rotated clockwise by \inlinecode{degrees}.
+  \item \inlinecode{rotate\_in\_place(a, degrees = 90)} rotates \inlinecode{a} in place and returns a reference to it. The grid must be square for rotations by $90$ or $270$ degrees.
+  \item \inlinecode{reflect\_horizontal(a)} returns \inlinecode{a} reflected across its horizontal axis, reversing the row order.
+  \item \inlinecode{reflect\_vertical(a)} returns \inlinecode{a} reflected across its vertical axis, reversing every row.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(R \cdot C)$ per call, where $R$ and $C$ are the grid dimensions.
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(R \cdot C)$ for the returned grid from the non-in-place operations.
+  \item $O(1)$ auxiliary for the in-place operations.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <utility>
+#include <vector>
+
+using Grid = std::vector<std::vector<int>>;
+
+Grid transpose(const Grid &a) {
+  int rows = static_cast<int>(a.size());
+  int cols = rows == 0 ? 0 : static_cast<int>(a[0].size());
+  Grid res(cols, std::vector<int>(rows));
+  for (int r = 0; r < rows; r++) {
+    for (int c = 0; c < cols; c++) {
+      res[c][r] = a[r][c];
+    }
+  }
+  return res;
+}
+
+Grid &transpose_in_place(Grid &a) {
+  assert(a.empty() || a.size() == a[0].size());
+  for (int r = 0; r < static_cast<int>(a.size()); r++) {
+    for (int c = r + 1; c < static_cast<int>(a.size()); c++) {
+      std::swap(a[r][c], a[c][r]);
+    }
+  }
+  return a;
+}
+
+Grid rotate(const Grid &a, int degrees = 90) {
+  assert(degrees % 90 == 0);
+  int rows = static_cast<int>(a.size());
+  int cols = rows == 0 ? 0 : static_cast<int>(a[0].size());
+  int rotation = (degrees % 360 + 360) % 360;
+  Grid res(rotation % 180 == 0 ? rows : cols, std::vector<int>(rotation % 180 == 0 ? cols : rows));
+  for (int r = 0; r < rows; r++) {
+    for (int c = 0; c < cols; c++) {
+      if (rotation == 90) {
+        res[c][rows - r - 1] = a[r][c];
+      } else if (rotation == 180) {
+        res[rows - r - 1][cols - c - 1] = a[r][c];
+      } else if (rotation == 270) {
+        res[cols - c - 1][r] = a[r][c];
+      } else {
+        res[r][c] = a[r][c];
+      }
+    }
+  }
+  return res;
+}
+
+Grid &rotate_in_place(Grid &a, int degrees = 90) {
+  assert(degrees % 90 == 0);
+  int rotation = (degrees % 360 + 360) % 360;
+  assert(rotation % 180 == 0 || a.empty() || a.size() == a[0].size());
+  if (rotation == 90) {
+    transpose_in_place(a);
+    for (auto &row : a) {
+      std::reverse(row.begin(), row.end());
+    }
+  } else if (rotation == 180) {
+    std::reverse(a.begin(), a.end());
+    for (auto &row : a) {
+      std::reverse(row.begin(), row.end());
+    }
+  } else if (rotation == 270) {
+    transpose_in_place(a);
+    std::reverse(a.begin(), a.end());
+  }
+  return a;
+}
+
+Grid reflect_horizontal(Grid a) {
+  std::reverse(a.begin(), a.end());
+  return a;
+}
+
+Grid reflect_vertical(Grid a) {
+  for (auto &row : a) {
+    std::reverse(row.begin(), row.end());
+  }
+  return a;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  Grid a{{1, 2, 3}, {4, 5, 6}};
+  assert((transpose(a) == Grid{{1, 4}, {2, 5}, {3, 6}}));
+  assert((rotate(a) == Grid{{4, 1}, {5, 2}, {6, 3}}));
+  assert((rotate(a, -90) == Grid{{3, 6}, {2, 5}, {1, 4}}));
+  assert((rotate(a, 180) == Grid{{6, 5, 4}, {3, 2, 1}}));
+  assert((reflect_horizontal(a) == Grid{{4, 5, 6}, {1, 2, 3}}));
+  assert((reflect_vertical(a) == Grid{{3, 2, 1}, {6, 5, 4}}));
+
+  Grid square{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+  for (int degrees = -360; degrees <= 360; degrees += 90) {
+    Grid rotated = square;
+    assert(rotate_in_place(rotated, degrees) == rotate(square, degrees));
+  }
+  Grid transposed = square;
+  assert(transpose_in_place(transposed) == transpose(square));
+
+  Grid rectangular = a;
+  assert(rotate_in_place(rectangular, 180) == rotate(a, 180));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Grid Traversal}
+Traverses a rectangular grid as an implicit unweighted graph: each unblocked cell is a node joined to its unblocked four-way orthogonal neighbors. Depth-first flood fill finds connected regions, while breadth-first search finds shortest distances because every move has unit length. Seeding the BFS with several cells computes the distance to the nearest source in one pass.
+
+\begin{compactitem}
+  \item \inlinecode{flood\_fill(blocked, r, c)} returns all unblocked cells reachable from starting cell $({\inlinecodemath{r}}, {\inlinecodemath{c}})$, which must lie within the grid. If it is blocked, the returned vector is empty; otherwise, its size is the area of the containing component.
+  \item \inlinecode{grid\_components(blocked)} returns the connected components of cells marked zero, with each cell represented by a pair $({\inlinecodemath{r}}, {\inlinecodemath{c}})$. Movement is allowed in the four orthogonal directions.
+  \item \inlinecode{grid\_distances(blocked, sources)} returns an $R$ by $C$ matrix of shortest distances from the nearest source. Blocked and unreachable cells contain $-1$. Every source must be an unblocked cell represented by a pair $({\inlinecodemath{r}}, {\inlinecodemath{c}})$. Passing one source gives ordinary single-source shortest paths.
+  \item \inlinecode{shortest\_grid\_path(blocked, source, target)} returns one shortest path from the unblocked cell \inlinecode{source} to \inlinecode{target}, including both endpoints, or an empty vector if \inlinecode{target} is blocked or unreachable. Both endpoints must lie within the grid.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(R \cdot C)$ per call, where $R$ and $C$ are the grid dimensions.
+
+\textbf{Space Complexity}: $O(R \cdot C)$ auxiliary, including the recursion stack used by \inlinecode{grid\_components()} and $O(R \cdot C)$ for the returned result.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <queue>
+#include <utility>
+#include <vector>
+
+void flood_fill_dfs(
+    const std::vector<std::vector<char>> &blocked, int r, int c,
+    std::vector<std::vector<char>> &visit, std::vector<std::pair<int, int>> &component
+) {
+  int rows = static_cast<int>(blocked.size());
+  int cols = static_cast<int>(blocked[0].size());
+  visit[r][c] = true;
+  component.push_back({r, c});
+  for (auto [r2, c2] : {std::pair{r - 1, c}, {r + 1, c}, {r, c - 1}, {r, c + 1}}) {
+    if (0 <= r2 && r2 < rows && 0 <= c2 && c2 < cols && !blocked[r2][c2] && !visit[r2][c2]) {
+      flood_fill_dfs(blocked, r2, c2, visit, component);
+    }
+  }
+}
+
+std::vector<std::pair<int, int>> flood_fill(
+    const std::vector<std::vector<char>> &blocked, int r, int c
+) {
+  int rows = static_cast<int>(blocked.size());
+  int cols = rows == 0 ? 0 : static_cast<int>(blocked[0].size());
+  assert(0 <= r && r < rows && 0 <= c && c < cols);
+  if (blocked[r][c]) {
+    return {};
+  }
+  std::vector<std::vector<char>> visit(rows, std::vector<char>(cols));
+  std::vector<std::pair<int, int>> component;
+  flood_fill_dfs(blocked, r, c, visit, component);
+  return component;
+}
+
+std::vector<std::vector<std::pair<int, int>>> grid_components(
+    const std::vector<std::vector<char>> &blocked
+) {
+  int rows = static_cast<int>(blocked.size());
+  int cols = rows == 0 ? 0 : static_cast<int>(blocked[0].size());
+  std::vector<std::vector<std::pair<int, int>>> components;
+  std::vector<std::vector<char>> visit(rows, std::vector<char>(cols));
+  for (int r = 0; r < rows; r++) {
+    for (int c = 0; c < cols; c++) {
+      if (blocked[r][c] || visit[r][c]) {
+        continue;
+      }
+      components.push_back({});
+      flood_fill_dfs(blocked, r, c, visit, components.back());
+    }
+  }
+  return components;
+}
+
+std::vector<std::vector<int>> grid_distances(
+    const std::vector<std::vector<char>> &blocked, const std::vector<std::pair<int, int>> &sources
+) {
+  int rows = static_cast<int>(blocked.size());
+  int cols = rows == 0 ? 0 : static_cast<int>(blocked[0].size());
+  std::vector<std::vector<int>> dist(rows, std::vector<int>(cols, -1));
+  std::queue<std::pair<int, int>> q;
+  for (auto [r, c] : sources) {
+    assert(0 <= r && r < rows && 0 <= c && c < cols && !blocked[r][c]);
+    if (dist[r][c] == -1) {
+      dist[r][c] = 0;
+      q.push({r, c});
+    }
+  }
+  while (!q.empty()) {
+    auto [r, c] = q.front();
+    q.pop();
+    for (auto [r2, c2] : {std::pair{r - 1, c}, {r + 1, c}, {r, c - 1}, {r, c + 1}}) {
+      if (0 <= r2 && r2 < rows && 0 <= c2 && c2 < cols && !blocked[r2][c2] && dist[r2][c2] == -1) {
+        dist[r2][c2] = dist[r][c] + 1;
+        q.push({r2, c2});
+      }
+    }
+  }
+  return dist;
+}
+
+std::vector<std::pair<int, int>> shortest_grid_path(
+    const std::vector<std::vector<char>> &blocked, std::pair<int, int> source,
+    std::pair<int, int> target
+) {
+  int rows = static_cast<int>(blocked.size());
+  int cols = rows == 0 ? 0 : static_cast<int>(blocked[0].size());
+  auto [sr, sc] = source;
+  auto [r, c] = target;
+  assert(0 <= sr && sr < rows && 0 <= sc && sc < cols && !blocked[sr][sc]);
+  assert(0 <= r && r < rows && 0 <= c && c < cols);
+  if (blocked[r][c]) {
+    return {};
+  }
+  auto dist = grid_distances(blocked, {source});
+  if (dist[r][c] == -1) {
+    return {};
+  }
+  std::vector<std::pair<int, int>> path;
+  while (!(r == sr && c == sc)) {
+    path.push_back({r, c});
+    for (auto [r2, c2] : {std::pair{r - 1, c}, {r + 1, c}, {r, c - 1}, {r, c + 1}}) {
+      if (0 <= r2 && r2 < rows && 0 <= c2 && c2 < cols && dist[r2][c2] == dist[r][c] - 1) {
+        r = r2;
+        c = c2;
+        break;
+      }
+    }
+  }
+  path.push_back(source);
+  std::reverse(path.begin(), path.end());
+  return path;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<vector<char>> blocked{
+      {0, 0, 1, 0},
+      {1, 0, 1, 0},
+      {0, 0, 1, 0},
+  };
+  auto components = grid_components(blocked);
+  assert(components.size() == 2);
+  assert(components[0].size() == 5 && components[1].size() == 3);
+  assert(flood_fill(blocked, 0, 0).size() == 5);
+  assert(flood_fill(blocked, 0, 2).empty());
+
+  auto dist = grid_distances(blocked, {{0, 0}, {2, 3}});
+  assert((dist == vector<vector<int>>{{0, 1, -1, 2}, {-1, 2, -1, 1}, {4, 3, -1, 0}}));
+  assert(
+      (shortest_grid_path(blocked, {0, 0}, {2, 1}) ==
+       vector<pair<int, int>>{{0, 0}, {0, 1}, {1, 1}, {2, 1}})
+  );
+  assert(shortest_grid_path(blocked, {0, 0}, {0, 3}).empty());
+  assert(shortest_grid_path(blocked, {0, 0}, {0, 2}).empty());
+  return 0;
+}
+\end{lstlisting}
+\subsection{Grid Path DP}
+Solves basic dynamic programming problems on a rectangular grid. In grid DP, each cell represents a state and transitions usually come from already-computed neighboring cells, most commonly the cell above and the cell to the left. Processing rows from top to bottom and columns from left to right therefore makes every predecessor available when a state is computed.
+
+For path-counting, \inlinecode{dp[r][c]} stores the number of ways to reach cell $(r, c)$. For minimum-cost paths, \inlinecode{dp[r][c]} stores the cheapest cost to reach that cell, and a predecessor direction reconstructs one optimal path. The implementation retains only the current row of path costs while storing all predecessor directions. The helpers below assume movement only down or right.
+
+\begin{compactitem}
+  \item \inlinecode{count\_grid\_paths(blocked)} returns the number of paths from the upper-left cell to the lower-right cell, moving only down or right and avoiding blocked cells marked nonzero.
+  \item \inlinecode{min\_cost\_grid\_path(cost)} returns a pair (\inlinecode{min\_cost}, \inlinecode{path}) containing the minimum cost of a down/right path from the upper-left cell to the lower-right cell and the cells of one optimal path in order. If the grid is empty, \inlinecode{min\_cost} is $0$ and \inlinecode{path} is empty.
+\end{compactitem}
+
+Overflow warning: Path counts and path costs must fit in \inlinecode{int64\_t}.
+
+\textbf{Time Complexity}: $O(R \cdot C)$ per call to \inlinecode{count\_grid\_paths(blocked)} and \inlinecode{min\_cost\_grid\_path(cost)}, where $R$ and $C$ are the grid dimensions.
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(C)$ auxiliary for \inlinecode{count\_grid\_paths(blocked)}.
+  \item $O(R \cdot C)$ auxiliary for predecessor directions, $O(C)$ for path costs, and $O(R + C)$ for the returned path from \inlinecode{min\_cost\_grid\_path(cost)}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cstdint>
+#include <utility>
+#include <vector>
+
+int64_t count_grid_paths(const std::vector<std::vector<char>> &blocked) {
+  int rows = static_cast<int>(blocked.size());
+  int cols = rows == 0 ? 0 : static_cast<int>(blocked[0].size());
+  if (rows == 0 || cols == 0 || blocked[0][0] || blocked[rows - 1][cols - 1]) {
+    return 0;
+  }
+  std::vector<int64_t> dp(cols);
+  dp[0] = 1;
+  for (int r = 0; r < rows; r++) {
+    for (int c = 0; c < cols; c++) {
+      if (blocked[r][c]) {
+        dp[c] = 0;
+      } else if (c > 0) {
+        dp[c] += dp[c - 1];  // Overflow warning.
+      }
+    }
+  }
+  return dp[cols - 1];
+}
+
+std::pair<int64_t, std::vector<std::pair<int, int>>> min_cost_grid_path(
+    const std::vector<std::vector<int>> &cost
+) {
+  int rows = static_cast<int>(cost.size());
+  int cols = rows == 0 ? 0 : static_cast<int>(cost[0].size());
+  if (rows == 0 || cols == 0) {
+    return {0, {}};
+  }
+  std::vector<int64_t> dp(cols);
+  std::vector<std::vector<char>> parent(rows, std::vector<char>(cols));
+  dp[0] = cost[0][0];
+  for (int r = 0; r < rows; r++) {
+    for (int c = 0; c < cols; c++) {
+      if (r == 0 && c == 0) {
+        continue;
+      }
+      if (r > 0 && (c == 0 || dp[c] <= dp[c - 1])) {
+        dp[c] += cost[r][c];  // Overflow warning.
+        parent[r][c] = 'U';
+      } else {
+        dp[c] = dp[c - 1] + cost[r][c];
+        parent[r][c] = 'L';
+      }
+    }
+  }
+  // Optional: reconstruct one optimal path.
+  std::vector<std::pair<int, int>> path;
+  for (int r = rows - 1, c = cols - 1;;) {
+    path.emplace_back(r, c);
+    if (r == 0 && c == 0) {
+      break;
+    }
+    if (parent[r][c] == 'U') {
+      r--;
+    } else {
+      c--;
+    }
+  }
+  std::reverse(path.begin(), path.end());
+  return {dp.back(), path};
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<vector<char>> blocked{
+      {0, 0, 0},
+      {0, 1, 0},
+      {0, 0, 0},
+  };
+  assert(count_grid_paths(blocked) == 2);
+
+  vector<vector<int>> cost{
+      {1, 3, 1},
+      {1, 5, 1},
+      {4, 2, 1},
+  };
+  auto [min_cost, path] = min_cost_grid_path(cost);
+  assert(min_cost == 7);
+  assert((path == vector<pair<int, int>>{{0, 0}, {0, 1}, {0, 2}, {1, 2}, {2, 2}}));
+  return 0;
+}
+\end{lstlisting}
+
+\section{\texorpdfstring{Greedy and Scheduling}{1.4 Greedy and Scheduling}}
+\setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Fractional Knapsack}
 Solves the fractional knapsack problem: given items with positive integer weights and nonnegative integer values, choose any fraction of each item to maximize total value without exceeding a capacity limit.
@@ -2380,18 +2695,18 @@ std::pair<double, std::vector<double>> fractional_knapsack(
 ) {
   int n = static_cast<int>(weight.size());
   assert(static_cast<int>(value.size()) == n && capacity >= 0);
-  std::vector<int> order(n);
-  std::iota(order.begin(), order.end(), 0);
   for (int i = 0; i < n; i++) {
     assert(weight[i] > 0 && value[i] >= 0);
   }
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [&](int i, int j) {
     int64_t lhs = static_cast<int64_t>(value[i]) * weight[j];
     int64_t rhs = static_cast<int64_t>(value[j]) * weight[i];
     return lhs != rhs ? lhs > rhs : i < j;
   });
   double best_value = 0;
-  std::vector<double> fraction(n, 0);
+  std::vector<double> fraction(n);
   for (int i : order) {
     int taken = std::min(capacity, weight[i]);
     fraction[i] = static_cast<double>(taken) / weight[i];
@@ -2422,7 +2737,7 @@ int main() {
 \subsection{Interval Scheduling}
 Selects the maximum number of non-overlapping intervals using the classic earliest-finish-time greedy algorithm. This is the unweighted interval scheduling problem, also known as activity selection: every interval has the same value, so the objective is to choose as many compatible intervals as possible.
 
-The greedy choice is safe because among all intervals that could be chosen first, taking one with the earliest finish time leaves the most room for the remaining intervals. In any optimal solution, the first chosen interval can be exchanged for an earliest-finishing compatible interval without reducing the number of intervals selected. Repeating this argument after each choice proves the greedy algorithm optimal. The weighted version in 1.3.3 needs dynamic programming instead.
+The greedy choice is safe because among all intervals that could be chosen first, taking one with the earliest finish time leaves the most room for the remaining intervals. In any optimal solution, the first chosen interval can be exchanged for an earliest-finishing compatible interval without reducing the number of intervals selected. Repeating this argument after each choice proves the greedy algorithm optimal. The weighted version in 1.4.3 needs dynamic programming instead.
 
 Intervals are represented as half-open ranges $[{\inlinecodemath{start}}, {\inlinecodemath{finish}})$, so two intervals are compatible if the next interval's \inlinecode{start} is at least the previous interval's \inlinecode{finish}.
 
@@ -2446,12 +2761,11 @@ struct Interval {
 };
 
 std::vector<int> schedule_intervals(const std::vector<Interval> &intervals) {
-  int n = static_cast<int>(intervals.size());
-  std::vector<int> order(n);
-  std::iota(order.begin(), order.end(), 0);
   for (const auto &iv : intervals) {
     assert(iv.start < iv.finish);
   }
+  std::vector<int> order(intervals.size());
+  std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [&](int i, int j) {
     return intervals[i].finish != intervals[j].finish ? intervals[i].finish < intervals[j].finish
                                                       : intervals[i].start < intervals[j].start;
@@ -2493,7 +2807,7 @@ Intervals are represented as half-open ranges $[{\inlinecodemath{start}}, {\inli
   \item \inlinecode{select\_weighted\_intervals(intervals)} returns a pair (\inlinecode{weight}, \inlinecode{selected}) containing that maximum weight and the selected intervals as original input indices in execution order, from an input vector of \inlinecode{WeightedInterval} with fields \inlinecode{start}, \inlinecode{finish}, and \inlinecode{weight}. \inlinecode{dp[i]} stores the best answer using the first \inlinecode{i} intervals after sorting by finish time. Each interval must satisfy \inlinecode{start} \textless{} \inlinecode{finish}. The empty subset is allowed, so nonpositive weights need not be selected.
 \end{compactitem}
 
-Accumulated weights must fit in \inlinecode{int64\_t}.
+Overflow warning: Accumulated weights must fit in \inlinecode{int64\_t}.
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting and binary searching compatible intervals.
 
@@ -2515,12 +2829,12 @@ struct WeightedInterval {
 std::pair<int64_t, std::vector<int>> select_weighted_intervals(
     const std::vector<WeightedInterval> &intervals
 ) {
-  int n = static_cast<int>(intervals.size());
-  std::vector<int> order(n), finish(n), prev(n);
-  std::iota(order.begin(), order.end(), 0);
   for (const auto &iv : intervals) {
     assert(iv.start < iv.finish);
   }
+  int n = static_cast<int>(intervals.size());
+  std::vector<int> order(n), finish(n), prev(n);
+  std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [&](int i, int j) {
     return intervals[i].finish != intervals[j].finish ? intervals[i].finish < intervals[j].finish
                                                       : intervals[i].start < intervals[j].start;
@@ -2528,8 +2842,8 @@ std::pair<int64_t, std::vector<int>> select_weighted_intervals(
   for (int i = 0; i < n; i++) {
     finish[i] = intervals[order[i]].finish;
   }
-  std::vector<int64_t> dp(n + 1, 0);
-  std::vector<char> take(n + 1, false);
+  std::vector<int64_t> dp(n + 1);
+  std::vector<char> take(n + 1);
   for (int i = 1; i <= n; i++) {
     int j =
         std::upper_bound(finish.begin(), finish.begin() + i - 1, intervals[order[i - 1]].start) -
@@ -2543,6 +2857,7 @@ std::pair<int64_t, std::vector<int>> select_weighted_intervals(
       dp[i] = dp[i - 1];
     }
   }
+  // Optional: reconstruct one optimal subset of intervals.
   std::vector<int> selected;
   for (int i = n; i > 0;) {
     if (take[i]) {
@@ -2625,12 +2940,12 @@ std::optional<std::vector<int>> cover_interval(
     const std::vector<Interval> &intervals, int lo, int hi
 ) {
   assert(lo <= hi);
-  int n = static_cast<int>(intervals.size());
-  std::vector<int> order(n);
-  std::iota(order.begin(), order.end(), 0);
   for (const auto &iv : intervals) {
     assert(iv.start < iv.finish);
   }
+  int n = static_cast<int>(intervals.size());
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [&](int i, int j) {
     if (intervals[i].start != intervals[j].start) {
       return intervals[i].start < intervals[j].start;
@@ -2710,12 +3025,12 @@ struct Interval {
 };
 
 std::pair<int, std::vector<int>> partition_intervals(const std::vector<Interval> &intervals) {
-  int n = static_cast<int>(intervals.size());
-  std::vector<int> order(n);
-  std::iota(order.begin(), order.end(), 0);
   for (const auto &iv : intervals) {
     assert(iv.start < iv.finish);
   }
+  int n = static_cast<int>(intervals.size());
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [&](int i, int j) {
     return intervals[i].start != intervals[j].start ? intervals[i].start < intervals[j].start
                                                     : intervals[i].finish < intervals[j].finish;
@@ -2767,7 +3082,7 @@ The latest-slot choice is safe because it uses the current high-profit job while
   \item \inlinecode{select\_deadline\_jobs(jobs)} returns a pair (\inlinecode{profit}, \inlinecode{slot}) containing that maximum profit and \inlinecode{slot[i]}, the assigned time slot of input job \inlinecode{i}, or $-1$ if that job is not selected, for a vector of \inlinecode{Job} with fields \inlinecode{deadline} and \inlinecode{profit}. Deadlines are positive integers, and assigned slots are numbered starting from $1$. Jobs with nonpositive profit are not selected.
 \end{compactitem}
 
-The total profit must fit in \inlinecode{int64\_t}.
+Overflow warning: The total profit must fit in \inlinecode{int64\_t}.
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting, with near-constant disjoint-set operations.
 
@@ -2797,12 +3112,12 @@ class SlotDSU {
 };
 
 std::pair<int64_t, std::vector<int>> select_deadline_jobs(const std::vector<Job> &jobs) {
-  int n = static_cast<int>(jobs.size());
-  std::vector<int> order(n);
-  std::iota(order.begin(), order.end(), 0);
   for (const auto &job : jobs) {
     assert(job.deadline > 0);
   }
+  int n = static_cast<int>(jobs.size());
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [&](int i, int j) {
     return jobs[i].profit != jobs[j].profit ? jobs[i].profit > jobs[j].profit
                                             : jobs[i].deadline < jobs[j].deadline;
@@ -2844,16 +3159,16 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Minimizing Late Jobs (Moore-Hodgson)}
+\subsection{Minimum Late Jobs (Moore-Hodgson)}
 Selects a maximum-size subset of jobs that can all be completed by their deadlines. Each job has a processing time and deadline, and all jobs are available at time $0$. The Moore-Hodgson algorithm sorts by deadline and keeps the accepted jobs in a max-heap by processing time; whenever the schedule becomes late, it removes the longest accepted job.
 
 After considering jobs up to some deadline, if the accepted set no longer fits, at least one accepted job must be removed. Removing the longest one leaves the most remaining time while keeping the same number of removed jobs, so it is never worse than removing a shorter accepted job. Repeating this repair after each deadline leaves a largest feasible accepted set.
 
 \begin{compactitem}
-  \item \inlinecode{select\_on\_time\_jobs(jobs)} returns the selected jobs as original input indices in a feasible earliest-deadline-first execution order, for an input vector of \inlinecode{TimedJob} with fields \inlinecode{duration} and \inlinecode{deadline}. Durations and deadlines must be nonnegative integers.
+  \item \inlinecode{max\_on\_time\_jobs(jobs)} returns the selected jobs as original input indices in a feasible earliest-deadline-first execution order, for an input vector of \inlinecode{TimedJob} with fields \inlinecode{duration} and \inlinecode{deadline}. Durations and deadlines must be nonnegative integers.
 \end{compactitem}
 
-The total duration must fit in \inlinecode{int64\_t}.
+Overflow warning: The total duration must fit in \inlinecode{int64\_t}.
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting and heap operations.
 
@@ -2872,19 +3187,19 @@ struct TimedJob {
   int duration, deadline;
 };
 
-std::vector<int> select_on_time_jobs(const std::vector<TimedJob> &jobs) {
-  int n = static_cast<int>(jobs.size());
-  std::vector<int> order(n);
-  std::iota(order.begin(), order.end(), 0);
+std::vector<int> max_on_time_jobs(const std::vector<TimedJob> &jobs) {
   for (const auto &job : jobs) {
     assert(job.duration >= 0 && job.deadline >= 0);
   }
+  int n = static_cast<int>(jobs.size());
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [&](int i, int j) {
     return jobs[i].deadline != jobs[j].deadline ? jobs[i].deadline < jobs[j].deadline
                                                 : jobs[i].duration < jobs[j].duration;
   });
   std::priority_queue<std::pair<int, int>> accepted;
-  std::vector<char> selected(n, false);
+  std::vector<char> selected(n);
   int64_t time = 0;
   for (int i : order) {
     time += jobs[i].duration;  // Overflow warning.
@@ -2913,13 +3228,13 @@ using namespace std;
 
 int main() {
   vector<TimedJob> jobs{{3, 4}, {2, 3}, {1, 2}, {2, 7}};
-  assert((select_on_time_jobs(jobs) == vector<int>{2, 1, 3}));
+  assert((max_on_time_jobs(jobs) == vector<int>{2, 1, 3}));
   return 0;
 }
 \end{lstlisting}
 
-\section{\texorpdfstring{Streaming and Randomized Algorithms}{1.4 Streaming and Randomized Algorithms}}
-\setcounter{section}{4}
+\section{\texorpdfstring{Streaming and Randomized Algorithms}{1.5 Streaming and Randomized Algorithms}}
+\setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Fisher-Yates Shuffle}
 Randomly permutes a range in-place using the Fisher-Yates shuffle. Each possible permutation is produced with equal probability, assuming the random number source is uniform.
@@ -3354,8 +3669,8 @@ int main() {
 }
 \end{lstlisting}
 
-\section{\texorpdfstring{Bit Manipulation}{1.5 Bit Manipulation}}
-\setcounter{section}{5}
+\section{\texorpdfstring{Bit Manipulation}{1.6 Bit Manipulation}}
+\setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Bit Operations and Masks}
 Integers are all fixed-size sets of bits, where the $i$-th bit (counting from the least significant bit where $i = 0$) is ``present'' when set to $1$. Treating an \inlinecode{int} as a bitmask makes set membership, insertion, deletion, and iteration into single machine instructions, which is why bitmasks are the backbone of subset dynamic programming and many low-level tricks. The helpers below operate on \inlinecode{Mask}, which is \inlinecode{uint32\_t} by default; change its alias to \inlinecode{uint64\_t} to use 64-bit masks. The loop implementations below exist for education only; production code should prefer the matching GCC built-ins when available, or on C++20 systems the generic \inlinecode{constexpr} equivalents from the \inlinecode{\textless{}bit\textgreater{}} header, which are additionally well-defined at $0$.
@@ -3510,8 +3825,10 @@ Gosper's hack advances to the next mask with the same popcount. It isolates the 
   \item \inlinecode{submasks(m)} returns all submasks of \inlinecode{m}, including \inlinecode{m} itself and 0, in decreasing order.
   \item \inlinecode{next\_popcount(x)} returns the smallest integer greater than \inlinecode{x} with the same number of set bits (Gosper's hack), for \inlinecode{x \textgreater{} 0} when that next mask is representable in \inlinecode{Mask}.
   \item \inlinecode{masks\_with\_popcount(n, k)} returns all \inlinecode{k}-bit subsets of an \inlinecode{n}-bit universe as masks, in increasing order, where $0 \leq k \leq n < {\inlinecodemath{MASK\_BITS}}$.
-  \item \inlinecode{subset\_sum\_transform(f)} overwrites \inlinecode{f} (indexed by mask over \inlinecode{n} bits) so that \inlinecode{f[m]} becomes the sum of the original \inlinecode{f[s]} over all submasks \inlinecode{s} of \inlinecode{m}. This ``sum over subsets'' (SOS) DP is the bitmask analog of a prefix sum, accumulating one bit dimension at a time. The value type must support \inlinecode{+=}, and all intermediate sums must be representable.
+  \item \inlinecode{subset\_sum\_transform(f)} overwrites \inlinecode{f} (indexed by mask over \inlinecode{n} bits) so that \inlinecode{f[m]} becomes the sum of the original \inlinecode{f[s]} over all submasks \inlinecode{s} of \inlinecode{m}. This ``sum over subsets'' (SOS) DP is the bitmask analog of a prefix sum, accumulating one bit dimension at a time. The value type must support \inlinecode{+=}.
 \end{compactitem}
+
+Overflow warning: All intermediate sums must be representable in the value type.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -3552,8 +3869,9 @@ std::vector<Mask> submasks(Mask m) {
 }
 
 Mask next_popcount(Mask x) {
+  assert(x != 0);
   Mask c = x & (Mask{0} - x), r = x + c;
-  assert(x != 0 && r != 0);
+  assert(r != 0);
   return r | (((x ^ r) >> 2) / c);
 }
 
@@ -3618,7 +3936,7 @@ For assignment, \inlinecode{dp[mask]} is the minimum cost after assigning the fi
   \item \inlinecode{count\_domino\_tilings(rows, cols)} returns the number of ways to tile a \inlinecode{rows} by \inlinecode{cols} rectangle with $1 \times 2$ and $2 \times 1$ dominoes.
 \end{compactitem}
 
-All accumulated costs and tiling counts must fit in \inlinecode{int64\_t}.
+Overflow warning: All accumulated costs and tiling counts must fit in \inlinecode{int64\_t}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -3669,6 +3987,7 @@ std::pair<int64_t, std::vector<int>> assignment_min_cost(
       }
     }
   }
+  // Optional: reconstruct one optimal assignment.
   std::vector<int> job(n);
   for (int mask = states - 1, worker = n - 1; worker >= 0; worker--) {
     job[worker] = parent[mask];
@@ -3681,12 +4000,12 @@ std::pair<int, std::vector<int>> minimum_set_cover(
     const std::vector<int> &sets, int universe_size
 ) {
   assert(0 <= universe_size && universe_size < 31);
-  int n = static_cast<int>(sets.size());
   int states = 1 << universe_size;
   int full = states - 1;
   for (int subset : sets) {
     assert((subset & ~full) == 0);
   }
+  int n = static_cast<int>(sets.size());
   int inf = n + 1;
   std::vector<int> dp(states, inf), parent(states, -1), prev(states, -1);
   dp[0] = 0;
@@ -3706,6 +4025,7 @@ std::pair<int, std::vector<int>> minimum_set_cover(
   if (dp[full] == inf) {
     return {-1, {}};
   }
+  // Optional: reconstruct one minimum set cover.
   std::vector<int> chosen;
   for (int mask = full; mask != 0; mask = prev[mask]) {
     int i = parent[mask];
@@ -3736,7 +4056,7 @@ int64_t count_domino_tilings(int rows, int cols) {
   }
   assert(cols < 31);
   int states = 1 << cols;
-  std::vector<int64_t> dp(states, 0), next(states, 0);
+  std::vector<int64_t> dp(states), next(states);
   dp[0] = 1;
   for (int r = 0; r < rows; r++) {
     for (int c = 0; c < cols; c++) {
@@ -4086,7 +4406,7 @@ class BinaryTrie {
       int bit = (x >> b) & 1;
       int opp = child[node][bit ^ 1];
       if (opp != 0 && cnt[opp] > 0) {
-        res |= U(1) << b;
+        res |= U{1} << b;
         node = opp;
       } else {
         node = child[node][bit];
@@ -4106,7 +4426,7 @@ class BinaryTrie {
       if (same != 0 && cnt[same] > 0) {
         node = same;
       } else {
-        res |= U(1) << b;
+        res |= U{1} << b;
         node = child[node][bit ^ 1];
       }
     }
@@ -4158,7 +4478,7 @@ int main() {
   assert(trie.max_xor(25) == 28);                           // 25 XOR 5.
   assert(trie.min_xor(25) == 0);                            // 25 XOR 25.
   assert(trie.count_xor_less(25, 20) == 2);                 // XOR values 0 and 19 are below 20.
-  assert(trie.count_xor_less(25, uint32_t(1) << 30) == 5);  // Bound at/above 2^BITS counts all.
+  assert(trie.count_xor_less(25, uint32_t{1} << 30) == 5);  // Bound at/above 2^BITS counts all.
 
   assert(trie.count(10) == 1);
   trie.insert(10);
@@ -4187,7 +4507,9 @@ The fast Walsh-Hadamard transform (FWHT) diagonalizes XOR convolution in the sam
 
 Subset convolution restricts OR convolution to pairs of disjoint masks, so \inlinecode{c[m]} must count only \inlinecode{x | y = m} with \inlinecode{x \& y = 0}. Rank each entry by its number of set bits, transform every rank layer, and multiply the layers as polynomials in the rank. Mobius inversion then recovers pairs whose union is exactly \inlinecode{m}; among these pairs, the ranks sum to the number of set bits in \inlinecode{m} exactly when the pair is disjoint.
 
-The in-place transforms require a nonempty array whose length is a power of two. A convolution returns empty if either input is empty; otherwise, both inputs are padded with zeros to the smallest power of two at least their maximum length, which is also the output length. For exact integer XOR convolution, the inverse divisions are exact; for modular arithmetic, replace the division by multiplication with the modular inverse of the transform length. All intermediate sums, differences, and products must be representable in the value type.
+The in-place transforms require a nonempty array whose length is a power of two. A convolution returns empty if either input is empty; otherwise, both inputs are padded with zeros to the smallest power of two at least their maximum length, which is also the output length. For exact integer XOR convolution, the inverse divisions are exact; for modular arithmetic, replace the division by multiplication with the modular inverse of the transform length.
+
+Overflow warning: All intermediate sums, differences, and products must be representable in the value type.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -4402,8 +4724,8 @@ int main() {
 }
 \end{lstlisting}
 
-\section{\texorpdfstring{Miscellaneous Problems}{1.6 Miscellaneous Problems}}
-\setcounter{section}{6}
+\section{\texorpdfstring{Miscellaneous Problems}{1.7 Miscellaneous Problems}}
+\setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Minimum Excluded Value}
 Given a multiset of integers, find the minimum excluded nonnegative value (MEX), i.e. the smallest integer $x \geq 0$ not present in the multiset. MEX often appears in array problems, game theory with Grundy numbers, and dynamic programming states. Since the MEX of $n$ values never exceeds $n$, the one-shot version tracks seen values in $[0, n]$ before scanning to find the first missing.
@@ -4445,7 +4767,7 @@ The MEX of a dynamic multiset can be computed using counts of present values and
 template<typename It>
 int mex(It lo, It hi) {
   int n = std::distance(lo, hi);
-  std::vector<char> seen(n + 1, false);
+  std::vector<char> seen(n + 1);
   for (It it = lo; it != hi; ++it) {
     if (0 <= *it && *it <= n) {
       seen[*it] = true;
@@ -4534,7 +4856,7 @@ The Josephus problem arranges $n$ people, numbered $[0, n)$, in a circle and rep
 When $k$ is small, several removals can be processed at once. One complete pass removes $\lfloor n/k \rfloor$ people; recursively solving the compressed circle and undoing the resulting index shift reduces the running time to $O(k \log n)$. To recover the full elimination order, a Fenwick tree stores which labels remain and selects each next victim by rank.
 
 \begin{compactitem}
-  \item \inlinecode{josephus(n, k)} returns the zero-based label of the survivor, where \inlinecode{n} and \inlinecode{k} must be positive.
+  \item \inlinecode{josephus(n, k)} returns the 0-based label of the survivor, where \inlinecode{n} and \inlinecode{k} must be positive.
   \item \inlinecode{josephus\_small\_k(n, k)} returns the same survivor using the batched recurrence. It is preferable when $k$ is small relative to $n$.
   \item \inlinecode{josephus\_order(n, k)} returns all labels in elimination order, ending with the survivor.
 \end{compactitem}
@@ -4842,7 +5164,7 @@ Pisinger's algorithm targets the opposite regime: nonnegative weights whose maxi
   \item \inlinecode{max\_subset\_sum\_bounded(lo, hi, target)} returns the maximum sum of any subset of the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ that does not exceed \inlinecode{target}. All weights and \inlinecode{target} must be nonnegative integers. This is faster than meet-in-the-middle when the largest weight is small relative to $2^{n/2}$.
 \end{compactitem}
 
-All subset sums and intermediate differences in \inlinecode{max\_subset\_sum\_at\_most()} must fit in \inlinecode{int64\_t}.
+Overflow warning: All subset sums and intermediate differences in \inlinecode{max\_subset\_sum\_at\_most()} must fit in \inlinecode{int64\_t}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -4897,6 +5219,7 @@ std::pair<int64_t, std::vector<int>> max_subset_sum_at_most(It lo, It hi, int64_
       }
     }
   }
+  // Optional: reconstruct one optimal subset.
   std::vector<int> items;
   for (int i = 0; i < n / 2; i++) {
     if ((lmask >> i) & 1) {

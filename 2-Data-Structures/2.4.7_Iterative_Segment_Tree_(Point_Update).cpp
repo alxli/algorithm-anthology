@@ -15,7 +15,7 @@ single updated index. The default definition below supports updates that "set" t
 index to a new value. Another possible update operation is "increment", in which case
 `apply_delta(v, d)` should return `v + d`.
 
-- `IterativeSegTree<T>(n, v = T())` constructs an array of size `n` with indices $[0, `n`)$, and all
+- `IterativeSegTree<T>(n, v = T{})` constructs an array of size `n` with indices $[0, `n`)$, and all
   values initialized to `v`.
 - `IterativeSegTree<T>(lo, hi)` constructs an array from the half-open random-access iterator range
   $[`lo`, `hi`)$.
@@ -83,7 +83,7 @@ class IterativeSegTree {
   }
 
  public:
-  explicit IterativeSegTree(int n, const T &v = T()) : len(n) {
+  explicit IterativeSegTree(int n, const T &v = T{}) : len(n) {
     assert(len > 0);
     build([&](int) { return v; });
   }

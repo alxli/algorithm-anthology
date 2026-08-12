@@ -33,7 +33,7 @@ Type aliases:
 - `LineI = TLine<int>`: exact integer-coefficient lines (small values only; see overflow warning)
 - `LineL = TLine<int64_t>`: exact integer-coefficient lines for large coordinates
 - `LineD = TLine<double>`: standard floating-point
-- `LineLD = TLine<long double>`: extra precision
+- `LineLD = TLine<long double>`: extra precision (where supported)
 - `Line = LineD`: default line type is double
 
 Time Complexity:
@@ -80,9 +80,9 @@ struct TLine {
   void canonicalize() {
     if constexpr (EXACT) {
       auto gcd = [](T x, T y) {
-        if (x < T(0)) x = -x;
-        if (y < T(0)) y = -y;
-        while (y != T(0)) {
+        if (x < T{0}) x = -x;
+        if (y < T{0}) y = -y;
+        while (y != T{0}) {
           x %= y;
           std::swap(x, y);
         }
@@ -99,14 +99,14 @@ struct TLine {
         b = -b;
         c = -c;
       }
-    } else if (!EQ(b, T(0))) {
+    } else if (!EQ(b, T{0})) {
       a /= b;
       c /= b;
-      b = T(1);
-    } else if (!EQ(a, T(0))) {
+      b = T{1};
+    } else if (!EQ(a, T{0})) {
       c /= a;
-      a = T(1);
-      b = T(0);
+      a = T{1};
+      b = T{0};
     }
   }
 
@@ -183,8 +183,11 @@ struct TLine {
   }
 
   friend std::ostream &operator<<(std::ostream &out, const TLine &l) {
-    auto clean = [](T v) -> double {
-      return fabs(static_cast<double>(v)) < EPS ? 0 : static_cast<double>(v);
+    auto clean = [](T v) {
+      if constexpr (std::is_floating_point_v<T>) {
+        return std::fabs(v) < EPS ? T{0} : v;
+      }
+      return v;
     };
     auto flags = out.flags();
     out << clean(l.a) << "x" << std::showpos << clean(l.b) << "y" << clean(l.c) << "=0";

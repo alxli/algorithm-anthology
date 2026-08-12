@@ -36,8 +36,8 @@ std::pair<int64_t, std::vector<int>> knapsack_01(
   for (int i = 0; i < n; i++) {
     assert(weight[i] >= 0 && value[i] >= 0);
   }
-  std::vector<int64_t> dp(capacity + 1, 0);
-  std::vector<std::vector<char>> take(n, std::vector<char>(capacity + 1, false));
+  std::vector<int64_t> dp(capacity + 1);
+  std::vector<std::vector<char>> take(n, std::vector<char>(capacity + 1));
   for (int i = 0; i < n; i++) {
     for (int w = capacity; w >= weight[i]; w--) {
       int64_t candidate = dp[w - weight[i]] + value[i];  // Overflow warning.
@@ -47,7 +47,7 @@ std::pair<int64_t, std::vector<int>> knapsack_01(
       }
     }
   }
-  // Optional: reconstruct the selected items.
+  // Optional: reconstruct one optimal subset.
   std::vector<int> items;
   for (int i = n - 1, w = capacity; i >= 0; i--) {
     if (take[i][w]) {
@@ -67,7 +67,6 @@ using namespace std;
 int main() {
   vector<int> weight{3, 4, 5, 9};
   vector<int64_t> value{4, 5, 7, 10};
-
   auto [best_value, items] = knapsack_01(weight, value, 8);
   assert(best_value == 11);
   assert((items == vector<int>{0, 2}));

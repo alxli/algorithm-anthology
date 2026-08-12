@@ -30,7 +30,7 @@ Space Complexity:
 
 std::vector<int> de_bruijn(int k, int n) {
   assert(k >= 1 && n >= 1);
-  std::vector<int> word(n + 1, 0), seq;
+  std::vector<int> word(n + 1), seq;
   auto dfs = [&](auto &&dfs, int t, int p) -> void {
     if (t > n) {
       if (n % p == 0) {

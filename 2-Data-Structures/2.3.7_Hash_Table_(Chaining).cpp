@@ -81,7 +81,7 @@ class ChainingHashMap {
   void grow_and_rehash() {
     auto old = std::move(table);
     table_size = 2 * table_size;
-    table.assign(table_size, std::list<HashNode>());
+    table.assign(table_size, std::list<HashNode>{});
     for (auto &chain : old) {
       while (!chain.empty()) {
         auto it = chain.begin();
@@ -92,7 +92,7 @@ class ChainingHashMap {
   }
 
  public:
-  explicit ChainingHashMap(int buckets = 128, Hash hash = Hash(), KeyEqual equal = KeyEqual())
+  explicit ChainingHashMap(int buckets = 128, Hash hash = Hash{}, KeyEqual equal = KeyEqual{})
       : table_size(buckets), num_entries(0), hash(std::move(hash)), equal(std::move(equal)) {
     assert(buckets > 0);
     table.resize(buckets);
@@ -148,7 +148,7 @@ class ChainingHashMap {
       grow_and_rehash();
     }
     int i = bucket(k);
-    table[i].emplace_back(k, V());
+    table[i].emplace_back(k, V{});
     num_entries++;
     return table[i].back().value;
   }
@@ -180,8 +180,8 @@ struct Hasher {
   inline static const uint64_t RAND_SEED = chrono::steady_clock::now().time_since_epoch().count();
 
   // Signed -> unsigned delegates.
-  uint32_t operator()(int k) const { return Hasher()(static_cast<uint32_t>(k)); }
-  uint32_t operator()(int64_t k) const { return Hasher()(static_cast<uint64_t>(k)); }
+  uint32_t operator()(int k) const { return Hasher{}(static_cast<uint32_t>(k)); }
+  uint32_t operator()(int64_t k) const { return Hasher{}(static_cast<uint64_t>(k)); }
 
   // Knuth's multiplicative method. Fast, but affine: an additive RAND_SEED only shifts all buckets
   // uniformly and won't stop crafted collisions (unlike the non-linear hashers below). To harden
@@ -218,7 +218,7 @@ struct AbsHash {
 };
 
 struct AbsEqual {
-  bool operator()(int a, int b) const { return AbsHash()(a) == AbsHash()(b); }
+  bool operator()(int a, int b) const { return AbsHash{}(a) == AbsHash{}(b); }
 };
 
 int main() {
@@ -256,7 +256,7 @@ int main() {
   defaults["answer"] = 42;
   assert(*defaults.find("answer") == 42);
 
-  ChainingHashMap<int, char, AbsHash, AbsEqual> absolute(128, AbsHash(7), AbsEqual());
+  ChainingHashMap<int, char, AbsHash, AbsEqual> absolute(128, AbsHash(7), AbsEqual{});
   assert(absolute.insert(-2, 'x'));
   assert(!absolute.insert(2, 'y') && *absolute.find(2) == 'x');
   return 0;

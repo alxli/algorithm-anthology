@@ -32,7 +32,7 @@ Space Complexity:
 #include <vector>
 
 template<typename It, typename Compare = std::less<>>
-int64_t inversions(It lo, It hi, Compare comp = Compare()) {
+int64_t inversions(It lo, It hi, Compare comp = Compare{}) {
   int n = static_cast<int>(hi - lo);
   if (n < 2) {
     return 0;
@@ -70,7 +70,7 @@ int64_t inversions(const std::vector<int> &a) {
   std::vector<int> values(a);
   std::sort(values.begin(), values.end());
   values.resize(std::unique(values.begin(), values.end()) - values.begin());
-  std::vector<int> bit(values.size() + 1, 0);
+  std::vector<int> bit(values.size() + 1);
   int64_t res = 0;
   for (int i = n - 1; i >= 0; i--) {
     int id =

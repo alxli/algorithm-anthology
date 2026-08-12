@@ -631,7 +631,7 @@ struct ScalarHasher {
     if constexpr (std::is_integral_v<T>) {
       return IntHasher<T>{}(x);
     }
-    return std::hash<T>()(x);
+    return std::hash<T>{}(x);
   }
 };
 
@@ -654,8 +654,8 @@ template<typename A, typename B>
 struct PairHasher {
   std::size_t operator()(const std::pair<A, B> &p) const {
     uint64_t h = 0;
-    h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<A>()(p.first)));
-    h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<B>()(p.second)));
+    h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<A>{}(p.first)));
+    h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<B>{}(p.second)));
     return static_cast<std::size_t>(h);
   }
 };
@@ -665,7 +665,7 @@ struct VectorHasher {
   std::size_t operator()(const std::vector<T> &v) const {
     uint64_t h = 0;
     for (const auto &x : v) {
-      h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<T>()(x)));
+      h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<T>{}(x)));
     }
     h = hash_combine64(h, v.size());  // Mix in the length so different sizes (e.g. empty) separate.
     return static_cast<std::size_t>(h);
@@ -678,7 +678,7 @@ struct TupleHasher {
     uint64_t h = 0;
     std::apply(
         [&](const Ts &...xs) {
-          ((h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<Ts>()(xs)))), ...);
+          ((h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<Ts>{}(xs)))), ...);
         },
         t
     );
@@ -861,17 +861,17 @@ class RollingHash {
   }
 
  public:
-  explicit RollingHash(const Hash &hasher = Hash()) : hasher(hasher) {
+  explicit RollingHash(const Hash &hasher = Hash{}) : hasher(hasher) {
     ensure_powers(0);
     pref.push_back(0);
   }
 
   template<typename It>
-  RollingHash(It lo, It hi, const Hash &hasher = Hash()) : hasher(hasher) {
+  RollingHash(It lo, It hi, const Hash &hasher = Hash{}) : hasher(hasher) {
     build(lo, hi);
   }
 
-  explicit RollingHash(const std::vector<T> &v, const Hash &hasher = Hash())
+  explicit RollingHash(const std::vector<T> &v, const Hash &hasher = Hash{})
       : RollingHash(v.begin(), v.end(), hasher) {}
 
   int size() const { return static_cast<int>(pref.size()) - 1; }
@@ -882,12 +882,12 @@ class RollingHash {
   }
 
   template<typename It>
-  static uint64_t hash(It lo, It hi, const Hash &hasher = Hash()) {
+  static uint64_t hash(It lo, It hi, const Hash &hasher = Hash{}) {
     RollingHash<T, Hash> h(lo, hi, hasher);
     return h.hash(0, h.size());
   }
 
-  static uint64_t hash(const std::vector<T> &v, const Hash &hasher = Hash()) {
+  static uint64_t hash(const std::vector<T> &v, const Hash &hasher = Hash{}) {
     RollingHash<T, Hash> h(v, hasher);
     return h.hash(0, h.size());
   }
@@ -1024,7 +1024,7 @@ class HashDeque {
   uint64_t top1 = INV1, top2 = INV2;  // B^(len-1), or B^-1 while empty.
 
  public:
-  explicit HashDeque(Hash hasher = Hash()) : hasher(hasher) {}
+  explicit HashDeque(Hash hasher = Hash{}) : hasher(hasher) {}
 
   int size() const { return static_cast<int>(digits.size()); }
   bool empty() const { return digits.empty(); }
@@ -1338,7 +1338,7 @@ class ZobristHash {
   template<typename It>
   std::vector<uint64_t> distinct_prefix_hashes(It lo, It hi) {
     std::unordered_set<T> seen;
-    std::vector<uint64_t> res(1, 0);
+    std::vector<uint64_t> res(1);
     uint64_t h = 0;
     for (It it = lo; it != hi; ++it) {
       if (seen.insert(*it).second) {
@@ -1916,7 +1916,7 @@ The construction here is the Fredricksen-Kessler-Maiorana (FKM) algorithm. It co
 
 std::vector<int> de_bruijn(int k, int n) {
   assert(k >= 1 && n >= 1);
-  std::vector<int> word(n + 1, 0), seq;
+  std::vector<int> word(n + 1), seq;
   auto dfs = [&](auto &&dfs, int t, int p) -> void {
     if (t > n) {
       if (n % p == 0) {
@@ -3603,7 +3603,7 @@ using std::string;
 
 string longest_common_subsequence(const string &s1, const string &s2) {
   int n = static_cast<int>(s1.size()), m = static_cast<int>(s2.size());
-  std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1, 0));
+  std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1));
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= m; j++) {
       if (s1[i - 1] == s2[j - 1]) {
@@ -3613,6 +3613,7 @@ string longest_common_subsequence(const string &s1, const string &s2) {
       }
     }
   }
+  // Optional: reconstruct one longest common subsequence.
   string res;
   for (int i = n, j = m; i > 0 && j > 0;) {
     if (s1[i - 1] == s2[j - 1]) {
@@ -3746,7 +3747,7 @@ std::pair<string, string> align_sequences(
     const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1
 ) {
   int n = static_cast<int>(s1.size()), m = static_cast<int>(s2.size());
-  std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1, 0));
+  std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1));
   for (int i = 0; i <= n; i++) {
     dp[i][0] = i * gap_cost;
   }
@@ -3762,6 +3763,7 @@ std::pair<string, string> align_sequences(
                                             );
     }
   }
+  // Optional: reconstruct one minimum-cost alignment.
   string res1, res2;
   int i = n, j = m;
   while (i > 0 && j > 0) {
@@ -3923,7 +3925,7 @@ string longest_palindromic_subsequence(const string &s) {
   if (n == 0) {
     return "";
   }
-  std::vector<std::vector<int>> dp(n, std::vector<int>(n, 0));
+  std::vector<std::vector<int>> dp(n, std::vector<int>(n));
   for (int len = 1; len <= n; len++) {
     for (int l = 0, r = len - 1; r < n; l++, r++) {
       if (l == r) {
@@ -3935,6 +3937,7 @@ string longest_palindromic_subsequence(const string &s) {
       }
     }
   }
+  // Optional: reconstruct one longest palindromic subsequence.
   string left, right;
   for (int l = 0, r = n - 1; l <= r;) {
     if (l == r) {
@@ -3956,7 +3959,7 @@ string longest_palindromic_subsequence(const string &s) {
 
 int min_insertions_palindrome(const string &s) {
   int n = static_cast<int>(s.size());
-  std::vector<int> dp(n, 0);
+  std::vector<int> dp(n);
   for (int l = n - 1; l >= 0; l--) {
     int inside = 0;
     for (int r = l + 1; r < n; r++) {
@@ -3995,11 +3998,13 @@ Evaluate integer arithmetic expressions containing parentheses, unary plus and m
 
 At each binary-operator level, the parser first evaluates one operand at the next tighter level, then repeatedly consumes operators of the current level and their right operands. These loops make binary operators left-associative, while recursively restarting at the loosest level inside parentheses enforces grouping.
 
-Literals must be nonnegative decimal integers, although unary signs may precede them. The input must be valid and contain no whitespace. Division truncates toward zero, every divisor must be nonzero, and all intermediate results must fit in \inlinecode{int}.
+Literals must be nonnegative decimal integers, although unary signs may precede them. The input must be valid and contain no whitespace. Division truncates toward zero, and every divisor must be nonzero.
 
 \begin{compactitem}
   \item \inlinecode{eval(s)} returns an evaluation of the arithmetic expression \inlinecode{s}.
 \end{compactitem}
+
+Overflow warning: All intermediate results must fit in \inlinecode{int}.
 
 \textbf{Time Complexity}: $O(n)$ per call, where $n$ is the length of \inlinecode{s}.
 
@@ -4487,7 +4492,7 @@ For symbol probabilities $p_i$, the order-0 empirical entropy is $H = -\sum_i p_
 using std::string;
 
 std::vector<int> byte_frequencies(const string &s) {
-  std::vector<int> freq(256, 0);
+  std::vector<int> freq(256);
   for (unsigned char c : s) {
     freq[c]++;
   }
@@ -4574,7 +4579,7 @@ int main() {
   assert(EQ(entropy(freq), 1.0));
   assert(EQ(entropy("aaaa"), 0.0));
 
-  vector<int> length(256, 0);
+  vector<int> length(256);
   length['a'] = 1;
   length['b'] = 1;
   assert(EQ(expected_code_length(freq, length), 1.0));
@@ -4802,7 +4807,7 @@ class HuffmanTree {
 
  public:
   explicit HuffmanTree(const string &text) : root(-1), code(256) {
-    std::vector<int> freq(256, 0);
+    std::vector<int> freq(256);
     for (unsigned char c : text) {
       freq[c]++;
     }

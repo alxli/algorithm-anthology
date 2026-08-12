@@ -168,7 +168,7 @@ class HeavyLight {
   }
 
  public:
-  explicit HeavyLight(const std::vector<std::vector<int>> &adj, const T &v = T())
+  explicit HeavyLight(const std::vector<std::vector<int>> &adj, const T &v = T{})
       : adj(adj),
         size(adj.size()),
         parent(adj.size()),

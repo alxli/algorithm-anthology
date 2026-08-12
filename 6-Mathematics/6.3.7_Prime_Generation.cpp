@@ -105,7 +105,7 @@ std::vector<int> linear_sieve(int n, std::vector<int> *least_out = nullptr) {
     }
     return {};
   }
-  std::vector<int> least(n + 1, 0), primes;
+  std::vector<int> least(n + 1), primes;
   for (int i = 2; i <= n; i++) {
     if (least[i] == 0) {
       least[i] = i;
