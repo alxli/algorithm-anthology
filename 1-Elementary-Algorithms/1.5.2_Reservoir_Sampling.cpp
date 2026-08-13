@@ -31,12 +31,13 @@ Space Complexity:
 */
 
 #include <cassert>
+#include <chrono>
 #include <optional>
 #include <random>
 #include <vector>
 
 int rand_int(int lo, int hi) {
-  static std::mt19937 rng(std::random_device{}());
+  static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
   return std::uniform_int_distribution<int>(lo, hi)(rng);
 }
 

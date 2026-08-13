@@ -10,13 +10,13 @@ Lengauer-Tarjan's algorithm numbers nodes by DFS order, computes each reachable 
 using a disjoint-set structure with path compression, and then resolves immediate dominators from
 semidominator buckets.
 
-- `find_dominators(start)` uses the directed graph in the global adjacency list `adj` and returns a
-  vector `idom` where `idom[start]` = `start`, `idom[v]` is the immediate dominator of reachable
-  node `v`, and `idom[v]` $= -1$ if `v` is unreachable.
+- `immediate_dominators(start)` uses the directed graph in the global adjacency list `adj` and
+  returns a vector `idom` where `idom[start]` = `start`, `idom[v]` is the immediate dominator of
+  reachable node `v`, and `idom[v]` $= -1$ if `v` is unreachable.
 
 Time Complexity:
-- O(max(n, m) log n) per call to `find_dominators()` in this path-compressed implementation, where
-  $n$ is the number of nodes and $m$ is the number of edges.
+- O(max(n, m) log n) per call to `immediate_dominators()` in this path-compressed implementation,
+  where $n$ is the number of nodes and $m$ is the number of edges.
 
 Space Complexity:
 - O(max(n, m)) for the graph, result, and auxiliary heap arrays.
@@ -29,7 +29,7 @@ Space Complexity:
 
 std::vector<std::vector<int>> adj;
 
-std::vector<int> find_dominators(int start) {
+std::vector<int> immediate_dominators(int start) {
   int n = static_cast<int>(adj.size());
   std::vector<std::vector<int>> pred(n + 1), bucket(n + 1);
   std::vector<int> time(n), node_at_time(n + 1), parent(n + 1), sdom(n + 1);
@@ -102,7 +102,7 @@ int main() {
     // v           v /           v
     // 2 --------> 3 ---> 5 ---> 6
     adj = {{1, 2}, {3}, {3}, {4, 5}, {6}, {6}, {}};
-    assert((find_dominators(0) == vector<int>{0, 0, 0, 0, 3, 3, 3}));
+    assert((immediate_dominators(0) == vector<int>{0, 0, 0, 0, 3, 3, 3}));
   }
   {
     // Node 3 is reachable through either 1 or 2, so neither one dominates it.
@@ -112,7 +112,7 @@ int main() {
     // v /    v      v
     // 0 ---> 2 ---> 3
     adj = {{1, 2}, {2, 3}, {3}, {}, {0, 1}};
-    assert((find_dominators(4) == vector<int>{4, 4, 4, 4, 4}));
+    assert((immediate_dominators(4) == vector<int>{4, 4, 4, 4, 4}));
   }
   return 0;
 }

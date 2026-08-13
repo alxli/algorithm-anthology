@@ -9,10 +9,10 @@ floating-point output point.
 
 - `line_intersection(a1, b1, c1, a2, b2, c2, &p)` intersects lines $a_1 x + b_1 y + c_1 = 0$ and
   $a_2 x + b_2 y + c_2 = 0$, returning $-1$ (parallel), $0$ (one point, stored into `p`), or $1$
-  (identical).
+  (identical). Both coefficient triples must represent valid lines.
 - `line_intersection(p1, p2, p3, p4, &p)` intersects the infinite lines determined by points `p1`,
   `p2`, `p3`, and `p4`, returning $-1$ (parallel), $0$ (one point, stored into `p`), or $1$
-  (identical).
+  (identical). The points in each pair must differ.
 - `seg_intersection(a, b, c, d, &p, &q, include_boundary = true)` intersects segments `a`-`b` and
   `c`-`d`, returning $-1$ (none), $0$ (one point), or $1$ (overlapping segment). The
   `include_boundary` flag controls whether segments that meet only at an endpoint count as
@@ -22,10 +22,8 @@ floating-point output point.
   type.
 - `seg_intersection(a, b, c, d, include_boundary = true)` is a simplified, detection-only version of
   the above. Both versions are exact for detection if the input point type is integral.
-- `closest_point(a, b, c, p)` returns the closest point on line $ax + by + c = 0$ to point `p`.
-
-Coefficient triples must represent valid lines, and each point pair used to define an infinite line
-must contain two distinct points.
+- `closest_point(a, b, c, p)` returns the closest point on the valid line $ax + by + c = 0$ to point
+  `p`.
 
 Overflow warning: the exact integer paths multiply coordinate differences (cross products and
 squared lengths), which grow like the squared coordinate magnitude. With 32-bit `int` coordinates

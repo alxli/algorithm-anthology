@@ -12,26 +12,26 @@ needles inherited through its failure link.
 
 - `AhoCorasick(needles)` constructs the finite-state automaton for a set of needle strings that are
   to be searched for subsequently in haystack queries. Empty needles are ignored.
-- `find_all_in(haystack, report_match)` calls the function `report_match(s, pos)` once on each
-  occurrence of each needle that occurs in the `haystack`, where `pos` is the starting position in
-  the `haystack` at which string `s` (a matched needle) occurs. The matches will be reported in
-  increasing order of their ending positions within the `haystack`.
+- `find_all_in(haystack)` returns a vector of (`needle_idx`, `pos`) pairs for all matches, where
+  `needle_idx` is the 0-based index of a matched needle and `pos` is its starting position in
+  `haystack`. Matches are ordered by increasing ending position in `haystack`.
 
 Time Complexity:
 - O(L + z) expected per call to the constructor, where $L$ is the total needle length and $z$ is the
   total number of inherited output entries.
-- O(n + z) expected per call to `find_all_in(haystack, report_match)`, where $n$ is the length of
-  `haystack` and $z$ is the number of matches.
+- O(n + z) expected per call to `find_all_in(haystack)`, where $n$ is the length of `haystack` and
+  $z$ is the number of matches.
 
 Space Complexity:
 - O(L + z) for storage of the automaton and inherited output entries.
-- O(1) auxiliary for `find_all_in()`.
+- O(1) auxiliary and O(z) for the vector returned by `find_all_in()`.
 
 */
 
 #include <queue>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 using std::string;
 
@@ -102,23 +102,22 @@ class AhoCorasick {
     }
   }
 
-  template<typename Fn>
-  void find_all_in(const string &haystack, Fn report_match) const {
+  std::vector<std::pair<int, int>> find_all_in(const string &haystack) const {
+    std::vector<std::pair<int, int>> matches;
     int state = 0;
     for (int i = 0; i < static_cast<int>(haystack.size()); i++) {
       state = next_state(state, haystack[i]);
       for (int idx : out[state]) {
-        report_match(needles[idx], i - static_cast<int>(needles[idx].size()) + 1);
+        matches.emplace_back(idx, i - static_cast<int>(needles[idx].size()) + 1);
       }
     }
+    return matches;
   }
 };
 
 /*** Example Usage ***/
 
-#include <algorithm>
 #include <cassert>
-#include <utility>
 using namespace std;
 
 int main() {
@@ -133,20 +132,10 @@ int main() {
   needles.push_back("abccab");
 
   AhoCorasick ac(needles);
-  vector<pair<string, int>> matches;
-  ac.find_all_in("abccab", [&](const string &needle, int pos) {
-    matches.push_back({needle, pos});
-  });
-  sort(matches.begin(), matches.end());
   assert(
-      (matches ==
-       vector<pair<string, int>>{
-           {"a", 0}, {"a", 4}, {"ab", 0}, {"ab", 4}, {"abccab", 0}, {"bc", 1}, {"c", 2}, {"c", 3}
-       })
+      (ac.find_all_in("abccab") ==
+       vector<pair<int, int>>{{0, 0}, {1, 0}, {3, 1}, {5, 2}, {5, 3}, {0, 4}, {7, 0}, {1, 4}})
   );
-
-  vector<pair<string, int>> none;
-  ac.find_all_in("zzzz", [&](const string &needle, int pos) { none.push_back({needle, pos}); });
-  assert(none.empty());
+  assert(ac.find_all_in("zzzz").empty());
   return 0;
 }

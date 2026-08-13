@@ -260,7 +260,7 @@ struct Hasher {
   // uniformly and won't stop crafted collisions (unlike the non-linear hashers below). To harden
   // it, randomize the odd multiplier and take the high bits instead.
   uint32_t operator()(uint32_t k) const {
-    return k * 2654435761u;  // Or just return k.
+    return k * 2654435761U;  // Or just return k.
   }
 
   // SplitMix64 mixer (see 3.2.1's mix64).

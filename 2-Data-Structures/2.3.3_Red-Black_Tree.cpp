@@ -209,7 +209,7 @@ class RedBlackTree {
   void collect_entries(Node *n, std::vector<std::pair<K, V>> &res) const {
     if (n != LEAF_NIL) {
       collect_entries(n->left, res);
-      res.push_back({n->key, n->value});
+      res.emplace_back(n->key, n->value);
       collect_entries(n->right, res);
     }
   }

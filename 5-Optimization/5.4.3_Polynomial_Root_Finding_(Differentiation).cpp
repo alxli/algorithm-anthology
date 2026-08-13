@@ -11,7 +11,7 @@ requested range, including roots of even multiplicity. Each recursive call first
 coefficients by their largest magnitude so that root detection is unaffected by a common factor.
 
 - `horner_eval(p, x)` evaluates the polynomial `p` of degree $d$ (represented as a vector of size
-  $d + 1$ where `p[i]` stores the coefficient for the $x^i$ term) at `x`, using Horner's method.
+  $d + 1$ where `p[i]` stores the degree-`i` coefficient) at `x`, using Horner's method.
 - `find_one_root(p, a, b, eps = 1e-15)` returns a root in the interval $[`a`, `b`]$ for a polynomial
   `p` where either endpoint is a root or the endpoint values have opposite signs, using the
   bisection method. If this precondition is not satisfied, then `NaN` is returned. The root is found

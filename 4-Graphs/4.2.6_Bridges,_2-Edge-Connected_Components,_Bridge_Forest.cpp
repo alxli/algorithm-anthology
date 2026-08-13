@@ -106,7 +106,7 @@ class BridgeDecomposition {
     two_edge_components.clear();
     for (int i = 0; i < n; i++) {
       if (component[i] == -1) {
-        two_edge_components.push_back({});
+        two_edge_components.emplace_back();
         dfs_component(i, static_cast<int>(two_edge_components.size()) - 1);
       }
     }

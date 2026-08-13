@@ -6,7 +6,7 @@ ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 cd "$ROOT" || exit 1
 
 ALLOWLISTED_FILES=(
-  "./8-Miscellany/8.3_Policy-Based_Data_Structures.cpp"
+  "./8-Miscellany/8.6_GNU_Policy-Based_Data_Structures.cpp"
 )
 
 is_allowlisted() {

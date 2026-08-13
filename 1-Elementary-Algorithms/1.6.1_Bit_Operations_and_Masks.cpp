@@ -124,18 +124,18 @@ int main() {
   Mask x = 0b101100;
   assert(test_bit(x, 2) == true);
   assert(test_bit(x, 0) == false);
-  assert(set_bit(x, 0) == 0b101101u);
-  assert(clear_bit(x, 2) == 0b101000u);
-  assert(toggle_bit(x, 3) == 0b100100u);
+  assert(set_bit(x, 0) == 0b101101U);
+  assert(clear_bit(x, 2) == 0b101000U);
+  assert(toggle_bit(x, 3) == 0b100100U);
 
-  assert(lowest_set_bit(x) == 0b100u);
-  assert(clear_lowest_set_bit(x) == 0b101000u);
-  assert(lowest_set_bit(0) == 0u);
-  assert(clear_lowest_set_bit(0) == 0u);
+  assert(lowest_set_bit(x) == 0b100U);
+  assert(clear_lowest_set_bit(x) == 0b101000U);
+  assert(lowest_set_bit(0) == 0U);
+  assert(clear_lowest_set_bit(0) == 0U);
   assert(popcount(x) == 3);
   assert(popcount(0) == 0);
   assert(parity(x) == 1);
-  assert(parity(0b101101u) == 0);
+  assert(parity(0b101101U) == 0);
   assert(parity(0) == 0);
   assert(ctz(x) == 2);
   assert(ffs(x) == 3);
@@ -144,9 +144,9 @@ int main() {
 
   assert(is_pow2(16) == true);
   assert(is_pow2(24) == false);
-  assert(floor_pow2(20) == 16u);
-  assert(ceil_pow2(20) == 32u);
-  assert(ceil_pow2(16) == 16u);
+  assert(floor_pow2(20) == 16U);
+  assert(ceil_pow2(20) == 32U);
+  assert(ceil_pow2(16) == 16U);
   assert(ceil_pow2((Mask{1} << (MASK_BITS - 1)) - 1) == (Mask{1} << (MASK_BITS - 1)));
 
   vector<int> bits;

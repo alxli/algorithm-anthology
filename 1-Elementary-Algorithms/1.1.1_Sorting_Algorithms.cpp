@@ -11,12 +11,11 @@ specified to replace the default `operator<`.
 - `insertion_sort(lo, hi, comp = std::less<>)` sorts the range using insertion sort, which is
   stable.
 - `combsort(lo, hi, comp = std::less<>)` sorts the range using comb sort.
-- `radix_sort(lo, hi)` sorts the range using least-significant-byte radix sort.
+- `radix_sort(lo, hi)` sorts an integer range using least-significant-byte radix sort; unlike the
+  shared interface above, it takes no comparator.
 
-`radix_sort()` is the exception to the shared interface above: it takes no comparator and requires
-an integer value type. These functions are not meant to compete with standard library
-implementations in terms of speed. Instead, they are meant to demonstrate how common sorting
-algorithms can be concisely implemented in C++.
+These functions are not meant to compete with standard library implementations in terms of speed.
+Instead, they demonstrate how common sorting algorithms can be concisely implemented in C++.
 
 */
 

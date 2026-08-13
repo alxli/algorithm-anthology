@@ -3,7 +3,7 @@
 \section{\texorpdfstring{DFS and Trees}{4.1 DFS and Trees}}
 \setcounter{section}{1}
 \setcounter{subsection}{0}
-\subsection{Graph Class and DFS}
+\subsection{Graph Representation and DFS}
 Stores a directed or undirected simple graph as adjacency lists. The list for node \inlinecode{u} contains its out-neighbors; an undirected edge is stored in both endpoints' lists. Nodes are nonnegative integer indices in $[0, {\inlinecodemath{size()}})$, and \inlinecode{add\_edge()} grows the graph when either endpoint is new. The class also provides depth-first search, cycle detection, and forest/DAG checks.
 
 A simple graph must not have self-loops or parallel edges, although the class does not enforce these restrictions. In particular, undirected \inlinecode{has\_cycle()} cannot distinguish a second edge to the parent from the tree edge.
@@ -594,21 +594,25 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Tree Centers and Diameter}
-An unweighted tree possesses a center, centroid, and diameter. The centers are found by repeatedly peeling away the leaves of the tree until one or two nodes remain. The diameter relies on the fact that the farthest node from any start is always one endpoint of a diameter, so a second traversal from that endpoint measures the full diameter. The following functions apply to a global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must form a valid tree with nodes numbered $[0, n)$, where $n$ is \inlinecode{adj.size()}.
+\subsection{Tree Centers, Centroid, and Diameter}
+An unweighted tree has two useful notions of its middle and one of its extent. Jordan centers optimize distances, centroids balance component sizes, and a diameter identifies the farthest pair of nodes; a tree's centers and centroids need not coincide.
+
+Repeatedly removing all leaves reveals the centers. Subtree sizes locate a centroid. A diameter is found by first finding the farthest node from any start, then traversing again from that endpoint to find the other.
 
 \begin{compactitem}
-  \item \inlinecode{find\_centers()} returns a vector of either one or two tree Jordan centers. The Jordan center of a tree is the set of all nodes with minimum eccentricity, that is, the set of all nodes where the maximum distance to all other nodes in the tree is minimal.
-  \item \inlinecode{find\_centroid()} returns the node where all of its subtrees have a size less than or equal to $n / 2$, where $n$ is the number of nodes in the tree.
-  \item \inlinecode{diameter()} returns a tuple (\inlinecode{length}, \inlinecode{u}, \inlinecode{v}), where \inlinecode{length} is the maximum distance between any two nodes in the tree and \inlinecode{u} and \inlinecode{v} are endpoints attaining that distance. It uses a well-known double DFS technique.
+  \item \inlinecode{find\_centers()} returns the one or two Jordan centers: the nodes minimizing the maximum distance to every other node.
+  \item \inlinecode{find\_centroid()} returns a centroid: a node whose removal leaves every connected component with at most $n / 2$ nodes.
+  \item \inlinecode{diameter()} returns (\inlinecode{length}, \inlinecode{u}, \inlinecode{v}), where \inlinecode{length} is the maximum distance between any two nodes and \inlinecode{u} and \inlinecode{v} are endpoints attaining it.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{find\_centers()}, \inlinecode{find\_centroid()}, and \inlinecode{diameter()}, where $n$ is the number of nodes and $m$ is the number of edges.
+The functions use a global, bidirectionally pre-populated adjacency list \inlinecode{adj}, which must form a nonempty tree with nodes numbered $[0, n)$, where $n$ is \inlinecode{adj.size()}.
+
+\textbf{Time Complexity}: $O(n)$ per call to \inlinecode{find\_centers()}, \inlinecode{find\_centroid()}, and \inlinecode{diameter()}.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ auxiliary heap space for \inlinecode{find\_centers()}, where $n$ is the number of nodes.
+  \item $O(n)$ auxiliary heap space for \inlinecode{find\_centers()}.
   \item $O(n)$ auxiliary stack space for \inlinecode{find\_centroid()} and \inlinecode{diameter()}.
 \end{compactitem}
 
@@ -780,19 +784,18 @@ int main() {
   add_edge(2, 5);
   vector<int> color{0, 1, 0, 2, 1, 2};
   vector<int> ans(6);
+  using Summary = unordered_map<int, int>;
   auto init = [&](int u) {
-    unordered_map<int, int> freq;
+    Summary freq;
     freq[color[u]] = 1;
     return freq;
   };
-  auto merge = [](unordered_map<int, int> &big, const unordered_map<int, int> &small) {
+  auto merge = [](Summary &big, const Summary &small) {
     for (const auto &[c, cnt] : small) {
       big[c] += cnt;
     }
   };
-  auto answer = [&](int u, const unordered_map<int, int> &freq) {
-    ans[u] = static_cast<int>(freq.size());
-  };
+  auto answer = [&](int u, const Summary &freq) { ans[u] = static_cast<int>(freq.size()); };
   subtree_small_to_large_merge(adj, 0, init, merge, answer);
   assert((ans == vector<int>{3, 2, 2, 1, 1, 1}));
   return 0;
@@ -1050,11 +1053,9 @@ int main() {
 Encode and decode labeled trees using Prufer codes. A Prufer code is a sequence of length $n - 2$ that uniquely represents a labeled tree on nodes $0, 1, \ldots, n - 1$. It is useful for counting labeled trees, generating test cases, and converting between trees and compact sequences. Encoding repeatedly removes a leaf and records its neighbor until two nodes remain; decoding reverses this, deducing each removed leaf from the node degrees implied by the code. Both functions choose the smallest available leaf at each step. This makes the implementation deterministic and matches the usual textbook convention.
 
 \begin{compactitem}
-  \item \inlinecode{encode\_prufer()} returns the Prufer code for the global, bidirectionally pre-populated adjacency list \inlinecode{adj}, which must form a valid tree and whose indices represent the nodes.
+  \item \inlinecode{encode\_prufer()} returns the Prufer code for the global, bidirectionally pre-populated adjacency list \inlinecode{adj}, which must form a valid tree on at least two nodes and whose indices represent the nodes. The empty code represents the unique tree on two nodes.
   \item \inlinecode{decode\_prufer()} takes a Prufer code and returns the corresponding tree edges.
 \end{compactitem}
-
-The encoded tree must contain at least two nodes, since the empty code represents the unique tree on two nodes.
 
 \textbf{Time Complexity}: $O(n \log n)$ per call to \inlinecode{encode\_prufer()} or \inlinecode{decode\_prufer()}, where $n$ is the number of nodes in the tree.
 
@@ -1562,7 +1563,7 @@ void connected_components() {
   comp_id.assign(n, -1);
   for (int u = 0; u < n; u++) {
     if (comp_id[u] == -1) {
-      components.push_back({});
+      components.emplace_back();
       dfs(u, static_cast<int>(components.size()) - 1);
     }
   }
@@ -1858,10 +1859,10 @@ Given a directed graph and a start node, find the immediate dominator of every n
 Lengauer-Tarjan's algorithm numbers nodes by DFS order, computes each reachable node's semidominator using a disjoint-set structure with path compression, and then resolves immediate dominators from semidominator buckets.
 
 \begin{compactitem}
-  \item \inlinecode{find\_dominators(start)} uses the directed graph in the global adjacency list \inlinecode{adj} and returns a vector \inlinecode{idom} where \inlinecode{idom[start]} = \inlinecode{start}, \inlinecode{idom[v]} is the immediate dominator of reachable node \inlinecode{v}, and \inlinecode{idom[v]} $= -1$ if \inlinecode{v} is unreachable.
+  \item \inlinecode{immediate\_dominators(start)} uses the directed graph in the global adjacency list \inlinecode{adj} and returns a vector \inlinecode{idom} where \inlinecode{idom[start]} = \inlinecode{start}, \inlinecode{idom[v]} is the immediate dominator of reachable node \inlinecode{v}, and \inlinecode{idom[v]} $= -1$ if \inlinecode{v} is unreachable.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(\max\left(n, m\right) \log n)$ per call to \inlinecode{find\_dominators()} in this path-compressed implementation, where $n$ is the number of nodes and $m$ is the number of edges.
+\textbf{Time Complexity}: $O(\max\left(n, m\right) \log n)$ per call to \inlinecode{immediate\_dominators()} in this path-compressed implementation, where $n$ is the number of nodes and $m$ is the number of edges.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -1876,7 +1877,7 @@ Lengauer-Tarjan's algorithm numbers nodes by DFS order, computes each reachable 
 
 std::vector<std::vector<int>> adj;
 
-std::vector<int> find_dominators(int start) {
+std::vector<int> immediate_dominators(int start) {
   int n = static_cast<int>(adj.size());
   std::vector<std::vector<int>> pred(n + 1), bucket(n + 1);
   std::vector<int> time(n), node_at_time(n + 1), parent(n + 1), sdom(n + 1);
@@ -1950,7 +1951,7 @@ int main() {
     // v           v /           v
     // 2 --------> 3 ---> 5 ---> 6
     adj = {{1, 2}, {3}, {3}, {4, 5}, {6}, {6}, {}};
-    assert((find_dominators(0) == vector<int>{0, 0, 0, 0, 3, 3, 3}));
+    assert((immediate_dominators(0) == vector<int>{0, 0, 0, 0, 3, 3, 3}));
   }
   {
     // Node 3 is reachable through either 1 or 2, so neither one dominates it.
@@ -1960,7 +1961,7 @@ int main() {
     // v /    v      v
     // 0 ---> 2 ---> 3
     adj = {{1, 2}, {2, 3}, {3}, {}, {0, 1}};
-    assert((find_dominators(4) == vector<int>{4, 4, 4, 4, 4}));
+    assert((immediate_dominators(4) == vector<int>{4, 4, 4, 4, 4}));
   }
   return 0;
 }
@@ -2234,7 +2235,7 @@ class BridgeDecomposition {
     two_edge_components.clear();
     for (int i = 0; i < n; i++) {
       if (component[i] == -1) {
-        two_edge_components.push_back({});
+        two_edge_components.emplace_back();
         dfs_component(i, static_cast<int>(two_edge_components.size()) - 1);
       }
     }
@@ -2743,22 +2744,22 @@ int main() {
 \subsection{Offline Dynamic Connectivity}
 Maintains the number of connected components of an undirected graph as edges are added and removed over time, answering queries offline once the entire sequence of operations is known. Each edge is alive over a contiguous interval of time, from when it is added until it is removed. These intervals are placed into a segment tree over the time axis, so that for $T$ operations, each edge appears in $O(\log T)$ nodes whose ranges it spans. A depth-first traversal of this segment tree unites the edges stored at each node on the way down and undoes them on the way back up, so at each leaf the disjoint set forest reflects exactly the edges alive at that moment.
 
-This offline method supports arbitrary undirected graphs. When updates must be processed online and the graph remains a forest, see the Euler Tour Tree in Section 2.7.9.
+This offline method supports arbitrary undirected graphs. When updates must be processed online and the graph remains a forest, see the Euler Tour Tree in 2.7.9.
 
 Undoing unions requires a disjoint set forest with rollback (see the disjoint sets section): it joins by size or rank without path compression, recording each change on a stack so it can be reversed. Path compression is incompatible with rollback, so finding a representative costs $O(\log n)$ rather than near-constant time.
 
 \begin{compactitem}
   \item \inlinecode{OfflineDynamicConnectivity(n)} creates a structure of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$, initially with no edges.
   \item \inlinecode{add\_edge(u, v)} and \inlinecode{remove\_edge(u, v)} record adding or removing the undirected edge \inlinecode{u}-\inlinecode{v} at the current time, then advance the time by one step. Each edge may be present at most once at a time: \inlinecode{add\_edge} must not name an edge that is already present, and \inlinecode{remove\_edge} must name one that is. Both preconditions are checked with \inlinecode{assert} during \inlinecode{solve()}.
-  \item \inlinecode{count\_components()} records a query at the current time and advances the time by one step.
-  \item \inlinecode{solve()} processes all recorded operations and returns a vector holding, for each \inlinecode{count\_components()} query in the order issued, the number of connected components at that time.
+  \item \inlinecode{query\_components()} records a query at the current time and advances the time by one step.
+  \item \inlinecode{solve()} processes all recorded operations and returns a vector holding, for each \inlinecode{query\_components()} query in the order issued, the number of connected components at that time.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(T \log T + m \log T \log n)$ per call to \inlinecode{solve()}, where $T$ is the total number of operations (\inlinecode{add\_edge()}, \inlinecode{remove\_edge()}, and \inlinecode{count\_components()} combined), $m$ is the number of \inlinecode{add\_edge()} operations, and $n$ is the number of nodes.
-  \item $O(1)$ amortized per call to \inlinecode{add\_edge()}, \inlinecode{remove\_edge()}, and \inlinecode{count\_components()}.
+  \item $O(T \log T + m \log T \log n)$ per call to \inlinecode{solve()}, where $T$ is the total number of operations (\inlinecode{add\_edge()}, \inlinecode{remove\_edge()}, and \inlinecode{query\_components()} combined), $m$ is the number of \inlinecode{add\_edge()} operations, and $n$ is the number of nodes.
+  \item $O(1)$ amortized per call to \inlinecode{add\_edge()}, \inlinecode{remove\_edge()}, and \inlinecode{query\_components()}.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(n + T + m \log T)$ auxiliary.
@@ -2861,7 +2862,7 @@ class OfflineDynamicConnectivity {
 
   void add_edge(int u, int v) { ops.push_back({ADD, std::min(u, v), std::max(u, v)}); }
   void remove_edge(int u, int v) { ops.push_back({REMOVE, std::min(u, v), std::max(u, v)}); }
-  void count_components() { ops.push_back({QUERY, 0, 0}); }
+  void query_components() { ops.push_back({QUERY, 0, 0}); }
 
   std::vector<int> solve() {
     int t = static_cast<int>(ops.size());
@@ -2905,17 +2906,17 @@ using namespace std;
 int main() {
   OfflineDynamicConnectivity dc(4);
   // 0   1   2   3
-  dc.count_components();  // 4 isolated nodes.
+  dc.query_components();  // 4 isolated nodes.
   dc.add_edge(0, 1);
   dc.add_edge(2, 3);
   // 0---1   2---3
-  dc.count_components();  // 2 components.
+  dc.query_components();  // 2 components.
   dc.add_edge(1, 2);
   // 0---1---2---3
-  dc.count_components();  // All connected => 1 component.
+  dc.query_components();  // All connected => 1 component.
   dc.remove_edge(1, 2);
   // 0---1   2---3
-  dc.count_components();  // Back to 2 components.
+  dc.query_components();  // Back to 2 components.
   assert((dc.solve() == vector<int>{4, 2, 1, 2}));
   return 0;
 }
@@ -3025,14 +3026,14 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{0-1 Shortest Path (Deque BFS)}
+\subsection{0-1 BFS}
 Given one or more starting nodes in a weighted graph whose edge weights are only $0$ or $1$, compute the shortest distance from any start to every reachable node. Optionally, reconstruct the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred}.
 
 0-1 BFS is a specialized version of Dijkstra's algorithm. Because every relaxation changes the distance by either $0$ or $1$, a deque maintains nodes in nondecreasing distance order: push weight-$0$ relaxations to the front and weight-$1$ relaxations to the back.
 
 \begin{compactitem}
-  \item \inlinecode{bfs\_zero\_one(starts)} populates \inlinecode{dist} and \inlinecode{pred} for shortest paths from the nodes in \inlinecode{starts}, assigning each node its minimum distance from any start. The global, pre-populated adjacency list \inlinecode{adj} uses its indices as nodes. Each edge is stored as (\inlinecode{neighbor}, \inlinecode{weight}), where \inlinecode{weight} is either $0$ or $1$. Pass a singleton vector for a single source.
-  \item \inlinecode{get\_path(dest)} returns the path from a nearest starting node to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable, using the state left by the most recent call to \inlinecode{bfs\_zero\_one()}.
+  \item \inlinecode{bfs01(starts)} populates \inlinecode{dist} and \inlinecode{pred} for shortest paths from the nodes in \inlinecode{starts}, assigning each node its minimum distance from any start. The global, pre-populated adjacency list \inlinecode{adj} uses its indices as nodes. Each edge is stored as (\inlinecode{neighbor}, \inlinecode{weight}), where \inlinecode{weight} is either $0$ or $1$. Pass a singleton vector for a single source.
+  \item \inlinecode{get\_path(dest)} returns the path from a nearest starting node to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable, using the state left by the most recent call to \inlinecode{bfs01()}.
 \end{compactitem}
 
 For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from a nearest start to \inlinecode{v}, or $-1$ if \inlinecode{v} is a starting node or unreachable. Follow \inlinecode{pred} backward from the destination to its starting node, then reverse that sequence to recover the path.
@@ -3063,7 +3064,7 @@ const int INF = INT_MAX / 2;
 std::vector<std::vector<std::pair<int, int>>> adj;
 std::vector<int> dist, pred;
 
-void bfs_zero_one(const std::vector<int> &starts) {
+void bfs01(const std::vector<int> &starts) {
   int n = static_cast<int>(adj.size());
   dist.assign(n, INF);
   pred.assign(n, -1);
@@ -3124,12 +3125,12 @@ int main() {
   adj[2].emplace_back(1, 0);
   adj[1].emplace_back(3, 1);
   adj[2].emplace_back(3, 1);
-  bfs_zero_one(vector<int>{0});
+  bfs01(vector<int>{0});
   assert((dist == vector<int>{0, 0, 0, 1}));
   assert((pred == vector<int>{-1, 2, 0, 2}));
   assert((get_path(3) == vector<int>{0, 2, 3}));
 
-  bfs_zero_one(vector<int>{1, 0});
+  bfs01(vector<int>{1, 0});
   assert((dist == vector<int>{0, 0, 0, 1}));
   assert((pred == vector<int>{-1, -1, 0, 1}));
   assert((get_path(3) == vector<int>{1, 3}));
@@ -3567,7 +3568,7 @@ Floyd-Warshall's algorithm is a dynamic program over intermediate nodes: for eac
 
 \begin{compactitem}
   \item \inlinecode{init\_floyd(n)} initializes \inlinecode{dist} and \inlinecode{next\_node} for a graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
-  \item \inlinecode{floyd\_warshall()} updates the global adjacency matrix \inlinecode{dist} so \inlinecode{dist[u][v]} stores the shortest-path distance from $u$ to $v$, updates \inlinecode{next\_node} for path reconstruction, and returns whether the graph contains no negative-weight cycle.
+  \item \inlinecode{floyd\_warshall()} updates the global adjacency matrix \inlinecode{dist} so \inlinecode{dist[u][v]} stores the shortest-path distance from \inlinecode{u} to \inlinecode{v}, updates \inlinecode{next\_node} for path reconstruction, and returns whether the graph contains no negative-weight cycle.
   \item \inlinecode{get\_path(start, dest)} returns the shortest path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable from \inlinecode{start}, provided the most recent call to \inlinecode{floyd\_warshall()} returned true. If it returned false, a reachable negative-weight cycle leaves the distances and paths undefined.
 \end{compactitem}
 
@@ -3677,7 +3678,7 @@ Given a sparse, weighted directed graph with possibly negative edge weights, det
 Initializing every potential to $0$ is equivalent to adding a virtual source with zero-weight edges to all nodes. Bellman-Ford therefore detects a negative cycle anywhere in the graph, not only one reachable from a particular original node. If such a cycle exists, shortest paths are undefined.
 
 \begin{compactitem}
-  \item \inlinecode{johnson\_all\_pairs(n)} populates \inlinecode{dist} and \inlinecode{next\_node} for a global, pre-populated edge list \inlinecode{edges} whose nodes are numbered $[0, {\inlinecodemath{n}})$. Each edge is stored as (\inlinecode{u}, \inlinecode{v}, \inlinecode{weight}). Afterward, \inlinecode{dist[u][v]} is the shortest distance from $u$ to $v$, or \inlinecode{INF} if $v$ is unreachable from $u$. The function returns whether the graph contains no negative-weight cycle.
+  \item \inlinecode{johnson\_all\_pairs(n)} populates \inlinecode{dist} and \inlinecode{next\_node} for a global, pre-populated edge list \inlinecode{edges} whose nodes are numbered $[0, {\inlinecodemath{n}})$. Each edge is stored as (\inlinecode{u}, \inlinecode{v}, \inlinecode{weight}). Afterward, \inlinecode{dist[u][v]} is the shortest distance from \inlinecode{u} to \inlinecode{v}, or \inlinecode{INF} if \inlinecode{v} is unreachable from \inlinecode{u}. The function returns whether the graph contains no negative-weight cycle.
   \item \inlinecode{get\_path(start, dest)} returns the shortest path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable from \inlinecode{start}, provided the most recent call to \inlinecode{johnson\_all\_pairs()} returned true. If it returned false, a reachable negative-weight cycle leaves the distances and paths undefined.
 \end{compactitem}
 
@@ -4009,12 +4010,10 @@ Given a connected, undirected, weighted graph, build the Kruskal reconstruction 
 The lowest common ancestor of two leaves is exactly the merge step that first connects their MST components, so its value is the maximum edge weight on the MST path between those two nodes. This turns bottleneck path queries into ordinary LCA queries on the reconstruction tree.
 
 \begin{compactitem}
-  \item \inlinecode{KruskalReconstructionTree(n, edges)} builds the tree from weighted edges stored as (\inlinecode{weight}, \inlinecode{u}, \inlinecode{v}).
+  \item \inlinecode{KruskalReconstructionTree(n, edges)} builds the tree from a connected graph whose weighted edges are stored as (\inlinecode{weight}, \inlinecode{u}, \inlinecode{v}), where the \inlinecode{n} original nodes are numbered $[0, {\inlinecodemath{n}})$. Parallel edges are supported.
   \item \inlinecode{root()} returns the reconstruction-tree root.
   \item \inlinecode{max\_edge\_on\_path(u, v)} returns the maximum edge weight on the MST path between original nodes \inlinecode{u} and \inlinecode{v}.
 \end{compactitem}
-
-The input graph must be connected. Parallel edges are supported and are handled naturally by Kruskal's algorithm.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -4359,7 +4358,7 @@ Edmonds-Karp is the Ford-Fulkerson method with the augmenting path always chosen
 
 \begin{compactitem}
   \item \inlinecode{EdmondsKarp\textless{}T\textgreater{}(n)} constructs an empty flow network with nodes numbered $[0, {\inlinecodemath{n}})$.
-  \item \inlinecode{add\_edge(u, v, cap)} adds a directed residual-network edge from \inlinecode{u} to \inlinecode{v}.
+  \item \inlinecode{add\_edge(u, v, cap)} adds a directed edge from \inlinecode{u} to \inlinecode{v} with capacity \inlinecode{cap}.
   \item \inlinecode{max\_flow(source, sink)} modifies the residual network and returns the maximum flow.
   \item \inlinecode{clear\_flow()} resets all edge flows to zero, allowing a fresh recomputation on the same graph.
   \item \inlinecode{min\_cut(source)} returns the source side of a minimum cut after \inlinecode{max\_flow()} has been called.
@@ -4507,7 +4506,7 @@ Dinic's algorithm proceeds in phases. Each phase runs a breadth-first search to 
 
 \begin{compactitem}
   \item \inlinecode{Dinic\textless{}T\textgreater{}(n)} constructs an empty flow network with nodes numbered $[0, {\inlinecodemath{n}})$.
-  \item \inlinecode{add\_edge(u, v, cap)} adds a directed residual-network edge from \inlinecode{u} to \inlinecode{v} and returns its edge ID.
+  \item \inlinecode{add\_edge(u, v, cap)} adds a directed edge from \inlinecode{u} to \inlinecode{v} with capacity \inlinecode{cap} and returns its edge ID.
   \item \inlinecode{edge\_flow(id)} returns the flow through a previously added edge.
   \item \inlinecode{max\_flow(source, sink)} modifies the residual network and returns the maximum flow.
   \item \inlinecode{clear\_flow()} resets all edge flows to zero, allowing a fresh recomputation on the same graph.
@@ -5168,7 +5167,7 @@ Given a flow network with capacities and edge costs, find a minimum-cost flow fr
 
 \begin{compactitem}
   \item \inlinecode{MinCostMaxFlow\textless{}T, C\textgreater{}(n)} constructs an empty residual network with nodes numbered $[0, {\inlinecodemath{n}})$.
-  \item \inlinecode{add\_edge(u, v, cap, cost)} adds a directed edge and returns its edge ID.
+  \item \inlinecode{add\_edge(u, v, cap, cost)} adds a directed edge from \inlinecode{u} to \inlinecode{v} with capacity \inlinecode{cap} and per-unit cost \inlinecode{cost}, and returns its edge ID.
   \item \inlinecode{edge\_flow(id)} returns the flow through a previously added edge.
   \item \inlinecode{clear\_flow()} resets all edge flows to zero.
   \item \inlinecode{min\_cost\_flow(source, sink, target\_flow)} sends up to \inlinecode{target\_flow} additional units of flow and returns a pair (\inlinecode{flow}, \inlinecode{cost}) for the flow sent by that call. If the returned flow is smaller than \inlinecode{target\_flow}, the residual network cannot carry the requested amount.
@@ -5325,7 +5324,7 @@ Given a flow network with capacities and edge costs, find a minimum-cost flow fr
 
 \begin{compactitem}
   \item \inlinecode{MinCostMaxFlow\textless{}T, C\textgreater{}(n)} constructs an empty residual network with nodes numbered $[0, {\inlinecodemath{n}})$.
-  \item \inlinecode{add\_edge(u, v, cap, cost)} adds a directed edge and returns its edge ID.
+  \item \inlinecode{add\_edge(u, v, cap, cost)} adds a directed edge from \inlinecode{u} to \inlinecode{v} with capacity \inlinecode{cap} and per-unit cost \inlinecode{cost}, and returns its edge ID.
   \item \inlinecode{edge\_flow(id)} returns the flow through a previously added edge.
   \item \inlinecode{clear\_flow()} resets all edge flows to zero.
   \item \inlinecode{min\_cost\_flow(source, sink, target\_flow)} sends up to \inlinecode{target\_flow} additional units of flow and returns a pair (\inlinecode{flow}, \inlinecode{cost}) for the flow sent by that call. If the returned flow is smaller than \inlinecode{target\_flow}, the residual network cannot carry the requested amount.
@@ -5444,7 +5443,7 @@ class MinCostMaxFlow {
       std::priority_queue<qnode, std::vector<qnode>, std::greater<>> pq;
       dist.assign(nodes, INF_COST);
       dist[source] = 0;
-      pq.push({0, source});
+      pq.emplace(0, source);
       while (!pq.empty()) {
         auto [du, u] = pq.top();
         pq.pop();
@@ -5457,7 +5456,7 @@ class MinCostMaxFlow {
           if (residual(e) && dist[u] + reduced_cost < dist[e.v]) {
             dist[e.v] = dist[u] + reduced_cost;
             parent_edge[e.v] = id;
-            pq.push({dist[e.v], e.v});
+            pq.emplace(dist[e.v], e.v);
           }
         }
       }
@@ -5531,7 +5530,7 @@ The algorithm starts with every node attached to node $0$, then performs $n - 1$
 
 \begin{compactitem}
   \item \inlinecode{gomory\_hu(n, edges)} returns the \inlinecode{n - 1} edges of a Gomory-Hu tree as tuples (\inlinecode{u}, \inlinecode{v}, \inlinecode{weight}) for an undirected, weighted graph with \inlinecode{n} nodes and \inlinecode{edges} of the same shape.
-  \item \inlinecode{min\_cut\_value(n, tree, source, sink)} returns the minimum cut value between two nodes using a Gomory-Hu tree. Note that for many pairwise cut queries on the same tree, it's more efficient to prebuild the tree adjacency once and answer minimum edge-on-path queries with LCA/binary lifting instead of calling \inlinecode{min\_cut\_value()} each time.
+  \item \inlinecode{min\_cut\_value(n, tree, source, sink)} returns the minimum cut value between nodes \inlinecode{source} and \inlinecode{sink} in $[0, {\inlinecodemath{n}})$ using the tree returned by \inlinecode{gomory\_hu()}. For many pairwise cut queries on the same tree, it is more efficient to prebuild the tree adjacency once and answer minimum edge-on-path queries with LCA/binary lifting instead of calling \inlinecode{min\_cut\_value()} each time.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -6031,8 +6030,6 @@ The construction first computes a maximum matching with Kuhn's algorithm. It the
   \item \inlinecode{min\_vertex\_cover(n2)} returns the nodes of a minimum vertex cover for the global adjacency list \inlinecode{adj} (left nodes $[0, {\inlinecodemath{n1}})$, right neighbors $[0, {\inlinecodemath{n2}})$), where \inlinecode{n1} is \inlinecode{adj.size()}. Each returned value is a left node \inlinecode{i} in $[0, {\inlinecodemath{n1}})$, or a right node \inlinecode{j} encoded as \inlinecode{n1 + j}.
 \end{compactitem}
 
-The adjacency list \inlinecode{adj} is shared with the matching routine: \inlinecode{adj[u]} lists the right-side neighbors of left node \inlinecode{u}. Cover nodes are reported with right node \inlinecode{j} encoded as \inlinecode{n1 + j} so the two sides share one index space.
-
 \textbf{Time Complexity}: $O(n_1 \cdot m)$ per call, dominated by the matching, where $m$ is the number of edges.
 
 \Needspace*{3\baselineskip}
@@ -6157,7 +6154,7 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Maximum Graph Matching (Blossom)}
+\subsection{Maximum Matching (Blossom)}
 Given an undirected, unweighted simple graph, determine a maximum matching: a maximum subset of its edges such that no node is shared between different edges in the resulting subset.
 
 Edmonds' blossom algorithm extends augmenting-path search to general (non-bipartite) graphs, where odd-length cycles called blossoms can conceal augmenting paths. Each blossom is contracted into a single node so the search can proceed, and is expanded afterward to recover the matching. For maximum-weight matching in bipartite graphs, use Hungarian or min-cost max-flow; for maximum-weight matching in general graphs, use the weighted blossom algorithm in the next section.
@@ -6325,14 +6322,12 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Maximum Weight Graph Matching (Weighted Blossom)}
+\subsection{Maximum-Weight Matching (Weighted Blossom)}
 Given an undirected graph with positive edge weights, determine a maximum-weight matching: a subset of edges, no two sharing a node, whose total weight is as large as possible. Unlike the bipartite case (which Hungarian or min-cost max-flow solves), general graphs may contain odd cycles, so this is the weighted generalization of Edmonds' blossom algorithm.
 
 The algorithm runs a primal-dual method. Each node carries a dual label, and an edge is ``tight'' when its label sum equals twice its weight; the search uses only tight edges, exactly as unweighted blossom matching does, contracting odd cycles into blossoms. When no tight augmenting structure remains, the labels are adjusted by the largest step that keeps every dual constraint satisfied, which makes a new edge tight or lets a blossom expand, and the search resumes. Because the matching is over the implicit complete graph with absent edges weighted 0, a node may be left effectively unmatched whenever staying unmatched is at least as good as any incident edge.
 
 All edge weights must be positive; an absent edge is treated as weight 0. Self-loops are not supported. Parallel edges are supported by retaining only the maximum weight added between each pair of nodes. The node count should be kept modest, as the algorithm uses dense storage.
-
-Overflow warning: labels and the returned matching weight are stored in \inlinecode{int64\_t}; all doubled weights, label sums, and the total matching weight must fit.
 
 \begin{compactitem}
   \item \inlinecode{MaxWeightMatching(n)} creates a graph of \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$.
@@ -6340,6 +6335,8 @@ Overflow warning: labels and the returned matching weight are stored in \inlinec
   \item \inlinecode{solve()} computes a maximum-weight matching and returns its total weight.
   \item \inlinecode{partner(u)} returns the node matched with \inlinecode{u}, or $-1$ if \inlinecode{u} is unmatched. Valid after \inlinecode{solve()}.
 \end{compactitem}
+
+Overflow warning: labels and the returned matching weight are stored in \inlinecode{int64\_t}; all doubled weights, label sums, and the total matching weight must fit.
 
 \textbf{Time Complexity}: $O(n^{3})$ per call to \inlinecode{solve()}, where $n$ is the number of nodes.
 
@@ -7077,7 +7074,7 @@ Given a simple undirected graph, assign a color to every node such that no pair 
 This implementation finds the chromatic number by backtracking: nodes (ordered by degree to prune sooner) are colored one at a time, each tried with every color already in use plus one new color, while the fewest colors seen in a complete coloring so far bounds the search and cuts off any branch at least as costly.
 
 \begin{compactitem}
-  \item \inlinecode{color\_graph()} populates \inlinecode{color} and returns minimum color count for a global, bidirectionally pre-populated adjacency matrix \inlinecode{adj}, whose row and column indices represent the nodes.
+  \item \inlinecode{min\_coloring()} populates \inlinecode{color} and returns minimum color count for a global, bidirectionally pre-populated adjacency matrix \inlinecode{adj}, whose row and column indices represent the nodes.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n^{n})$ per call in the worst case, where $n$ is the number of nodes.
@@ -7128,7 +7125,7 @@ void color_rec(int pos, int used_colors) {
   curr[u] = -1;
 }
 
-int color_graph() {
+int min_coloring() {
   int n = static_cast<int>(adj.size());
   if (n == 0) {
     color.clear();
@@ -7136,9 +7133,7 @@ int color_graph() {
   }
   std::vector<int> degree(n);
   for (int u = 0; u < n; u++) {
-    for (int v = 0; v < n; v++) {
-      degree[u] += adj[u][v];
-    }
+    degree[u] = std::accumulate(adj[u].begin(), adj[u].end(), 0);
   }
   order.resize(n);
   std::iota(order.begin(), order.end(), 0);
@@ -7189,7 +7184,7 @@ int main() {
   add_edge(2, 3);
   add_edge(2, 4);
   add_edge(3, 4);
-  assert(color_graph() == 3);
+  assert(min_coloring() == 3);
   for (int u = 0; u < nodes; u++) {
     for (int v = u + 1; v < nodes; v++) {
       if (adj[u][v]) {

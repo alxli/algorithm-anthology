@@ -2,7 +2,7 @@
 
 \section{\texorpdfstring{Math Utilities}{6.1 Math Utilities}}
 \setcounter{section}{1}
-Common mathematic constants and functions, most of which already have standard STL equivalents. The implementations below are for educational purposes only and may not be as heavily optimized as their standard library counterparts.
+Common mathematical constants and functions, many of which have standard library counterparts. The implementations below are educational and may not be as heavily optimized as the library versions.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -27,6 +27,7 @@ Common mathematic constants and functions, most of which already have standard S
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <climits>
 #include <cmath>
 #include <cstdint>
@@ -99,8 +100,8 @@ Sign Functions:
 
 \begin{compactitem}
   \item \inlinecode{sgn(x)} returns $-1$ (if $x < 0$), $0$ (if $x = 0$), or $1$ (if $x > 0$). Unlike \inlinecode{std::signbit()} or \inlinecode{std::copysign()}, this does not handle the sign of \inlinecode{NaN}.
-  \item \inlinecode{signbit\_(x)} is analogous to \inlinecode{std::signbit()}, returning whether the sign bit of the floating point number is set to true. If so, then \inlinecode{x} is considered ``negative.'' Note that this works as expected on \inlinecode{+0.0}, \inlinecode{-0.0}, \inlinecode{Inf}, \inlinecode{-Inf}, \inlinecode{NaN}, as well as \inlinecode{-NaN}. Warning: This assumes that the sign bit is the leading (most significant) bit in the internal IEEE representation and that bytes are stored in little-endian order.
-  \item \inlinecode{copysign\_(x, y)} is analogous to \inlinecode{std::copysign()}, returning a number with the magnitude of \inlinecode{x} but the sign of \inlinecode{y}.
+  \item \inlinecode{sign\_bit(x)} is analogous to \inlinecode{std::signbit()}, returning whether the sign bit of the floating point number is set to true. If so, then \inlinecode{x} is considered ``negative.'' Note that this works as expected on \inlinecode{+0.0}, \inlinecode{-0.0}, \inlinecode{Inf}, \inlinecode{-Inf}, \inlinecode{NaN}, as well as \inlinecode{-NaN}. Warning: This assumes that the sign bit is the leading (most significant) bit in the internal IEEE representation and that bytes are stored in little-endian order.
+  \item \inlinecode{copy\_sign(x, y)} is analogous to \inlinecode{std::copysign()}, returning a number with the magnitude of \inlinecode{x} but the sign of \inlinecode{y}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -110,13 +111,13 @@ int sgn(const T &x) {
 }
 
 template<typename Double>
-bool signbit_(Double x) {
+bool sign_bit(Double x) {
   return (((unsigned char *)&x)[sizeof(x) - 1] >> (CHAR_BIT - 1)) & 1;
 }
 
 template<typename Double>
-Double copysign_(Double x, Double y) {
-  return signbit_(y) ? -std::fabs(x) : std::fabs(x);
+Double copy_sign(Double x, Double y) {
+  return sign_bit(y) ? -std::fabs(x) : std::fabs(x);
 }
 \end{lstlisting}
 Rounding Functions:
@@ -209,13 +210,13 @@ Double round_half_random(const Double &x) {
   if (away == toward) {
     return away;
   }
-  static std::mt19937 rng(std::random_device{}());
+  static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
   return (rng() % 2 == 0) ? away : toward;
 }
 
 template<typename Double, typename RoundFn>
 Double round_n_places(const Double &x, unsigned int n, RoundFn round) {
-  Double scale = std::pow(Double(10), n);
+  Double scale = std::pow(Double{10}, n);
   return round(x * scale) / scale;
 }
 \end{lstlisting}
@@ -355,11 +356,11 @@ int main() {
   assert(isnan(M_NAN) && isnan(-M_NAN) && isnan(M_INF - M_INF));
 
   assert(sgn(x) == -1 && sgn(0.0) == 0 && sgn(5678) == 1);
-  assert(signbit_(x) && !signbit_(0.0) && signbit_(-0.0));
-  assert(!signbit_(M_INF) && signbit_(-M_INF));
-  assert(!signbit_(M_NAN) && signbit_(-M_NAN));
-  assert(copysign(1.0, +2.0) == +1.0 && copysign(M_INF, -2.0) == -M_INF);
-  assert(copysign(1.0, -2.0) == -1.0 && signbit(copysign(M_NAN, -2.0)));
+  assert(sign_bit(x) && !sign_bit(0.0) && sign_bit(-0.0));
+  assert(!sign_bit(M_INF) && sign_bit(-M_INF));
+  assert(!sign_bit(M_NAN) && sign_bit(-M_NAN));
+  assert(copy_sign(1.0, +2.0) == +1.0 && copy_sign(M_INF, -2.0) == -M_INF);
+  assert(copy_sign(1.0, -2.0) == -1.0 && sign_bit(copy_sign(M_NAN, -2.0)));
 
   assert(EQ(floor0(1.5), 1.0) && EQ(ceil0(1.5), 2.0));
   assert(EQ(floor0(-1.5), -1.0) && EQ(ceil0(-1.5), -2.0));
@@ -1365,6 +1366,7 @@ The lexicographic successor edits the suffix of a non-increasing partition: incr
 
 \begin{lstlisting}[language=C++]
 #include <cstdint>
+#include <numeric>
 #include <vector>
 
 bool next_partition(std::vector<int> &p) {
@@ -1419,10 +1421,7 @@ std::vector<int> partition_by_rank(int n, int64_t r) {
 
 int64_t rank_by_partition(const std::vector<int> &p) {
   int64_t res = 0;
-  int sum = 0;
-  for (int x : p) {
-    sum += x;
-  }
+  int sum = std::accumulate(p.begin(), p.end(), 0);
   for (int x : p) {
     for (int j = 0; j < x; j++) {
       res += partition_function(sum, j);
@@ -1505,7 +1504,7 @@ Partitions of 4:
 Increasing partitions of 8:
 {1,2,5} {1,3,4} {1,7} {2,6} {3,5} {8}
 \end{exampleoutput}
-\subsection{Enumerating Generic Combinatorial Sequences}
+\subsection{Generic Combinatorial Enumeration}
 Rank, unrank, and enumerate combinatorial sequences in lexicographic order using only a prefix counting oracle. This is useful when the objects are too numerous to precompute, but there is a simple dynamic-programming formula for the number of valid completions after a fixed prefix. Derived classes of \inlinecode{AbstractEnumerator} implement \inlinecode{count(prefix)}, which returns how many valid full sequences begin with that prefix.
 
 Let $A$ be the number of candidate values considered at each position (the base class \inlinecode{range}), $L$ be the output sequence length (the base class \inlinecode{length}), and $T$ be \inlinecode{total\_count()}, the number of valid sequences. The base class tries candidate values in $[0, A)$ at each of the $L$ positions, asking \inlinecode{count()} how many completions each prefix admits. The concrete classes may still use their own conventional constructor names, such as \inlinecode{n} and \inlinecode{k} for combinations.
@@ -1539,6 +1538,7 @@ Overflow warning: All exact counts and ranks must fit in \inlinecode{int64\_t}.
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cstdint>
+#include <numeric>
 #include <vector>
 
 class AbstractEnumerator {
@@ -1665,10 +1665,8 @@ class PartitionEnumerator : public AbstractEnumerator {
   }
 
   int64_t count(const std::vector<int> &prefix) override {
-    int n = static_cast<int>(prefix.size()), sum = 0;
-    for (int x : prefix) {
-      sum += x;
-    }
+    int n = static_cast<int>(prefix.size());
+    int sum = std::accumulate(prefix.begin(), prefix.end(), 0);
     if (sum == range - 1) {
       return 1;
     }
@@ -1775,18 +1773,18 @@ Partition of 4:
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{GCD, LCM, Mod Inverse, Chinese Remainder}
-Common number theory operations relating to modular arithmetic.
+Core integer and modular-arithmetic operations built around the Euclidean algorithm. Extended GCD produces Bezout coefficients, which solve linear Diophantine equations and modular inverses, while the Chinese remainder routines combine compatible congruences into one residue class.
 
 \begin{compactitem}
   \item \inlinecode{gcd(a, b)} returns the greatest common divisor of \inlinecode{a} and \inlinecode{b} using the Euclidean algorithm. This is mainly for educational purposes, as \inlinecode{std::gcd(a, b)} from \inlinecode{\textless{}numeric\textgreater{}} is available as of C++17 (\inlinecode{\_\_gcd(a, b)} from \inlinecode{\textless{}algorithm\textgreater{}} in C++14 and earlier).
   \item \inlinecode{lcm(a, b)} returns the least common multiple of \inlinecode{a} and \inlinecode{b}. This implementation is mainly for educational purposes, as \inlinecode{std::lcm(a, b)} from \inlinecode{\textless{}numeric\textgreater{}} is available as of C++17.
-  \item \inlinecode{extended\_euclid(a, b)} returns a pair $(x, y)$ of integers such that $\gcd(a, b) = ax + by$.
+  \item \inlinecode{extended\_gcd(a, b)} returns a pair $(x, y)$ of integers such that $\gcd(a, b) = ax + by$.
   \item \inlinecode{diophantine(a, b, c, \&g, \&x, \&y)} solves the linear Diophantine equation $ax + by = c$, returning whether a solution exists (one does if and only if $\gcd(a, b)$ divides $c$). \inlinecode{g} is always set to $\gcd(a, b)$, while (\inlinecode{x}, \inlinecode{y}) is set only on success to a particular solution bounded by $\max(|a|, |b|, |c|)$ in magnitude. Every other solution is $({\inlinecodemath{x}} + t({\inlinecodemath{b}}/{\inlinecodemath{g}}), {\inlinecodemath{y}} - t({\inlinecodemath{a}}/{\inlinecodemath{g}}))$ for an integer $t$. A 128-bit intermediate is used where available to keep the scaling step overflow-free.
   \item \inlinecode{mod(a, m)} returns the least nonnegative residue of \inlinecode{a} modulo \inlinecode{m}, that is, the unique value in $[0, {\inlinecodemath{m}})$ congruent to \inlinecode{a}, where \inlinecode{m} must be positive. Unlike the C++ remainder operator \inlinecode{\%}, whose result follows the sign of \inlinecode{a}, the result is never negative.
   \item \inlinecode{mod\_inverse(a, m)} returns an integer $x$ such that $ax \equiv 1 \pmod m$, where the arguments must satisfy $m > 0$ and $\gcd(a, m) = 1$.
-  \item \inlinecode{mod\_inverse\_table(p)} returns a vector \inlinecode{v} of integers where for each index $i$ in the vector, $i \cdot {\inlinecodemath{v[i]}} \equiv 1 \pmod p$, where the argument $p$ is prime.
+  \item \inlinecode{mod\_inverse\_table(p)} returns a vector \inlinecode{v} where \inlinecode{v[i]} is the modular inverse of \inlinecode{i} modulo the prime \inlinecode{p} for every valid index \inlinecode{i}.
   \item \inlinecode{crt(r1, m1, r2, m2, \&r, \&m)} merges the two congruences $x \equiv r_1 \pmod{m_1}$ and $x \equiv r_2 \pmod{m_2}$ for arbitrary moduli (not necessarily coprime). It returns whether the system is consistent, and on success sets \inlinecode{m} to \inlinecode{lcm(m\_1, m\_2)} and \inlinecode{r} to the unique solution in $[0, {\inlinecodemath{m}})$. Both moduli must be positive, and their least common multiple must fit in \inlinecode{int64\_t}. Fold it pairwise to merge more than two congruences.
-  \item \inlinecode{garner\_restore(a, p)} returns the smallest nonnegative solution $x$ for the system of simultaneous congruences $x \equiv {\inlinecodemath{a[i]}} \pmod{{\inlinecodemath{p[i]}}}$ for all indices \inlinecode{i} in $[0, n)$, where $n$ is \inlinecode{a.size()} and \inlinecode{p} consists of pairwise coprime integers (unlike \inlinecode{crt}, which allows shared factors). The exact solution is unique modulo the product of all moduli, so that product and the final answer must fit in \inlinecode{int64\_t}.
+  \item \inlinecode{garner\_restore(a, p)} returns the smallest nonnegative solution whose residue modulo \inlinecode{p[i]} is \inlinecode{a[i]} at every valid index. The entries of \inlinecode{p} must be pairwise coprime (unlike \inlinecode{crt}, which allows shared factors). The exact solution is unique modulo the product of all moduli, so that product and the final answer must fit in \inlinecode{int64\_t}.
   \item \inlinecode{garner\_restore\_mod(a, p, m)} returns that same CRT solution modulo \inlinecode{m}. This is the right variant when the product of the moduli is too large to fit in \inlinecode{int64\_t}.
 \end{compactitem}
 
@@ -1795,7 +1793,7 @@ Overflow warning: Every intermediate and result of the templated signed-integer 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(\log M)$ per call to \inlinecode{gcd()}, \inlinecode{lcm()}, \inlinecode{extended\_euclid()}, \inlinecode{diophantine()}, \inlinecode{mod\_inverse()}, and \inlinecode{crt()}, where $M$ is the largest relevant input magnitude.
+  \item $O(\log M)$ per call to \inlinecode{gcd()}, \inlinecode{lcm()}, \inlinecode{extended\_gcd()}, \inlinecode{diophantine()}, \inlinecode{mod\_inverse()}, and \inlinecode{crt()}, where $M$ is the largest relevant input magnitude.
   \item $O(1)$ per call to \inlinecode{mod()}.
   \item $O(p)$ per call to \inlinecode{mod\_inverse\_table()}.
   \item $O(n^{2})$ per call to \inlinecode{garner\_restore()} and \inlinecode{garner\_restore\_mod()}.
@@ -1836,7 +1834,7 @@ Int lcm(Int a, Int b) {
 }
 
 template<typename Int>
-std::pair<Int, Int> extended_euclid(Int a, Int b) {
+std::pair<Int, Int> extended_gcd(Int a, Int b) {
   Int x = 1, y = 0, x1 = 0, y1 = 1;
   while (b != 0) {
     Int q = a / b, prev_x1 = x1, prev_y1 = y1, prev_b = b;
@@ -1881,7 +1879,7 @@ bool diophantine(Int a, Int b, Int c, Int *g, Int *x, Int *y) {
   // Absorb the bulk of c into a*dx + b*dy, then scale the base solution by the small remainder so
   // the reported (x, y) stay bounded by max(|a|, |b|, |c|). The scaled product is taken modulo b
   // (resp. a) through a 128-bit intermediate where available, to avoid overflow.
-  std::pair<Int, Int> base = extended_euclid(a, b);
+  std::pair<Int, Int> base = extended_gcd(a, b);
   Int dx = c / a;
   c -= dx * a;
   Int dy = c / b;
@@ -1906,7 +1904,7 @@ Int mod(Int a, Int m) {
 
 template<typename Int>
 Int mod_inverse(Int a, Int m) {
-  return mod(extended_euclid(a, m).first, m);
+  return mod(extended_gcd(a, m).first, m);
 }
 
 std::vector<int> mod_inverse_table(int p) {
@@ -1996,7 +1994,7 @@ int main() {
     for (int a = -20; a <= 20; a++) {
       for (int b = -20; b <= 20; b++) {
         int g = gcd(a, b);
-        auto [x, y] = extended_euclid(a, b);
+        auto [x, y] = extended_gcd(a, b);
         assert(g == a * x + b * y);
         if (g == 1 && b > 1) {
           assert(mod(a * mod_inverse(a, b), b) == 1);
@@ -2077,28 +2075,29 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Modular Arithmetic}
-Wraps arithmetic modulo a compile-time constant in a small value type. This is a common contest helper for dynamic programming, combinatorics, polynomial operations, and any calculation where all answers are taken modulo some number $p$ such as $10^9 + 7$.
+Wraps arithmetic modulo a positive compile-time constant \inlinecode{MOD} in a small value type. This is a common contest helper for dynamic programming, combinatorics, polynomial operations, and any calculation whose answers are taken modulo some number such as $10^9 + 7$. Runtime-chosen moduli are not supported.
 
-The implementation follows the conventional modular-integer wrapper (often called \inlinecode{Mint} in contest templates): normalization happens at construction, arithmetic operators are overloaded, mixed integer operations are supported through implicit construction, and combinations can be computed from lazy factorial tables. The operators use the hidden friend idiom: each \inlinecode{friend} defined inside the class is a non-template function, so mixed expressions like \inlinecode{2 + Mint(3)} convert the integer operand through the implicit constructor. (Free function template operators cannot do this - template argument deduction ignores implicit conversions - which is why some contest templates carry per-operator \inlinecode{Modular op U} and \inlinecode{U op Modular} overloads instead.)
-
-The modulus is a positive signed \inlinecode{auto} template argument. For example, \inlinecode{Modular\textless{}1000000007\textgreater{}} and \inlinecode{Modular\textless{}998244353\textgreater{}} need no other annotation. Its literal type determines the storage type, so a 64-bit modulus (e.g. \inlinecode{Modular\textless{}(1LL \textless{}\textless{} 61) - 1\textgreater{}}) is stored in 64 bits. The modulus must be a compile-time constant; a runtime-chosen modulus is not supported by this design.
-
-Two integer types are at play: the type of the modulus stores the representative, while construction, multiplication, and inverses widen through an intermediate type chosen automatically from the storage width - \inlinecode{int64\_t} for 32-bit storage, or \inlinecode{\_\_int128} (a GCC/Clang extension, in line with this book's use of \inlinecode{\_\_builtin} functions) for 64-bit storage; on compilers without \inlinecode{\_\_int128}, only 32-bit moduli are supported. The requirements are that $2p$ fits the storage type (for addition) and $(p - 1)^2$ fits the intermediate type (for the widening multiply), so any modulus up to half the storage type's range works out of the box; 64-bit moduli simply pay the cost of slower 128-bit multiplies. (Some contest templates instead estimate the multiply's quotient in \inlinecode{long double} to avoid \inlinecode{\_\_int128}; beware that this requires x86's 80-bit \inlinecode{long double} and silently breaks for large moduli on ARM, where \inlinecode{long double} is only 64-bit.)
-
-Division uses the extended Euclidean algorithm, so the divisor only needs to be coprime to the modulus. For the factorial-table combination helper, the usual contest assumption is that $p$ is prime and the requested factorials are invertible modulo $p$.
+The signed \inlinecode{auto} argument \inlinecode{MOD} determines the storage type: \inlinecode{Modular\textless{}1000000007\textgreater{}} uses 32-bit storage, while \inlinecode{Modular\textless{}(1LL \textless{}\textless{} 61) - 1\textgreater{}} uses 64-bit storage. The implementation follows the conventional \inlinecode{Mint} wrapper: construction normalizes values, while hidden friend operators support mixed expressions such as \inlinecode{2 + Mint(3)} through implicit conversion.
 
 \begin{compactitem}
   \item \inlinecode{Modular\textless{}MOD\textgreater{}(x = 0)} constructs the residue class of integer \inlinecode{x} modulo \inlinecode{MOD}.
   \item \inlinecode{value()} and \inlinecode{operator()()} return the stored representative in $[0, {\inlinecodemath{MOD}})$.
   \item Explicit casts to \inlinecode{int}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double} convert that stored representative to the corresponding primitive.
   \item \inlinecode{pow(n)} returns this value raised to nonnegative integer exponent \inlinecode{n}.
-  \item \inlinecode{inv()} returns the multiplicative inverse, asserting it exists.
-  \item Operators \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, comparison, increment, decrement, and stream I/O are overloaded.
-  \item \inlinecode{ModCombinatorics\textless{}Mint\textgreater{}::factorial(n)} returns $n!$ using a lazy factorial table.
-  \item \inlinecode{ModCombinatorics\textless{}Mint\textgreater{}::choose(n, k)} returns $\binom n k$ using lazy factorial and inverse-factorial tables.
-  \item \inlinecode{ModCombinatorics\textless{}Mint\textgreater{}::permute(n, k)} returns the number of ordered selections of \inlinecode{k} distinct elements from \inlinecode{n}.
-  \item \inlinecode{ModCombinatorics\textless{}Mint\textgreater{}::multichoose(n, k)} returns the number of size-\inlinecode{k} multisets drawn from \inlinecode{n} types.
+  \item \inlinecode{inv()} returns the multiplicative inverse, asserting the value is coprime to \inlinecode{MOD}.
+  \item Operators \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, comparison, increment, decrement, and stream I/O are overloaded. Division likewise requires the divisor to be coprime to \inlinecode{MOD}.
 \end{compactitem}
+
+\inlinecode{ModCombinatorics\textless{}Mint\textgreater{}} maintains lazy factorial and inverse-factorial tables for a modular type \inlinecode{Mint}. It assumes the modulus is prime and all requested factorials are invertible.
+
+\begin{compactitem}
+  \item \inlinecode{factorial(n)} returns $n!$ using a lazy factorial table.
+  \item \inlinecode{choose(n, k)} returns $\binom n k$ using lazy factorial and inverse-factorial tables.
+  \item \inlinecode{permute(n, k)} returns the number of ordered selections of \inlinecode{k} distinct elements from \inlinecode{n}.
+  \item \inlinecode{multichoose(n, k)} returns the number of size-\inlinecode{k} multisets drawn from \inlinecode{n} types.
+\end{compactitem}
+
+Overflow warning: Construction, multiplication, and inverses widen through \inlinecode{int64\_t} for 32-bit storage or \inlinecode{\_\_int128} for 64-bit storage. Thus $2p$ must fit the storage type and $(p - 1)^2$ must fit the intermediate type. On compilers without \inlinecode{\_\_int128}, only 32-bit moduli are supported. Estimating a 64-bit product with \inlinecode{long double} is not used because it silently loses the needed precision on platforms where \inlinecode{long double} is only 64 bits.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -2575,7 +2574,7 @@ int main() {
 \subsection{Modular Square Root (Tonelli-Shanks)}
 Given an integer $a$ and an odd prime $p$, find a modular square root: an $x$ with $x^2$ congruent to $a$ modulo $p$. Exactly half of the nonzero residues modulo a prime are squares (quadratic residues), so a solution exists only for those; when it does, the two roots are $x$ and $p - x$.
 
-The Tonelli-Shanks algorithm handles the general case. Euler's criterion, $a^{(p-1)/2}$ modulo $p$, first tests whether $a$ is a residue at all. When $p$ is congruent to $3 \pmod{4}$, the root is simply $a^{(p+1)/4}$. Otherwise the algorithm factors $p - 1$ as $s \cdot 2^e$, picks any quadratic non-residue to generate the 2-power part of the group, and repeatedly squares a running value to find the order of the current error term, correcting the candidate root until the error becomes $1$.
+The Tonelli-Shanks algorithm handles the general case. Euler's criterion, $a^{(p-1)/2}$ modulo $p$, first tests whether $a$ is a residue at all. When $p$ is congruent to $3 \pmod{4}$, the root is simply $a^{(p+1)/4}$. Otherwise the algorithm factors $p - 1$ as $s \cdot 2^e$, picks any quadratic non-residue to generate the $2$-power part of the group, and repeatedly squares a running value to find the order of the current error term, correcting the candidate root until the error becomes $1$.
 
 \begin{compactitem}
   \item \inlinecode{mod\_sqrt(a, p)} returns the smaller of the two square roots of \inlinecode{a} modulo the odd prime \inlinecode{p}, or $-1$ if \inlinecode{a} is not a quadratic residue. The value $0$ maps to $0$. The argument \inlinecode{a} is reduced modulo \inlinecode{p} internally. The modulus \inlinecode{p} must be an odd prime.
@@ -2653,7 +2652,7 @@ int64_t mod_sqrt(int64_t a, int64_t p) {
     if (order == 0) {
       return x < p - x ? x : p - x;
     }
-    int64_t gs = powmod(g, int64_t{1} << (r - order - 1), p);
+    int64_t gs = powmod(g, 1LL << (r - order - 1), p);
     g = mulmod(gs, gs, p);
     x = mulmod(x, gs, p);
     b = mulmod(b, g, p);
@@ -2764,30 +2763,30 @@ int main() {
 \subsection{Prime Generation}
 Generate prime numbers using the Sieve of Eratosthenes, which repeatedly marks the multiples of each prime as composite.
 
-The range overload \inlinecode{sieve(lo, hi)} uses a segmented sieve, letting primes in a high but narrow window be found without sieving everything below it. Since every composite at most \inlinecode{hi} has a prime factor at most $\sqrt{{\inlinecodemath{hi}}}$, it first sieves the primes up to $\sqrt{{\inlinecodemath{hi}}}$, then uses only those primes to mark composites within $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ (each prime $p$ starting at the first of its multiples that is at least both $p^2$ and \inlinecode{lo}). This needs only $O(w + \sqrt{{\inlinecodemath{hi}}})$ space, where $w = {\inlinecodemath{hi}} - {\inlinecodemath{lo}} + 1$, instead of the $O({\inlinecodemath{hi}})$ space that sieving all of $[2, {\inlinecodemath{hi}}]$ would require.
-
 The linear sieve finds the least prime factor of each integer. When processing \inlinecode{i}, it marks \inlinecode{i * p} for each known prime \inlinecode{p} no greater than \inlinecode{least[i]}. Every composite \inlinecode{x} is therefore generated exactly once: writing \inlinecode{x = i * p}, where \inlinecode{p} is its least prime factor, gives \inlinecode{p} $\leq$ \inlinecode{least[i]}, while any representation using a larger prime is skipped. This single visit per composite gives the $O(n)$ running time.
+
+The segmented sieve technique computes primes in a high but narrow window without sieving everything below it. Since every composite at most \inlinecode{hi} has a prime factor at most $\sqrt{{\inlinecodemath{hi}}}$, it first sieves the primes up to $\sqrt{{\inlinecodemath{hi}}}$, then uses only those primes to mark composites within $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ (each prime $p$ starting at the first of its multiples that is at least both $p^2$ and \inlinecode{lo}). This needs only $O(w + \sqrt{{\inlinecodemath{hi}}})$ space, where $w = {\inlinecodemath{hi}} - {\inlinecodemath{lo}} + 1$, instead of the $O({\inlinecodemath{hi}})$ space that sieving all of $[2, {\inlinecodemath{hi}}]$ would require.
 
 \begin{compactitem}
   \item \inlinecode{sieve(n)} returns a vector of all the primes less than or equal to \inlinecode{n}.
-  \item \inlinecode{sieve(lo, hi)} returns a vector of all the primes in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{linear\_sieve(n, \&least\_out)} returns a vector of all primes less than or equal to \inlinecode{n} in linear time. If \inlinecode{least\_out} is not null, it is filled so that \inlinecode{least\_out[x]} is the least prime factor of \inlinecode{x} for every \inlinecode{x} $\geq 2$.
+  \item \inlinecode{segmented\_sieve(lo, hi)} returns a vector of all the primes in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log \log n)$ per call to \inlinecode{sieve(n)}.
-  \item $O((w + \sqrt{{\inlinecodemath{hi}}}) \cdot \log\left(\log\left({\inlinecodemath{hi}}\right)\right))$ per call to \inlinecode{sieve(lo, hi)}, where $w = {\inlinecodemath{hi}} - {\inlinecodemath{lo}} + 1$.
   \item $O(n)$ per call to \inlinecode{linear\_sieve()}.
+  \item $O((w + \sqrt{{\inlinecodemath{hi}}}) \cdot \log\left(\log\left({\inlinecodemath{hi}}\right)\right))$ per call to \inlinecode{segmented\_sieve(lo, hi)}, where $w = {\inlinecodemath{hi}} - {\inlinecodemath{lo}} + 1$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ auxiliary for \inlinecode{sieve(n)}.
-  \item $O(w + \sqrt{{\inlinecodemath{hi}}})$ auxiliary for \inlinecode{sieve(lo, hi)}.
   \item $O(n)$ auxiliary for \inlinecode{linear\_sieve()}.
+  \item $O(w + \sqrt{{\inlinecodemath{hi}}})$ auxiliary for \inlinecode{segmented\_sieve(lo, hi)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -2811,44 +2810,6 @@ std::vector<int> sieve(int n) {
   std::vector<int> res;
   for (int i = 2; i <= n; i++) {
     if (prime[i]) {
-      res.push_back(i);
-    }
-  }
-  return res;
-}
-
-std::vector<int> sieve(int lo, int hi) {
-  if (hi < 2 || lo > hi) {
-    return {};
-  }
-  int sqrt_hi = sqrt(hi);
-  while (1LL * (sqrt_hi + 1) * (sqrt_hi + 1) <= hi) {
-    sqrt_hi++;
-  }
-  int fourth_root_hi = sqrt(sqrt_hi);
-  while (1LL * (fourth_root_hi + 1) * (fourth_root_hi + 1) <= sqrt_hi) {
-    fourth_root_hi++;
-  }
-  std::vector<char> prime1(sqrt_hi + 1, true), prime2(hi - lo + 1, true);
-  for (int i = 2; i <= fourth_root_hi; i++) {
-    if (prime1[i]) {
-      for (int64_t j = 1LL * i * i; j <= sqrt_hi; j += i) {
-        prime1[j] = false;
-      }
-    }
-  }
-  for (int i = 2; i <= sqrt_hi; i++) {
-    if (prime1[i]) {
-      int64_t first_multiple = ((static_cast<int64_t>(lo) + i - 1) / i) * i;
-      int64_t start = std::max(static_cast<int64_t>(i) * i, first_multiple);
-      for (int64_t j = start; j <= hi; j += i) {
-        prime2[j - lo] = false;
-      }
-    }
-  }
-  std::vector<int> res;
-  for (int i = (lo > 1) ? lo : 2; i <= hi; i++) {
-    if (prime2[i - lo]) {
       res.push_back(i);
     }
   }
@@ -2880,6 +2841,44 @@ std::vector<int> linear_sieve(int n, std::vector<int> *least_out = nullptr) {
   }
   return primes;
 }
+
+std::vector<int> segmented_sieve(int lo, int hi) {
+  if (hi < 2 || lo > hi) {
+    return {};
+  }
+  int sqrt_hi = std::sqrt(hi);
+  while (1LL * (sqrt_hi + 1) * (sqrt_hi + 1) <= hi) {
+    sqrt_hi++;
+  }
+  int fourth_root_hi = std::sqrt(sqrt_hi);
+  while (1LL * (fourth_root_hi + 1) * (fourth_root_hi + 1) <= sqrt_hi) {
+    fourth_root_hi++;
+  }
+  std::vector<char> prime1(sqrt_hi + 1, true), prime2(hi - lo + 1, true);
+  for (int i = 2; i <= fourth_root_hi; i++) {
+    if (prime1[i]) {
+      for (int64_t j = 1LL * i * i; j <= sqrt_hi; j += i) {
+        prime1[j] = false;
+      }
+    }
+  }
+  for (int i = 2; i <= sqrt_hi; i++) {
+    if (prime1[i]) {
+      int64_t first_multiple = ((static_cast<int64_t>(lo) + i - 1) / i) * i;
+      int64_t start = std::max(static_cast<int64_t>(i) * i, first_multiple);
+      for (int64_t j = start; j <= hi; j += i) {
+        prime2[j - lo] = false;
+      }
+    }
+  }
+  std::vector<int> res;
+  for (int i = (lo > 1) ? lo : 2; i <= hi; i++) {
+    if (prime2[i - lo]) {
+      res.push_back(i);
+    }
+  }
+  return res;
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -2908,18 +2907,18 @@ int main() {
 
   int lo = 1000000000, hi = 1005000000;
   start = clock();
-  p = sieve(lo, hi);
+  p = segmented_sieve(lo, hi);
   delta = static_cast<double>((clock() - start)) / CLOCKS_PER_SEC;
-  cout << "sieve([" << lo << ", " << hi << "]): " << delta << "s" << endl;
-  assert((sieve(14, 16) == vector<int>{}));
-  assert((sieve(17, 19) == vector<int>{17, 19}));
+  cout << "segmented_sieve([" << lo << ", " << hi << "]): " << delta << "s" << endl;
+  assert((segmented_sieve(14, 16) == vector<int>{}));
+  assert((segmented_sieve(17, 19) == vector<int>{17, 19}));
   assert(!p.empty() && p.front() >= lo && p.back() <= hi);
   return 0;
 }
 \end{lstlisting}
 \begin{exampleoutput}
 sieve(n=10000000): 0.042641s
-sieve([1000000000, 1005000000]): 0.01969s
+segmented_sieve([1000000000, 1005000000]): 0.01969s
 \end{exampleoutput}
 \subsection{Prime Tests and Factorization}
 Test whether an integer is prime and compute the prime factorization of an integer $n$. The Miller-Rabin test writes $n - 1 = d \cdot 2^r$ and squares $a^d$ repeatedly, checking that the sequence behaves the only way it can for a prime; a base $a$ that breaks the pattern is a witness that $n$ is composite. For large composite inputs, Pollard's rho iterates a pseudorandom map modulo $n$; two iterates that collide modulo a hidden prime factor reveal that factor through a GCD with their difference. Prime factorizations are represented as sorted vectors of (\inlinecode{prime}, \inlinecode{exponent}) pairs. For $0$ and $1$, the prime factorization is empty.
@@ -2935,7 +2934,7 @@ Test whether an integer is prime and compute the prime factorization of an integ
   \item \inlinecode{factorize\_rho(n)} returns the prime factorization of a 64-bit integer using Miller-Rabin and Pollard's rho without initial trial division.
   \item \inlinecode{factorize(n, small\_prime\_limit = 1000000)} returns the prime factorization of a 64-bit integer \inlinecode{n} using a combination of trial division, the Miller-Rabin primality test, and Pollard's rho algorithm. \inlinecode{small\_prime\_limit} specifies the largest prime to test with trial division before falling back to the rho algorithm. This supports 64-bit integers up to and including $2^{63} - 1$.
   \item \inlinecode{divisors\_from\_factors(factors)} returns all divisors from a compressed factorization.
-  \item \inlinecode{get\_divisors(n)} returns all divisors of a 64-bit integer using \inlinecode{factorize()} followed by \inlinecode{divisors\_from\_factors()}.
+  \item \inlinecode{divisors(n)} returns all divisors of a 64-bit integer using \inlinecode{factorize()} followed by \inlinecode{divisors\_from\_factors()}.
 \end{compactitem}
 
 Modular multiplication inside Miller-Rabin and Pollard's rho uses \inlinecode{\_\_uint128\_t} when available for speed, with a slower portable double-and-add fallback to avoid overflow on compilers without 128-bit integers.
@@ -2950,7 +2949,7 @@ Modular multiplication inside Miller-Rabin and Pollard's rho uses \inlinecode{\_
   \item $O(n^{1/4})$ expected per call to \inlinecode{factorize\_rho()}. \inlinecode{factorize()} additionally performs $O(L/\log L)$ trial divisions, where $L$ is \inlinecode{small\_prime\_limit}, and takes $O(L)$ time if the prime cache must be rebuilt.
   \item $O(|a| + |b|)$ per call to \inlinecode{merge\_factors()}.
   \item $O(d \log d)$ per call to \inlinecode{divisors\_from\_factors()}, where $d$ is the number of divisors generated, due to sorting the result.
-  \item $O(L/\log L + n^{1/4} + d \log d)$ expected per call to \inlinecode{get\_divisors()}, plus $O(L)$ if the prime cache must be rebuilt.
+  \item $O(L/\log L + n^{1/4} + d \log d)$ expected per call to \inlinecode{divisors()}, plus $O(L)$ if the prime cache must be rebuilt.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -2958,12 +2957,13 @@ Modular multiplication inside Miller-Rabin and Pollard's rho uses \inlinecode{\_
 \begin{compactitem}
   \item $O(c)$ cached space after sieving through $c$.
   \item $O(f + \log n)$ auxiliary for recursive factorization, where $f$ is the number of compressed prime factors returned.
-  \item $O(d)$ output space and $O(\log d)$ auxiliary stack space for \inlinecode{divisors\_from\_factors()} and \inlinecode{get\_divisors()}.
+  \item $O(d)$ output space and $O(\log d)$ auxiliary stack space for \inlinecode{divisors\_from\_factors()} and \inlinecode{divisors()}.
   \item $O(1)$ auxiliary for the primality tests, \inlinecode{rho\_factor()}, \inlinecode{factorize\_slow()}, and \inlinecode{merge\_factors()}, excluding returned vectors.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <numeric>
 #include <random>
@@ -3036,7 +3036,7 @@ uint64_t powmod(uint64_t x, uint64_t n, uint64_t m) {
 }
 
 uint64_t rand64u() {
-  static std::mt19937_64 rng(std::random_device{}());
+  static std::mt19937_64 rng(std::chrono::steady_clock::now().time_since_epoch().count());
   return rng();
 }
 
@@ -3253,7 +3253,7 @@ std::vector<int64_t> divisors_from_factors(const Factors &factors) {
   return res;
 }
 
-std::vector<int64_t> get_divisors(int64_t n) {
+std::vector<int64_t> divisors(int64_t n) {
   if (n <= 1) {
     return (n < 1) ? std::vector<int64_t>() : std::vector<int64_t>(1, 1);
   }
@@ -3348,7 +3348,7 @@ int main() {
       auto v2 = factorize(i);
       validate(i, v1);
       assert(v1 == v2);
-      auto d = get_divisors(i);
+      auto d = divisors(i);
       set<int> s(d.begin(), d.end());
       assert(d.size() == s.size());
       for (int j = 1; j <= i; j++) {
@@ -3360,15 +3360,15 @@ int main() {
   }
   {  // Compressed factors are convenient for building divisors.
     Factors factors{{2, 3}, {3, 2}, {5, 1}};
-    vector<int64_t> divisors = divisors_from_factors(factors);
+    vector<int64_t> divs = divisors_from_factors(factors);
     assert(
-        (divisors == vector<int64_t>{
-                         1,  2,  3,  4,  5,  6,  8,  9,  10, 12,  15,  18,
-                         20, 24, 30, 36, 40, 45, 60, 72, 90, 120, 180, 360,
-                     })
+        (divs == vector<int64_t>{
+                     1,  2,  3,  4,  5,  6,  8,  9,  10, 12,  15,  18,
+                     20, 24, 30, 36, 40, 45, 60, 72, 90, 120, 180, 360,
+                 })
     );
     assert(factorize(360) == factors);
-    assert(get_divisors(360) == divisors);
+    assert(divisors(360) == divs);
   }
   {  // Large factorization tests.
     const vector<int64_t> nums{
@@ -3487,7 +3487,7 @@ std::vector<int> phi_table(int lo, int hi) {
   if (hi < lo) {
     return {};
   }
-  int root = static_cast<int>(sqrt(hi));
+  int root = static_cast<int>(std::sqrt(hi));
   while (1LL * (root + 1) * (root + 1) <= hi) {
     root++;
   }
@@ -3903,7 +3903,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Big Integer}
-Perform operations on arbitrary precision big integers internally represented as a vector of base-\inlinecode{BASE} digits in little-endian order. \inlinecode{BASE} defaults to $10^9$ and must be a power of 10 no larger than $10^9$. Multiplication picks its algorithm from the operand size, so no configuration is needed. Typical arithmetic operations involving mixed numeric primitives and strings are supported through implicit construction and hidden friend operators, as long as at least one operand is a \inlinecode{BigInt} at any given level of evaluation.
+Perform operations on arbitrary precision big integers internally represented as a vector of base-\inlinecode{BASE} digits in little-endian order. \inlinecode{BASE} defaults to $10^9$ and must be a power of 10 no larger than $10^9$. Multiplication selects schoolbook, Karatsuba, or FFT from the operand size; \inlinecode{FFT\_CUTOFF} is the padded transform length where FFT takes over and normally needs no adjustment. Typical arithmetic operations involving mixed numeric primitives and strings are supported through implicit construction and hidden friend operators, as long as at least one operand is a \inlinecode{BigInt} at any given level of evaluation.
 
 \begin{compactitem}
   \item \inlinecode{BigInt()} constructs zero, and \inlinecode{BigInt(n)} constructs a big integer from an integer \inlinecode{n}.
@@ -3916,15 +3916,11 @@ Perform operations on arbitrary precision big integers internally represented as
   \item \inlinecode{a.comp(v)} returns $-1$, $0$, or $1$ depending on whether the big integers \inlinecode{a} and \inlinecode{v} compare less, equal, or greater, respectively.
   \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on integer primitives. Addition, subtraction, and comparisons are performed using the standard linear algorithms. Multiplication first converts limbs from base \inlinecode{BASE} to the narrower base \inlinecode{MULT\_BASE} so coefficient products fit safely, then multiplies with schoolbook, Karatsuba, or complex FFT convolution according to the operand size, converting the result back. Division and modulo are computed together by normalized long division: scale the operands so the divisor's leading limb is large, estimate each quotient limb from the top one or two limbs of the running remainder, correct the estimate by adding the divisor back if necessary, then unscale the remainder.
   \item \inlinecode{a.div(v)} returns a pair consisting of the quotient and remainder when \inlinecode{a} is divided by \inlinecode{v}.
-  \item \inlinecode{v.pow(n)} returns \inlinecode{v} raised to the nonnegative power $n$.
-  \item \inlinecode{v.sqrt()} returns the integral part of the square root of big integer \inlinecode{v}.
-  \item \inlinecode{v.nth\_root(n)} returns the integral part of the $n$-th root of big integer \inlinecode{v}. Negative inputs require odd $n$.
+  \item \inlinecode{v.pow(n)} returns \inlinecode{v} raised to the nonnegative power $n$ using binary exponentiation.
+  \item \inlinecode{v.sqrt()} returns the integral part of the square root of big integer \inlinecode{v} using a digit-by-digit algorithm in the internal base.
+  \item \inlinecode{v.nth\_root(n)} returns the integral part of the $n$-th root of big integer \inlinecode{v} using binary search. Negative inputs require odd $n$.
   \item \inlinecode{rand(n)} returns a random, positive big integer with $n$ digits.
 \end{compactitem}
-
-\inlinecode{pow(n)} uses binary exponentiation. \inlinecode{sqrt()} uses a digit-by-digit square-root algorithm in the internal base, while \inlinecode{nth\_root(n)} uses binary search over the answer range.
-
-All three multiplication methods produce identical results, so the choice only trades constant factors. Karatsuba falls back to schoolbook on short operands, and beats FFT up to roughly $400$ decimal digits; past that FFT pulls ahead, reaching about a $3.5$x advantage by $6400$ digits. \inlinecode{FFT\_CUTOFF} is the padded transform length, counted in \inlinecode{MULT\_BASE} limbs, at which FFT takes over, so lowering it favors FFT on smaller inputs. The rebasing is what keeps multiplication exact: a product of two base-$10^9$ limbs already reaches $10^{18}$, so summing only nine of them would overflow \inlinecode{int64\_t}, and such coefficients are far past the $53$ bits a complex FFT represents exactly.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -3948,6 +3944,7 @@ All three multiplication methods produce identical results, so the choice only t
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <climits>
 #include <cmath>
 #include <complex>
@@ -4148,7 +4145,7 @@ class BigInt {
     vcd roots(n), res(n);
     for (int i = 0; i < n; i++) {
       double alpha = 2 * 3.14159265358979323846 * i / n;
-      roots[i] = std::complex<double>(cos(alpha), sin(alpha));
+      roots[i] = std::complex<double>(std::cos(alpha), std::sin(alpha));
       res[i] = *(lo + rev[i]);
     }
     for (int len = 1; len < n; len <<= 1) {
@@ -4500,7 +4497,7 @@ class BigInt {
       BigInt root = magnitude.comp(BigInt(p).pow(n)) < 0 ? p - 1 : p;
       return sign == -1 ? -root : root;
     }
-    BigInt lo(BigInt(10).pow(static_cast<int>(ceil(static_cast<double>(size()) / n)) - 1));
+    BigInt lo(BigInt(10).pow(static_cast<int>(std::ceil(static_cast<double>(size()) / n)) - 1));
     BigInt hi(lo * 10), mid;
     while (lo < hi) {
       mid = (lo + hi) / 2;
@@ -4520,7 +4517,7 @@ class BigInt {
     if (n == 0) {
       return BigInt(0);
     }
-    static std::mt19937 rng(std::random_device{}());
+    static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
     std::uniform_int_distribution<int> first_digit(1, 9), digit(0, 9);
     std::string s(1, static_cast<char>('0' + first_digit(rng)));
     for (int i = 1; i < n; i++) {
@@ -4897,8 +4894,6 @@ int main() {
 \subsection{Rational Numbers}
 Perform operations on rational numbers internally represented as two integers: a numerator and a denominator. The template integer type must support streamed input/output, comparisons, and arithmetic operations.
 
-Overflow warning: Internal operations do not check for overflow. Comparisons and arithmetic cross-multiply numerators and denominators, so instantiate with a wider integer type (such as \inlinecode{\_\_int128}, or even \inlinecode{BigInt}) if the values may grow large.
-
 \begin{compactitem}
   \item \inlinecode{Rational\textless{}Int\textgreater{}(n)} constructs a rational number with numerator \inlinecode{n} and denominator $1$.
   \item \inlinecode{Rational\textless{}Int\textgreater{}(n, d)} constructs a rational number with numerator \inlinecode{n} and denominator \inlinecode{d}.
@@ -4909,6 +4904,8 @@ Overflow warning: Internal operations do not check for overflow. Comparisons and
   \item \inlinecode{v.abs()}, \inlinecode{abs(v)}, \inlinecode{v.floor()}, and \inlinecode{v.ceil()} return the absolute value, floor, and ceiling of rational \inlinecode{v}.
   \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on numerical primitives. The comparisons and binary arithmetic are hidden friends, so a raw integer operand works on either side.
 \end{compactitem}
+
+Overflow warning: Internal operations do not check for overflow. Comparisons and arithmetic cross-multiply numerators and denominators, so instantiate with a wider integer type (such as \inlinecode{\_\_int128}, or even \inlinecode{BigInt}) if the values may grow large.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -5089,11 +5086,14 @@ Basic matrix operations defined on a two-dimensional vector of numeric values. M
   \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, and \inlinecode{!=} define lexicographical comparison based on that of \inlinecode{std::vector}.
   \item Operators \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, and \inlinecode{/=} define scalar addition, subtraction, multiplication, and division involving a matrix and a numeric scalar value.
   \item Operators \inlinecode{*} and \inlinecode{*=} define vector and matrix multiplication.
+\end{compactitem}
+
+Exponentiation uses iterative binary exponentiation: keep an accumulated result, square the base each round, and multiply it when the current exponent bit is set. The power sum uses the block identity that $\begin{bmatrix} A & A \\ 0 & I \end{bmatrix}^p$ has $A + A^2 + \dots + A^p$ in its upper-right block.
+
+\begin{compactitem}
   \item Operators \inlinecode{\textasciicircum{}} and \inlinecode{\textasciicircum{}=} define iterative binary matrix exponentiation of a square matrix \inlinecode{a} by a \inlinecode{uint64\_t} power \inlinecode{p}.
   \item \inlinecode{power\_sum(a, p)} returns the power sum of a square matrix \inlinecode{a} up to a \inlinecode{uint64\_t} power \inlinecode{p}, that is, $a + a^2 + \ldots + a^p$.
 \end{compactitem}
-
-Exponentiation uses the usual iterative binary exponentiation pattern: keep an accumulated result, square the base each round, and multiply the result when the current exponent bit is set. The power sum uses a block matrix identity that $\begin{bmatrix} A & A \\ 0 & I \end{bmatrix}^p$ has $A + A^2 + \dots + A^p$ in its upper-right block.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -5392,6 +5392,7 @@ Converts a matrix to reduced row echelon form using Gaussian elimination to solv
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <type_traits>
@@ -5444,9 +5445,7 @@ Matrix &row_reduce(Matrix &a) {
         }
       }
     }
-    for (int j = 0; j < lead; j++) {
-      a[r][j] = 0;
-    }
+    std::fill(a[r].begin(), a[r].begin() + lead, 0);
     a[r][lead] = 1;
     r++;
   }
@@ -5759,7 +5758,7 @@ int main() {
 The LU decomposition of a matrix $a$ with row-partial pivoting is a factorization of $a$ (after some rows are possibly permuted by a permutation matrix $p$) as a product of a lower triangular matrix $l$ and an upper triangular matrix $u$. This factorization can be used to tackle many common problems in linear algebra such as solving systems of linear equations and computing determinants. An improvement on basic row reduction, LU decomposition by row-partial pivoting keeps the relative magnitude of matrix values small, thus reducing the relative error due to rounding in computed solutions. These routines require floating-point matrix elements; use 6.5.3 for exact-field or integer determinant calculations.
 
 \begin{compactitem}
-  \item \inlinecode{lu\_decompose(a, \&perm, eps = 1e-10)} assigns floating-point matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}; it returns $0$ for even row-swap parity, $1$ for odd parity, or $-1$ for a degenerate matrix (i.e. singular for square matrices). The merged matrix \inlinecode{lu} has \inlinecode{lu[i][j]} = \inlinecode{l[i][j]} for \inlinecode{i} \textgreater{} \inlinecode{j} and \inlinecode{lu[i][j]} = \inlinecode{u[i][j]} for \inlinecode{i} $\leq$ \inlinecode{j}. Note that the algorithm always yields a unit lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to $1$, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optional output vector \inlinecode{perm} represents $p$: \inlinecode{perm[i]} is the only column containing $1$ in row $i$. Left-multiplying \inlinecode{a} by this permutation matrix gives the product of the separate lower and upper triangular matrices, not the merged storage matrix \inlinecode{lu} itself.
+  \item \inlinecode{lu\_decompose(a, \&perm, eps = 1e-10)} assigns floating-point matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}; it returns $0$ for even row-swap parity, $1$ for odd parity, or $-1$ for a degenerate matrix (i.e. singular for square matrices). The merged matrix stores \inlinecode{l[i][j]} in \inlinecode{lu[i][j]} when \inlinecode{i \textgreater{} j}, and \inlinecode{u[i][j]} otherwise. The diagonal entries \inlinecode{l[i][i]} are always $1$, so they are not explicitly stored. Access general entries of the lower and upper triangular matrices via \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)}. Optional output vector \inlinecode{perm} represents $p$: \inlinecode{perm[i]} is the only column containing $1$ in row \inlinecode{i}. Left-multiplying \inlinecode{a} by this permutation matrix gives the product of the separate lower and upper triangular matrices, not the merged storage matrix \inlinecode{lu} itself.
   \item \inlinecode{solve\_system(a, b, \&x, eps = 1e-10)} solves the system of linear equations $ax = b$ given an $m$ by $n$ floating-point matrix \inlinecode{a} and a length $m$ vector \inlinecode{b}, returning $0$ if there is one solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then the output vector \inlinecode{x} is populated with the solution of length $n$; otherwise, \inlinecode{x} is unchanged.
   \item \inlinecode{det(a)} returns the determinant of an $n$ by $n$ floating-point matrix \inlinecode{a} using LU decomposition.
   \item \inlinecode{inverse(a)} returns the inverse of the $n$ by $n$ floating-point matrix \inlinecode{a}, or \inlinecode{std::nullopt} if \inlinecode{a} is singular.
@@ -6214,7 +6213,9 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Sparse Matrix}
-A sparse matrix stores only nonzero entries, which is useful when the matrix is large but most values are zero. This implementation keeps both row maps and column maps in sync: \inlinecode{row(i)} can iterate all nonzeros in row \inlinecode{i}, while \inlinecode{column(j)} can iterate all nonzeros in column \inlinecode{j}. That bidirectional storage is especially useful for sparse elimination or graph-like matrix operations, where both row updates and column pivot lookups are common.
+A sparse matrix stores only nonzero entries, which is useful when the matrix is large but most values are zero. This implementation keeps both row maps and column maps in sync: \inlinecode{row(i)} can iterate all nonzeros in row \inlinecode{i}, while \inlinecode{col(j)} can iterate all nonzeros in column \inlinecode{j}. That bidirectional storage is especially useful for sparse elimination or graph-like matrix operations, where both row updates and column pivot lookups are common.
+
+The class treats \inlinecode{T\{\}} as additive zero and requires \inlinecode{value == T\{\}} to be a valid zero test.
 
 \begin{compactitem}
   \item \inlinecode{SparseMatrix\textless{}T\textgreater{}(rows, cols)} constructs a \inlinecode{rows} by \inlinecode{cols} sparse matrix.
@@ -6225,7 +6226,7 @@ A sparse matrix stores only nonzero entries, which is useful when the matrix is 
   \item \inlinecode{set(i, j, value)} assigns an entry. Assigning zero erases it from both maps.
   \item \inlinecode{add(i, j, delta)} adds \inlinecode{delta} to an entry. If the result becomes zero, the entry is erased.
   \item \inlinecode{row(i)} returns a map from column index to value for the nonzero entries in row \inlinecode{i}.
-  \item \inlinecode{column(j)} returns a map from row index to value for the nonzero entries in column \inlinecode{j}.
+  \item \inlinecode{col(j)} returns a map from row index to value for the nonzero entries in column \inlinecode{j}.
   \item \inlinecode{swap\_rows(i, j)} swaps two rows while keeping the column maps synchronized.
   \item \inlinecode{transpose()} transposes the matrix in place.
   \item \inlinecode{multiply\_vector(x)} returns the matrix-vector product with vector \inlinecode{x}.
@@ -6233,39 +6234,40 @@ A sparse matrix stores only nonzero entries, which is useful when the matrix is 
   \item \inlinecode{a * b} returns the matrix product, requiring \inlinecode{a.num\_cols()} to equal \inlinecode{b.num\_rows()}. Only pairs of stored entries are ever multiplied.
   \item \inlinecode{a * k} returns \inlinecode{a} scaled by the value \inlinecode{k}. Scaling by zero yields an empty matrix.
   \item Operators \inlinecode{+=}, \inlinecode{-=}, and \inlinecode{*=} assign the corresponding result back into the left operand. In all of these operators, entries that cancel to zero are not stored.
+\end{compactitem}
+
+The elimination routines require field-like arithmetic because they divide by pivots, so use types such as \inlinecode{double}, rational numbers, or modular integers. For floating-point matrices, replace \inlinecode{is\_zero()} with an epsilon comparison if small roundoff values should be erased. At each pivot column, sparse elimination chooses the available row with the fewest stored entries to reduce fill-in, although an unfriendly matrix can still become dense.
+
+\begin{compactitem}
   \item \inlinecode{row\_reduce(a, limit)} converts columns $[0, {\inlinecodemath{limit}})$ of \inlinecode{a} to sparse row echelon form, returning the rank found in those columns.
   \item \inlinecode{det(a)} returns the determinant of a square sparse matrix.
   \item \inlinecode{sparse\_rank(a)} returns the rank of a sparse matrix.
   \item \inlinecode{solve\_system(a, b, \&x)} solves the system $ax = b$, returning $0$ for one solution, $-1$ for no solution, or $-2$ for infinitely many solutions. When one solution exists, \inlinecode{x} is populated.
 \end{compactitem}
 
-The class assumes that \inlinecode{T\{\}} is the additive zero and that \inlinecode{value == T\{\}} is a valid zero test. The elimination routines also require field-like arithmetic because they divide by pivots, so use types such as \inlinecode{double}, rational numbers, or modular integers. For floating-point matrices, replace \inlinecode{is\_zero()} with an epsilon comparison if small roundoff values should be erased.
-
-Sparse elimination chooses, in each pivot column, the available pivot row with the fewest stored entries. This heuristic can reduce fill-in, although sparse elimination can still become dense on unfriendly inputs.
-
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(\log d)$ per call to \inlinecode{get()}, \inlinecode{set()}, and \inlinecode{add()}, where $d$ is the number of nonzeros in the touched row or column.
-  \item $O(1)$ per call to \inlinecode{transpose()} and $O(n)$ per call to \inlinecode{multiply\_vector()}, where $n$ is the number of stored nonzero entries.
+  \item $O(1)$ per call to \inlinecode{transpose()} and $O(z)$ per call to \inlinecode{multiply\_vector()}, where $z$ is the number of stored nonzero entries.
   \item $O((r_i + r_j) \cdot \log d)$ per call to \inlinecode{swap\_rows(i, j)}, where $r_i$ and $r_j$ are the sizes of the two rows.
-  \item $O((n_a + n_b) \cdot \log d)$ per call to \inlinecode{operator+} and \inlinecode{operator-}, where $n_a$ and $n_b$ are the operand nonzero counts.
-  \item $O(n \cdot \log d)$ per call to scalar \inlinecode{operator*}, where $n$ is the number of stored nonzero entries.
+  \item $O((z_a + z_b) \cdot \log d)$ per call to \inlinecode{operator+} and \inlinecode{operator-}, where $z_a$ and $z_b$ are the operand nonzero counts.
+  \item $O(z \cdot \log d)$ per call to scalar \inlinecode{operator*}, where $z$ is the number of stored nonzero entries.
   \item $O(f \cdot \log d)$ per call to \inlinecode{operator*}, where $f$ is the number of scalar products accumulated, that is, the sum of \inlinecode{b.row(k).size()} over every stored entry \inlinecode{a[i][k]}.
   \item $O(f \cdot \log d)$ for sparse elimination, where $f$ is the number of entry updates performed after fill-in and $d$ is a touched row or column size. In the worst case this is still cubic.
   \item $O(f \cdot \log d)$ per call to \inlinecode{det()}, \inlinecode{sparse\_rank()}, and \inlinecode{solve\_system()}.
-  \item $O(1)$ per call to \inlinecode{num\_rows()}, \inlinecode{num\_cols()}, \inlinecode{nonzeros()}, \inlinecode{row()}, and \inlinecode{column()}.
+  \item $O(1)$ per call to \inlinecode{num\_rows()}, \inlinecode{num\_cols()}, \inlinecode{nonzeros()}, \inlinecode{row()}, and \inlinecode{col()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ storage.
-  \item $O(1)$ auxiliary for \inlinecode{get()}, \inlinecode{set()}, \inlinecode{add()}, \inlinecode{row()}, \inlinecode{column()}, and \inlinecode{transpose()}.
+  \item $O(z)$ storage.
+  \item $O(1)$ auxiliary for \inlinecode{get()}, \inlinecode{set()}, \inlinecode{add()}, \inlinecode{row()}, \inlinecode{col()}, and \inlinecode{transpose()}.
   \item $O(r_i + r_j)$ auxiliary for \inlinecode{swap\_rows(i, j)}.
-  \item $O(R)$ auxiliary for \inlinecode{multiply\_vector()}.
+  \item $O(m)$ auxiliary for \inlinecode{multiply\_vector()}, where $m$ is the number of rows.
   \item $O(c)$ auxiliary for \inlinecode{operator*}, where $c$ is the largest number of nonzeros in one result row.
-  \item $O(n + R)$ auxiliary for elimination, in addition to the copied matrix used by \inlinecode{det()} and \inlinecode{sparse\_rank()} or the augmented matrix used by \inlinecode{solve\_system()}.
+  \item $O(z + m)$ auxiliary for elimination, in addition to the copied matrix used by \inlinecode{det()} and \inlinecode{sparse\_rank()} or the augmented matrix used by \inlinecode{solve\_system()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -6320,7 +6322,7 @@ class SparseMatrix {
   }
 
   const std::map<int, T> &row(int i) const { return rvals[i]; }
-  const std::map<int, T> &column(int j) const { return cvals[j]; }
+  const std::map<int, T> &col(int j) const { return cvals[j]; }
 
   void swap_rows(int i, int j) {
     if (i == j) {
@@ -6429,7 +6431,7 @@ int row_reduce(SparseMatrix<T> &a, int limit) {
   int r = 0;
   for (int c = 0; c < limit && r < a.num_rows(); c++) {
     int pivot = -1;
-    for (const auto &[i, value] : a.column(c)) {
+    for (const auto &[i, value] : a.col(c)) {
       if (i >= r && (pivot == -1 || a.row(i).size() < a.row(pivot).size())) {
         pivot = i;
       }
@@ -6441,7 +6443,7 @@ int row_reduce(SparseMatrix<T> &a, int limit) {
     T inv_pivot = T{1} / a.get(r, c);
     std::vector<std::pair<int, T>> pivot_row(a.row(r).begin(), a.row(r).end());
     std::vector<int> touched_rows;
-    for (const auto &[i, value] : a.column(c)) {
+    for (const auto &[i, value] : a.col(c)) {
       if (i > r) {
         touched_rows.push_back(i);
       }
@@ -6467,7 +6469,7 @@ T det(SparseMatrix<T> a) {
   T det = 1;
   for (int c = 0; c < n && r < n; c++) {
     int pivot = -1;
-    for (const auto &[i, value] : a.column(c)) {
+    for (const auto &[i, value] : a.col(c)) {
       if (i >= r && (pivot == -1 || a.row(i).size() < a.row(pivot).size())) {
         pivot = i;
       }
@@ -6484,7 +6486,7 @@ T det(SparseMatrix<T> a) {
     T inv_pivot = T{1} / pivot_value;
     std::vector<std::pair<int, T>> pivot_row(a.row(r).begin(), a.row(r).end());
     std::vector<int> touched_rows;
-    for (const auto &[i, value] : a.column(c)) {
+    for (const auto &[i, value] : a.col(c)) {
       if (i > r) {
         touched_rows.push_back(i);
       }
@@ -6574,7 +6576,7 @@ int main() {
   assert(a.get(0, 1) == 3);
   assert(a.get(0, 0) == 0);
   assert(a.row(0).begin()->first == 1);
-  assert(a.column(2).begin()->first == 1);
+  assert(a.col(2).begin()->first == 1);
 
   vector<int64_t> x{10, 20, 30, 40};
   assert((a.multiply_vector(x) == vector<int64_t>{60, 120, 280}));
@@ -6583,7 +6585,7 @@ int main() {
   assert(a.get(0, 1) == 0);
   assert(a.nonzeros() == 2);
   assert(a.row(0).empty());
-  assert(a.column(1).empty());
+  assert(a.col(1).empty());
 
   a.transpose();
   assert(a.num_rows() == 4 && a.num_cols() == 3);
@@ -6620,7 +6622,7 @@ int main() {
 
   SparseMatrix<int64_t> scaled = p * 3;
   assert(scaled.get(0, 0) == 3 && scaled.get(0, 1) == 6 && scaled.get(1, 1) == 3);
-  assert((p * int64_t{0}).nonzeros() == 0);
+  assert((p * 0LL).nonzeros() == 0);
 
   SparseMatrix<int64_t> acc = p;
   acc += q;
@@ -6661,7 +6663,7 @@ int main() {
 }
 \end{lstlisting}
 
-\section{\texorpdfstring{Polynomials}{6.6 Polynomials}}
+\section{\texorpdfstring{Polynomials and Linear Recurrences}{6.6 Polynomials and Linear Recurrences}}
 \setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Number Theoretic Transform}
@@ -6670,7 +6672,7 @@ The number theoretic transform (NTT) is the discrete Fourier transform carried o
 The transform replaces a coefficient vector with its evaluations at the powers of a root of unity; pointwise multiplying two such evaluation vectors and transforming back gives their convolution. This is the same divide-and-conquer butterfly as the fast Fourier transform, with the root of unity and all arithmetic taken modulo the prime.
 
 \begin{compactitem}
-  \item \inlinecode{ntt(a, invert)} transforms the vector \inlinecode{a} in place, whose length must be a power of two. The forward transform uses \inlinecode{invert = false}; the inverse uses \inlinecode{invert = true}.
+  \item \inlinecode{ntt(a, invert = false)} transforms the vector \inlinecode{a} in place, whose length must be a power of two. The forward transform uses \inlinecode{invert = false}; the inverse uses \inlinecode{invert = true}.
   \item \inlinecode{convolve(a, b)} returns the convolution of \inlinecode{a} and \inlinecode{b} modulo the prime, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length ${\inlinecodemath{a.size()}} + {\inlinecodemath{b.size()}} - 1$, or is empty if either input is empty. Input values are assumed to lie in $[0, {\inlinecodemath{MOD}})$. Small inputs use direct multiplication to avoid NTT overhead.
 \end{compactitem}
 
@@ -6711,7 +6713,7 @@ int64_t powmod(int64_t b, int64_t e, int64_t m) {
   return res;
 }
 
-void ntt(std::vector<int64_t> &a, bool invert) {
+void ntt(std::vector<int64_t> &a, bool invert = false) {
   int n = static_cast<int>(a.size());
   assert(n > 0 && (n & (n - 1)) == 0 && n <= (1 << MAX_POWER_OF_TWO));
   for (int i = 1, j = 0; i < n; i++) {
@@ -6768,8 +6770,8 @@ std::vector<int64_t> convolve(std::vector<int64_t> a, std::vector<int64_t> b) {
   assert(n <= (1 << MAX_POWER_OF_TWO));
   a.resize(n);
   b.resize(n);
-  ntt(a, false);
-  ntt(b, false);
+  ntt(a);
+  ntt(b);
   for (int i = 0; i < n; i++) {
     a[i] = a[i] * b[i] % MOD;
   }
@@ -6802,7 +6804,7 @@ The fast Fourier transform (FFT) multiplies two polynomials, or equivalently con
 The trade-off is precision. Complex arithmetic in double precision accumulates rounding error, so the result is recovered by rounding each output to the nearest integer; this is reliable as long as the true coefficients stay well within the roughly 15 significant decimal digits a \inlinecode{double} can hold. When exact results modulo a prime are required, or coefficients are large, prefer the number theoretic transform; use the FFT for real-valued convolution or big-integer multiplication.
 
 \begin{compactitem}
-  \item \inlinecode{fft(a, invert)} transforms the complex vector \inlinecode{a} in place, whose length must be a power of two. The forward transform uses \inlinecode{invert = false}; the inverse uses \inlinecode{invert = true}.
+  \item \inlinecode{fft(a, invert = false)} transforms the complex vector \inlinecode{a} in place, whose length must be a power of two. The forward transform uses \inlinecode{invert = false}; the inverse uses \inlinecode{invert = true}.
   \item \inlinecode{convolve(a, b)} returns the convolution of two integer sequences \inlinecode{a} and \inlinecode{b}, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length ${\inlinecodemath{a.size()}} + {\inlinecodemath{b.size()}} - 1$, or is empty if either input is empty, with each entry rounded to the nearest integer. Small inputs use direct multiplication to avoid FFT overhead.
 \end{compactitem}
 
@@ -6831,11 +6833,11 @@ Overflow warning: The exact coefficients and the direct branch's intermediate pr
 #include <utility>
 #include <vector>
 
-typedef std::complex<double> cd;
-const double PI = acos(-1.0);
+using cdbl = std::complex<double>;
+const double PI = std::acos(-1.0);
 const int NAIVE_CUTOFF = 150;
 
-void fft(std::vector<cd> &a, bool invert) {
+void fft(std::vector<cdbl> &a, bool invert = false) {
   int n = static_cast<int>(a.size());
   assert(n > 0 && (n & (n - 1)) == 0);
   for (int i = 1, j = 0; i < n; i++) {
@@ -6850,11 +6852,11 @@ void fft(std::vector<cd> &a, bool invert) {
   }
   for (int len = 2; len <= n; len <<= 1) {
     double angle = 2 * PI / len * (invert ? -1 : 1);
-    cd root(cos(angle), sin(angle));
+    cdbl root(std::cos(angle), std::sin(angle));
     for (int i = 0; i < n; i += len) {
-      cd w(1);
+      cdbl w(1);
       for (int k = 0; k < len / 2; k++) {
-        cd u = a[i + k], v = a[i + k + len / 2] * w;
+        cdbl u = a[i + k], v = a[i + k + len / 2] * w;
         a[i + k] = u + v;
         a[i + k + len / 2] = u - v;
         w *= root;
@@ -6862,7 +6864,7 @@ void fft(std::vector<cd> &a, bool invert) {
     }
   }
   if (invert) {
-    for (cd &x : a) {
+    for (cdbl &x : a) {
       x /= n;
     }
   }
@@ -6886,18 +6888,18 @@ std::vector<int64_t> convolve(const std::vector<int64_t> &a, const std::vector<i
   while (n < result_size) {
     n <<= 1;
   }
-  std::vector<cd> fa(a.begin(), a.end()), fb(b.begin(), b.end());
+  std::vector<cdbl> fa(a.begin(), a.end()), fb(b.begin(), b.end());
   fa.resize(n);
   fb.resize(n);
-  fft(fa, false);
-  fft(fb, false);
+  fft(fa);
+  fft(fb);
   for (int i = 0; i < n; i++) {
     fa[i] *= fb[i];
   }
   fft(fa, true);
   std::vector<int64_t> res(result_size);
   for (int i = 0; i < result_size; i++) {
-    res[i] = llround(fa[i].real());
+    res[i] = std::llround(fa[i].real());
   }
   return res;
 }
@@ -6931,19 +6933,25 @@ The code aliases one modular field element as \inlinecode{Coeff} and one coeffic
   \item \inlinecode{multiply(a, b)} returns \inlinecode{a * b}.
   \item \inlinecode{derivative(a)} returns the formal derivative of \inlinecode{a}.
   \item \inlinecode{antiderivative(a)} returns the formal antiderivative of \inlinecode{a} with constant term zero.
-  \item \inlinecode{inverse(a, n)} returns the first \inlinecode{n} coefficients of \inlinecode{1 / a}, requiring \inlinecode{a[0]} to be nonzero.
-  \item \inlinecode{series\_divide(a, b, n)} returns the first \inlinecode{n} coefficients of the formal power series \inlinecode{a / b}, requiring \inlinecode{b[0]} to be nonzero.
-  \item \inlinecode{log(a, n)} returns the first \inlinecode{n} coefficients of $\log a$, requiring \inlinecode{a[0]} to be $1$.
-  \item \inlinecode{exp(a, n)} returns the first \inlinecode{n} coefficients of $\exp a$, requiring \inlinecode{a[0]} to be $0$.
-  \item \inlinecode{sqrt(a, n)} returns the first \inlinecode{n} coefficients of the square root of \inlinecode{a} whose constant term is $1$, requiring \inlinecode{a[0]} to be $1$.
-  \item \inlinecode{power(a, k, n)} returns the first \inlinecode{n} coefficients of $a^k$ for a nonnegative \inlinecode{uint64\_t} exponent \inlinecode{k}; \inlinecode{k = 0} returns the constant series $1$.
-  \item \inlinecode{divide(a, b)} returns the polynomial quotient of \inlinecode{a / b}, requiring \inlinecode{b} to be nonzero.
-  \item \inlinecode{modulo(a, b)} returns the polynomial remainder of \inlinecode{a / b}, requiring \inlinecode{b} to be nonzero.
 \end{compactitem}
 
-The inverse is a formal power series inverse modulo $x^n$: it finds $b$ such that $a \cdot b \equiv 1 \pmod{x^n}$. Series division multiplies by this inverse directly. Euclidean polynomial division instead uses the standard reversal trick: reverse both polynomials, compute a truncated series inverse of the reversed divisor, multiply, truncate, and reverse back.
+For formal power series, the inverse modulo $x^n$ is a series $b$ satisfying $a \cdot b \equiv 1 \pmod{x^n}$. Series division uses this inverse, and logarithm follows from $(\log a)' = a'/a$. Exponential and square root use Newton iteration, doubling the number of correct coefficients each round. Power factors $a = x^t c b$, where $b(0) = 1$, and applies $a^k = x^{tk} c^k \exp(k \log b)$. To handle a square root whose constant term is not $1$, factor \inlinecode{a[0]} out and multiply back one of its modular square roots (see 6.3.5); if the lowest nonzero coefficient sits at an odd power of $x$, no square root exists.
 
-The logarithm follows from $(\log a)' = a'/a$, integrating the truncated quotient. The exponential and square root use Newton iteration, which doubles the number of correct coefficients each round and so costs the same asymptotically as the final multiplication. To take a square root whose constant term is not $1$, factor \inlinecode{a[0]} out and multiply back one of its modular square roots (see 6.3.5); if the lowest nonzero coefficient sits at an odd power of $x$, no square root exists. Power factors $a = x^t c b$, where $b(0) = 1$, and uses $a^k = x^{tk} c^k \exp(k \log b)$.
+\begin{compactitem}
+  \item \inlinecode{inverse(a, n)} returns the first \inlinecode{n} coefficients of \inlinecode{1 / a}, requiring \inlinecode{a[0]} to be nonzero.
+  \item \inlinecode{series\_divide(a, b, n)} returns the first \inlinecode{n} coefficients of the formal power series \inlinecode{a / b}, requiring \inlinecode{b[0]} to be nonzero.
+  \item \inlinecode{log(a, n)} returns the first \inlinecode{n} coefficients of $\log(a)$, requiring \inlinecode{a[0]} to be $1$.
+  \item \inlinecode{exp(a, n)} returns the first \inlinecode{n} coefficients of $\exp(a)$, requiring \inlinecode{a[0]} to be $0$.
+  \item \inlinecode{sqrt(a, n)} returns the first \inlinecode{n} coefficients of the square root of \inlinecode{a} whose constant term is $1$, requiring \inlinecode{a[0]} to be $1$.
+  \item \inlinecode{power(a, k, n)} returns the first \inlinecode{n} coefficients of $a^k$ for a nonnegative \inlinecode{uint64\_t} exponent \inlinecode{k}; \inlinecode{k = 0} returns the constant series $1$.
+\end{compactitem}
+
+Euclidean polynomial division uses the reversal trick: reverse both polynomials, compute a truncated series inverse of the reversed divisor, multiply, truncate, and reverse back.
+
+\begin{compactitem}
+  \item \inlinecode{div(a, b)} returns the polynomial quotient of \inlinecode{a / b}, requiring \inlinecode{b} to be nonzero.
+  \item \inlinecode{mod(a, b)} returns the polynomial remainder of \inlinecode{a / b}, requiring \inlinecode{b} to be nonzero.
+\end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -6953,7 +6961,7 @@ The logarithm follows from $(\log a)' = a'/a$, integrating the truncated quotien
   \item $O(n \log n)$ per call to \inlinecode{inverse()} and \inlinecode{series\_divide()}, where $n$ is the requested length.
   \item $O(n \log n)$ per call to \inlinecode{log()}, \inlinecode{exp()}, and \inlinecode{sqrt()}, where $n$ is the requested length. The exponential carries the largest constant, since every Newton round computes a logarithm.
   \item $O(n \log n + \log k)$ per call to \inlinecode{power()}, where $n$ is the requested length.
-  \item $O(n \log n)$ per call to \inlinecode{divide()} and \inlinecode{modulo()}, where $n$ is the padded multiplication length.
+  \item $O(n \log n)$ per call to \inlinecode{div()} and \inlinecode{mod()}, where $n$ is the padded multiplication length.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(1)$ auxiliary per call to \inlinecode{eval()} and $O(n)$ auxiliary for all other operations.
@@ -7236,7 +7244,7 @@ Poly power(const Poly &a, uint64_t k, int n) {
   return res;
 }
 
-Poly divide(Poly a, Poly b) {
+Poly div(Poly a, Poly b) {
   trim(a);
   trim(b);
   assert(!b.empty());
@@ -7254,8 +7262,8 @@ Poly divide(Poly a, Poly b) {
   return q;
 }
 
-Poly modulo(const Poly &a, const Poly &b) {
-  Poly q = divide(a, b);
+Poly mod(const Poly &a, const Poly &b) {
+  Poly q = div(a, b);
   Poly res = subtract(a, multiply(q, b));
   if (res.size() >= b.size()) {
     res.resize(b.size() - 1);
@@ -7294,8 +7302,8 @@ int main() {
   // (x^3 - 1) / (x - 1) = x^2 + x + 1, remainder 0.
   Poly dividend{MOD - 1, 0, 0, 1};
   Poly divisor{MOD - 1, 1};
-  assert((divide(dividend, divisor) == Poly{1, 1, 1}));
-  assert(modulo(dividend, divisor).empty());
+  assert((div(dividend, divisor) == Poly{1, 1, 1}));
+  assert(mod(dividend, divisor).empty());
 
   // exp(x) = 1 + x + x^2/2 + x^3/6 + ..., checked by clearing each denominator.
   Poly exp_x = exp({0, 1}, 4);
@@ -7329,7 +7337,114 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Berlekamp-Massey}
+\subsection{Polynomial Interpolation}
+Recovers the unique polynomial of degree less than $n$ that passes through $n$ given points, working modulo a prime. The $x$ coordinates must be distinct; the $y$ coordinates may be anything. Two operations are provided: reconstructing the full coefficient vector, and evaluating the interpolating polynomial at a single point without ever forming the coefficients.
+
+Coefficient recovery uses Newton's divided differences. It first replaces the sample values by their successive divided differences in place, then expands the Newton basis $1$, $(x - x_0)$, $(x - x_0)(x - x_1)$, $\ldots$ into ordinary coefficients by multiplying through one factor at a time. Point evaluation instead applies the Lagrange formula directly, summing each sample weighted by the product of $(t - x_j) / (x_k - x_j)$ over the other nodes. Coefficient recovery performs $O(n^{2})$ modular inverses, while point evaluation performs $n$.
+
+\begin{compactitem}
+  \item \inlinecode{interpolate(x, y)} returns the coefficients $a_0, ..., a_{n-1}$ (constant term first) of the polynomial $P$ with $P({\inlinecodemath{x[i]}}) = {\inlinecodemath{y[i]}}$, modulo \inlinecode{MOD}. The entries of \inlinecode{x} must be distinct modulo \inlinecode{MOD}.
+  \item \inlinecode{interpolate\_at(x, y, t)} returns $P({\inlinecodemath{t}})$ modulo \inlinecode{MOD} for that same polynomial, without building its coefficients.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n^{2} \log p)$ per call to \inlinecode{interpolate()} and $O(n^{2} + n \log p)$ per call to \inlinecode{interpolate\_at()}, where $n$ is the number of points and $p$ is \inlinecode{MOD}.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cstdint>
+#include <vector>
+
+const int64_t MOD = 998244353;
+
+int64_t powmod(int64_t b, int64_t e, int64_t m) {
+  int64_t res = 1;
+  for (b %= m; e > 0; e >>= 1) {
+    if (e & 1) {
+      res = res * b % m;
+    }
+    b = b * b % m;
+  }
+  return res;
+}
+
+int64_t modnorm(int64_t a) { return (a %= MOD) < 0 ? a + MOD : a; }
+int64_t addmod(int64_t a, int64_t b) { return modnorm(modnorm(a) + modnorm(b)); }
+int64_t submod(int64_t a, int64_t b) { return modnorm(modnorm(a) - modnorm(b)); }
+int64_t inv(int64_t a) { return powmod(modnorm(a), MOD - 2, MOD); }
+
+std::vector<int64_t> interpolate(std::vector<int64_t> x, std::vector<int64_t> y) {
+  assert(x.size() == y.size());
+  int n = static_cast<int>(x.size());
+  for (int i = 0; i < n; i++) {
+    x[i] = modnorm(x[i]);
+    y[i] = modnorm(y[i]);
+  }
+  // Replace y by its divided differences in place.
+  for (int k = 0; k < n; k++) {
+    for (int i = k + 1; i < n; i++) {
+      y[i] = submod(y[i], y[k]) * inv(submod(x[i], x[k])) % MOD;
+    }
+  }
+  // Expand the Newton basis into ordinary coefficients.
+  std::vector<int64_t> res(n), temp(n);
+  temp[0] = 1;
+  for (int k = 0; k < n; k++) {
+    int64_t last = 0;
+    for (int i = 0; i < n; i++) {
+      res[i] = addmod(res[i], y[k] * temp[i] % MOD);
+      int64_t old = temp[i];
+      temp[i] = last;
+      last = old;
+      temp[i] = submod(temp[i], last * x[k] % MOD);
+    }
+  }
+  return res;
+}
+
+int64_t interpolate_at(const std::vector<int64_t> &x, const std::vector<int64_t> &y, int64_t t) {
+  assert(x.size() == y.size());
+  int n = static_cast<int>(x.size());
+  t = modnorm(t);
+  int64_t res = 0;
+  for (int k = 0; k < n; k++) {
+    int64_t num = 1, den = 1;
+    for (int j = 0; j < n; j++) {
+      if (j != k) {
+        num = num * submod(t, x[j]) % MOD;
+        den = den * submod(x[k], x[j]) % MOD;
+      }
+    }
+    res = addmod(res, modnorm(y[k]) * num % MOD * inv(den) % MOD);
+  }
+  return res;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // P(x) = x^2 + 2x + 3 sampled at x = 0, 1, 2 gives y = 3, 6, 11.
+  vector<int64_t> x{0, 1, 2}, y{3, 6, 11};
+  assert((interpolate(x, y) == vector<int64_t>{3, 2, 1}));
+  assert(interpolate_at(x, y, 5) == 38);  // 25 + 10 + 3.
+
+  // Non-consecutive nodes for P(x) = 2x^3 - x + 4.
+  auto poly = [](int64_t t) { return modnorm(2 * t * t * t - t + 4); };
+  vector<int64_t> xs{2, 5, 7, 10}, ys;
+  for (int64_t v : xs) {
+    ys.push_back(poly(v));
+  }
+  assert((interpolate(xs, ys) == vector<int64_t>{4, MOD - 1, 0, 2}));  // 4 - x + 2x^3.
+  assert(interpolate_at(xs, ys, 13) == poly(13));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Linear Recurrence (Berlekamp-Massey)}
 The Berlekamp-Massey algorithm finds the shortest linear recurrence that generates a given sequence over a field. Given the first terms of a sequence taken modulo a prime, it returns coefficients $\Lambda_0, \dots, \Lambda_{L-1}$ of the minimal recurrence $s_i = \Lambda_0 \, s_{i-1} + \Lambda_1 \, s_{i-2} + \dots + \Lambda_{L-1} \, s_{i-L} \pmod{p}$, holding for every $i \geq L$. It scans the sequence once, maintaining a current candidate recurrence and correcting it whenever a term fails to match the prediction, using the last position where a correction was needed. The order $L$ never decreases, and $2L$ terms suffice to determine a recurrence of order $L$. This is the standard tool for guessing a linear recurrence from sampled values, after which the sequence can be extended or its $n$-th term found by fast methods.
 
 An order-$L$ recurrence generally needs at least $2L$ terms to be determined, so the result is most trustworthy when \inlinecode{s} is comfortably longer than twice the returned length. If the returned $L$ is close to $n / 2$, the sequence is under-determined and the recurrence may be a spurious overfit.
@@ -7524,113 +7639,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Polynomial Interpolation}
-Recovers the unique polynomial of degree less than $n$ that passes through $n$ given points, working modulo a prime. The $x$ coordinates must be distinct; the $y$ coordinates may be anything. Two operations are provided: reconstructing the full coefficient vector, and evaluating the interpolating polynomial at a single point without ever forming the coefficients.
-
-Coefficient recovery uses Newton's divided differences. It first replaces the sample values by their successive divided differences in place, then expands the Newton basis $1$, $(x - x_0)$, $(x - x_0)(x - x_1)$, $\ldots$ into ordinary coefficients by multiplying through one factor at a time. Point evaluation instead applies the Lagrange formula directly, summing each sample weighted by the product of $(t - x_j) / (x_k - x_j)$ over the other nodes. Coefficient recovery performs $O(n^{2})$ modular inverses, while point evaluation performs $n$.
-
-\begin{compactitem}
-  \item \inlinecode{interpolate(x, y)} returns the coefficients $a_0, ..., a_{n-1}$ (constant term first) of the polynomial $P$ with $P({\inlinecodemath{x[i]}}) = {\inlinecodemath{y[i]}}$, modulo \inlinecode{MOD}. The entries of \inlinecode{x} must be distinct modulo \inlinecode{MOD}.
-  \item \inlinecode{interpolate\_at(x, y, t)} returns $P({\inlinecodemath{t}})$ modulo \inlinecode{MOD} for that same polynomial, without building its coefficients.
-\end{compactitem}
-
-\textbf{Time Complexity}: $O(n^{2} \log p)$ per call to \inlinecode{interpolate()} and $O(n^{2} + n \log p)$ per call to \inlinecode{interpolate\_at()}, where $n$ is the number of points and $p$ is \inlinecode{MOD}.
-
-\textbf{Space Complexity}: $O(n)$ auxiliary.
-
-\begin{lstlisting}[language=C++]
-#include <cassert>
-#include <cstdint>
-#include <vector>
-
-const int64_t MOD = 998244353;
-
-int64_t powmod(int64_t b, int64_t e, int64_t m) {
-  int64_t res = 1;
-  for (b %= m; e > 0; e >>= 1) {
-    if (e & 1) {
-      res = res * b % m;
-    }
-    b = b * b % m;
-  }
-  return res;
-}
-
-int64_t modnorm(int64_t a) { return (a %= MOD) < 0 ? a + MOD : a; }
-int64_t addmod(int64_t a, int64_t b) { return modnorm(modnorm(a) + modnorm(b)); }
-int64_t submod(int64_t a, int64_t b) { return modnorm(modnorm(a) - modnorm(b)); }
-int64_t inv(int64_t a) { return powmod(modnorm(a), MOD - 2, MOD); }
-
-std::vector<int64_t> interpolate(std::vector<int64_t> x, std::vector<int64_t> y) {
-  assert(x.size() == y.size());
-  int n = static_cast<int>(x.size());
-  for (int i = 0; i < n; i++) {
-    x[i] = modnorm(x[i]);
-    y[i] = modnorm(y[i]);
-  }
-  // Replace y by its divided differences in place.
-  for (int k = 0; k < n; k++) {
-    for (int i = k + 1; i < n; i++) {
-      y[i] = submod(y[i], y[k]) * inv(submod(x[i], x[k])) % MOD;
-    }
-  }
-  // Expand the Newton basis into ordinary coefficients.
-  std::vector<int64_t> res(n), temp(n);
-  temp[0] = 1;
-  for (int k = 0; k < n; k++) {
-    int64_t last = 0;
-    for (int i = 0; i < n; i++) {
-      res[i] = addmod(res[i], y[k] * temp[i] % MOD);
-      int64_t old = temp[i];
-      temp[i] = last;
-      last = old;
-      temp[i] = submod(temp[i], last * x[k] % MOD);
-    }
-  }
-  return res;
-}
-
-int64_t interpolate_at(const std::vector<int64_t> &x, const std::vector<int64_t> &y, int64_t t) {
-  assert(x.size() == y.size());
-  int n = static_cast<int>(x.size());
-  t = modnorm(t);
-  int64_t res = 0;
-  for (int k = 0; k < n; k++) {
-    int64_t num = 1, den = 1;
-    for (int j = 0; j < n; j++) {
-      if (j != k) {
-        num = num * submod(t, x[j]) % MOD;
-        den = den * submod(x[k], x[j]) % MOD;
-      }
-    }
-    res = addmod(res, modnorm(y[k]) * num % MOD * inv(den) % MOD);
-  }
-  return res;
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-using namespace std;
-
-int main() {
-  // P(x) = x^2 + 2x + 3 sampled at x = 0, 1, 2 gives y = 3, 6, 11.
-  vector<int64_t> x{0, 1, 2}, y{3, 6, 11};
-  assert((interpolate(x, y) == vector<int64_t>{3, 2, 1}));
-  assert(interpolate_at(x, y, 5) == 38);  // 25 + 10 + 3.
-
-  // Non-consecutive nodes for P(x) = 2x^3 - x + 4.
-  auto poly = [](int64_t t) { return modnorm(2 * t * t * t - t + 4); };
-  vector<int64_t> xs{2, 5, 7, 10}, ys;
-  for (int64_t v : xs) {
-    ys.push_back(poly(v));
-  }
-  assert((interpolate(xs, ys) == vector<int64_t>{4, MOD - 1, 0, 2}));  // 4 - x + 2x^3.
-  assert(interpolate_at(xs, ys, 13) == poly(13));
-  return 0;
-}
-\end{lstlisting}
 
 \section{\texorpdfstring{Game Theory}{6.7 Game Theory}}
 \setcounter{section}{7}
@@ -7643,7 +7651,7 @@ This is the base case of the Sprague-Grundy theorem: every finite impartial game
 \begin{compactitem}
   \item \inlinecode{nim\_sum(piles)} returns the XOR of all pile sizes.
   \item \inlinecode{first\_player\_wins(piles)} returns whether the player to move has a winning strategy.
-  \item \inlinecode{winning\_move(piles)} returns a move (\inlinecode{pile}, \inlinecode{new\_size}) that moves to XOR 0, or $(-1, -1)$ if the position is losing.
+  \item \inlinecode{winning\_move(piles)} returns a move (\inlinecode{pile}, \inlinecode{new\_size}) that moves to XOR $0$, or $(-1, -1)$ if the position is losing.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ per call, where $n$ is the number of piles.
@@ -7733,7 +7741,7 @@ const bool nim_product_init = [] {
   for (int i = 0; i < 64; i++) {
     for (int j = 0; j < 64; j++) {
       if ((i & j) == 0) {
-        bit_prod[i][j] = uint64_t{1} << (i | j);  // Distinct Fermat powers multiply like 2^(i|j).
+        bit_prod[i][j] = 1ULL << (i | j);  // Distinct Fermat powers multiply like 2^(i|j).
       } else {
         int a = (i & j) & -(i & j);  // Lowest Fermat power shared by both exponents.
         bit_prod[i][j] = bit_prod[i ^ a][j] ^ bit_prod[(i ^ a) | (a - 1)][(j ^ a) | (i & (a - 1))];
@@ -7804,13 +7812,13 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Sprague-Grundy}
+\subsection{Sprague-Grundy Theorem}
 Computes Grundy numbers for finite impartial games. The Grundy number of a game position is the minimum excluded nonnegative integer (MEX) of the Grundy numbers reachable in one move. A position is losing exactly when its Grundy number is $0$.
 
 For a sum of independent impartial games, the combined Grundy number is the XOR of the component Grundy numbers. This is the Sprague-Grundy theorem.
 
 \begin{compactitem}
-  \item \inlinecode{subtraction\_game\_grundy(max\_stones, moves)} computes Grundy numbers for a game where a move subtracts one positive value in \inlinecode{moves} from the pile. Nonpositive values are ignored.
+  \item \inlinecode{subtraction\_game\_grundy(max\_stones, moves)} computes Grundy numbers for a game where a move subtracts one positive value in \inlinecode{moves} from the pile. It returns a vector of length \inlinecode{max\_stones + 1}, whose element \inlinecode{grundy[stones]} is the Grundy number for a pile of that size. Nonpositive moves are ignored.
   \item \inlinecode{sum\_grundy(grundies)} returns the XOR of component Grundy numbers.
 \end{compactitem}
 

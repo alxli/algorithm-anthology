@@ -15,11 +15,10 @@ Both `gap_cost` and `sub_cost` must be nonnegative.
 
 - `edit_distance(s1, s2)` returns the Levenshtein edit distance between strings `s1` and `s2`.
 - `align_sequences(s1, s2, gap_cost, sub_cost)` returns a pair of aligned strings for strings `s1`
-  and `s2`, using a classic dynamic programming approach. This implementation first computes
-  `dp[i][j]` (the cost of aligning the length $i$ prefix of `s1` with the length $j$ prefix of `s2`)
-  before following the path backwards to construct the answer. For $`gap_cost` = `sub_cost` = 1$,
-  `dp[n][m]` will be the Levenshtein edit distance, where $n$ and $m$ are the lengths of `s1` and
-  `s2`, respectively.
+  and `s2`, using a classic dynamic programming approach. It first computes $dp(i, j)$, the cost of
+  aligning the length-$i$ prefix of `s1` with the length-$j$ prefix of `s2`, before following the
+  table backward to construct the answer. For $`gap_cost` = `sub_cost` = 1$, $dp(n, m)$ is the
+  Levenshtein edit distance, where $n$ and $m$ are the lengths of `s1` and `s2`, respectively.
 - `hirschberg_align(s1, s2, gap_cost, sub_cost)` returns the sequence alignment of strings `s1` and
   `s2` using the more memory efficient Hirschberg's algorithm.
 

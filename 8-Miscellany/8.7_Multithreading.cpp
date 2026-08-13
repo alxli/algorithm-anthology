@@ -7,7 +7,8 @@ threads, so use it only when the environment allows it.
 - `parallel_for(n, threads, f)` runs `f(i)` once for each $0 \leq `i` < `n`$, splitting the indices
   among at most `threads` worker threads.
 - `parallel_cases(cases, threads, solve)` solves independent test cases in parallel and returns the
-  outputs in the original case order.
+  outputs in the original case order, using at most `threads` workers and calling
+  `solve(case, output)` for each case.
 
 Each call to `f(i)` must be safe to run concurrently with the others. If it writes shared state, use
 separate output slots or synchronization.
@@ -60,7 +61,7 @@ int main() {
   assert(squares[17] == 289);
   assert(accumulate(squares.begin(), squares.end(), 0LL) == 332833500);
 
-  vector<int> cases = {3, 1, 4, 2};
+  vector<int> cases{3, 1, 4, 2};
   auto out =
       parallel_cases(cases, 2, [](int x, ostringstream &os) { os << x << "^2 = " << x * x; });
   assert((out == vector<string>{"3^2 = 9", "1^2 = 1", "4^2 = 16", "2^2 = 4"}));

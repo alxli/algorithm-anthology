@@ -36,14 +36,15 @@ queries, and `compose_deltas(old, d)` would return `old + d`.
   node `v`.
 - `update(u, v, d)` modifies all the values on the path from node `u` to node `v` by applying the
   delta `d`.
+
+The forest is unrooted: a tree's root is whichever node was most recently established as such.
+`reroot(u)` sets it explicitly, while `link`, `query`, and `update` do so implicitly; the latter two
+use their first argument. The root-sensitive operations below are relative to that current root, so
+call `reroot(r)` first when a specific root `r` is intended.
+
 - `reroot(u)` makes node `u` the root of its tree.
 - `find_root(u)` returns the label of the root of the tree containing node `u`.
 - `lca(u, v)` returns the lowest common ancestor of `u` and `v` relative to the tree's current root.
-
-The forest is unrooted: a tree's root is whichever node was most recently established as such.
-`reroot(u)` sets it explicitly, while `link`, `query`, and `update` reroot implicitly (the latter
-two at their first argument). `find_root(u)` and `lca(u, v)` are therefore relative to the current
-root, so call `reroot(r)` first whenever a specific root `r` is intended.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `trees()`.

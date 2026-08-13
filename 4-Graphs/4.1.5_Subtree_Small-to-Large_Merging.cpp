@@ -81,19 +81,18 @@ int main() {
   add_edge(2, 5);
   vector<int> color{0, 1, 0, 2, 1, 2};
   vector<int> ans(6);
+  using Summary = unordered_map<int, int>;
   auto init = [&](int u) {
-    unordered_map<int, int> freq;
+    Summary freq;
     freq[color[u]] = 1;
     return freq;
   };
-  auto merge = [](unordered_map<int, int> &big, const unordered_map<int, int> &small) {
+  auto merge = [](Summary &big, const Summary &small) {
     for (const auto &[c, cnt] : small) {
       big[c] += cnt;
     }
   };
-  auto answer = [&](int u, const unordered_map<int, int> &freq) {
-    ans[u] = static_cast<int>(freq.size());
-  };
+  auto answer = [&](int u, const Summary &freq) { ans[u] = static_cast<int>(freq.size()); };
   subtree_small_to_large_merge(adj, 0, init, merge, answer);
   assert((ans == vector<int>{3, 2, 2, 1, 1, 1}));
   return 0;

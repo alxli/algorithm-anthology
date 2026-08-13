@@ -19,12 +19,21 @@ KNOWN_LONG_DOCSTRING_LINES = {
 }
 
 EXAMPLE_OUTPUT_WITHOUT_DIRECT_PRINT = {
-    Path("8-Miscellany/8.4_Debugging.cpp"),
+    Path("8-Miscellany/8.3_Debugging.cpp"),
 }
 
 EXAMPLE_STD_QUALIFICATION_ALLOWLIST = {
     Path("1-Elementary-Algorithms/1.1.3_Array_Rotation.cpp"): {"rotate"},
     Path("6-Mathematics/6.2.3_Enumerating_Permutations.cpp"): {"next_permutation"},
+}
+
+BRACED_PUSH_ALLOWLIST = {
+    Path("1-Elementary-Algorithms/1.6.6_Binary_Trie.cpp"): {"child"},
+    Path("2-Data-Structures/2.5.3_2D_Range_Tree.cpp"): {"points"},
+    Path("3-Strings/3.7.2_Shunting_Yard_and_Postfix_Evaluation.cpp"): {"op_stack"},
+    Path("4-Graphs/4.2.5_Articulation_Points,_Biconnected_Components,_Block-Cut_Forest.cpp"):
+        {"bccs"},
+    Path("4-Graphs/4.2.10_Offline_Dynamic_Connectivity.cpp"): {"ops"},
 }
 
 TYPE_PRESERVING_CMATH_FILES = {
@@ -47,15 +56,30 @@ EXAMPLE_HELPER_RE = re.compile(
 C_RAND_RE = re.compile(
     r"((?<![A-Za-z0-9_])::rand\s*\(|(?<!::)\brand\s*\(\s*\)\s*%|\bsrand\s*\()"
 )
+RANDOM_DEVICE_RE = re.compile(r"\b(?:std::)?random_device\b")
 UNQUALIFIED_CMATH_RE = re.compile(
     r"(?<![A-Za-z0-9_:])(?:fabs|sqrt|hypot|atan2|acos|asin|cos|sin|floor|ceil|pow|exp|log|"
     r"modf|fmod)l?\s*\("
 )
+UNQUALIFIED_STD_CMATH_RE = re.compile(
+    r"(?<![A-Za-z0-9_:])"
+    r"(sqrt|cbrt|hypot|atan2|acos|asin|atan|cos|sin|tan|floor|ceil|round|llround|pow|"
+    r"exp|log|log2|modf|fmod)\s*\("
+)
+UNQUALIFIED_CMATH_NAME_ALLOWLIST = {
+    Path("6-Mathematics/6.1_Math_Utilities.cpp"): {"round"},
+    Path("6-Mathematics/6.3.2_Modular_Arithmetic.cpp"): {"pow"},
+    Path("6-Mathematics/6.4.2_Big_Integer.cpp"): {"pow", "sqrt"},
+    Path("6-Mathematics/6.4.3_Big_Decimal.cpp"): {"pow", "sqrt", "floor", "ceil"},
+    Path("6-Mathematics/6.4.4_Rational_Numbers.cpp"): {"floor", "ceil"},
+    Path("6-Mathematics/6.6.3_Polynomial_Operations.cpp"): {"log", "exp", "sqrt"},
+}
 UNQUALIFIED_GENERIC_FABS_RE = re.compile(r"(?<![A-Za-z0-9_:])fabs\(C\(")
 CAST_EPS_RE = re.compile(r"\bstatic_cast<C>\(EPS\)")
 FUNCTION_LITERAL_CAST_RE = re.compile(
-    r"\b(?:T|U|W|C|Mask|mask_t|Mint|dbl|cdbl|fp_t|u?int(?:8|16|32|64)_t|"
-    r"int128_t|uint128_t)\s*\([01]\)"
+    r"\b(?:T|U|W|C|Double|Mask|mask_t|dbl|cdbl|fp_t|u?int(?:8|16|32|64)_t|"
+    r"int128_t|uint128_t)\s*\(\s*-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?"
+    r"[uUlLfF]*\s*\)"
 )
 STATIC_LITERAL_CAST_RE = re.compile(
     r"\bstatic_cast<(?:T|U|W|C|Mask|mask_t|Mint|dbl|cdbl|fp_t|"
@@ -66,9 +90,43 @@ EMPTY_DEPENDENT_CONSTRUCTION_RE = re.compile(
     r"Hasher|AbsHash|AbsEqual)\(\)|\b(?:std::hash|GenericHasher)<[^>]+>\(\)"
 )
 AUTO_DEREF_COPY_RE = re.compile(r"\bauto\s+[A-Za-z_][A-Za-z0-9_]*\s*=\s*\*")
+COPY_LIST_CONTAINER_RE = re.compile(
+    r"^\s*(?:std::)?(?:vector|array|deque|list|forward_list|set|multiset|map|multimap|"
+    r"unordered_set|unordered_multiset|unordered_map|unordered_multimap|string)"
+    r"(?:\s*<.*>)?\s+[A-Za-z_][A-Za-z0-9_]*\s*=\s*\{"
+)
+LOWERCASE_LITERAL_SUFFIX_RE = re.compile(
+    r"(?<![A-Za-z0-9_.])(?:"
+    r"(?:0[xX][0-9A-Fa-f]+|0[bB][01]+)[uUlL]*[ul][uUlL]*|"
+    r"(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?"
+    r"[uUlLfF]*[ulf][uUlLfF]*)"
+    r"(?![A-Za-z0-9_])"
+)
+EXAMPLE_CONTAINER_DECL_RE = re.compile(
+    r"^(\s*)((?:std::)?(?:vector|array|deque|list|forward_list|set|multiset|map|multimap|"
+    r"unordered_set|unordered_multiset|unordered_map|unordered_multimap|string)\s*<.*>|"
+    r"(?:std::)?string)\s+([A-Za-z_][A-Za-z0-9_]*)\s*(\{.*\}|=\s*.*);\s*$"
+)
 VECTOR_TYPE_RE = re.compile(r"(?:std::)?vector\s*<")
 DEFAULT_VECTOR_FILL_RE = re.compile(
     r"(?:0(?:\.0+|[uUlLfF]+)?|false|nullptr|'\\0'|[A-Za-z_][A-Za-z0-9_]*\{\}|\{\})"
+)
+POST_API_CONTRACT_RE = re.compile(
+    r"\b(?:must|requires?|may not|cannot|nonnegative|nonempty|positive|distinct|sorted)\b",
+    re.IGNORECASE,
+)
+SHARED_POST_API_RE = re.compile(
+    r"\b(?:functions|operations|helpers|overloads|implementations?|value type|element type|"
+    r"callback|objects|replace(?:d)?|adapt)\b",
+    re.IGNORECASE,
+)
+ORDINAL_API_NAME_RE = re.compile(
+    r"(?:^|_)kth(?:_|$)|(?:^|_)rank(?:_|$)|(?:^|_)by_rank(?:_|$)|"
+    r"(?:^|_)rank_by(?:_|$)|^find_by_order$|^(?:inverse_)?gray_code$"
+)
+ORDINAL_BASE_RE = re.compile(
+    r"\b[01]-based\b|`k`?\s*={1,2}\s*[01]|\brank\b.{0,120}\$?\[0,",
+    re.IGNORECASE,
 )
 OPTIONAL_RECONSTRUCTION_RE = re.compile(r"^\s*// Optional: reconstruct one .+\.$")
 LEGACY_BOUNDARY_FLAG_RE = re.compile(r"\b(?:edge_is_inside|touch_is_intersect)\b")
@@ -140,6 +198,14 @@ def vector_has_redundant_fill(code):
     return False
 
 STYLE_PATTERNS = [
+    (
+        re.compile(r"static_cast<fp_t>\s*\("),
+        "Use compact function-style conversion for the local arithmetic alias, e.g. fp_t(x).",
+    ),
+    (
+        re.compile(r"\(fp_t\)\s*[A-Za-z_(]"),
+        "Replace the C-style arithmetic cast with function-style conversion, e.g. fp_t(x).",
+    ),
     (
         re.compile(
             r"if constexpr \(std::is_floating_point_v<C>\) return "
@@ -462,6 +528,133 @@ def scan_docstrings(paths):
     return issues
 
 
+def scan_docstring_wording(paths):
+    issues = []
+    bare_constant_re = re.compile(r"\b(?:EPS|INF|MOD|PI|MASK_BITS)\b")
+    for path in paths:
+        lines = path.read_text().splitlines()
+        for start, end in docstring_ranges(lines):
+            if lines[start].startswith("/***"):
+                continue
+            for i in range(start, end + 1):
+                line = lines[i]
+                prose = re.sub(r"`[^`]*`|\$[^$]*\$", "", line)
+                if re.search(r"\bstandard STL\b", prose, re.IGNORECASE):
+                    issues.append(
+                        Issue(
+                            path,
+                            i + 1,
+                            "docstring-wording",
+                            'Write "standard library" instead of the redundant "standard STL".',
+                            line,
+                        )
+                    )
+                if bare_constant_re.search(prose):
+                    issues.append(
+                        Issue(
+                            path,
+                            i + 1,
+                            "docstring-code-style",
+                            "Put named code constants such as `EPS` or `MOD` in backticks.",
+                            line,
+                        )
+                    )
+    return issues
+
+
+def scan_docstring_structure(paths):
+    """Enforce the stable layout of leading section docstrings."""
+    issues = []
+    api_bullet_re = re.compile(r"^- `")
+    one_line_complexity_re = re.compile(r"^(?:Time|Space) Complexity:\s+\S")
+    for path in paths:
+        lines = path.read_text().splitlines()
+        ranges = list(docstring_ranges(lines))
+        if not ranges or ranges[0][0] != 0 or lines[0].startswith("/***"):
+            continue
+        start, end = ranges[0]
+        body = lines[start + 1 : end]
+        api_indices = [i for i, line in enumerate(body, start + 1) if api_bullet_re.match(line)]
+
+        for i, line in enumerate(body, start + 1):
+            stripped = line.strip()
+            if one_line_complexity_re.match(stripped):
+                issues.append(
+                    Issue(
+                        path,
+                        i + 1,
+                        "docstring-structure",
+                        "Put the complexity heading on its own line and the bound in a bullet.",
+                        line,
+                    )
+                )
+            if re.match(r"^Preconditions?:", stripped):
+                issues.append(
+                    Issue(
+                        path,
+                        i + 1,
+                        "detached-api-contract",
+                        "Put preconditions in the applicable API bullet or a shared paragraph.",
+                        line,
+                    )
+                )
+
+        if not api_indices:
+            continue
+        first_api = min(api_indices)
+        for i in range(start + 1, first_api):
+            if lines[i].strip().startswith("Overflow warning:"):
+                issues.append(
+                    Issue(
+                        path,
+                        i + 1,
+                        "docstring-structure",
+                        "Place labeled warnings after the API list.",
+                        lines[i],
+                    )
+                )
+
+        first_complexity = next(
+            (
+                i
+                for i in range(start + 1, end)
+                if lines[i].strip() in {"Time Complexity:", "Space Complexity:"}
+            ),
+            end,
+        )
+        intro_end = min(first_api, first_complexity)
+        intro = " ".join(lines[i].strip() for i in range(start + 1, intro_end))
+        intro_words = re.findall(r"[A-Za-z0-9_]+", re.sub(r"[`$]", "", intro))
+        if len(api_indices) >= 4 and len(intro_words) < 20:
+            issues.append(
+                Issue(
+                    path,
+                    start + 3,
+                    "thin-docstring-intro",
+                    "Introduce the common idea connecting this section's APIs.",
+                    lines[start + 2] if start + 2 < len(lines) else lines[start],
+                )
+            )
+
+        signatures = [lines[i].split("`", 2)[1] for i in api_indices]
+        if (
+            path.relative_to(ROOT).parts[0] != "8-Miscellany"
+            and all("(" not in signature for signature in signatures)
+        ):
+            code = "\n".join(lines[end + 1 :])
+            if re.search(r"^(?:template<[^\n]+>\n)?(?:class|struct)\s+", code, re.MULTILINE):
+                issues.append(
+                    Issue(
+                        path,
+                        api_indices[0] + 1,
+                        "docstring-structure",
+                        "Document the type's callable API or coherent major-operation groups.",
+                        lines[api_indices[0]],
+                    )
+                )
+    return issues
+
+
 def scan_overflow_warning_labels(paths):
     issues = []
     representability_re = re.compile(r"\b(?:must fit|must be representable)\b", re.IGNORECASE)
@@ -509,6 +702,155 @@ def scan_overflow_warning_labels(paths):
                     paragraph_line = i + 1
                 paragraph.append(lines[i])
             check_paragraph()
+    return issues
+
+
+def scan_post_api_contracts(paths):
+    """Flag narrow contracts detached from the one API bullet they describe."""
+    issues = []
+    bullet_re = re.compile(r"^- `([^`]+)`")
+    for path in paths:
+        lines = path.read_text().splitlines()
+        for start, end in docstring_ranges(lines):
+            if lines[start].startswith("/***"):
+                continue
+            bullets = []
+            for i in range(start + 1, end):
+                match = bullet_re.match(lines[i].strip())
+                if not match:
+                    continue
+                signature = match.group(1)
+                name_match = re.search(
+                    r"\b([A-Za-z_][A-Za-z0-9_]*)(?:<[^`]*>)?\s*\(", signature
+                )
+                if not name_match:
+                    continue
+                params = []
+                for param in split_parameters(call_parameters(signature)):
+                    default = top_level_default_expression(param)
+                    if default:
+                        param = param[: len(param) - len(default) - 1].rstrip()
+                    param_match = re.search(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*$", param)
+                    if param_match and len(param_match.group(1)) >= 4:
+                        params.append(param_match.group(1))
+                bullets.append((i, name_match.group(1), params))
+            if not bullets:
+                continue
+
+            param_owners = {}
+            for _, name, params in bullets:
+                for param in params:
+                    param_owners.setdefault(param, set()).add(name)
+
+            paragraph_start = bullets[-1][0] + 1
+            while paragraph_start < end and lines[paragraph_start].strip():
+                paragraph_start += 1
+            while paragraph_start < end and not lines[paragraph_start].strip():
+                paragraph_start += 1
+
+            paragraph = []
+            line_no = 0
+
+            def check_paragraph():
+                if not paragraph:
+                    return
+                text = " ".join(line.strip() for line in paragraph)
+                if (
+                    text.startswith(("Overflow warning:", "Time Complexity:", "Space Complexity:"))
+                    or not POST_API_CONTRACT_RE.search(text)
+                    or SHARED_POST_API_RE.search(text)
+                    or len(re.findall(r"[.!?](?:\s|$)", text)) > 2
+                ):
+                    return
+                owners = set()
+                for _, name, _ in bullets:
+                    if re.search(rf"\b{re.escape(name)}(?:\(\))?\b", text):
+                        owners.add(name)
+                for param, names in param_owners.items():
+                    if len(names) == 1 and re.search(rf"\b{re.escape(param)}\b", text):
+                        owners.update(names)
+                if len(owners) == 1:
+                    name = next(iter(owners))
+                    issues.append(
+                        Issue(
+                            path,
+                            line_no,
+                            "detached-api-contract",
+                            f"Move this operation-specific contract into the `{name}()` API bullet.",
+                            lines[line_no - 1],
+                        )
+                    )
+                elif owners:
+                    issues.append(
+                        Issue(
+                            path,
+                            line_no,
+                            "detached-api-contract",
+                            "Distribute these operation-specific contracts among their API bullets.",
+                            lines[line_no - 1],
+                        )
+                    )
+
+            for i in range(paragraph_start, end):
+                stripped = lines[i].strip()
+                if re.match(r"^(?:Time|Space) Complexity:", stripped):
+                    check_paragraph()
+                    break
+                if stripped:
+                    if not paragraph:
+                        line_no = i + 1
+                    paragraph.append(lines[i])
+                else:
+                    check_paragraph()
+                    paragraph = []
+            else:
+                check_paragraph()
+    return issues
+
+
+def scan_ordinal_base_docs(paths):
+    """Require a base convention where an ordinal API could naturally use either one."""
+    issues = []
+    non_ordinal_rank_apis = {"matrix_rank", "sparse_rank"}
+    bullet_re = re.compile(r"^- `([^`]+)`")
+    for path in paths:
+        lines = path.read_text().splitlines()
+        for start, end in docstring_ranges(lines):
+            i = start + 1
+            while i < end:
+                match = bullet_re.match(lines[i].strip())
+                if not match:
+                    i += 1
+                    continue
+                signature = match.group(1)
+                text = lines[i].strip()
+                j = i + 1
+                while j < end and lines[j].startswith("  "):
+                    text += " " + lines[j].strip()
+                    j += 1
+                name_match = re.search(
+                    r"\b([A-Za-z_][A-Za-z0-9_]*)(?:<[^`]*>)?\s*\(", signature
+                )
+                if not name_match:
+                    i = j
+                    continue
+                name = name_match.group(1)
+                has_kth_ordinal = re.search(r"(?:`k`|\$k\$|\bk\b)-th\b", text) is not None
+                is_ordinal_api = (
+                    name not in non_ordinal_rank_apis
+                    and (ORDINAL_API_NAME_RE.search(name) is not None or has_kth_ordinal)
+                )
+                if is_ordinal_api and not ORDINAL_BASE_RE.search(text):
+                    issues.append(
+                        Issue(
+                            path,
+                            i + 1,
+                            "ordinal-base",
+                            "State whether this rank or ordinal is 0-based or 1-based.",
+                            lines[i],
+                        )
+                    )
+                i = j
     return issues
 
 
@@ -597,6 +939,46 @@ def scan_time_complexity_scope(paths):
     return issues
 
 
+def scan_grid_dimension_symbols(paths):
+    issues = []
+    lowercase_grid_re = re.compile(r"O\([^)]*\br\b[^)]*\bc\b|O\([^)]*\bc\b[^)]*\br\b")
+    for path in paths:
+        lines = path.read_text().splitlines()
+        for start, end in docstring_ranges(lines):
+            bullet = ""
+            bullet_line = 0
+
+            def check_bullet():
+                if not bullet.startswith("- O("):
+                    return
+                if lowercase_grid_re.search(bullet):
+                    issues.append(
+                        Issue(
+                            path,
+                            bullet_line,
+                            "grid-dimension-style",
+                            "Use R and C when r and c would collide with cell coordinates.",
+                            lines[bullet_line - 1],
+                        )
+                    )
+
+            for i in range(start, end):
+                stripped = lines[i].strip()
+                if stripped.startswith("- "):
+                    if bullet:
+                        check_bullet()
+                    bullet = stripped
+                    bullet_line = i + 1
+                elif bullet and lines[i].startswith("  "):
+                    bullet += " " + stripped
+                elif bullet:
+                    check_bullet()
+                    bullet = ""
+            if bullet:
+                check_bullet()
+    return issues
+
+
 def scan_example_markers(paths):
     issues = []
     marker_re = re.compile(r"/\*\*\* Example Usage.*?\*\*\*/", re.DOTALL)
@@ -630,6 +1012,70 @@ def scan_example_markers(paths):
                     "example-marker",
                     "output marker has no direct print call",
                     marker,
+                )
+            )
+    return issues
+
+
+def scan_inlineable_example_variables(paths):
+    issues = []
+    for path in paths:
+        text = path.read_text()
+        marker = text.find("/*** Example Usage")
+        if marker == -1:
+            continue
+        example = text[marker:]
+        lines = example.splitlines()
+        code_lines = []
+        in_block_comment = False
+        for line in lines:
+            code, in_block_comment = strip_cpp_comments_and_strings(line, in_block_comment)
+            code_lines.append(code)
+
+        declarations = {}
+        all_code = "\n".join(code_lines)
+        for i, code in enumerate(code_lines):
+            match = EXAMPLE_CONTAINER_DECL_RE.match(code)
+            if match is not None and len(re.findall(rf"\b{re.escape(match.group(3))}\b", all_code)) == 2:
+                declarations[match.group(3)] = i
+
+        for i, code in enumerate(code_lines):
+            match = EXAMPLE_CONTAINER_DECL_RE.match(code)
+            if match is None:
+                continue
+            indent, type_name, name, initializer = match.groups()
+            if name not in declarations:
+                continue
+            j = i + 1
+            while j < len(code_lines) and not code_lines[j].strip():
+                j += 1
+            if (
+                j == len(code_lines)
+                or not re.search(rf"\b{re.escape(name)}\b", code_lines[j])
+                or not re.match(r"\s*auto\s*\[", code_lines[j])
+                or not initializer.startswith("{")
+            ):
+                continue
+            other_fixtures = [
+                other
+                for other in declarations
+                if other != name and re.search(rf"\b{re.escape(other)}\b", code_lines[j])
+            ]
+            if other_fixtures:
+                continue
+            expression = (
+                type_name + initializer if initializer.startswith("{") else initializer[1:].strip()
+            )
+            inlined = re.sub(rf"\b{re.escape(name)}\b", expression, code_lines[j], count=1)
+            if len(inlined) > LIMIT:
+                continue
+            issues.append(
+                Issue(
+                    path,
+                    text[:marker].count("\n") + i + 1,
+                    "inline-example-variable",
+                    "Inline this one-use example container into the following statement.",
+                    lines[i],
                 )
             )
     return issues
@@ -671,6 +1117,20 @@ def scan_code_consistency(paths):
                         line,
                     )
                 )
+            unqualified_cmath = {
+                match.group(1) for match in UNQUALIFIED_STD_CMATH_RE.finditer(code)
+            }
+            allowed_cmath = UNQUALIFIED_CMATH_NAME_ALLOWLIST.get(rel, set())
+            if not in_example and unqualified_cmath - allowed_cmath:
+                issues.append(
+                    Issue(
+                        path,
+                        line_no,
+                        "code-consistency",
+                        "Qualify standard <cmath> calls in reusable code with std::.",
+                        line,
+                    )
+                )
             if CAST_EPS_RE.search(code):
                 issues.append(
                     Issue(
@@ -687,7 +1147,7 @@ def scan_code_consistency(paths):
                         path,
                         line_no,
                         "code-consistency",
-                        "Use braces to construct typed zero and one constants, e.g. T{0} or U{1}.",
+                        "Use braces to construct typed numeric literals, e.g. T{10} or U{1}.",
                         line,
                     )
                 )
@@ -698,6 +1158,16 @@ def scan_code_consistency(paths):
                         line_no,
                         "code-consistency",
                         "Use braces to value-initialize dependent types, e.g. T{} or Compare{}.",
+                        line,
+                    )
+                )
+            if LOWERCASE_LITERAL_SUFFIX_RE.search(code):
+                issues.append(
+                    Issue(
+                        path,
+                        line_no,
+                        "code-consistency",
+                        "Capitalize all letters in numeric literal suffixes, e.g. 1U or 1LL.",
                         line,
                     )
                 )
@@ -787,6 +1257,16 @@ def scan_code_consistency(paths):
         for offset, (line, code) in enumerate(
             zip(implementation.splitlines(), implementation_start), start=1
         ):
+            if RANDOM_DEVICE_RE.search(code):
+                issues.append(
+                    Issue(
+                        path,
+                        offset,
+                        "code-consistency",
+                        "Seed reusable randomized code from the full steady-clock tick count.",
+                        line,
+                    )
+                )
             if FIXED_ENGINE_SEED_RE.search(code) or FIXED_XORSHIFT_STATE_RE.search(code) or any(
                 re.search(rf"\b{re.escape(name)}\s*\(\s*[0-9]+[uUlL]*\s*\)", code)
                 for name in engine_members
@@ -825,7 +1305,7 @@ def scan_code_consistency(paths):
                             line,
                         )
                     )
-            if re.search(r"(?:std::)?random_device\s*\{\s*\}", code):
+            if RANDOM_DEVICE_RE.search(code):
                 issues.append(
                     Issue(
                         path,
@@ -1025,6 +1505,16 @@ def scan_known_style_drift(paths):
             for i in range(start, end + 1)
         }
         for line_no, line in enumerate(lines, start=1):
+            if line_no not in doc_lines and COPY_LIST_CONTAINER_RE.search(line):
+                issues.append(
+                    Issue(
+                        path,
+                        line_no,
+                        "style-drift",
+                        "Use direct-list initialization for explicitly typed standard containers.",
+                        line,
+                    )
+                )
             for pattern, message in STYLE_PATTERNS:
                 if pattern.search(line):
                     issues.append(Issue(path, line_no, "style-drift", message, line))
@@ -1041,6 +1531,41 @@ def scan_known_style_drift(paths):
                             line,
                         )
                     )
+    return issues
+
+
+def scan_emplace_opportunities(paths):
+    issues = []
+    braced_push_re = re.compile(
+        r"\b([A-Za-z_][A-Za-z0-9_]*)\.(?:push|push_back|push_front)\s*\(\s*\{"
+    )
+    temporary_push_re = re.compile(
+        r"\.(?:push|push_back|push_front)\s*\(\s*(?:std::)?[A-Z][A-Za-z0-9_:<>]*\s*\("
+    )
+    for path in paths:
+        allowed = BRACED_PUSH_ALLOWLIST.get(path.relative_to(ROOT), set())
+        for line_no, line in enumerate(path.read_text().splitlines(), start=1):
+            braced = braced_push_re.search(line)
+            if braced and braced.group(1) not in allowed:
+                issues.append(
+                    Issue(
+                        path,
+                        line_no,
+                        "emplace-opportunity",
+                        "Construct the element in place unless brace insertion is required.",
+                        line,
+                    )
+                )
+            elif temporary_push_re.search(line):
+                issues.append(
+                    Issue(
+                        path,
+                        line_no,
+                        "emplace-opportunity",
+                        "Replace an explicitly constructed temporary with emplace arguments.",
+                        line,
+                    )
+                )
     return issues
 
 
@@ -1643,6 +2168,10 @@ def scan_repeated_literal_defaults(paths):
 def scan_contextual_math_style(paths):
     issues = []
     api_signature_re = re.compile(r"-\s+`([^`]*)`")
+    indexed_code_re = re.compile(
+        r"`([A-Za-z_][A-Za-z0-9_]*)((?:\[[A-Za-z_][A-Za-z0-9_]*\])+)`"
+    )
+    math_span_re = re.compile(r"(?<!\\)\$(?!\$)(.*?)(?<!\\)\$")
     bare_bound_re = re.compile(r"\$\[[0-9]+, ([A-Za-z_][A-Za-z0-9_]*)[\]\)]\$")
     code_bound_re = re.compile(r"\$\[[0-9]+, `([A-Za-z_][A-Za-z0-9_]*)`[\]\)]\$")
     prose_bound_re = re.compile(r"\$\[[^\]]*`[a-z]`[^\]]*[\]\)]\$")
@@ -1704,6 +2233,35 @@ def scan_contextual_math_style(paths):
                     i += 1
                 paragraph_lines = lines[paragraph_start:i]
                 paragraph = "\n".join(paragraph_lines)
+                math_names = set()
+                for math_match in math_span_re.finditer(paragraph):
+                    if "`" not in math_match.group(1):
+                        math_names.update(
+                            re.findall(
+                                r"(?<![A-Za-z_])([A-Za-z_][A-Za-z0-9_]*)",
+                                math_match.group(1),
+                            )
+                        )
+                for match in indexed_code_re.finditer(paragraph):
+                    indices = tuple(re.findall(r"\[([A-Za-z_][A-Za-z0-9_]*)\]", match.group(2)))
+                    explicit_bridge = re.search(
+                        r"(?:Write|Let)\s+\$[^$]+\$\s+(?:for|as)\s+"
+                        + re.escape(match.group(0)),
+                        paragraph,
+                    )
+                    if not set(indices) <= math_names or explicit_bridge:
+                        continue
+                    issue_line = paragraph_start + paragraph[: match.start()].count("\n") + 1
+                    issues.append(
+                        Issue(
+                            path,
+                            issue_line,
+                            "math-code-style",
+                            "Keep an indexed state and its indices in one notation; use a math "
+                            "state such as $dp(r, c)$ or code-style indices throughout.",
+                            lines[issue_line - 1],
+                        )
+                    )
                 spans = big_o_spans(paragraph)
                 if not spans:
                     continue
@@ -1917,14 +2475,21 @@ def main():
     paths = list(cpp_files())
     issues = []
     issues.extend(scan_docstrings(paths))
+    issues.extend(scan_docstring_wording(paths))
+    issues.extend(scan_docstring_structure(paths))
     issues.extend(scan_overflow_warning_labels(paths))
+    issues.extend(scan_post_api_contracts(paths))
+    issues.extend(scan_ordinal_base_docs(paths))
     issues.extend(scan_size_declaration_order(paths))
     issues.extend(scan_time_complexity_scope(paths))
+    issues.extend(scan_grid_dimension_symbols(paths))
     issues.extend(scan_atomic_inline_wrapping(paths))
     issues.extend(scan_example_markers(paths))
+    issues.extend(scan_inlineable_example_variables(paths))
     issues.extend(scan_code_consistency(paths))
     issues.extend(scan_function_spacing(paths))
     issues.extend(scan_known_style_drift(paths))
+    issues.extend(scan_emplace_opportunities(paths))
     issues.extend(scan_markup_outside_docstrings(paths))
     issues.extend(scan_result_parameter_name_collisions(paths))
     issues.extend(scan_default_argument_docs(paths))

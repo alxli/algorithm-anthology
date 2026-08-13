@@ -64,7 +64,7 @@ double triangle_area(const Pt &a, const Pt &b, const Pt &c) {
 
 double triangle_area_sides(double s1, double s2, double s3) {
   double s = (s1 + s2 + s3) / 2.0;
-  return sqrt(s * (s - s1) * (s - s2) * (s - s3));
+  return std::sqrt(s * (s - s1) * (s - s2) * (s - s3));
 }
 
 double triangle_area_medians(double m1, double m2, double m3) {
@@ -77,7 +77,7 @@ double triangle_area_altitudes(double h1, double h2, double h3) {
   }
   double x = h1 * h1, y = h2 * h2, z = h3 * h3;
   double v = 2.0 / (x * y) + 2.0 / (x * z) + 2.0 / (y * z);
-  return 1.0 / sqrt(v - 1.0 / (x * x) - 1.0 / (y * y) - 1.0 / (z * z));
+  return 1.0 / std::sqrt(v - 1.0 / (x * x) - 1.0 / (y * y) - 1.0 / (z * z));
 }
 
 template<typename Pt>

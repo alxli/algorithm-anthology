@@ -1,40 +1,35 @@
 /*
 
-A straight line in two dimensions, templated on the coordinate type `T`. The line $ax + by + c = 0$
-is canonicalized by default. With `EXACT = true`, coefficients are divided by their Euclidean GCD
-and given a fixed sign; this supports built-in integer types as well as `BigInt` and `Rational` from
-previous chapters. With `EXACT = false`, coefficients are scaled to $b = 1$ when $b$ is nonzero, or
-to $a = 1$ for vertical lines; this supports floating-point and `Modular` coefficients. Thus
-proportional valid coefficient vectors have the same canonical representation, up to floating-point
-rounding.
+A straight line in two dimensions, represented by coefficients of $ax + by + c = 0$ and templated on
+their type `T`. Coefficients are canonicalized by default so proportional valid coefficient vectors
+have the same representation, up to floating-point rounding.
 
-Set the template flag `CANONICALIZE = false` to preserve the supplied coefficients. `EXACT` defaults
-to `true` only for built-in integral types; set it explicitly for custom types such as `BigInt` and
-`Rational`. The internal Euclidean GCD only requires `%`, comparisons, and basic arithmetic. Calling
-`canonicalized()` returns a canonical copy. `operator==` always compares stored coefficients
-exactly, while `EQ(l1, l2)` canonicalizes raw lines if necessary and uses `EPS` for floating-point
-coefficients.
+The template flag `CANONICALIZE` controls whether construction normalizes the coefficients and
+defaults to `true`. When enabled, `EXACT = true` divides coefficients by their Euclidean GCD and
+fixes their sign, while `EXACT = false` scales a nonvertical line to $b = 1$ and a vertical line to
+$a = 1$. `EXACT` defaults to `true` for built-in integral types; set it explicitly for custom exact
+types such as `BigInt` and `Rational`. Exact canonicalization requires `%`, comparisons, and basic
+arithmetic, and predicates remain exact for integral `T`. Floating-point and `Modular` coefficients
+use the scaling form.
 
-Storage and the predicates `contains()`, `is_parallel()`, and `is_perpendicular()` stay exact for
-integral type `T`. The inherently-fractional operations `slope()`, `x()`, and `y()` return `fp_t`,
-which is `T` when `T` is floating-point and `double` otherwise.
+- `TLine<T>(a, b, c)` constructs a line from its coefficients, while `TLine<T>(p, q)` constructs the
+  line through distinct points `p` and `q`. For floating-point `T`, `TLine<T>(slope, p)` constructs
+  the line of the given slope through `p`. The default constructor produces an invalid line.
+- `canonicalized()` returns a canonical copy. `operator==` compares stored coefficients exactly,
+  while `EQ(l1, l2)` canonicalizes raw lines if necessary and uses `EPS` for floating-point
+  coefficients.
+- `valid()`, `horizontal()`, and `vertical()` classify the line.
+- `slope()`, `x(y)`, and `y(x)` return `fp_t`, which is `T` for floating-point coefficients and
+  `double` otherwise. An undefined result is returned as `NaN`.
+- `contains(p)`, `is_parallel(l)`, and `is_perpendicular(l)` test geometric relationships.
+- `parallel(p)` and `perpendicular(p)` return the corresponding line through point `p`.
+- `operator<<` outputs the line in the form `ax+by+c=0`.
+- `LineI`, `LineL`, `LineD`, and `LineLD` use `int`, `int64_t`, `double`, and `long double`
+  coefficients, respectively. `Line` aliases `LineD`.
 
-Operations include `horizontal()`, `vertical()`, `slope()`, evaluating $y$ at some $x$ with `y()`
-(and vice versa with `x()`), checking if a point falls on the line with `contains()`, checking if
-another line is parallel or perpendicular with `is_parallel()` or `is_perpendicular()`, and finding
-the `parallel()` or `perpendicular()` line through a point.
-
-Overflow warning: the exact predicates form products of coefficients (e.g. cross terms in
-`is_parallel()`/`is_perpendicular()` and `a*p.x + b*p.y` in `contains()`), which grow like the
-squared coordinate magnitude. For integral type `T`, use `LineL` (`TLine<int64_t>`) once coordinates
-reach a few tens of thousands, or the 32-bit products may overflow.
-
-Type aliases:
-- `LineI = TLine<int>`: exact integer-coefficient lines (small values only; see overflow warning)
-- `LineL = TLine<int64_t>`: exact integer-coefficient lines for large coordinates
-- `LineD = TLine<double>`: standard floating-point
-- `LineLD = TLine<long double>`: extra precision (where supported)
-- `Line = LineD`: default line type is double
+Overflow warning: the exact predicates form products of coefficients, which grow like the squared
+coordinate magnitude. With `LineI` these may overflow once coordinates reach a few tens of
+thousands, so use `LineL` for larger integer coordinates.
 
 Time Complexity:
 - O(log C) per integral canonicalizing constructor or call to `canonicalize()`, where $C$ is the
@@ -149,13 +144,13 @@ struct TLine {
   bool vertical() const { return valid() && EQ(b, 0); }
 
   // Slope -a/b, or NaN if the line is vertical or invalid.
-  fp_t slope() const { return (!valid() || EQ(b, 0)) ? M_NAN : -(fp_t)a / b; }
+  fp_t slope() const { return (!valid() || EQ(b, 0)) ? M_NAN : -fp_t(a) / b; }
 
   // Solve for x at a given y (NaN if horizontal or invalid).
-  fp_t x(fp_t y) const { return (!valid() || EQ(a, 0)) ? M_NAN : -((fp_t)b * y + c) / a; }
+  fp_t x(fp_t y) const { return (!valid() || EQ(a, 0)) ? M_NAN : -(fp_t(b) * y + c) / a; }
 
   // Solve for y at a given x (NaN if vertical or invalid).
-  fp_t y(fp_t x) const { return (!valid() || EQ(b, 0)) ? M_NAN : -((fp_t)a * x + c) / b; }
+  fp_t y(fp_t x) const { return (!valid() || EQ(b, 0)) ? M_NAN : -(fp_t(a) * x + c) / b; }
 
   // Whether point p lies on the line. Exact for integer T and integer p.
   template<typename Pt>

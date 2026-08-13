@@ -21,12 +21,12 @@ Overflow warning: All stored differences and reconstructed values must fit in `i
 Time Complexity:
 - O(1) per call to `add()` of either version.
 - O(n) per call to `build()` of `DifferenceArray`, where $n$ is the array size.
-- O(m*n) per call to `build()` of `DifferenceArray2D`, where $m$ and $n$ are the number of rows and
+- O(R*C) per call to `build()` of `DifferenceArray2D`, where $R$ and $C$ are the number of rows and
   columns, respectively.
 
 Space Complexity:
 - O(n) for storage and O(n) for the array returned by `DifferenceArray::build()`.
-- O(m*n) for storage and O(m*n) for the grid returned by `DifferenceArray2D::build()`.
+- O(R*C) for storage and O(R*C) for the grid returned by `DifferenceArray2D::build()`.
 
 */
 

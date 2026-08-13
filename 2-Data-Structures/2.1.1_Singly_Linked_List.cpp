@@ -14,14 +14,13 @@ nodes, or when manual pointer manipulation is the point of the exercise.
 - `merge_sorted_lists(a, b)` merges two sorted lists using a dummy node and returns the merged head.
 - `splice_after(pos, before)` moves the node after `before` so it appears after `pos`.
 - `splice_range_after(pos, before_first, last)` moves the half-open range (`before_first`, `last`)
-  so it appears after `pos`.
+  so it appears after `pos`; `pos` must not lie inside the moved range.
 
 The splicing helpers use the same "after" convention as `std::forward_list::splice_after()`. They
 work naturally with a dummy head node, which makes insertions and removals at the beginning of a
-list match all other positions. For `splice_range_after()`, `pos` must not lie inside the moved
-range. For doubly linked list splicing, use the next section.
+list match all other positions. For doubly linked list splicing, use the next section.
 
-For cycle detection, see the variant on iterated functions in chapter 1, which can be easily adapted
+For cycle detection, see the variants on iterated functions in 1.7.3, which can be directly adapted
 for linked lists.
 
 Time Complexity:

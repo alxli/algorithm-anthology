@@ -29,7 +29,7 @@ offers no protection against adversarial inputs.
   existing hash accumulator.
 - `hash_float(x)` and `hash_double(x)` hash floating-point bit patterns, normalizing `-0.0` to
   `0.0`. Different NaN representations may still hash differently.
-- `hash_string_fnv1a32(s)` and `hash_string_fnv1a64(s)` compute FNV-1a hashes of string `s`.
+- `fnv1a32(s)` and `fnv1a64(s)` compute FNV-1a hashes of string `s`.
 - `hash_range32(lo, hi)` and `hash_range64(lo, hi)` hash a sequence of integer-like values in the
   half-open iterator range $[`lo`, `hi`)$.
 - `PairIntHasher` is a self-contained hasher for `std::pair<int, int>` keys, written without any
@@ -98,8 +98,8 @@ uint64_t hash_combine64(uint64_t h, uint64_t x) {
 }
 
 uint32_t hash_float(float x) {
-  if (x == 0.0f) {
-    x = 0.0f;  // Normalize -0.0.
+  if (x == 0.0F) {
+    x = 0.0F;  // Normalize -0.0.
   }
   uint32_t bits = 0;
   std::memcpy(&bits, &x, sizeof(bits));
@@ -115,7 +115,7 @@ uint64_t hash_double(double x) {
   return mix64(bits);
 }
 
-uint32_t hash_string_fnv1a32(const std::string &s) {
+uint32_t fnv1a32(const std::string &s) {
   uint32_t h = 2166136261U;
   for (unsigned char c : s) {
     h ^= c;
@@ -124,7 +124,7 @@ uint32_t hash_string_fnv1a32(const std::string &s) {
   return h;
 }
 
-uint64_t hash_string_fnv1a64(const std::string &s) {
+uint64_t fnv1a64(const std::string &s) {
   uint64_t h = 14695981039346656037ULL;
   for (unsigned char c : s) {
     h ^= c;
@@ -246,10 +246,10 @@ int main() {
   assert(mix32(123U) != mix32(124U));
   assert(hash32(-1) == hash32(-1));
   assert(hash64(123) == mix64(123ULL));
-  assert(hash_float(-0.0f) == hash_float(0.0f));
+  assert(hash_float(-0.0F) == hash_float(0.0F));
   assert(hash_double(-0.0) == hash_double(0.0));
-  assert(hash_string_fnv1a32("abc") == hash_string_fnv1a32("abc"));
-  assert(hash_string_fnv1a64("abc") != hash_string_fnv1a64("acb"));
+  assert(fnv1a32("abc") == fnv1a32("abc"));
+  assert(fnv1a64("abc") != fnv1a64("acb"));
 
   vector<int> v;
   v.push_back(1);

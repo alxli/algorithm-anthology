@@ -11,7 +11,8 @@ value. Unlike 0-1 knapsack, allowing fractions makes each such exchange feasible
 
 - `fractional_knapsack(weight, value, capacity)` returns a pair (`best_value`, `fraction`)
   containing the maximum value and the fraction of each input item taken. Item `i` has weight
-  `weight[i]` and value `value[i]`, and `fraction[i]` is in $[0, 1]$.
+  `weight[i]` and value `value[i]`, `capacity` is the maximum total weight, and `fraction[i]` is in
+  $[0, 1]$.
 
 Time Complexity:
 - O(n log n) per call due to sorting, where $n$ is the number of items.

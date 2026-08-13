@@ -20,15 +20,13 @@ and predicates are templated on the point type `Pt` and only read `.x`/`.y`, so 
 - `operator==` and `operator!=` compare stored centers and radii exactly; `EQ(a, b)` compares them
   using `EPS`.
 - `contains(p)` returns whether point `p` lies inside or on the circle.
-- `on_edge(p)` returns whether point `p` lies on the circle boundary.
+- `on_boundary(p)` returns whether point `p` lies on the circle boundary.
 - `incircle(a, b, c)` returns the circle inscribed in triangle `abc`.
-- `in_circumcircle(a, b, c, d)` returns $1$ if `d` lies strictly inside the circle through `a`, `b`,
-  and `c`, $0$ if it lies on the circle, or $-1$ if it lies outside. This has exact reasoning for
-  integral points by evaluating the determinant directly without constructing a `Circle` or taking
-  square roots. Points `a`, `b`, and `c` must not be collinear. For integer inputs, the sign test is
-  exact provided the chosen intermediate type does not overflow.
-
-The floating-point constructors and predicates use an absolute tolerance `EPS`.
+- `in_circumcircle(a, b, c, d)` returns $1$ if point `d` lies strictly inside the circle through
+  points `a`, `b`, and `c`, $0$ if it lies on the circle, or $-1$ if it lies outside. This has exact
+  reasoning for integral points by evaluating the determinant directly without constructing a
+  `Circle` or taking square roots. Points `a`, `b`, and `c` must not be collinear. For integer
+  inputs, the sign test is exact provided the chosen intermediate type does not overflow.
 
 Overflow warning: the determinant in `in_circumcircle()` grows like the fourth power of the
 coordinate magnitude. For large integer coordinates, use a point or intermediate type wide enough
@@ -86,7 +84,7 @@ struct Circle {
   Circle(const Pt &a, const Pt &b) {
     h = (a.x + b.x) / 2.0;
     k = (a.y + b.y) / 2.0;
-    r = hypot(a.x - h, a.y - k);
+    r = std::hypot(a.x - h, a.y - k);
   }
 
   template<typename Pt, typename = if_point<Pt>>
@@ -99,7 +97,7 @@ struct Circle {
     }
     h = (asq * (by - cy) + bsq * (cy - ay) + csq * (ay - by)) / d;
     k = (asq * (cx - bx) + bsq * (ax - cx) + csq * (bx - ax)) / d;
-    r = hypot(ax - h, ay - k);
+    r = std::hypot(ax - h, ay - k);
   }
 
   template<typename Pt, typename = if_point<Pt>>
@@ -109,7 +107,7 @@ struct Circle {
       k = a.y;
       return;
     }
-    double d = hypot(b.x - a.x, b.y - a.y);
+    double d = std::hypot(b.x - a.x, b.y - a.y);
     if (EQ(d, 0)) {
       throw std::runtime_error("Identical points, infinite circles.");
     }
@@ -117,7 +115,7 @@ struct Circle {
       throw std::runtime_error("Points too far away to make Circle.");
     }
     double z = this->r * this->r - d * d / 4.0;
-    double v = sqrt(z < 0 ? 0 : z) / d;
+    double v = std::sqrt(z < 0 ? 0 : z) / d;
     double mx = (a.x + b.x) / 2.0, my = (a.y + b.y) / 2.0;
     h = mx + v * (a.y - b.y);
     k = my + v * (b.x - a.x);
@@ -133,12 +131,12 @@ struct Circle {
 
   template<typename Pt>
   bool contains(const Pt &p) const {
-    return LE(hypot(p.x - h, p.y - k), r);
+    return LE(std::hypot(p.x - h, p.y - k), r);
   }
 
   template<typename Pt>
-  bool on_edge(const Pt &p) const {
-    return EQ(hypot(p.x - h, p.y - k), r);
+  bool on_boundary(const Pt &p) const {
+    return EQ(std::hypot(p.x - h, p.y - k), r);
   }
 
   friend std::ostream &operator<<(std::ostream &out, const Circle &c) {
@@ -153,9 +151,9 @@ struct Circle {
 
 template<typename Pt>
 Circle incircle(const Pt &a, const Pt &b, const Pt &c) {
-  double al = hypot(b.x - c.x, b.y - c.y);
-  double bl = hypot(a.x - c.x, a.y - c.y);
-  double cl = hypot(a.x - b.x, a.y - b.y);
+  double al = std::hypot(b.x - c.x, b.y - c.y);
+  double bl = std::hypot(a.x - c.x, a.y - c.y);
+  double cl = std::hypot(a.x - b.x, a.y - b.y);
   double l = al + bl + cl;
   double px = a.x - c.x, py = a.y - c.y, qx = b.x - c.x, qy = b.y - c.y;
   return EQ(l, 0) ? Circle(a.x, a.y, 0)
@@ -205,23 +203,20 @@ int main() {
   assert(EQ(Circle(Point(0, 0), Point(0, 2), -1), Circle(0, 1, 1)));
   assert(EQ(c, incircle(Point(-12, 5), Point(3, 0), Point(0, 9))));
   assert(c.contains(Point(-2, 8)) && !c.contains(Point(-2, 9)));
-  assert(c.on_edge(Point(-1, 2)) && !c.on_edge(Point(-1.01, 2)));
+  assert(c.on_boundary(Point(-1, 2)) && !c.on_boundary(Point(-1.01, 2)));
 
   // Integer-coordinate points are accepted; the Circle is computed in double.
   assert(EQ(c, Circle(PointI(1, 6), PointI(-5, 4))));
   assert(EQ(c, Circle(PointI(-3, 2), PointI(-3, 8), PointI(-1, 8))));
   assert(EQ(c, incircle(PointI(-12, 5), PointI(3, 0), PointI(0, 9))));
   assert(c.contains(PointI(-2, 8)) && !c.contains(PointI(-2, 9)));
-  assert(c.on_edge(PointI(-1, 2)));
+  assert(c.on_boundary(PointI(-1, 2)));
 
   // Exact integer in-circle predicate: unit circle through (1,0), (0,1), (-1,0).
-  assert(in_circumcircle(PointI(1, 0), PointI(0, 1), PointI(-1, 0), PointI(0, 0)) == 1);  // inside
-  assert(
-      in_circumcircle(PointI(1, 0), PointI(0, 1), PointI(-1, 0), PointI(2, 0)) == -1
-  );  // outside
-  assert(
-      in_circumcircle(PointI(1, 0), PointI(0, 1), PointI(-1, 0), PointI(0, -1)) == 0
-  );  // on edge
+  assert(in_circumcircle(PointI(1, 0), PointI(0, 1), PointI(-1, 0), PointI(0, 0)) == 1);   // inside
+  assert(in_circumcircle(PointI(1, 0), PointI(0, 1), PointI(-1, 0), PointI(2, 0)) == -1);  // out
+  assert(in_circumcircle(PointI(1, 0), PointI(0, 1), PointI(-1, 0), PointI(0, -1)) == 0);  // edge
+
   // Orientation-independent: reversing a, b, c gives the same answer.
   assert(in_circumcircle(PointI(-1, 0), PointI(0, 1), PointI(1, 0), PointI(0, 0)) == 1);
   return 0;

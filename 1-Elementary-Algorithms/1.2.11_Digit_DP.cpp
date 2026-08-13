@@ -18,9 +18,11 @@ digit.
 - `count_digit_sum(lo, hi, target)` returns the number of integers in the inclusive range
   $[`lo`, `hi`]$ whose decimal digits sum to `target`. The bounds and `target` must be nonnegative.
 
-Time Complexity: O(d*s) per call, where $d$ is the number of digits in `hi` and $s$ is `target`.
+Time Complexity:
+- O(d*s) per call, where $d$ is the number of digits in `hi` and $s$ is `target`.
 
-Space Complexity: O(d*s) auxiliary heap space and O(d) call stack space.
+Space Complexity:
+- O(d*s) auxiliary heap space and O(d) call stack space.
 
 */
 
@@ -33,12 +35,12 @@ int64_t count_digit_sum(int64_t lo, int64_t hi, int target) {
   assert(0 <= lo && lo <= hi && target >= 0);
   auto count_up_to = [&](int64_t bound) {
     if (bound < 0) {
-      return int64_t{0};
+      return 0LL;
     }
     std::string digits = std::to_string(bound);
     int n = static_cast<int>(digits.size());
     if (target > 9 * n) {
-      return int64_t{0};
+      return 0LL;
     }
     std::vector<std::vector<int64_t>> memo(n, std::vector<int64_t>(target + 1, -1));
     auto rec = [&](auto &&rec, int pos, int sum, bool tight) -> int64_t {

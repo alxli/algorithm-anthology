@@ -25,14 +25,14 @@ counts must fit in `int64_t`.
 
 Time Complexity:
 - O(n) per call to `prefix_sums(a)`, where $n$ is the array size.
-- O(m*n) per call to `prefix_sums_2d(a)`, where $m$ and $n$ are the number of rows and columns of
+- O(R*C) per call to `prefix_sums_2d(a)`, where $R$ and $C$ are the number of rows and columns of
   `a`, respectively.
 - O(1) per range or rectangle query.
 - O(n) expected per call to `count_subarrays_with_sum(a, target)`.
 
 Space Complexity:
 - O(n) for the array returned by `prefix_sums(a)`.
-- O(m*n) for the table returned by `prefix_sums_2d(a)`.
+- O(R*C) for the table returned by `prefix_sums_2d(a)`.
 - O(1) auxiliary for `range_sum()` and `rectangle_sum()`.
 - O(n) auxiliary for `count_subarrays_with_sum(a, target)`.
 

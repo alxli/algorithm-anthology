@@ -64,17 +64,11 @@ struct BumpAllocator {
     return reinterpret_cast<T *>(bump_alloc(n * sizeof(T), alignof(T)));
   }
 
+  // clang-format off
   void deallocate(T *, std::size_t) {}
-
-  template<typename U>
-  bool operator==(const BumpAllocator<U> &) const {
-    return true;
-  }
-
-  template<typename U>
-  bool operator!=(const BumpAllocator<U> &) const {
-    return false;
-  }
+  template<typename U> bool operator==(const BumpAllocator<U> &) const { return true; }
+  template<typename U> bool operator!=(const BumpAllocator<U> &) const { return false; }
+  // clang-format on
 };
 
 /*** Example Usage ***/

@@ -76,7 +76,7 @@ std::vector<int> phi_table(int lo, int hi) {
   if (hi < lo) {
     return {};
   }
-  int root = static_cast<int>(sqrt(hi));
+  int root = static_cast<int>(std::sqrt(hi));
   while (1LL * (root + 1) * (root + 1) <= hi) {
     root++;
   }

@@ -27,22 +27,20 @@ changing the comparison from strict to non-strict (e.g. `>=` to `>`) toggles how
 - `next_greater(a)` returns, for each $i$, the smallest index $j > i$ with $a[j] > a[i]$, or $n$ if
   there's no such index.
 - `largest_histogram_rectangle(heights)` returns the maximum area and its inclusive left and right
-  endpoints in a histogram where each bar has width $1$.
+  endpoints in a histogram where bars have width $1$ and nonnegative heights given by `heights`.
 - `largest_zero_submatrix(a)` returns the maximum area and its inclusive top, left, bottom, and
   right boundaries among all-zero rectangular submatrices of the 0/1 matrix `a`.
-
-Histogram heights must be nonnegative.
 
 Overflow warning: Histogram areas must fit in the height value type.
 
 Time Complexity:
 - O(n) per call to all one-dimensional functions, where $n$ is the size of the input.
-- O(r*c) per call to `largest_zero_submatrix()`, where $r$ and $c$ are the matrix dimensions.
+- O(R*C) per call to `largest_zero_submatrix()`, where $R$ and $C$ are the matrix dimensions.
 
 Space Complexity:
 - O(n) auxiliary and O(n) for the returned indices from each neighbor query.
 - O(n) auxiliary for `largest_histogram_rectangle()`.
-- O(c) auxiliary for `largest_zero_submatrix()`.
+- O(C) auxiliary for `largest_zero_submatrix()`.
 
 */
 

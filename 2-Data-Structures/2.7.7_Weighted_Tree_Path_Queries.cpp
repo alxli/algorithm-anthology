@@ -19,8 +19,8 @@ weighted depth `dw[u]` and return `dw[u] + dw[v] - 2*dw[lca]`.
   by the constructor's outer loop.
 - `lca(u, v)` returns the lowest common ancestor of `u` and `v`, or $-1$ if they lie in different
   trees.
-- `kth_ancestor(u, k)` returns the $k$-th ancestor of `u`, stopping at that tree's root if `k`
-  exceeds `u`'s depth.
+- `kth_ancestor(u, k)` returns the ancestor `k` edges above `u` (`k = 0` returns `u`), stopping at
+  that tree's root if `k` exceeds `u`'s depth.
 - `is_ancestor(parent, child)` returns whether `parent` is an ancestor of `child`.
 - `path_query(u, v)` returns the combined weight of the edges on the path from `u` to `v`. The nodes
   must be distinct and lie in the same tree.

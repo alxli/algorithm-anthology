@@ -2,7 +2,7 @@
 
 \section{\texorpdfstring{String Utilities}{3.1 String Utilities}}
 \setcounter{section}{1}
-Common string functions, many of which already have standard STL equivalents. Most of the following implementations are presented for educational purposes, and are not heavily optimized. They often depend on certain \inlinecode{std::string} functions that have unspecified complexity.
+Common string functions, many of which have standard library counterparts. The implementations below are educational rather than heavily optimized, and often depend on \inlinecode{std::string} operations with unspecified complexity.
 
 \textbf{Time Complexity}: $O(n)$ per call to most operations, where $n$ is the length of the input string or total length of all input strings. Exceptions are noted with the individual functions below.
 
@@ -494,7 +494,7 @@ FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Start
   \item \inlinecode{hash32(x)} and \inlinecode{hash64(x)} hash any integer type that can be converted to \inlinecode{uint32\_t} or \inlinecode{uint64\_t}, respectively.
   \item \inlinecode{hash\_combine32(h, x)} and \inlinecode{hash\_combine64(h, x)} fold another already-hashed value into an existing hash accumulator.
   \item \inlinecode{hash\_float(x)} and \inlinecode{hash\_double(x)} hash floating-point bit patterns, normalizing \inlinecode{-0.0} to \inlinecode{0.0}. Different NaN representations may still hash differently.
-  \item \inlinecode{hash\_string\_fnv1a32(s)} and \inlinecode{hash\_string\_fnv1a64(s)} compute FNV-1a hashes of string \inlinecode{s}.
+  \item \inlinecode{fnv1a32(s)} and \inlinecode{fnv1a64(s)} compute FNV-1a hashes of string \inlinecode{s}.
   \item \inlinecode{hash\_range32(lo, hi)} and \inlinecode{hash\_range64(lo, hi)} hash a sequence of integer-like values in the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{PairIntHasher} is a self-contained hasher for \inlinecode{std::pair\textless{}int, int\textgreater{}} keys, written without any dependency on the templates below so that it can be copy-pasted on its own.
   \item \inlinecode{IntHasher\textless{}Int\textgreater{}}, \inlinecode{PairHasher\textless{}A, B\textgreater{}}, \inlinecode{TupleHasher\textless{}Ts...\textgreater{}}, and \inlinecode{VectorHasher\textless{}T\textgreater{}} are hash functors passed as the third template argument of \inlinecode{std::unordered\_map} or \inlinecode{std::unordered\_set}.
@@ -560,8 +560,8 @@ uint64_t hash_combine64(uint64_t h, uint64_t x) {
 }
 
 uint32_t hash_float(float x) {
-  if (x == 0.0f) {
-    x = 0.0f;  // Normalize -0.0.
+  if (x == 0.0F) {
+    x = 0.0F;  // Normalize -0.0.
   }
   uint32_t bits = 0;
   std::memcpy(&bits, &x, sizeof(bits));
@@ -577,7 +577,7 @@ uint64_t hash_double(double x) {
   return mix64(bits);
 }
 
-uint32_t hash_string_fnv1a32(const std::string &s) {
+uint32_t fnv1a32(const std::string &s) {
   uint32_t h = 2166136261U;
   for (unsigned char c : s) {
     h ^= c;
@@ -586,7 +586,7 @@ uint32_t hash_string_fnv1a32(const std::string &s) {
   return h;
 }
 
-uint64_t hash_string_fnv1a64(const std::string &s) {
+uint64_t fnv1a64(const std::string &s) {
   uint64_t h = 14695981039346656037ULL;
   for (unsigned char c : s) {
     h ^= c;
@@ -709,10 +709,10 @@ int main() {
   assert(mix32(123U) != mix32(124U));
   assert(hash32(-1) == hash32(-1));
   assert(hash64(123) == mix64(123ULL));
-  assert(hash_float(-0.0f) == hash_float(0.0f));
+  assert(hash_float(-0.0F) == hash_float(0.0F));
   assert(hash_double(-0.0) == hash_double(0.0));
-  assert(hash_string_fnv1a32("abc") == hash_string_fnv1a32("abc"));
-  assert(hash_string_fnv1a64("abc") != hash_string_fnv1a64("acb"));
+  assert(fnv1a32("abc") == fnv1a32("abc"));
+  assert(fnv1a64("abc") != fnv1a64("acb"));
 
   vector<int> v;
   v.push_back(1);
@@ -1553,27 +1553,28 @@ This implementation stores transitions in hash tables, which keeps lookups expec
 
 \begin{compactitem}
   \item \inlinecode{AhoCorasick(needles)} constructs the finite-state automaton for a set of needle strings that are to be searched for subsequently in haystack queries. Empty needles are ignored.
-  \item \inlinecode{find\_all\_in(haystack, report\_match)} calls the function \inlinecode{report\_match(s, pos)} once on each occurrence of each needle that occurs in the \inlinecode{haystack}, where \inlinecode{pos} is the starting position in the \inlinecode{haystack} at which string \inlinecode{s} (a matched needle) occurs. The matches will be reported in increasing order of their ending positions within the \inlinecode{haystack}.
+  \item \inlinecode{find\_all\_in(haystack)} returns a vector of (\inlinecode{needle\_idx}, \inlinecode{pos}) pairs for all matches, where \inlinecode{needle\_idx} is the 0-based index of a matched needle and \inlinecode{pos} is its starting position in \inlinecode{haystack}. Matches are ordered by increasing ending position in \inlinecode{haystack}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(L + z)$ expected per call to the constructor, where $L$ is the total needle length and $z$ is the total number of inherited output entries.
-  \item $O(n + z)$ expected per call to \inlinecode{find\_all\_in(haystack, report\_match)}, where $n$ is the length of \inlinecode{haystack} and $z$ is the number of matches.
+  \item $O(n + z)$ expected per call to \inlinecode{find\_all\_in(haystack)}, where $n$ is the length of \inlinecode{haystack} and $z$ is the number of matches.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(L + z)$ for storage of the automaton and inherited output entries.
-  \item $O(1)$ auxiliary for \inlinecode{find\_all\_in()}.
+  \item $O(1)$ auxiliary and $O(z)$ for the vector returned by \inlinecode{find\_all\_in()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <queue>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 using std::string;
 
@@ -1644,24 +1645,23 @@ class AhoCorasick {
     }
   }
 
-  template<typename Fn>
-  void find_all_in(const string &haystack, Fn report_match) const {
+  std::vector<std::pair<int, int>> find_all_in(const string &haystack) const {
+    std::vector<std::pair<int, int>> matches;
     int state = 0;
     for (int i = 0; i < static_cast<int>(haystack.size()); i++) {
       state = next_state(state, haystack[i]);
       for (int idx : out[state]) {
-        report_match(needles[idx], i - static_cast<int>(needles[idx].size()) + 1);
+        matches.emplace_back(idx, i - static_cast<int>(needles[idx].size()) + 1);
       }
     }
+    return matches;
   }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <cassert>
-#include <utility>
 using namespace std;
 
 int main() {
@@ -1676,21 +1676,11 @@ int main() {
   needles.push_back("abccab");
 
   AhoCorasick ac(needles);
-  vector<pair<string, int>> matches;
-  ac.find_all_in("abccab", [&](const string &needle, int pos) {
-    matches.push_back({needle, pos});
-  });
-  sort(matches.begin(), matches.end());
   assert(
-      (matches ==
-       vector<pair<string, int>>{
-           {"a", 0}, {"a", 4}, {"ab", 0}, {"ab", 4}, {"abccab", 0}, {"bc", 1}, {"c", 2}, {"c", 3}
-       })
+      (ac.find_all_in("abccab") ==
+       vector<pair<int, int>>{{0, 0}, {1, 0}, {3, 1}, {5, 2}, {5, 3}, {0, 4}, {7, 0}, {1, 4}})
   );
-
-  vector<pair<string, int>> none;
-  ac.find_all_in("zzzz", [&](const string &needle, int pos) { none.push_back({needle, pos}); });
-  assert(none.empty());
+  assert(ac.find_all_in("zzzz").empty());
   return 0;
 }
 \end{lstlisting}
@@ -2437,7 +2427,7 @@ int main() {
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Trie}
-Maintain a map of strings to values using a tree data structure. Each node corresponds to a character, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node. Children are stored in hash tables, and \inlinecode{walk()} sorts child labels as needed to preserve lexicographic traversal.
+Maintain a map of strings to values using a tree data structure. Each node corresponds to a character, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node. Children are stored in hash tables, and \inlinecode{entries()} sorts child labels as needed to preserve lexicographic traversal.
 
 \begin{compactitem}
   \item \inlinecode{Trie\textless{}V\textgreater{}()} constructs an empty map.
@@ -2447,16 +2437,16 @@ Maintain a map of strings to values using a tree data structure. Each node corre
   \item \inlinecode{erase(s)} removes the entry with string key \inlinecode{s} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the string to be removed was not found.
   \item \inlinecode{find(s)} returns a pointer to a const value associated with string key \inlinecode{s}, or \inlinecode{nullptr} if the key was not found.
   \item \inlinecode{count\_prefix(s)} returns the number of keys currently in the map that have \inlinecode{s} as a prefix (a key equal to \inlinecode{s} counts as well). \inlinecode{count\_prefix("")} therefore equals \inlinecode{size()}.
-  \item \inlinecode{walk(f)} calls the function \inlinecode{f(s, v)} on each entry of the map, in lexicographically ascending order of the string keys.
+  \item \inlinecode{entries()} returns all string-value pairs in lexicographically ascending order of string keys.
 \end{compactitem}
 
-For a small, fixed alphabet, the \inlinecode{std::unordered\_map} children can be replaced by a fixed-size array of child pointers indexed by character. This removes the per-step hashing and lets \inlinecode{walk()} traverse in sorted order without sorting each node's labels, at the cost of restricting the alphabet and spending more memory per node.
+For a small, fixed alphabet, the \inlinecode{std::unordered\_map} children can be replaced by a fixed-size array of child pointers indexed by character. This removes the per-step hashing and lets \inlinecode{entries()} traverse in sorted order without sorting each node's labels, at the cost of restricting the alphabet and spending more memory per node.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ expected per call to \inlinecode{insert(s, v)}, \inlinecode{erase(s)}, \inlinecode{find(s)}, and \inlinecode{count\_prefix(s)}, where $n$ is the length of \inlinecode{s}.
-  \item $O(l)$ per call to \inlinecode{walk()}, where $l$ is the total length of string keys that are currently in the map, treating the character alphabet as constant.
+  \item $O(l)$ per call to \inlinecode{entries()}, where $l$ is the total length of string keys that are currently in the map, treating the character alphabet as constant.
   \item $O(1)$ per call to all other operations.
 \end{compactitem}
 
@@ -2464,7 +2454,8 @@ For a small, fixed alphabet, the \inlinecode{std::unordered\_map} children can b
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(l)$ for storage of the Trie, where $l$ is the total length of string keys that are currently in the map.
-  \item $O(n)$ auxiliary stack space for destruction and \inlinecode{walk()}, where $n$ is the maximum length of any string that has been inserted so far.
+  \item $O(l)$ for the vector returned by \inlinecode{entries()}.
+  \item $O(n)$ auxiliary stack space for destruction and \inlinecode{entries()}, where $n$ is the maximum length of any string that has been inserted so far.
   \item $O(n)$ auxiliary stack space for \inlinecode{erase(s)}, where $n$ is the length of \inlinecode{s}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
@@ -2510,16 +2501,15 @@ class Trie {
     return true;
   }
 
-  template<typename Fn>
-  static void walk(Node *n, string &s, Fn f) {
+  static void collect_entries(Node *n, string &s, std::vector<std::pair<string, V>> &res) {
     if (n->is_terminal) {
-      f(s, n->value);
+      res.emplace_back(s, n->value);
     }
     std::vector<std::pair<char, Node *>> children(n->children.begin(), n->children.end());
     std::sort(children.begin(), children.end());
     for (auto &[c, child] : children) {
       s += c;
-      walk(child, s, f);
+      collect_entries(child, s, res);
       s.pop_back();
     }
   }
@@ -2599,10 +2589,12 @@ class Trie {
     return n->cnt;
   }
 
-  template<typename Fn>
-  void walk(Fn f) const {
+  std::vector<std::pair<string, V>> entries() const {
+    std::vector<std::pair<string, V>> res;
+    res.reserve(num_terminals);
     string s;
-    walk(root, s, f);
+    collect_entries(root, s, res);
+    return res;
   }
 };
 \end{lstlisting}
@@ -2619,20 +2611,18 @@ int main() {
   for (int i = 0; i < static_cast<int>(s.size()); i++) {
     assert(t.insert(s[i], i));
   }
-  vector<pair<string, int>> entries;
-  t.walk([&](string key, int value) { entries.emplace_back(key, value); });
   assert(
-      (entries == vector<pair<string, int>>{
-                      {"", 0},
-                      {"a", 1},
-                      {"i", 6},
-                      {"in", 7},
-                      {"inn", 8},
-                      {"tea", 3},
-                      {"ted", 4},
-                      {"ten", 5},
-                      {"to", 2}
-                  })
+      (t.entries() == vector<pair<string, int>>{
+                          {"", 0},
+                          {"a", 1},
+                          {"i", 6},
+                          {"in", 7},
+                          {"inn", 8},
+                          {"tea", 3},
+                          {"ted", 4},
+                          {"ten", 5},
+                          {"to", 2}
+                      })
   );
   assert(!t.empty());
   assert(t.size() == 9);
@@ -2663,7 +2653,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Radix Tree}
-Maintain a map of strings to values using a compressed tree data structure. Each node corresponds to a substring of an inserted string, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node. Contrary to a regular trie, a radix tree is more space efficient as it combines chains of nodes with only a single child. Children are stored in hash tables, and \inlinecode{walk()} sorts child labels as needed to preserve lexicographic traversal.
+Maintain a map of strings to values using a compressed tree data structure. Each node corresponds to a substring of an inserted string, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node. Contrary to a regular trie, a radix tree is more space efficient as it combines chains of nodes with only a single child. Children are stored in hash tables, and \inlinecode{entries()} sorts child labels as needed to preserve lexicographic traversal.
 
 \begin{compactitem}
   \item \inlinecode{RadixTree\textless{}V\textgreater{}()} constructs an empty map.
@@ -2673,14 +2663,14 @@ Maintain a map of strings to values using a compressed tree data structure. Each
   \item \inlinecode{erase(s)} removes the entry with string key \inlinecode{s} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the string to be removed was not found.
   \item \inlinecode{find(s)} returns a pointer to a const value associated with string key \inlinecode{s}, or \inlinecode{nullptr} if the key was not found.
   \item \inlinecode{count\_prefix(s)} returns the number of keys currently in the map that have \inlinecode{s} as a prefix (a key equal to \inlinecode{s} counts as well), including the case where \inlinecode{s} ends partway along a compressed edge. \inlinecode{count\_prefix("")} therefore equals \inlinecode{size()}.
-  \item \inlinecode{walk(f)} calls the function \inlinecode{f(s, v)} on each entry of the map, in lexicographically ascending order of the string keys.
+  \item \inlinecode{entries()} returns all string-value pairs in lexicographically ascending order of string keys.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ expected per call to \inlinecode{insert(s, v)}, \inlinecode{erase(s)}, \inlinecode{find(s)}, and \inlinecode{count\_prefix(s)}, where $n$ is the length of \inlinecode{s}, assuming the number of outgoing compressed edges checked at each node is small.
-  \item $O(l \log l)$ per call to \inlinecode{walk()}, where $l$ is the total length of string keys that are currently in the map.
+  \item $O(l \log l)$ per call to \inlinecode{entries()}, where $l$ is the total length of string keys that are currently in the map.
   \item $O(1)$ per call to all other operations.
 \end{compactitem}
 
@@ -2688,7 +2678,8 @@ Maintain a map of strings to values using a compressed tree data structure. Each
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(l)$ for storage of the radix tree, where $l$ is the total length of string keys that are currently in the map.
-  \item $O(n)$ auxiliary stack space for \inlinecode{insert()}, destruction, and \inlinecode{walk()}, where $n$ is the maximum length of any string that has been inserted so far.
+  \item $O(l)$ for the vector returned by \inlinecode{entries()}.
+  \item $O(n)$ auxiliary stack space for \inlinecode{insert()}, destruction, and \inlinecode{entries()}, where $n$ is the maximum length of any string that has been inserted so far.
   \item $O(n)$ auxiliary stack space for \inlinecode{erase(s)}, where $n$ is the length of \inlinecode{s}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
@@ -2815,16 +2806,15 @@ class RadixTree {
     return false;
   }
 
-  template<typename Fn>
-  static void walk(Node *n, string &s, Fn f) {
+  static void collect_entries(Node *n, string &s, std::vector<std::pair<string, V>> &res) {
     if (n->value) {
-      f(s, *n->value);
+      res.emplace_back(s, *n->value);
     }
     std::vector<std::pair<string, Node *>> children(n->children.begin(), n->children.end());
     std::sort(children.begin(), children.end());
     for (auto &[key, child] : children) {
       s += key;
-      walk(child, s, f);
+      collect_entries(child, s, res);
       s.erase(s.size() - key.size());
     }
   }
@@ -2916,10 +2906,12 @@ class RadixTree {
     return n->cnt;
   }
 
-  template<typename Fn>
-  void walk(Fn f) const {
+  std::vector<std::pair<string, V>> entries() const {
+    std::vector<std::pair<string, V>> res;
+    res.reserve(num_terminals);
     string s;
-    walk(root, s, f);
+    collect_entries(root, s, res);
+    return res;
   }
 };
 \end{lstlisting}
@@ -2936,20 +2928,18 @@ int main() {
   for (int i = 0; i < static_cast<int>(s.size()); i++) {
     assert(t.insert(s[i], i));
   }
-  vector<pair<string, int>> entries;
-  t.walk([&](string key, int value) { entries.emplace_back(key, value); });
   assert(
-      (entries == vector<pair<string, int>>{
-                      {"", 0},
-                      {"a", 1},
-                      {"i", 6},
-                      {"in", 7},
-                      {"inn", 8},
-                      {"tea", 3},
-                      {"ted", 4},
-                      {"ten", 5},
-                      {"to", 2}
-                  })
+      (t.entries() == vector<pair<string, int>>{
+                          {"", 0},
+                          {"a", 1},
+                          {"i", 6},
+                          {"in", 7},
+                          {"inn", 8},
+                          {"tea", 3},
+                          {"ted", 4},
+                          {"ten", 5},
+                          {"to", 2}
+                      })
   );
   assert(!t.empty());
   assert(t.size() == 9);
@@ -3581,7 +3571,7 @@ Given two strings, determine their longest common subsequence. A subsequence is 
 The dynamic program compares prefixes: if the last characters match, they can extend an optimal subsequence of the smaller prefixes; otherwise, one of the two last characters must be skipped. Following the filled table backward reconstructs one optimal subsequence. Hirschberg's algorithm keeps only one DP row at a time, using forward and backward length rows to choose where an optimal answer crosses the midpoint of the longer string.
 
 \begin{compactitem}
-  \item \inlinecode{longest\_common\_subsequence(s1, s2)} returns the longest common subsequence of strings \inlinecode{s1} and \inlinecode{s2} using a classic dynamic programming approach. This implementation computes \inlinecode{dp[i][j]} (the length of the longest common subsequence for the length $i$ prefix of \inlinecode{s1} and the length $j$ prefix of \inlinecode{s2}) before following the path backwards to construct the answer.
+  \item \inlinecode{longest\_common\_subsequence(s1, s2)} returns the longest common subsequence of strings \inlinecode{s1} and \inlinecode{s2} using a classic dynamic programming approach. It computes $dp(i, j)$, the longest common subsequence length for the length-$i$ prefix of \inlinecode{s1} and length-$j$ prefix of \inlinecode{s2}, before following the table backward to construct the answer.
   \item \inlinecode{hirschberg\_lcs(s1, s2)} returns the longest common subsequence of strings \inlinecode{s1} and \inlinecode{s2} using the more memory efficient Hirschberg's algorithm.
 \end{compactitem}
 
@@ -3701,7 +3691,7 @@ Dynamic programming compares prefixes and chooses the cheapest last operation: a
 
 \begin{compactitem}
   \item \inlinecode{edit\_distance(s1, s2)} returns the Levenshtein edit distance between strings \inlinecode{s1} and \inlinecode{s2}.
-  \item \inlinecode{align\_sequences(s1, s2, gap\_cost, sub\_cost)} returns a pair of aligned strings for strings \inlinecode{s1} and \inlinecode{s2}, using a classic dynamic programming approach. This implementation first computes \inlinecode{dp[i][j]} (the cost of aligning the length $i$ prefix of \inlinecode{s1} with the length $j$ prefix of \inlinecode{s2}) before following the path backwards to construct the answer. For ${\inlinecodemath{gap\_cost}} = {\inlinecodemath{sub\_cost}} = 1$, \inlinecode{dp[n][m]} will be the Levenshtein edit distance, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+  \item \inlinecode{align\_sequences(s1, s2, gap\_cost, sub\_cost)} returns a pair of aligned strings for strings \inlinecode{s1} and \inlinecode{s2}, using a classic dynamic programming approach. It first computes $dp(i, j)$, the cost of aligning the length-$i$ prefix of \inlinecode{s1} with the length-$j$ prefix of \inlinecode{s2}, before following the table backward to construct the answer. For ${\inlinecodemath{gap\_cost}} = {\inlinecodemath{sub\_cost}} = 1$, $dp(n, m)$ is the Levenshtein edit distance, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
   \item \inlinecode{hirschberg\_align(s1, s2, gap\_cost, sub\_cost)} returns the sequence alignment of strings \inlinecode{s1} and \inlinecode{s2} using the more memory efficient Hirschberg's algorithm.
 \end{compactitem}
 
@@ -4070,7 +4060,7 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Postfix Conversion and Evaluation}
+\subsection{Shunting Yard and Postfix Evaluation}
 Convert an infix expression to postfix notation, also called reverse Polish notation (RPN), and evaluate the result. In postfix notation each operator follows its operands, so evaluation needs no parentheses or precedence rules: operands are pushed onto a value stack, and each operator replaces its operands with their result.
 
 The shunting yard algorithm produces postfix notation by sending operands directly to the output and holding operators on a stack. An operator is emitted before a lower-precedence operator, or before a left-associative operator of equal precedence. Parentheses delimit independent portions of the operator stack. Whether \inlinecode{+} or \inlinecode{-} is unary follows from context: a prefix operator is expected at the beginning, after another operator, or after an opening parenthesis.
@@ -4486,6 +4476,7 @@ For symbol probabilities $p_i$, the order-0 empirical entropy is $H = -\sum_i p_
 #include <cassert>
 #include <cmath>
 #include <cstdint>
+#include <numeric>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -4500,10 +4491,7 @@ std::vector<int> byte_frequencies(const string &s) {
 }
 
 double entropy(const std::vector<int> &freq) {
-  int64_t total = 0;
-  for (int count : freq) {
-    total += count;
-  }
+  int64_t total = std::accumulate(freq.begin(), freq.end(), 0LL);
   if (total == 0) {
     return 0;
   }
@@ -4548,10 +4536,7 @@ double conditional_entropy(const string &s, int order = 1) {
 
 double expected_code_length(const std::vector<int> &freq, const std::vector<int> &length) {
   assert(freq.size() == length.size());
-  int64_t total = 0;
-  for (int count : freq) {
-    total += count;
-  }
+  int64_t total = std::accumulate(freq.begin(), freq.end(), 0LL);
   if (total == 0) {
     return 0;
   }
@@ -4912,6 +4897,7 @@ The input must not contain the sentinel character \inlinecode{\textquotesingle{}
 #include <algorithm>
 #include <numeric>
 #include <string>
+#include <tuple>
 #include <vector>
 
 std::string bwt(std::string s) {
@@ -4926,10 +4912,7 @@ std::string bwt(std::string s) {
   }
   for (int k = 1; k < n; k <<= 1) {
     auto cmp = [&](int a, int b) {
-      if (rank[a] != rank[b]) {
-        return rank[a] < rank[b];
-      }
-      return rank[(a + k) % n] < rank[(b + k) % n];
+      return std::tie(rank[a], rank[(a + k) % n]) < std::tie(rank[b], rank[(b + k) % n]);
     };
     std::sort(order.begin(), order.end(), cmp);
     tmp[order[0]] = 0;

@@ -48,10 +48,10 @@ Space Complexity:
 
 */
 
+#include <chrono>
 #include <cstdint>
 #include <functional>
 #include <optional>
-#include <random>
 #include <utility>
 #include <vector>
 
@@ -59,7 +59,8 @@ template<typename K, typename V, typename Compare = std::less<K>>
 class Treap {
   struct Node {
     static uint32_t rand32() {
-      static uint32_t x = std::random_device{}() | 1U;
+      static uint32_t x =
+          static_cast<uint32_t>(std::chrono::steady_clock::now().time_since_epoch().count()) | 1U;
       x ^= x << 13;
       x ^= x >> 17;
       x ^= x << 5;

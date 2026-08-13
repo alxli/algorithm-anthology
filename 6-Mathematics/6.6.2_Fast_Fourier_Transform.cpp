@@ -14,8 +14,8 @@ the true coefficients stay well within the roughly 15 significant decimal digits
 hold. When exact results modulo a prime are required, or coefficients are large, prefer the number
 theoretic transform; use the FFT for real-valued convolution or big-integer multiplication.
 
-- `fft(a, invert)` transforms the complex vector `a` in place, whose length must be a power of two.
-  The forward transform uses `invert = false`; the inverse uses `invert = true`.
+- `fft(a, invert = false)` transforms the complex vector `a` in place, whose length must be a power
+  of two. The forward transform uses `invert = false`; the inverse uses `invert = true`.
 - `convolve(a, b)` returns the convolution of two integer sequences `a` and `b`, that is, the
   coefficients of the product of the two polynomials whose coefficients are the inputs. The result
   has length $`a.size()` + `b.size()` - 1$, or is empty if either input is empty, with each entry
@@ -43,11 +43,11 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-typedef std::complex<double> cd;
-const double PI = acos(-1.0);
+using cdbl = std::complex<double>;
+const double PI = std::acos(-1.0);
 const int NAIVE_CUTOFF = 150;
 
-void fft(std::vector<cd> &a, bool invert) {
+void fft(std::vector<cdbl> &a, bool invert = false) {
   int n = static_cast<int>(a.size());
   assert(n > 0 && (n & (n - 1)) == 0);
   for (int i = 1, j = 0; i < n; i++) {
@@ -62,11 +62,11 @@ void fft(std::vector<cd> &a, bool invert) {
   }
   for (int len = 2; len <= n; len <<= 1) {
     double angle = 2 * PI / len * (invert ? -1 : 1);
-    cd root(cos(angle), sin(angle));
+    cdbl root(std::cos(angle), std::sin(angle));
     for (int i = 0; i < n; i += len) {
-      cd w(1);
+      cdbl w(1);
       for (int k = 0; k < len / 2; k++) {
-        cd u = a[i + k], v = a[i + k + len / 2] * w;
+        cdbl u = a[i + k], v = a[i + k + len / 2] * w;
         a[i + k] = u + v;
         a[i + k + len / 2] = u - v;
         w *= root;
@@ -74,7 +74,7 @@ void fft(std::vector<cd> &a, bool invert) {
     }
   }
   if (invert) {
-    for (cd &x : a) {
+    for (cdbl &x : a) {
       x /= n;
     }
   }
@@ -98,18 +98,18 @@ std::vector<int64_t> convolve(const std::vector<int64_t> &a, const std::vector<i
   while (n < result_size) {
     n <<= 1;
   }
-  std::vector<cd> fa(a.begin(), a.end()), fb(b.begin(), b.end());
+  std::vector<cdbl> fa(a.begin(), a.end()), fb(b.begin(), b.end());
   fa.resize(n);
   fb.resize(n);
-  fft(fa, false);
-  fft(fb, false);
+  fft(fa);
+  fft(fb);
   for (int i = 0; i < n; i++) {
     fa[i] *= fb[i];
   }
   fft(fa, true);
   std::vector<int64_t> res(result_size);
   for (int i = 0; i < result_size; i++) {
-    res[i] = llround(fa[i].real());
+    res[i] = std::llround(fa[i].real());
   }
   return res;
 }

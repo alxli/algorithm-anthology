@@ -13,13 +13,11 @@ semantics in one place.
   `a` $\to$ `b` hits the polygon: $(-1, -1)$ for no intersection, $(i, -1)$ for touching vertex $i$,
   $(i, i)$ for containing side $i \to i+1$, or $(i, j)$ for crossing sides $i \to i+1$ and
   $j \to j+1$, with side indices taken modulo the number of vertices. The polygon must have at least
-  three vertices, and `a` and `b` must differ.
+  three vertices, and `a` and `b` must differ. When the line crosses two sides, their order is
+  determined using a floating-point line parameter.
 - `convex_polygon_tangents(poly, p)` returns the two tangent vertex indices from an outside point
   `p` as (`left`, `right`). The left tangent has all polygon vertices on or to the left of the
   directed line `p` $\to$ `poly[left]`; the right tangent is analogous for the right side.
-
-When a line crosses two sides, their returned order is determined using a floating-point line
-parameter.
 
 Overflow warning: For integer-coordinate inputs, all orientation tests are exact provided the cross
 products do not overflow.
@@ -51,7 +49,7 @@ int sgn(const T &x) {
 }
 
 template<typename Pt>
-bool on_segment(const Pt &p, const Pt &a, const Pt &b) {
+bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
   return cross(a, b, p) == 0 && std::min(a.x, b.x) <= p.x && p.x <= std::max(a.x, b.x) &&
          std::min(a.y, b.y) <= p.y && p.y <= std::max(a.y, b.y);
 }
@@ -68,7 +66,7 @@ bool point_in_convex_polygon(
     return include_boundary && p.x == poly[0].x && p.y == poly[0].y;
   }
   if (n == 2) {
-    return include_boundary && on_segment(p, poly[0], poly[1]);
+    return include_boundary && point_on_segment(p, poly[0], poly[1]);
   }
   int left = sgn(cross(poly[1], p, poly[0]));
   int right = sgn(cross(poly[n - 1], p, poly[0]));
@@ -76,10 +74,10 @@ bool point_in_convex_polygon(
     return false;
   }
   if (left == 0) {
-    return include_boundary && on_segment(p, poly[0], poly[1]);
+    return include_boundary && point_on_segment(p, poly[0], poly[1]);
   }
   if (right == 0) {
-    return include_boundary && on_segment(p, poly[0], poly[n - 1]);
+    return include_boundary && point_on_segment(p, poly[0], poly[n - 1]);
   }
   int lo = 1, hi = n - 1;
   while (hi - lo > 1) {

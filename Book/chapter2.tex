@@ -13,12 +13,12 @@ For production C++, prefer containers such as \inlinecode{std::list}, \inlinecod
   \item \inlinecode{split\_half(head, \&second)} cuts a list into two halves, returning the first half and storing the second half in \inlinecode{second}.
   \item \inlinecode{merge\_sorted\_lists(a, b)} merges two sorted lists using a dummy node and returns the merged head.
   \item \inlinecode{splice\_after(pos, before)} moves the node after \inlinecode{before} so it appears after \inlinecode{pos}.
-  \item \inlinecode{splice\_range\_after(pos, before\_first, last)} moves the half-open range (\inlinecode{before\_first}, \inlinecode{last}) so it appears after \inlinecode{pos}.
+  \item \inlinecode{splice\_range\_after(pos, before\_first, last)} moves the half-open range (\inlinecode{before\_first}, \inlinecode{last}) so it appears after \inlinecode{pos}; \inlinecode{pos} must not lie inside the moved range.
 \end{compactitem}
 
-The splicing helpers use the same ``after'' convention as \inlinecode{std::forward\_list::splice\_after()}. They work naturally with a dummy head node, which makes insertions and removals at the beginning of a list match all other positions. For \inlinecode{splice\_range\_after()}, \inlinecode{pos} must not lie inside the moved range. For doubly linked list splicing, use the next section.
+The splicing helpers use the same ``after'' convention as \inlinecode{std::forward\_list::splice\_after()}. They work naturally with a dummy head node, which makes insertions and removals at the beginning of a list match all other positions. For doubly linked list splicing, use the next section.
 
-For cycle detection, see the variant on iterated functions in chapter 1, which can be easily adapted for linked lists.
+For cycle detection, see the variants on iterated functions in 1.7.3, which can be directly adapted for linked lists.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -369,7 +369,7 @@ class LRUCache {
       where.erase(items.back().first);
       items.pop_back();
     }
-    items.push_front({key, value});
+    items.emplace_front(key, value);
     where[key] = items.begin();
   }
 };
@@ -1086,10 +1086,10 @@ The comparator \inlinecode{comp} defines the key ordering: \inlinecode{comp(a, b
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <chrono>
 #include <cstdint>
 #include <functional>
 #include <optional>
-#include <random>
 #include <utility>
 #include <vector>
 
@@ -1097,7 +1097,8 @@ template<typename K, typename V, typename Compare = std::less<K>>
 class Treap {
   struct Node {
     static uint32_t rand32() {
-      static uint32_t x = std::random_device{}() | 1U;
+      static uint32_t x =
+          static_cast<uint32_t>(std::chrono::steady_clock::now().time_since_epoch().count()) | 1U;
       x ^= x << 13;
       x ^= x >> 17;
       x ^= x << 5;
@@ -1776,7 +1777,7 @@ class RedBlackTree {
   void collect_entries(Node *n, std::vector<std::pair<K, V>> &res) const {
     if (n != LEAF_NIL) {
       collect_entries(n->left, res);
-      res.push_back({n->key, n->value});
+      res.emplace_back(n->key, n->value);
       collect_entries(n->right, res);
     }
   }
@@ -2456,7 +2457,7 @@ This implementation uses \inlinecode{std::pair} to represent intervals and requi
   \item \inlinecode{erase(lo, hi)} removes the entry with key $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the interval was not found.
   \item \inlinecode{find\_key(lo, hi)} returns a pointer to a const \inlinecode{std::pair} representing the key of some interval in the map which intersects with $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$, or \inlinecode{nullptr} if no such entry was found.
   \item \inlinecode{find\_value(lo, hi)} returns a pointer to a const value of some entry in the map with a key that intersects with $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$, or \inlinecode{nullptr} if no such entry was found.
-  \item \inlinecode{find\_all(lo, hi, f)} calls the function \inlinecode{f(lo, hi, v)} on each entry in the map that overlaps with $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$, in lexicographically ascending order of intervals.
+  \item \inlinecode{find\_all(lo, hi)} returns all entries that overlap $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ in lexicographically ascending order of intervals.
   \item \inlinecode{entries()} returns all intervals and their values in lexicographically ascending order of intervals.
 \end{compactitem}
 
@@ -2476,12 +2477,13 @@ This implementation uses \inlinecode{std::pair} to represent intervals and requi
   \item $O(1)$ auxiliary for \inlinecode{size()} and \inlinecode{empty()}.
   \item $O(\log n)$ auxiliary stack space on average for all other operations and destruction, and $O(n)$ in the worst case.
   \item $O(n)$ for the vector returned by \inlinecode{entries()}.
+  \item $O(m)$ for the vector returned by \inlinecode{find\_all()}, where $m$ is the number of intersecting intervals.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <chrono>
 #include <cstdint>
-#include <random>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -2492,7 +2494,8 @@ class IntervalTreap {
 
   struct Node {
     static uint32_t rand32() {
-      static uint32_t x = std::random_device{}() | 1U;
+      static uint32_t x =
+          static_cast<uint32_t>(std::chrono::steady_clock::now().time_since_epoch().count()) | 1U;
       x ^= x << 13;
       x ^= x >> 17;
       x ^= x << 5;
@@ -2610,17 +2613,16 @@ class IntervalTreap {
     return find_any(n->right, i);
   }
 
-  template<typename Fn>
-  static void find_all(Node *n, const Interval &i, Fn &f) {
+  static void find_all(Node *n, const Interval &i, std::vector<std::tuple<K, K, V>> &res) {
     if (n == nullptr || n->max < i.first) {
       return;
     }
-    find_all(n->left, i, f);
+    find_all(n->left, i, res);
     if (!(i.second < n->interval.first) && !(n->interval.second < i.first)) {
-      f(n->interval.first, n->interval.second, n->value);
+      res.emplace_back(n->interval.first, n->interval.second, n->value);
     }
     if (!(i.second < n->interval.first)) {
-      find_all(n->right, i, f);
+      find_all(n->right, i, res);
     }
   }
 
@@ -2671,10 +2673,11 @@ class IntervalTreap {
     return (n == nullptr) ? nullptr : &(n->value);
   }
 
-  template<typename Fn>
-  void find_all(const K &lo, const K &hi, Fn f) const {
+  std::vector<std::tuple<K, K, V>> find_all(const K &lo, const K &hi) const {
     assert(!(hi < lo));
-    find_all(root, Interval{lo, hi}, f);
+    std::vector<std::tuple<K, K, V>> res;
+    find_all(root, Interval{lo, hi}, res);
+    return res;
   }
 
   std::vector<std::tuple<K, K, V>> entries() const {
@@ -2705,9 +2708,10 @@ int main() {
   assert(t.size() == 5);
   assert(*t.find_key(3, 9) == (pair<int, int>{5, 20}));
   assert(*t.find_value(3, 9) == 'd');
-  vector<pair<int, int>> intersections;
-  t.find_all(16, 20, [&](int lo, int hi, char) { intersections.emplace_back(lo, hi); });
-  assert((intersections == vector<pair<int, int>>{{5, 20}, {10, 30}, {10, 40}, {15, 20}}));
+  assert(
+      (t.find_all(16, 20) ==
+       vector<tuple<int, int, char>>{{5, 20, 'd'}, {10, 30, 'b'}, {10, 40, 'f'}, {15, 20, 'a'}})
+  );
   assert(
       (t.entries() == vector<tuple<int, int, char>>{
                           {5, 20, 'd'}, {10, 30, 'b'}, {10, 40, 'f'}, {12, 15, 'e'}, {15, 20, 'a'}
@@ -2894,7 +2898,7 @@ struct Hasher {
   // uniformly and won't stop crafted collisions (unlike the non-linear hashers below). To harden
   // it, randomize the odd multiplier and take the high bits instead.
   uint32_t operator()(uint32_t k) const {
-    return k * 2654435761u;  // Or just return k.
+    return k * 2654435761U;  // Or just return k.
   }
 
   // SplitMix64 mixer (see 3.2.1's mix64).
@@ -3215,7 +3219,7 @@ struct Hasher {
   // uniformly and won't stop crafted collisions (unlike the non-linear hashers below). To harden
   // it, randomize the odd multiplier and take the high bits instead.
   uint32_t operator()(uint32_t k) const {
-    return k * 2654435761u;  // Or just return k.
+    return k * 2654435761U;  // Or just return k.
   }
 
   // SplitMix64 mixer (see 3.2.1's mix64).
@@ -3324,6 +3328,7 @@ The sentinel node requires \inlinecode{K} and \inlinecode{V} to be default const
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <chrono>
 #include <functional>
 #include <random>
 #include <utility>
@@ -3344,8 +3349,8 @@ class SkipList {
   int num_nodes;
   Compare comp;
 
-  static int random_level() {
-    static std::mt19937 rng(std::random_device{}());
+  static int rand_level() {
+    static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
     static std::uniform_int_distribution<int> coin(0, 1);
     int level = 1;
     while (coin(rng) && level < MAX_LEVELS) {
@@ -3409,7 +3414,7 @@ class SkipList {
     if (n != nullptr && !comp(k, n->key) && !comp(n->key, k)) {
       return false;
     }
-    int new_level = random_level();
+    int new_level = rand_level();
     if (new_level > curr_level) {
       for (int i = curr_level; i < new_level; i++) {
         update[i] = head;
@@ -3515,7 +3520,7 @@ int main() {
 \subsection{Sparse Table}
 Given a static array, precompute a table that answers range minimum queries in constant time. More generally, the sparse table works for any range query whose combining operation is both associative and idempotent (i.e. \inlinecode{combine(x, x)} must equal \inlinecode{x}). The canonical examples are ``min'', ``max'', ``gcd'', and the bitwise ``and'' and ``or''.
 
-For each level $j$, the entry \inlinecode{dp[j][i]} holds the result of \inlinecode{combine()} over the half-open range $[i, i + 2^j)$, built by combining two ranges of length $2^{j-1}$. A query over $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ is answered by combining the two overlapping ranges of length $2^j$ that are anchored at \inlinecode{lo} and at \inlinecode{hi}, where $2^j$ is the largest power of two not exceeding the length of the range. Because these two ranges overlap whenever the query length is not a power of two, the elements in the overlap are folded in twice; this is harmless only when \inlinecode{combine()} is idempotent. To support a non-idempotent but associative operation such as ``sum'' or ``XOR'' in constant time, use the disjoint sparse table in the next section instead, whose ranges meet at a center and never overlap.
+For each level $j$, the state $dp(j, i)$ holds the result of \inlinecode{combine()} over the half-open range $[i, i + 2^j)$, built by combining two ranges of length $2^{j-1}$. A query over $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ is answered by combining the two overlapping ranges of length $2^j$ that are anchored at \inlinecode{lo} and at \inlinecode{hi}, where $2^j$ is the largest power of two not exceeding the length of the range. Because these two ranges overlap whenever the query length is not a power of two, the elements in the overlap are folded in twice; this is harmless only when \inlinecode{combine()} is idempotent. To support a non-idempotent but associative operation such as ``sum'' or ``XOR'' in constant time, use the disjoint sparse table in the next section instead, whose ranges meet at a center and never overlap.
 
 The query operation is defined by an associative and idempotent function \inlinecode{combine(a, b)}. The default code below returns the ``min'' of the range; for ``gcd'', \inlinecode{combine(a, b)} should return \inlinecode{gcd(a, b)}.
 
@@ -5828,8 +5833,8 @@ The query and update operations match those of the point- and range-update segme
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <chrono>
 #include <cstdint>
-#include <random>
 #include <utility>
 
 template<typename T>
@@ -5840,7 +5845,8 @@ class ImplicitTreap {
 
   struct Node {
     static uint32_t rand32() {
-      static uint32_t x = std::random_device{}() | 1U;
+      static uint32_t x =
+          static_cast<uint32_t>(std::chrono::steady_clock::now().time_since_epoch().count()) | 1U;
       x ^= x << 13;
       x ^= x >> 17;
       x ^= x << 5;
@@ -6480,7 +6486,7 @@ class SparseSegTree2D {
 
  public:
   explicit SparseSegTree2D(const T &v = T{})
-      : root(new OuterNode(0, R - 1, combine_n(v, int64_t{R} * C))), init(v) {}
+      : root(new OuterNode(0, R - 1, combine_n(v, static_cast<int64_t>(R) * C))), init(v) {}
 
   ~SparseSegTree2D() { clean_up(root); }
   SparseSegTree2D(const SparseSegTree2D &) = delete;
@@ -6551,7 +6557,7 @@ Use this for static point-reporting queries when guaranteed worst-case bounds ar
 
 \begin{compactitem}
   \item \inlinecode{RangeTree\textless{}T\textgreater{}(lo, hi)} constructs a set of \inlinecode{std::pair} points from the half-open forward-iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
-  \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(i, x, y)} on each point whose $x$-coordinate is in $[{\inlinecodemath{x1}}, {\inlinecodemath{x2}}]$ and whose $y$-coordinate is in $[{\inlinecodemath{y1}}, {\inlinecodemath{y2}}]$. The first argument to \inlinecode{f} is the 0-based index of the point in the original range given to the constructor.
+  \item \inlinecode{query(x1, y1, x2, y2)} returns (\inlinecode{i}, \inlinecode{x}, \inlinecode{y}) tuples for all points in the closed rectangle $[{\inlinecodemath{x1}}, {\inlinecodemath{x2}}] \times [{\inlinecodemath{y1}}, {\inlinecodemath{y2}}]$, where \inlinecode{i} is the point's 0-based index in the original range.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -6566,12 +6572,14 @@ Use this for static point-reporting queries when guaranteed worst-case bounds ar
 \begin{compactitem}
   \item $O(n \log n)$ for storage of the points.
   \item $O(\log n)$ auxiliary stack space for \inlinecode{query()}.
+  \item $O(m)$ for the vector returned by \inlinecode{query()}, where $m$ is the number of reported points.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
 #include <iterator>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -6602,8 +6610,10 @@ class RangeTree {
     );
   }
 
-  template<typename Fn>
-  void query(int n, int lo, int hi, const T &x1, const T &y1, const T &x2, const T &y2, Fn &f) {
+  void query(
+      int n, int lo, int hi, const T &x1, const T &y1, const T &x2, const T &y2,
+      std::vector<std::tuple<int, T, T>> &res
+  ) {
     if (points[hi].x < x1 || x2 < points[lo].x) {
       return;
     }
@@ -6615,13 +6625,13 @@ class RangeTree {
         );
         for (; it != columns[n].end() && it->second <= y2; ++it) {
           const IndexedPoint &p = points[it->first];
-          f(p.original_index, p.x, p.y);
+          res.emplace_back(p.original_index, p.x, p.y);
         }
       }
     } else if (lo != hi) {
       int mid = lo + (hi - lo) / 2;
-      query(n * 2 + 1, lo, mid, x1, y1, x2, y2, f);
-      query(n * 2 + 2, mid + 1, hi, x1, y1, x2, y2, f);
+      query(n * 2 + 1, lo, mid, x1, y1, x2, y2, res);
+      query(n * 2 + 2, mid + 1, hi, x1, y1, x2, y2, res);
     }
   }
 
@@ -6642,10 +6652,11 @@ class RangeTree {
     build(0, 0, n - 1);
   }
 
-  template<typename Fn>
-  void query(const T &x1, const T &y1, const T &x2, const T &y2, Fn f) {
+  std::vector<std::tuple<int, T, T>> query(const T &x1, const T &y1, const T &x2, const T &y2) {
     assert(!(x2 < x1) && !(y2 < y1));
-    query(0, 0, static_cast<int>(points.size()) - 1, x1, y1, x2, y2, f);
+    std::vector<std::tuple<int, T, T>> res;
+    query(0, 0, static_cast<int>(points.size()) - 1, x1, y1, x2, y2, res);
+    return res;
   }
 };
 \end{lstlisting}
@@ -6660,26 +6671,16 @@ int main() {
   vector<pair<int, int>> v{{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
                            {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
   RangeTree<int> t(v.begin(), v.end());
-  vector<pair<int, int>> got;
-  vector<int> indices;
-  auto collect = [&](int i, int x, int y) {
-    indices.push_back(i);
-    got.emplace_back(x, y);
-  };
-  t.query(-1, -1, 2, 5, collect);
+  auto got = t.query(-1, -1, 2, 5);
   sort(got.begin(), got.end());
-  assert((got == vector<pair<int, int>>{{-1, -1}, {1, 4}, {2, -1}, {2, 2}}));
-  sort(indices.begin(), indices.end());
-  assert((indices == vector<int>{0, 2, 8, 9}));
-  got.clear();
-  indices.clear();
-  t.query(1, 1, 4, 8, collect);
+  assert((got == vector<tuple<int, int, int>>{{0, 1, 4}, {2, 2, 2}, {8, -1, -1}, {9, 2, -1}}));
+  got = t.query(1, 1, 4, 8);
   sort(got.begin(), got.end());
-  assert((got == vector<pair<int, int>>{{1, 4}, {2, 2}, {3, 1}}));
+  assert((got == vector<tuple<int, int, int>>{{0, 1, 4}, {2, 2, 2}, {3, 3, 1}}));
   return 0;
 }
 \end{lstlisting}
-\subsection{K-d Tree for 2D Range Query}
+\subsection{K-d Tree (2D Range Reporting)}
 Maintain a static set of two-dimensional points while supporting rectangle reporting queries. A k-d tree recursively splits points by alternating coordinates and stores a bounding box for each subtree, allowing whole subtrees to be accepted or pruned during a query.
 
 This implementation uses \inlinecode{std::pair} to represent points, requiring \inlinecode{operator\textless{}} to be defined on the numeric template type.
@@ -6688,7 +6689,7 @@ Use this for static point-reporting queries when $O(n)$ space and good average p
 
 \begin{compactitem}
   \item \inlinecode{RangeKDTree\textless{}T\textgreater{}(lo, hi)} constructs a set of \inlinecode{std::pair} points from the half-open forward-iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
-  \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(p)} on each point whose $x$-coordinate is in $[{\inlinecodemath{x1}}, {\inlinecodemath{x2}}]$ and whose $y$-coordinate is in $[{\inlinecodemath{y1}}, {\inlinecodemath{y2}}]$. The argument \inlinecode{p} is the point as an \inlinecode{std::pair}.
+  \item \inlinecode{query(x1, y1, x2, y2)} returns all points in the closed rectangle $[{\inlinecodemath{x1}}, {\inlinecodemath{x2}}] \times [{\inlinecodemath{y1}}, {\inlinecodemath{y2}}]$ as \inlinecode{std::pair} values.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -6703,6 +6704,7 @@ Use this for static point-reporting queries when $O(n)$ space and good average p
 \begin{compactitem}
   \item $O(n)$ for storage of the points.
   \item $O(\log n)$ auxiliary stack space for \inlinecode{query()}.
+  \item $O(m)$ for the vector returned by \inlinecode{query()}, where $m$ is the number of reported points.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -6741,8 +6743,10 @@ class RangeKDTree {
     build(mid + 1, hi, !div_x);
   }
 
-  template<typename Fn>
-  void query(int lo, int hi, const T &x1, const T &y1, const T &x2, const T &y2, Fn &f) {
+  void query(
+      int lo, int hi, const T &x1, const T &y1, const T &x2, const T &y2,
+      std::vector<std::pair<T, T>> &res
+  ) {
     if (lo >= hi) {
       return;
     }
@@ -6753,18 +6757,16 @@ class RangeKDTree {
       return;
     }
     if (!(ax < x1 || x2 < bx || ay < y1 || y2 < by)) {
-      for (int i = l_index[mid]; i < h_index[mid]; i++) {
-        f(tree[i]);
-      }
+      res.insert(res.end(), tree.begin() + l_index[mid], tree.begin() + h_index[mid]);
       return;
     }
-    query(lo, mid, x1, y1, x2, y2, f);
-    query(mid + 1, hi, x1, y1, x2, y2, f);
+    query(lo, mid, x1, y1, x2, y2, res);
+    query(mid + 1, hi, x1, y1, x2, y2, res);
     if (tree[mid].first < x1 || x2 < tree[mid].first || tree[mid].second < y1 ||
         y2 < tree[mid].second) {
       return;
     }
-    f(tree[mid]);
+    res.push_back(tree[mid]);
   }
 
  public:
@@ -6778,10 +6780,11 @@ class RangeKDTree {
     build(0, static_cast<int>(tree.size()), true);
   }
 
-  template<typename Fn>
-  void query(const T &x1, const T &y1, const T &x2, const T &y2, Fn f) {
+  std::vector<std::pair<T, T>> query(const T &x1, const T &y1, const T &x2, const T &y2) {
     assert(!(x2 < x1) && !(y2 < y1));
-    query(0, static_cast<int>(tree.size()), x1, y1, x2, y2, f);
+    std::vector<std::pair<T, T>> res;
+    query(0, static_cast<int>(tree.size()), x1, y1, x2, y2, res);
+    return res;
   }
 };
 \end{lstlisting}
@@ -6796,19 +6799,16 @@ int main() {
   vector<pair<int, int>> v{{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
                            {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
   RangeKDTree<int> t(v.begin(), v.end());
-  vector<pair<int, int>> got;
-  auto collect = [&](const pair<int, int> &p) { got.push_back(p); };
-  t.query(-1, -1, 2, 5, collect);
+  auto got = t.query(-1, -1, 2, 5);
   sort(got.begin(), got.end());
   assert((got == vector<pair<int, int>>{{-1, -1}, {1, 4}, {2, -1}, {2, 2}}));
-  got.clear();
-  t.query(1, 1, 4, 8, collect);
+  got = t.query(1, 1, 4, 8);
   sort(got.begin(), got.end());
   assert((got == vector<pair<int, int>>{{1, 4}, {2, 2}, {3, 1}}));
   return 0;
 }
 \end{lstlisting}
-\subsection{K-d Tree for Nearest Neighbor}
+\subsection{K-d Tree (Nearest Neighbor)}
 Maintain a static set of two-dimensional points while supporting nearest-neighbor queries. A k-d tree recursively splits points by the coordinate with larger spread, searches the more promising side first, and only explores the other side when its splitting plane can still improve the answer.
 
 This implementation uses \inlinecode{std::pair} to represent points. The numeric template type must support \inlinecode{operator\textless{}} and conversion to \inlinecode{int64\_t} for integral types or \inlinecode{long double} otherwise.
@@ -7920,12 +7920,10 @@ This version uses an \inlinecode{std::unordered\_map} for storage and coordinate
   \item \inlinecode{make\_set(u)} adds \inlinecode{u} as a singleton partition, or does nothing if \inlinecode{u} is already present.
   \item \inlinecode{size()} returns the number of elements that have been added.
   \item \inlinecode{sets()} returns the current number of disjoint sets.
-  \item \inlinecode{is\_united(u, v)} returns whether elements \inlinecode{u} and \inlinecode{v} belong to the same partition.
-  \item \inlinecode{unite(u, v)} replaces the partitions containing \inlinecode{u} and \inlinecode{v} with a single new partition consisting of the union of elements in the original partitions, returning \inlinecode{true} if a merge occurred or \inlinecode{false} if \inlinecode{u} and \inlinecode{v} already belonged to the same partition.
+  \item \inlinecode{is\_united(u, v)} returns whether elements \inlinecode{u} and \inlinecode{v}, which must have been added with \inlinecode{make\_set()}, belong to the same partition.
+  \item \inlinecode{unite(u, v)} replaces the partitions containing \inlinecode{u} and \inlinecode{v} with a single new partition consisting of the union of elements in the original partitions, returning \inlinecode{true} if a merge occurred or \inlinecode{false} if \inlinecode{u} and \inlinecode{v} already belonged to the same partition. Both elements must have been added with \inlinecode{make\_set()}.
   \item \inlinecode{get\_all\_sets()} returns all current partitions as a vector of vectors.
 \end{compactitem}
-
-A precondition to the last three operations is that \inlinecode{make\_set()} must have been previously called on their arguments.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -8069,19 +8067,13 @@ Path compression is intentionally not used, because it is hard to undo. Union by
 \begin{lstlisting}[language=C++]
 #include <cassert>
 #include <numeric>
+#include <tuple>
 #include <utility>
 #include <vector>
 
 class RollbackDSU {
-  struct Change {
-    int child, parent, parent_size;
-
-    Change(int child = -1, int parent = -1, int parent_size = 0)
-        : child(child), parent(parent), parent_size(parent_size) {}
-  };
-
   std::vector<int> root, size;
-  std::vector<Change> history;
+  std::vector<std::tuple<int, int, int>> history;  // (child, parent, old parent size)
   int num_sets;
 
  public:
@@ -8121,10 +8113,10 @@ class RollbackDSU {
   void rollback(int snapshot) {
     assert(0 <= snapshot && snapshot <= static_cast<int>(history.size()));
     while (static_cast<int>(history.size()) > snapshot) {
-      Change c = history.back();
+      auto [child, parent, parent_size] = history.back();
       history.pop_back();
-      root[c.child] = c.child;
-      size[c.parent] = c.parent_size;
+      root[child] = child;
+      size[parent] = parent_size;
       num_sets++;
     }
   }
@@ -8152,11 +8144,11 @@ int main() {
 \subsection{Lowest Common Ancestor (Binary Lifting)}
 Given a rooted tree or forest, determine the lowest common ancestor of any two nodes in the same tree. The lowest common ancestor of two nodes $u$ and $v$ is the node that has the greatest depth while having both $u$ and $v$ as descendants. A node is considered to be a descendant of itself.
 
-This implementation preprocesses binary ancestor jumps. During depth-first search, it records entry and exit times so ancestry can be tested in $O(1)$, records each node's depth and root, and stores \inlinecode{up[u][i]}, the $2^i$-th ancestor of each node \inlinecode{u}. To answer \inlinecode{lca(u, v)}, it first handles the case where one node is already an ancestor of the other, then jumps \inlinecode{u} upward by decreasing powers of two until its parent is the lowest common ancestor.
+This implementation preprocesses binary ancestor jumps. During depth-first search, it records entry and exit times so ancestry can be tested in $O(1)$, records each node's depth and root, and stores in \inlinecode{up[u][i]} the ancestor $2^i$ edges above node \inlinecode{u}. To answer \inlinecode{lca(u, v)}, it first handles the case where one node is already an ancestor of the other, then jumps \inlinecode{u} upward by decreasing powers of two until its parent is the lowest common ancestor.
 
 \begin{compactitem}
   \item \inlinecode{BinaryLiftingLCA(adj)} builds the structure over a forest represented by the bidirectional adjacency list \inlinecode{adj}, whose indices represent the nodes.
-  \item \inlinecode{go\_up(u, k)} returns the \inlinecode{k}-th ancestor of node \inlinecode{u}, stopping at that tree's root if \inlinecode{k} is larger than \inlinecode{u}'s depth.
+  \item \inlinecode{go\_up(u, k)} returns the ancestor \inlinecode{k} edges above node \inlinecode{u}. When \inlinecode{k == 0}, it returns \inlinecode{u}; values larger than \inlinecode{u}'s depth stop at that tree's root.
   \item \inlinecode{lca(u, v)} returns the lowest common ancestor of nodes \inlinecode{u} and \inlinecode{v}, or $-1$ if they are in different trees.
   \item \inlinecode{is\_ancestor(parent, child)} returns whether \inlinecode{parent} is an ancestor of \inlinecode{child}.
   \item \inlinecode{dist(u, v)} returns the number of edges on the path between nodes \inlinecode{u} and \inlinecode{v}, or $-1$ if they are in different trees.
@@ -8646,7 +8638,7 @@ The aggregate is defined by a commutative, associative \inlinecode{combine()}. T
 \begin{compactitem}
   \item \inlinecode{TreePathQueries\textless{}W\textgreater{}(adj)} builds the structure over a forest given by a weighted, bidirectional adjacency list \inlinecode{adj}, whose indices represent the nodes and where \inlinecode{adj[u]} holds pairs (\inlinecode{v}, \inlinecode{w}) for each edge \inlinecode{u}-\inlinecode{v} of weight \inlinecode{w}. Each connected component is rooted at its first node reached by the constructor's outer loop.
   \item \inlinecode{lca(u, v)} returns the lowest common ancestor of \inlinecode{u} and \inlinecode{v}, or $-1$ if they lie in different trees.
-  \item \inlinecode{kth\_ancestor(u, k)} returns the $k$-th ancestor of \inlinecode{u}, stopping at that tree's root if \inlinecode{k} exceeds \inlinecode{u}'s depth.
+  \item \inlinecode{kth\_ancestor(u, k)} returns the ancestor \inlinecode{k} edges above \inlinecode{u} (\inlinecode{k = 0} returns \inlinecode{u}), stopping at that tree's root if \inlinecode{k} exceeds \inlinecode{u}'s depth.
   \item \inlinecode{is\_ancestor(parent, child)} returns whether \inlinecode{parent} is an ancestor of \inlinecode{child}.
   \item \inlinecode{path\_query(u, v)} returns the combined weight of the edges on the path from \inlinecode{u} to \inlinecode{v}. The nodes must be distinct and lie in the same tree.
 \end{compactitem}
@@ -8830,7 +8822,7 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Heavy Light Decomposition}
+\subsection{Heavy-Light Decomposition}
 Maintain a tree or forest with values associated with either edges or nodes, while supporting both dynamic queries and dynamic updates of all values on a given path between two nodes in the tree. Heavy-light decomposition chooses at most one heavy child for each node and partitions the tree into maximal paths of heavy edges. This implementation keeps a child on its parent's path when its subtree contains at least half of its parent's nodes. Every remaining edge is light and at least halves the remaining subtree size, so walking from any node to the root crosses $O(\log n)$ heavy paths. Each path stores its values in its own lazy segment tree, decomposing any path query or update into $O(\log n)$ contiguous range operations.
 
 The query operation is defined by an associative \inlinecode{combine()} function. The default code below assumes a numerical tree type, defining queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return \inlinecode{a + b}. For direction-independent path queries, \inlinecode{combine()} should also be commutative; otherwise, store enough information in each aggregate to combine paths in the required order.
@@ -8838,7 +8830,7 @@ The query operation is defined by an associative \inlinecode{combine()} function
 The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{compose\_deltas()}. A delta must act on an aggregate summary of a path of length \inlinecode{len}: \inlinecode{apply\_delta(v, d, len)} returns the aggregate after applying update \inlinecode{d} to every element represented by aggregate \inlinecode{v}. Pending deltas are combined in chronological order by \inlinecode{compose\_deltas(old, d)}, meaning ``apply \inlinecode{old}, then apply \inlinecode{d}''. These hooks do not support arbitrary query/update pairings; the delta operation must distribute over \inlinecode{combine()}, and composed deltas must have the same effect as applying their updates sequentially. The default code below defines updates that ``set'' a path's edges or nodes to a new value. For range increment updates, \inlinecode{apply\_delta(v, d, len)} would return \inlinecode{v + d} for min/max queries, or \inlinecode{v + d * len} for sum queries, and \inlinecode{compose\_deltas(old, d)} would return \inlinecode{old + d}.
 
 \begin{compactitem}
-  \item \inlinecode{HeavyLight\textless{}T, VALUES\_ON\_EDGES = true\textgreater{}(adj, v)} constructs a new heavy light decomposition on a forest defined by the adjacency list \inlinecode{adj}, with all values initialized to \inlinecode{v}. Its entries must be valid indices into \inlinecode{adj}, and no duplicate edges should exist. Set \inlinecode{VALUES\_ON\_EDGES} to false to store values on nodes instead.
+  \item \inlinecode{HeavyLight\textless{}T, VALUES\_ON\_EDGES = true\textgreater{}(adj, v)} constructs a new heavy-light decomposition on a forest defined by the adjacency list \inlinecode{adj}, with all values initialized to \inlinecode{v}. Its entries must be valid indices into \inlinecode{adj}, and no duplicate edges should exist. Set \inlinecode{VALUES\_ON\_EDGES} to false to store values on nodes instead.
   \item \inlinecode{query(u, v)} returns the result of \inlinecode{combine()} applied to all values on the path from node \inlinecode{u} to node \inlinecode{v}. The nodes must be in the same tree and, when values are on edges, must be distinct.
   \item \inlinecode{update(u, v, d)} modifies all values on the path from node \inlinecode{u} to node \inlinecode{v} by applying the delta \inlinecode{d}. The nodes must be in the same tree.
   \item \inlinecode{for\_each\_path(u, v, include\_lca, f)} decomposes the path from node \inlinecode{u} to node \inlinecode{v} into heavy path ranges and calls \inlinecode{f(path, lo, hi, up)} on each range, where \inlinecode{up} says the path segment is traversed upward from \inlinecode{u} toward the LCA. If \inlinecode{VALUES\_ON\_EDGES = true}, pass \inlinecode{include\_lca = false} to skip the LCA's node slot. Returns false if \inlinecode{u} and \inlinecode{v} are in different trees.
@@ -9169,6 +9161,7 @@ This version supports dynamic connectivity, \inlinecode{link}, \inlinecode{cut},
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <chrono>
 #include <random>
 #include <unordered_map>
 #include <unordered_set>
@@ -9287,7 +9280,8 @@ class EulerTourTree {
   }
 
  public:
-  explicit EulerTourTree(int n) : n(n), rng(std::random_device{}()), adj(n) {}
+  explicit EulerTourTree(int n)
+      : n(n), rng(std::chrono::steady_clock::now().time_since_epoch().count()), adj(n) {}
 
   ~EulerTourTree() {
     for (const auto &neighbors : adj) {
@@ -9421,12 +9415,15 @@ The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{c
   \item \inlinecode{cut(u, v)} removes the edge between the nodes \inlinecode{u} and \inlinecode{v}, both of which must exist and be connected.
   \item \inlinecode{query(u, v)} returns the result of \inlinecode{combine()} applied to all values on the path from node \inlinecode{u} to node \inlinecode{v}.
   \item \inlinecode{update(u, v, d)} modifies all the values on the path from node \inlinecode{u} to node \inlinecode{v} by applying the delta \inlinecode{d}.
+\end{compactitem}
+
+The forest is unrooted: a tree's root is whichever node was most recently established as such. \inlinecode{reroot(u)} sets it explicitly, while \inlinecode{link}, \inlinecode{query}, and \inlinecode{update} do so implicitly; the latter two use their first argument. The root-sensitive operations below are relative to that current root, so call \inlinecode{reroot(r)} first when a specific root \inlinecode{r} is intended.
+
+\begin{compactitem}
   \item \inlinecode{reroot(u)} makes node \inlinecode{u} the root of its tree.
   \item \inlinecode{find\_root(u)} returns the label of the root of the tree containing node \inlinecode{u}.
   \item \inlinecode{lca(u, v)} returns the lowest common ancestor of \inlinecode{u} and \inlinecode{v} relative to the tree's current root.
 \end{compactitem}
-
-The forest is unrooted: a tree's root is whichever node was most recently established as such. \inlinecode{reroot(u)} sets it explicitly, while \inlinecode{link}, \inlinecode{query}, and \inlinecode{update} reroot implicitly (the latter two at their first argument). \inlinecode{find\_root(u)} and \inlinecode{lca(u, v)} are therefore relative to the current root, so call \inlinecode{reroot(r)} first whenever a specific root \inlinecode{r} is intended.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:

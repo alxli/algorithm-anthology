@@ -16,29 +16,30 @@ coefficients must lie in $[0, `MOD`)$.
 - `multiply(a, b)` returns `a * b`.
 - `derivative(a)` returns the formal derivative of `a`.
 - `antiderivative(a)` returns the formal antiderivative of `a` with constant term zero.
+
+For formal power series, the inverse modulo $x^n$ is a series $b$ satisfying
+$a \cdot b \equiv 1 \pmod{x^n}$. Series division uses this inverse, and logarithm follows from
+$(\log a)' = a'/a$. Exponential and square root use Newton iteration, doubling the number of correct
+coefficients each round. Power factors $a = x^t c b$, where $b(0) = 1$, and applies
+$a^k = x^{tk} c^k \exp(k \log b)$. To handle a square root whose constant term is not $1$, factor
+`a[0]` out and multiply back one of its modular square roots (see 6.3.5); if the lowest nonzero
+coefficient sits at an odd power of $x$, no square root exists.
+
 - `inverse(a, n)` returns the first `n` coefficients of `1 / a`, requiring `a[0]` to be nonzero.
 - `series_divide(a, b, n)` returns the first `n` coefficients of the formal power series `a / b`,
   requiring `b[0]` to be nonzero.
-- `log(a, n)` returns the first `n` coefficients of $\log a$, requiring `a[0]` to be $1$.
-- `exp(a, n)` returns the first `n` coefficients of $\exp a$, requiring `a[0]` to be $0$.
+- `log(a, n)` returns the first `n` coefficients of $\log(a)$, requiring `a[0]` to be $1$.
+- `exp(a, n)` returns the first `n` coefficients of $\exp(a)$, requiring `a[0]` to be $0$.
 - `sqrt(a, n)` returns the first `n` coefficients of the square root of `a` whose constant term is
   $1$, requiring `a[0]` to be $1$.
 - `power(a, k, n)` returns the first `n` coefficients of $a^k$ for a nonnegative `uint64_t` exponent
   `k`; `k = 0` returns the constant series $1$.
-- `divide(a, b)` returns the polynomial quotient of `a / b`, requiring `b` to be nonzero.
-- `modulo(a, b)` returns the polynomial remainder of `a / b`, requiring `b` to be nonzero.
 
-The inverse is a formal power series inverse modulo $x^n$: it finds $b$ such that
-$a \cdot b \equiv 1 \pmod{x^n}$. Series division multiplies by this inverse directly. Euclidean
-polynomial division instead uses the standard reversal trick: reverse both polynomials, compute a
-truncated series inverse of the reversed divisor, multiply, truncate, and reverse back.
+Euclidean polynomial division uses the reversal trick: reverse both polynomials, compute a truncated
+series inverse of the reversed divisor, multiply, truncate, and reverse back.
 
-The logarithm follows from $(\log a)' = a'/a$, integrating the truncated quotient. The exponential
-and square root use Newton iteration, which doubles the number of correct coefficients each round
-and so costs the same asymptotically as the final multiplication. To take a square root whose
-constant term is not $1$, factor `a[0]` out and multiply back one of its modular square roots (see
-6.3.5); if the lowest nonzero coefficient sits at an odd power of $x$, no square root exists. Power
-factors $a = x^t c b$, where $b(0) = 1$, and uses $a^k = x^{tk} c^k \exp(k \log b)$.
+- `div(a, b)` returns the polynomial quotient of `a / b`, requiring `b` to be nonzero.
+- `mod(a, b)` returns the polynomial remainder of `a / b`, requiring `b` to be nonzero.
 
 Time Complexity:
 - O(n) per call to `eval()`, `add()`, `subtract()`, `derivative()`, and `antiderivative()`.
@@ -48,7 +49,7 @@ Time Complexity:
 - O(n log n) per call to `log()`, `exp()`, and `sqrt()`, where $n$ is the requested length. The
   exponential carries the largest constant, since every Newton round computes a logarithm.
 - O(n log n + log k) per call to `power()`, where $n$ is the requested length.
-- O(n log n) per call to `divide()` and `modulo()`, where $n$ is the padded multiplication length.
+- O(n log n) per call to `div()` and `mod()`, where $n$ is the padded multiplication length.
 
 Space Complexity:
 - O(1) auxiliary per call to `eval()` and O(n) auxiliary for all other operations.
@@ -332,7 +333,7 @@ Poly power(const Poly &a, uint64_t k, int n) {
   return res;
 }
 
-Poly divide(Poly a, Poly b) {
+Poly div(Poly a, Poly b) {
   trim(a);
   trim(b);
   assert(!b.empty());
@@ -350,8 +351,8 @@ Poly divide(Poly a, Poly b) {
   return q;
 }
 
-Poly modulo(const Poly &a, const Poly &b) {
-  Poly q = divide(a, b);
+Poly mod(const Poly &a, const Poly &b) {
+  Poly q = div(a, b);
   Poly res = subtract(a, multiply(q, b));
   if (res.size() >= b.size()) {
     res.resize(b.size() - 1);
@@ -389,8 +390,8 @@ int main() {
   // (x^3 - 1) / (x - 1) = x^2 + x + 1, remainder 0.
   Poly dividend{MOD - 1, 0, 0, 1};
   Poly divisor{MOD - 1, 1};
-  assert((divide(dividend, divisor) == Poly{1, 1, 1}));
-  assert(modulo(dividend, divisor).empty());
+  assert((div(dividend, divisor) == Poly{1, 1, 1}));
+  assert(mod(dividend, divisor).empty());
 
   // exp(x) = 1 + x + x^2/2 + x^3/6 + ..., checked by clearing each denominator.
   Poly exp_x = exp({0, 1}, 4);

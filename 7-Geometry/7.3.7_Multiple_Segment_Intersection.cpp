@@ -12,8 +12,8 @@ endpoints may be integer (`PointI`) or floating-point (`Point` or `PointD`), but
 This implementation counts endpoint contacts as intersections. See 7.2.3 for pairwise intersection
 predicates when that distinction matters.
 
-- `find_intersection(lo, hi, &res1, &res2)` returns whether any pair of segments intersect given a
-  range $[`lo`, `hi`)$ of segments, where `lo` and `hi` are random-access iterators. If an
+- `find_intersecting_pair(lo, hi, &res1, &res2)` returns whether any pair of segments intersect
+  given a range $[`lo`, `hi`)$ of segments, where `lo` and `hi` are random-access iterators. If an
   intersection is found, then one such pair of segments is stored in `res1` and `res2`. Constructing
   a `Segment` places its lexicographically smaller endpoint first, as required by the sweep. If no
   intersection is found, the output segments are unchanged.
@@ -70,7 +70,7 @@ bool intersects(const Segment<Pt> &s1, const Segment<Pt> &s2) {
 }
 
 template<typename It>
-bool find_intersection(
+bool find_intersecting_pair(
     It lo, It hi, typename std::iterator_traits<It>::value_type *res1,
     typename std::iterator_traits<It>::value_type *res2
 ) {
@@ -181,7 +181,7 @@ int main() {
         Segment<Point>(Point(0, 2), Point(2, -2)), Segment<Point>(Point(0, 3), Point(9, 0))
     };
     Segment<Point> res1, res2;
-    assert(find_intersection(v.begin(), v.end(), &res1, &res2));
+    assert(find_intersecting_pair(v.begin(), v.end(), &res1, &res2));
     assert(res1.p == Point(0, 0) && res1.q == Point(2, 2));
     assert(res2.p == Point(0, 2) && res2.q == Point(2, -2));
   }
@@ -191,19 +191,19 @@ int main() {
         Segment<PointI>({0, 2}, {2, -2}), Segment<PointI>({0, 3}, {9, 0})
     };
     Segment<PointI> res1, res2;
-    assert(find_intersection(v.begin(), v.end(), &res1, &res2));
+    assert(find_intersecting_pair(v.begin(), v.end(), &res1, &res2));
 
     const vector<Segment<PointI>> disjoint{
         Segment<PointI>({0, 0}, {1, 0}), Segment<PointI>({0, 5}, {1, 5})
     };
-    assert(!find_intersection(disjoint.begin(), disjoint.end(), &res1, &res2));
+    assert(!find_intersecting_pair(disjoint.begin(), disjoint.end(), &res1, &res2));
   }
   {  // Shared endpoints count as intersections.
     vector<Segment<PointI>> shared{
         Segment<PointI>({0, 0}, {2, 2}), Segment<PointI>({2, 2}, {4, 0})
     };
     Segment<PointI> res1, res2;
-    assert(find_intersection(shared.begin(), shared.end(), &res1, &res2));
+    assert(find_intersecting_pair(shared.begin(), shared.end(), &res1, &res2));
   }
   return 0;
 }

@@ -10,7 +10,7 @@ processed the matrix holds the all-pairs shortest distances.
 
 - `init_floyd(n)` initializes `dist` and `next_node` for a graph of `n` nodes numbered $[0, `n`)$.
 - `floyd_warshall()` updates the global adjacency matrix `dist` so `dist[u][v]` stores the
-  shortest-path distance from $u$ to $v$, updates `next_node` for path reconstruction, and returns
+  shortest-path distance from `u` to `v`, updates `next_node` for path reconstruction, and returns
   whether the graph contains no negative-weight cycle.
 - `get_path(start, dest)` returns the shortest path from `start` to `dest`, or an empty vector if
   `dest` is unreachable from `start`, provided the most recent call to `floyd_warshall()` returned

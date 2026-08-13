@@ -18,11 +18,12 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <chrono>
 #include <random>
 
 template<typename It>
 void fisher_yates_shuffle(It lo, It hi) {
-  static std::mt19937 rng(std::random_device{}());
+  static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
   int n = static_cast<int>(hi - lo);
   for (int i = n - 1; i > 0; i--) {
     std::uniform_int_distribution<int> dist(0, i);

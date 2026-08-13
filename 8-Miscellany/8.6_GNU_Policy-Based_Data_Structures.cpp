@@ -1,8 +1,8 @@
 /*
 
-GNU policy-based data structures provide non-standard associative containers and priority queues,
-including order-statistic trees and fast hash tables. They are not part of the C++ standard library,
-but they are available on many GNU C++ contest judges.
+GNU policy-based data structures (PBDS) provide non-standard associative containers and priority
+queues, including order-statistic trees and fast hash tables. They are not part of the C++ standard
+library, but they are available on many GNU C++ contest judges.
 
 - `HashMap<K, V>` and `HashSet<K>` behave like faster, non-standard alternatives to
   `std::unordered_map<K, V>` and `std::unordered_set<K>`, using `gp_hash_table`. The default
@@ -61,9 +61,8 @@ struct SplitMix64Hasher {
   }
 
   std::size_t operator()(uint64_t x) const {
-    static const uint64_t FIXED_RANDOM =
-        std::chrono::steady_clock::now().time_since_epoch().count();
-    return mix64(x + FIXED_RANDOM);
+    static const uint64_t RAND_SEED = std::chrono::steady_clock::now().time_since_epoch().count();
+    return mix64(x + RAND_SEED);
   }
 };
 

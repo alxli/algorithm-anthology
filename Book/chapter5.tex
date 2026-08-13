@@ -94,15 +94,13 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Exponential Search}
-Finds the first value where a monotone Boolean predicate becomes true when an upper bound is not known in advance. Exponential search first grows the search range by powers of two until it brackets the transition point, then finishes with ordinary binary search.
-
-This is useful for answer-search problems over unbounded or very large integer domains.
-
-Overflow warning: The predicate must become true before the exponentially growing probe overflows \inlinecode{Int}; otherwise, add an explicit limit.
+Finds the first value where a monotone Boolean predicate becomes true when an upper bound is not known in advance. Exponential search first grows the search range by powers of two until it brackets the transition point, then finishes with ordinary binary search. This is useful for answer-search problems over unbounded or very large integer domains.
 
 \begin{compactitem}
   \item \inlinecode{exponential\_first\_true(lo, pred)} returns the smallest integer \inlinecode{x} greater than or equal to \inlinecode{lo} such that \inlinecode{pred(x)} is true.
 \end{compactitem}
+
+Overflow warning: The predicate must become true before the exponentially growing probe overflows \inlinecode{Int}; otherwise, add an explicit limit.
 
 \textbf{Time Complexity}: $O(\log n)$ calls to \inlinecode{pred()} per call, where $n$ is the distance from \inlinecode{lo} to the first true value.
 
@@ -410,11 +408,13 @@ Approximately minimizes an energy function $E(s)$ over an arbitrary state space 
 
 Starting from an initial state $s$, each iteration generates a random neighboring state $s'$. An improving move is always accepted, while a worsening move is accepted with probability $\exp(-(E(s') - E(s))/T)$ at temperature $T$. High temperatures encourage exploration across energy barriers; as the temperature decreases, the search increasingly favors improvements. The best state is tracked separately because the current state may later move to a worse one.
 
+The geometric schedule multiplies the temperature by \inlinecode{cooling\_rate} each round, performing $k = \lceil \log(T_{end}/T_{start}) / \log(r) \rceil$ iterations. Temperature has the same scale as energy, so scaling every energy requires scaling both temperature bounds by the same factor to preserve acceptance probabilities.
+
 \begin{compactitem}
   \item \inlinecode{anneal\_min(initial, energy, rand\_neighbor, rng, ...)} returns (\inlinecode{best\_energy}, \inlinecode{best\_state}) given an initial state \inlinecode{initial}, a callable \inlinecode{energy(state)} that returns the state's energy, and a callable \inlinecode{rand\_neighbor(state, temp, rng)} that returns a randomly chosen nearby state. Optional parameters default to \inlinecode{temp\_start = 1000}, \inlinecode{temp\_end = 1e-6}, and \inlinecode{cooling\_rate = 0.995}. \inlinecode{temp\_end} must be positive and less than \inlinecode{temp\_start}, while \inlinecode{cooling\_rate} must be strictly between $0$ and $1$.
 \end{compactitem}
 
-The geometric schedule repeatedly multiplies the temperature by \inlinecode{cooling\_rate}, performing $k = \lceil \log(T_{end}/T_{start}) / \log(r) \rceil$ iterations. Temperature has the same scale as energy: multiplying every energy by a constant requires multiplying both temperature bounds by the same constant to preserve acceptance probabilities. For continuous states, temperature can also control the neighbor step size. Slower cooling, independent restarts, and a time-based stopping condition often improve results, but simulated annealing never proves optimality.
+For continuous states, temperature can also control the neighbor step size. Slower cooling, independent restarts, and a time-based stopping condition often improve results, but simulated annealing never proves optimality.
 
 This generic interface copies each proposed state and recomputes its energy. For large permutation states, adapt the loop to mutate and revert moves in place and update the energy from the affected terms instead.
 
@@ -1367,7 +1367,7 @@ Finds every real root $x$ of a polynomial $p$ satisfying $p(x) = 0$ by recursive
 The key observation is that derivative roots split the real line into intervals where the polynomial is monotone. A monotone interval contains at most one root, and if an endpoint is a root or the endpoint values have opposite signs, bisection isolates that root. Recursively solving the derivative therefore provides all interval boundaries needed to find every real root in the requested range, including roots of even multiplicity. Each recursive call first scales the coefficients by their largest magnitude so that root detection is unaffected by a common factor.
 
 \begin{compactitem}
-  \item \inlinecode{horner\_eval(p, x)} evaluates the polynomial \inlinecode{p} of degree $d$ (represented as a vector of size $d + 1$ where \inlinecode{p[i]} stores the coefficient for the $x^i$ term) at \inlinecode{x}, using Horner's method.
+  \item \inlinecode{horner\_eval(p, x)} evaluates the polynomial \inlinecode{p} of degree $d$ (represented as a vector of size $d + 1$ where \inlinecode{p[i]} stores the degree-\inlinecode{i} coefficient) at \inlinecode{x}, using Horner's method.
   \item \inlinecode{find\_one\_root(p, a, b, eps = 1e-15)} returns a root in the interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a polynomial \inlinecode{p} where either endpoint is a root or the endpoint values have opposite signs, using the bisection method. If this precondition is not satisfied, then \inlinecode{NaN} is returned. The root is found to a tolerance of \inlinecode{eps} in absolute or relative error (whichever is reached first).
   \item \inlinecode{find\_all\_roots(p, a = -1e20, b = 1e20, eps = 1e-15)} returns a vector of all roots in the interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a polynomial \inlinecode{p} using the bisection method. The roots are found to a tolerance of \inlinecode{eps} in absolute or relative error (whichever is reached first).
 \end{compactitem}
@@ -1507,12 +1507,10 @@ int main() {
 Finds every complex root $x$ for a polynomial $p$ with complex coefficients such that $p(x) = 0$. Laguerre's method is a root-finding iteration with reliable, near-cubic convergence from almost any starting point. Once a root is found it is removed by polynomial deflation, and the iteration repeats on the lower-degree quotient until every root has been extracted.
 
 \begin{compactitem}
-  \item \inlinecode{horner\_eval(p, x)} evaluates a complex polynomial $p$ of degree $d$ (represented as a vector of size $d + 1$ where \inlinecode{p[i]} stores the complex coefficient for the $x^i$ term) at \inlinecode{x}, using Horner's method, returning a pair where the first value is the final result $p(x)$ and the second value is the quotient polynomial $q$ from the identity $p(t) = (t - x)q(t) + p(x)$.
-  \item \inlinecode{find\_one\_root(p, x0, eps = 1e-15, iterations = 10000)} returns a complex root $x$ for polynomial \inlinecode{p} (represented as a vector of size $d + 1$ where \inlinecode{p[i]} stores the complex coefficient for the $x^i$ term) using an initial guess \inlinecode{x0} which should be relatively close to $x$. The root is found to a tolerance of \inlinecode{eps} in absolute or relative error (whichever is reached first).
-  \item \inlinecode{find\_all\_roots(p, eps = 1e-15, iterations = 10000)} returns a vector of all complex roots for a complex polynomial \inlinecode{p}. The roots are found to a tolerance of \inlinecode{eps} in absolute or relative error (whichever is reached first).
+  \item \inlinecode{horner\_eval(p, x)} evaluates a complex polynomial $p$ of degree $d$ (represented as a vector of size $d + 1$ where \inlinecode{p[i]} stores the degree-\inlinecode{i} coefficient) at \inlinecode{x}, using Horner's method, returning a pair where the first value is the final result $p(x)$ and the second value is the quotient polynomial $q$ from the identity $p(t) = (t - x)q(t) + p(x)$. The coefficient vector must be nonempty.
+  \item \inlinecode{find\_one\_root(p, x0, eps = 1e-15, iterations = 10000)} returns a complex root $x$ for polynomial \inlinecode{p} (represented as a vector of size $d + 1$ where \inlinecode{p[i]} stores the degree-\inlinecode{i} coefficient) using an initial guess \inlinecode{x0} which should be relatively close to $x$. The root is found to a tolerance of \inlinecode{eps} in absolute or relative error (whichever is reached first). The polynomial must have degree at least one and omit trailing zero coefficients; its coefficients are scaled by their largest magnitude so a common factor does not affect convergence.
+  \item \inlinecode{find\_all\_roots(p, eps = 1e-15, iterations = 10000)} returns a vector of all complex roots for a complex polynomial \inlinecode{p}. The roots are found to a tolerance of \inlinecode{eps} in absolute or relative error (whichever is reached first). The coefficient vector must be nonempty and omit trailing zero coefficients.
 \end{compactitem}
-
-Coefficient vectors must be nonempty and omit trailing zero coefficients. \inlinecode{find\_one\_root()} requires a polynomial of degree at least one and scales its coefficients by their largest magnitude so a common coefficient factor does not affect convergence.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -1531,6 +1529,7 @@ Coefficient vectors must be nonempty and omit trailing zero coefficients. \inlin
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <complex>
 #include <random>
@@ -1594,7 +1593,7 @@ std::vector<cdbl> find_all_roots(const cpoly &p, dbl eps = 1e-15L, int iteration
   if (q.size() <= 1) {
     return res;
   }
-  static std::mt19937 rng(std::random_device{}());
+  static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
   std::uniform_real_distribution<dbl> unit(0.0L, 1.0L);
   while (q.size() > 2) {
     cdbl z(unit(rng), unit(rng));
@@ -1660,11 +1659,9 @@ Finds every complex root $x$ for a polynomial $p$ such that $p(x) = 0$. The Ehrl
 This routine is intended for well-scaled polynomials when all complex roots are wanted. If only real roots are needed, a real-root isolator such as derivative recursion with bisection is usually more reliable. Multiple or tightly clustered roots may converge slowly, and very large or very small root scales may require rescaling the input or using multiprecision arithmetic.
 
 \begin{compactitem}
-  \item \inlinecode{eval\_with\_derivative(p, x)} returns a pair $(p(x), p'(x))$ for a polynomial $p$ given as a vector \inlinecode{p} where \inlinecode{p[i]} stores the coefficient for the $x^i$ term.
-  \item \inlinecode{find\_all\_roots(p, eps = ROOT\_EPS, iterations = 2000)} returns a vector of all complex roots for a complex polynomial given by the vector of coefficients \inlinecode{p}. A \inlinecode{vector\textless{}dbl\textgreater{}} overload is provided for polynomials with real coefficients. The roots are found to a tolerance of \inlinecode{eps} in absolute or relative error (whichever is reached first), and zero roots are removed exactly before the simultaneous iteration starts.
+  \item \inlinecode{eval\_with\_derivative(p, x)} returns a pair $(p(x), p'(x))$ for a polynomial $p$ given as a vector \inlinecode{p} where \inlinecode{p[i]} stores the degree-\inlinecode{i} coefficient. The vector must be nonempty.
+  \item \inlinecode{find\_all\_roots(p, eps = ROOT\_EPS, iterations = 2000)} returns a vector of all complex roots for a complex polynomial given by the vector of coefficients \inlinecode{p}. A \inlinecode{vector\textless{}dbl\textgreater{}} overload is provided for polynomials with real coefficients. The roots are found to a tolerance of \inlinecode{eps} in absolute or relative error (whichever is reached first), and zero roots are removed exactly before the simultaneous iteration starts. The input must contain at least one nonzero coefficient; after normalization, trailing coefficients no larger than \inlinecode{ZERO\_EPS} relative to the largest coefficient are discarded.
 \end{compactitem}
-
-Root-finding inputs must contain at least one nonzero coefficient. After normalization, trailing coefficients no larger than \inlinecode{ZERO\_EPS} relative to the largest coefficient are discarded. \inlinecode{eval\_with\_derivative()} requires a nonempty coefficient vector.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -1691,7 +1688,7 @@ using dbl = long double;
 using cdbl = std::complex<dbl>;
 using cpoly = std::vector<cdbl>;
 
-const dbl PI = std::acos(dbl(-1));
+const dbl PI = std::acos(dbl{-1});
 const dbl ZERO_EPS = 1e-30L;   // Treat normalized coefficients and denominators this small as zero.
 const dbl ROOT_EPS = 1e-15L;   // Stop once root updates are this small relative to the root.
 const dbl CHECK_EPS = 1e-12L;  // Residual tolerance used by the example assertions.
@@ -1940,7 +1937,7 @@ The simplex algorithm walks between vertices of the feasible polytope, at each s
 The implementation uses a two-phase simplex tableau. Phase 1 introduces an artificial variable to find a feasible starting basis, which is essential when some constraint bounds are negative. Phase 2 then optimizes the original objective. The \inlinecode{basis} and \inlinecode{nonbasis} arrays track which variable each tableau row or column currently represents, making solution recovery independent of pivot order.
 
 \begin{compactitem}
-  \item \inlinecode{simplex\_solve(a, b, c, \&x, maximize = true, eps = 1e-10)} solves the linear programming problem for an $m$ by $n$ matrix \inlinecode{a} of real values, a length $m$ vector \inlinecode{b}, and a length $n$ vector \inlinecode{c}, returning $0$ if an optimum was found, $-1$ if there are no feasible solutions, or $1$ if the objective is unbounded. Set \inlinecode{maximize = false} to minimize instead, and use \inlinecode{eps} as the pivot and feasibility tolerance. If an optimum is found, \inlinecode{x} is assigned a vector of length \inlinecode{n}, where \inlinecode{x[j]} is the value of the $j$-th variable.
+  \item \inlinecode{simplex\_solve(a, b, c, \&x, maximize = true, eps = 1e-10)} solves the linear programming problem for an $m$ by $n$ matrix \inlinecode{a} of real values, a length $m$ vector \inlinecode{b}, and a length $n$ vector \inlinecode{c}, returning $0$ if an optimum was found, $-1$ if there are no feasible solutions, or $1$ if the objective is unbounded. Set \inlinecode{maximize = false} to minimize instead, and use \inlinecode{eps} as the pivot and feasibility tolerance. If an optimum is found, \inlinecode{x} is assigned a vector of length \inlinecode{n}, where \inlinecode{x[j]} is the value of the \inlinecode{j}-th variable.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(pmn)$ per call, where $p$ is the total number of pivots across both phases. Each pivot takes $O(mn)$, and $p$ can be exponential in the worst case, although it is usually much smaller in practice.
@@ -1950,6 +1947,7 @@ The implementation uses a two-phase simplex tableau. Phase 1 introduces an artif
 \begin{lstlisting}[language=C++]
 #include <cassert>
 #include <cmath>
+#include <numeric>
 #include <utility>
 #include <vector>
 
@@ -2084,10 +2082,7 @@ int main() {
   vector<double> vc{3, 4};
   vector<double> x;
   assert(simplex_solve(va, vb, vc, &x) == 0);
-  double maxval = 0;
-  for (int i = 0; i < static_cast<int>(x.size()); i++) {
-    maxval += vc[i] * x[i];
-  }
+  double maxval = inner_product(vc.begin(), vc.end(), x.begin(), 0.0);
   cout << "Solution = " << maxval << " at (" << x[0];
   for (int i = 1; i < static_cast<int>(x.size()); i++) {
     cout << ", " << x[i];

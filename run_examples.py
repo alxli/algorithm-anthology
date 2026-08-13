@@ -8,6 +8,7 @@ Usage:
   python3 run_examples.py -s 4.2       # run one section
   python3 run_examples.py -s 4.2.4     # run one subsection
   python3 run_examples.py -s 4.3.4 6.3.7  # run multiple sections
+  python3 run_examples.py --modified   # run staged, unstaged, and untracked chapter files
   python3 run_examples.py 2-Data-Structures/2.3.2_Treap.cpp  # single file
 """
 
@@ -45,13 +46,35 @@ def matches_section_filter(path: Path, section: str) -> bool:
     return key == section or (key is not None and key.startswith(f'{section}.'))
 
 
+def modified_cpp_files(root: Path) -> set[Path]:
+    """Return modified or untracked chapter .cpp files."""
+    commands = [
+        ['git', 'diff', '--name-only', '--diff-filter=ACMR', '-z', 'HEAD'],
+        ['git', 'ls-files', '--others', '--exclude-standard', '-z'],
+    ]
+    names = set()
+    for command in commands:
+        result = subprocess.run(command, cwd=root, check=True, capture_output=True, text=True)
+        names.update(name for name in result.stdout.split('\0') if name)
+    return {
+        path
+        for name in names
+        if (path := root / name).suffix == '.cpp'
+        and path.exists()
+        and re.match(r'\d+-', Path(name).parts[0])
+    }
+
+
 def compile_and_run(src: Path, show_output: bool, cxx: str) -> tuple[bool, str, str]:
     """Compile and run one file. Returns (ok, message, warnings)."""
     with tempfile.NamedTemporaryFile(suffix='', delete=True) as tmp:
         exe = tmp.name
 
     # Compile (capture warnings even on success).
-    compile_cmd = [cxx, *CXXFLAGS, str(src), '-o', exe]
+    flags = [*CXXFLAGS]
+    if Path(cxx).name.startswith('g++'):
+        flags.append('-Wno-psabi')
+    compile_cmd = [cxx, *flags, str(src), '-o', exe]
     comp = subprocess.run(compile_cmd, capture_output=True, text=True)
     warnings = comp.stderr.strip()
     if comp.returncode != 0:
@@ -85,16 +108,17 @@ def main():
         '--section', '-s', nargs='+',
         help='Run one or more chapter/section/subsection prefixes, e.g. 4.2 6.3.7',
     )
+    parser.add_argument(
+        '--modified', '-m', action='store_true',
+        help='Run staged, unstaged, and untracked chapter .cpp files',
+    )
     parser.add_argument('--output', '-o', action='store_true', help='Print stdout from each file')
     args = parser.parse_args()
 
     root = Path(__file__).parent
-    cxx = find_compiler()
-    if cxx is None:
-        parser.error('no C++ compiler found; install g++ or set CXX')
 
-    if args.files and args.section:
-        parser.error('--section cannot be combined with explicit files')
+    if sum((bool(args.files), bool(args.section), args.modified)) > 1:
+        parser.error('--section, --modified, and explicit files cannot be combined')
     invalid_sections = [
         section
         for section in args.section or []
@@ -112,7 +136,12 @@ def main():
         if re.match(r'\d+-', d.name) and d.is_dir()
     ]
 
-    if args.section:
+    if args.modified:
+        paths = sorted(modified_cpp_files(root))
+        if not paths:
+            print('No modified chapter .cpp files.')
+            return 0
+    elif args.section:
         matching_paths = {
             p
             for d in chapter_dirs
@@ -138,6 +167,10 @@ def main():
             for d in chapter_dirs
             for p in sorted(d.glob('*.cpp'))
         )
+
+    cxx = find_compiler()
+    if cxx is None:
+        parser.error('no C++ compiler found; install g++ or set CXX')
 
     passed = failed = warned = 0
     failures = []

@@ -1,13 +1,15 @@
 /*
 
-Common number theory operations relating to modular arithmetic.
+Core integer and modular-arithmetic operations built around the Euclidean algorithm. Extended GCD
+produces Bezout coefficients, which solve linear Diophantine equations and modular inverses, while
+the Chinese remainder routines combine compatible congruences into one residue class.
 
 - `gcd(a, b)` returns the greatest common divisor of `a` and `b` using the Euclidean algorithm. This
   is mainly for educational purposes, as `std::gcd(a, b)` from `<numeric>` is available as of C++17
   (`__gcd(a, b)` from `<algorithm>` in C++14 and earlier).
 - `lcm(a, b)` returns the least common multiple of `a` and `b`. This implementation is mainly for
   educational purposes, as `std::lcm(a, b)` from `<numeric>` is available as of C++17.
-- `extended_euclid(a, b)` returns a pair $(x, y)$ of integers such that $\gcd(a, b) = ax + by$.
+- `extended_gcd(a, b)` returns a pair $(x, y)$ of integers such that $\gcd(a, b) = ax + by$.
 - `diophantine(a, b, c, &g, &x, &y)` solves the linear Diophantine equation $ax + by = c$, returning
   whether a solution exists (one does if and only if $\gcd(a, b)$ divides $c$). `g` is always set to
   $\gcd(a, b)$, while (`x`, `y`) is set only on success to a particular solution bounded by
@@ -19,18 +21,17 @@ Common number theory operations relating to modular arithmetic.
   whose result follows the sign of `a`, the result is never negative.
 - `mod_inverse(a, m)` returns an integer $x$ such that $ax \equiv 1 \pmod m$, where the arguments
   must satisfy $m > 0$ and $\gcd(a, m) = 1$.
-- `mod_inverse_table(p)` returns a vector `v` of integers where for each index $i$ in the vector,
-  $i \cdot `v[i]` \equiv 1 \pmod p$, where the argument $p$ is prime.
+- `mod_inverse_table(p)` returns a vector `v` where `v[i]` is the modular inverse of `i` modulo the
+  prime `p` for every valid index `i`.
 - `crt(r1, m1, r2, m2, &r, &m)` merges the two congruences $x \equiv r_1 \pmod{m_1}$ and
   $x \equiv r_2 \pmod{m_2}$ for arbitrary moduli (not necessarily coprime). It returns whether the
   system is consistent, and on success sets `m` to `lcm(m_1, m_2)` and `r` to the unique solution in
   $[0, `m`)$. Both moduli must be positive, and their least common multiple must fit in `int64_t`.
   Fold it pairwise to merge more than two congruences.
-- `garner_restore(a, p)` returns the smallest nonnegative solution $x$ for the system of
-  simultaneous congruences $x \equiv `a[i]` \pmod{`p[i]`}$ for all indices `i` in $[0, n)$, where
-  $n$ is `a.size()` and `p` consists of pairwise coprime integers (unlike `crt`, which allows shared
-  factors). The exact solution is unique modulo the product of all moduli, so that product and the
-  final answer must fit in `int64_t`.
+- `garner_restore(a, p)` returns the smallest nonnegative solution whose residue modulo `p[i]` is
+  `a[i]` at every valid index. The entries of `p` must be pairwise coprime (unlike `crt`, which
+  allows shared factors). The exact solution is unique modulo the product of all moduli, so that
+  product and the final answer must fit in `int64_t`.
 - `garner_restore_mod(a, p, m)` returns that same CRT solution modulo `m`. This is the right variant
   when the product of the moduli is too large to fit in `int64_t`.
 
@@ -39,7 +40,7 @@ representable by `Int`; in particular, the minimum value of `Int` cannot be nega
 $-1$.
 
 Time Complexity:
-- O(log M) per call to `gcd()`, `lcm()`, `extended_euclid()`, `diophantine()`, `mod_inverse()`, and
+- O(log M) per call to `gcd()`, `lcm()`, `extended_gcd()`, `diophantine()`, `mod_inverse()`, and
   `crt()`, where $M$ is the largest relevant input magnitude.
 - O(1) per call to `mod()`.
 - O(p) per call to `mod_inverse_table()`.
@@ -78,7 +79,7 @@ Int lcm(Int a, Int b) {
 }
 
 template<typename Int>
-std::pair<Int, Int> extended_euclid(Int a, Int b) {
+std::pair<Int, Int> extended_gcd(Int a, Int b) {
   Int x = 1, y = 0, x1 = 0, y1 = 1;
   while (b != 0) {
     Int q = a / b, prev_x1 = x1, prev_y1 = y1, prev_b = b;
@@ -123,7 +124,7 @@ bool diophantine(Int a, Int b, Int c, Int *g, Int *x, Int *y) {
   // Absorb the bulk of c into a*dx + b*dy, then scale the base solution by the small remainder so
   // the reported (x, y) stay bounded by max(|a|, |b|, |c|). The scaled product is taken modulo b
   // (resp. a) through a 128-bit intermediate where available, to avoid overflow.
-  std::pair<Int, Int> base = extended_euclid(a, b);
+  std::pair<Int, Int> base = extended_gcd(a, b);
   Int dx = c / a;
   c -= dx * a;
   Int dy = c / b;
@@ -148,7 +149,7 @@ Int mod(Int a, Int m) {
 
 template<typename Int>
 Int mod_inverse(Int a, Int m) {
-  return mod(extended_euclid(a, m).first, m);
+  return mod(extended_gcd(a, m).first, m);
 }
 
 std::vector<int> mod_inverse_table(int p) {
@@ -237,7 +238,7 @@ int main() {
     for (int a = -20; a <= 20; a++) {
       for (int b = -20; b <= 20; b++) {
         int g = gcd(a, b);
-        auto [x, y] = extended_euclid(a, b);
+        auto [x, y] = extended_gcd(a, b);
         assert(g == a * x + b * y);
         if (g == 1 && b > 1) {
           assert(mod(a * mod_inverse(a, b), b) == 1);

@@ -14,7 +14,7 @@ greedy algorithm optimal. The weighted version in 1.4.3 needs dynamic programmin
 Intervals are represented as half-open ranges $[`start`, `finish`)$, so two intervals are compatible
 if the next interval's `start` is at least the previous interval's `finish`.
 
-- `schedule_intervals(intervals)` returns one maximum-size compatible subset of intervals, in the
+- `select_intervals(intervals)` returns one maximum-size compatible subset of intervals, in the
   order they are selected, as original indices into an input vector of `Interval` with fields
   `start` and `finish`. Every interval must satisfy `start` < `finish`.
 
@@ -36,7 +36,7 @@ struct Interval {
   int start, finish;
 };
 
-std::vector<int> schedule_intervals(const std::vector<Interval> &intervals) {
+std::vector<int> select_intervals(const std::vector<Interval> &intervals) {
   for (const auto &iv : intervals) {
     assert(iv.start < iv.finish);
   }
@@ -66,9 +66,9 @@ using namespace std;
 int main() {
   vector<Interval> intervals{{1, 4}, {3, 5}, {0, 6}, {5, 7}, {8, 9}};
   // Earliest-finish greedy chooses original indices 0, 3, 4.
-  assert((schedule_intervals(intervals) == vector<int>{0, 3, 4}));
+  assert((select_intervals(intervals) == vector<int>{0, 3, 4}));
 
   vector<Interval> touching{{0, 2}, {2, 4}, {4, 5}};
-  assert((schedule_intervals(touching) == vector<int>{0, 1, 2}));
+  assert((select_intervals(touching) == vector<int>{0, 1, 2}));
   return 0;
 }

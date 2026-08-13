@@ -31,6 +31,7 @@ Space Complexity:
 */
 
 #include <cassert>
+#include <chrono>
 #include <random>
 #include <unordered_map>
 #include <unordered_set>
@@ -149,7 +150,8 @@ class EulerTourTree {
   }
 
  public:
-  explicit EulerTourTree(int n) : n(n), rng(std::random_device{}()), adj(n) {}
+  explicit EulerTourTree(int n)
+      : n(n), rng(std::chrono::steady_clock::now().time_since_epoch().count()), adj(n) {}
 
   ~EulerTourTree() {
     for (const auto &neighbors : adj) {

@@ -19,14 +19,15 @@ butterfly-shaped implementation and the same O(n log n) runtime for arrays of le
 - `xor_convolve(a, b)` returns the XOR convolution of `a` and `b`.
 - `or_convolve(a, b)` returns the OR convolution of `a` and `b`.
 - `and_convolve(a, b)` returns the AND convolution of `a` and `b`.
-- `subset_convolve(a, b)` returns the subset convolution of `a` and `b`, where `c[m]` sums
-  `a[x]*b[y]` over the pairs of disjoint masks satisfying `x | y = m`.
 
 Subset convolution restricts OR convolution to pairs of disjoint masks, so `c[m]` must count only
 `x | y = m` with `x & y = 0`. Rank each entry by its number of set bits, transform every rank layer,
 and multiply the layers as polynomials in the rank. Mobius inversion then recovers pairs whose union
 is exactly `m`; among these pairs, the ranks sum to the number of set bits in `m` exactly when the
 pair is disjoint.
+
+- `subset_convolve(a, b)` returns the subset convolution of `a` and `b`, where `c[m]` sums
+  `a[x]*b[y]` over the pairs of disjoint masks satisfying `x | y = m`.
 
 The in-place transforms require a nonempty array whose length is a power of two. A convolution
 returns empty if either input is empty; otherwise, both inputs are padded with zeros to the smallest

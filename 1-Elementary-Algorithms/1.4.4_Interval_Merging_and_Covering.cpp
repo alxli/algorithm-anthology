@@ -20,9 +20,11 @@ merged because their union is another half-open interval with no gap.
   intervals cover $[`lo`, `hi`)$, in the order selected, or `std::nullopt` if coverage is
   impossible. Every input interval must satisfy `start` < `finish`, and `lo` must not exceed `hi`.
 
-Time Complexity: O(n log n) per call due to sorting, where $n$ is the number of intervals.
+Time Complexity:
+- O(n log n) per call due to sorting, where $n$ is the number of intervals.
 
-Space Complexity: O(n) auxiliary and O(n) for the returned intervals or indices.
+Space Complexity:
+- O(n) auxiliary and O(n) for the returned intervals or indices.
 
 */
 

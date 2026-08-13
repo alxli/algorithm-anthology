@@ -5,10 +5,9 @@ Start with a tetrahedron, delete every visible face for each new point, and stit
 to that point. Returned faces are oriented outward.
 
 - `convex_hull_3d(p)` returns triangular faces as `Face{a, b, c}` triples, where each face has
-  vertices `p[a]`, `p[b]`, and `p[c]`.
-
-Preconditions: at least four points, and no four points coplanar. For coplanar or highly degenerate
-inputs, perturbing points slightly or using a more robust library is recommended.
+  vertices `p[a]`, `p[b]`, and `p[c]`. The input must contain at least four points, with no four
+  coplanar. For coplanar or highly degenerate inputs, perturb the points slightly or use a more
+  robust library.
 
 Time Complexity:
 - O(n^2) per call, where $n$ is the number of points.
@@ -27,6 +26,7 @@ const double EPS = 1e-9;
 
 struct Point3D {
   double x, y, z;
+
   Point3D(double x = 0, double y = 0, double z = 0) : x(x), y(y), z(z) {}
   Point3D operator-(const Point3D &p) const { return {x - p.x, y - p.y, z - p.z}; }
   Point3D operator*(double k) const { return {x * k, y * k, z * k}; }
@@ -140,7 +140,7 @@ int main() {
   assert(faces.size() == 4);
   assert_outward(tetra, faces);
 
-  tetra.push_back(Point3D(1, 1, 1));
+  tetra.emplace_back(1, 1, 1);
   faces = convex_hull_3d(tetra);
   // Adding the opposite point makes a triangular bipyramid with six triangular faces.
   assert(faces.size() == 6);

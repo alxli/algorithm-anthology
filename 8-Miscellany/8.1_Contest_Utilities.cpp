@@ -3,24 +3,32 @@
 Small contest-template helpers that are useful across many algorithms. These snippets avoid
 algorithm-specific policy and are meant to be pasted near the top of a solution file.
 
+A personal template may also collect shortened versions of utilities elsewhere in the anthology,
+such as fast I/O and debugging, custom hashing, coordinate compression, bit operations, modular
+arithmetic, binary search, and GNU policy-based data structures. They remain in their dedicated
+sections here to avoid duplication and let each template be assembled to taste.
+
 - `Rep(i,N)`, `For(i,L,H)`, `Rev(i,N)`, `Dwn(i,H,L)`, and `Each(x,C)` are compact loop macros.
+- `All(c)` and `Rall(c)` expand to the forward or reverse iterator pair of a container or array.
 - `sz(c)` returns the signed size of a container.
 - `ckmin(a, b)` assigns `a = b` and returns true if `b` < `a` before the assignment.
 - `ckmax(a, b)` assigns `a = b` and returns true if `a` < `b` before the assignment.
-- `between(x, a, b)` returns whether `a` $\leq$ `x` $\leq$ `b`.
 - `floor_div(a, b)` and `ceil_div(a, b)` divide signed integers with mathematical rounding toward
   negative or positive infinity. Requires nonzero `b` and the resulting quotient to be representable
   by the result type; in particular, the minimum value cannot be divided by $-1$.
+- `lb(a, x)` and `ub(a, x)` return the indices of the first elements in sorted container `a` that
+  are not less than or are greater than `x`, respectively.
 - `sort_unique(v)` sorts a vector and removes duplicates.
+- `indices(n)` returns the vector `{0, 1, ..., n - 1}`.
+- `argsort(a)` returns the indices of `a` in ascending order of their values.
 - `erase_one(c, x)` erases one existing value from an associative container, asserting that it is
   present.
-- `min_priority_queue<T>` is a min-heap alias.
-- `RNG()` constructs a 64-bit Mersenne Twister seeded from `std::random_device`.
-- `RNG(seed)` constructs a reproducible 64-bit Mersenne Twister.
-- `rng.uniform_int(lo, hi)` returns a random integer in range $[`lo`, `hi`]$.
-- `rng.uniform_real(lo = 0.0, hi = 1.0)` returns a random real number in the half-open range
+- `min_heap<T>` is a min-heap alias.
+- `rng` is a global 64-bit Mersenne Twister seeded from the current `std::chrono::steady_clock`
+  reading; call `rng.seed(seed)` for reproducible results.
+- `rand_int(lo, hi)` returns a random integer in range $[`lo`, `hi`]$.
+- `rand_real(lo = 0.0, hi = 1.0)` returns a random real number in the half-open range
   $[`lo`, `hi`)$.
-- `rng.shuffle(lo, hi)` randomly shuffles the range $[`lo`, `hi`)$.
 - `y_combinator(f)` wraps a recursive lambda so that the lambda can call itself as its first
   argument.
 
@@ -28,8 +36,10 @@ algorithm-specific policy and are meant to be pasted near the top of a solution 
 
 #include <algorithm>
 #include <cassert>
-#include <cstdint>
+#include <chrono>
 #include <functional>
+#include <iterator>
+#include <numeric>
 #include <queue>
 #include <random>
 #include <type_traits>
@@ -41,12 +51,13 @@ algorithm-specific policy and are meant to be pasted near the top of a solution 
 #define Rev(i, N) for (int i = (N); --i >= 0;)                      // N-1 to 0
 #define Dwn(i, H, L) for (int i = (H), _##i = (L); i >= _##i; --i)  //   H to L
 #define Each(x, C) for (auto &x : (C))
+#define All(C) std::begin(C), std::end(C)
+#define Rall(C) std::rbegin(C), std::rend(C)
 
 // clang-format off
 template<typename C> int sz(const C &c) { return static_cast<int>(c.size()); }
-template<typename T, typename U> bool ckmin(T &a, const U &b) { return b < a ? a = b, true : false; }
-template<typename T, typename U> bool ckmax(T &a, const U &b) { return a < b ? a = b, true : false; }
-template<typename T> bool between(const T &x, const T &a, const T &b) { return !(x < a) && !(b < x); }
+template<typename T, typename U> bool ckmin(T &a, const U &b) { return b < a && (a = b, true); }
+template<typename T, typename U> bool ckmax(T &a, const U &b) { return a < b && (a = b, true); }
 // clang-format on
 
 template<typename T>
@@ -63,10 +74,33 @@ T ceil_div(T a, T b) {
   return q + (r != 0 && ((r < 0) == (b < 0)));
 }
 
+template<typename C, typename T>
+int lb(const C &a, const T &x) {
+  return static_cast<int>(std::lower_bound(a.begin(), a.end(), x) - a.begin());
+}
+
+template<typename C, typename T>
+int ub(const C &a, const T &x) {
+  return static_cast<int>(std::upper_bound(a.begin(), a.end(), x) - a.begin());
+}
+
 template<typename T>
 void sort_unique(std::vector<T> &v) {
   std::sort(v.begin(), v.end());
   v.erase(std::unique(v.begin(), v.end()), v.end());
+}
+
+std::vector<int> indices(int n) {
+  std::vector<int> v(n);
+  std::iota(v.begin(), v.end(), 0);
+  return v;
+}
+
+template<typename C>
+std::vector<int> argsort(const C &a) {
+  std::vector<int> p = indices(static_cast<int>(a.size()));
+  std::sort(p.begin(), p.end(), [&](int i, int j) { return a[i] < a[j]; });
+  return p;
 }
 
 template<typename C, typename T>
@@ -77,31 +111,21 @@ void erase_one(C &c, const T &x) {
 }
 
 template<typename T>
-using min_priority_queue = std::priority_queue<T, std::vector<T>, std::greater<T>>;
+using min_heap = std::priority_queue<T, std::vector<T>, std::greater<T>>;
 
-struct RNG {
-  std::mt19937_64 gen;
+std::mt19937_64 rng(std::chrono::steady_clock::now().time_since_epoch().count());
 
-  RNG() : RNG(std::random_device{}()) {}
-  explicit RNG(uint64_t seed) : gen(seed) {}
+template<typename T>
+T rand_int(T lo, T hi) {
+  static_assert(std::is_integral<T>::value, "rand_int() requires an integral type");
+  assert(lo <= hi);
+  return std::uniform_int_distribution<T>(lo, hi)(rng);
+}
 
-  template<typename T>
-  T uniform_int(T lo, T hi) {
-    static_assert(std::is_integral<T>::value, "uniform_int() requires an integral type");
-    assert(lo <= hi);
-    return std::uniform_int_distribution<T>(lo, hi)(gen);
-  }
-
-  double uniform_real(double lo = 0.0, double hi = 1.0) {
-    assert(lo < hi);
-    return std::uniform_real_distribution<double>(lo, hi)(gen);
-  }
-
-  template<typename It>
-  void shuffle(It lo, It hi) {
-    std::shuffle(lo, hi, gen);
-  }
-};
+double rand_real(double lo = 0.0, double hi = 1.0) {
+  assert(lo < hi);
+  return std::uniform_real_distribution<double>(lo, hi)(rng);
+}
 
 template<typename Fun>
 class y_combinator_result {
@@ -140,11 +164,12 @@ int main() {
   assert(!ckmin(x, 9) && x == 7);
   assert(ckmax(x, 11) && x == 11);
 
-  vector<int> v = {1, 2, 3};
+  vector<int> v{1, 2, 3};
   assert(sz(v) == 3);
-  assert(between(2, 1, 3));
-  assert(between(1, 1, 3) && between(3, 1, 3));
-  assert(!between(0, 1, 3));
+  sort(Rall(v));
+  assert((v == vector<int>{3, 2, 1}));
+  sort(All(v));
+  assert(lb(v, 2) == 1 && ub(v, 2) == 2);
   assert(floor_div(7, -3) == -3);
   assert(floor_div(-7, 3) == -3);
   assert(ceil_div(7, -3) == -2);
@@ -152,20 +177,22 @@ int main() {
   v = {3, 1, 3, 2, 1};
   sort_unique(v);
   assert((v == vector<int>{1, 2, 3}));
+  assert((indices(4) == vector<int>{0, 1, 2, 3}));
+  assert((argsort(vector<int>{30, 10, 20}) == vector<int>{1, 2, 0}));
   multiset<int> ms{1, 2, 2, 3};
   erase_one(ms, 2);
   assert(ms.count(2) == 1);
-  min_priority_queue<int> pq;
+  min_heap<int> pq;
   pq.push(3);
   pq.push(1);
   assert(pq.top() == 1);
 
-  RNG rng(1234567);  // Fixed seed for reproducibility.
-  int r = rng.uniform_int(1, 6);
+  rng.seed(1234567);  // Fixed seed for reproducibility.
+  int r = rand_int(1, 6);
   assert(1 <= r && r <= 6);
-  double d = rng.uniform_real();
+  double d = rand_real();
   assert(0.0 <= d && d < 1.0);
-  rng.shuffle(v.begin(), v.end());
+  shuffle(All(v), rng);
   assert(sz(v) == 3);
 
   // Recursive lambda with y_combinator.

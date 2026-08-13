@@ -8,7 +8,9 @@ For a sum of independent impartial games, the combined Grundy number is the XOR 
 Grundy numbers. This is the Sprague-Grundy theorem.
 
 - `subtraction_game_grundy(max_stones, moves)` computes Grundy numbers for a game where a move
-  subtracts one positive value in `moves` from the pile. Nonpositive values are ignored.
+  subtracts one positive value in `moves` from the pile. It returns a vector of length
+  `max_stones + 1`, whose element `grundy[stones]` is the Grundy number for a pile of that size.
+  Nonpositive moves are ignored.
 - `sum_grundy(grundies)` returns the XOR of component Grundy numbers.
 
 Time Complexity:

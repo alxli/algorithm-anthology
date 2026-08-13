@@ -42,7 +42,7 @@ const bool nim_product_init = [] {
   for (int i = 0; i < 64; i++) {
     for (int j = 0; j < 64; j++) {
       if ((i & j) == 0) {
-        bit_prod[i][j] = uint64_t{1} << (i | j);  // Distinct Fermat powers multiply like 2^(i|j).
+        bit_prod[i][j] = 1ULL << (i | j);  // Distinct Fermat powers multiply like 2^(i|j).
       } else {
         int a = (i & j) & -(i & j);  // Lowest Fermat power shared by both exponents.
         bit_prod[i][j] = bit_prod[i ^ a][j] ^ bit_prod[(i ^ a) | (a - 1)][(j ^ a) | (i & (a - 1))];

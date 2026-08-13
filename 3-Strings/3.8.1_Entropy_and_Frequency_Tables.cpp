@@ -44,6 +44,7 @@ Space Complexity:
 #include <cassert>
 #include <cmath>
 #include <cstdint>
+#include <numeric>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -58,10 +59,7 @@ std::vector<int> byte_frequencies(const string &s) {
 }
 
 double entropy(const std::vector<int> &freq) {
-  int64_t total = 0;
-  for (int count : freq) {
-    total += count;
-  }
+  int64_t total = std::accumulate(freq.begin(), freq.end(), 0LL);
   if (total == 0) {
     return 0;
   }
@@ -106,10 +104,7 @@ double conditional_entropy(const string &s, int order = 1) {
 
 double expected_code_length(const std::vector<int> &freq, const std::vector<int> &length) {
   assert(freq.size() == length.size());
-  int64_t total = 0;
-  for (int count : freq) {
-    total += count;
-  }
+  int64_t total = std::accumulate(freq.begin(), freq.end(), 0LL);
   if (total == 0) {
     return 0;
   }

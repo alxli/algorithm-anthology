@@ -16,14 +16,13 @@ by `get_all_sets()` is unspecified.
 - `make_set(u)` adds `u` as a singleton partition, or does nothing if `u` is already present.
 - `size()` returns the number of elements that have been added.
 - `sets()` returns the current number of disjoint sets.
-- `is_united(u, v)` returns whether elements `u` and `v` belong to the same partition.
+- `is_united(u, v)` returns whether elements `u` and `v`, which must have been added with
+  `make_set()`, belong to the same partition.
 - `unite(u, v)` replaces the partitions containing `u` and `v` with a single new partition
   consisting of the union of elements in the original partitions, returning `true` if a merge
-  occurred or `false` if `u` and `v` already belonged to the same partition.
+  occurred or `false` if `u` and `v` already belonged to the same partition. Both elements must have
+  been added with `make_set()`.
 - `get_all_sets()` returns all current partitions as a vector of vectors.
-
-A precondition to the last three operations is that `make_set()` must have been previously called on
-their arguments.
 
 Time Complexity:
 - O(1) per call to the constructor.

@@ -82,7 +82,7 @@ std::tuple<int, int, int> three_sum(const std::vector<int> &a, int64_t target) {
   std::vector<std::pair<int, int>> sorted;
   sorted.reserve(a.size());
   for (int i = 0; i < n; i++) {
-    sorted.push_back({a[i], i});
+    sorted.emplace_back(a[i], i);
   }
   std::sort(sorted.begin(), sorted.end());
   for (int i = 0; i < n; i++) {

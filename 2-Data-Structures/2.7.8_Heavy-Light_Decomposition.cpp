@@ -25,7 +25,7 @@ The default code below defines updates that "set" a path's edges or nodes to a n
 increment updates, `apply_delta(v, d, len)` would return `v + d` for min/max queries, or
 `v + d * len` for sum queries, and `compose_deltas(old, d)` would return `old + d`.
 
-- `HeavyLight<T, VALUES_ON_EDGES = true>(adj, v)` constructs a new heavy light decomposition on a
+- `HeavyLight<T, VALUES_ON_EDGES = true>(adj, v)` constructs a new heavy-light decomposition on a
   forest defined by the adjacency list `adj`, with all values initialized to `v`. Its entries must
   be valid indices into `adj`, and no duplicate edges should exist. Set `VALUES_ON_EDGES` to false
   to store values on nodes instead.

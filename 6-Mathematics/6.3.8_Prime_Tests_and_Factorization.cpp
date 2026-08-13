@@ -31,7 +31,7 @@ pairs. For $0$ and $1$, the prime factorization is empty.
   algorithm. `small_prime_limit` specifies the largest prime to test with trial division before
   falling back to the rho algorithm. This supports 64-bit integers up to and including $2^{63} - 1$.
 - `divisors_from_factors(factors)` returns all divisors from a compressed factorization.
-- `get_divisors(n)` returns all divisors of a 64-bit integer using `factorize()` followed by
+- `divisors(n)` returns all divisors of a 64-bit integer using `factorize()` followed by
   `divisors_from_factors()`.
 
 Modular multiplication inside Miller-Rabin and Pollard's rho uses `__uint128_t` when available for
@@ -52,7 +52,7 @@ Time Complexity:
 - O(|a| + |b|) per call to `merge_factors()`.
 - O(d log d) per call to `divisors_from_factors()`, where $d$ is the number of divisors generated,
   due to sorting the result.
-- O(L/log L + n^{1/4} + d log d) expected per call to `get_divisors()`, plus O(L) if the prime cache
+- O(L/log L + n^{1/4} + d log d) expected per call to `divisors()`, plus O(L) if the prime cache
   must be rebuilt.
 
 Space Complexity:
@@ -60,13 +60,14 @@ Space Complexity:
 - O(f + log n) auxiliary for recursive factorization, where $f$ is the number of compressed prime
   factors returned.
 - O(d) output space and O(log d) auxiliary stack space for `divisors_from_factors()` and
-  `get_divisors()`.
+  `divisors()`.
 - O(1) auxiliary for the primality tests, `rho_factor()`, `factorize_slow()`, and `merge_factors()`,
   excluding returned vectors.
 
 */
 
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <numeric>
 #include <random>
@@ -139,7 +140,7 @@ uint64_t powmod(uint64_t x, uint64_t n, uint64_t m) {
 }
 
 uint64_t rand64u() {
-  static std::mt19937_64 rng(std::random_device{}());
+  static std::mt19937_64 rng(std::chrono::steady_clock::now().time_since_epoch().count());
   return rng();
 }
 
@@ -356,7 +357,7 @@ std::vector<int64_t> divisors_from_factors(const Factors &factors) {
   return res;
 }
 
-std::vector<int64_t> get_divisors(int64_t n) {
+std::vector<int64_t> divisors(int64_t n) {
   if (n <= 1) {
     return (n < 1) ? std::vector<int64_t>() : std::vector<int64_t>(1, 1);
   }
@@ -470,7 +471,7 @@ int main() {
       auto v2 = factorize(i);
       validate(i, v1);
       assert(v1 == v2);
-      auto d = get_divisors(i);
+      auto d = divisors(i);
       set<int> s(d.begin(), d.end());
       assert(d.size() == s.size());
       for (int j = 1; j <= i; j++) {
@@ -482,15 +483,15 @@ int main() {
   }
   {  // Compressed factors are convenient for building divisors.
     Factors factors{{2, 3}, {3, 2}, {5, 1}};
-    vector<int64_t> divisors = divisors_from_factors(factors);
+    vector<int64_t> divs = divisors_from_factors(factors);
     assert(
-        (divisors == vector<int64_t>{
-                         1,  2,  3,  4,  5,  6,  8,  9,  10, 12,  15,  18,
-                         20, 24, 30, 36, 40, 45, 60, 72, 90, 120, 180, 360,
-                     })
+        (divs == vector<int64_t>{
+                     1,  2,  3,  4,  5,  6,  8,  9,  10, 12,  15,  18,
+                     20, 24, 30, 36, 40, 45, 60, 72, 90, 120, 180, 360,
+                 })
     );
     assert(factorize(360) == factors);
-    assert(get_divisors(360) == divisors);
+    assert(divisors(360) == divs);
   }
   {  // Large factorization tests.
     const vector<int64_t> nums{

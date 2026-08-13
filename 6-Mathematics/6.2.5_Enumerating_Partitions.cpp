@@ -37,6 +37,7 @@ Space Complexity:
 */
 
 #include <cstdint>
+#include <numeric>
 #include <vector>
 
 bool next_partition(std::vector<int> &p) {
@@ -91,10 +92,7 @@ std::vector<int> partition_by_rank(int n, int64_t r) {
 
 int64_t rank_by_partition(const std::vector<int> &p) {
   int64_t res = 0;
-  int sum = 0;
-  for (int x : p) {
-    sum += x;
-  }
+  int sum = std::accumulate(p.begin(), p.end(), 0);
   for (int x : p) {
     for (int j = 0; j < x; j++) {
       res += partition_function(sum, j);

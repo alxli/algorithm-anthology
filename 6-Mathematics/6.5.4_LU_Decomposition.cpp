@@ -11,15 +11,13 @@ integer determinant calculations.
 
 - `lu_decompose(a, &perm, eps = 1e-10)` assigns floating-point matrix `a` to merged LU decomposition
   matrix `lu`; it returns $0$ for even row-swap parity, $1$ for odd parity, or $-1$ for a degenerate
-  matrix (i.e. singular for square matrices). The merged matrix `lu` has `lu[i][j]` = `l[i][j]` for
-  `i` > `j` and `lu[i][j]` = `u[i][j]` for `i` $\leq$ `j`. Note that the algorithm always yields a
-  unit lower triangular matrix for which the diagonal entries `l[i][i]` are always equal to $1$, so
-  this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values
-  of the lower and upper triangular matrices should be accessed via the `getl(lu, i, j)` and
-  `getu(lu, i, j)` functions. Optional output vector `perm` represents $p$:
-  `perm[i]` is the only column containing $1$ in row $i$. Left-multiplying `a` by this permutation
-  matrix gives the product of the separate lower and upper triangular matrices, not the merged
-  storage matrix `lu` itself.
+  matrix (i.e. singular for square matrices). The merged matrix stores `l[i][j]` in `lu[i][j]` when
+  `i > j`, and `u[i][j]` otherwise. The diagonal entries `l[i][i]` are always $1$, so they are not
+  explicitly stored. Access general entries of the lower and upper triangular matrices via
+  `getl(lu, i, j)` and `getu(lu, i, j)`. Optional output vector `perm` represents $p$: `perm[i]` is
+  the only column containing $1$ in row `i`. Left-multiplying `a` by this permutation matrix gives
+  the product of the separate lower and upper triangular matrices, not the merged storage matrix
+  `lu` itself.
 - `solve_system(a, b, &x, eps = 1e-10)` solves the system of linear equations $ax = b$ given an $m$
   by $n$ floating-point matrix `a` and a length $m$ vector `b`, returning $0$ if there is one
   solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then

@@ -4,29 +4,34 @@
 \setcounter{section}{1}
 Small contest-template helpers that are useful across many algorithms. These snippets avoid algorithm-specific policy and are meant to be pasted near the top of a solution file.
 
+A personal template may also collect shortened versions of utilities elsewhere in the anthology, such as fast I/O and debugging, custom hashing, coordinate compression, bit operations, modular arithmetic, binary search, and GNU policy-based data structures. They remain in their dedicated sections here to avoid duplication and let each template be assembled to taste.
+
 \begin{compactitem}
   \item \inlinecode{Rep(i,N)}, \inlinecode{For(i,L,H)}, \inlinecode{Rev(i,N)}, \inlinecode{Dwn(i,H,L)}, and \inlinecode{Each(x,C)} are compact loop macros.
+  \item \inlinecode{All(c)} and \inlinecode{Rall(c)} expand to the forward or reverse iterator pair of a container or array.
   \item \inlinecode{sz(c)} returns the signed size of a container.
   \item \inlinecode{ckmin(a, b)} assigns \inlinecode{a = b} and returns true if \inlinecode{b} \textless{} \inlinecode{a} before the assignment.
   \item \inlinecode{ckmax(a, b)} assigns \inlinecode{a = b} and returns true if \inlinecode{a} \textless{} \inlinecode{b} before the assignment.
-  \item \inlinecode{between(x, a, b)} returns whether \inlinecode{a} $\leq$ \inlinecode{x} $\leq$ \inlinecode{b}.
   \item \inlinecode{floor\_div(a, b)} and \inlinecode{ceil\_div(a, b)} divide signed integers with mathematical rounding toward negative or positive infinity. Requires nonzero \inlinecode{b} and the resulting quotient to be representable by the result type; in particular, the minimum value cannot be divided by $-1$.
+  \item \inlinecode{lb(a, x)} and \inlinecode{ub(a, x)} return the indices of the first elements in sorted container \inlinecode{a} that are not less than or are greater than \inlinecode{x}, respectively.
   \item \inlinecode{sort\_unique(v)} sorts a vector and removes duplicates.
+  \item \inlinecode{indices(n)} returns the vector \inlinecode{\{0, 1, ..., n - 1\}}.
+  \item \inlinecode{argsort(a)} returns the indices of \inlinecode{a} in ascending order of their values.
   \item \inlinecode{erase\_one(c, x)} erases one existing value from an associative container, asserting that it is present.
-  \item \inlinecode{min\_priority\_queue\textless{}T\textgreater{}} is a min-heap alias.
-  \item \inlinecode{RNG()} constructs a 64-bit Mersenne Twister seeded from \inlinecode{std::random\_device}.
-  \item \inlinecode{RNG(seed)} constructs a reproducible 64-bit Mersenne Twister.
-  \item \inlinecode{rng.uniform\_int(lo, hi)} returns a random integer in range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
-  \item \inlinecode{rng.uniform\_real(lo = 0.0, hi = 1.0)} returns a random real number in the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
-  \item \inlinecode{rng.shuffle(lo, hi)} randomly shuffles the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
+  \item \inlinecode{min\_heap\textless{}T\textgreater{}} is a min-heap alias.
+  \item \inlinecode{rng} is a global 64-bit Mersenne Twister seeded from the current \inlinecode{std::chrono::steady\_clock} reading; call \inlinecode{rng.seed(seed)} for reproducible results.
+  \item \inlinecode{rand\_int(lo, hi)} returns a random integer in range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
+  \item \inlinecode{rand\_real(lo = 0.0, hi = 1.0)} returns a random real number in the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{y\_combinator(f)} wraps a recursive lambda so that the lambda can call itself as its first argument.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <cstdint>
+#include <chrono>
 #include <functional>
+#include <iterator>
+#include <numeric>
 #include <queue>
 #include <random>
 #include <type_traits>
@@ -38,11 +43,12 @@ Small contest-template helpers that are useful across many algorithms. These sni
 #define Rev(i, N) for (int i = (N); --i >= 0;)                      // N-1 to 0
 #define Dwn(i, H, L) for (int i = (H), _##i = (L); i >= _##i; --i)  //   H to L
 #define Each(x, C) for (auto &x : (C))
+#define All(C) std::begin(C), std::end(C)
+#define Rall(C) std::rbegin(C), std::rend(C)
 
 template<typename C> int sz(const C &c) { return static_cast<int>(c.size()); }
-template<typename T, typename U> bool ckmin(T &a, const U &b) { return b < a ? a = b, true : false; }
-template<typename T, typename U> bool ckmax(T &a, const U &b) { return a < b ? a = b, true : false; }
-template<typename T> bool between(const T &x, const T &a, const T &b) { return !(x < a) && !(b < x); }
+template<typename T, typename U> bool ckmin(T &a, const U &b) { return b < a && (a = b, true); }
+template<typename T, typename U> bool ckmax(T &a, const U &b) { return a < b && (a = b, true); }
 
 template<typename T>
 T floor_div(T a, T b) {
@@ -58,10 +64,33 @@ T ceil_div(T a, T b) {
   return q + (r != 0 && ((r < 0) == (b < 0)));
 }
 
+template<typename C, typename T>
+int lb(const C &a, const T &x) {
+  return static_cast<int>(std::lower_bound(a.begin(), a.end(), x) - a.begin());
+}
+
+template<typename C, typename T>
+int ub(const C &a, const T &x) {
+  return static_cast<int>(std::upper_bound(a.begin(), a.end(), x) - a.begin());
+}
+
 template<typename T>
 void sort_unique(std::vector<T> &v) {
   std::sort(v.begin(), v.end());
   v.erase(std::unique(v.begin(), v.end()), v.end());
+}
+
+std::vector<int> indices(int n) {
+  std::vector<int> v(n);
+  std::iota(v.begin(), v.end(), 0);
+  return v;
+}
+
+template<typename C>
+std::vector<int> argsort(const C &a) {
+  std::vector<int> p = indices(static_cast<int>(a.size()));
+  std::sort(p.begin(), p.end(), [&](int i, int j) { return a[i] < a[j]; });
+  return p;
 }
 
 template<typename C, typename T>
@@ -72,31 +101,21 @@ void erase_one(C &c, const T &x) {
 }
 
 template<typename T>
-using min_priority_queue = std::priority_queue<T, std::vector<T>, std::greater<T>>;
+using min_heap = std::priority_queue<T, std::vector<T>, std::greater<T>>;
 
-struct RNG {
-  std::mt19937_64 gen;
+std::mt19937_64 rng(std::chrono::steady_clock::now().time_since_epoch().count());
 
-  RNG() : RNG(std::random_device{}()) {}
-  explicit RNG(uint64_t seed) : gen(seed) {}
+template<typename T>
+T rand_int(T lo, T hi) {
+  static_assert(std::is_integral<T>::value, "rand_int() requires an integral type");
+  assert(lo <= hi);
+  return std::uniform_int_distribution<T>(lo, hi)(rng);
+}
 
-  template<typename T>
-  T uniform_int(T lo, T hi) {
-    static_assert(std::is_integral<T>::value, "uniform_int() requires an integral type");
-    assert(lo <= hi);
-    return std::uniform_int_distribution<T>(lo, hi)(gen);
-  }
-
-  double uniform_real(double lo = 0.0, double hi = 1.0) {
-    assert(lo < hi);
-    return std::uniform_real_distribution<double>(lo, hi)(gen);
-  }
-
-  template<typename It>
-  void shuffle(It lo, It hi) {
-    std::shuffle(lo, hi, gen);
-  }
-};
+double rand_real(double lo = 0.0, double hi = 1.0) {
+  assert(lo < hi);
+  return std::uniform_real_distribution<double>(lo, hi)(rng);
+}
 
 template<typename Fun>
 class y_combinator_result {
@@ -136,11 +155,12 @@ int main() {
   assert(!ckmin(x, 9) && x == 7);
   assert(ckmax(x, 11) && x == 11);
 
-  vector<int> v = {1, 2, 3};
+  vector<int> v{1, 2, 3};
   assert(sz(v) == 3);
-  assert(between(2, 1, 3));
-  assert(between(1, 1, 3) && between(3, 1, 3));
-  assert(!between(0, 1, 3));
+  sort(Rall(v));
+  assert((v == vector<int>{3, 2, 1}));
+  sort(All(v));
+  assert(lb(v, 2) == 1 && ub(v, 2) == 2);
   assert(floor_div(7, -3) == -3);
   assert(floor_div(-7, 3) == -3);
   assert(ceil_div(7, -3) == -2);
@@ -148,20 +168,22 @@ int main() {
   v = {3, 1, 3, 2, 1};
   sort_unique(v);
   assert((v == vector<int>{1, 2, 3}));
+  assert((indices(4) == vector<int>{0, 1, 2, 3}));
+  assert((argsort(vector<int>{30, 10, 20}) == vector<int>{1, 2, 0}));
   multiset<int> ms{1, 2, 2, 3};
   erase_one(ms, 2);
   assert(ms.count(2) == 1);
-  min_priority_queue<int> pq;
+  min_heap<int> pq;
   pq.push(3);
   pq.push(1);
   assert(pq.top() == 1);
 
-  RNG rng(1234567);  // Fixed seed for reproducibility.
-  int r = rng.uniform_int(1, 6);
+  rng.seed(1234567);  // Fixed seed for reproducibility.
+  int r = rand_int(1, 6);
   assert(1 <= r && r <= 6);
-  double d = rng.uniform_real();
+  double d = rand_real();
   assert(0.0 <= d && d < 1.0);
-  rng.shuffle(v.begin(), v.end());
+  shuffle(All(v), rng);
   assert(sz(v) == 3);
 
   // Recursive lambda with y_combinator.
@@ -201,27 +223,29 @@ Fast input and output wrappers based on \inlinecode{fread()} and \inlinecode{fwr
   \item \inlinecode{out.flush()} writes any buffered output immediately.
 \end{compactitem}
 
-The parser assumes valid input. Floating point input/output is provided for convenience, not as the main performance path.
+File redirection and detected read/write failures throw \inlinecode{std::runtime\_error}. End-of-file is not an error, and the parser otherwise assumes valid input. Destruction flushes output on a best-effort basis; call \inlinecode{flush()} explicitly to detect a final write failure. Floating point input/output is provided for convenience, not as the main performance path.
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
 #include <cctype>
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <limits>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 
 void set_in(const std::string &name) {
-  FILE *result = freopen(name.c_str(), "r", stdin);
-  assert(result != nullptr);
-  (void)result;
+  if (!freopen(name.c_str(), "r", stdin)) {
+    throw std::runtime_error("Failed to open input file: " + name);
+  }
 }
 
 void set_out(const std::string &name) {
-  FILE *result = freopen(name.c_str(), "w", stdout);
-  assert(result != nullptr);
-  (void)result;
+  if (!freopen(name.c_str(), "w", stdout)) {
+    throw std::runtime_error("Failed to open output file: " + name);
+  }
 }
 
 void set_io(const std::string &iname, const std::string &oname) {
@@ -245,6 +269,9 @@ struct FastInput {
       len = static_cast<int>(fread(buf, 1, BUF_SIZE, file));
       pos = 0;
       if (len == 0) {
+        if (ferror(file)) {
+          throw std::runtime_error("Failed to read input.");
+        }
         return 0;
       }
     }
@@ -304,7 +331,7 @@ struct FastInput {
     using U = typename std::make_unsigned<T>::type;
     U val = 0;
     while (c && !std::isspace(static_cast<unsigned char>(c))) {
-      val = U(10) * val + U(c - '0');
+      val = U{10} * val + U(c - '0');
       c = get_char();
     }
     if constexpr (std::is_signed<T>::value) {
@@ -332,14 +359,19 @@ struct FastOutput {
 
   explicit FastOutput(FILE *file_ = stdout) : file(file_) {}
 
-  ~FastOutput() { flush(); }
+  ~FastOutput() { flush_buffer(); }
   FastOutput(const FastOutput &) = delete;
   FastOutput &operator=(const FastOutput &) = delete;
 
+  bool flush_buffer() {
+    int n = pos;
+    pos = 0;
+    return fwrite(buf, 1, n, file) == static_cast<std::size_t>(n);
+  }
+
   void flush() {
-    if (pos) {
-      fwrite(buf, 1, pos, file);
-      pos = 0;
+    if (!flush_buffer()) {
+      throw std::runtime_error("Failed to write output.");
     }
   }
 
@@ -378,28 +410,20 @@ struct FastOutput {
   typename std::enable_if<
       std::is_integral<T>::value && !std::is_same<T, bool>::value, FastOutput &>::type
   operator<<(T x) {
-    if (x == 0) {
-      put_char('0');
-      return *this;
-    }
     using U = typename std::make_unsigned<T>::type;
-    U val;
+    U val = U(x);
     if constexpr (std::is_signed<T>::value) {
       if (x < 0) {
         put_char('-');
-        val = U{0} - U(x);
-      } else {
-        val = U(x);
+        val = U{0} - val;
       }
-    } else {
-      val = x;
     }
-    char s[32];
+    char s[std::numeric_limits<U>::digits10 + 1];
     int n = 0;
-    while (val > 0) {
+    do {
       s[n++] = char('0' + val % 10);
       val /= 10;
-    }
+    } while (val);
     while (n--) {
       put_char(s[n]);
     }
@@ -457,9 +481,588 @@ int main() {
 }
 \end{lstlisting}
 
-\section{\texorpdfstring{Policy-Based Data Structures}{8.3 Policy-Based Data Structures}}
+\section{\texorpdfstring{Debugging}{8.3 Debugging}}
 \setcounter{section}{3}
-GNU policy-based data structures provide non-standard associative containers and priority queues, including order-statistic trees and fast hash tables. They are not part of the C++ standard library, but they are available on many GNU C++ contest judges.
+Local-only debug printing for contest code. The macro expands to a no-op unless \inlinecode{LOCAL} is defined (e.g. by passing \inlinecode{-DLOCAL} to the compiler flags), so it can remain in submitted code without producing output.
+
+\begin{compactitem}
+  \item \inlinecode{dbg\_repr(x)} returns a string representation of arithmetic types, strings, pairs, tuples, iterable containers, and custom types that support insertion into \inlinecode{std::ostream}.
+  \item \inlinecode{dbg(a, b, c)} prints the function name, line number, argument names, and values to \inlinecode{std::cerr} when \inlinecode{LOCAL} is defined.
+  \item \inlinecode{pr(a, b, c)} prints only the values to \inlinecode{std::cerr} when \inlinecode{LOCAL} is defined; \inlinecode{pr()} prints a blank line.
+  \item \inlinecode{dbg\_rows(rows, col\_width, limit = -1)} prints the function name, line number, argument name, and each iterable row on a separate indexed line. A positive \inlinecode{col\_width} right-aligns each element in a field of that width. Pass $0$ for ordinary container formatting. A nonnegative \inlinecode{limit} prints at most that many rows and elements per row, marking omitted entries with \inlinecode{...}.
+  \item \inlinecode{pr\_rows(rows, col\_width, limit = -1)} prints only the indexed rows with the same formatting.
+\end{compactitem}
+
+All four printing macros evaluate to no output when \inlinecode{LOCAL} is not defined.
+
+Avoid naming these helpers \inlinecode{to\_string()} unless you want them mixed into overload resolution with \inlinecode{std::to\_string()} and other user-defined \inlinecode{to\_string()} functions. A separate name keeps debug formatting local to this snippet.
+
+\begin{lstlisting}[language=C++]
+#include <cstddef>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
+template<typename T, typename = void>
+struct is_iterable : std::false_type {};
+
+template<typename T>
+struct is_iterable<
+    T, std::void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>()))>>
+    : std::true_type {};
+
+template<typename T, typename = void>
+struct is_streamable : std::false_type {};
+
+template<typename T>
+struct is_streamable<
+    T, std::void_t<decltype(std::declval<std::ostream &>() << std::declval<const T &>())>>
+    : std::true_type {};
+
+std::string dbg_repr(const std::string &s) { return '"' + s + '"'; }
+std::string dbg_repr(const char *s) { return dbg_repr(std::string(s)); }
+std::string dbg_repr(char c) { return std::string("'") + c + "'"; }
+std::string dbg_repr(bool b) { return b ? "true" : "false"; }
+
+template<typename T>
+typename std::enable_if<
+    std::is_arithmetic<T>::value && !std::is_same<T, char>::value &&
+        !std::is_same<T, bool>::value && !std::is_floating_point<T>::value,
+    std::string>::type
+dbg_repr(T x) {
+  std::ostringstream out;
+  out << x;
+  return out.str();
+}
+
+template<typename T>
+typename std::enable_if<std::is_floating_point<T>::value, std::string>::type dbg_repr(T x) {
+  std::ostringstream out;
+  out << std::setprecision(10) << x;  // Set floating point dbg precision here.
+  return out.str();
+}
+
+template<typename T>
+typename std::enable_if<
+    is_streamable<T>::value && !is_iterable<T>::value && !std::is_arithmetic<T>::value &&
+        !std::is_convertible<T, std::string>::value,
+    std::string>::type
+dbg_repr(const T &x) {
+  std::ostringstream out;
+  out << x;
+  return out.str();
+}
+
+template<typename A, typename B>
+std::string dbg_repr(const std::pair<A, B> &p) {
+  return "(" + dbg_repr(p.first) + ", " + dbg_repr(p.second) + ")";
+}
+
+template<typename Tuple, std::size_t... Is>
+std::string dbg_tuple_repr(const Tuple &t, std::index_sequence<Is...>) {
+  std::string res = "(";
+  bool first = true;
+  ((res += (first ? (first = false, "") : ", ") + dbg_repr(std::get<Is>(t))), ...);
+  return res + ")";
+}
+
+template<typename... Ts>
+std::string dbg_repr(const std::tuple<Ts...> &t) {
+  return dbg_tuple_repr(t, std::index_sequence_for<Ts...>{});
+}
+
+template<typename T>
+typename std::enable_if<
+    is_iterable<T>::value && !std::is_convertible<T, std::string>::value, std::string>::type
+dbg_repr(const T &v) {
+  std::string res = "{";
+  bool first = true;
+  for (const auto &x : v) {
+    if (!first) {
+      res += ", ";
+    }
+    first = false;
+    res += dbg_repr(x);
+  }
+  return res + "}";
+}
+
+template<typename Head, typename... Tail>
+void dbg_out(bool leading_space, const Head &head, const Tail &...tail) {
+  if (leading_space) {
+    std::cerr << ' ';
+  }
+  std::cerr << dbg_repr(head);
+  ((std::cerr << ' ' << dbg_repr(tail)), ...);
+  std::cerr << '\n';
+}
+
+void pr_out() {
+  std::cerr << '\n';
+}
+
+template<typename Head, typename... Tail>
+void pr_out(const Head &head, const Tail &...tail) {
+  dbg_out(false, head, tail...);
+}
+
+template<typename Rows>
+void dbg_rows_out(const Rows &rows, int col_width = 0, int limit = -1) {
+  int i = 0;
+  for (const auto &row : rows) {
+    if (i == limit) {
+      std::cerr << "...\n";
+      break;
+    }
+    std::cerr << i++ << ':' << (col_width > 0 ? "" : " {");
+    int j = 0;
+    for (const auto &x : row) {
+      if (j == limit) {
+        std::cerr << (col_width > 0 ? " ..." : (j == 0 ? "..." : ", ..."));
+        break;
+      }
+      std::cerr << (col_width > 0 ? " " : (j == 0 ? "" : ", ")) << std::setw(col_width)
+                << dbg_repr(x);
+      j++;
+    }
+    std::cerr << (col_width > 0 ? "\n" : "}\n");
+  }
+}
+
+#ifdef LOCAL
+#define dbg(...)                                                                  \
+  std::cerr << "[" << __func__ << ":" << __LINE__ << "] " << #__VA_ARGS__ << ":", \
+      dbg_out(true, __VA_ARGS__)
+#define pr(...) pr_out(__VA_ARGS__)
+#define dbg_rows(rows, ...)                                                  \
+  std::cerr << "[" << __func__ << ":" << __LINE__ << "] " << #rows << ":\n", \
+      dbg_rows_out(rows, __VA_ARGS__)
+#define pr_rows(rows, ...) dbg_rows_out(rows, __VA_ARGS__)
+#else
+#define dbg(...) ((void)0)
+#define pr(...) ((void)0)
+#define dbg_rows(...) ((void)0)
+#define pr_rows(...) ((void)0)
+#endif
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <map>
+#include <set>
+#include <vector>
+using namespace std;
+
+struct Point {
+  int x, y;
+};
+
+// Can overload dbg_repr to dbg your custom structs.
+string dbg_repr(const Point &p) {
+  return "Point(" + dbg_repr(p.x) + ", " + dbg_repr(p.y) + ")";
+}
+
+struct Edge {
+  int u, v, w;
+};
+
+string dbg_repr(const Edge &e) {
+  return "Edge{" + dbg_repr(e.u) + "->" + dbg_repr(e.v) + ", w=" + dbg_repr(e.w) + "}";
+}
+
+struct Streamable {
+  int value;
+
+  friend ostream &operator<<(ostream &out, const Streamable &x) {
+    return out << "Streamable(" << x.value << ")";
+  }
+};
+
+int main() {
+  vector<int> v{1, 2, 3};
+  auto p = make_pair(4, string("x"));
+  auto t = make_tuple(1, true, string("ok"));
+  map<string, int> mp{{"a", 1}, {"b", 2}};
+  Point pt{2, 3};
+  Edge e{0, 1, 5};
+  double d = 3.141592653589793;
+
+  assert(dbg_repr(v) == "{1, 2, 3}");
+  assert(dbg_repr(p) == "(4, \"x\")");
+  assert(dbg_repr(t) == "(1, true, \"ok\")");
+  assert(dbg_repr(mp) == "{(\"a\", 1), (\"b\", 2)}");
+  assert(dbg_repr(pt) == "Point(2, 3)");
+  assert(dbg_repr(e) == "Edge{0->1, w=5}");
+  assert(dbg_repr(Streamable{6}) == "Streamable(6)");
+  assert(dbg_repr(vector<Streamable>{{7}, {8}}) == "{Streamable(7), Streamable(8)}");
+  assert(dbg_repr(1.0 / 3.0) == "0.3333333333");
+  assert(dbg_repr(d) == "3.141592654");
+
+  dbg(v);
+  dbg(p, t, mp);
+  dbg(pt, e);
+  pr("plain output", d);
+
+  vector<vector<int>> adj{{1, 2}, {0}, {0}};
+  pr();
+  dbg_rows(adj, 0);
+
+  vector<vector<int>> grid{{1, 20, -3}, {400, 5, 6}, {7, 8, 9}};
+  pr();
+  dbg_rows(grid, 3, 2);
+  return 0;
+}
+\end{lstlisting}
+\begin{exampleoutput}
+[main:250] v: {1, 2, 3}
+[main:251] p, t, mp: (4, "x") (1, true, "ok") {("a", 1), ("b", 2)}
+[main:252] pt, e: Point(2, 3) Edge{0->1, w=5}
+"plain output" 3.141592654
+
+[main:257] adj:
+0: {1, 2}
+1: {0}
+2: {0}
+
+[main:261] grid:
+0:   1  20 ...
+1: 400   5 ...
+...
+\end{exampleoutput}
+
+\section{\texorpdfstring{Stress-Testing}{8.4 Stress-Testing}}
+\setcounter{section}{4}
+A stress test compares an optimized implementation against a trusted brute force implementation on many generated inputs. Small tests make brute force practical and produce manageable counterexamples. Mix uniform randomness with boundary values and structured cases such as sorted, reverse-sorted, duplicate-heavy, and all-distinct inputs.
+
+\begin{compactitem}
+  \item \inlinecode{rng} is a global 64-bit Mersenne Twister. Call \inlinecode{rng.seed(seed)} before a stress test to make it reproducible.
+  \item \inlinecode{rand\_int(lo, hi)} returns a uniformly random integer in range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
+  \item \inlinecode{rand\_choice(values)} returns a uniformly random element of the nonempty vector \inlinecode{values}.
+  \item \inlinecode{rand\_perm(n, first = 0)} returns a random permutation of the $n$ consecutive integers beginning at \inlinecode{first}.
+  \item \inlinecode{rand\_distinct(k, lo, hi)} returns \inlinecode{k} distinct integers sampled uniformly from $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ in expected $O(k)$ time and $O(k)$ space.
+  \item \inlinecode{rand\_graph(n, m, directed = false)} returns a uniformly random simple graph with \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$ and exactly \inlinecode{m} edges. It uses expected $O(m)$ time and $O(m)$ space.
+  \item \inlinecode{rand\_tree(n)} returns a uniformly random labeled tree on nodes $[0, {\inlinecodemath{n}})$ as an edge list using a Prüfer code.
+  \item \inlinecode{rand\_composition(parts, sum, min\_part)} uniformly splits \inlinecode{sum} into \inlinecode{parts} ordered integers, each at least \inlinecode{min\_part}.
+  \item \inlinecode{stress(trials, gen, solve, brute, equal = std::equal\_to\textless{}\textgreater{}())} runs \inlinecode{trials} tests, calling \inlinecode{gen(trial)} with each 1-based trial number and comparing \inlinecode{solve(test)} with \inlinecode{brute(test)} using \inlinecode{equal}. It returns a \inlinecode{StressFailure} containing the number, first failing test, and actual and expected results.
+  \item \inlinecode{stress(...)} returns \inlinecode{std::nullopt} if all generated tests pass.
+\end{compactitem}
+
+The generated test type must be copyable so each solution receives an independent input. The comparison function must accept the respective results of \inlinecode{solve(test)} and \inlinecode{brute(test)}. Use an explicit seed so a failed run can be reproduced in the same environment.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <climits>
+#include <cmath>
+#include <cstdint>
+#include <functional>
+#include <numeric>
+#include <optional>
+#include <queue>
+#include <random>
+#include <type_traits>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
+std::mt19937_64 rng;
+
+int rand_int(int lo, int hi) {
+  assert(lo <= hi);
+  return std::uniform_int_distribution<int>(lo, hi)(rng);
+}
+
+template<typename T>
+T rand_choice(const std::vector<T> &values) {
+  assert(!values.empty());
+  assert(values.size() <= INT_MAX);
+  return values[rand_int(0, static_cast<int>(values.size()) - 1)];
+}
+
+std::vector<int> rand_perm(int n, int first = 0) {
+  assert(n >= 0 && (n == 0 || static_cast<int64_t>(first) + n - 1 <= INT_MAX));
+  std::vector<int> p(n);
+  std::iota(p.begin(), p.end(), first);
+  std::shuffle(p.begin(), p.end(), rng);
+  return p;
+}
+
+std::vector<int> rand_distinct(int k, int lo, int hi) {
+  int64_t count = static_cast<int64_t>(hi) - lo + 1;
+  assert(lo <= hi && 0 <= k && k <= count);
+  std::unordered_set<int> used;
+  used.reserve(k);
+  std::vector<int> values;
+  values.reserve(k);
+  // Floyd's algorithm avoids materializing the entire interval.
+  for (int64_t j = static_cast<int64_t>(hi) - k + 1; j <= hi; ++j) {
+    int x = rand_int(lo, static_cast<int>(j));
+    if (!used.insert(x).second) {
+      x = static_cast<int>(j);
+      used.insert(x);
+    }
+    values.push_back(x);
+  }
+  std::shuffle(values.begin(), values.end(), rng);
+  return values;
+}
+
+std::vector<std::pair<int, int>> rand_graph(int n, int m, bool directed = false) {
+  assert(n >= 0 && m >= 0);
+  int64_t total =
+      directed ? static_cast<int64_t>(n) * (n - 1) : static_cast<int64_t>(n) * (n - 1) / 2;
+  assert(m <= total);
+  bool complement = m > total / 2;
+  int sample = complement ? static_cast<int>(total - m) : m;
+  // For dense graphs, sample the omitted edges instead of the included ones.
+  std::unordered_set<int64_t> sampled;
+  sampled.reserve(sample);
+  while (static_cast<int>(sampled.size()) < sample) {
+    int u = rand_int(0, n - 1), v = rand_int(0, n - 2);
+    if (v >= u) {
+      v++;
+    }
+    if (!directed && u > v) {
+      std::swap(u, v);
+    }
+    sampled.insert(static_cast<int64_t>(u) * n + v);
+  }
+  std::vector<std::pair<int, int>> edges;
+  edges.reserve(m);
+  if (!complement) {
+    for (int64_t key : sampled) {
+      edges.emplace_back(static_cast<int>(key / n), static_cast<int>(key % n));
+    }
+  } else {
+    for (int u = 0; u < n; ++u) {
+      for (int v = directed ? 0 : u + 1; v < n; ++v) {
+        if (u != v && !sampled.count(static_cast<int64_t>(u) * n + v)) {
+          edges.emplace_back(u, v);
+        }
+      }
+    }
+  }
+  std::shuffle(edges.begin(), edges.end(), rng);
+  return edges;
+}
+
+std::vector<std::pair<int, int>> rand_tree(int n) {
+  assert(n >= 1);
+  if (n == 1) {
+    return {};
+  }
+  std::vector<int> degree(n, 1), code(n - 2);
+  for (int &u : code) {
+    degree[u = rand_int(0, n - 1)]++;
+  }
+  std::priority_queue<int, std::vector<int>, std::greater<int>> leaves;
+  for (int u = 0; u < n; ++u) {
+    if (degree[u] == 1) {
+      leaves.push(u);
+    }
+  }
+  std::vector<std::pair<int, int>> edges;
+  for (int u : code) {
+    int leaf = leaves.top();
+    leaves.pop();
+    edges.emplace_back(leaf, u);
+    if (--degree[u] == 1) {
+      leaves.push(u);
+    }
+  }
+  int u = leaves.top();
+  leaves.pop();
+  edges.emplace_back(u, leaves.top());
+  std::shuffle(edges.begin(), edges.end(), rng);
+  return edges;
+}
+
+std::vector<int> rand_composition(int parts, int sum, int min_part) {
+  int64_t remaining = static_cast<int64_t>(sum) - static_cast<int64_t>(parts) * min_part;
+  assert(parts >= 1 && min_part >= 0 && remaining >= 0 && remaining + parts - 2 <= INT_MAX);
+  if (parts == 1) {
+    return {sum};
+  }
+  auto cuts = rand_distinct(parts - 1, 0, static_cast<int>(remaining) + parts - 2);
+  std::sort(cuts.begin(), cuts.end());
+  std::vector<int> values;
+  int prev = -1;
+  for (int cut : cuts) {
+    values.push_back(min_part + cut - prev - 1);
+    prev = cut;
+  }
+  values.push_back(min_part + static_cast<int>(remaining) + parts - 2 - prev);
+  return values;
+}
+
+template<typename Test, typename Actual, typename Expected>
+struct StressFailure {
+  int trial;
+  Test test;
+  Actual actual;
+  Expected expected;
+};
+
+template<typename Generate, typename Solve, typename Brute, typename Equal = std::equal_to<>>
+auto stress(int trials, Generate gen, Solve solve, Brute brute, Equal equal = {}) {
+  assert(trials >= 0);
+  using Test = std::decay_t<decltype(gen(1))>;
+  using Actual = std::decay_t<decltype(solve(std::declval<Test &>()))>;
+  using Expected = std::decay_t<decltype(brute(std::declval<Test &>()))>;
+  using Failure = StressFailure<Test, Actual, Expected>;
+  for (int trial = 1; trial <= trials; ++trial) {
+    auto test = gen(trial);
+    auto solve_test = test, brute_test = test;
+    auto actual = solve(solve_test);
+    auto expected = brute(brute_test);
+    if (!equal(actual, expected)) {
+      return std::optional<Failure>{
+          Failure{trial, std::move(test), std::move(actual), std::move(expected)}
+      };
+    }
+  }
+  return std::optional<Failure>{};
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+using namespace std;
+
+bool EQ(double a, double b) {
+  return a == b || fabs(a - b) <= 1e-9;
+}
+
+int main() {
+  rng.seed(1234567);  // Fixed seed for reproducibility.
+
+  auto graph = rand_graph(5, 7);
+  assert(graph.size() == 7 && all_of(graph.begin(), graph.end(), [](auto edge) {
+           return edge.first < edge.second;
+         }));
+  assert(rand_tree(6).size() == 5);
+  auto composition = rand_composition(4, 20, 2);
+  assert(accumulate(composition.begin(), composition.end(), 0) == 20);
+  assert(*min_element(composition.begin(), composition.end()) >= 2);
+
+  auto generate = [](int trial) {
+    int n = rand_int(1, 8), kind = trial <= 3 ? trial - 1 : rand_int(0, 2);
+    switch (kind) {
+      case 0:
+        return rand_perm(n, 1);
+      case 1:
+        return rand_distinct(n, -5, 5);
+      default:
+        break;
+    }
+    static const vector<int> boundary_values{-5, 0, 5};
+    bernoulli_distribution use_boundary(0.25);
+    vector<int> a(n);
+    for (int &x : a) {
+      x = use_boundary(rng) ? rand_choice(boundary_values) : rand_int(-5, 5);
+    }
+    return a;
+  };
+  auto solve = [](vector<int> a) {
+    sort(a.begin(), a.end());
+    return a;
+  };
+  auto brute = [](vector<int> a) {
+    do {
+      if (is_sorted(a.begin(), a.end())) {
+        return a;
+      }
+    } while (next_permutation(a.begin(), a.end()));
+    sort(a.begin(), a.end());
+    return a;
+  };
+
+  assert(!stress(100, generate, solve, brute));
+  assert(!stress(
+      1, [](int) { return 0; }, [](int) { return 1.0; }, [](int) { return 1.0 + 1e-12; }, EQ
+  ));
+
+  // Mutating solvers still receive independent copies of the generated test.
+  auto mutate = [](vector<int> &a) { return ++a[0]; };
+  auto unchanged = [](const vector<int> &a) { return a[0]; };
+  auto failure = stress(1, [](int) { return vector<int>{1}; }, mutate, unchanged);
+  assert(failure && failure->trial == 1 && failure->test == vector<int>{1});
+  assert(failure->actual == 2 && failure->expected == 1);
+  return 0;
+}
+\end{lstlisting}
+
+\section{\texorpdfstring{Benchmarking}{8.5 Benchmarking}}
+\setcounter{section}{5}
+Small timing helpers for local profiling and codebook examples. Use \inlinecode{std::chrono::steady\_clock} instead of wall-clock time so elapsed durations are monotonic.
+
+\begin{compactitem}
+  \item \inlinecode{Timer()} starts a timer immediately.
+  \item \inlinecode{timer.reset()} restarts the timer.
+  \item \inlinecode{timer.elapsed()} returns the elapsed time in milliseconds as a double.
+  \item \inlinecode{benchmark(iterations, f)} runs \inlinecode{f()} \inlinecode{iterations} times and returns the average elapsed milliseconds per call. \inlinecode{iterations} must be positive.
+\end{compactitem}
+
+Benchmarks should be treated as local measurements, not proofs of asymptotic performance. Warm-up, CPU frequency scaling, compiler optimization, and input choice can dominate tiny timings.
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <chrono>
+
+class Timer {
+  using Clock = std::chrono::steady_clock;
+  Clock::time_point start_time;
+
+ public:
+  Timer() { reset(); }
+
+  void reset() { start_time = Clock::now(); }
+
+  double elapsed() const {
+    return std::chrono::duration<double, std::milli>(Clock::now() - start_time).count();
+  }
+};
+
+template<typename Fun>
+double benchmark(int iterations, Fun f) {
+  assert(iterations > 0);
+  Timer timer;
+  for (int i = 0; i < iterations; ++i) {
+    f();
+  }
+  return timer.elapsed() / iterations;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <numeric>
+#include <vector>
+using namespace std;
+
+int main() {
+  Timer timer;
+  vector<int> v(1000);
+  iota(v.begin(), v.end(), 0);
+  assert(timer.elapsed() >= 0.0);
+
+  volatile long long sink = 0;
+  double avg_time = benchmark(5, [&] { sink += accumulate(v.begin(), v.end(), 0LL); });
+  assert(avg_time >= 0.0);
+  assert(sink > 0);
+  return 0;
+}
+\end{lstlisting}
+
+\section{\texorpdfstring{GNU Policy-Based Data Structures}{8.6 GNU Policy-Based Data Structures}}
+\setcounter{section}{6}
+GNU policy-based data structures (PBDS) provide non-standard associative containers and priority queues, including order-statistic trees and fast hash tables. They are not part of the C++ standard library, but they are available on many GNU C++ contest judges.
 
 \begin{compactitem}
   \item \inlinecode{HashMap\textless{}K, V\textgreater{}} and \inlinecode{HashSet\textless{}K\textgreater{}} behave like faster, non-standard alternatives to \inlinecode{std::unordered\_map\textless{}K, V\textgreater{}} and \inlinecode{std::unordered\_set\textless{}K\textgreater{}}, using \inlinecode{gp\_hash\_table}. The default \inlinecode{SplitMix64Hasher} is for integer-like keys; pass a custom hash for other key types. It randomizes the hash seed to avoid weak adversarial integer hashes.
@@ -505,9 +1108,8 @@ struct SplitMix64Hasher {
   }
 
   std::size_t operator()(uint64_t x) const {
-    static const uint64_t FIXED_RANDOM =
-        std::chrono::steady_clock::now().time_since_epoch().count();
-    return mix64(x + FIXED_RANDOM);
+    static const uint64_t RAND_SEED = std::chrono::steady_clock::now().time_since_epoch().count();
+    return mix64(x + RAND_SEED);
   }
 };
 
@@ -655,538 +1257,13 @@ int main() {
 }
 \end{lstlisting}
 
-\section{\texorpdfstring{Debugging}{8.4 Debugging}}
-\setcounter{section}{4}
-Local-only debug printing for contest code. The macro expands to a no-op unless \inlinecode{LOCAL} is defined (e.g. by passing \inlinecode{-DLOCAL} to the compiler flags), so it can remain in submitted code without producing output.
-
-\begin{compactitem}
-  \item \inlinecode{dbg\_repr(x)} returns a string representation of arithmetic types, strings, pairs, tuples, iterable containers, and custom types that support insertion into \inlinecode{std::ostream}.
-  \item \inlinecode{dbg(a, b, c)} prints the function name, line number, argument names, and values to \inlinecode{std::cerr} when \inlinecode{LOCAL} is defined.
-  \item \inlinecode{pr(a, b, c)} prints only the values to \inlinecode{std::cerr} when \inlinecode{LOCAL} is defined.
-  \item \inlinecode{dbg(...)} evaluates to no output when \inlinecode{LOCAL} is not defined.
-  \item \inlinecode{pr(...)} evaluates to no output when \inlinecode{LOCAL} is not defined.
-\end{compactitem}
-
-Avoid naming these helpers \inlinecode{to\_string()} unless you want them mixed into overload resolution with \inlinecode{std::to\_string()} and other user-defined \inlinecode{to\_string()} functions. A separate name keeps debug formatting local to this snippet.
-
-\begin{lstlisting}[language=C++]
-#include <cstddef>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <tuple>
-#include <type_traits>
-#include <utility>
-
-template<typename T, typename = void>
-struct is_iterable : std::false_type {};
-
-template<typename T>
-struct is_iterable<
-    T, std::void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>()))>>
-    : std::true_type {};
-
-template<typename T, typename = void>
-struct is_streamable : std::false_type {};
-
-template<typename T>
-struct is_streamable<
-    T, std::void_t<decltype(std::declval<std::ostream &>() << std::declval<const T &>())>>
-    : std::true_type {};
-
-std::string dbg_repr(const std::string &s) { return '"' + s + '"'; }
-std::string dbg_repr(const char *s) { return dbg_repr(std::string(s)); }
-std::string dbg_repr(char c) { return std::string("'") + c + "'"; }
-std::string dbg_repr(bool b) { return b ? "true" : "false"; }
-
-template<typename T>
-typename std::enable_if<
-    std::is_arithmetic<T>::value && !std::is_same<T, char>::value &&
-        !std::is_same<T, bool>::value && !std::is_floating_point<T>::value,
-    std::string>::type
-dbg_repr(T x) {
-  std::ostringstream out;
-  out << x;
-  return out.str();
-}
-
-template<typename T>
-typename std::enable_if<std::is_floating_point<T>::value, std::string>::type dbg_repr(T x) {
-  std::ostringstream out;
-  out << std::setprecision(10) << x;  // Set floating point dbg precision here.
-  return out.str();
-}
-
-template<typename T>
-typename std::enable_if<
-    is_streamable<T>::value && !is_iterable<T>::value && !std::is_arithmetic<T>::value &&
-        !std::is_convertible<T, std::string>::value,
-    std::string>::type
-dbg_repr(const T &x) {
-  std::ostringstream out;
-  out << x;
-  return out.str();
-}
-
-template<typename A, typename B>
-std::string dbg_repr(const std::pair<A, B> &p) {
-  return "(" + dbg_repr(p.first) + ", " + dbg_repr(p.second) + ")";
-}
-
-template<typename Tuple, std::size_t... Is>
-std::string dbg_tuple_repr(const Tuple &t, std::index_sequence<Is...>) {
-  std::string res = "(";
-  bool first = true;
-  ((res += (first ? (first = false, "") : ", ") + dbg_repr(std::get<Is>(t))), ...);
-  return res + ")";
-}
-
-template<typename... Ts>
-std::string dbg_repr(const std::tuple<Ts...> &t) {
-  return dbg_tuple_repr(t, std::index_sequence_for<Ts...>{});
-}
-
-template<typename T>
-typename std::enable_if<
-    is_iterable<T>::value && !std::is_convertible<T, std::string>::value, std::string>::type
-dbg_repr(const T &v) {
-  std::string res = "{";
-  bool first = true;
-  for (const auto &x : v) {
-    if (!first) {
-      res += ", ";
-    }
-    first = false;
-    res += dbg_repr(x);
-  }
-  return res + "}";
-}
-
-template<typename Head, typename... Tail>
-void dbg_out(bool leading_space, const Head &head, const Tail &...tail) {
-  if (leading_space) {
-    std::cerr << ' ';
-  }
-  std::cerr << dbg_repr(head);
-  ((std::cerr << ' ' << dbg_repr(tail)), ...);
-  std::cerr << '\n';
-}
-
-#ifdef LOCAL
-#define dbg(...)                                                                  \
-  std::cerr << "[" << __func__ << ":" << __LINE__ << "] " << #__VA_ARGS__ << ":", \
-      dbg_out(true, __VA_ARGS__)
-#define pr(...) dbg_out(false, __VA_ARGS__)
-#else
-#define dbg(...) ((void)0)
-#define pr(...) ((void)0)
-#endif
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-#include <map>
-#include <set>
-#include <vector>
-using namespace std;
-
-struct Point {
-  int x, y;
-};
-
-// Can overload dbg_repr to dbg your custom structs.
-string dbg_repr(const Point &p) {
-  return "Point(" + dbg_repr(p.x) + ", " + dbg_repr(p.y) + ")";
-}
-
-struct Edge {
-  int u, v, w;
-};
-
-string dbg_repr(const Edge &e) {
-  return "Edge{" + dbg_repr(e.u) + "->" + dbg_repr(e.v) + ", w=" + dbg_repr(e.w) + "}";
-}
-
-struct Streamable {
-  int value;
-
-  friend ostream &operator<<(ostream &out, const Streamable &x) {
-    return out << "Streamable(" << x.value << ")";
-  }
-};
-
-int main() {
-  vector<int> v = {1, 2, 3};
-  auto p = make_pair(4, string("x"));
-  auto t = make_tuple(1, true, string("ok"));
-  map<string, int> mp = {{"a", 1}, {"b", 2}};
-  Point pt{2, 3};
-  Edge e{0, 1, 5};
-  assert(dbg_repr(v) == "{1, 2, 3}");
-  assert(dbg_repr(p) == "(4, \"x\")");
-  assert(dbg_repr(t) == "(1, true, \"ok\")");
-  assert(dbg_repr(mp) == "{(\"a\", 1), (\"b\", 2)}");
-  assert(dbg_repr(pt) == "Point(2, 3)");
-  assert(dbg_repr(e) == "Edge{0->1, w=5}");
-  assert(dbg_repr(Streamable{6}) == "Streamable(6)");
-  assert(dbg_repr(vector<Streamable>{{7}, {8}}) == "{Streamable(7), Streamable(8)}");
-  double d = 3.141592653589793;
-  dbg(v);
-  dbg(p, t, mp);
-  dbg(pt, e);
-  pr("plain output", d);
-  assert(dbg_repr(1.0 / 3.0) == "0.3333333333");
-  assert(dbg_repr(d) == "3.141592654");
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
-[main:166] v: {1, 2, 3}
-[main:167] p, t, mp: (4, "x") (1, true, "ok") {("a", 1), ("b", 2)}
-[main:168] pt, e: Point(2, 3) Edge{0->1, w=5}
-"plain output" 3.141592654
-\end{exampleoutput}
-
-\section{\texorpdfstring{Stress-Testing}{8.5 Stress-Testing}}
-\setcounter{section}{5}
-A stress test compares an optimized implementation against a trusted brute force implementation on many generated inputs. Small tests make brute force practical and produce manageable counterexamples. Mix uniform randomness with boundary values and structured cases such as sorted, reverse-sorted, duplicate-heavy, and all-distinct inputs.
-
-\begin{compactitem}
-  \item \inlinecode{rng} is a global 64-bit Mersenne Twister. Call \inlinecode{rng.seed(seed)} before a stress test to make it reproducible.
-  \item \inlinecode{rand\_int(lo, hi)} returns a uniformly random integer in range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
-  \item \inlinecode{rand\_choice(values)} returns a uniformly random element of the nonempty vector \inlinecode{values}.
-  \item \inlinecode{rand\_perm(n, first = 0)} returns a random permutation of the $n$ consecutive integers beginning at \inlinecode{first}.
-  \item \inlinecode{rand\_distinct(k, lo, hi)} returns \inlinecode{k} distinct integers sampled uniformly from $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ in expected $O(k)$ time and $O(k)$ space.
-  \item \inlinecode{rand\_graph(n, m, directed = false)} returns a uniformly random simple graph as an edge list. It uses expected $O(m)$ time and $O(m)$ space.
-  \item \inlinecode{rand\_tree(n)} returns a uniformly random labeled tree as an edge list using a Prüfer code.
-  \item \inlinecode{rand\_composition(parts, sum, min\_part)} uniformly splits \inlinecode{sum} into \inlinecode{parts} ordered integers, each at least \inlinecode{min\_part}.
-  \item \inlinecode{stress(trials, gen, solve, brute, equal = std::equal\_to\textless{}\textgreater{}())} calls \inlinecode{gen(trial)} with each 1-based trial number and returns a \inlinecode{StressFailure} containing the number, first failing test, and the actual and expected results.
-  \item \inlinecode{stress(...)} returns \inlinecode{std::nullopt} if all generated tests pass.
-\end{compactitem}
-
-The generated test type must be copyable so each solution receives an independent input. The comparison function must accept the respective results of \inlinecode{solve(test)} and \inlinecode{brute(test)}. Use an explicit seed so a failed run can be reproduced in the same environment.
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <cassert>
-#include <climits>
-#include <cmath>
-#include <cstdint>
-#include <functional>
-#include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <type_traits>
-#include <unordered_set>
-#include <utility>
-#include <vector>
-
-std::mt19937_64 rng;
-
-int rand_int(int lo, int hi) {
-  assert(lo <= hi);
-  return std::uniform_int_distribution<int>(lo, hi)(rng);
-}
-
-template<typename T>
-T rand_choice(const std::vector<T> &values) {
-  assert(!values.empty());
-  assert(values.size() <= INT_MAX);
-  return values[rand_int(0, static_cast<int>(values.size()) - 1)];
-}
-
-std::vector<int> rand_perm(int n, int first = 0) {
-  assert(n >= 0 && (n == 0 || static_cast<int64_t>(first) + n - 1 <= INT_MAX));
-  std::vector<int> p(n);
-  std::iota(p.begin(), p.end(), first);
-  std::shuffle(p.begin(), p.end(), rng);
-  return p;
-}
-
-std::vector<int> rand_distinct(int k, int lo, int hi) {
-  int64_t count = static_cast<int64_t>(hi) - lo + 1;
-  assert(lo <= hi && 0 <= k && k <= count);
-  std::unordered_set<int> used;
-  used.reserve(k);
-  std::vector<int> values;
-  values.reserve(k);
-  // Floyd's algorithm avoids materializing the entire interval.
-  for (int64_t j = static_cast<int64_t>(hi) - k + 1; j <= hi; ++j) {
-    int x = rand_int(lo, static_cast<int>(j));
-    if (!used.insert(x).second) {
-      x = static_cast<int>(j);
-      used.insert(x);
-    }
-    values.push_back(x);
-  }
-  std::shuffle(values.begin(), values.end(), rng);
-  return values;
-}
-
-std::vector<std::pair<int, int>> rand_graph(int n, int m, bool directed = false) {
-  assert(n >= 0 && m >= 0);
-  int64_t total =
-      directed ? static_cast<int64_t>(n) * (n - 1) : static_cast<int64_t>(n) * (n - 1) / 2;
-  assert(m <= total);
-  bool complement = m > total / 2;
-  int sample = complement ? static_cast<int>(total - m) : m;
-  // For dense graphs, sample the omitted edges instead of the included ones.
-  std::unordered_set<int64_t> sampled;
-  sampled.reserve(sample);
-  while (static_cast<int>(sampled.size()) < sample) {
-    int u = rand_int(0, n - 1), v = rand_int(0, n - 2);
-    if (v >= u) {
-      v++;
-    }
-    if (!directed && u > v) {
-      std::swap(u, v);
-    }
-    sampled.insert(static_cast<int64_t>(u) * n + v);
-  }
-  std::vector<std::pair<int, int>> edges;
-  edges.reserve(m);
-  if (!complement) {
-    for (int64_t key : sampled) {
-      edges.push_back({static_cast<int>(key / n), static_cast<int>(key % n)});
-    }
-  } else {
-    for (int u = 0; u < n; ++u) {
-      for (int v = directed ? 0 : u + 1; v < n; ++v) {
-        if (u != v && !sampled.count(static_cast<int64_t>(u) * n + v)) {
-          edges.push_back({u, v});
-        }
-      }
-    }
-  }
-  std::shuffle(edges.begin(), edges.end(), rng);
-  return edges;
-}
-
-std::vector<std::pair<int, int>> rand_tree(int n) {
-  assert(n >= 1);
-  if (n == 1) {
-    return {};
-  }
-  std::vector<int> degree(n, 1), code(n - 2);
-  for (int &u : code) {
-    degree[u = rand_int(0, n - 1)]++;
-  }
-  std::priority_queue<int, std::vector<int>, std::greater<int>> leaves;
-  for (int u = 0; u < n; ++u) {
-    if (degree[u] == 1) {
-      leaves.push(u);
-    }
-  }
-  std::vector<std::pair<int, int>> edges;
-  for (int u : code) {
-    int leaf = leaves.top();
-    leaves.pop();
-    edges.push_back({leaf, u});
-    if (--degree[u] == 1) {
-      leaves.push(u);
-    }
-  }
-  int u = leaves.top();
-  leaves.pop();
-  edges.push_back({u, leaves.top()});
-  std::shuffle(edges.begin(), edges.end(), rng);
-  return edges;
-}
-
-std::vector<int> rand_composition(int parts, int sum, int min_part) {
-  int64_t remaining = static_cast<int64_t>(sum) - static_cast<int64_t>(parts) * min_part;
-  assert(parts >= 1 && min_part >= 0 && remaining >= 0 && remaining + parts - 2 <= INT_MAX);
-  if (parts == 1) {
-    return {sum};
-  }
-  auto cuts = rand_distinct(parts - 1, 0, static_cast<int>(remaining) + parts - 2);
-  std::sort(cuts.begin(), cuts.end());
-  std::vector<int> values;
-  int prev = -1;
-  for (int cut : cuts) {
-    values.push_back(min_part + cut - prev - 1);
-    prev = cut;
-  }
-  values.push_back(min_part + static_cast<int>(remaining) + parts - 2 - prev);
-  return values;
-}
-
-template<typename Test, typename Actual, typename Expected>
-struct StressFailure {
-  int trial;
-  Test test;
-  Actual actual;
-  Expected expected;
-};
-
-template<typename Generate, typename Solve, typename Brute, typename Equal = std::equal_to<>>
-auto stress(int trials, Generate gen, Solve solve, Brute brute, Equal equal = {}) {
-  assert(trials >= 0);
-  using Test = std::decay_t<decltype(gen(1))>;
-  using Actual = std::decay_t<decltype(solve(std::declval<Test &>()))>;
-  using Expected = std::decay_t<decltype(brute(std::declval<Test &>()))>;
-  using Failure = StressFailure<Test, Actual, Expected>;
-  for (int trial = 1; trial <= trials; ++trial) {
-    auto test = gen(trial);
-    auto solve_test = test, brute_test = test;
-    auto actual = solve(solve_test);
-    auto expected = brute(brute_test);
-    if (!equal(actual, expected)) {
-      return std::optional<Failure>{
-          Failure{trial, std::move(test), std::move(actual), std::move(expected)}
-      };
-    }
-  }
-  return std::optional<Failure>{};
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-using namespace std;
-
-bool EQ(double a, double b) {
-  return a == b || fabs(a - b) <= 1e-9;
-}
-
-int main() {
-  rng.seed(1234567);  // Fixed seed for reproducibility.
-
-  auto graph = rand_graph(5, 7);
-  assert(graph.size() == 7 && all_of(graph.begin(), graph.end(), [](auto edge) {
-           return edge.first < edge.second;
-         }));
-  assert(rand_tree(6).size() == 5);
-  auto composition = rand_composition(4, 20, 2);
-  assert(accumulate(composition.begin(), composition.end(), 0) == 20);
-  assert(*min_element(composition.begin(), composition.end()) >= 2);
-
-  auto generate = [](int trial) {
-    int n = rand_int(1, 8), kind = trial <= 3 ? trial - 1 : rand_int(0, 2);
-    switch (kind) {
-      case 0:
-        return rand_perm(n, 1);
-      case 1:
-        return rand_distinct(n, -5, 5);
-      default:
-        break;
-    }
-    static const vector<int> boundary_values{-5, 0, 5};
-    bernoulli_distribution use_boundary(0.25);
-    vector<int> a(n);
-    for (int &x : a) {
-      x = use_boundary(rng) ? rand_choice(boundary_values) : rand_int(-5, 5);
-    }
-    return a;
-  };
-  auto solve = [](vector<int> a) {
-    sort(a.begin(), a.end());
-    return a;
-  };
-  auto brute = [](vector<int> a) {
-    do {
-      if (is_sorted(a.begin(), a.end())) {
-        return a;
-      }
-    } while (next_permutation(a.begin(), a.end()));
-    sort(a.begin(), a.end());
-    return a;
-  };
-
-  assert(!stress(100, generate, solve, brute));
-  assert(!stress(
-      1, [](int) { return 0; }, [](int) { return 1.0; }, [](int) { return 1.0 + 1e-12; }, EQ
-  ));
-
-  // Mutating solvers still receive independent copies of the generated test.
-  auto mutate = [](vector<int> &a) { return ++a[0]; };
-  auto unchanged = [](const vector<int> &a) { return a[0]; };
-  auto failure = stress(1, [](int) { return vector<int>{1}; }, mutate, unchanged);
-  assert(failure && failure->trial == 1 && failure->test == vector<int>{1});
-  assert(failure->actual == 2 && failure->expected == 1);
-  return 0;
-}
-\end{lstlisting}
-
-\section{\texorpdfstring{Benchmarking}{8.6 Benchmarking}}
-\setcounter{section}{6}
-Small timing helpers for local profiling and codebook examples. Use \inlinecode{std::chrono::steady\_clock} instead of wall-clock time so elapsed durations are monotonic.
-
-\begin{compactitem}
-  \item \inlinecode{Timer()} starts a timer immediately.
-  \item \inlinecode{timer.reset()} restarts the timer.
-  \item \inlinecode{timer.elapsed()} returns the elapsed time in milliseconds as a double.
-  \item \inlinecode{benchmark(iterations, f)} runs \inlinecode{f()} \inlinecode{iterations} times and returns the average elapsed milliseconds per call. \inlinecode{iterations} must be positive.
-\end{compactitem}
-
-Benchmarks should be treated as local measurements, not proofs of asymptotic performance. Warm-up, CPU frequency scaling, compiler optimization, and input choice can dominate tiny timings.
-
-\begin{lstlisting}[language=C++]
-#include <cassert>
-#include <chrono>
-
-class Timer {
-  using Clock = std::chrono::steady_clock;
-  Clock::time_point start_time;
-
- public:
-  Timer() { reset(); }
-
-  void reset() { start_time = Clock::now(); }
-
-  double elapsed() const {
-    return std::chrono::duration<double, std::milli>(Clock::now() - start_time).count();
-  }
-};
-
-template<typename Fun>
-double benchmark(int iterations, Fun f) {
-  assert(iterations > 0);
-  Timer timer;
-  for (int i = 0; i < iterations; ++i) {
-    f();
-  }
-  return timer.elapsed() / iterations;
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-#include <numeric>
-#include <vector>
-using namespace std;
-
-int main() {
-  Timer timer;
-  vector<int> v(1000);
-  iota(v.begin(), v.end(), 0);
-  assert(timer.elapsed() >= 0.0);
-
-  volatile long long sink = 0;
-  double avg_time = benchmark(5, [&] {
-    long long cur = 0;
-    for (int x : v) {
-      cur += x;
-    }
-    sink += cur;
-  });
-  assert(avg_time >= 0.0);
-  assert(sink > 0);
-  return 0;
-}
-\end{lstlisting}
-
 \section{\texorpdfstring{Multithreading}{8.7 Multithreading}}
 \setcounter{section}{7}
 Basic multithreading can speed up independent local work such as stress tests, batch experiments, or offline preprocessing. It is rarely useful in standard contest submissions, and many judges restrict threads, so use it only when the environment allows it.
 
 \begin{compactitem}
   \item \inlinecode{parallel\_for(n, threads, f)} runs \inlinecode{f(i)} once for each $0 \leq {\inlinecodemath{i}} < {\inlinecodemath{n}}$, splitting the indices among at most \inlinecode{threads} worker threads.
-  \item \inlinecode{parallel\_cases(cases, threads, solve)} solves independent test cases in parallel and returns the outputs in the original case order.
+  \item \inlinecode{parallel\_cases(cases, threads, solve)} solves independent test cases in parallel and returns the outputs in the original case order, using at most \inlinecode{threads} workers and calling \inlinecode{solve(case, output)} for each case.
 \end{compactitem}
 
 Each call to \inlinecode{f(i)} must be safe to run concurrently with the others. If it writes shared state, use separate output slots or synchronization.
@@ -1239,7 +1316,7 @@ int main() {
   assert(squares[17] == 289);
   assert(accumulate(squares.begin(), squares.end(), 0LL) == 332833500);
 
-  vector<int> cases = {3, 1, 4, 2};
+  vector<int> cases{3, 1, 4, 2};
   auto out =
       parallel_cases(cases, 2, [](int x, ostringstream &os) { os << x << "^2 = " << x * x; });
   assert((out == vector<string>{"3^2 = 9", "1^2 = 1", "4^2 = 16", "2^2 = 4"}));
@@ -1302,16 +1379,8 @@ struct BumpAllocator {
   }
 
   void deallocate(T *, std::size_t) {}
-
-  template<typename U>
-  bool operator==(const BumpAllocator<U> &) const {
-    return true;
-  }
-
-  template<typename U>
-  bool operator!=(const BumpAllocator<U> &) const {
-    return false;
-  }
+  template<typename U> bool operator==(const BumpAllocator<U> &) const { return true; }
+  template<typename U> bool operator!=(const BumpAllocator<U> &) const { return false; }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}

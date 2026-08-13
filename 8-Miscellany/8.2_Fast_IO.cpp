@@ -13,29 +13,33 @@ input is huge or when `iostream` overhead is measurable.
 - `out << x` writes `char`, C strings, `std::string`, integral types, or floating point types.
 - `out.flush()` writes any buffered output immediately.
 
-The parser assumes valid input. Floating point input/output is provided for convenience, not as the
-main performance path.
+File redirection and detected read/write failures throw `std::runtime_error`. End-of-file is not an
+error, and the parser otherwise assumes valid input. Destruction flushes output on a best-effort
+basis; call `flush()` explicitly to detect a final write failure. Floating point input/output is
+provided for convenience, not as the main performance path.
 
 */
 
 #include <cassert>
 #include <cctype>
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <limits>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 
 void set_in(const std::string &name) {
-  FILE *result = freopen(name.c_str(), "r", stdin);
-  assert(result != nullptr);
-  (void)result;
+  if (!freopen(name.c_str(), "r", stdin)) {
+    throw std::runtime_error("Failed to open input file: " + name);
+  }
 }
 
 void set_out(const std::string &name) {
-  FILE *result = freopen(name.c_str(), "w", stdout);
-  assert(result != nullptr);
-  (void)result;
+  if (!freopen(name.c_str(), "w", stdout)) {
+    throw std::runtime_error("Failed to open output file: " + name);
+  }
 }
 
 void set_io(const std::string &iname, const std::string &oname) {
@@ -59,6 +63,9 @@ struct FastInput {
       len = static_cast<int>(fread(buf, 1, BUF_SIZE, file));
       pos = 0;
       if (len == 0) {
+        if (ferror(file)) {
+          throw std::runtime_error("Failed to read input.");
+        }
         return 0;
       }
     }
@@ -118,7 +125,7 @@ struct FastInput {
     using U = typename std::make_unsigned<T>::type;
     U val = 0;
     while (c && !std::isspace(static_cast<unsigned char>(c))) {
-      val = U(10) * val + U(c - '0');
+      val = U{10} * val + U(c - '0');
       c = get_char();
     }
     if constexpr (std::is_signed<T>::value) {
@@ -146,14 +153,19 @@ struct FastOutput {
 
   explicit FastOutput(FILE *file_ = stdout) : file(file_) {}
 
-  ~FastOutput() { flush(); }
+  ~FastOutput() { flush_buffer(); }
   FastOutput(const FastOutput &) = delete;
   FastOutput &operator=(const FastOutput &) = delete;
 
+  bool flush_buffer() {
+    int n = pos;
+    pos = 0;
+    return fwrite(buf, 1, n, file) == static_cast<std::size_t>(n);
+  }
+
   void flush() {
-    if (pos) {
-      fwrite(buf, 1, pos, file);
-      pos = 0;
+    if (!flush_buffer()) {
+      throw std::runtime_error("Failed to write output.");
     }
   }
 
@@ -192,28 +204,20 @@ struct FastOutput {
   typename std::enable_if<
       std::is_integral<T>::value && !std::is_same<T, bool>::value, FastOutput &>::type
   operator<<(T x) {
-    if (x == 0) {
-      put_char('0');
-      return *this;
-    }
     using U = typename std::make_unsigned<T>::type;
-    U val;
+    U val = U(x);
     if constexpr (std::is_signed<T>::value) {
       if (x < 0) {
         put_char('-');
-        val = U{0} - U(x);
-      } else {
-        val = U(x);
+        val = U{0} - val;
       }
-    } else {
-      val = x;
     }
-    char s[32];
+    char s[std::numeric_limits<U>::digits10 + 1];
     int n = 0;
-    while (val > 0) {
+    do {
       s[n++] = char('0' + val % 10);
       val /= 10;
-    }
+    } while (val);
     while (n--) {
       put_char(s[n]);
     }

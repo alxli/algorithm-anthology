@@ -13,8 +13,8 @@ pointwise multiplying two such evaluation vectors and transforming back gives th
 This is the same divide-and-conquer butterfly as the fast Fourier transform, with the root of unity
 and all arithmetic taken modulo the prime.
 
-- `ntt(a, invert)` transforms the vector `a` in place, whose length must be a power of two. The
-  forward transform uses `invert = false`; the inverse uses `invert = true`.
+- `ntt(a, invert = false)` transforms the vector `a` in place, whose length must be a power of two.
+  The forward transform uses `invert = false`; the inverse uses `invert = true`.
 - `convolve(a, b)` returns the convolution of `a` and `b` modulo the prime, that is, the
   coefficients of the product of the two polynomials whose coefficients are the inputs. The result
   has length $`a.size()` + `b.size()` - 1$, or is empty if either input is empty. Input values are
@@ -53,7 +53,7 @@ int64_t powmod(int64_t b, int64_t e, int64_t m) {
   return res;
 }
 
-void ntt(std::vector<int64_t> &a, bool invert) {
+void ntt(std::vector<int64_t> &a, bool invert = false) {
   int n = static_cast<int>(a.size());
   assert(n > 0 && (n & (n - 1)) == 0 && n <= (1 << MAX_POWER_OF_TWO));
   for (int i = 1, j = 0; i < n; i++) {
@@ -110,8 +110,8 @@ std::vector<int64_t> convolve(std::vector<int64_t> a, std::vector<int64_t> b) {
   assert(n <= (1 << MAX_POWER_OF_TWO));
   a.resize(n);
   b.resize(n);
-  ntt(a, false);
-  ntt(b, false);
+  ntt(a);
+  ntt(b);
   for (int i = 0; i < n; i++) {
     a[i] = a[i] * b[i] % MOD;
   }

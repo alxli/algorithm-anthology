@@ -55,13 +55,7 @@ int main() {
   assert(timer.elapsed() >= 0.0);
 
   volatile long long sink = 0;
-  double avg_time = benchmark(5, [&] {
-    long long cur = 0;
-    for (int x : v) {
-      cur += x;
-    }
-    sink += cur;
-  });
+  double avg_time = benchmark(5, [&] { sink += accumulate(v.begin(), v.end(), 0LL); });
   assert(avg_time >= 0.0);
   assert(sink > 0);
   return 0;

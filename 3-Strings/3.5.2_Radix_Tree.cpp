@@ -4,7 +4,7 @@ Maintain a map of strings to values using a compressed tree data structure. Each
 a substring of an inserted string, and each inserted string corresponds to a path from the root to a
 node that is flagged as a terminal node. Contrary to a regular trie, a radix tree is more space
 efficient as it combines chains of nodes with only a single child. Children are stored in hash
-tables, and `walk()` sorts child labels as needed to preserve lexicographic traversal.
+tables, and `entries()` sorts child labels as needed to preserve lexicographic traversal.
 
 - `RadixTree<V>()` constructs an empty map.
 - `size()` returns the size of the map.
@@ -19,21 +19,21 @@ tables, and `walk()` sorts child labels as needed to preserve lexicographic trav
 - `count_prefix(s)` returns the number of keys currently in the map that have `s` as a prefix (a key
   equal to `s` counts as well), including the case where `s` ends partway along a compressed edge.
   `count_prefix("")` therefore equals `size()`.
-- `walk(f)` calls the function `f(s, v)` on each entry of the map, in lexicographically ascending
-  order of the string keys.
+- `entries()` returns all string-value pairs in lexicographically ascending order of string keys.
 
 Time Complexity:
 - O(n) expected per call to `insert(s, v)`, `erase(s)`, `find(s)`, and `count_prefix(s)`, where $n$
   is the length of `s`, assuming the number of outgoing compressed edges checked at each node is
   small.
-- O(l log l) per call to `walk()`, where $l$ is the total length of string keys that are currently
-  in the map.
+- O(l log l) per call to `entries()`, where $l$ is the total length of string keys that are
+  currently in the map.
 - O(1) per call to all other operations.
 
 Space Complexity:
 - O(l) for storage of the radix tree, where $l$ is the total length of string keys that are
   currently in the map.
-- O(n) auxiliary stack space for `insert()`, destruction, and `walk()`, where $n$ is the maximum
+- O(l) for the vector returned by `entries()`.
+- O(n) auxiliary stack space for `insert()`, destruction, and `entries()`, where $n$ is the maximum
   length of any string that has been inserted so far.
 - O(n) auxiliary stack space for `erase(s)`, where $n$ is the length of `s`.
 - O(1) auxiliary for all other operations.
@@ -161,16 +161,15 @@ class RadixTree {
     return false;
   }
 
-  template<typename Fn>
-  static void walk(Node *n, string &s, Fn f) {
+  static void collect_entries(Node *n, string &s, std::vector<std::pair<string, V>> &res) {
     if (n->value) {
-      f(s, *n->value);
+      res.emplace_back(s, *n->value);
     }
     std::vector<std::pair<string, Node *>> children(n->children.begin(), n->children.end());
     std::sort(children.begin(), children.end());
     for (auto &[key, child] : children) {
       s += key;
-      walk(child, s, f);
+      collect_entries(child, s, res);
       s.erase(s.size() - key.size());
     }
   }
@@ -262,10 +261,12 @@ class RadixTree {
     return n->cnt;
   }
 
-  template<typename Fn>
-  void walk(Fn f) const {
+  std::vector<std::pair<string, V>> entries() const {
+    std::vector<std::pair<string, V>> res;
+    res.reserve(num_terminals);
     string s;
-    walk(root, s, f);
+    collect_entries(root, s, res);
+    return res;
   }
 };
 
@@ -281,20 +282,18 @@ int main() {
   for (int i = 0; i < static_cast<int>(s.size()); i++) {
     assert(t.insert(s[i], i));
   }
-  vector<pair<string, int>> entries;
-  t.walk([&](string key, int value) { entries.emplace_back(key, value); });
   assert(
-      (entries == vector<pair<string, int>>{
-                      {"", 0},
-                      {"a", 1},
-                      {"i", 6},
-                      {"in", 7},
-                      {"inn", 8},
-                      {"tea", 3},
-                      {"ted", 4},
-                      {"ten", 5},
-                      {"to", 2}
-                  })
+      (t.entries() == vector<pair<string, int>>{
+                          {"", 0},
+                          {"a", 1},
+                          {"i", 6},
+                          {"in", 7},
+                          {"inn", 8},
+                          {"tea", 3},
+                          {"ted", 4},
+                          {"ten", 5},
+                          {"to", 2}
+                      })
   );
   assert(!t.empty());
   assert(t.size() == 9);

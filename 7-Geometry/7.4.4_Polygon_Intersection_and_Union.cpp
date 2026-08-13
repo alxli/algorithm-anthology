@@ -140,12 +140,6 @@ int line_intersection1(
   return 0;
 }
 
-struct Event {
-  double y;
-  int mask_delta;
-  Event(double y = 0, int mask_delta = 0) : y(y), mask_delta(mask_delta) {}
-};
-
 template<typename It>
 double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   if (lo1 == hi1 || lo2 == hi2) {
@@ -187,7 +181,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   for (int k = 0; k + 1 < static_cast<int>(x_coords.size()); k++) {
     double x = (x_coords[k] + x_coords[k + 1]) / 2;
     SweepPoint sweep0{x, 0}, sweep1{x, 1};
-    std::vector<Event> events;
+    std::vector<std::pair<double, int>> events;  // (y, mask delta)
     for (int poly = 0; poly < 2; poly++) {
       It lo = poly_lo[poly], hi = poly_hi[poly];
       for (It j = lo, i = hi - 1; j != hi; i = j++) {
@@ -202,18 +196,17 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
         }
       }
     }
-    std::sort(events.begin(), events.end(), [](const Event &e1, const Event &e2) {
-      return e1.y != e2.y ? e1.y < e2.y : e1.mask_delta < e2.mask_delta;
-    });
+    std::sort(events.begin(), events.end());
     double height = 0;
     int coverage[2] = {0, 0};
     for (int j = 0; j < static_cast<int>(events.size()); j++) {
+      auto [y, mask_delta] = events[j];
       if (coverage[0] != 0 && coverage[1] != 0) {
-        height += events[j].y - events[j - 1].y;
+        height += y - events[j - 1].first;
       }
-      int bit = std::abs(events[j].mask_delta);
+      int bit = std::abs(mask_delta);
       int poly = (bit == 1 ? 0 : 1);
-      coverage[poly] += events[j].mask_delta / bit;
+      coverage[poly] += mask_delta / bit;
     }
     res += height * (x_coords[k + 1] - x_coords[k]);
   }

@@ -30,6 +30,7 @@ Space Complexity:
 
 */
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <type_traits>
@@ -82,9 +83,7 @@ Matrix &row_reduce(Matrix &a) {
         }
       }
     }
-    for (int j = 0; j < lead; j++) {
-      a[r][j] = 0;
-    }
+    std::fill(a[r].begin(), a[r].begin() + lead, 0);
     a[r][lead] = 1;
     r++;
   }

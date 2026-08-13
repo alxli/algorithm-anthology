@@ -2,15 +2,14 @@
 
 Finds the first value where a monotone Boolean predicate becomes true when an upper bound is not
 known in advance. Exponential search first grows the search range by powers of two until it brackets
-the transition point, then finishes with ordinary binary search.
-
-This is useful for answer-search problems over unbounded or very large integer domains.
-
-Overflow warning: The predicate must become true before the exponentially growing probe overflows
-`Int`; otherwise, add an explicit limit.
+the transition point, then finishes with ordinary binary search. This is useful for answer-search
+problems over unbounded or very large integer domains.
 
 - `exponential_first_true(lo, pred)` returns the smallest integer `x` greater than or equal to `lo`
   such that `pred(x)` is true.
+
+Overflow warning: The predicate must become true before the exponentially growing probe overflows
+`Int`; otherwise, add an explicit limit.
 
 Time Complexity:
 - O(log n) calls to `pred()` per call, where $n$ is the distance from `lo` to the first true value.

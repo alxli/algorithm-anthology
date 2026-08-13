@@ -16,10 +16,6 @@ each matched edge contributes exactly one endpoint, so the cover size equals the
   `adj` (left nodes $[0, `n1`)$, right neighbors $[0, `n2`)$), where `n1` is `adj.size()`. Each
   returned value is a left node `i` in $[0, `n1`)$, or a right node `j` encoded as `n1 + j`.
 
-The adjacency list `adj` is shared with the matching routine: `adj[u]` lists the right-side
-neighbors of left node `u`. Cover nodes are reported with right node `j` encoded as `n1 + j` so the
-two sides share one index space.
-
 Time Complexity:
 - O(n_1*m) per call, dominated by the matching, where $m$ is the number of edges.
 

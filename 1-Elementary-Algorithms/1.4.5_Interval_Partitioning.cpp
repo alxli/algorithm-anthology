@@ -72,8 +72,7 @@ std::pair<int, std::vector<int>> partition_intervals(const std::vector<Interval>
 using namespace std;
 
 int main() {
-  vector<Interval> intervals{{0, 30}, {5, 10}, {15, 20}};
-  auto [rooms, room] = partition_intervals(intervals);
+  auto [rooms, room] = partition_intervals(vector<Interval>{{0, 30}, {5, 10}, {15, 20}});
   // The long interval overlaps both short intervals, but the short intervals can share a room.
   assert(rooms == 2);
   assert(room[1] == room[2]);

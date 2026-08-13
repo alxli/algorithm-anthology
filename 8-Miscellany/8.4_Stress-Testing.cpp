@@ -13,14 +13,16 @@ reverse-sorted, duplicate-heavy, and all-distinct inputs.
   at `first`.
 - `rand_distinct(k, lo, hi)` returns `k` distinct integers sampled uniformly from $[`lo`, `hi`]$ in
   expected $O(k)$ time and $O(k)$ space.
-- `rand_graph(n, m, directed = false)` returns a uniformly random simple graph as an edge list. It
-  uses expected $O(m)$ time and $O(m)$ space.
-- `rand_tree(n)` returns a uniformly random labeled tree as an edge list using a Prüfer code.
+- `rand_graph(n, m, directed = false)` returns a uniformly random simple graph with `n` nodes
+  numbered $[0, `n`)$ and exactly `m` edges. It uses expected $O(m)$ time and $O(m)$ space.
+- `rand_tree(n)` returns a uniformly random labeled tree on nodes $[0, `n`)$ as an edge list using a
+  Prüfer code.
 - `rand_composition(parts, sum, min_part)` uniformly splits `sum` into `parts` ordered integers,
   each at least `min_part`.
-- `stress(trials, gen, solve, brute, equal = std::equal_to<>())` calls `gen(trial)` with each
-  1-based trial number and returns a `StressFailure` containing the number, first failing test, and
-  the actual and expected results.
+- `stress(trials, gen, solve, brute, equal = std::equal_to<>())` runs `trials` tests, calling
+  `gen(trial)` with each 1-based trial number and comparing `solve(test)` with `brute(test)` using
+  `equal`. It returns a `StressFailure` containing the number, first failing test, and actual and
+  expected results.
 - `stress(...)` returns `std::nullopt` if all generated tests pass.
 
 The generated test type must be copyable so each solution receives an independent input. The
@@ -110,13 +112,13 @@ std::vector<std::pair<int, int>> rand_graph(int n, int m, bool directed = false)
   edges.reserve(m);
   if (!complement) {
     for (int64_t key : sampled) {
-      edges.push_back({static_cast<int>(key / n), static_cast<int>(key % n)});
+      edges.emplace_back(static_cast<int>(key / n), static_cast<int>(key % n));
     }
   } else {
     for (int u = 0; u < n; ++u) {
       for (int v = directed ? 0 : u + 1; v < n; ++v) {
         if (u != v && !sampled.count(static_cast<int64_t>(u) * n + v)) {
-          edges.push_back({u, v});
+          edges.emplace_back(u, v);
         }
       }
     }
@@ -144,14 +146,14 @@ std::vector<std::pair<int, int>> rand_tree(int n) {
   for (int u : code) {
     int leaf = leaves.top();
     leaves.pop();
-    edges.push_back({leaf, u});
+    edges.emplace_back(leaf, u);
     if (--degree[u] == 1) {
       leaves.push(u);
     }
   }
   int u = leaves.top();
   leaves.pop();
-  edges.push_back({u, leaves.top()});
+  edges.emplace_back(u, leaves.top());
   std::shuffle(edges.begin(), edges.end(), rng);
   return edges;
 }

@@ -41,7 +41,7 @@ void connected_components() {
   comp_id.assign(n, -1);
   for (int u = 0; u < n; u++) {
     if (comp_id[u] == -1) {
-      components.push_back({});
+      components.emplace_back();
       dfs(u, static_cast<int>(components.size()) - 1);
     }
   }

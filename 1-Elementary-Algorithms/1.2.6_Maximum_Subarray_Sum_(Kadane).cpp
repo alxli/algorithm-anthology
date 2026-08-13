@@ -34,12 +34,12 @@ Overflow warning: All resulting sums and products must fit in the value type.
 Time Complexity:
 - O(n) per call to `max_subarray_sum()`, `max_circular_subarray_sum()`, and
   `max_product_subarray()`, where $n$ is the distance between `lo` and `hi`.
-- O(m*n^2) per call to `max_submatrix_sum()`, where $m$ is the number of rows and $n$ is the number
+- O(R*C^2) per call to `max_submatrix_sum()`, where $R$ is the number of rows and $C$ is the number
   of columns in the matrix.
 
 Space Complexity:
 - O(1) auxiliary for each subarray function.
-- O(m) auxiliary for `max_submatrix_sum()`, where $m$ is the number of rows in the matrix.
+- O(R) auxiliary for `max_submatrix_sum()`.
 
 */
 
@@ -107,30 +107,30 @@ auto max_product_subarray(It lo, It hi) {
   if (lo == hi) {
     return std::tuple{T{}, 0, -1};
   }
-  T max_ending = *lo, min_ending = *lo, best = *lo;
+  T max_end = *lo, min_end = *lo, best = *lo;
   int max_begin = 0, min_begin = 0, begin = 0, end = 0;
   for (It it = lo + 1; it != hi; ++it) {
     int i = it - lo;
     if (*it < 0) {
-      std::swap(max_ending, min_ending);
+      std::swap(max_end, min_end);
       std::swap(max_begin, min_begin);
     }
-    T next_max = max_ending * *it;  // Overflow warning.
-    T next_min = min_ending * *it;  // Overflow warning.
+    T next_max = max_end * *it;  // Overflow warning.
+    T next_min = min_end * *it;  // Overflow warning.
     if (next_max < *it) {
-      max_ending = *it;
+      max_end = *it;
       max_begin = i;
     } else {
-      max_ending = next_max;
+      max_end = next_max;
     }
     if (*it < next_min) {
-      min_ending = *it;
+      min_end = *it;
       min_begin = i;
     } else {
-      min_ending = next_min;
+      min_end = next_min;
     }
-    if (best < max_ending) {
-      best = max_ending;
+    if (best < max_end) {
+      best = max_end;
       begin = max_begin;
       end = i;
     }

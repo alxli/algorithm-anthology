@@ -2,9 +2,11 @@
 
 A sparse matrix stores only nonzero entries, which is useful when the matrix is large but most
 values are zero. This implementation keeps both row maps and column maps in sync: `row(i)` can
-iterate all nonzeros in row `i`, while `column(j)` can iterate all nonzeros in column `j`. That
+iterate all nonzeros in row `i`, while `col(j)` can iterate all nonzeros in column `j`. That
 bidirectional storage is especially useful for sparse elimination or graph-like matrix operations,
 where both row updates and column pivot lookups are common.
+
+The class treats `T{}` as additive zero and requires `value == T{}` to be a valid zero test.
 
 - `SparseMatrix<T>(rows, cols)` constructs a `rows` by `cols` sparse matrix.
 - `num_rows()` returns the number of rows.
@@ -14,7 +16,7 @@ where both row updates and column pivot lookups are common.
 - `set(i, j, value)` assigns an entry. Assigning zero erases it from both maps.
 - `add(i, j, delta)` adds `delta` to an entry. If the result becomes zero, the entry is erased.
 - `row(i)` returns a map from column index to value for the nonzero entries in row `i`.
-- `column(j)` returns a map from row index to value for the nonzero entries in column `j`.
+- `col(j)` returns a map from row index to value for the nonzero entries in column `j`.
 - `swap_rows(i, j)` swaps two rows while keeping the column maps synchronized.
 - `transpose()` transposes the matrix in place.
 - `multiply_vector(x)` returns the matrix-vector product with vector `x`.
@@ -24,6 +26,13 @@ where both row updates and column pivot lookups are common.
 - `a * k` returns `a` scaled by the value `k`. Scaling by zero yields an empty matrix.
 - Operators `+=`, `-=`, and `*=` assign the corresponding result back into the left operand. In all
   of these operators, entries that cancel to zero are not stored.
+
+The elimination routines require field-like arithmetic because they divide by pivots, so use types
+such as `double`, rational numbers, or modular integers. For floating-point matrices, replace
+`is_zero()` with an epsilon comparison if small roundoff values should be erased. At each pivot
+column, sparse elimination chooses the available row with the fewest stored entries to reduce
+fill-in, although an unfriendly matrix can still become dense.
+
 - `row_reduce(a, limit)` converts columns $[0, `limit`)$ of `a` to sparse row echelon form,
   returning the rank found in those columns.
 - `det(a)` returns the determinant of a square sparse matrix.
@@ -31,39 +40,30 @@ where both row updates and column pivot lookups are common.
 - `solve_system(a, b, &x)` solves the system $ax = b$, returning $0$ for one solution, $-1$ for no
   solution, or $-2$ for infinitely many solutions. When one solution exists, `x` is populated.
 
-The class assumes that `T{}` is the additive zero and that `value == T{}` is a valid zero test. The
-elimination routines also require field-like arithmetic because they divide by pivots, so use types
-such as `double`, rational numbers, or modular integers. For floating-point matrices, replace
-`is_zero()` with an epsilon comparison if small roundoff values should be erased.
-
-Sparse elimination chooses, in each pivot column, the available pivot row with the fewest stored
-entries. This heuristic can reduce fill-in, although sparse elimination can still become dense on
-unfriendly inputs.
-
 Time Complexity:
 - O(log d) per call to `get()`, `set()`, and `add()`, where $d$ is the number of nonzeros in the
   touched row or column.
-- O(1) per call to `transpose()` and O(n) per call to `multiply_vector()`, where $n$ is the number
+- O(1) per call to `transpose()` and O(z) per call to `multiply_vector()`, where $z$ is the number
   of stored nonzero entries.
 - O((r_i + r_j)*log d) per call to `swap_rows(i, j)`, where $r_i$ and $r_j$ are the sizes of the two
   rows.
-- O((n_a + n_b)*log d) per call to `operator+` and `operator-`, where $n_a$ and $n_b$ are the
+- O((z_a + z_b)*log d) per call to `operator+` and `operator-`, where $z_a$ and $z_b$ are the
   operand nonzero counts.
-- O(n*log d) per call to scalar `operator*`, where $n$ is the number of stored nonzero entries.
+- O(z*log d) per call to scalar `operator*`, where $z$ is the number of stored nonzero entries.
 - O(f*log d) per call to `operator*`, where $f$ is the number of scalar products accumulated, that
   is, the sum of `b.row(k).size()` over every stored entry `a[i][k]`.
 - O(f * log d) for sparse elimination, where $f$ is the number of entry updates performed after
   fill-in and $d$ is a touched row or column size. In the worst case this is still cubic.
 - O(f * log d) per call to `det()`, `sparse_rank()`, and `solve_system()`.
-- O(1) per call to `num_rows()`, `num_cols()`, `nonzeros()`, `row()`, and `column()`.
+- O(1) per call to `num_rows()`, `num_cols()`, `nonzeros()`, `row()`, and `col()`.
 
 Space Complexity:
-- O(n) storage.
-- O(1) auxiliary for `get()`, `set()`, `add()`, `row()`, `column()`, and `transpose()`.
+- O(z) storage.
+- O(1) auxiliary for `get()`, `set()`, `add()`, `row()`, `col()`, and `transpose()`.
 - O(r_i + r_j) auxiliary for `swap_rows(i, j)`.
-- O(R) auxiliary for `multiply_vector()`.
+- O(m) auxiliary for `multiply_vector()`, where $m$ is the number of rows.
 - O(c) auxiliary for `operator*`, where $c$ is the largest number of nonzeros in one result row.
-- O(n + R) auxiliary for elimination, in addition to the copied matrix used by `det()` and
+- O(z + m) auxiliary for elimination, in addition to the copied matrix used by `det()` and
   `sparse_rank()` or the augmented matrix used by `solve_system()`.
 
 */
@@ -119,7 +119,7 @@ class SparseMatrix {
   }
 
   const std::map<int, T> &row(int i) const { return rvals[i]; }
-  const std::map<int, T> &column(int j) const { return cvals[j]; }
+  const std::map<int, T> &col(int j) const { return cvals[j]; }
 
   void swap_rows(int i, int j) {
     if (i == j) {
@@ -228,7 +228,7 @@ int row_reduce(SparseMatrix<T> &a, int limit) {
   int r = 0;
   for (int c = 0; c < limit && r < a.num_rows(); c++) {
     int pivot = -1;
-    for (const auto &[i, value] : a.column(c)) {
+    for (const auto &[i, value] : a.col(c)) {
       if (i >= r && (pivot == -1 || a.row(i).size() < a.row(pivot).size())) {
         pivot = i;
       }
@@ -240,7 +240,7 @@ int row_reduce(SparseMatrix<T> &a, int limit) {
     T inv_pivot = T{1} / a.get(r, c);
     std::vector<std::pair<int, T>> pivot_row(a.row(r).begin(), a.row(r).end());
     std::vector<int> touched_rows;
-    for (const auto &[i, value] : a.column(c)) {
+    for (const auto &[i, value] : a.col(c)) {
       if (i > r) {
         touched_rows.push_back(i);
       }
@@ -266,7 +266,7 @@ T det(SparseMatrix<T> a) {
   T det = 1;
   for (int c = 0; c < n && r < n; c++) {
     int pivot = -1;
-    for (const auto &[i, value] : a.column(c)) {
+    for (const auto &[i, value] : a.col(c)) {
       if (i >= r && (pivot == -1 || a.row(i).size() < a.row(pivot).size())) {
         pivot = i;
       }
@@ -283,7 +283,7 @@ T det(SparseMatrix<T> a) {
     T inv_pivot = T{1} / pivot_value;
     std::vector<std::pair<int, T>> pivot_row(a.row(r).begin(), a.row(r).end());
     std::vector<int> touched_rows;
-    for (const auto &[i, value] : a.column(c)) {
+    for (const auto &[i, value] : a.col(c)) {
       if (i > r) {
         touched_rows.push_back(i);
       }
@@ -372,7 +372,7 @@ int main() {
   assert(a.get(0, 1) == 3);
   assert(a.get(0, 0) == 0);
   assert(a.row(0).begin()->first == 1);
-  assert(a.column(2).begin()->first == 1);
+  assert(a.col(2).begin()->first == 1);
 
   vector<int64_t> x{10, 20, 30, 40};
   assert((a.multiply_vector(x) == vector<int64_t>{60, 120, 280}));
@@ -381,7 +381,7 @@ int main() {
   assert(a.get(0, 1) == 0);
   assert(a.nonzeros() == 2);
   assert(a.row(0).empty());
-  assert(a.column(1).empty());
+  assert(a.col(1).empty());
 
   a.transpose();
   assert(a.num_rows() == 4 && a.num_cols() == 3);
@@ -418,7 +418,7 @@ int main() {
 
   SparseMatrix<int64_t> scaled = p * 3;
   assert(scaled.get(0, 0) == 3 && scaled.get(0, 1) == 6 && scaled.get(1, 1) == 3);
-  assert((p * int64_t{0}).nonzeros() == 0);
+  assert((p * 0LL).nonzeros() == 0);
 
   SparseMatrix<int64_t> acc = p;
   acc += q;

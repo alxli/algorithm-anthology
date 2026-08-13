@@ -14,9 +14,8 @@ its pruning is more distribution-dependent.
 
 - `RangeTree<T>(lo, hi)` constructs a set of `std::pair` points from the half-open forward-iterator
   range $[`lo`, `hi`)$.
-- `query(x1, y1, x2, y2, f)` calls the function `f(i, x, y)` on each point whose $x$-coordinate is
-  in $[`x1`, `x2`]$ and whose $y$-coordinate is in $[`y1`, `y2`]$. The first argument to `f` is the
-  0-based index of the point in the original range given to the constructor.
+- `query(x1, y1, x2, y2)` returns (`i`, `x`, `y`) tuples for all points in the closed rectangle
+  $[`x1`, `x2`] \times [`y1`, `y2`]$, where `i` is the point's 0-based index in the original range.
 
 Time Complexity:
 - O(n log n) per call to the constructor, where $n$ is the number of points.
@@ -26,12 +25,14 @@ Time Complexity:
 Space Complexity:
 - O(n log n) for storage of the points.
 - O(log n) auxiliary stack space for `query()`.
+- O(m) for the vector returned by `query()`, where $m$ is the number of reported points.
 
 */
 
 #include <algorithm>
 #include <cassert>
 #include <iterator>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -62,8 +63,10 @@ class RangeTree {
     );
   }
 
-  template<typename Fn>
-  void query(int n, int lo, int hi, const T &x1, const T &y1, const T &x2, const T &y2, Fn &f) {
+  void query(
+      int n, int lo, int hi, const T &x1, const T &y1, const T &x2, const T &y2,
+      std::vector<std::tuple<int, T, T>> &res
+  ) {
     if (points[hi].x < x1 || x2 < points[lo].x) {
       return;
     }
@@ -75,13 +78,13 @@ class RangeTree {
         );
         for (; it != columns[n].end() && it->second <= y2; ++it) {
           const IndexedPoint &p = points[it->first];
-          f(p.original_index, p.x, p.y);
+          res.emplace_back(p.original_index, p.x, p.y);
         }
       }
     } else if (lo != hi) {
       int mid = lo + (hi - lo) / 2;
-      query(n * 2 + 1, lo, mid, x1, y1, x2, y2, f);
-      query(n * 2 + 2, mid + 1, hi, x1, y1, x2, y2, f);
+      query(n * 2 + 1, lo, mid, x1, y1, x2, y2, res);
+      query(n * 2 + 2, mid + 1, hi, x1, y1, x2, y2, res);
     }
   }
 
@@ -102,10 +105,11 @@ class RangeTree {
     build(0, 0, n - 1);
   }
 
-  template<typename Fn>
-  void query(const T &x1, const T &y1, const T &x2, const T &y2, Fn f) {
+  std::vector<std::tuple<int, T, T>> query(const T &x1, const T &y1, const T &x2, const T &y2) {
     assert(!(x2 < x1) && !(y2 < y1));
-    query(0, 0, static_cast<int>(points.size()) - 1, x1, y1, x2, y2, f);
+    std::vector<std::tuple<int, T, T>> res;
+    query(0, 0, static_cast<int>(points.size()) - 1, x1, y1, x2, y2, res);
+    return res;
   }
 };
 
@@ -119,21 +123,11 @@ int main() {
   vector<pair<int, int>> v{{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
                            {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
   RangeTree<int> t(v.begin(), v.end());
-  vector<pair<int, int>> got;
-  vector<int> indices;
-  auto collect = [&](int i, int x, int y) {
-    indices.push_back(i);
-    got.emplace_back(x, y);
-  };
-  t.query(-1, -1, 2, 5, collect);
+  auto got = t.query(-1, -1, 2, 5);
   sort(got.begin(), got.end());
-  assert((got == vector<pair<int, int>>{{-1, -1}, {1, 4}, {2, -1}, {2, 2}}));
-  sort(indices.begin(), indices.end());
-  assert((indices == vector<int>{0, 2, 8, 9}));
-  got.clear();
-  indices.clear();
-  t.query(1, 1, 4, 8, collect);
+  assert((got == vector<tuple<int, int, int>>{{0, 1, 4}, {2, 2, 2}, {8, -1, -1}, {9, 2, -1}}));
+  got = t.query(1, 1, 4, 8);
   sort(got.begin(), got.end());
-  assert((got == vector<pair<int, int>>{{1, 4}, {2, 2}, {3, 1}}));
+  assert((got == vector<tuple<int, int, int>>{{0, 1, 4}, {2, 2, 2}, {3, 3, 1}}));
   return 0;
 }

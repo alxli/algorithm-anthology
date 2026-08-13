@@ -12,10 +12,10 @@ The following functions are equivalent to \inlinecode{std::sort()}, taking rando
   \item \inlinecode{heapsort(lo, hi, comp = std::less\textless{}\textgreater{})} sorts the range using heapsort.
   \item \inlinecode{insertion\_sort(lo, hi, comp = std::less\textless{}\textgreater{})} sorts the range using insertion sort, which is stable.
   \item \inlinecode{combsort(lo, hi, comp = std::less\textless{}\textgreater{})} sorts the range using comb sort.
-  \item \inlinecode{radix\_sort(lo, hi)} sorts the range using least-significant-byte radix sort.
+  \item \inlinecode{radix\_sort(lo, hi)} sorts an integer range using least-significant-byte radix sort; unlike the shared interface above, it takes no comparator.
 \end{compactitem}
 
-\inlinecode{radix\_sort()} is the exception to the shared interface above: it takes no comparator and requires an integer value type. These functions are not meant to compete with standard library implementations in terms of speed. Instead, they are meant to demonstrate how common sorting algorithms can be concisely implemented in C++.
+These functions are not meant to compete with standard library implementations in terms of speed. Instead, they demonstrate how common sorting algorithms can be concisely implemented in C++.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -362,20 +362,21 @@ Quickselect repeatedly applies this partition and continues only into the group 
 
 \begin{compactitem}
   \item \inlinecode{partition\_three\_way(lo, hi, pivot, comp = std::less\textless{}\textgreater{}())} rearranges $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ in-place and returns a pair of iterators (\inlinecode{mid1}, \inlinecode{mid2}). The three resulting ranges contain elements that precede, are equivalent to, and follow \inlinecode{pivot} according to \inlinecode{comp}, respectively. The resulting partition is not stable.
-  \item \inlinecode{nth\_element2(lo, nth, hi, comp = std::less\textless{}\textgreater{}())} rearranges $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ in-place around the 0-based rank represented by iterator \inlinecode{nth} according to \inlinecode{comp}. This requires random-access iterators.
+  \item \inlinecode{quickselect(lo, nth, hi, comp = std::less\textless{}\textgreater{}())} rearranges $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ in-place around the 0-based rank represented by iterator \inlinecode{nth} according to \inlinecode{comp}. This requires random-access iterators.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{partition\_three\_way()}, where $n$ is the range length.
-  \item $O(n)$ expected per call to \inlinecode{nth\_element2()}, and $O(n^{2})$ in the worst case.
+  \item $O(n)$ expected per call to \inlinecode{quickselect()}, and $O(n^{2})$ in the worst case.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <chrono>
 #include <functional>
 #include <iterator>
 #include <random>
@@ -397,9 +398,9 @@ std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot, Compare comp
 }
 
 template<typename It, typename Compare = std::less<>>
-void nth_element2(It lo, It nth, It hi, Compare comp = Compare{}) {
+void quickselect(It lo, It nth, It hi, Compare comp = Compare{}) {
   using T = typename std::iterator_traits<It>::value_type;
-  static std::mt19937 rng(std::random_device{}());
+  static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
   while (hi - lo > 1) {
     std::uniform_int_distribution<int> dist(0, hi - lo - 1);
     T pivot = *(lo + dist(rng));
@@ -441,7 +442,7 @@ int main() {
 
   vector<int> a{5, 6, 4, 3, 2, 6, 7, 9, 3};
   int n = static_cast<int>(a.size());
-  nth_element2(a.begin(), a.begin() + n / 2, a.end());
+  quickselect(a.begin(), a.begin() + n / 2, a.end());
   assert(a[n / 2] == 5);
   // Values left of the median are <=, and values right are >= (the exact order within each side is
   // randomized, since the pivot is chosen at random).
@@ -452,9 +453,9 @@ int main() {
     assert(a[i] >= a[n / 2]);
   }
 
-  vector<int> descending{1, 4, 2, 3};
-  nth_element2(descending.begin(), descending.begin() + 1, descending.end(), greater<int>());
-  assert(descending[1] == 3);
+  vector<int> desc{1, 4, 2, 3};
+  quickselect(desc.begin(), desc.begin() + 1, desc.end(), greater<int>());
+  assert(desc[1] == 3);
   return 0;
 }
 \end{lstlisting}
@@ -533,10 +534,8 @@ void rotate3(It lo, It mid, It hi) {
 using namespace std;
 
 int main() {
-  vector<int> a0, a1, a2, a3;
-  for (int i = 0; i < 10000; i++) {
-    a0.push_back(i);
-  }
+  vector<int> a0(10000), a1, a2, a3;
+  iota(a0.begin(), a0.end(), 0);
   a1 = a2 = a3 = a0;
   int mid = 5678;
   std::rotate(a0.begin(), a0.begin() + mid, a0.end());
@@ -581,21 +580,21 @@ All implementations below take ranges as ForwardIterators. The comparator \inlin
   \item \inlinecode{compress2(lo, hi, comp = std::less\textless{}\textgreater{}())} achieves the same result by inserting all values into an \inlinecode{std::map}, which automatically removes duplicate values and supports efficient lookups of the compressed values.
 \end{compactitem}
 
-\inlinecode{CoordinateCompressor} is a class version that retains the sorted table of distinct values so that arbitrary values can be mapped to and from compressed ranks long after construction (e.g. for offline queries arriving separately from the array being compressed). It uses \inlinecode{std::less\textless{}T\textgreater{}} by default; to customize the ordering, instantiate \inlinecode{CoordinateCompressor\textless{}T, Compare\textgreater{}} and pass the comparator to either constructor.
+\inlinecode{Compressor} is a class version that retains the sorted table of distinct values so that arbitrary values can be mapped to and from compressed ranks long after construction (e.g. for offline queries arriving separately from the array being compressed). It uses \inlinecode{std::less\textless{}T\textgreater{}} by default; to customize the ordering, instantiate \inlinecode{Compressor\textless{}T, Compare\textgreater{}} and pass the comparator to either constructor.
 
 \begin{compactitem}
-  \item \inlinecode{CoordinateCompressor\textless{}T\textgreater{}()} constructs an empty compressor. Register values with \inlinecode{add(x)}, then call \inlinecode{build()} once before the first query.
-  \item \inlinecode{CoordinateCompressor\textless{}T\textgreater{}(lo, hi)} constructs a compressor from the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
+  \item \inlinecode{Compressor\textless{}T\textgreater{}()} constructs an empty compressor. Register values with \inlinecode{add(x)}, then call \inlinecode{build()} once before the first query.
+  \item \inlinecode{Compressor\textless{}T\textgreater{}(lo, hi)} constructs a compressor from the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the number of distinct registered values $k$.
   \item \inlinecode{value(r)} returns the original value with rank \inlinecode{r}, inverting \inlinecode{rank()}.
-  \item \inlinecode{rank(x)} returns the compressed value (rank) of \inlinecode{x} in $[0, k)$. \inlinecode{x} must have been registered.
   \item \inlinecode{contains(x)} returns whether \inlinecode{x} is a registered value.
+  \item \inlinecode{rank(x)} returns the compressed value (rank) of \inlinecode{x} in $[0, k)$. \inlinecode{x} must have been registered.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \log n)$ per call to \inlinecode{compress1(lo, hi)}, \inlinecode{compress2(lo, hi)}, and \inlinecode{CoordinateCompressor(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+  \item $O(n \log n)$ per call to \inlinecode{compress1(lo, hi)}, \inlinecode{compress2(lo, hi)}, and \inlinecode{Compressor(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
   \item $O(1)$ amortized per call to \inlinecode{add()}, and $O(m \log m)$ per call to \inlinecode{build()}, where $m$ is the total number of values registered.
   \item $O(\log k)$ per call to \inlinecode{rank()} and \inlinecode{contains()}, where $k$ is the number of distinct values.
   \item $O(1)$ per call to \inlinecode{size()} and \inlinecode{value()}.
@@ -605,7 +604,7 @@ All implementations below take ranges as ForwardIterators. The comparator \inlin
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ auxiliary for \inlinecode{compress1()} and \inlinecode{compress2()}.
-  \item $O(k)$ storage for \inlinecode{CoordinateCompressor}.
+  \item $O(k)$ storage for \inlinecode{Compressor}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -621,11 +620,11 @@ void compress1(It lo, It hi, Compare comp = Compare{}) {
   using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> v(lo, hi);
   std::sort(v.begin(), v.end(), comp);
-  v.resize(
+  v.erase(
       std::unique(
           v.begin(), v.end(), [&](const T &a, const T &b) { return !comp(a, b) && !comp(b, a); }
-      ) -
-      v.begin()
+      ),
+      v.end()
   );
   for (It it = lo; it != hi; ++it) {
     *it = static_cast<int>(std::lower_bound(v.begin(), v.end(), *it, comp) - v.begin());
@@ -649,43 +648,37 @@ void compress2(It lo, It hi, Compare comp = Compare{}) {
 }
 
 template<typename T, typename Compare = std::less<T>>
-class CoordinateCompressor {
+class Compressor {
   Compare comp;
-  std::vector<T> values;
+  std::vector<T> v;
 
  public:
-  explicit CoordinateCompressor(Compare comp = Compare{}) : comp(std::move(comp)) {}
+  explicit Compressor(Compare comp = Compare{}) : comp(std::move(comp)) {}
 
   template<typename It>
-  CoordinateCompressor(It lo, It hi, Compare comp = Compare{})
-      : comp(std::move(comp)), values(lo, hi) {
+  Compressor(It lo, It hi, Compare comp = Compare{}) : comp(std::move(comp)), v(lo, hi) {
     build();
   }
 
-  int size() const { return static_cast<int>(values.size()); }
-  const T &value(int r) const { return values[r]; }
-  void add(const T &x) { values.push_back(x); }
-
   void build() {
-    std::sort(values.begin(), values.end(), comp);
-    values.resize(
+    std::sort(v.begin(), v.end(), comp);
+    v.erase(
         std::unique(
-            values.begin(), values.end(),
-            [&](const T &a, const T &b) { return !comp(a, b) && !comp(b, a); }
-        ) -
-        values.begin()
+            v.begin(), v.end(), [&](const T &a, const T &b) { return !comp(a, b) && !comp(b, a); }
+        ),
+        v.end()
     );
   }
 
-  int rank(const T &x) const {
-    int r =
-        static_cast<int>(std::lower_bound(values.begin(), values.end(), x, comp) - values.begin());
-    assert(r < size() && !comp(x, values[r]));  // x must be registered.
-    return r;
-  }
+  void add(const T &x) { v.push_back(x); }
+  int size() const { return static_cast<int>(v.size()); }
+  const T &value(int r) const { return v[r]; }
+  bool contains(const T &x) const { return std::binary_search(v.begin(), v.end(), x, comp); }
 
-  bool contains(const T &x) const {
-    return std::binary_search(values.begin(), values.end(), x, comp);
+  int rank(const T &x) const {
+    int r = static_cast<int>(std::lower_bound(v.begin(), v.end(), x, comp) - v.begin());
+    assert(r < size() && !comp(x, v[r]));  // x must be registered.
+    return r;
   }
 };
 \end{lstlisting}
@@ -713,7 +706,7 @@ int main() {
   }
   {
     vector<int> a{10, 5, 30, 5, 20};
-    CoordinateCompressor<int> cc(a.begin(), a.end());
+    Compressor<int> cc(a.begin(), a.end());
     assert(cc.size() == 4);
     assert(cc.rank(5) == 0);
     assert(cc.rank(30) == 3);
@@ -721,7 +714,7 @@ int main() {
     assert(cc.contains(10) && !cc.contains(7));
   }
   {  // Register values incrementally, then build once before querying.
-    CoordinateCompressor<double> cc;
+    Compressor<double> cc;
     cc.add(0.5);
     cc.add(-1.0);
     cc.add(0.5);
@@ -732,7 +725,7 @@ int main() {
   }
   {
     vector<int> a{10, 30, 20, 10};
-    CoordinateCompressor<int, greater<int>> cc(a.begin(), a.end());
+    Compressor<int, greater<int>> cc(a.begin(), a.end());
     assert(cc.rank(30) == 0 && cc.rank(10) == 2);
     assert(cc.value(1) == 20);
     compress1(a.begin(), a.end(), greater<int>());
@@ -871,7 +864,7 @@ Overflow warning: All prefix sums, target differences, inclusion-exclusion resul
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{prefix\_sums(a)}, where $n$ is the array size.
-  \item $O(m \cdot n)$ per call to \inlinecode{prefix\_sums\_2d(a)}, where $m$ and $n$ are the number of rows and columns of \inlinecode{a}, respectively.
+  \item $O(R \cdot C)$ per call to \inlinecode{prefix\_sums\_2d(a)}, where $R$ and $C$ are the number of rows and columns of \inlinecode{a}, respectively.
   \item $O(1)$ per range or rectangle query.
   \item $O(n)$ expected per call to \inlinecode{count\_subarrays\_with\_sum(a, target)}.
 \end{compactitem}
@@ -880,7 +873,7 @@ Overflow warning: All prefix sums, target differences, inclusion-exclusion resul
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for the array returned by \inlinecode{prefix\_sums(a)}.
-  \item $O(m \cdot n)$ for the table returned by \inlinecode{prefix\_sums\_2d(a)}.
+  \item $O(R \cdot C)$ for the table returned by \inlinecode{prefix\_sums\_2d(a)}.
   \item $O(1)$ auxiliary for \inlinecode{range\_sum()} and \inlinecode{rectangle\_sum()}.
   \item $O(n)$ auxiliary for \inlinecode{count\_subarrays\_with\_sum(a, target)}.
 \end{compactitem}
@@ -985,14 +978,14 @@ Overflow warning: All stored differences and reconstructed values must fit in \i
 \begin{compactitem}
   \item $O(1)$ per call to \inlinecode{add()} of either version.
   \item $O(n)$ per call to \inlinecode{build()} of \inlinecode{DifferenceArray}, where $n$ is the array size.
-  \item $O(m \cdot n)$ per call to \inlinecode{build()} of \inlinecode{DifferenceArray2D}, where $m$ and $n$ are the number of rows and columns, respectively.
+  \item $O(R \cdot C)$ per call to \inlinecode{build()} of \inlinecode{DifferenceArray2D}, where $R$ and $C$ are the number of rows and columns, respectively.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage and $O(n)$ for the array returned by \inlinecode{DifferenceArray::build()}.
-  \item $O(m \cdot n)$ for storage and $O(m \cdot n)$ for the grid returned by \inlinecode{DifferenceArray2D::build()}.
+  \item $O(R \cdot C)$ for storage and $O(R \cdot C)$ for the grid returned by \inlinecode{DifferenceArray2D::build()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1155,7 +1148,7 @@ std::tuple<int, int, int> three_sum(const std::vector<int> &a, int64_t target) {
   std::vector<std::pair<int, int>> sorted;
   sorted.reserve(a.size());
   for (int i = 0; i < n; i++) {
-    sorted.push_back({a[i], i});
+    sorted.emplace_back(a[i], i);
   }
   std::sort(sorted.begin(), sorted.end());
   for (int i = 0; i < n; i++) {
@@ -1354,11 +1347,9 @@ All functions below take a vector \inlinecode{a} of $n$ comparable values and re
   \item \inlinecode{next\_less(a)} returns, for each $i$, the smallest index $j > i$ with $a[j] < a[i]$, or $n$ if there's no such index.
   \item \inlinecode{prev\_greater(a)} returns, for each $i$, the largest index $j < i$ with $a[j] > a[i]$, or $-1$ if there's no such index.
   \item \inlinecode{next\_greater(a)} returns, for each $i$, the smallest index $j > i$ with $a[j] > a[i]$, or $n$ if there's no such index.
-  \item \inlinecode{largest\_histogram\_rectangle(heights)} returns the maximum area and its inclusive left and right endpoints in a histogram where each bar has width $1$.
+  \item \inlinecode{largest\_histogram\_rectangle(heights)} returns the maximum area and its inclusive left and right endpoints in a histogram where bars have width $1$ and nonnegative heights given by \inlinecode{heights}.
   \item \inlinecode{largest\_zero\_submatrix(a)} returns the maximum area and its inclusive top, left, bottom, and right boundaries among all-zero rectangular submatrices of the 0/1 matrix \inlinecode{a}.
 \end{compactitem}
-
-Histogram heights must be nonnegative.
 
 Overflow warning: Histogram areas must fit in the height value type.
 
@@ -1366,7 +1357,7 @@ Overflow warning: Histogram areas must fit in the height value type.
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to all one-dimensional functions, where $n$ is the size of the input.
-  \item $O(r \cdot c)$ per call to \inlinecode{largest\_zero\_submatrix()}, where $r$ and $c$ are the matrix dimensions.
+  \item $O(R \cdot C)$ per call to \inlinecode{largest\_zero\_submatrix()}, where $R$ and $C$ are the matrix dimensions.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1374,7 +1365,7 @@ Overflow warning: Histogram areas must fit in the height value type.
 \begin{compactitem}
   \item $O(n)$ auxiliary and $O(n)$ for the returned indices from each neighbor query.
   \item $O(n)$ auxiliary for \inlinecode{largest\_histogram\_rectangle()}.
-  \item $O(c)$ auxiliary for \inlinecode{largest\_zero\_submatrix()}.
+  \item $O(C)$ auxiliary for \inlinecode{largest\_zero\_submatrix()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1659,14 +1650,14 @@ Overflow warning: All resulting sums and products must fit in the value type.
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{max\_subarray\_sum()}, \inlinecode{max\_circular\_subarray\_sum()}, and \inlinecode{max\_product\_subarray()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
-  \item $O(m \cdot n^{2})$ per call to \inlinecode{max\_submatrix\_sum()}, where $m$ is the number of rows and $n$ is the number of columns in the matrix.
+  \item $O(R \cdot C^{2})$ per call to \inlinecode{max\_submatrix\_sum()}, where $R$ is the number of rows and $C$ is the number of columns in the matrix.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for each subarray function.
-  \item $O(m)$ auxiliary for \inlinecode{max\_submatrix\_sum()}, where $m$ is the number of rows in the matrix.
+  \item $O(R)$ auxiliary for \inlinecode{max\_submatrix\_sum()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1734,30 +1725,30 @@ auto max_product_subarray(It lo, It hi) {
   if (lo == hi) {
     return std::tuple{T{}, 0, -1};
   }
-  T max_ending = *lo, min_ending = *lo, best = *lo;
+  T max_end = *lo, min_end = *lo, best = *lo;
   int max_begin = 0, min_begin = 0, begin = 0, end = 0;
   for (It it = lo + 1; it != hi; ++it) {
     int i = it - lo;
     if (*it < 0) {
-      std::swap(max_ending, min_ending);
+      std::swap(max_end, min_end);
       std::swap(max_begin, min_begin);
     }
-    T next_max = max_ending * *it;  // Overflow warning.
-    T next_min = min_ending * *it;  // Overflow warning.
+    T next_max = max_end * *it;  // Overflow warning.
+    T next_min = min_end * *it;  // Overflow warning.
     if (next_max < *it) {
-      max_ending = *it;
+      max_end = *it;
       max_begin = i;
     } else {
-      max_ending = next_max;
+      max_end = next_max;
     }
     if (*it < next_min) {
-      min_ending = *it;
+      min_end = *it;
       min_begin = i;
     } else {
-      min_ending = next_min;
+      min_end = next_min;
     }
-    if (best < max_ending) {
-      best = max_ending;
+    if (best < max_end) {
+      best = max_end;
       begin = max_begin;
       end = i;
     }
@@ -2205,12 +2196,12 @@ int64_t count_digit_sum(int64_t lo, int64_t hi, int target) {
   assert(0 <= lo && lo <= hi && target >= 0);
   auto count_up_to = [&](int64_t bound) {
     if (bound < 0) {
-      return int64_t{0};
+      return 0LL;
     }
     std::string digits = std::to_string(bound);
     int n = static_cast<int>(digits.size());
     if (target > 9 * n) {
-      return int64_t{0};
+      return 0LL;
     }
     std::vector<std::vector<int64_t>> memo(n, std::vector<int64_t>(target + 1, -1));
     auto rec = [&](auto &&rec, int pos, int sum, bool tight) -> int64_t {
@@ -2393,54 +2384,81 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Grid Traversal}
-Traverses a rectangular grid as an implicit unweighted graph: each unblocked cell is a node joined to its unblocked four-way orthogonal neighbors. Depth-first flood fill finds connected regions, while breadth-first search finds shortest distances because every move has unit length. Seeding the BFS with several cells computes the distance to the nearest source in one pass.
+Traverses a rectangular grid as an implicit unweighted graph: each unblocked cell is a node joined to its unblocked (four-way by default) orthogonal neighbors. Depth-first flood fill finds connected regions, while breadth-first search finds shortest distances because every move has unit length. Seeding the BFS with several cells computes the distance to the nearest source in one pass.
 
 \begin{compactitem}
-  \item \inlinecode{flood\_fill(blocked, r, c)} returns all unblocked cells reachable from starting cell $({\inlinecodemath{r}}, {\inlinecodemath{c}})$, which must lie within the grid. If it is blocked, the returned vector is empty; otherwise, its size is the area of the containing component.
-  \item \inlinecode{grid\_components(blocked)} returns the connected components of cells marked zero, with each cell represented by a pair $({\inlinecodemath{r}}, {\inlinecodemath{c}})$. Movement is allowed in the four orthogonal directions.
-  \item \inlinecode{grid\_distances(blocked, sources)} returns an $R$ by $C$ matrix of shortest distances from the nearest source. Blocked and unreachable cells contain $-1$. Every source must be an unblocked cell represented by a pair $({\inlinecodemath{r}}, {\inlinecodemath{c}})$. Passing one source gives ordinary single-source shortest paths.
-  \item \inlinecode{shortest\_grid\_path(blocked, source, target)} returns one shortest path from the unblocked cell \inlinecode{source} to \inlinecode{target}, including both endpoints, or an empty vector if \inlinecode{target} is blocked or unreachable. Both endpoints must lie within the grid.
+  \item \inlinecode{inside(r, c, rows, cols)} returns whether $0 \leq {\inlinecodemath{r}} < {\inlinecodemath{rows}}$ and $0 \leq {\inlinecodemath{c}} < {\inlinecodemath{cols}}$.
+  \item \inlinecode{adj4(r, c)} returns the four orthogonally adjacent coordinates without filtering those outside the grid. For eight-way movement, also include the four diagonal neighbors.
+  \item \inlinecode{component\_area\_perimeter(blocked, r, c)} uses flood fill to return the area and perimeter of the component containing (\inlinecode{r}, \inlinecode{c}). If the starting cell is blocked, both values are $0$.
+  \item \inlinecode{grid\_components(blocked)} uses repeated flood fills to return the connected components of cells marked zero, with each cell represented by a pair (\inlinecode{r}, \inlinecode{c}). Movement is allowed in the four orthogonal directions.
+  \item \inlinecode{grid\_bfs(blocked, sources)} returns the pair (\inlinecode{dist}, \inlinecode{pred}) from every cell in \inlinecode{sources}. Each source must be an unblocked cell represented by a pair (\inlinecode{r}, \inlinecode{c}). Passing one source gives ordinary single-source BFS. Blocked and unreachable cells have distance $-1$.
+  \item \inlinecode{get\_path(pred, tr, tc)} uses the predecessor grid returned by \inlinecode{grid\_bfs()} to return the path from a nearest source to (\inlinecode{tr}, \inlinecode{tc}), including both endpoints, or an empty vector if the target is blocked or unreachable.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(R \cdot C)$ per call, where $R$ and $C$ are the grid dimensions.
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(R \cdot C)$ per call to \inlinecode{component\_area\_perimeter()}, \inlinecode{grid\_components()}, or \inlinecode{grid\_bfs()}, where $R$ and $C$ are the grid dimensions.
+  \item $O(p)$ per call to \inlinecode{get\_path()}, where $p$ is the number of cells in the returned path.
+\end{compactitem}
 
-\textbf{Space Complexity}: $O(R \cdot C)$ auxiliary, including the recursion stack used by \inlinecode{grid\_components()} and $O(R \cdot C)$ for the returned result.
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(R \cdot C)$ auxiliary, including the recursion stack used by \inlinecode{component\_area\_perimeter()} and \inlinecode{grid\_components()}.
+  \item $O(R \cdot C)$ for the returned \inlinecode{dist} and \inlinecode{pred}, and $O(p)$ for the path returned by \inlinecode{get\_path()}.
+\end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <queue>
 #include <utility>
 #include <vector>
 
-void flood_fill_dfs(
+bool inside(int r, int c, int rows, int cols) {
+  return 0 <= r && r < rows && 0 <= c && c < cols;
+}
+
+std::array<std::pair<int, int>, 4> adj4(int r, int c) {
+  return {{{r - 1, c}, {r + 1, c}, {r, c - 1}, {r, c + 1}}};
+}
+
+template<typename Fn>
+void grid_dfs(
     const std::vector<std::vector<char>> &blocked, int r, int c,
-    std::vector<std::vector<char>> &visit, std::vector<std::pair<int, int>> &component
+    std::vector<std::vector<char>> &visit, const Fn &f
 ) {
   int rows = static_cast<int>(blocked.size());
   int cols = static_cast<int>(blocked[0].size());
   visit[r][c] = true;
-  component.push_back({r, c});
-  for (auto [r2, c2] : {std::pair{r - 1, c}, {r + 1, c}, {r, c - 1}, {r, c + 1}}) {
-    if (0 <= r2 && r2 < rows && 0 <= c2 && c2 < cols && !blocked[r2][c2] && !visit[r2][c2]) {
-      flood_fill_dfs(blocked, r2, c2, visit, component);
+  f(r, c);
+  for (auto [r2, c2] : adj4(r, c)) {
+    if (inside(r2, c2, rows, cols) && !blocked[r2][c2] && !visit[r2][c2]) {
+      grid_dfs(blocked, r2, c2, visit, f);
     }
   }
 }
 
-std::vector<std::pair<int, int>> flood_fill(
+std::pair<int, int> component_area_perimeter(
     const std::vector<std::vector<char>> &blocked, int r, int c
 ) {
   int rows = static_cast<int>(blocked.size());
   int cols = rows == 0 ? 0 : static_cast<int>(blocked[0].size());
-  assert(0 <= r && r < rows && 0 <= c && c < cols);
+  assert(inside(r, c, rows, cols));
   if (blocked[r][c]) {
-    return {};
+    return {0, 0};
   }
+  int area = 0, perimeter = 0;
   std::vector<std::vector<char>> visit(rows, std::vector<char>(cols));
-  std::vector<std::pair<int, int>> component;
-  flood_fill_dfs(blocked, r, c, visit, component);
-  return component;
+  grid_dfs(blocked, r, c, visit, [&](int r, int c) {
+    area++;
+    for (auto [r2, c2] : adj4(r, c)) {
+      perimeter += !inside(r2, c2, rows, cols) || blocked[r2][c2];
+    }
+  });
+  return {area, perimeter};
 }
 
 std::vector<std::vector<std::pair<int, int>>> grid_components(
@@ -2455,69 +2473,61 @@ std::vector<std::vector<std::pair<int, int>>> grid_components(
       if (blocked[r][c] || visit[r][c]) {
         continue;
       }
-      components.push_back({});
-      flood_fill_dfs(blocked, r, c, visit, components.back());
+      components.emplace_back();
+      grid_dfs(blocked, r, c, visit, [&](int r, int c) { components.back().emplace_back(r, c); });
     }
   }
   return components;
 }
 
-std::vector<std::vector<int>> grid_distances(
+auto grid_bfs(
     const std::vector<std::vector<char>> &blocked, const std::vector<std::pair<int, int>> &sources
 ) {
   int rows = static_cast<int>(blocked.size());
   int cols = rows == 0 ? 0 : static_cast<int>(blocked[0].size());
   std::vector<std::vector<int>> dist(rows, std::vector<int>(cols, -1));
+  std::vector<std::vector<std::pair<int, int>>> pred(
+      rows, std::vector<std::pair<int, int>>(cols, {-1, -1})
+  );
   std::queue<std::pair<int, int>> q;
   for (auto [r, c] : sources) {
-    assert(0 <= r && r < rows && 0 <= c && c < cols && !blocked[r][c]);
+    assert(inside(r, c, rows, cols) && !blocked[r][c]);
     if (dist[r][c] == -1) {
       dist[r][c] = 0;
-      q.push({r, c});
+      pred[r][c] = {r, c};
+      q.emplace(r, c);
     }
   }
   while (!q.empty()) {
     auto [r, c] = q.front();
     q.pop();
-    for (auto [r2, c2] : {std::pair{r - 1, c}, {r + 1, c}, {r, c - 1}, {r, c + 1}}) {
-      if (0 <= r2 && r2 < rows && 0 <= c2 && c2 < cols && !blocked[r2][c2] && dist[r2][c2] == -1) {
+    for (auto [r2, c2] : adj4(r, c)) {
+      if (inside(r2, c2, rows, cols) && !blocked[r2][c2] && dist[r2][c2] == -1) {
         dist[r2][c2] = dist[r][c] + 1;
-        q.push({r2, c2});
+        pred[r2][c2] = {r, c};
+        q.emplace(r2, c2);
       }
     }
   }
-  return dist;
+  return std::pair{std::move(dist), std::move(pred)};
 }
 
-std::vector<std::pair<int, int>> shortest_grid_path(
-    const std::vector<std::vector<char>> &blocked, std::pair<int, int> source,
-    std::pair<int, int> target
+std::vector<std::pair<int, int>> get_path(
+    const std::vector<std::vector<std::pair<int, int>>> &pred, int tr, int tc
 ) {
-  int rows = static_cast<int>(blocked.size());
-  int cols = rows == 0 ? 0 : static_cast<int>(blocked[0].size());
-  auto [sr, sc] = source;
-  auto [r, c] = target;
-  assert(0 <= sr && sr < rows && 0 <= sc && sc < cols && !blocked[sr][sc]);
-  assert(0 <= r && r < rows && 0 <= c && c < cols);
-  if (blocked[r][c]) {
-    return {};
-  }
-  auto dist = grid_distances(blocked, {source});
-  if (dist[r][c] == -1) {
+  int rows = static_cast<int>(pred.size());
+  int cols = rows == 0 ? 0 : static_cast<int>(pred[0].size());
+  assert(inside(tr, tc, rows, cols));
+  if (pred[tr][tc].first == -1) {
     return {};
   }
   std::vector<std::pair<int, int>> path;
-  while (!(r == sr && c == sc)) {
-    path.push_back({r, c});
-    for (auto [r2, c2] : {std::pair{r - 1, c}, {r + 1, c}, {r, c - 1}, {r, c + 1}}) {
-      if (0 <= r2 && r2 < rows && 0 <= c2 && c2 < cols && dist[r2][c2] == dist[r][c] - 1) {
-        r = r2;
-        c = c2;
-        break;
-      }
-    }
+  std::pair cur{tr, tc};
+  while (pred[cur.first][cur.second] != cur) {
+    path.push_back(cur);
+    cur = pred[cur.first][cur.second];
   }
-  path.push_back(source);
+  path.push_back(cur);
   std::reverse(path.begin(), path.end());
   return path;
 }
@@ -2537,44 +2547,42 @@ int main() {
   auto components = grid_components(blocked);
   assert(components.size() == 2);
   assert(components[0].size() == 5 && components[1].size() == 3);
-  assert(flood_fill(blocked, 0, 0).size() == 5);
-  assert(flood_fill(blocked, 0, 2).empty());
+  assert((component_area_perimeter(blocked, 0, 0) == pair{5, 12}));
+  assert((component_area_perimeter(blocked, 0, 2) == pair{0, 0}));
 
-  auto dist = grid_distances(blocked, {{0, 0}, {2, 3}});
+  auto [dist, pred] = grid_bfs(blocked, {{0, 0}, {2, 3}});
   assert((dist == vector<vector<int>>{{0, 1, -1, 2}, {-1, 2, -1, 1}, {4, 3, -1, 0}}));
-  assert(
-      (shortest_grid_path(blocked, {0, 0}, {2, 1}) ==
-       vector<pair<int, int>>{{0, 0}, {0, 1}, {1, 1}, {2, 1}})
-  );
-  assert(shortest_grid_path(blocked, {0, 0}, {0, 3}).empty());
-  assert(shortest_grid_path(blocked, {0, 0}, {0, 2}).empty());
+  assert((get_path(pred, 2, 1) == vector<pair<int, int>>{{0, 0}, {0, 1}, {1, 1}, {2, 1}}));
+  assert((get_path(pred, 0, 3) == vector<pair<int, int>>{{2, 3}, {1, 3}, {0, 3}}));
+  assert(get_path(pred, 0, 2).empty());
   return 0;
 }
 \end{lstlisting}
-\subsection{Grid Path DP}
-Solves basic dynamic programming problems on a rectangular grid. In grid DP, each cell represents a state and transitions usually come from already-computed neighboring cells, most commonly the cell above and the cell to the left. Processing rows from top to bottom and columns from left to right therefore makes every predecessor available when a state is computed.
-
-For path-counting, \inlinecode{dp[r][c]} stores the number of ways to reach cell $(r, c)$. For minimum-cost paths, \inlinecode{dp[r][c]} stores the cheapest cost to reach that cell, and a predecessor direction reconstructs one optimal path. The implementation retains only the current row of path costs while storing all predecessor directions. The helpers below assume movement only down or right.
+\subsection{Grid DP}
+Solves basic dynamic programming problems on a rectangular grid. In grid DP, each cell represents a state and transitions usually come from already-computed neighboring cells. Processing rows from top to bottom and columns from left to right makes predecessors above and to the left available when a state is computed.
 
 \begin{compactitem}
-  \item \inlinecode{count\_grid\_paths(blocked)} returns the number of paths from the upper-left cell to the lower-right cell, moving only down or right and avoiding blocked cells marked nonzero.
-  \item \inlinecode{min\_cost\_grid\_path(cost)} returns a pair (\inlinecode{min\_cost}, \inlinecode{path}) containing the minimum cost of a down/right path from the upper-left cell to the lower-right cell and the cells of one optimal path in order. If the grid is empty, \inlinecode{min\_cost} is $0$ and \inlinecode{path} is empty.
+  \item \inlinecode{count\_grid\_paths(blocked)} returns the number of paths from the upper-left cell to the lower-right cell, moving only down or right and avoiding blocked cells marked nonzero. The state $dp(r, c)$ counts paths to cell $(r, c)$ from the counts above and left. Only the current row is retained.
+  \item \inlinecode{min\_cost\_grid\_path(cost)} returns a pair (\inlinecode{min\_cost}, \inlinecode{path}) containing the minimum cost of a down/right path from the upper-left cell to the lower-right cell and the cells of one optimal path in order. The state $dp(r, c)$ stores the cheapest cost to cell $(r, c)$. Only the current row of costs is retained, while predecessor directions reconstruct one optimal path. If the grid is empty, \inlinecode{min\_cost} is $0$ and \inlinecode{path} is empty.
+  \item \inlinecode{largest\_one\_square(a)} returns a tuple (\inlinecode{side}, \inlinecode{top}, \inlinecode{left}) describing a largest all-nonzero square in \inlinecode{a}. The state $dp(c)$ is the largest square ending at the current cell in column $c$; a nonzero cell extends the minimum of the states above, left, and diagonally above-left. If no such square exists, the function returns $(0, -1, -1)$.
 \end{compactitem}
 
 Overflow warning: Path counts and path costs must fit in \inlinecode{int64\_t}.
 
-\textbf{Time Complexity}: $O(R \cdot C)$ per call to \inlinecode{count\_grid\_paths(blocked)} and \inlinecode{min\_cost\_grid\_path(cost)}, where $R$ and $C$ are the grid dimensions.
+\textbf{Time Complexity}: $O(R \cdot C)$ per call, where $R$ and $C$ are the grid dimensions.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(C)$ auxiliary for \inlinecode{count\_grid\_paths(blocked)}.
   \item $O(R \cdot C)$ auxiliary for predecessor directions, $O(C)$ for path costs, and $O(R + C)$ for the returned path from \inlinecode{min\_cost\_grid\_path(cost)}.
+  \item $O(C)$ auxiliary for \inlinecode{largest\_one\_square(a)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cstdint>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -2639,6 +2647,26 @@ std::pair<int64_t, std::vector<std::pair<int, int>>> min_cost_grid_path(
   std::reverse(path.begin(), path.end());
   return {dp.back(), path};
 }
+
+std::tuple<int, int, int> largest_one_square(const std::vector<std::vector<char>> &a) {
+  int rows = static_cast<int>(a.size()), cols = rows == 0 ? 0 : static_cast<int>(a[0].size());
+  std::vector<int> dp(cols);
+  int best = 0, top = -1, left = -1;
+  for (int r = 0; r < rows; r++) {
+    int diagonal = 0;
+    for (int c = 0; c < cols; c++) {
+      int above = dp[c];
+      dp[c] = a[r][c] ? 1 + std::min({above, c == 0 ? 0 : dp[c - 1], diagonal}) : 0;
+      diagonal = above;
+      if (dp[c] > best) {
+        best = dp[c];
+        top = r - best + 1;
+        left = c - best + 1;
+      }
+    }
+  }
+  return {best, top, left};
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -2662,6 +2690,15 @@ int main() {
   auto [min_cost, path] = min_cost_grid_path(cost);
   assert(min_cost == 7);
   assert((path == vector<pair<int, int>>{{0, 0}, {0, 1}, {0, 2}, {1, 2}, {2, 2}}));
+
+  vector<vector<char>> binary{
+      {1, 0, 1, 0, 0},
+      {1, 0, 1, 1, 1},
+      {1, 1, 1, 1, 1},
+      {1, 0, 1, 1, 1},
+  };
+  assert((largest_one_square(binary) == tuple{3, 1, 2}));
+  assert((largest_one_square({{0, 0}}) == tuple{0, -1, -1}));
   return 0;
 }
 \end{lstlisting}
@@ -2675,7 +2712,7 @@ Solves the fractional knapsack problem: given items with positive integer weight
 The greedy algorithm processes items in decreasing order of value per unit weight, taking each item in full until only part of the next item fits. This is optimal because replacing any weight taken from a lower-density item with the same weight from a higher-density item cannot decrease the total value. Unlike 0-1 knapsack, allowing fractions makes each such exchange feasible.
 
 \begin{compactitem}
-  \item \inlinecode{fractional\_knapsack(weight, value, capacity)} returns a pair (\inlinecode{best\_value}, \inlinecode{fraction}) containing the maximum value and the fraction of each input item taken. Item \inlinecode{i} has weight \inlinecode{weight[i]} and value \inlinecode{value[i]}, and \inlinecode{fraction[i]} is in $[0, 1]$.
+  \item \inlinecode{fractional\_knapsack(weight, value, capacity)} returns a pair (\inlinecode{best\_value}, \inlinecode{fraction}) containing the maximum value and the fraction of each input item taken. Item \inlinecode{i} has weight \inlinecode{weight[i]} and value \inlinecode{value[i]}, \inlinecode{capacity} is the maximum total weight, and \inlinecode{fraction[i]} is in $[0, 1]$.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting, where $n$ is the number of items.
@@ -2742,7 +2779,7 @@ The greedy choice is safe because among all intervals that could be chosen first
 Intervals are represented as half-open ranges $[{\inlinecodemath{start}}, {\inlinecodemath{finish}})$, so two intervals are compatible if the next interval's \inlinecode{start} is at least the previous interval's \inlinecode{finish}.
 
 \begin{compactitem}
-  \item \inlinecode{schedule\_intervals(intervals)} returns one maximum-size compatible subset of intervals, in the order they are selected, as original indices into an input vector of \inlinecode{Interval} with fields \inlinecode{start} and \inlinecode{finish}. Every interval must satisfy \inlinecode{start} \textless{} \inlinecode{finish}.
+  \item \inlinecode{select\_intervals(intervals)} returns one maximum-size compatible subset of intervals, in the order they are selected, as original indices into an input vector of \inlinecode{Interval} with fields \inlinecode{start} and \inlinecode{finish}. Every interval must satisfy \inlinecode{start} \textless{} \inlinecode{finish}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting, where $n$ is the number of intervals.
@@ -2760,7 +2797,7 @@ struct Interval {
   int start, finish;
 };
 
-std::vector<int> schedule_intervals(const std::vector<Interval> &intervals) {
+std::vector<int> select_intervals(const std::vector<Interval> &intervals) {
   for (const auto &iv : intervals) {
     assert(iv.start < iv.finish);
   }
@@ -2791,10 +2828,10 @@ using namespace std;
 int main() {
   vector<Interval> intervals{{1, 4}, {3, 5}, {0, 6}, {5, 7}, {8, 9}};
   // Earliest-finish greedy chooses original indices 0, 3, 4.
-  assert((schedule_intervals(intervals) == vector<int>{0, 3, 4}));
+  assert((select_intervals(intervals) == vector<int>{0, 3, 4}));
 
   vector<Interval> touching{{0, 2}, {2, 4}, {4, 5}};
-  assert((schedule_intervals(touching) == vector<int>{0, 1, 2}));
+  assert((select_intervals(touching) == vector<int>{0, 1, 2}));
   return 0;
 }
 \end{lstlisting}
@@ -3059,8 +3096,7 @@ std::pair<int, std::vector<int>> partition_intervals(const std::vector<Interval>
 using namespace std;
 
 int main() {
-  vector<Interval> intervals{{0, 30}, {5, 10}, {15, 20}};
-  auto [rooms, room] = partition_intervals(intervals);
+  auto [rooms, room] = partition_intervals(vector<Interval>{{0, 30}, {5, 10}, {15, 20}});
   // The long interval overlaps both short intervals, but the short intervals can share a room.
   assert(rooms == 2);
   assert(room[1] == room[2]);
@@ -3203,7 +3239,7 @@ std::vector<int> max_on_time_jobs(const std::vector<TimedJob> &jobs) {
   int64_t time = 0;
   for (int i : order) {
     time += jobs[i].duration;  // Overflow warning.
-    accepted.push({jobs[i].duration, i});
+    accepted.emplace(jobs[i].duration, i);
     selected[i] = true;
     if (time > jobs[i].deadline) {
       time -= accepted.top().first;
@@ -3251,11 +3287,12 @@ The algorithm scans from right to left. At each position $i$, it chooses a rando
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <chrono>
 #include <random>
 
 template<typename It>
 void fisher_yates_shuffle(It lo, It hi) {
-  static std::mt19937 rng(std::random_device{}());
+  static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
   int n = static_cast<int>(hi - lo);
   for (int i = n - 1; i > 0; i--) {
     std::uniform_int_distribution<int> dist(0, i);
@@ -3311,12 +3348,13 @@ Each class maintains its reservoir incrementally; call \inlinecode{add(x)} once 
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <chrono>
 #include <optional>
 #include <random>
 #include <vector>
 
 int rand_int(int lo, int hi) {
-  static std::mt19937 rng(std::random_device{}());
+  static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
   return std::uniform_int_distribution<int>(lo, hi)(rng);
 }
 
@@ -3783,18 +3821,18 @@ int main() {
   Mask x = 0b101100;
   assert(test_bit(x, 2) == true);
   assert(test_bit(x, 0) == false);
-  assert(set_bit(x, 0) == 0b101101u);
-  assert(clear_bit(x, 2) == 0b101000u);
-  assert(toggle_bit(x, 3) == 0b100100u);
+  assert(set_bit(x, 0) == 0b101101U);
+  assert(clear_bit(x, 2) == 0b101000U);
+  assert(toggle_bit(x, 3) == 0b100100U);
 
-  assert(lowest_set_bit(x) == 0b100u);
-  assert(clear_lowest_set_bit(x) == 0b101000u);
-  assert(lowest_set_bit(0) == 0u);
-  assert(clear_lowest_set_bit(0) == 0u);
+  assert(lowest_set_bit(x) == 0b100U);
+  assert(clear_lowest_set_bit(x) == 0b101000U);
+  assert(lowest_set_bit(0) == 0U);
+  assert(clear_lowest_set_bit(0) == 0U);
   assert(popcount(x) == 3);
   assert(popcount(0) == 0);
   assert(parity(x) == 1);
-  assert(parity(0b101101u) == 0);
+  assert(parity(0b101101U) == 0);
   assert(parity(0) == 0);
   assert(ctz(x) == 2);
   assert(ffs(x) == 3);
@@ -3803,9 +3841,9 @@ int main() {
 
   assert(is_pow2(16) == true);
   assert(is_pow2(24) == false);
-  assert(floor_pow2(20) == 16u);
-  assert(ceil_pow2(20) == 32u);
-  assert(ceil_pow2(16) == 16u);
+  assert(floor_pow2(20) == 16U);
+  assert(ceil_pow2(20) == 32U);
+  assert(ceil_pow2(16) == 16U);
   assert(ceil_pow2((Mask{1} << (MASK_BITS - 1)) - 1) == (Mask{1} << (MASK_BITS - 1)));
 
   vector<int> bits;
@@ -3823,7 +3861,7 @@ Gosper's hack advances to the next mask with the same popcount. It isolates the 
 
 \begin{compactitem}
   \item \inlinecode{submasks(m)} returns all submasks of \inlinecode{m}, including \inlinecode{m} itself and 0, in decreasing order.
-  \item \inlinecode{next\_popcount(x)} returns the smallest integer greater than \inlinecode{x} with the same number of set bits (Gosper's hack), for \inlinecode{x \textgreater{} 0} when that next mask is representable in \inlinecode{Mask}.
+  \item \inlinecode{next\_same\_popcount(x)} returns the smallest integer greater than \inlinecode{x} with the same number of set bits (Gosper's hack), for \inlinecode{x \textgreater{} 0} when that next mask is representable in \inlinecode{Mask}.
   \item \inlinecode{masks\_with\_popcount(n, k)} returns all \inlinecode{k}-bit subsets of an \inlinecode{n}-bit universe as masks, in increasing order, where $0 \leq k \leq n < {\inlinecodemath{MASK\_BITS}}$.
   \item \inlinecode{subset\_sum\_transform(f)} overwrites \inlinecode{f} (indexed by mask over \inlinecode{n} bits) so that \inlinecode{f[m]} becomes the sum of the original \inlinecode{f[s]} over all submasks \inlinecode{s} of \inlinecode{m}. This ``sum over subsets'' (SOS) DP is the bitmask analog of a prefix sum, accumulating one bit dimension at a time. The value type must support \inlinecode{+=}.
 \end{compactitem}
@@ -3834,7 +3872,7 @@ Overflow warning: All intermediate sums must be representable in the value type.
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(2^{p})$ per call to \inlinecode{submasks(m)}, where $p$ is \inlinecode{popcount(m)}.
-  \item $O(1)$ per call to \inlinecode{next\_popcount()}.
+  \item $O(1)$ per call to \inlinecode{next\_same\_popcount()}.
   \item $O(\binom{n}{k})$ per call to \inlinecode{masks\_with\_popcount(n, k)}.
   \item $O(n \cdot 2^{n})$ per call to \inlinecode{subset\_sum\_transform(f)}, where \inlinecode{f} has $2^n$ entries.
 \end{compactitem}
@@ -3842,7 +3880,7 @@ Overflow warning: All intermediate sums must be representable in the value type.
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(1)$ auxiliary for \inlinecode{next\_popcount()} and \inlinecode{subset\_sum\_transform()}.
+  \item $O(1)$ auxiliary for \inlinecode{next\_same\_popcount()} and \inlinecode{subset\_sum\_transform()}.
   \item $O(1)$ auxiliary and $O(s)$ for the returned masks from \inlinecode{submasks(m)} and \inlinecode{masks\_with\_popcount(n, k)}, where $s$ is the result size.
 \end{compactitem}
 
@@ -3868,7 +3906,7 @@ std::vector<Mask> submasks(Mask m) {
   return res;
 }
 
-Mask next_popcount(Mask x) {
+Mask next_same_popcount(Mask x) {
   assert(x != 0);
   Mask c = x & (Mask{0} - x), r = x + c;
   assert(r != 0);
@@ -3882,7 +3920,7 @@ std::vector<Mask> masks_with_popcount(int n, int k) {
     return {0};
   }
   Mask limit = Mask{1} << n;
-  for (Mask x = (Mask{1} << k) - 1; x < limit; x = next_popcount(x)) {
+  for (Mask x = (Mask{1} << k) - 1; x < limit; x = next_same_popcount(x)) {
     res.push_back(x);
   }
   return res;
@@ -3895,8 +3933,8 @@ void subset_sum_transform(std::vector<T> &f) {
   int n = __builtin_ctz(static_cast<unsigned>(size));  // size = 2^n.
   for (int b = 0; b < n; b++) {
     for (int m = 0; m < size; m++) {
-      if (m & (1u << b)) {
-        f[m] += f[m ^ (1u << b)];
+      if (m & (1U << b)) {
+        f[m] += f[m ^ (1U << b)];
       }
     }
   }
@@ -3910,7 +3948,7 @@ using namespace std;
 int main() {
   assert((submasks(0b101) == vector<Mask>{0b101, 0b100, 0b001, 0b000}));
 
-  assert(next_popcount(0b0110) == 0b1001u);
+  assert(next_same_popcount(0b0110) == 0b1001U);
   assert(
       (masks_with_popcount(4, 2) == vector<Mask>{0b0011, 0b0101, 0b0110, 0b1001, 0b1010, 0b1100})
   );
@@ -3924,14 +3962,14 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Bitmask Dynamic Programming}
+\subsection{Bitmask DP}
 Bitmask dynamic programming uses a bitmask to represent a small set or frontier, then treats that mask as the DP state. This is useful when one dimension is small enough for $2^n$ states: assignment problems can store which jobs are already used, set cover can store which elements are covered, submask DP can split a set into groups, and grid tiling can store which cells on the current frontier are already occupied.
 
 For assignment, \inlinecode{dp[mask]} is the minimum cost after assigning the first \inlinecode{popcount(mask)} workers to the selected jobs. The next worker tries every unused job. For set cover, \inlinecode{dp[mask]} is the minimum number of chosen sets needed to cover exactly the elements in \inlinecode{mask}; adding one set moves to the union mask. For set partitioning, iterating all submasks gives the recurrence \inlinecode{dp[mask] = min(dp[mask \textasciicircum{} sub] + cost[sub])}. Over all masks, this has $O(3^{n})$ transitions. For domino tiling, the mask is a profile of the current row; this technique is often called DP on a broken profile or plug DP. A domino covers exactly two edge-adjacent cells, so each piece is either horizontal ($1 \times 2$) or vertical ($2 \times 1$).
 
 \begin{compactitem}
   \item \inlinecode{assignment\_min\_cost(cost)} returns a pair (\inlinecode{sum}, \inlinecode{job}), where \inlinecode{sum} is the minimum cost of assigning each worker to a distinct job, and \inlinecode{job[i]} is the job assigned to worker \inlinecode{i}. The input is a square matrix with one row per worker and one column per job.
-  \item \inlinecode{minimum\_set\_cover(sets, universe\_size)} returns a pair (\inlinecode{count}, \inlinecode{chosen}), where \inlinecode{count} is the minimum number of sets needed to cover all elements in $[0, u)$, where $u$ is \inlinecode{universe\_size}, and \inlinecode{chosen} contains one optimal list of set indices. If no cover exists, \inlinecode{count} is $-1$ and \inlinecode{chosen} is empty. Each input set is represented as a bitmask.
+  \item \inlinecode{set\_cover(sets, universe\_size)} returns a pair (\inlinecode{count}, \inlinecode{chosen}), where \inlinecode{count} is the minimum number of sets needed to cover all elements in $[0, u)$, where $u$ is \inlinecode{universe\_size}, and \inlinecode{chosen} contains one optimal list of set indices. If no cover exists, \inlinecode{count} is $-1$ and \inlinecode{chosen} is empty. Each input set is represented as a bitmask.
   \item \inlinecode{partition\_min\_cost(group\_cost)} returns the minimum total cost to partition all elements into disjoint nonempty groups, where \inlinecode{group\_cost[mask]} is the cost of taking \inlinecode{mask} as one group.
   \item \inlinecode{count\_domino\_tilings(rows, cols)} returns the number of ways to tile a \inlinecode{rows} by \inlinecode{cols} rectangle with $1 \times 2$ and $2 \times 1$ dominoes.
 \end{compactitem}
@@ -3942,18 +3980,18 @@ Overflow warning: All accumulated costs and tiling counts must fit in \inlinecod
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n^{2} \cdot 2^{n})$ per call to \inlinecode{assignment\_min\_cost()}, where $n$ is the number of workers and jobs.
-  \item $O(s \cdot 2^{u})$ per call to \inlinecode{minimum\_set\_cover()}, where $s$ is the number of sets and $u$ is \inlinecode{universe\_size}.
+  \item $O(s \cdot 2^{u})$ per call to \inlinecode{set\_cover()}, where $s$ is the number of sets and $u$ is \inlinecode{universe\_size}.
   \item $O(3^{n})$ per call to \inlinecode{partition\_min\_cost()}, where $n$ is the number of elements.
-  \item $O(r \cdot c \cdot 2^{c})$ per call to \inlinecode{count\_domino\_tilings()}, where $r$ and $c$ are the number of rows and columns, respectively.
+  \item $O(R \cdot C \cdot 2^{C})$ per call to \inlinecode{count\_domino\_tilings()}, where $R$ and $C$ are the number of rows and columns, respectively.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(2^{n})$ auxiliary and $O(n)$ for the returned assignment from \inlinecode{assignment\_min\_cost()}.
-  \item $O(2^{u})$ auxiliary and $O(s)$ for the returned indices from \inlinecode{minimum\_set\_cover()}.
+  \item $O(2^{u})$ auxiliary and $O(s)$ for the returned indices from \inlinecode{set\_cover()}.
   \item $O(2^{n})$ auxiliary for \inlinecode{partition\_min\_cost()}.
-  \item $O(2^{c})$ auxiliary for \inlinecode{count\_domino\_tilings()}.
+  \item $O(2^{C})$ auxiliary for \inlinecode{count\_domino\_tilings()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3996,9 +4034,7 @@ std::pair<int64_t, std::vector<int>> assignment_min_cost(
   return {dp[states - 1], job};
 }
 
-std::pair<int, std::vector<int>> minimum_set_cover(
-    const std::vector<int> &sets, int universe_size
-) {
+std::pair<int, std::vector<int>> set_cover(const std::vector<int> &sets, int universe_size) {
   assert(0 <= universe_size && universe_size < 31);
   int states = 1 << universe_size;
   int full = states - 1;
@@ -4094,12 +4130,11 @@ int main() {
   assert(assignment_cost == 9);
   assert((job == vector<int>{1, 0, 2}));
 
-  vector<int> sets{0b0011, 0b0110, 0b1100, 0b1000};
-  auto [cover_count, chosen] = minimum_set_cover(sets, 4);
+  auto [cover_count, chosen] = set_cover(vector<int>{0b0011, 0b0110, 0b1100, 0b1000}, 4);
   assert(cover_count == 2);
   assert((chosen == vector<int>{0, 2}));
 
-  auto [impossible_count, impossible_chosen] = minimum_set_cover(vector<int>{0b001, 0b010}, 3);
+  auto [impossible_count, impossible_chosen] = set_cover(vector<int>{0b001, 0b010}, 3);
   assert(impossible_count == -1 && impossible_chosen.empty());
 
   vector<int64_t> group_cost{
@@ -4120,11 +4155,11 @@ int main() {
 \subsection{Gray Code}
 The binary reflected Gray code is an ordering of all $2^n$ bitmasks in which consecutive masks differ in exactly one bit. It is useful whenever the cost of moving between adjacent states depends on a single bit flip: enumerating subsets while incrementally maintaining a value, hardware where only one bit may toggle at a time, and constructions like Hamiltonian paths on the hypercube.
 
-The \inlinecode{k}-th Gray code is obtained from the ordinary binary value \inlinecode{k} by \inlinecode{k \textasciicircum{} (k \textgreater{}\textgreater{} 1)}. Incrementing \inlinecode{k} flips one binary bit and every lower bit, but XORing each bit with its higher neighbor cancels all but the highest of those changes, so consecutive Gray codes differ in exactly one bit. The map is a bijection: each binary bit is the prefix XOR of the Gray bits at and above it. The inverse loop computes those prefix XORs in doubling steps to recover the original rank.
+The Gray code at 0-based rank \inlinecode{k} is obtained from the ordinary binary value \inlinecode{k} by \inlinecode{k \textasciicircum{} (k \textgreater{}\textgreater{} 1)}. Incrementing \inlinecode{k} flips one binary bit and every lower bit, but XORing each bit with its higher neighbor cancels all but the highest of those changes, so consecutive Gray codes differ in exactly one bit. The map is a bijection: each binary bit is the prefix XOR of the Gray bits at and above it. The inverse loop computes those prefix XORs in doubling steps to recover the original rank.
 
 \begin{compactitem}
-  \item \inlinecode{gray\_code(k)} returns the \inlinecode{k}-th mask in Gray code order.
-  \item \inlinecode{inverse\_gray\_code(g)} returns the rank \inlinecode{k} such that \inlinecode{gray\_code(k)} equals \inlinecode{g}.
+  \item \inlinecode{gray\_code(k)} returns the mask at 0-based rank \inlinecode{k} in Gray code order.
+  \item \inlinecode{inverse\_gray\_code(g)} returns the 0-based rank \inlinecode{k} such that \inlinecode{gray\_code(k)} equals \inlinecode{g}.
   \item \inlinecode{gray\_sequence(n)} returns all $2^n$ masks in Gray code order; consecutive entries (and the last with the first when \inlinecode{n \textgreater{} 0}) differ in exactly one bit, where $0 \leq {\inlinecodemath{n}} < {\inlinecodemath{MASK\_BITS}}$.
 \end{compactitem}
 
@@ -4179,15 +4214,15 @@ std::vector<Mask> gray_sequence(int n) {
 using namespace std;
 
 int main() {
-  assert(gray_code(0) == 0b000u);
-  assert(gray_code(1) == 0b001u);
-  assert(gray_code(2) == 0b011u);
-  assert(gray_code(3) == 0b010u);
+  assert(gray_code(0) == 0b000U);
+  assert(gray_code(1) == 0b001U);
+  assert(gray_code(2) == 0b011U);
+  assert(gray_code(3) == 0b010U);
 
   for (Mask k = 0; k < 256; k++) {
     assert(inverse_gray_code(gray_code(k)) == k);
   }
-  assert(inverse_gray_code(gray_code(0xdeadbeefu)) == 0xdeadbeefu);
+  assert(inverse_gray_code(gray_code(0xdeadbeefU)) == 0xdeadbeefU);
 
   vector<Mask> seq = gray_sequence(3);
   assert((seq == vector<Mask>{0b000, 0b001, 0b011, 0b010, 0b110, 0b111, 0b101, 0b100}));
@@ -4475,10 +4510,10 @@ int main() {
   assert(trie.size() == 5);
 
   // x XOR y over the stored y: {26, 19, 28, 0, 27} for x = 25.
-  assert(trie.max_xor(25) == 28);                           // 25 XOR 5.
-  assert(trie.min_xor(25) == 0);                            // 25 XOR 25.
-  assert(trie.count_xor_less(25, 20) == 2);                 // XOR values 0 and 19 are below 20.
-  assert(trie.count_xor_less(25, uint32_t{1} << 30) == 5);  // Bound at/above 2^BITS counts all.
+  assert(trie.max_xor(25) == 28);                  // 25 XOR 5.
+  assert(trie.min_xor(25) == 0);                   // 25 XOR 25.
+  assert(trie.count_xor_less(25, 20) == 2);        // XOR values 0 and 19 are below 20.
+  assert(trie.count_xor_less(25, 1U << 30) == 5);  // Bound at/above 2^BITS counts all.
 
   assert(trie.count(10) == 1);
   trie.insert(10);
@@ -4502,10 +4537,13 @@ The fast Walsh-Hadamard transform (FWHT) diagonalizes XOR convolution in the sam
   \item \inlinecode{xor\_convolve(a, b)} returns the XOR convolution of \inlinecode{a} and \inlinecode{b}.
   \item \inlinecode{or\_convolve(a, b)} returns the OR convolution of \inlinecode{a} and \inlinecode{b}.
   \item \inlinecode{and\_convolve(a, b)} returns the AND convolution of \inlinecode{a} and \inlinecode{b}.
-  \item \inlinecode{subset\_convolve(a, b)} returns the subset convolution of \inlinecode{a} and \inlinecode{b}, where \inlinecode{c[m]} sums \inlinecode{a[x]*b[y]} over the pairs of disjoint masks satisfying \inlinecode{x | y = m}.
 \end{compactitem}
 
 Subset convolution restricts OR convolution to pairs of disjoint masks, so \inlinecode{c[m]} must count only \inlinecode{x | y = m} with \inlinecode{x \& y = 0}. Rank each entry by its number of set bits, transform every rank layer, and multiply the layers as polynomials in the rank. Mobius inversion then recovers pairs whose union is exactly \inlinecode{m}; among these pairs, the ranks sum to the number of set bits in \inlinecode{m} exactly when the pair is disjoint.
+
+\begin{compactitem}
+  \item \inlinecode{subset\_convolve(a, b)} returns the subset convolution of \inlinecode{a} and \inlinecode{b}, where \inlinecode{c[m]} sums \inlinecode{a[x]*b[y]} over the pairs of disjoint masks satisfying \inlinecode{x | y = m}.
+\end{compactitem}
 
 The in-place transforms require a nonempty array whose length is a power of two. A convolution returns empty if either input is empty; otherwise, both inputs are padded with zeros to the smallest power of two at least their maximum length, which is also the output length. For exact integer XOR convolution, the inverse divisions are exact; for modular arithmetic, replace the division by multiplication with the modular inverse of the transform length.
 
@@ -4979,7 +5017,7 @@ Floyd's cycle-finding algorithm, a.k.a. the ``tortoise and the hare algorithm'',
 For Floyd's algorithm, suppose the tail has length $m$ and the cycle has length $n$. At a meeting, the hare has traveled twice as far as the tortoise, so the tortoise's distance is a multiple of $n$. Consequently, the distance from the meeting point around the cycle to its entry is congruent to $m$ modulo $n$. Resetting one pointer to $x_0$ and advancing both one step at a time makes them meet at the cycle entry after $m$ steps. Brent first determines $n$, then advances one pointer $n$ steps; moving both together from that fixed separation likewise makes them meet at the entry.
 
 \begin{compactitem}
-  \item \inlinecode{find\_cycle\_floyd(f, x0)} repeatedly applies \inlinecode{f} starting from \inlinecode{x0} and returns the reached cycle as a tuple (\inlinecode{entry}, \inlinecode{start}, \inlinecode{length}), where \inlinecode{entry} is the first cycle value, \inlinecode{start} is its index in the sequence, and \inlinecode{length} is the number of distinct values in the cycle.
+  \item \inlinecode{find\_cycle\_floyd(f, x0)} repeatedly applies \inlinecode{f} starting from \inlinecode{x0} and returns the reached cycle as a tuple (\inlinecode{entry}, \inlinecode{start}, \inlinecode{length}), where \inlinecode{entry} is the first cycle value, \inlinecode{start} is the number of applications of \inlinecode{f} needed to reach it from \inlinecode{x0}, and \inlinecode{length} is the number of distinct values in the cycle.
   \item \inlinecode{find\_cycle\_brent(f, x0)} does the same with fewer calls to \inlinecode{f} in many cases.
 \end{compactitem}
 

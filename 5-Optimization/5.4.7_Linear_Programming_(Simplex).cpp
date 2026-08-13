@@ -19,7 +19,7 @@ tableau row or column currently represents, making solution recovery independent
   returning $0$ if an optimum was found, $-1$ if there are no feasible solutions, or $1$ if the
   objective is unbounded. Set `maximize = false` to minimize instead, and use `eps` as the pivot and
   feasibility tolerance. If an optimum is found, `x` is assigned a vector of length `n`, where
-  `x[j]` is the value of the $j$-th variable.
+  `x[j]` is the value of the `j`-th variable.
 
 Time Complexity:
 - O(pmn) per call, where $p$ is the total number of pivots across both phases. Each pivot takes
@@ -33,6 +33,7 @@ Space Complexity:
 
 #include <cassert>
 #include <cmath>
+#include <numeric>
 #include <utility>
 #include <vector>
 
@@ -170,10 +171,7 @@ int main() {
   vector<double> vc{3, 4};
   vector<double> x;
   assert(simplex_solve(va, vb, vc, &x) == 0);
-  double maxval = 0;
-  for (int i = 0; i < static_cast<int>(x.size()); i++) {
-    maxval += vc[i] * x[i];
-  }
+  double maxval = inner_product(vc.begin(), vc.end(), x.begin(), 0.0);
   cout << "Solution = " << maxval << " at (" << x[0];
   for (int i = 1; i < static_cast<int>(x.size()); i++) {
     cout << ", " << x[i];

@@ -13,8 +13,8 @@ reachable from a particular original node. If such a cycle exists, shortest path
 
 - `johnson_all_pairs(n)` populates `dist` and `next_node` for a global, pre-populated edge list
   `edges` whose nodes are numbered $[0, `n`)$. Each edge is stored as (`u`, `v`, `weight`).
-  Afterward, `dist[u][v]` is the shortest distance from $u$ to $v$, or `INF` if $v$ is unreachable
-  from $u$. The function returns whether the graph contains no negative-weight cycle.
+  Afterward, `dist[u][v]` is the shortest distance from `u` to `v`, or `INF` if `v` is unreachable
+  from `u`. The function returns whether the graph contains no negative-weight cycle.
 - `get_path(start, dest)` returns the shortest path from `start` to `dest`, or an empty vector if
   `dest` is unreachable from `start`, provided the most recent call to `johnson_all_pairs()`
   returned true. If it returned false, a reachable negative-weight cycle leaves the distances and

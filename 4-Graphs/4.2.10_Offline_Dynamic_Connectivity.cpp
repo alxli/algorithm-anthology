@@ -9,7 +9,7 @@ stored at each node on the way down and undoes them on the way back up, so at ea
 set forest reflects exactly the edges alive at that moment.
 
 This offline method supports arbitrary undirected graphs. When updates must be processed online and
-the graph remains a forest, see the Euler Tour Tree in Section 2.7.9.
+the graph remains a forest, see the Euler Tour Tree in 2.7.9.
 
 Undoing unions requires a disjoint set forest with rollback (see the disjoint sets section): it
 joins by size or rank without path compression, recording each change on a stack so it can be
@@ -22,15 +22,15 @@ rather than near-constant time.
   the current time, then advance the time by one step. Each edge may be present at most once at a
   time: `add_edge` must not name an edge that is already present, and `remove_edge` must name one
   that is. Both preconditions are checked with `assert` during `solve()`.
-- `count_components()` records a query at the current time and advances the time by one step.
+- `query_components()` records a query at the current time and advances the time by one step.
 - `solve()` processes all recorded operations and returns a vector holding, for each
-  `count_components()` query in the order issued, the number of connected components at that time.
+  `query_components()` query in the order issued, the number of connected components at that time.
 
 Time Complexity:
 - O(T log T + m log T log n) per call to `solve()`, where $T$ is the total number of operations
-  (`add_edge()`, `remove_edge()`, and `count_components()` combined), $m$ is the number of
+  (`add_edge()`, `remove_edge()`, and `query_components()` combined), $m$ is the number of
   `add_edge()` operations, and $n$ is the number of nodes.
-- O(1) amortized per call to `add_edge()`, `remove_edge()`, and `count_components()`.
+- O(1) amortized per call to `add_edge()`, `remove_edge()`, and `query_components()`.
 
 Space Complexity:
 - O(n + T + m log T) auxiliary.
@@ -134,7 +134,7 @@ class OfflineDynamicConnectivity {
 
   void add_edge(int u, int v) { ops.push_back({ADD, std::min(u, v), std::max(u, v)}); }
   void remove_edge(int u, int v) { ops.push_back({REMOVE, std::min(u, v), std::max(u, v)}); }
-  void count_components() { ops.push_back({QUERY, 0, 0}); }
+  void query_components() { ops.push_back({QUERY, 0, 0}); }
 
   std::vector<int> solve() {
     int t = static_cast<int>(ops.size());
@@ -177,17 +177,17 @@ using namespace std;
 int main() {
   OfflineDynamicConnectivity dc(4);
   // 0   1   2   3
-  dc.count_components();  // 4 isolated nodes.
+  dc.query_components();  // 4 isolated nodes.
   dc.add_edge(0, 1);
   dc.add_edge(2, 3);
   // 0---1   2---3
-  dc.count_components();  // 2 components.
+  dc.query_components();  // 2 components.
   dc.add_edge(1, 2);
   // 0---1---2---3
-  dc.count_components();  // All connected => 1 component.
+  dc.query_components();  // All connected => 1 component.
   dc.remove_edge(1, 2);
   // 0---1   2---3
-  dc.count_components();  // Back to 2 components.
+  dc.query_components();  // Back to 2 components.
   assert((dc.solve() == vector<int>{4, 2, 1, 2}));
   return 0;
 }

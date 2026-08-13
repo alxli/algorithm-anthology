@@ -34,6 +34,7 @@ Space Complexity:
 #include <algorithm>
 #include <numeric>
 #include <string>
+#include <tuple>
 #include <vector>
 
 std::string bwt(std::string s) {
@@ -48,10 +49,7 @@ std::string bwt(std::string s) {
   }
   for (int k = 1; k < n; k <<= 1) {
     auto cmp = [&](int a, int b) {
-      if (rank[a] != rank[b]) {
-        return rank[a] < rank[b];
-      }
-      return rank[(a + k) % n] < rank[(b + k) % n];
+      return std::tie(rank[a], rank[(a + k) % n]) < std::tie(rank[b], rank[(b + k) % n]);
     };
     std::sort(order.begin(), order.end(), cmp);
     tmp[order[0]] = 0;

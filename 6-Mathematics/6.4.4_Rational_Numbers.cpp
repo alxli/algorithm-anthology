@@ -4,10 +4,6 @@ Perform operations on rational numbers internally represented as two integers: a
 denominator. The template integer type must support streamed input/output, comparisons, and
 arithmetic operations.
 
-Overflow warning: Internal operations do not check for overflow. Comparisons and arithmetic
-cross-multiply numerators and denominators, so instantiate with a wider integer type (such as
-`__int128`, or even `BigInt`) if the values may grow large.
-
 - `Rational<Int>(n)` constructs a rational number with numerator `n` and denominator $1$.
 - `Rational<Int>(n, d)` constructs a rational number with numerator `n` and denominator `d`.
 - `operator>>` inputs a rational number using the next integer from the stream as the numerator and
@@ -25,6 +21,10 @@ cross-multiply numerators and denominators, so instantiate with a wider integer 
 - Operators `<`, `>`, `<=`, `>=`, `==`, `!=`, `+`, `-`, `*`, `/`, `%`, `++`, `--`, `+=`, `-=`, `*=`,
   `/=`, and `%=` are defined analogous to those on numerical primitives. The comparisons and binary
   arithmetic are hidden friends, so a raw integer operand works on either side.
+
+Overflow warning: Internal operations do not check for overflow. Comparisons and arithmetic
+cross-multiply numerators and denominators, so instantiate with a wider integer type (such as
+`__int128`, or even `BigInt`) if the values may grow large.
 
 Time Complexity:
 - O(log s) per call to constructor `Rational(n, d)`, where $s = |n| + |d|$.

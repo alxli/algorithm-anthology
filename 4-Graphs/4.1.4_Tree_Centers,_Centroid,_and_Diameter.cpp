@@ -1,27 +1,28 @@
 /*
 
-An unweighted tree possesses a center, centroid, and diameter. The centers are found by repeatedly
-peeling away the leaves of the tree until one or two nodes remain. The diameter relies on the fact
-that the farthest node from any start is always one endpoint of a diameter, so a second traversal
-from that endpoint measures the full diameter. The following functions apply to a global,
-bidirectionally pre-populated adjacency list `adj` which must form a valid tree with nodes numbered
-$[0, n)$, where $n$ is `adj.size()`.
+An unweighted tree has two useful notions of its middle and one of its extent. Jordan centers
+optimize distances, centroids balance component sizes, and a diameter identifies the farthest pair
+of nodes; a tree's centers and centroids need not coincide.
 
-- `find_centers()` returns a vector of either one or two tree Jordan centers. The Jordan center of a
-  tree is the set of all nodes with minimum eccentricity, that is, the set of all nodes where the
-  maximum distance to all other nodes in the tree is minimal.
-- `find_centroid()` returns the node where all of its subtrees have a size less than or equal to
-  $n / 2$, where $n$ is the number of nodes in the tree.
-- `diameter()` returns a tuple (`length`, `u`, `v`), where `length` is the maximum distance between
-  any two nodes in the tree and `u` and `v` are endpoints attaining that distance. It uses a
-  well-known double DFS technique.
+Repeatedly removing all leaves reveals the centers. Subtree sizes locate a centroid. A diameter is
+found by first finding the farthest node from any start, then traversing again from that endpoint to
+find the other.
+
+- `find_centers()` returns the one or two Jordan centers: the nodes minimizing the maximum distance
+  to every other node.
+- `find_centroid()` returns a centroid: a node whose removal leaves every connected component with
+  at most $n / 2$ nodes.
+- `diameter()` returns (`length`, `u`, `v`), where `length` is the maximum distance between any two
+  nodes and `u` and `v` are endpoints attaining it.
+
+The functions use a global, bidirectionally pre-populated adjacency list `adj`, which must form a
+nonempty tree with nodes numbered $[0, n)$, where $n$ is `adj.size()`.
 
 Time Complexity:
-- O(max(n, m)) per call to `find_centers()`, `find_centroid()`, and `diameter()`, where $n$ is the
-  number of nodes and $m$ is the number of edges.
+- O(n) per call to `find_centers()`, `find_centroid()`, and `diameter()`.
 
 Space Complexity:
-- O(n) auxiliary heap space for `find_centers()`, where $n$ is the number of nodes.
+- O(n) auxiliary heap space for `find_centers()`.
 - O(n) auxiliary stack space for `find_centroid()` and `diameter()`.
 
 */

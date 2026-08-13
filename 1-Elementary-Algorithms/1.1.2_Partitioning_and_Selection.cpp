@@ -27,13 +27,13 @@ split avoids unnecessary work on duplicate-heavy inputs.
   returns a pair of iterators (`mid1`, `mid2`). The three resulting ranges contain elements that
   precede, are equivalent to, and follow `pivot` according to `comp`, respectively. The resulting
   partition is not stable.
-- `nth_element2(lo, nth, hi, comp = std::less<>())` rearranges $[`lo`, `hi`)$ in-place around the
+- `quickselect(lo, nth, hi, comp = std::less<>())` rearranges $[`lo`, `hi`)$ in-place around the
   0-based rank represented by iterator `nth` according to `comp`. This requires random-access
   iterators.
 
 Time Complexity:
 - O(n) per call to `partition_three_way()`, where $n$ is the range length.
-- O(n) expected per call to `nth_element2()`, and O(n^2) in the worst case.
+- O(n) expected per call to `quickselect()`, and O(n^2) in the worst case.
 
 Space Complexity:
 - O(1) auxiliary.
@@ -41,6 +41,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <chrono>
 #include <functional>
 #include <iterator>
 #include <random>
@@ -62,9 +63,9 @@ std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot, Compare comp
 }
 
 template<typename It, typename Compare = std::less<>>
-void nth_element2(It lo, It nth, It hi, Compare comp = Compare{}) {
+void quickselect(It lo, It nth, It hi, Compare comp = Compare{}) {
   using T = typename std::iterator_traits<It>::value_type;
-  static std::mt19937 rng(std::random_device{}());
+  static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
   while (hi - lo > 1) {
     std::uniform_int_distribution<int> dist(0, hi - lo - 1);
     T pivot = *(lo + dist(rng));
@@ -105,7 +106,7 @@ int main() {
 
   vector<int> a{5, 6, 4, 3, 2, 6, 7, 9, 3};
   int n = static_cast<int>(a.size());
-  nth_element2(a.begin(), a.begin() + n / 2, a.end());
+  quickselect(a.begin(), a.begin() + n / 2, a.end());
   assert(a[n / 2] == 5);
   // Values left of the median are <=, and values right are >= (the exact order within each side is
   // randomized, since the pivot is chosen at random).
@@ -116,8 +117,8 @@ int main() {
     assert(a[i] >= a[n / 2]);
   }
 
-  vector<int> descending{1, 4, 2, 3};
-  nth_element2(descending.begin(), descending.begin() + 1, descending.end(), greater<int>());
-  assert(descending[1] == 3);
+  vector<int> desc{1, 4, 2, 3};
+  quickselect(desc.begin(), desc.begin() + 1, desc.end(), greater<int>());
+  assert(desc[1] == 3);
   return 0;
 }

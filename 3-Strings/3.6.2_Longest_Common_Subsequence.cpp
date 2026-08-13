@@ -11,9 +11,9 @@ keeps only one DP row at a time, using forward and backward length rows to choos
 answer crosses the midpoint of the longer string.
 
 - `longest_common_subsequence(s1, s2)` returns the longest common subsequence of strings `s1` and
-  `s2` using a classic dynamic programming approach. This implementation computes `dp[i][j]` (the
-  length of the longest common subsequence for the length $i$ prefix of `s1` and the length $j$
-  prefix of `s2`) before following the path backwards to construct the answer.
+  `s2` using a classic dynamic programming approach. It computes $dp(i, j)$, the longest common
+  subsequence length for the length-$i$ prefix of `s1` and length-$j$ prefix of `s2`, before
+  following the table backward to construct the answer.
 - `hirschberg_lcs(s1, s2)` returns the longest common subsequence of strings `s1` and `s2` using the
   more memory efficient Hirschberg's algorithm.
 

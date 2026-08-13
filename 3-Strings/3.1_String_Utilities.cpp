@@ -1,8 +1,8 @@
 /*
 
-Common string functions, many of which already have standard STL equivalents. Most of the following
-implementations are presented for educational purposes, and are not heavily optimized. They often
-depend on certain `std::string` functions that have unspecified complexity.
+Common string functions, many of which have standard library counterparts. The implementations below
+are educational rather than heavily optimized, and often depend on `std::string` operations with
+unspecified complexity.
 
 Time Complexity:
 - O(n) per call to most operations, where $n$ is the length of the input string or total length of

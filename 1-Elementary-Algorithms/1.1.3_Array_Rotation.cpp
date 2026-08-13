@@ -86,10 +86,8 @@ void rotate3(It lo, It mid, It hi) {
 using namespace std;
 
 int main() {
-  vector<int> a0, a1, a2, a3;
-  for (int i = 0; i < 10000; i++) {
-    a0.push_back(i);
-  }
+  vector<int> a0(10000), a1, a2, a3;
+  iota(a0.begin(), a0.end(), 0);
   a1 = a2 = a3 = a0;
   int mid = 5678;
   std::rotate(a0.begin(), a0.begin() + mid, a0.end());

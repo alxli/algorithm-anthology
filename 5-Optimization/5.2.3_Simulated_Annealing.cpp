@@ -10,6 +10,11 @@ $\exp(-(E(s') - E(s))/T)$ at temperature $T$. High temperatures encourage explor
 barriers; as the temperature decreases, the search increasingly favors improvements. The best state
 is tracked separately because the current state may later move to a worse one.
 
+The geometric schedule multiplies the temperature by `cooling_rate` each round, performing
+$k = \lceil \log(T_{end}/T_{start}) / \log(r) \rceil$ iterations. Temperature has the same scale as
+energy, so scaling every energy requires scaling both temperature bounds by the same factor to
+preserve acceptance probabilities.
+
 - `anneal_min(initial, energy, rand_neighbor, rng, ...)` returns (`best_energy`, `best_state`) given
   an initial state `initial`, a callable `energy(state)` that returns the state's energy, and a
   callable `rand_neighbor(state, temp, rng)` that returns a randomly chosen nearby state. Optional
@@ -17,12 +22,9 @@ is tracked separately because the current state may later move to a worse one.
   `temp_end` must be positive and less than `temp_start`, while `cooling_rate` must be strictly
   between $0$ and $1$.
 
-The geometric schedule repeatedly multiplies the temperature by `cooling_rate`, performing
-$k = \lceil \log(T_{end}/T_{start}) / \log(r) \rceil$ iterations. Temperature has the same scale as
-energy: multiplying every energy by a constant requires multiplying both temperature bounds by the
-same constant to preserve acceptance probabilities. For continuous states, temperature can also
-control the neighbor step size. Slower cooling, independent restarts, and a time-based stopping
-condition often improve results, but simulated annealing never proves optimality.
+For continuous states, temperature can also control the neighbor step size. Slower cooling,
+independent restarts, and a time-based stopping condition often improve results, but simulated
+annealing never proves optimality.
 
 This generic interface copies each proposed state and recomputes its energy. For large permutation
 states, adapt the loop to mutate and revert moves in place and update the energy from the affected

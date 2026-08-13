@@ -8,9 +8,15 @@ producing output.
   iterable containers, and custom types that support insertion into `std::ostream`.
 - `dbg(a, b, c)` prints the function name, line number, argument names, and values to `std::cerr`
   when `LOCAL` is defined.
-- `pr(a, b, c)` prints only the values to `std::cerr` when `LOCAL` is defined.
-- `dbg(...)` evaluates to no output when `LOCAL` is not defined.
-- `pr(...)` evaluates to no output when `LOCAL` is not defined.
+- `pr(a, b, c)` prints only the values to `std::cerr` when `LOCAL` is defined; `pr()` prints a blank
+  line.
+- `dbg_rows(rows, col_width, limit = -1)` prints the function name, line number, argument name, and
+  each iterable row on a separate indexed line. A positive `col_width` right-aligns each element in
+  a field of that width. Pass $0$ for ordinary container formatting. A nonnegative `limit` prints at
+  most that many rows and elements per row, marking omitted entries with `...`.
+- `pr_rows(rows, col_width, limit = -1)` prints only the indexed rows with the same formatting.
+
+All four printing macros evaluate to no output when `LOCAL` is not defined.
 
 Avoid naming these helpers `to_string()` unless you want them mixed into overload resolution with
 `std::to_string()` and other user-defined `to_string()` functions. A separate name keeps debug
@@ -123,22 +129,70 @@ void dbg_out(bool leading_space, const Head &head, const Tail &...tail) {
   std::cerr << '\n';
 }
 
+void pr_out() {
+  std::cerr << '\n';
+}
+
+template<typename Head, typename... Tail>
+void pr_out(const Head &head, const Tail &...tail) {
+  dbg_out(false, head, tail...);
+}
+
+template<typename Rows>
+void dbg_rows_out(const Rows &rows, int col_width = 0, int limit = -1) {
+  int i = 0;
+  for (const auto &row : rows) {
+    if (i == limit) {
+      std::cerr << "...\n";
+      break;
+    }
+    std::cerr << i++ << ':' << (col_width > 0 ? "" : " {");
+    int j = 0;
+    for (const auto &x : row) {
+      if (j == limit) {
+        std::cerr << (col_width > 0 ? " ..." : (j == 0 ? "..." : ", ..."));
+        break;
+      }
+      std::cerr << (col_width > 0 ? " " : (j == 0 ? "" : ", ")) << std::setw(col_width)
+                << dbg_repr(x);
+      j++;
+    }
+    std::cerr << (col_width > 0 ? "\n" : "}\n");
+  }
+}
+
 #ifdef LOCAL
 #define dbg(...)                                                                  \
   std::cerr << "[" << __func__ << ":" << __LINE__ << "] " << #__VA_ARGS__ << ":", \
       dbg_out(true, __VA_ARGS__)
-#define pr(...) dbg_out(false, __VA_ARGS__)
+#define pr(...) pr_out(__VA_ARGS__)
+#define dbg_rows(rows, ...)                                                  \
+  std::cerr << "[" << __func__ << ":" << __LINE__ << "] " << #rows << ":\n", \
+      dbg_rows_out(rows, __VA_ARGS__)
+#define pr_rows(rows, ...) dbg_rows_out(rows, __VA_ARGS__)
 #else
 #define dbg(...) ((void)0)
 #define pr(...) ((void)0)
+#define dbg_rows(...) ((void)0)
+#define pr_rows(...) ((void)0)
 #endif
 
 /*** Example Usage and Output:
 
-[main:166] v: {1, 2, 3}
-[main:167] p, t, mp: (4, "x") (1, true, "ok") {("a", 1), ("b", 2)}
-[main:168] pt, e: Point(2, 3) Edge{0->1, w=5}
+[main:250] v: {1, 2, 3}
+[main:251] p, t, mp: (4, "x") (1, true, "ok") {("a", 1), ("b", 2)}
+[main:252] pt, e: Point(2, 3) Edge{0->1, w=5}
 "plain output" 3.141592654
+
+[main:257] adj:
+0: {1, 2}
+1: {0}
+2: {0}
+
+[main:261] grid:
+0:   1  20 ...
+1: 400   5 ...
+...
 
 ***/
 
@@ -174,12 +228,14 @@ struct Streamable {
 };
 
 int main() {
-  vector<int> v = {1, 2, 3};
+  vector<int> v{1, 2, 3};
   auto p = make_pair(4, string("x"));
   auto t = make_tuple(1, true, string("ok"));
-  map<string, int> mp = {{"a", 1}, {"b", 2}};
+  map<string, int> mp{{"a", 1}, {"b", 2}};
   Point pt{2, 3};
   Edge e{0, 1, 5};
+  double d = 3.141592653589793;
+
   assert(dbg_repr(v) == "{1, 2, 3}");
   assert(dbg_repr(p) == "(4, \"x\")");
   assert(dbg_repr(t) == "(1, true, \"ok\")");
@@ -188,12 +244,20 @@ int main() {
   assert(dbg_repr(e) == "Edge{0->1, w=5}");
   assert(dbg_repr(Streamable{6}) == "Streamable(6)");
   assert(dbg_repr(vector<Streamable>{{7}, {8}}) == "{Streamable(7), Streamable(8)}");
-  double d = 3.141592653589793;
+  assert(dbg_repr(1.0 / 3.0) == "0.3333333333");
+  assert(dbg_repr(d) == "3.141592654");
+
   dbg(v);
   dbg(p, t, mp);
   dbg(pt, e);
   pr("plain output", d);
-  assert(dbg_repr(1.0 / 3.0) == "0.3333333333");
-  assert(dbg_repr(d) == "3.141592654");
+
+  vector<vector<int>> adj{{1, 2}, {0}, {0}};
+  pr();
+  dbg_rows(adj, 0);
+
+  vector<vector<int>> grid{{1, 20, -3}, {400, 5, 6}, {7, 8, 9}};
+  pr();
+  dbg_rows(grid, 3, 2);
   return 0;
 }

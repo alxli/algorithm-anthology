@@ -17,15 +17,15 @@ All edge weights must be positive; an absent edge is treated as weight 0. Self-l
 supported. Parallel edges are supported by retaining only the maximum weight added between each pair
 of nodes. The node count should be kept modest, as the algorithm uses dense storage.
 
-Overflow warning: labels and the returned matching weight are stored in `int64_t`; all doubled
-weights, label sums, and the total matching weight must fit.
-
 - `MaxWeightMatching(n)` creates a graph of `n` nodes numbered $[0, `n`)$.
 - `add_edge(u, v, w)` adds an undirected edge of positive weight `w` between `u` and `v`. If several
   edges join the same pair, only the maximum weight is retained.
 - `solve()` computes a maximum-weight matching and returns its total weight.
 - `partner(u)` returns the node matched with `u`, or $-1$ if `u` is unmatched. Valid after
   `solve()`.
+
+Overflow warning: labels and the returned matching weight are stored in `int64_t`; all doubled
+weights, label sums, and the total matching weight must fit.
 
 Time Complexity:
 - O(n^3) per call to `solve()`, where $n$ is the number of nodes.

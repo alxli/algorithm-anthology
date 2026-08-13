@@ -86,7 +86,7 @@ class LRUCache {
       where.erase(items.back().first);
       items.pop_back();
     }
-    items.push_front({key, value});
+    items.emplace_front(key, value);
     where[key] = items.begin();
   }
 };

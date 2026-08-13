@@ -8,12 +8,12 @@ path to a specific destination node using the shortest-path tree from the predec
 distance by either $0$ or $1$, a deque maintains nodes in nondecreasing distance order: push
 weight-$0$ relaxations to the front and weight-$1$ relaxations to the back.
 
-- `bfs_zero_one(starts)` populates `dist` and `pred` for shortest paths from the nodes in `starts`,
+- `bfs01(starts)` populates `dist` and `pred` for shortest paths from the nodes in `starts`,
   assigning each node its minimum distance from any start. The global, pre-populated adjacency list
   `adj` uses its indices as nodes. Each edge is stored as (`neighbor`, `weight`), where `weight` is
   either $0$ or $1$. Pass a singleton vector for a single source.
 - `get_path(dest)` returns the path from a nearest starting node to `dest`, or an empty vector if
-  `dest` is unreachable, using the state left by the most recent call to `bfs_zero_one()`.
+  `dest` is unreachable, using the state left by the most recent call to `bfs01()`.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 a nearest start to `v`, or $-1$ if `v` is a starting node or unreachable. Follow `pred` backward
@@ -42,7 +42,7 @@ const int INF = INT_MAX / 2;
 std::vector<std::vector<std::pair<int, int>>> adj;
 std::vector<int> dist, pred;
 
-void bfs_zero_one(const std::vector<int> &starts) {
+void bfs01(const std::vector<int> &starts) {
   int n = static_cast<int>(adj.size());
   dist.assign(n, INF);
   pred.assign(n, -1);
@@ -102,12 +102,12 @@ int main() {
   adj[2].emplace_back(1, 0);
   adj[1].emplace_back(3, 1);
   adj[2].emplace_back(3, 1);
-  bfs_zero_one(vector<int>{0});
+  bfs01(vector<int>{0});
   assert((dist == vector<int>{0, 0, 0, 1}));
   assert((pred == vector<int>{-1, 2, 0, 2}));
   assert((get_path(3) == vector<int>{0, 2, 3}));
 
-  bfs_zero_one(vector<int>{1, 0});
+  bfs01(vector<int>{1, 0});
   assert((dist == vector<int>{0, 0, 0, 1}));
   assert((pred == vector<int>{-1, -1, 0, 1}));
   assert((get_path(3) == vector<int>{1, 3}));

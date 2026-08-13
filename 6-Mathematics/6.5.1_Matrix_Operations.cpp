@@ -16,15 +16,16 @@ constructible from $0$ and $1$ and support the arithmetic operators used by the 
 - Operators `+`, `-`, `*`, `/`, `+=`, `-=`, `*=`, and `/=` define scalar addition, subtraction,
   multiplication, and division involving a matrix and a numeric scalar value.
 - Operators `*` and `*=` define vector and matrix multiplication.
+
+Exponentiation uses iterative binary exponentiation: keep an accumulated result, square the base
+each round, and multiply it when the current exponent bit is set. The power sum uses the block
+identity that $\begin{bmatrix} A & A \\ 0 & I \end{bmatrix}^p$ has $A + A^2 + \dots + A^p$ in its
+upper-right block.
+
 - Operators `^` and `^=` define iterative binary matrix exponentiation of a square matrix `a` by a
   `uint64_t` power `p`.
 - `power_sum(a, p)` returns the power sum of a square matrix `a` up to a `uint64_t` power `p`, that
   is, $a + a^2 + \ldots + a^p$.
-
-Exponentiation uses the usual iterative binary exponentiation pattern: keep an accumulated result,
-square the base each round, and multiply the result when the current exponent bit is set. The power
-sum uses a block matrix identity that $\begin{bmatrix} A & A \\ 0 & I \end{bmatrix}^p$ has
-$A + A^2 + \dots + A^p$ in its upper-right block.
 
 Time Complexity:
 - O(m*n) per construction, output, comparison, or scalar-arithmetic operation on $m$ by $n$

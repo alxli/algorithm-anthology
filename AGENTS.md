@@ -78,12 +78,26 @@ Prefer code that a strong contestant can adapt quickly after skimming:
   file.
 - In reusable code, use `std::` qualifications rather than `using namespace std;`. Example blocks
   use `using namespace std;` by default; keep explicit `std::` only where the contrast carries
-  meaning, as in 8.3 alongside `__gnu_pbds`.
+  meaning, as in 8.6 alongside `__gnu_pbds`.
 - Prefer `static_cast<int>(container.size())` before mixing sizes with `int` indices.
+- For ordinary numeric conversion to a local arithmetic type alias, use compact function-style
+  syntax such as `fp_t(x)` or `C(a)`. Keep `static_cast` for named concrete types and conversions
+  involving pointers, enums, inheritance, or other cases where its explicitness clarifies intent;
+  do not use C-style casts as a shorthand.
 - Omit top-level `const` from by-value parameters; it does not affect callers and makes signatures
   noisier.
 - For read-only structured bindings of small pairs or tuples, prefer copying with `auto [...]`;
   use `const auto &` when copying the bound object would be material.
+- Prefer direct-list initialization for an explicitly typed standard container initialized from an
+  element list, such as `vector<int> v{1, 2, 3}`, rather than `vector<int> v = {1, 2, 3}`. This does
+  not apply to later brace assignment such as `v = {1, 2, 3}`.
+- In examples, inline a one-line container fixture into its sole use on the immediately following
+  statement when the result still fits within 100 columns. Keep named fixtures when they are reused,
+  clarify the example, or would make the consuming statement too long.
+- When constructing a container element directly from arguments, prefer `emplace()`,
+  `emplace_back()`, or `emplace_front()` over `push({args...})` or
+  `push_back(Type(args...))`. Keep brace-based `push` for C++17 aggregates and initializer-list
+  construction when `emplace` would require adding a constructor or obscure the intended value.
 - Prefer a self-passing generic lambda for local recursion in C++17, especially when a file-scope
   helper exists only to thread the caller's locals through by-reference or pointer parameters. Keep
   a free function when the recursion reads only globals and value parameters and its shape is a
@@ -98,6 +112,8 @@ Prefer code that a strong contestant can adapt quickly after skimming:
   specifically requires changing it. Such regions intentionally override ordinary formatting and
   line-length rules, including the 100-column limit.
 - Use `int64_t`/`long long` for sums, weights, counts, and products that may overflow `int`.
+- Capitalize all letters in numeric literal suffixes: `1U`, `1L`, `1LL`, `1ULL`, and `1.0F`.
+  This does not require uppercase hexadecimal digits or scientific-notation exponents.
 - Use unsigned types for bit masks whose highest bit may be used; signed shifts, negation, and
   successor-mask arithmetic can otherwise invoke undefined behavior.
 - Check intermediate arithmetic as well as the final mathematical result for overflow. Rearrange or
@@ -126,6 +142,10 @@ Prefer code that a strong contestant can adapt quickly after skimming:
   and STL-style `first`/`last`.
 - Compile-time template knobs and named constants are uppercase:
   `VALUES_ON_EDGES`, `CANONICALIZE`, `EXACT`, `EPS`, `INF`, `NAIVE_CUTOFF`.
+- In grid algorithms and 2D spatial data structures, prefer $R$ and $C$ for row and column counts,
+  leaving $(r, c)$ for an individual cell. Preserve conventional or already established notation
+  elsewhere: linear algebra generally uses $m$ by $n$ matrices, and domain-specific matrices may
+  use symbols such as $n$ workers and $m$ jobs. Runtime parameters remain lowercase.
 - For zero-based fixed-domain data structures, compile-time dimensions denote counts: `N` defines
   indices $[0, `N`)$, while `R` and `C` define rows $[0, `R`)$ and columns $[0, `C`)$. This does not
   require range-query APIs themselves to use half-open intervals.
@@ -138,15 +158,18 @@ Prefer code that a strong contestant can adapt quickly after skimming:
   structures, and `add()` for arithmetic updates, unordered registration, or stream summaries.
 - Avoid bare eponym-only public API names when the operation is not universally recognized at a call
   site. Prefer names that include the computed object or action, such as `frequent_candidates()`,
-  `maximum_matching()`, `global_min_cut()`, or `min_assignment_cost()`. Eponyms are fine when they
+  `max_matching()`, `global_min_cut()`, or `min_assignment_cost()`. Eponyms are fine when they
   are standard search terms, when the function name also names the result, or when they distinguish
   variants, e.g. `dijkstra()`, `smawk_row_minima()`, and `find_cycle_floyd()`.
 - Standalone sections may reuse canonical class names when they provide interchangeable
   implementations or conventional domain types. When a variant exposes materially different public
   operations, give its class a distinguishing name; do not rename internal helpers merely to make
   every top-level name globally unique.
-- For small two-item returns, prefer `std::pair` or structured bindings over a one-off struct when
-  the meaning is obvious from the API bullet. Use `std::tuple` when returning three simple values.
+- For short-lived records of two or three simple values, prefer `std::pair` or `std::tuple` with
+  structured bindings over a one-off struct when the meaning is clear at construction and use.
+  This includes simple internal history, queue, and event entries as well as small returns. Keep a
+  named struct when it is a public or durable domain object, carries behavior or invariants, or its
+  fields are accessed often enough that `.first`/`.second` or repeated bindings would obscure them.
 
 ## API Style
 
@@ -162,6 +185,10 @@ Prefer code that a strong contestant can adapt quickly after skimming:
   more powerful API when it does not make the section heavy.
 - Prefer returning result objects, pairs, tuples, vectors, or sentinels over output pointers for new
   APIs, unless the local section already strongly uses pointer outputs.
+- Prefer returning a collection for a finite query or traversal result instead of requiring a
+  reporting callback that callers merely use to fill a vector. Keep callbacks when incremental
+  processing avoids materializing a potentially large generated sequence, controls traversal or
+  updates, or represents an input function rather than an output sink.
 - Do not mutate an input merely to reuse it as internal workspace when the function naturally
   returns a separate result. Accept it by value when the implementation needs a copy, or by const
   reference when it does not; use an explicit failure-bearing return type when needed.
@@ -187,12 +214,41 @@ Most algorithm sections begin with one leading `/* ... */` docstring using this 
 1. Problem statement and algorithm insight. Lead with what is computed and why the algorithm works,
    not with iterator mechanics or parameter trivia.
 2. One bullet per exposed function, constructor, class, or major operation.
-3. Implementation-specific callouts after the API list: assumptions, overflow notes, multigraph
-   support, precision behavior, optional variants, and cross-references.
+3. Section-level callouts after the API list: assumptions shared by multiple operations, type or
+   callback requirements, algorithm explanation, comparative or adaptation guidance, labeled
+   warnings, optional variants, and cross-references.
 4. `Time Complexity:` and `Space Complexity:` labelled blocks.
+
+Keep these zones in order. In particular, place labeled warnings after the API list, and put each
+complexity heading on its own line followed by `- O(...)` bullets. Compact one-line complexity
+labels are reserved for subordinate per-algorithm comments such as the individual sorting entries.
 
 Utility grab-bags may instead use mid-file `/* Section: ... */` blocks with local API bullets. Do
 not duplicate every bullet in the top docstring for those files; update the relevant local block.
+
+A file containing several distinct but closely related facilities may repeat an insight paragraph
+and API-bullet group for each facility. For an operator-heavy value type, document coherent groups
+of major operations rather than producing a separate bullet for every overload, but do not leave
+all callable operations in unstructured narrative prose. Type aliases may be grouped in one bullet.
+
+Put the conceptual model, representation policy, invariant, recurrence, or algorithm needed to
+understand an API immediately before that API or its related bullet group. Do not introduce those
+ideas only after the reader has passed the affected bullets. Reserve post-list explanations for
+secondary implementation details, shared caveats, comparisons, adaptations, and optional variants.
+
+Keep a precondition, return-value caveat, supported-input note, or other contract detail in its API
+bullet when it applies to only that operation. Do not leave it as a detached paragraph after the
+list. A post-list paragraph is appropriate when it governs multiple operations or the section as a
+whole, or when it gives shared type/callback requirements, secondary implementation detail,
+comparisons, adaptations, a labeled warning, an optional variant, or a cross-reference.
+
+Do not introduce standalone `Precondition:` or `Preconditions:` headings. Put a condition in the
+applicable API bullet, or state it as an ordinary shared requirement after the bullets when it truly
+governs the whole section.
+
+Do not add a blanket tolerance sentence merely because a geometry section uses the standard
+`EQ()`/`LT()` helpers. Mention `EPS` where it materially changes a boundary case, constructor,
+ordering requirement, or exact-vs-approximate contract.
 
 Chapter 8 tooling sections may omit complexity blocks when they are not algorithms. For algorithmic
 sections elsewhere, include both `Time Complexity:` and `Space Complexity:`.
@@ -210,8 +266,10 @@ sections elsewhere, include both `Time Complexity:` and `Space Complexity:`.
   update the documentation; rename a code parameter only when its existing name is independently
   unclear or inconsistent, not merely to satisfy the scanner.
 - Write big-O as plain text: `O(n log n)`, not `$O(n \log n)$`.
-- Use single-letter variables inside big-O expressions. Quantify named parameters afterward, e.g.
-  `O(r*c*2^c)`, where $r$ and $c$ are the number of rows and columns, and not `O(rows*cols*2^cols)`.
+- Use single-letter variables inside big-O expressions and keep them consistent with the notation
+  established by the section. For a grid, write `O(R*C*2^C)`, where $R$ and $C$ are the row and
+  column counts, rather than `O(rows*cols*2^cols)`. For an $m$ by $n$ matrix already defined in a
+  linear-algebra section, continue to use `O(m*n)`.
 - Keep function-style parentheses when they make plain-text big-O clearer, e.g.
   `O(log(R)*log(C))`, `O(sqrt(n))`, and `O(max(n, m))`.
 - For ranges or numeric search intervals, prefer naming the span with one letter in big-O, e.g.
@@ -237,6 +295,11 @@ sections elsewhere, include both `Time Complexity:` and `Space Complexity:`.
 - Use math mode for variables and inequalities in prose: `$n$`, `$\leq$`, `$\geq$`, `$-1$`.
 - Prefer half-open interval notation for numbered domains, e.g. nodes in `$[0, n)$`, instead of
   spelling out "from $0$ to `$n - 1`".
+- State whether ranks, order statistics, and other ordinal parameters are 0-based or 1-based when
+  either convention is plausible. An explicit range or semantic definition such as "`k == 0`
+  returns `u`" is equally clear. Do not repeat the convention for ordinary C++ indices already
+  anchored by a container, iterator range, or numbered domain, or for opaque IDs that callers only
+  pass back to the API.
 - State whether returned endpoint pairs are inclusive or half-open, and write numeric interval
   literals in math mode.
 - Code identifiers inside math expressions should remain backticked, e.g. $[`lo`, `hi`)$ or
@@ -248,6 +311,9 @@ sections elsewhere, include both `Time Complexity:` and `Space Complexity:`.
   subjective phrase units across line breaks; only math mode, code spans, backticked identifiers,
   and plain-text Big-O expressions are atomic.
 - Literal operators and function names stay in backticks: `<=`, `operator<`, `combine()`.
+- Put named code constants such as `EPS`, `INF`, `MOD`, `PI`, and `MASK_BITS` in backticks when
+  prose refers to the identifier. Avoid redundant expansions such as "standard STL"; write
+  "standard library" instead.
 - Prefer relative paths for cross-references to other sections.
 - Reflow edited prose to the 100-column limit by hand; clang-format does not reflow comments. Do
   not leave very short continuation lines when the text would still fit on the previous line.
@@ -266,9 +332,9 @@ sections elsewhere, include both `Time Complexity:` and `Space Complexity:`.
   disconnected components, non-default flags, node-vs-edge conventions, or the witness returned by
   the API.
 - Seed random engines in examples and tests with the fixed seed `1234567` so failures and output
-  are reproducible. Reusable randomized implementations should instead seed once from
-  `std::random_device{}()`, unless the API accepts a caller-provided seed or engine. Per-run
-  steady-clock salts used to harden hash tables are a separate intentional convention.
+  are reproducible. Reusable randomized implementations and per-run hash salts should instead seed
+  once from the full `std::chrono::steady_clock::now().time_since_epoch().count()`, unless the API
+  accepts a caller-provided seed or engine.
 - When examples rely on exact equality for floating-point-looking objects, either use `EQ()` or add
   a short comment explaining why exact equality is intentional.
 - ASCII diagrams are welcome when they make tree/graph/data-structure updates easier to follow.
@@ -276,10 +342,12 @@ sections elsewhere, include both `Time Complexity:` and `Space Complexity:`.
 
 ## Precision And Numeric Code
 
-- Use plain `fabs()` for known-`double` code to match the anthology's compact convention. In generic
-  or `long double` code, qualify `<cmath>` calls such as `std::fabs()` so overload resolution
-  preserves the argument type on GCC. In the templated `EQ()` and `LT()` helpers, use `EPS` directly
-  instead of `static_cast<C>(EPS)`; the floating-point expression converts it implicitly.
+- Qualify standard `<cmath>` calls with `std::` in reusable implementation code. The deliberate
+  exception is plain `fabs()` for known-`double` code, matching the anthology's compact convention;
+  in generic or `long double` code, use `std::fabs()` so overload resolution preserves the argument
+  type on GCC. Examples that import `std` may leave these calls unqualified. In the templated `EQ()`
+  and `LT()` helpers, use `EPS` directly instead of `static_cast<C>(EPS)`; the floating-point
+  expression converts it implicitly.
 - Floating-point tolerance constants are usually named `EPS` and kept as uppercase constants.
 - Runtime tolerance parameters are lowercase `eps`.
 - Use `include_boundary` for geometry flags that control whether boundary points or boundary-only
@@ -359,15 +427,18 @@ repo-wide consistency issues, and keep taste calls out of the default scan until
 them as a convention. The current code-consistency pass in `scan_quality.py` checks for:
 
 - unused helper functions left in example blocks;
-- direct `std::random_device{}` seeding inside examples, where the fixed seed `1234567` keeps
-  examples reproducible;
-- fixed literal seeds in reusable randomized code, which should seed at runtime instead;
+- `std::random_device` seeding, where reusable randomized code should use the full
+  `std::chrono::steady_clock::now().time_since_epoch().count()` and examples should use the fixed
+  seed `1234567`;
+- fixed literal seeds in reusable randomized code, which should use the same runtime clock seed;
 - C `rand()`/`srand()` usage, which should be replaced by a C++ random engine and distribution;
 - unqualified `<cmath>` calls in generic or `long double` code that could select a narrowing global
   overload;
 - `static_cast<C>(EPS)` in floating-point comparison helpers, where direct `EPS` is clearer;
-- function-style or `static_cast` construction of typed zero and one constants, where direct-list
-  initialization such as `T{0}`, `U{1}`, or `Mask{1}` is clearer and rejects narrowing;
+- function-style construction of typed numeric literals, or `static_cast` construction of typed
+  zero and one constants, where direct-list initialization such as `T{10}`, `U{1}`, or `Mask{1}`
+  is clearer and rejects narrowing; keep parentheses for converting expressions such as `U(x)` and
+  for ordinary user-defined class construction such as `BigInt(10)`;
 - empty function-style construction of dependent values and policy objects, where direct-list
   initialization such as `T{}`, `Compare{}`, or `Hash{}` is clearer and also supports aggregates;
 - redundant `std::vector` fill arguments such as `0`, `false`, `nullptr`, and `T{}`, which already
@@ -392,6 +463,11 @@ parameter is not repeated by the method. Keep backticks inside tuple notation wh
 code-facing return-field names or parameters, but use plain math tuples like `$(i, j)$` in
 conceptual prose. If a sentence defines a math symbol from code, such as "$n$ is `size()`", keep
 later uses of that symbol in math notation, e.g. `$[0, n]$`.
+Within one conceptual description, do not switch the same state and indices between code array
+syntax and mathematical notation, such as writing `dp[r][c]` for cell $(r, c). Prefer a coherent
+mathematical form such as $dp(r, c)$ when explaining a recurrence, or keep the whole explanation in
+code notation when it directly describes the implementation. Choose between those styles from
+context; the scanner only identifies likely mixtures for review.
 Do not introduce a code-styled size variable solely to restate a container's size, such as
 "$[0, `n`)$, where `n` is `adj.size()`"; say that the indices of `adj` represent the nodes instead.
 When a prose sentence is explicitly explaining code-index formulas, code-style intervals such as

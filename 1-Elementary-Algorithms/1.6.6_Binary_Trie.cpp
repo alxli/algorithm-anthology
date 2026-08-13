@@ -185,10 +185,10 @@ int main() {
   assert(trie.size() == 5);
 
   // x XOR y over the stored y: {26, 19, 28, 0, 27} for x = 25.
-  assert(trie.max_xor(25) == 28);                           // 25 XOR 5.
-  assert(trie.min_xor(25) == 0);                            // 25 XOR 25.
-  assert(trie.count_xor_less(25, 20) == 2);                 // XOR values 0 and 19 are below 20.
-  assert(trie.count_xor_less(25, uint32_t{1} << 30) == 5);  // Bound at/above 2^BITS counts all.
+  assert(trie.max_xor(25) == 28);                  // 25 XOR 5.
+  assert(trie.min_xor(25) == 0);                   // 25 XOR 25.
+  assert(trie.count_xor_less(25, 20) == 2);        // XOR values 0 and 19 are below 20.
+  assert(trie.count_xor_less(25, 1U << 30) == 5);  // Bound at/above 2^BITS counts all.
 
   assert(trie.count(10) == 1);
   trie.insert(10);

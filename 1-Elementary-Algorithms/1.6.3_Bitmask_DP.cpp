@@ -18,8 +18,8 @@ horizontal ($1 \times 2$) or vertical ($2 \times 1$).
 - `assignment_min_cost(cost)` returns a pair (`sum`, `job`), where `sum` is the minimum cost of
   assigning each worker to a distinct job, and `job[i]` is the job assigned to worker `i`. The input
   is a square matrix with one row per worker and one column per job.
-- `minimum_set_cover(sets, universe_size)` returns a pair (`count`, `chosen`), where `count` is the
-  minimum number of sets needed to cover all elements in $[0, u)$, where $u$ is `universe_size`, and
+- `set_cover(sets, universe_size)` returns a pair (`count`, `chosen`), where `count` is the minimum
+  number of sets needed to cover all elements in $[0, u)$, where $u$ is `universe_size`, and
   `chosen` contains one optimal list of set indices. If no cover exists, `count` is $-1$ and
   `chosen` is empty. Each input set is represented as a bitmask.
 - `partition_min_cost(group_cost)` returns the minimum total cost to partition all elements into
@@ -31,17 +31,16 @@ Overflow warning: All accumulated costs and tiling counts must fit in `int64_t`.
 
 Time Complexity:
 - O(n^2*2^n) per call to `assignment_min_cost()`, where $n$ is the number of workers and jobs.
-- O(s*2^u) per call to `minimum_set_cover()`, where $s$ is the number of sets and $u$ is
-  `universe_size`.
+- O(s*2^u) per call to `set_cover()`, where $s$ is the number of sets and $u$ is `universe_size`.
 - O(3^n) per call to `partition_min_cost()`, where $n$ is the number of elements.
-- O(r*c*2^c) per call to `count_domino_tilings()`, where $r$ and $c$ are the number of rows and
+- O(R*C*2^C) per call to `count_domino_tilings()`, where $R$ and $C$ are the number of rows and
   columns, respectively.
 
 Space Complexity:
 - O(2^n) auxiliary and O(n) for the returned assignment from `assignment_min_cost()`.
-- O(2^u) auxiliary and O(s) for the returned indices from `minimum_set_cover()`.
+- O(2^u) auxiliary and O(s) for the returned indices from `set_cover()`.
 - O(2^n) auxiliary for `partition_min_cost()`.
-- O(2^c) auxiliary for `count_domino_tilings()`.
+- O(2^C) auxiliary for `count_domino_tilings()`.
 
 */
 
@@ -84,9 +83,7 @@ std::pair<int64_t, std::vector<int>> assignment_min_cost(
   return {dp[states - 1], job};
 }
 
-std::pair<int, std::vector<int>> minimum_set_cover(
-    const std::vector<int> &sets, int universe_size
-) {
+std::pair<int, std::vector<int>> set_cover(const std::vector<int> &sets, int universe_size) {
   assert(0 <= universe_size && universe_size < 31);
   int states = 1 << universe_size;
   int full = states - 1;
@@ -181,12 +178,11 @@ int main() {
   assert(assignment_cost == 9);
   assert((job == vector<int>{1, 0, 2}));
 
-  vector<int> sets{0b0011, 0b0110, 0b1100, 0b1000};
-  auto [cover_count, chosen] = minimum_set_cover(sets, 4);
+  auto [cover_count, chosen] = set_cover(vector<int>{0b0011, 0b0110, 0b1100, 0b1000}, 4);
   assert(cover_count == 2);
   assert((chosen == vector<int>{0, 2}));
 
-  auto [impossible_count, impossible_chosen] = minimum_set_cover(vector<int>{0b001, 0b010}, 3);
+  auto [impossible_count, impossible_chosen] = set_cover(vector<int>{0b001, 0b010}, 3);
   assert(impossible_count == -1 && impossible_chosen.empty());
 
   vector<int64_t> group_cost{

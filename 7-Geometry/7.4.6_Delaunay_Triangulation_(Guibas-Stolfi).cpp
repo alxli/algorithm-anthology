@@ -10,13 +10,13 @@ algorithm with a quad-edge data structure. The point set is split in half, each 
 recursively, and the halves are stitched together from the bottom up by a sequence of cross edges,
 with circumcircle tests deciding each connecting edge and deleting invalidated ones.
 
+The point type must provide exact lexicographic `operator<`, since sorting and duplicate removal
+require a strict ordering rather than epsilon equality. All arithmetic uses the point's coordinate
+type, so integer inputs yield an exact triangulation.
+
 - `delaunay_triangulation(p)` returns the triangles of one Delaunay triangulation as a vector of
   counterclockwise-oriented `Point<T>` triples (`std::tuple`). Duplicate points are ignored. If
   fewer than three non-collinear unique points remain, the result is empty.
-
-The point type must provide exact lexicographic `operator<`; sorting and duplicate removal requires
-this strict ordering rather than epsilon equality. All arithmetic uses the point's own coordinate
-type, so integer inputs yield an exact triangulation.
 
 Overflow warning: the in-circle test grows like the fourth power of the coordinate magnitude and
 dominates the overflow budget. With 64-bit integer coordinates, it overflows once coordinates exceed

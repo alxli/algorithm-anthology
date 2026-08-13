@@ -41,6 +41,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cstdint>
+#include <numeric>
 #include <vector>
 
 class AbstractEnumerator {
@@ -167,10 +168,8 @@ class PartitionEnumerator : public AbstractEnumerator {
   }
 
   int64_t count(const std::vector<int> &prefix) override {
-    int n = static_cast<int>(prefix.size()), sum = 0;
-    for (int x : prefix) {
-      sum += x;
-    }
+    int n = static_cast<int>(prefix.size());
+    int sum = std::accumulate(prefix.begin(), prefix.end(), 0);
     if (sum == range - 1) {
       return 1;
     }

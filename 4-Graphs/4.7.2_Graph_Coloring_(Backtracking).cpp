@@ -8,7 +8,7 @@ sooner) are colored one at a time, each tried with every color already in use pl
 while the fewest colors seen in a complete coloring so far bounds the search and cuts off any branch
 at least as costly.
 
-- `color_graph()` populates `color` and returns minimum color count for a global, bidirectionally
+- `min_coloring()` populates `color` and returns minimum color count for a global, bidirectionally
   pre-populated adjacency matrix `adj`, whose row and column indices represent the nodes.
 
 Time Complexity:
@@ -58,7 +58,7 @@ void color_rec(int pos, int used_colors) {
   curr[u] = -1;
 }
 
-int color_graph() {
+int min_coloring() {
   int n = static_cast<int>(adj.size());
   if (n == 0) {
     color.clear();
@@ -66,9 +66,7 @@ int color_graph() {
   }
   std::vector<int> degree(n);
   for (int u = 0; u < n; u++) {
-    for (int v = 0; v < n; v++) {
-      degree[u] += adj[u][v];
-    }
+    degree[u] = std::accumulate(adj[u].begin(), adj[u].end(), 0);
   }
   order.resize(n);
   std::iota(order.begin(), order.end(), 0);
@@ -118,7 +116,7 @@ int main() {
   add_edge(2, 3);
   add_edge(2, 4);
   add_edge(3, 4);
-  assert(color_graph() == 3);
+  assert(min_coloring() == 3);
   for (int u = 0; u < nodes; u++) {
     for (int v = u + 1; v < nodes; v++) {
       if (adj[u][v]) {

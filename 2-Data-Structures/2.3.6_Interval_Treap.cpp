@@ -21,8 +21,8 @@ key type `K`. Every interval must satisfy `!(hi < lo)`.
   in the map which intersects with $[`lo`, `hi`]$, or `nullptr` if no such entry was found.
 - `find_value(lo, hi)` returns a pointer to a const value of some entry in the map with a key that
   intersects with $[`lo`, `hi`]$, or `nullptr` if no such entry was found.
-- `find_all(lo, hi, f)` calls the function `f(lo, hi, v)` on each entry in the map that overlaps
-  with $[`lo`, `hi`]$, in lexicographically ascending order of intervals.
+- `find_all(lo, hi)` returns all entries that overlap $[`lo`, `hi`]$ in lexicographically ascending
+  order of intervals.
 - `entries()` returns all intervals and their values in lexicographically ascending order of
   intervals.
 
@@ -40,12 +40,13 @@ Space Complexity:
 - O(log n) auxiliary stack space on average for all other operations and destruction, and O(n) in
   the worst case.
 - O(n) for the vector returned by `entries()`.
+- O(m) for the vector returned by `find_all()`, where $m$ is the number of intersecting intervals.
 
 */
 
 #include <cassert>
+#include <chrono>
 #include <cstdint>
-#include <random>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -56,7 +57,8 @@ class IntervalTreap {
 
   struct Node {
     static uint32_t rand32() {
-      static uint32_t x = std::random_device{}() | 1U;
+      static uint32_t x =
+          static_cast<uint32_t>(std::chrono::steady_clock::now().time_since_epoch().count()) | 1U;
       x ^= x << 13;
       x ^= x >> 17;
       x ^= x << 5;
@@ -174,17 +176,16 @@ class IntervalTreap {
     return find_any(n->right, i);
   }
 
-  template<typename Fn>
-  static void find_all(Node *n, const Interval &i, Fn &f) {
+  static void find_all(Node *n, const Interval &i, std::vector<std::tuple<K, K, V>> &res) {
     if (n == nullptr || n->max < i.first) {
       return;
     }
-    find_all(n->left, i, f);
+    find_all(n->left, i, res);
     if (!(i.second < n->interval.first) && !(n->interval.second < i.first)) {
-      f(n->interval.first, n->interval.second, n->value);
+      res.emplace_back(n->interval.first, n->interval.second, n->value);
     }
     if (!(i.second < n->interval.first)) {
-      find_all(n->right, i, f);
+      find_all(n->right, i, res);
     }
   }
 
@@ -235,10 +236,11 @@ class IntervalTreap {
     return (n == nullptr) ? nullptr : &(n->value);
   }
 
-  template<typename Fn>
-  void find_all(const K &lo, const K &hi, Fn f) const {
+  std::vector<std::tuple<K, K, V>> find_all(const K &lo, const K &hi) const {
     assert(!(hi < lo));
-    find_all(root, Interval{lo, hi}, f);
+    std::vector<std::tuple<K, K, V>> res;
+    find_all(root, Interval{lo, hi}, res);
+    return res;
   }
 
   std::vector<std::tuple<K, K, V>> entries() const {
@@ -268,9 +270,10 @@ int main() {
   assert(t.size() == 5);
   assert(*t.find_key(3, 9) == (pair<int, int>{5, 20}));
   assert(*t.find_value(3, 9) == 'd');
-  vector<pair<int, int>> intersections;
-  t.find_all(16, 20, [&](int lo, int hi, char) { intersections.emplace_back(lo, hi); });
-  assert((intersections == vector<pair<int, int>>{{5, 20}, {10, 30}, {10, 40}, {15, 20}}));
+  assert(
+      (t.find_all(16, 20) ==
+       vector<tuple<int, int, char>>{{5, 20, 'd'}, {10, 30, 'b'}, {10, 40, 'f'}, {15, 20, 'a'}})
+  );
   assert(
       (t.entries() == vector<tuple<int, int, char>>{
                           {5, 20, 'd'}, {10, 30, 'b'}, {10, 40, 'f'}, {12, 15, 'e'}, {15, 20, 'a'}

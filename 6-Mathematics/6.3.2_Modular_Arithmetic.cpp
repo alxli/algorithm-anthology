@@ -1,52 +1,37 @@
 /*
 
-Wraps arithmetic modulo a compile-time constant in a small value type. This is a common contest
-helper for dynamic programming, combinatorics, polynomial operations, and any calculation where all
-answers are taken modulo some number $p$ such as $10^9 + 7$.
+Wraps arithmetic modulo a positive compile-time constant `MOD` in a small value type. This is a
+common contest helper for dynamic programming, combinatorics, polynomial operations, and any
+calculation whose answers are taken modulo some number such as $10^9 + 7$. Runtime-chosen moduli are
+not supported.
 
-The implementation follows the conventional modular-integer wrapper (often called `Mint` in contest
-templates): normalization happens at construction, arithmetic operators are overloaded, mixed
-integer operations are supported through implicit construction, and combinations can be computed
-from lazy factorial tables. The operators use the hidden friend idiom: each `friend` defined inside
-the class is a non-template function, so mixed expressions like `2 + Mint(3)` convert the integer
-operand through the implicit constructor. (Free function template operators cannot do this -
-template argument deduction ignores implicit conversions - which is why some contest templates carry
-per-operator `Modular op U` and `U op Modular` overloads instead.)
-
-The modulus is a positive signed `auto` template argument. For example, `Modular<1000000007>` and
-`Modular<998244353>` need no other annotation. Its literal type determines the storage type, so a
-64-bit modulus (e.g. `Modular<(1LL << 61) - 1>`) is stored in 64 bits. The modulus must be a
-compile-time constant; a runtime-chosen modulus is not supported by this design.
-
-Two integer types are at play: the type of the modulus stores the representative, while
-construction, multiplication, and inverses widen through an intermediate type chosen automatically
-from the storage width - `int64_t` for 32-bit storage, or `__int128` (a GCC/Clang extension, in line
-with this book's use of `__builtin` functions) for 64-bit storage; on compilers without `__int128`,
-only 32-bit moduli are supported. The requirements are that $2p$ fits the storage type (for
-addition) and $(p - 1)^2$ fits the intermediate type (for the widening multiply), so any modulus up
-to half the storage type's range works out of the box; 64-bit moduli simply pay the cost of slower
-128-bit multiplies. (Some contest templates instead estimate the multiply's quotient in
-`long double` to avoid `__int128`; beware that this requires x86's 80-bit `long double` and silently
-breaks for large moduli on ARM, where `long double` is only 64-bit.)
-
-Division uses the extended Euclidean algorithm, so the divisor only needs to be coprime to the
-modulus. For the factorial-table combination helper, the usual contest assumption is that $p$ is
-prime and the requested factorials are invertible modulo $p$.
+The signed `auto` argument `MOD` determines the storage type: `Modular<1000000007>` uses 32-bit
+storage, while `Modular<(1LL << 61) - 1>` uses 64-bit storage. The implementation follows the
+conventional `Mint` wrapper: construction normalizes values, while hidden friend operators support
+mixed expressions such as `2 + Mint(3)` through implicit conversion.
 
 - `Modular<MOD>(x = 0)` constructs the residue class of integer `x` modulo `MOD`.
 - `value()` and `operator()()` return the stored representative in $[0, `MOD`)$.
 - Explicit casts to `int`, `long long`, `double`, and `long double` convert that stored
   representative to the corresponding primitive.
 - `pow(n)` returns this value raised to nonnegative integer exponent `n`.
-- `inv()` returns the multiplicative inverse, asserting it exists.
+- `inv()` returns the multiplicative inverse, asserting the value is coprime to `MOD`.
 - Operators `+`, `-`, `*`, `/`, comparison, increment, decrement, and stream I/O are overloaded.
-- `ModCombinatorics<Mint>::factorial(n)` returns $n!$ using a lazy factorial table.
-- `ModCombinatorics<Mint>::choose(n, k)` returns $\binom n k$ using lazy factorial and
-  inverse-factorial tables.
-- `ModCombinatorics<Mint>::permute(n, k)` returns the number of ordered selections of `k` distinct
-  elements from `n`.
-- `ModCombinatorics<Mint>::multichoose(n, k)` returns the number of size-`k` multisets drawn from
-  `n` types.
+  Division likewise requires the divisor to be coprime to `MOD`.
+
+`ModCombinatorics<Mint>` maintains lazy factorial and inverse-factorial tables for a modular type
+`Mint`. It assumes the modulus is prime and all requested factorials are invertible.
+
+- `factorial(n)` returns $n!$ using a lazy factorial table.
+- `choose(n, k)` returns $\binom n k$ using lazy factorial and inverse-factorial tables.
+- `permute(n, k)` returns the number of ordered selections of `k` distinct elements from `n`.
+- `multichoose(n, k)` returns the number of size-`k` multisets drawn from `n` types.
+
+Overflow warning: Construction, multiplication, and inverses widen through `int64_t` for 32-bit
+storage or `__int128` for 64-bit storage. Thus $2p$ must fit the storage type and $(p - 1)^2$ must
+fit the intermediate type. On compilers without `__int128`, only 32-bit moduli are supported.
+Estimating a 64-bit product with `long double` is not used because it silently loses the needed
+precision on platforms where `long double` is only 64 bits.
 
 Time Complexity:
 - O(1) per addition, subtraction, multiplication, comparison, and stream output.

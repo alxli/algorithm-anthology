@@ -205,7 +205,7 @@ class SparseSegTree2D {
 
  public:
   explicit SparseSegTree2D(const T &v = T{})
-      : root(new OuterNode(0, R - 1, combine_n(v, int64_t{R} * C))), init(v) {}
+      : root(new OuterNode(0, R - 1, combine_n(v, static_cast<int64_t>(R) * C))), init(v) {}
 
   ~SparseSegTree2D() { clean_up(root); }
   SparseSegTree2D(const SparseSegTree2D &) = delete;

@@ -33,19 +33,13 @@ Space Complexity:
 
 #include <cassert>
 #include <numeric>
+#include <tuple>
 #include <utility>
 #include <vector>
 
 class RollbackDSU {
-  struct Change {
-    int child, parent, parent_size;
-
-    Change(int child = -1, int parent = -1, int parent_size = 0)
-        : child(child), parent(parent), parent_size(parent_size) {}
-  };
-
   std::vector<int> root, size;
-  std::vector<Change> history;
+  std::vector<std::tuple<int, int, int>> history;  // (child, parent, old parent size)
   int num_sets;
 
  public:
@@ -85,10 +79,10 @@ class RollbackDSU {
   void rollback(int snapshot) {
     assert(0 <= snapshot && snapshot <= static_cast<int>(history.size()));
     while (static_cast<int>(history.size()) > snapshot) {
-      Change c = history.back();
+      auto [child, parent, parent_size] = history.back();
       history.pop_back();
-      root[c.child] = c.child;
-      size[c.parent] = c.parent_size;
+      root[child] = child;
+      size[parent] = parent_size;
       num_sets++;
     }
   }

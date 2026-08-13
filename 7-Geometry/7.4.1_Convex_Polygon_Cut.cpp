@@ -7,11 +7,8 @@ are kept, and whenever an edge crosses the line, the intersection point is appen
 - `convex_cut(lo, hi, p, q)` returns the portion of the polygon lying on or to the left of the
   directed line from `p` to `q`. The input range $[`lo`, `hi`)$ must contain the vertices of a
   convex polygon in boundary order, either clockwise or counterclockwise. The returned polygon
-  preserves that boundary order. The points `p` and `q` must differ.
-
-The function is templated on the input point type. Side classification is done with cross products.
-Edge-line intersection points are computed in floating point, and the returned polygon uses `Point`
-with `double` coordinates.
+  preserves that boundary order and uses `Point` with `double` coordinates because edge-line
+  intersections are computed in floating point. The points `p` and `q` must differ.
 
 Overflow warning: For integer-coordinate inputs, classification is exact only if the intermediate
 products do not overflow.

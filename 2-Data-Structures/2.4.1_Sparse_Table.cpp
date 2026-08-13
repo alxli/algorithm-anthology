@@ -5,7 +5,7 @@ generally, the sparse table works for any range query whose combining operation 
 and idempotent (i.e. `combine(x, x)` must equal `x`). The canonical examples are "min", "max",
 "gcd", and the bitwise "and" and "or".
 
-For each level $j$, the entry `dp[j][i]` holds the result of `combine()` over the half-open range
+For each level $j$, the state $dp(j, i)$ holds the result of `combine()` over the half-open range
 $[i, i + 2^j)$, built by combining two ranges of length $2^{j-1}$. A query over $[`lo`, `hi`]$ is
 answered by combining the two overlapping ranges of length $2^j$ that are anchored at `lo` and at
 `hi`, where $2^j$ is the largest power of two not exceeding the length of the range. Because these

@@ -13,9 +13,8 @@ sets or query rectangles are expected and the extra O(n log n) space is acceptab
 
 - `RangeKDTree<T>(lo, hi)` constructs a set of `std::pair` points from the half-open
   forward-iterator range $[`lo`, `hi`)$.
-- `query(x1, y1, x2, y2, f)` calls the function `f(p)` on each point whose $x$-coordinate is in
-  $[`x1`, `x2`]$ and whose $y$-coordinate is in $[`y1`, `y2`]$. The argument `p` is the point as an
-  `std::pair`.
+- `query(x1, y1, x2, y2)` returns all points in the closed rectangle
+  $[`x1`, `x2`] \times [`y1`, `y2`]$ as `std::pair` values.
 
 Time Complexity:
 - O(n log n) per call to the constructor, where $n$ is the number of points.
@@ -25,6 +24,7 @@ Time Complexity:
 Space Complexity:
 - O(n) for storage of the points.
 - O(log n) auxiliary stack space for `query()`.
+- O(m) for the vector returned by `query()`, where $m$ is the number of reported points.
 
 */
 
@@ -63,8 +63,10 @@ class RangeKDTree {
     build(mid + 1, hi, !div_x);
   }
 
-  template<typename Fn>
-  void query(int lo, int hi, const T &x1, const T &y1, const T &x2, const T &y2, Fn &f) {
+  void query(
+      int lo, int hi, const T &x1, const T &y1, const T &x2, const T &y2,
+      std::vector<std::pair<T, T>> &res
+  ) {
     if (lo >= hi) {
       return;
     }
@@ -75,18 +77,16 @@ class RangeKDTree {
       return;
     }
     if (!(ax < x1 || x2 < bx || ay < y1 || y2 < by)) {
-      for (int i = l_index[mid]; i < h_index[mid]; i++) {
-        f(tree[i]);
-      }
+      res.insert(res.end(), tree.begin() + l_index[mid], tree.begin() + h_index[mid]);
       return;
     }
-    query(lo, mid, x1, y1, x2, y2, f);
-    query(mid + 1, hi, x1, y1, x2, y2, f);
+    query(lo, mid, x1, y1, x2, y2, res);
+    query(mid + 1, hi, x1, y1, x2, y2, res);
     if (tree[mid].first < x1 || x2 < tree[mid].first || tree[mid].second < y1 ||
         y2 < tree[mid].second) {
       return;
     }
-    f(tree[mid]);
+    res.push_back(tree[mid]);
   }
 
  public:
@@ -100,10 +100,11 @@ class RangeKDTree {
     build(0, static_cast<int>(tree.size()), true);
   }
 
-  template<typename Fn>
-  void query(const T &x1, const T &y1, const T &x2, const T &y2, Fn f) {
+  std::vector<std::pair<T, T>> query(const T &x1, const T &y1, const T &x2, const T &y2) {
     assert(!(x2 < x1) && !(y2 < y1));
-    query(0, static_cast<int>(tree.size()), x1, y1, x2, y2, f);
+    std::vector<std::pair<T, T>> res;
+    query(0, static_cast<int>(tree.size()), x1, y1, x2, y2, res);
+    return res;
   }
 };
 
@@ -117,13 +118,10 @@ int main() {
   vector<pair<int, int>> v{{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
                            {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
   RangeKDTree<int> t(v.begin(), v.end());
-  vector<pair<int, int>> got;
-  auto collect = [&](const pair<int, int> &p) { got.push_back(p); };
-  t.query(-1, -1, 2, 5, collect);
+  auto got = t.query(-1, -1, 2, 5);
   sort(got.begin(), got.end());
   assert((got == vector<pair<int, int>>{{-1, -1}, {1, 4}, {2, -1}, {2, 2}}));
-  got.clear();
-  t.query(1, 1, 4, 8, collect);
+  got = t.query(1, 1, 4, 8);
   sort(got.begin(), got.end());
   assert((got == vector<pair<int, int>>{{1, 4}, {2, 2}, {3, 1}}));
   return 0;

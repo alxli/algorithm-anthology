@@ -9,17 +9,16 @@ floating-point `Pt` there for a meaningful (non-truncated) result.
 
 - `dist(a, b)` and `sqdist(a, b)` respectively return the distance and squared distance between
   points `a` and `b`.
-- `line_dist(p, a, b, c)` returns the distance from point `p` to the line $ax + by + c = 0$.
+- `line_dist(p, a, b, c)` returns the distance from point `p` to the valid line $ax + by + c = 0$.
 - `line_dist(p, a, b)` returns the distance from point `p` to the infinite line containing points
   `a` and `b`. If `a` = `b`, the distance from `p` to `a` is returned.
-- `line_dist(a1, b1, c1, a2, b2, c2)` returns the distance between two lines.
+- `line_dist(a1, b1, c1, a2, b2, c2)` returns the distance between two valid lines.
 - `seg_dist(p, a, b)` returns the distance from point `p` to the line segment `a`-`b`.
 - `seg_dist(a, b, c, d)` returns the minimum distance between line segments `a`-`b` and `c`-`d`, or
   $0$ if the segments touch or intersect.
-- `closest_point(a, b, p)` returns the point on segment `a`-`b` closest to point `p`.
-
-Coefficient triples passed to `line_dist()` must represent valid lines. Use a floating-point point
-type with `closest_point()` when the closest point may have fractional coordinates.
+- `closest_point(a, b, p)` returns the point on segment `a`-`b` closest to point `p`, using the
+  input point type for the result. Use a floating-point point type when the closest point may have
+  fractional coordinates.
 
 Overflow warning: squared distances, dot products, and cross products are formed in the point's
 coordinate arithmetic type. For integer point types, use a 64-bit coordinate type when coordinates
@@ -65,13 +64,13 @@ auto sqdist(const Pt &a, const Pt &b) {
 
 template<typename Pt>
 double dist(const Pt &a, const Pt &b) {
-  return sqrt(static_cast<double>(sqdist(a, b)));
+  return std::sqrt(static_cast<double>(sqdist(a, b)));
 }
 
 template<typename Pt, typename T>
 double line_dist(const Pt &p, const T &a, const T &b, const T &c) {
   return fabs(static_cast<double>(a) * p.x + static_cast<double>(b) * p.y + c) /
-         sqrt(static_cast<double>(a) * a + static_cast<double>(b) * b);
+         std::sqrt(static_cast<double>(a) * a + static_cast<double>(b) * b);
 }
 
 template<typename Pt>
@@ -83,7 +82,7 @@ double line_dist(const Pt &p, const Pt &a, const Pt &b) {
   auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);  // Overflow warning.
   double u = static_cast<double>(d) / n;
   double dx = a.x + u * (b.x - a.x) - p.x, dy = a.y + u * (b.y - a.y) - p.y;
-  return sqrt(dx * dx + dy * dy);
+  return std::sqrt(dx * dx + dy * dy);
 }
 
 template<typename T>
@@ -93,7 +92,7 @@ double line_dist(const T &a1, const T &b1, const T &c1, const T &a2, const T &b2
     return EQ(c1, c2 * factor)
                ? 0
                : fabs(c2 * factor - c1) /
-                     sqrt(static_cast<double>(a1) * a1 + static_cast<double>(b1) * b1);
+                     std::sqrt(static_cast<double>(a1) * a1 + static_cast<double>(b1) * b1);
   }
   return 0;
 }
@@ -113,7 +112,7 @@ double seg_dist(const Pt &p, const Pt &a, const Pt &b) {
   }
   double t = static_cast<double>(d) / n;
   double dx = a.x + t * (b.x - a.x) - p.x, dy = a.y + t * (b.y - a.y) - p.y;
-  return sqrt(dx * dx + dy * dy);
+  return std::sqrt(dx * dx + dy * dy);
 }
 
 template<typename Pt>

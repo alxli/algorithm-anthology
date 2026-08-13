@@ -11,10 +11,10 @@ $s$ side of that cut are reparented under $s$, gradually refining the cut-equiva
 
 - `gomory_hu(n, edges)` returns the `n - 1` edges of a Gomory-Hu tree as tuples (`u`, `v`, `weight`)
   for an undirected, weighted graph with `n` nodes and `edges` of the same shape.
-- `min_cut_value(n, tree, source, sink)` returns the minimum cut value between two nodes using a
-  Gomory-Hu tree. Note that for many pairwise cut queries on the same tree, it's more efficient to
-  prebuild the tree adjacency once and answer minimum edge-on-path queries with LCA/binary lifting
-  instead of calling `min_cut_value()` each time.
+- `min_cut_value(n, tree, source, sink)` returns the minimum cut value between nodes `source` and
+  `sink` in $[0, `n`)$ using the tree returned by `gomory_hu()`. For many pairwise cut queries on
+  the same tree, it is more efficient to prebuild the tree adjacency once and answer minimum
+  edge-on-path queries with LCA/binary lifting instead of calling `min_cut_value()` each time.
 
 Time Complexity:
 - O(n) calls to maximum flow. With the included Dinic implementation, this is O(n^3*m) in the worst

@@ -2,10 +2,11 @@
 
 Perform operations on arbitrary precision big integers internally represented as a vector of
 base-`BASE` digits in little-endian order. `BASE` defaults to $10^9$ and must be a power of 10 no
-larger than $10^9$. Multiplication picks its algorithm from the operand size, so no configuration is
-needed. Typical arithmetic operations involving mixed numeric primitives and strings are supported
-through implicit construction and hidden friend operators, as long as at least one operand is a
-`BigInt` at any given level of evaluation.
+larger than $10^9$. Multiplication selects schoolbook, Karatsuba, or FFT from the operand size;
+`FFT_CUTOFF` is the padded transform length where FFT takes over and normally needs no adjustment.
+Typical arithmetic operations involving mixed numeric primitives and strings are supported through
+implicit construction and hidden friend operators, as long as at least one operand is a `BigInt` at
+any given level of evaluation.
 
 - `BigInt()` constructs zero, and `BigInt(n)` constructs a big integer from an integer `n`.
 - `BigInt(s)` constructs a big integer from a C string or an `std::string` `s`.
@@ -31,23 +32,12 @@ through implicit construction and hidden friend operators, as long as at least o
   top one or two limbs of the running remainder, correct the estimate by adding the divisor back if
   necessary, then unscale the remainder.
 - `a.div(v)` returns a pair consisting of the quotient and remainder when `a` is divided by `v`.
-- `v.pow(n)` returns `v` raised to the nonnegative power $n$.
-- `v.sqrt()` returns the integral part of the square root of big integer `v`.
-- `v.nth_root(n)` returns the integral part of the $n$-th root of big integer `v`. Negative inputs
-  require odd $n$.
+- `v.pow(n)` returns `v` raised to the nonnegative power $n$ using binary exponentiation.
+- `v.sqrt()` returns the integral part of the square root of big integer `v` using a digit-by-digit
+  algorithm in the internal base.
+- `v.nth_root(n)` returns the integral part of the $n$-th root of big integer `v` using binary
+  search. Negative inputs require odd $n$.
 - `rand(n)` returns a random, positive big integer with $n$ digits.
-
-`pow(n)` uses binary exponentiation. `sqrt()` uses a digit-by-digit square-root algorithm in the
-internal base, while `nth_root(n)` uses binary search over the answer range.
-
-All three multiplication methods produce identical results, so the choice only trades constant
-factors. Karatsuba falls back to schoolbook on short operands, and beats FFT up to roughly $400$
-decimal digits; past that FFT pulls ahead, reaching about a $3.5$x advantage by $6400$ digits.
-`FFT_CUTOFF` is the padded transform length, counted in `MULT_BASE` limbs, at which FFT takes over,
-so lowering it favors FFT on smaller inputs. The rebasing is what keeps multiplication exact: a
-product of two base-$10^9$ limbs already reaches $10^{18}$, so summing only nine of them would
-overflow `int64_t`, and such coefficients are far past the $53$ bits a complex FFT represents
-exactly.
 
 Time Complexity:
 - O(n) per call to the constructors, `size()`, `to_string()`, `to_llong()`, `to_double()`,
@@ -74,6 +64,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <climits>
 #include <cmath>
 #include <complex>
@@ -274,7 +265,7 @@ class BigInt {
     vcd roots(n), res(n);
     for (int i = 0; i < n; i++) {
       double alpha = 2 * 3.14159265358979323846 * i / n;
-      roots[i] = std::complex<double>(cos(alpha), sin(alpha));
+      roots[i] = std::complex<double>(std::cos(alpha), std::sin(alpha));
       res[i] = *(lo + rev[i]);
     }
     for (int len = 1; len < n; len <<= 1) {
@@ -628,7 +619,7 @@ class BigInt {
       BigInt root = magnitude.comp(BigInt(p).pow(n)) < 0 ? p - 1 : p;
       return sign == -1 ? -root : root;
     }
-    BigInt lo(BigInt(10).pow(static_cast<int>(ceil(static_cast<double>(size()) / n)) - 1));
+    BigInt lo(BigInt(10).pow(static_cast<int>(std::ceil(static_cast<double>(size()) / n)) - 1));
     BigInt hi(lo * 10), mid;
     while (lo < hi) {
       mid = (lo + hi) / 2;
@@ -648,7 +639,7 @@ class BigInt {
     if (n == 0) {
       return BigInt(0);
     }
-    static std::mt19937 rng(std::random_device{}());
+    static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
     std::uniform_int_distribution<int> first_digit(1, 9), digit(0, 9);
     std::string s(1, static_cast<char>('0' + first_digit(rng)));
     for (int i = 1; i < n; i++) {

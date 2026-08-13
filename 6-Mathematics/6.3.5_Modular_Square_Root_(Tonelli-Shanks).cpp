@@ -7,7 +7,7 @@ residues), so a solution exists only for those; when it does, the two roots are 
 The Tonelli-Shanks algorithm handles the general case. Euler's criterion, $a^{(p-1)/2}$ modulo $p$,
 first tests whether $a$ is a residue at all. When $p$ is congruent to $3 \pmod{4}$, the root is
 simply $a^{(p+1)/4}$. Otherwise the algorithm factors $p - 1$ as $s \cdot 2^e$, picks any quadratic
-non-residue to generate the 2-power part of the group, and repeatedly squares a running value to
+non-residue to generate the $2$-power part of the group, and repeatedly squares a running value to
 find the order of the current error term, correcting the candidate root until the error becomes $1$.
 
 - `mod_sqrt(a, p)` returns the smaller of the two square roots of `a` modulo the odd prime `p`, or
@@ -90,7 +90,7 @@ int64_t mod_sqrt(int64_t a, int64_t p) {
     if (order == 0) {
       return x < p - x ? x : p - x;
     }
-    int64_t gs = powmod(g, int64_t{1} << (r - order - 1), p);
+    int64_t gs = powmod(g, 1LL << (r - order - 1), p);
     g = mulmod(gs, gs, p);
     x = mulmod(x, gs, p);
     b = mulmod(b, g, p);

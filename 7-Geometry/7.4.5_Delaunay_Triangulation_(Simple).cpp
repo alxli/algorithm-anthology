@@ -9,11 +9,11 @@ This implementation produces one valid triangulation using a simple brute-force 
 candidate triangle is tested against the empty-circumcircle condition, and candidates whose edges
 would properly cross already accepted triangles are rejected.
 
+All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation.
+
 - `delaunay_triangulation(p)` returns a Delaunay triangulation of the distinct points in `p` as a
   vector of clockwise-oriented vertex triples, or an empty vector if no triangulation exists (e.g.
   fewer than three points, or all points collinear).
-
-All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation.
 
 Overflow warning: the lifted-paraboloid test grows like the fourth power of the coordinate
 magnitude. With 64-bit integer coordinates, it overflows once coordinates exceed roughly $17600$.

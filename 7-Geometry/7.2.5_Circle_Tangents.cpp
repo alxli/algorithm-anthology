@@ -71,8 +71,8 @@ std::vector<std::pair<Point, Point>> circle_tangents(
   }
   std::vector<std::pair<Point, Point>> res;
   for (double s : {-1.0, 1.0}) {
-    Point v = (d * dr + d.rotate90() * (sqrt(std::max(0.0, h2)) * s)) / d2;
-    res.push_back({Point(c1.x, c1.y) + v * r1, Point(c2.x, c2.y) + v * r2});
+    Point v = (d * dr + d.rotate90() * (std::sqrt(std::max(0.0, h2)) * s)) / d2;
+    res.emplace_back(Point(c1.x, c1.y) + v * r1, Point(c2.x, c2.y) + v * r2);
   }
   if (EQ(h2, 0)) {
     res.pop_back();

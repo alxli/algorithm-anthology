@@ -1,8 +1,7 @@
 /*
 
-Common mathematic constants and functions, most of which already have standard STL equivalents. The
-implementations below are for educational purposes only and may not be as heavily optimized as their
-standard library counterparts.
+Common mathematical constants and functions, many of which have standard library counterparts. The
+implementations below are educational and may not be as heavily optimized as the library versions.
 
 Time Complexity:
 - O(1) per call to most operations.
@@ -25,6 +24,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <climits>
 #include <cmath>
 #include <cstdint>
@@ -115,12 +115,12 @@ Sign Functions:
 
 - `sgn(x)` returns $-1$ (if $x < 0$), $0$ (if $x = 0$), or $1$ (if $x > 0$). Unlike `std::signbit()`
   or `std::copysign()`, this does not handle the sign of `NaN`.
-- `signbit_(x)` is analogous to `std::signbit()`, returning whether the sign bit of the floating
+- `sign_bit(x)` is analogous to `std::signbit()`, returning whether the sign bit of the floating
   point number is set to true. If so, then `x` is considered "negative." Note that this works as
   expected on `+0.0`, `-0.0`, `Inf`, `-Inf`, `NaN`, as well as `-NaN`. Warning: This assumes that
   the sign bit is the leading (most significant) bit in the internal IEEE representation and that
   bytes are stored in little-endian order.
-- `copysign_(x, y)` is analogous to `std::copysign()`, returning a number with the magnitude of `x`
+- `copy_sign(x, y)` is analogous to `std::copysign()`, returning a number with the magnitude of `x`
   but the sign of `y`.
 
 */
@@ -131,13 +131,13 @@ int sgn(const T &x) {
 }
 
 template<typename Double>
-bool signbit_(Double x) {
+bool sign_bit(Double x) {
   return (((unsigned char *)&x)[sizeof(x) - 1] >> (CHAR_BIT - 1)) & 1;
 }
 
 template<typename Double>
-Double copysign_(Double x, Double y) {
-  return signbit_(y) ? -std::fabs(x) : std::fabs(x);
+Double copy_sign(Double x, Double y) {
+  return sign_bit(y) ? -std::fabs(x) : std::fabs(x);
 }
 
 /*
@@ -237,13 +237,13 @@ Double round_half_random(const Double &x) {
   if (away == toward) {
     return away;
   }
-  static std::mt19937 rng(std::random_device{}());
+  static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
   return (rng() % 2 == 0) ? away : toward;
 }
 
 template<typename Double, typename RoundFn>
 Double round_n_places(const Double &x, unsigned int n, RoundFn round) {
-  Double scale = std::pow(Double(10), n);
+  Double scale = std::pow(Double{10}, n);
   return round(x * scale) / scale;
 }
 
@@ -396,11 +396,11 @@ int main() {
   assert(isnan(M_NAN) && isnan(-M_NAN) && isnan(M_INF - M_INF));
 
   assert(sgn(x) == -1 && sgn(0.0) == 0 && sgn(5678) == 1);
-  assert(signbit_(x) && !signbit_(0.0) && signbit_(-0.0));
-  assert(!signbit_(M_INF) && signbit_(-M_INF));
-  assert(!signbit_(M_NAN) && signbit_(-M_NAN));
-  assert(copysign(1.0, +2.0) == +1.0 && copysign(M_INF, -2.0) == -M_INF);
-  assert(copysign(1.0, -2.0) == -1.0 && signbit(copysign(M_NAN, -2.0)));
+  assert(sign_bit(x) && !sign_bit(0.0) && sign_bit(-0.0));
+  assert(!sign_bit(M_INF) && sign_bit(-M_INF));
+  assert(!sign_bit(M_NAN) && sign_bit(-M_NAN));
+  assert(copy_sign(1.0, +2.0) == +1.0 && copy_sign(M_INF, -2.0) == -M_INF);
+  assert(copy_sign(1.0, -2.0) == -1.0 && sign_bit(copy_sign(M_NAN, -2.0)));
 
   assert(EQ(floor0(1.5), 1.0) && EQ(ceil0(1.5), 2.0));
   assert(EQ(floor0(-1.5), -1.0) && EQ(ceil0(-1.5), -2.0));

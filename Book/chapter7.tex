@@ -4,32 +4,23 @@
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Point}
-A 2D point class templated on the coordinate type \inlinecode{T}. Integer types support some exact operations, while metric operations (\inlinecode{norm}, \inlinecode{arg}, \inlinecode{normalize}, \inlinecode{rotateCW/CCW}, \inlinecode{reflect} across a line) return coordinates of type \inlinecode{fp\_t}, which is \inlinecode{T} when \inlinecode{T} is floating-point and \inlinecode{double} otherwise.
+A 2D point class templated on the coordinate type \inlinecode{T}. Algebraic operations preserve \inlinecode{T}, while metric operations use \inlinecode{fp\_t}, which is \inlinecode{T} for floating-point coordinates and \inlinecode{double} otherwise.
 
-Exact operations (return \inlinecode{TPoint\textless{}T\textgreater{}} or \inlinecode{T}, no precision lost for integers) include: element-wise arithmetic, \inlinecode{dot()}, \inlinecode{cross()}, \inlinecode{sqnorm()}, cardinal rotations, \inlinecode{reflect(point)}, equality, and lexicographic ordering. \inlinecode{operator==} and \inlinecode{operator\textless{}} are exact for every coordinate type, as required by standard algorithms and containers. \inlinecode{EQ(p, q)} compares floating-point point coordinates using \inlinecode{EPS} and remains exact for other coordinate types.
-
-Overflow warning: the exact products \inlinecode{dot()}, \inlinecode{cross()}, and \inlinecode{sqnorm()} grow like the squared coordinate magnitude. With \inlinecode{TPoint\textless{}int\textgreater{}} these overflow a 32-bit \inlinecode{int} once coordinates exceed roughly a few tens of thousands, so use \inlinecode{PointL} (\inlinecode{TPoint\textless{}long long\textgreater{}}) for larger integer coordinates.
-
-Metric operations (return \inlinecode{TPoint\textless{}fp\_t\textgreater{}} or \inlinecode{fp\_t}):
+Non-floating-point coordinate types such as \inlinecode{Modular} or \inlinecode{Rational} compose for exact operations (arithmetic, \inlinecode{dot}, \inlinecode{cross}, \inlinecode{sqnorm}, comparisons, and \inlinecode{EQ}) using the coordinate type's own operators. Their metric operations convert coordinates explicitly to \inlinecode{double}; for \inlinecode{Modular}, this uses the stored representative and is not finite-field geometry.
 
 \begin{compactitem}
-  \item \inlinecode{norm()}, \inlinecode{arg()}, \inlinecode{proj()}, \inlinecode{normalize()}, \inlinecode{rotateCW()}, \inlinecode{rotateCCW()}, \inlinecode{reflect(line)}.
-  \item \inlinecode{operator/} also promotes to \inlinecode{fp\_t}.
+  \item \inlinecode{TPoint\textless{}T\textgreater{}()} constructs the origin, while \inlinecode{TPoint\textless{}T\textgreater{}(x, y)} constructs point $(x, y)$. A pair of values can also be converted explicitly to a point.
+  \item Operators \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, and their compound forms act element-wise on points or apply a scalar. Comparisons are exact and lexicographic, as required by standard algorithms and containers. \inlinecode{EQ(p, q)} instead uses \inlinecode{EPS} for floating-point coordinates and remains exact for other coordinate types.
+  \item \inlinecode{sqnorm()}, \inlinecode{dot(p)}, and \inlinecode{cross(p)} return the exact algebraic results in coordinate type \inlinecode{T}.
+  \item \inlinecode{norm()}, \inlinecode{arg()}, \inlinecode{proj(p)}, and \inlinecode{normalize()} return metric results in \inlinecode{fp\_t}; division also promotes to \inlinecode{fp\_t} to avoid integer truncation.
+  \item \inlinecode{rotate90()}, \inlinecode{rotate180()}, and \inlinecode{rotate270()} rotate by the corresponding counter-clockwise cardinal angle; overloads taking \inlinecode{p} rotate about point \inlinecode{p}.
+  \item \inlinecode{rotate\_cw(t)} and \inlinecode{rotate\_ccw(t)} rotate by an arbitrary angle \inlinecode{t} in radians; overloads taking (\inlinecode{p}, \inlinecode{t}) rotate about point \inlinecode{p}.
+  \item \inlinecode{reflect(p)} reflects across point \inlinecode{p}, while \inlinecode{reflect(p, q)} reflects across the line through points \inlinecode{p} and \inlinecode{q}.
+  \item \inlinecode{to\_double()} and \inlinecode{to\_ldouble()} explicitly convert the coordinate type. Integral points also convert implicitly to floating-point point types, so \inlinecode{PointI} can be passed where \inlinecode{PointD} is expected.
+  \item \inlinecode{PointI}, \inlinecode{PointL}, \inlinecode{PointD}, and \inlinecode{PointLD} use \inlinecode{int}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double} coordinates, respectively. \inlinecode{Point} aliases \inlinecode{PointD}.
 \end{compactitem}
 
-Implicit conversion from \inlinecode{TPoint\textless{}U\textgreater{}} to \inlinecode{TPoint\textless{}T\textgreater{}} is provided when \inlinecode{U} is integral and \inlinecode{T} is floating-point, so \inlinecode{PointI} can be passed wherever \inlinecode{PointD} is expected.
-
-Non-floating-point coordinate types such as \inlinecode{Modular} or \inlinecode{Rational} compose for the exact operations (arithmetic, \inlinecode{dot}, \inlinecode{cross}, \inlinecode{sqnorm}, comparisons, and \inlinecode{EQ}) using the coordinate type's own operators. Their metric operations convert coordinates explicitly to \inlinecode{double}; for \inlinecode{Modular}, this uses the stored representative and is not finite-field geometry.
-
-Type aliases:
-
-\begin{compactitem}
-  \item \inlinecode{PointI = TPoint\textless{}int\textgreater{}}: exact integer geometry (small coordinates only; see overflow warning)
-  \item \inlinecode{PointL = TPoint\textless{}long long\textgreater{}}: exact integer geometry for large coordinates
-  \item \inlinecode{PointD = TPoint\textless{}double\textgreater{}}: standard floating-point
-  \item \inlinecode{PointLD = TPoint\textless{}long double\textgreater{}}: extra precision (where supported)
-  \item \inlinecode{Point = PointD}: default point type is double
-\end{compactitem}
+Overflow warning: the exact products \inlinecode{dot()}, \inlinecode{cross()}, and \inlinecode{sqnorm()} grow like the squared coordinate magnitude. With \inlinecode{PointI} these overflow a 32-bit \inlinecode{int} once coordinates exceed roughly a few tens of thousands, so use \inlinecode{PointL} for larger integer coordinates.
 
 \textbf{Time Complexity}: $O(1)$ per call to the constructor and all other operations.
 
@@ -95,7 +86,7 @@ struct TPoint {
   TPoint operator*(T v) const { return {x * v, y * v}; }
 
   // Division always promotes to fp_t to avoid integer truncation.
-  TPoint<fp_t> operator/(fp_t v) const { return {(fp_t)x / v, (fp_t)y / v}; }
+  TPoint<fp_t> operator/(fp_t v) const { return {fp_t(x) / v, fp_t(y) / v}; }
 
   TPoint &operator+=(const TPoint &p) { x += p.x; y += p.y; return *this; }
   TPoint &operator-=(const TPoint &p) { x -= p.x; y -= p.y; return *this; }
@@ -113,19 +104,16 @@ struct TPoint {
 
   // --- Floating-point operations: return fp_t or TPoint<fp_t> ---
 
-  fp_t norm() const { return std::hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)); }
-  fp_t arg() const { return std::atan2(static_cast<fp_t>(y), static_cast<fp_t>(x)); }
-
-  fp_t proj(const TPoint &p) const {
-    return (static_cast<fp_t>(x) * p.x + static_cast<fp_t>(y) * p.y) / p.norm();
-  }
+  fp_t norm() const { return std::hypot(fp_t(x), fp_t(y)); }
+  fp_t arg() const { return std::atan2(fp_t(y), fp_t(x)); }
+  fp_t proj(const TPoint &p) const { return (fp_t(x) * p.x + fp_t(y) * p.y) / p.norm(); }
 
   TPoint<fp_t> normalize() const {
     fp_t n = norm();
-    if (n < static_cast<fp_t>(1e-30)) {  // guard against dividing by a near-zero norm, not a
-      return {fp_t{0}, fp_t{0}};         // geometric tolerance (EPS is too coarse here)
+    if (n < 1e-30) {              // guard against dividing by a near-zero norm, not a
+      return {fp_t{0}, fp_t{0}};  // geometric tolerance (EPS is too coarse here)
     }
-    return {static_cast<fp_t>(x) / n, static_cast<fp_t>(y) / n};
+    return {fp_t(x) / n, fp_t(y) / n};
   }
 
   // --- Cardinal rotations: exact for all coordinate types including int ---
@@ -143,27 +131,27 @@ struct TPoint {
   // --- Arbitrary-angle rotations: always return floating-point ---
 
   // Returns (x, y) rotated t radians clockwise about the origin.
-  TPoint<fp_t> rotateCW(fp_t t) const {
-    fp_t fx = (fp_t)x, fy = (fp_t)y;
+  TPoint<fp_t> rotate_cw(fp_t t) const {
+    fp_t fx(x), fy(y);
     return {fx * std::cos(t) + fy * std::sin(t), fy * std::cos(t) - fx * std::sin(t)};
   }
 
   // Returns (x, y) rotated t radians counter-clockwise about the origin.
-  TPoint<fp_t> rotateCCW(fp_t t) const {
-    fp_t fx = (fp_t)x, fy = (fp_t)y;
+  TPoint<fp_t> rotate_ccw(fp_t t) const {
+    fp_t fx(x), fy(y);
     return {fx * std::cos(t) - fy * std::sin(t), fx * std::sin(t) + fy * std::cos(t)};
   }
 
   // Returns (x, y) rotated t radians clockwise about point p.
-  TPoint<fp_t> rotateCW(const TPoint &p, fp_t t) const {
-    return TPoint<fp_t>{(fp_t)x - p.x, (fp_t)y - p.y}.rotateCW(t) +
-           TPoint<fp_t>{(fp_t)p.x, (fp_t)p.y};
+  TPoint<fp_t> rotate_cw(const TPoint &p, fp_t t) const {
+    return TPoint<fp_t>{fp_t(x) - p.x, fp_t(y) - p.y}.rotate_cw(t) +
+           TPoint<fp_t>{fp_t(p.x), fp_t(p.y)};
   }
 
   // Returns (x, y) rotated t radians counter-clockwise about point p.
-  TPoint<fp_t> rotateCCW(const TPoint &p, fp_t t) const {
-    return TPoint<fp_t>{(fp_t)x - p.x, (fp_t)y - p.y}.rotateCCW(t) +
-           TPoint<fp_t>{(fp_t)p.x, (fp_t)p.y};
+  TPoint<fp_t> rotate_ccw(const TPoint &p, fp_t t) const {
+    return TPoint<fp_t>{fp_t(x) - p.x, fp_t(y) - p.y}.rotate_ccw(t) +
+           TPoint<fp_t>{fp_t(p.x), fp_t(p.y)};
   }
 
   // --- Reflections ---
@@ -174,11 +162,12 @@ struct TPoint {
   // Returns (x, y) reflected across the line containing points p and q.
   // Always returns floating-point coordinates.
   TPoint<fp_t> reflect(const TPoint &p, const TPoint &q) const {
-    TPoint<fp_t> fp{(fp_t)p.x, (fp_t)p.y};
+    TPoint<fp_t> fp{fp_t(p.x), fp_t(p.y)};
     if (EQ(p, q)) {
-      return TPoint<fp_t>{(fp_t)x, (fp_t)y}.reflect(fp);
+      return TPoint<fp_t>{fp_t(x), fp_t(y)}.reflect(fp);
     }
-    TPoint<fp_t> r{(fp_t)x - p.x, (fp_t)y - p.y}, s{(fp_t)q.x - p.x, (fp_t)q.y - p.y};
+    TPoint<fp_t> r{fp_t(x) - p.x, fp_t(y) - p.y};
+    TPoint<fp_t> s{fp_t(q.x) - p.x, fp_t(q.y) - p.y};
     fp_t ssq = s.sqnorm();
     r = TPoint<fp_t>{(r.x * s.x + r.y * s.y) / ssq, (r.x * s.y - r.y * s.x) / ssq};
     return TPoint<fp_t>{r.x * s.x - r.y * s.y + fp.x, r.x * s.y + r.y * s.x + fp.y};
@@ -207,10 +196,10 @@ struct TPoint {
   friend TPoint rotate90(const TPoint &p, const TPoint &q) { return p.rotate90(q); }
   friend TPoint rotate180(const TPoint &p, const TPoint &q) { return p.rotate180(q); }
   friend TPoint rotate270(const TPoint &p, const TPoint &q) { return p.rotate270(q); }
-  friend TPoint<fp_t> rotateCW(const TPoint &p, fp_t t) { return p.rotateCW(t); }
-  friend TPoint<fp_t> rotateCCW(const TPoint &p, fp_t t) { return p.rotateCCW(t); }
-  friend TPoint<fp_t> rotateCW(const TPoint &p, const TPoint &q, fp_t t) { return p.rotateCW(q, t); }
-  friend TPoint<fp_t> rotateCCW(const TPoint &p, const TPoint &q, fp_t t) { return p.rotateCCW(q, t); }
+  friend TPoint<fp_t> rotate_cw(const TPoint &p, fp_t t) { return p.rotate_cw(t); }
+  friend TPoint<fp_t> rotate_ccw(const TPoint &p, fp_t t) { return p.rotate_ccw(t); }
+  friend TPoint<fp_t> rotate_cw(const TPoint &p, const TPoint &q, fp_t t) { return p.rotate_cw(q, t); }
+  friend TPoint<fp_t> rotate_ccw(const TPoint &p, const TPoint &q, fp_t t) { return p.rotate_ccw(q, t); }
   friend TPoint reflect(const TPoint &p, const TPoint &q) { return p.reflect(q); }
   friend TPoint<fp_t> reflect(const TPoint &p, const TPoint &a, const TPoint &b) { return p.reflect(a, b); }
 
@@ -255,8 +244,8 @@ int main() {
   assert(EQ(Point(-3, -10), p.rotate90()));
   assert(EQ(Point(10, -3), p.rotate180()));
   assert(EQ(Point(3, 10), p.rotate270()));
-  assert(EQ(Point(3, 12), p.rotateCW(Point(1, 1), PI / 2)));
-  assert(EQ(Point(1, -10), p.rotateCCW(Point(2, 2), PI / 2)));
+  assert(EQ(Point(3, 12), p.rotate_cw(Point(1, 1), PI / 2)));
+  assert(EQ(Point(1, -10), p.rotate_ccw(Point(2, 2), PI / 2)));
   assert(EQ(Point(10, -3), p.reflect(Point(0, 0))));
   assert(EQ(Point(-10, -3), p.reflect(Point(-2, 0), Point(5, 0))));
 
@@ -276,7 +265,7 @@ int main() {
   assert(EQ(anorm.norm(), 1.0));
   PointD adiv = a / 2.0;  // returns PointD (division always promotes)
   assert(EQ(adiv.x, 1.5) && EQ(adiv.y, 2.0));
-  auto rotated = PointI(1, 0).rotateCCW(PI / 4);  // returns PointD (arbitrary rotation promotes)
+  auto rotated = PointI(1, 0).rotate_ccw(PI / 4);  // returns PointD (arbitrary rotation promotes)
   double root2over2 = sqrt(2.0) / 2.0;
   assert(EQ(rotated.x, root2over2) && EQ(rotated.y, root2over2));
 
@@ -287,25 +276,22 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Line}
-A straight line in two dimensions, templated on the coordinate type \inlinecode{T}. The line $ax + by + c = 0$ is canonicalized by default. With \inlinecode{EXACT = true}, coefficients are divided by their Euclidean GCD and given a fixed sign; this supports built-in integer types as well as \inlinecode{BigInt} and \inlinecode{Rational} from previous chapters. With \inlinecode{EXACT = false}, coefficients are scaled to $b = 1$ when $b$ is nonzero, or to $a = 1$ for vertical lines; this supports floating-point and \inlinecode{Modular} coefficients. Thus proportional valid coefficient vectors have the same canonical representation, up to floating-point rounding.
+A straight line in two dimensions, represented by coefficients of $ax + by + c = 0$ and templated on their type \inlinecode{T}. Coefficients are canonicalized by default so proportional valid coefficient vectors have the same representation, up to floating-point rounding.
 
-Set the template flag \inlinecode{CANONICALIZE = false} to preserve the supplied coefficients. \inlinecode{EXACT} defaults to \inlinecode{true} only for built-in integral types; set it explicitly for custom types such as \inlinecode{BigInt} and \inlinecode{Rational}. The internal Euclidean GCD only requires \inlinecode{\%}, comparisons, and basic arithmetic. Calling \inlinecode{canonicalized()} returns a canonical copy. \inlinecode{operator==} always compares stored coefficients exactly, while \inlinecode{EQ(l1, l2)} canonicalizes raw lines if necessary and uses \inlinecode{EPS} for floating-point coefficients.
-
-Storage and the predicates \inlinecode{contains()}, \inlinecode{is\_parallel()}, and \inlinecode{is\_perpendicular()} stay exact for integral type \inlinecode{T}. The inherently-fractional operations \inlinecode{slope()}, \inlinecode{x()}, and \inlinecode{y()} return \inlinecode{fp\_t}, which is \inlinecode{T} when \inlinecode{T} is floating-point and \inlinecode{double} otherwise.
-
-Operations include \inlinecode{horizontal()}, \inlinecode{vertical()}, \inlinecode{slope()}, evaluating $y$ at some $x$ with \inlinecode{y()} (and vice versa with \inlinecode{x()}), checking if a point falls on the line with \inlinecode{contains()}, checking if another line is parallel or perpendicular with \inlinecode{is\_parallel()} or \inlinecode{is\_perpendicular()}, and finding the \inlinecode{parallel()} or \inlinecode{perpendicular()} line through a point.
-
-Overflow warning: the exact predicates form products of coefficients (e.g. cross terms in \inlinecode{is\_parallel()}/\inlinecode{is\_perpendicular()} and \inlinecode{a*p.x + b*p.y} in \inlinecode{contains()}), which grow like the squared coordinate magnitude. For integral type \inlinecode{T}, use \inlinecode{LineL} (\inlinecode{TLine\textless{}int64\_t\textgreater{}}) once coordinates reach a few tens of thousands, or the 32-bit products may overflow.
-
-Type aliases:
+The template flag \inlinecode{CANONICALIZE} controls whether construction normalizes the coefficients and defaults to \inlinecode{true}. When enabled, \inlinecode{EXACT = true} divides coefficients by their Euclidean GCD and fixes their sign, while \inlinecode{EXACT = false} scales a nonvertical line to $b = 1$ and a vertical line to $a = 1$. \inlinecode{EXACT} defaults to \inlinecode{true} for built-in integral types; set it explicitly for custom exact types such as \inlinecode{BigInt} and \inlinecode{Rational}. Exact canonicalization requires \inlinecode{\%}, comparisons, and basic arithmetic, and predicates remain exact for integral \inlinecode{T}. Floating-point and \inlinecode{Modular} coefficients use the scaling form.
 
 \begin{compactitem}
-  \item \inlinecode{LineI = TLine\textless{}int\textgreater{}}: exact integer-coefficient lines (small values only; see overflow warning)
-  \item \inlinecode{LineL = TLine\textless{}int64\_t\textgreater{}}: exact integer-coefficient lines for large coordinates
-  \item \inlinecode{LineD = TLine\textless{}double\textgreater{}}: standard floating-point
-  \item \inlinecode{LineLD = TLine\textless{}long double\textgreater{}}: extra precision (where supported)
-  \item \inlinecode{Line = LineD}: default line type is double
+  \item \inlinecode{TLine\textless{}T\textgreater{}(a, b, c)} constructs a line from its coefficients, while \inlinecode{TLine\textless{}T\textgreater{}(p, q)} constructs the line through distinct points \inlinecode{p} and \inlinecode{q}. For floating-point \inlinecode{T}, \inlinecode{TLine\textless{}T\textgreater{}(slope, p)} constructs the line of the given slope through \inlinecode{p}. The default constructor produces an invalid line.
+  \item \inlinecode{canonicalized()} returns a canonical copy. \inlinecode{operator==} compares stored coefficients exactly, while \inlinecode{EQ(l1, l2)} canonicalizes raw lines if necessary and uses \inlinecode{EPS} for floating-point coefficients.
+  \item \inlinecode{valid()}, \inlinecode{horizontal()}, and \inlinecode{vertical()} classify the line.
+  \item \inlinecode{slope()}, \inlinecode{x(y)}, and \inlinecode{y(x)} return \inlinecode{fp\_t}, which is \inlinecode{T} for floating-point coefficients and \inlinecode{double} otherwise. An undefined result is returned as \inlinecode{NaN}.
+  \item \inlinecode{contains(p)}, \inlinecode{is\_parallel(l)}, and \inlinecode{is\_perpendicular(l)} test geometric relationships.
+  \item \inlinecode{parallel(p)} and \inlinecode{perpendicular(p)} return the corresponding line through point \inlinecode{p}.
+  \item \inlinecode{operator\textless{}\textless{}} outputs the line in the form \inlinecode{ax+by+c=0}.
+  \item \inlinecode{LineI}, \inlinecode{LineL}, \inlinecode{LineD}, and \inlinecode{LineLD} use \inlinecode{int}, \inlinecode{int64\_t}, \inlinecode{double}, and \inlinecode{long double} coefficients, respectively. \inlinecode{Line} aliases \inlinecode{LineD}.
 \end{compactitem}
+
+Overflow warning: the exact predicates form products of coefficients, which grow like the squared coordinate magnitude. With \inlinecode{LineI} these may overflow once coordinates reach a few tens of thousands, so use \inlinecode{LineL} for larger integer coordinates.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -424,13 +410,13 @@ struct TLine {
   bool vertical() const { return valid() && EQ(b, 0); }
 
   // Slope -a/b, or NaN if the line is vertical or invalid.
-  fp_t slope() const { return (!valid() || EQ(b, 0)) ? M_NAN : -(fp_t)a / b; }
+  fp_t slope() const { return (!valid() || EQ(b, 0)) ? M_NAN : -fp_t(a) / b; }
 
   // Solve for x at a given y (NaN if horizontal or invalid).
-  fp_t x(fp_t y) const { return (!valid() || EQ(a, 0)) ? M_NAN : -((fp_t)b * y + c) / a; }
+  fp_t x(fp_t y) const { return (!valid() || EQ(a, 0)) ? M_NAN : -(fp_t(b) * y + c) / a; }
 
   // Solve for y at a given x (NaN if vertical or invalid).
-  fp_t y(fp_t x) const { return (!valid() || EQ(b, 0)) ? M_NAN : -((fp_t)a * x + c) / b; }
+  fp_t y(fp_t x) const { return (!valid() || EQ(b, 0)) ? M_NAN : -(fp_t(a) * x + c) / b; }
 
   // Whether point p lies on the line. Exact for integer T and integer p.
   template<typename Pt>
@@ -548,12 +534,10 @@ This implementation stores and computes circle parameters in \inlinecode{double}
   \item \inlinecode{Circle(a, b, r)} constructs one circle of radius \inlinecode{abs(r)} passing through points \inlinecode{a} and \inlinecode{b}, throwing if no finite circle is determined by the inputs.
   \item \inlinecode{operator==} and \inlinecode{operator!=} compare stored centers and radii exactly; \inlinecode{EQ(a, b)} compares them using \inlinecode{EPS}.
   \item \inlinecode{contains(p)} returns whether point \inlinecode{p} lies inside or on the circle.
-  \item \inlinecode{on\_edge(p)} returns whether point \inlinecode{p} lies on the circle boundary.
+  \item \inlinecode{on\_boundary(p)} returns whether point \inlinecode{p} lies on the circle boundary.
   \item \inlinecode{incircle(a, b, c)} returns the circle inscribed in triangle \inlinecode{abc}.
-  \item \inlinecode{in\_circumcircle(a, b, c, d)} returns $1$ if \inlinecode{d} lies strictly inside the circle through \inlinecode{a}, \inlinecode{b}, and \inlinecode{c}, $0$ if it lies on the circle, or $-1$ if it lies outside. This has exact reasoning for integral points by evaluating the determinant directly without constructing a \inlinecode{Circle} or taking square roots. Points \inlinecode{a}, \inlinecode{b}, and \inlinecode{c} must not be collinear. For integer inputs, the sign test is exact provided the chosen intermediate type does not overflow.
+  \item \inlinecode{in\_circumcircle(a, b, c, d)} returns $1$ if point \inlinecode{d} lies strictly inside the circle through points \inlinecode{a}, \inlinecode{b}, and \inlinecode{c}, $0$ if it lies on the circle, or $-1$ if it lies outside. This has exact reasoning for integral points by evaluating the determinant directly without constructing a \inlinecode{Circle} or taking square roots. Points \inlinecode{a}, \inlinecode{b}, and \inlinecode{c} must not be collinear. For integer inputs, the sign test is exact provided the chosen intermediate type does not overflow.
 \end{compactitem}
-
-The floating-point constructors and predicates use an absolute tolerance \inlinecode{EPS}.
 
 Overflow warning: the determinant in \inlinecode{in\_circumcircle()} grows like the fourth power of the coordinate magnitude. For large integer coordinates, use a point or intermediate type wide enough for that determinant.
 
@@ -611,7 +595,7 @@ struct Circle {
   Circle(const Pt &a, const Pt &b) {
     h = (a.x + b.x) / 2.0;
     k = (a.y + b.y) / 2.0;
-    r = hypot(a.x - h, a.y - k);
+    r = std::hypot(a.x - h, a.y - k);
   }
 
   template<typename Pt, typename = if_point<Pt>>
@@ -624,7 +608,7 @@ struct Circle {
     }
     h = (asq * (by - cy) + bsq * (cy - ay) + csq * (ay - by)) / d;
     k = (asq * (cx - bx) + bsq * (ax - cx) + csq * (bx - ax)) / d;
-    r = hypot(ax - h, ay - k);
+    r = std::hypot(ax - h, ay - k);
   }
 
   template<typename Pt, typename = if_point<Pt>>
@@ -634,7 +618,7 @@ struct Circle {
       k = a.y;
       return;
     }
-    double d = hypot(b.x - a.x, b.y - a.y);
+    double d = std::hypot(b.x - a.x, b.y - a.y);
     if (EQ(d, 0)) {
       throw std::runtime_error("Identical points, infinite circles.");
     }
@@ -642,7 +626,7 @@ struct Circle {
       throw std::runtime_error("Points too far away to make Circle.");
     }
     double z = this->r * this->r - d * d / 4.0;
-    double v = sqrt(z < 0 ? 0 : z) / d;
+    double v = std::sqrt(z < 0 ? 0 : z) / d;
     double mx = (a.x + b.x) / 2.0, my = (a.y + b.y) / 2.0;
     h = mx + v * (a.y - b.y);
     k = my + v * (b.x - a.x);
@@ -658,12 +642,12 @@ struct Circle {
 
   template<typename Pt>
   bool contains(const Pt &p) const {
-    return LE(hypot(p.x - h, p.y - k), r);
+    return LE(std::hypot(p.x - h, p.y - k), r);
   }
 
   template<typename Pt>
-  bool on_edge(const Pt &p) const {
-    return EQ(hypot(p.x - h, p.y - k), r);
+  bool on_boundary(const Pt &p) const {
+    return EQ(std::hypot(p.x - h, p.y - k), r);
   }
 
   friend std::ostream &operator<<(std::ostream &out, const Circle &c) {
@@ -678,9 +662,9 @@ struct Circle {
 
 template<typename Pt>
 Circle incircle(const Pt &a, const Pt &b, const Pt &c) {
-  double al = hypot(b.x - c.x, b.y - c.y);
-  double bl = hypot(a.x - c.x, a.y - c.y);
-  double cl = hypot(a.x - b.x, a.y - b.y);
+  double al = std::hypot(b.x - c.x, b.y - c.y);
+  double bl = std::hypot(a.x - c.x, a.y - c.y);
+  double cl = std::hypot(a.x - b.x, a.y - b.y);
   double l = al + bl + cl;
   double px = a.x - c.x, py = a.y - c.y, qx = b.x - c.x, qy = b.y - c.y;
   return EQ(l, 0) ? Circle(a.x, a.y, 0)
@@ -731,23 +715,20 @@ int main() {
   assert(EQ(Circle(Point(0, 0), Point(0, 2), -1), Circle(0, 1, 1)));
   assert(EQ(c, incircle(Point(-12, 5), Point(3, 0), Point(0, 9))));
   assert(c.contains(Point(-2, 8)) && !c.contains(Point(-2, 9)));
-  assert(c.on_edge(Point(-1, 2)) && !c.on_edge(Point(-1.01, 2)));
+  assert(c.on_boundary(Point(-1, 2)) && !c.on_boundary(Point(-1.01, 2)));
 
   // Integer-coordinate points are accepted; the Circle is computed in double.
   assert(EQ(c, Circle(PointI(1, 6), PointI(-5, 4))));
   assert(EQ(c, Circle(PointI(-3, 2), PointI(-3, 8), PointI(-1, 8))));
   assert(EQ(c, incircle(PointI(-12, 5), PointI(3, 0), PointI(0, 9))));
   assert(c.contains(PointI(-2, 8)) && !c.contains(PointI(-2, 9)));
-  assert(c.on_edge(PointI(-1, 2)));
+  assert(c.on_boundary(PointI(-1, 2)));
 
   // Exact integer in-circle predicate: unit circle through (1,0), (0,1), (-1,0).
-  assert(in_circumcircle(PointI(1, 0), PointI(0, 1), PointI(-1, 0), PointI(0, 0)) == 1);  // inside
-  assert(
-      in_circumcircle(PointI(1, 0), PointI(0, 1), PointI(-1, 0), PointI(2, 0)) == -1
-  );  // outside
-  assert(
-      in_circumcircle(PointI(1, 0), PointI(0, 1), PointI(-1, 0), PointI(0, -1)) == 0
-  );  // on edge
+  assert(in_circumcircle(PointI(1, 0), PointI(0, 1), PointI(-1, 0), PointI(0, 0)) == 1);   // inside
+  assert(in_circumcircle(PointI(1, 0), PointI(0, 1), PointI(-1, 0), PointI(2, 0)) == -1);  // out
+  assert(in_circumcircle(PointI(1, 0), PointI(0, 1), PointI(-1, 0), PointI(0, -1)) == 0);  // edge
+
   // Orientation-independent: reversing a, b, c gives the same answer.
   assert(in_circumcircle(PointI(-1, 0), PointI(0, 1), PointI(1, 0), PointI(0, 0)) == 1);
   return 0;
@@ -800,7 +781,7 @@ double triangle_area(const Pt &a, const Pt &b, const Pt &c) {
 
 double triangle_area_sides(double s1, double s2, double s3) {
   double s = (s1 + s2 + s3) / 2.0;
-  return sqrt(s * (s - s1) * (s - s2) * (s - s3));
+  return std::sqrt(s * (s - s1) * (s - s2) * (s - s3));
 }
 
 double triangle_area_medians(double m1, double m2, double m3) {
@@ -813,7 +794,7 @@ double triangle_area_altitudes(double h1, double h2, double h3) {
   }
   double x = h1 * h1, y = h2 * h2, z = h3 * h3;
   double v = 2.0 / (x * y) + 2.0 / (x * z) + 2.0 / (y * z);
-  return 1.0 / sqrt(v - 1.0 / (x * x) - 1.0 / (y * y) - 1.0 / (z * z));
+  return 1.0 / std::sqrt(v - 1.0 / (x * x) - 1.0 / (y * y) - 1.0 / (z * z));
 }
 
 template<typename Pt>
@@ -879,8 +860,6 @@ Common axis-aligned rectangle calculations in two dimensions. The functions are 
   \item \inlinecode{point\_in\_rectangle(p, a, b, include\_boundary = true)} returns whether \inlinecode{p} is inside the axis-aligned rectangle with opposite corners \inlinecode{a} and \inlinecode{b}.
   \item \inlinecode{rectangle\_intersection(a1, b1, a2, b2, \&p, \&q, include\_boundary = true)} finds the intersection of two axis-aligned rectangles, where \inlinecode{a1}/\inlinecode{b1} and \inlinecode{a2}/\inlinecode{b2} are opposite-corner pairs. Returns $-1$ if the rectangles are disjoint, $0$ if they partially intersect, $1$ if the first rectangle is completely inside the second, and $2$ if the second rectangle is completely inside the first. If an intersection exists, its lower-left and upper-right corners are stored in \inlinecode{p} and \inlinecode{q} when those pointers are non-null. The \inlinecode{include\_boundary} flag controls whether boundary-only contact counts as intersecting.
 \end{compactitem}
-
-Floating-point inputs use EPS-based comparisons.
 
 Overflow warning: For integer-coordinate inputs, comparisons are exact as long as intermediate coordinate additions, subtractions, and min/max values do not overflow.
 
@@ -1016,14 +995,12 @@ Angle calculations in two dimensions. All operations are inherently floating-poi
   \item \inlinecode{reduce\_rad(t)} takes an angle \inlinecode{t} radians and returns an equivalent angle in the range $[0, 2\pi)$ radians (e.g. $720.5$ becomes $0.5$).
   \item \inlinecode{polar\_point(r, t)} returns a two-dimensional Cartesian point given radius \inlinecode{r} and angle \inlinecode{t} radians in polar coordinates (see \inlinecode{std::polar()}).
   \item \inlinecode{polar\_angle(p)} returns the angle in radians of the line segment from $(0, 0)$ to point \inlinecode{p}, relative counterclockwise to the positive $x$-axis.
-  \item \inlinecode{angle(a, o, b)} returns the smallest angle in radians formed by the points \inlinecode{a}, \inlinecode{o}, \inlinecode{b} with vertex at point \inlinecode{o}.
-  \item \inlinecode{angle\_between(a, b)} returns the directed counter-clockwise angle in $[0, 2\pi)$ from vector \inlinecode{a} to vector \inlinecode{b}, treating both points as vectors from the origin.
-  \item \inlinecode{angle\_between(a1, b1, a2, b2)} returns the smaller angle in radians between two lines $a_1 x + b_1 y + c_1 = 0$ and $a_2 x + b_2 y + c_2 = 0$, limited to $[0, \pi / 2]$.
+  \item \inlinecode{angle(a, o, b)} returns the smallest angle in radians formed by the points \inlinecode{a}, \inlinecode{o}, \inlinecode{b} with vertex at point \inlinecode{o}. The points \inlinecode{a} and \inlinecode{b} must differ from \inlinecode{o}.
+  \item \inlinecode{angle\_between(a, b)} returns the directed counter-clockwise angle in $[0, 2\pi)$ from vector \inlinecode{a} to vector \inlinecode{b}, treating both points as vectors from the origin. Both vectors must be nonzero.
+  \item \inlinecode{angle\_between(a1, b1, a2, b2)} returns the smaller angle in radians between two lines whose normal vectors are (\inlinecode{a1}, \inlinecode{b1}) and (\inlinecode{a2}, \inlinecode{b2}), limited to $[0, \pi / 2]$. Both coefficient pairs must represent valid lines.
   \item \inlinecode{cross(a, b, o = Pt(0, 0))} returns the signed $z$-component of the three-dimensional cross product between points \inlinecode{a} and \inlinecode{b}, where the $z$-coordinates are implicitly zero and the origin is shifted to point \inlinecode{o}. This is also double the signed area of the triangle from these three points.
   \item \inlinecode{turn(a, o, b)} returns $1$ if the path \inlinecode{a} $\to$ \inlinecode{o} $\to$ \inlinecode{b} forms a left turn on the plane, $0$ if the path forms a straight line segment, or $-1$ if it forms a right turn.
 \end{compactitem}
-
-The points passed to \inlinecode{angle()} must differ from its vertex \inlinecode{o}, vectors passed to \inlinecode{angle\_between()} must be nonzero, and coefficient pairs passed to its line overload must represent valid lines.
 
 Overflow warning: \inlinecode{cross()} and \inlinecode{turn()} preserve the point's coordinate type, so their products may overflow for integral points. Use a 64-bit coordinate type for large integer coordinates.
 
@@ -1037,7 +1014,7 @@ Overflow warning: \inlinecode{cross()} and \inlinecode{turn()} preserve the poin
 #include <type_traits>
 
 const double EPS = 1e-9;
-const double PI = acos(-1.0);
+const double PI = std::acos(-1.0);
 const double DEG = PI / 180;
 const double RAD = 180 / PI;
 
@@ -1055,32 +1032,32 @@ bool LT(T a, U b) {
 
 double reduce_deg(double t) {
   if (t < -360) {
-    return reduce_deg(fmod(t, 360));
+    return reduce_deg(std::fmod(t, 360));
   }
   if (t < 0) {
     return t + 360;
   }
-  return (t >= 360) ? fmod(t, 360) : t;
+  return (t >= 360) ? std::fmod(t, 360) : t;
 }
 
 double reduce_rad(double t) {
   if (t < -2 * PI) {
-    return reduce_rad(fmod(t, 2 * PI));
+    return reduce_rad(std::fmod(t, 2 * PI));
   }
   if (t < 0) {
     return t + 2 * PI;
   }
-  return (t >= 2 * PI) ? fmod(t, 2 * PI) : t;
+  return (t >= 2 * PI) ? std::fmod(t, 2 * PI) : t;
 }
 
 template<typename OutPt>
 OutPt polar_point(double r, double t) {
-  return OutPt(r * cos(t), r * sin(t));
+  return OutPt(r * std::cos(t), r * std::sin(t));
 }
 
 template<typename Pt>
 double polar_angle(const Pt &p) {
-  double t = atan2(static_cast<double>(p.y), static_cast<double>(p.x));
+  double t = std::atan2(static_cast<double>(p.y), static_cast<double>(p.x));
   return (t < 0) ? (t + 2 * PI) : t;
 }
 
@@ -1089,17 +1066,17 @@ double angle(const Pt &a, const Pt &o, const Pt &b) {
   double ux = o.x - a.x, uy = o.y - a.y;
   double vx = o.x - b.x, vy = o.y - b.y;
   double cosine = (ux * vx + uy * vy) / (std::hypot(ux, uy) * std::hypot(vx, vy));
-  return acos(std::max(-1.0, std::min(1.0, cosine)));
+  return std::acos(std::clamp(cosine, -1.0, 1.0));
 }
 
 template<typename Pt>
 double angle_between(const Pt &a, const Pt &b) {
-  double t = atan2(a.x * b.y - a.y * b.x, a.x * b.x + a.y * b.y);
+  double t = std::atan2(a.x * b.y - a.y * b.x, a.x * b.x + a.y * b.y);
   return (t < 0) ? (t + 2 * PI) : t;
 }
 
 double angle_between(double a1, double b1, double a2, double b2) {
-  double t = atan2(a1 * b2 - a2 * b1, a1 * a2 + b1 * b2);
+  double t = std::atan2(a1 * b2 - a2 * b1, a1 * a2 + b1 * b2);
   if (t < 0) {
     t += PI;
   }
@@ -1148,15 +1125,13 @@ Distance calculations in two dimensions for points, lines, and line segments. Th
 
 \begin{compactitem}
   \item \inlinecode{dist(a, b)} and \inlinecode{sqdist(a, b)} respectively return the distance and squared distance between points \inlinecode{a} and \inlinecode{b}.
-  \item \inlinecode{line\_dist(p, a, b, c)} returns the distance from point \inlinecode{p} to the line $ax + by + c = 0$.
+  \item \inlinecode{line\_dist(p, a, b, c)} returns the distance from point \inlinecode{p} to the valid line $ax + by + c = 0$.
   \item \inlinecode{line\_dist(p, a, b)} returns the distance from point \inlinecode{p} to the infinite line containing points \inlinecode{a} and \inlinecode{b}. If \inlinecode{a} = \inlinecode{b}, the distance from \inlinecode{p} to \inlinecode{a} is returned.
-  \item \inlinecode{line\_dist(a1, b1, c1, a2, b2, c2)} returns the distance between two lines.
+  \item \inlinecode{line\_dist(a1, b1, c1, a2, b2, c2)} returns the distance between two valid lines.
   \item \inlinecode{seg\_dist(p, a, b)} returns the distance from point \inlinecode{p} to the line segment \inlinecode{a}-\inlinecode{b}.
   \item \inlinecode{seg\_dist(a, b, c, d)} returns the minimum distance between line segments \inlinecode{a}-\inlinecode{b} and \inlinecode{c}-\inlinecode{d}, or $0$ if the segments touch or intersect.
-  \item \inlinecode{closest\_point(a, b, p)} returns the point on segment \inlinecode{a}-\inlinecode{b} closest to point \inlinecode{p}.
+  \item \inlinecode{closest\_point(a, b, p)} returns the point on segment \inlinecode{a}-\inlinecode{b} closest to point \inlinecode{p}, using the input point type for the result. Use a floating-point point type when the closest point may have fractional coordinates.
 \end{compactitem}
-
-Coefficient triples passed to \inlinecode{line\_dist()} must represent valid lines. Use a floating-point point type with \inlinecode{closest\_point()} when the closest point may have fractional coordinates.
 
 Overflow warning: squared distances, dot products, and cross products are formed in the point's coordinate arithmetic type. For integer point types, use a 64-bit coordinate type when coordinates may exceed a few tens of thousands.
 
@@ -1195,13 +1170,13 @@ auto sqdist(const Pt &a, const Pt &b) {
 
 template<typename Pt>
 double dist(const Pt &a, const Pt &b) {
-  return sqrt(static_cast<double>(sqdist(a, b)));
+  return std::sqrt(static_cast<double>(sqdist(a, b)));
 }
 
 template<typename Pt, typename T>
 double line_dist(const Pt &p, const T &a, const T &b, const T &c) {
   return fabs(static_cast<double>(a) * p.x + static_cast<double>(b) * p.y + c) /
-         sqrt(static_cast<double>(a) * a + static_cast<double>(b) * b);
+         std::sqrt(static_cast<double>(a) * a + static_cast<double>(b) * b);
 }
 
 template<typename Pt>
@@ -1213,7 +1188,7 @@ double line_dist(const Pt &p, const Pt &a, const Pt &b) {
   auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);  // Overflow warning.
   double u = static_cast<double>(d) / n;
   double dx = a.x + u * (b.x - a.x) - p.x, dy = a.y + u * (b.y - a.y) - p.y;
-  return sqrt(dx * dx + dy * dy);
+  return std::sqrt(dx * dx + dy * dy);
 }
 
 template<typename T>
@@ -1223,7 +1198,7 @@ double line_dist(const T &a1, const T &b1, const T &c1, const T &a2, const T &b2
     return EQ(c1, c2 * factor)
                ? 0
                : fabs(c2 * factor - c1) /
-                     sqrt(static_cast<double>(a1) * a1 + static_cast<double>(b1) * b1);
+                     std::sqrt(static_cast<double>(a1) * a1 + static_cast<double>(b1) * b1);
   }
   return 0;
 }
@@ -1243,7 +1218,7 @@ double seg_dist(const Pt &p, const Pt &a, const Pt &b) {
   }
   double t = static_cast<double>(d) / n;
   double dx = a.x + t * (b.x - a.x) - p.x, dy = a.y + t * (b.y - a.y) - p.y;
-  return sqrt(dx * dx + dy * dy);
+  return std::sqrt(dx * dx + dy * dy);
 }
 
 template<typename Pt>
@@ -1345,14 +1320,12 @@ int main() {
 Intersection calculations in two dimensions for straight lines and line segments. The functions are templated on the point type \inlinecode{Pt}: pass any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields (for example \inlinecode{PointD}/\inlinecode{PointI} from 7.1.1, or the local example struct) for which \inlinecode{operator\textless{}} orders points lexicographically using exact coordinate comparisons. Point output types are deduced from the caller-supplied arguments, so they may differ from the input type, e.g. integer endpoints with a floating-point output point.
 
 \begin{compactitem}
-  \item \inlinecode{line\_intersection(a1, b1, c1, a2, b2, c2, \&p)} intersects lines $a_1 x + b_1 y + c_1 = 0$ and $a_2 x + b_2 y + c_2 = 0$, returning $-1$ (parallel), $0$ (one point, stored into \inlinecode{p}), or $1$ (identical).
-  \item \inlinecode{line\_intersection(p1, p2, p3, p4, \&p)} intersects the infinite lines determined by points \inlinecode{p1}, \inlinecode{p2}, \inlinecode{p3}, and \inlinecode{p4}, returning $-1$ (parallel), $0$ (one point, stored into \inlinecode{p}), or $1$ (identical).
+  \item \inlinecode{line\_intersection(a1, b1, c1, a2, b2, c2, \&p)} intersects lines $a_1 x + b_1 y + c_1 = 0$ and $a_2 x + b_2 y + c_2 = 0$, returning $-1$ (parallel), $0$ (one point, stored into \inlinecode{p}), or $1$ (identical). Both coefficient triples must represent valid lines.
+  \item \inlinecode{line\_intersection(p1, p2, p3, p4, \&p)} intersects the infinite lines determined by points \inlinecode{p1}, \inlinecode{p2}, \inlinecode{p3}, and \inlinecode{p4}, returning $-1$ (parallel), $0$ (one point, stored into \inlinecode{p}), or $1$ (identical). The points in each pair must differ.
   \item \inlinecode{seg\_intersection(a, b, c, d, \&p, \&q, include\_boundary = true)} intersects segments \inlinecode{a}-\inlinecode{b} and \inlinecode{c}-\inlinecode{d}, returning $-1$ (none), $0$ (one point), or $1$ (overlapping segment). The \inlinecode{include\_boundary} flag controls whether segments that meet only at an endpoint count as intersecting. If the intersection is a point (and \inlinecode{p} is not \inlinecode{nullptr}), it will be stored into \inlinecode{p}. If the intersection is an overlapping segment (and \inlinecode{p} and \inlinecode{q} are not \inlinecode{nullptr}) then their endpoints will be stored into pointers \inlinecode{p} and \inlinecode{q}, which must reference a floating-point point type.
   \item \inlinecode{seg\_intersection(a, b, c, d, include\_boundary = true)} is a simplified, detection-only version of the above. Both versions are exact for detection if the input point type is integral.
-  \item \inlinecode{closest\_point(a, b, c, p)} returns the closest point on line $ax + by + c = 0$ to point \inlinecode{p}.
+  \item \inlinecode{closest\_point(a, b, c, p)} returns the closest point on the valid line $ax + by + c = 0$ to point \inlinecode{p}.
 \end{compactitem}
-
-Coefficient triples must represent valid lines, and each point pair used to define an infinite line must contain two distinct points.
 
 Overflow warning: the exact integer paths multiply coordinate differences (cross products and squared lengths), which grow like the squared coordinate magnitude. With 32-bit \inlinecode{int} coordinates these overflow once coordinates exceed roughly a few tens of thousands, so for larger integer inputs use a point type with 64-bit (\inlinecode{int64\_t}) coordinates.
 
@@ -1623,11 +1596,11 @@ int main() {
 \subsection{Circle Intersection}
 Circle tangent and intersection calculations in two dimensions. Such calculations are floating-point by nature, so this section mostly computes in \inlinecode{double}. The input point \inlinecode{p} to \inlinecode{tangent()} can be any type with numeric \inlinecode{.x} and \inlinecode{.y} fields, and intersection point outputs are written through a caller-supplied point type.
 
-Circle radii are normalized to be nonnegative. \inlinecode{tangent()} requires a positive radius, and lines passed to \inlinecode{intersection()} must be valid.
+Circle radii are normalized to be nonnegative.
 
 \begin{compactitem}
-  \item \inlinecode{tangent(c, p, \&l1, \&l2)} determines the line(s) tangent to circle \inlinecode{c} that pass through point \inlinecode{p}, returning $-1$ if there is no tangent line because \inlinecode{p} is strictly inside \inlinecode{c}, $0$ if there is exactly one tangent line because \inlinecode{p} is on the boundary of \inlinecode{c} (in which case the line will be stored into pointer \inlinecode{l1} if it's not \inlinecode{nullptr}), or $1$ if there are two tangent lines because \inlinecode{p} is strictly outside of \inlinecode{c} (in which case the lines will be stored into pointers \inlinecode{l1} and \inlinecode{l2} if they are not \inlinecode{nullptr}).
-  \item \inlinecode{intersection(c, l, \&p, \&q)} determines the intersection between the circle \inlinecode{c} and line \inlinecode{l}, returning $-1$ if there is no intersection, $0$ if the line has one intersection point because the line is tangent (in which case it will be stored into pointer \inlinecode{p} if it's not \inlinecode{nullptr}), or $1$ if there are two intersection points because the line crosses through the circle (stored independently into \inlinecode{p} and \inlinecode{q} when those pointers are non-null).
+  \item \inlinecode{tangent(c, p, \&l1, \&l2)} determines the line(s) tangent to circle \inlinecode{c} that pass through point \inlinecode{p}, returning $-1$ if there is no tangent line because \inlinecode{p} is strictly inside \inlinecode{c}, $0$ if there is exactly one tangent line because \inlinecode{p} is on the boundary of \inlinecode{c} (in which case the line will be stored into pointer \inlinecode{l1} if it's not \inlinecode{nullptr}), or $1$ if there are two tangent lines because \inlinecode{p} is strictly outside of \inlinecode{c} (in which case the lines will be stored into pointers \inlinecode{l1} and \inlinecode{l2} if they are not \inlinecode{nullptr}). The circle must have positive radius.
+  \item \inlinecode{intersection(c, l, \&p, \&q)} determines the intersection between the circle \inlinecode{c} and line \inlinecode{l}, returning $-1$ if there is no intersection, $0$ if the line has one intersection point because the line is tangent (in which case it will be stored into pointer \inlinecode{p} if it's not \inlinecode{nullptr}), or $1$ if there are two intersection points because the line crosses through the circle (stored independently into \inlinecode{p} and \inlinecode{q} when those pointers are non-null). The line must be valid.
   \item \inlinecode{intersection(c1, c2, \&p, \&q)} determines the intersection points between two circles \inlinecode{c1} and \inlinecode{c2}, returning $-2$ if circle \inlinecode{c2} completely encloses circle \inlinecode{c1}, $-1$ if circle \inlinecode{c1} completely encloses circle \inlinecode{c2}, $0$ if the circles are completely disjoint, $1$ if the circles are tangent with one intersection (stored in \inlinecode{p} if it's not \inlinecode{nullptr}), $2$ if the circles intersect at two points (stored independently in \inlinecode{p} and \inlinecode{q} when those pointers are non-null), or $3$ if the circles are equal and intersect at infinite points.
   \item \inlinecode{intersection\_area(c1, c2)} returns the intersection area of circles \inlinecode{c1} and \inlinecode{c2}.
 \end{compactitem}
@@ -1641,7 +1614,7 @@ Circle radii are normalized to be nonnegative. \inlinecode{tangent()} requires a
 #include <cmath>
 #include <type_traits>
 
-const double EPS = 1e-9, PI = acos(-1.0);
+const double EPS = 1e-9, PI = std::acos(-1.0);
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
@@ -1718,14 +1691,14 @@ int tangent(const Circle &c, const Pt &p, Line *l1 = nullptr, Line *l2 = nullptr
     return -1;  // Point inside Circle, no intersection.
   }
   double qx = vopx / c.r, qy = vopy / c.r;
-  double n = sqnorm(qx, qy), d = qy * sqrt(n - 1.0);
+  double n = sqnorm(qx, qy), d = qy * std::sqrt(n - 1.0);
   double t1x = (qx - d) / n, t1y = c.k;
   double t2x = (qx + d) / n, t2y = c.k;
   if (!EQ(qy, 0)) {  // Common case.
     t1y += c.r * (1.0 - t1x * qx) / qy;
     t2y += c.r * (1.0 - t2x * qx) / qy;
   } else {  // Point at center horizontal, y = 0.
-    d = c.r * sqrt(1.0 - t1x * t1x);
+    d = c.r * std::sqrt(1.0 - t1x * t1x);
     t1y += d;
     t2y -= d;
   }
@@ -1757,7 +1730,7 @@ int intersection(const Circle &c, const Line &l, OutPt *p = nullptr, OutPt *q = 
     }
     return 0;
   }
-  double k = sqrt(std::max(0.0, disc / -aabb));
+  double k = std::sqrt(std::max(0.0, disc / -aabb));
   if (p != nullptr) {
     p->x = x0 + k * l.b + c.h;
     p->y = y0 - k * l.a + c.k;
@@ -1775,7 +1748,7 @@ int intersection(const Circle &c1, const Circle &c2, OutPt *p = nullptr, OutPt *
     return EQ(c1.r, c2.r) ? 3 : (c1.r > c2.r ? -1 : -2);
   }
   double d12x = c2.h - c1.h, d12y = c2.k - c1.k;
-  double d = hypot(d12x, d12y);
+  double d = std::hypot(d12x, d12y);
   if (LT(c1.r + c2.r, d)) {
     return 0;
   }
@@ -1784,7 +1757,7 @@ int intersection(const Circle &c1, const Circle &c2, OutPt *p = nullptr, OutPt *
   }
   double a = (c1.r * c1.r - c2.r * c2.r + d * d) / (2 * d);
   double x0 = c1.h + (d12x * a / d), y0 = c1.k + (d12y * a / d);
-  double s = sqrt(std::max(0.0, c1.r * c1.r - a * a));
+  double s = std::sqrt(std::max(0.0, c1.r * c1.r - a * a));
   double rx = -d12y * s / d, ry = d12x * s / d;
   if (EQ(rx, 0) && EQ(ry, 0)) {
     if (p != nullptr) {
@@ -1813,10 +1786,10 @@ double intersection_area(const Circle &c1, const Circle &c2) {
   if (LE(R + r, d)) {
     return 0;
   }
-  double alpha = std::max(-1.0, std::min(1.0, (d * d + r * r - R * R) / 2 / d / r));
-  double beta = std::max(-1.0, std::min(1.0, (d * d + R * R - r * r) / 2 / d / R));
-  return r * r * acos(alpha) + R * R * acos(beta) -
-         0.5 * sqrt((-d + r + R) * (d + r - R) * (d - r + R) * (d + r + R));
+  double alpha = std::clamp((d * d + r * r - R * R) / 2 / d / r, -1.0, 1.0);
+  double beta = std::clamp((d * d + R * R - r * r) / 2 / d / R, -1.0, 1.0);
+  return r * r * std::acos(alpha) + R * R * std::acos(beta) -
+         0.5 * std::sqrt((-d + r + R) * (d + r - R) * (d - r + R) * (d + r + R));
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -1933,8 +1906,8 @@ std::vector<std::pair<Point, Point>> circle_tangents(
   }
   std::vector<std::pair<Point, Point>> res;
   for (double s : {-1.0, 1.0}) {
-    Point v = (d * dr + d.rotate90() * (sqrt(std::max(0.0, h2)) * s)) / d2;
-    res.push_back({Point(c1.x, c1.y) + v * r1, Point(c2.x, c2.y) + v * r2});
+    Point v = (d * dr + d.rotate90() * (std::sqrt(std::max(0.0, h2)) * s)) / d2;
+    res.emplace_back(Point(c1.x, c1.y) + v * r1, Point(c2.x, c2.y) + v * r2);
   }
   if (EQ(h2, 0)) {
     res.pop_back();
@@ -2392,11 +2365,9 @@ Given a convex polygon in counter-clockwise order, answer containment and tangen
 
 \begin{compactitem}
   \item \inlinecode{point\_in\_convex\_polygon(poly, p, include\_boundary = true)} returns whether point \inlinecode{p} lies inside the convex polygon \inlinecode{poly}. The polygon must be in counter-clockwise order, with no repeated final vertex. Points on the boundary count as inside unless \inlinecode{include\_boundary} is set to \inlinecode{false}.
-  \item \inlinecode{line\_convex\_polygon\_intersection(poly, a, b)} describes where the infinite directed line through \inlinecode{a} $\to$ \inlinecode{b} hits the polygon: $(-1, -1)$ for no intersection, $(i, -1)$ for touching vertex $i$, $(i, i)$ for containing side $i \to i+1$, or $(i, j)$ for crossing sides $i \to i+1$ and $j \to j+1$, with side indices taken modulo the number of vertices. The polygon must have at least three vertices, and \inlinecode{a} and \inlinecode{b} must differ.
+  \item \inlinecode{line\_convex\_polygon\_intersection(poly, a, b)} describes where the infinite directed line through \inlinecode{a} $\to$ \inlinecode{b} hits the polygon: $(-1, -1)$ for no intersection, $(i, -1)$ for touching vertex $i$, $(i, i)$ for containing side $i \to i+1$, or $(i, j)$ for crossing sides $i \to i+1$ and $j \to j+1$, with side indices taken modulo the number of vertices. The polygon must have at least three vertices, and \inlinecode{a} and \inlinecode{b} must differ. When the line crosses two sides, their order is determined using a floating-point line parameter.
   \item \inlinecode{convex\_polygon\_tangents(poly, p)} returns the two tangent vertex indices from an outside point \inlinecode{p} as (\inlinecode{left}, \inlinecode{right}). The left tangent has all polygon vertices on or to the left of the directed line \inlinecode{p} $\to$ \inlinecode{poly[left]}; the right tangent is analogous for the right side.
 \end{compactitem}
-
-When a line crosses two sides, their returned order is determined using a floating-point line parameter.
 
 Overflow warning: For integer-coordinate inputs, all orientation tests are exact provided the cross products do not overflow.
 
@@ -2428,7 +2399,7 @@ int sgn(const T &x) {
 }
 
 template<typename Pt>
-bool on_segment(const Pt &p, const Pt &a, const Pt &b) {
+bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
   return cross(a, b, p) == 0 && std::min(a.x, b.x) <= p.x && p.x <= std::max(a.x, b.x) &&
          std::min(a.y, b.y) <= p.y && p.y <= std::max(a.y, b.y);
 }
@@ -2445,7 +2416,7 @@ bool point_in_convex_polygon(
     return include_boundary && p.x == poly[0].x && p.y == poly[0].y;
   }
   if (n == 2) {
-    return include_boundary && on_segment(p, poly[0], poly[1]);
+    return include_boundary && point_on_segment(p, poly[0], poly[1]);
   }
   int left = sgn(cross(poly[1], p, poly[0]));
   int right = sgn(cross(poly[n - 1], p, poly[0]));
@@ -2453,10 +2424,10 @@ bool point_in_convex_polygon(
     return false;
   }
   if (left == 0) {
-    return include_boundary && on_segment(p, poly[0], poly[1]);
+    return include_boundary && point_on_segment(p, poly[0], poly[1]);
   }
   if (right == 0) {
-    return include_boundary && on_segment(p, poly[0], poly[n - 1]);
+    return include_boundary && point_on_segment(p, poly[0], poly[n - 1]);
   }
   int lo = 1, hi = n - 1;
   while (hi - lo > 1) {
@@ -2582,7 +2553,7 @@ Given a set of points in two dimensions, finds the unique circle of minimum radi
 This implementation uses Welzl's randomized incremental algorithm. The points are shuffled and processed one at a time while maintaining the current minimum enclosing circle. Whenever a point lies outside the current circle, the circle is rebuilt with that point constrained to lie on the boundary. The final circle is determined by at most three boundary points.
 
 \begin{compactitem}
-  \item \inlinecode{minimum\_enclosing\_circle(lo, hi)} returns the minimum enclosing circle for the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of points, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators. The input range is shuffled in place. The point type may be any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members. The returned circle always uses \inlinecode{double} coordinates, so integer-coordinate inputs are accepted.
+  \item \inlinecode{min\_enclosing\_circle(lo, hi)} returns the minimum enclosing circle for the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of points, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators. The input range is shuffled in place. The point type may be any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members. The returned circle always uses \inlinecode{double} coordinates, so integer-coordinate inputs are accepted.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ expected time per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}, or $O(n^{3})$ in the worst-case for a particular shuffle order.
@@ -2591,6 +2562,7 @@ This implementation uses Welzl's randomized incremental algorithm. The points ar
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <random>
 #include <stdexcept>
@@ -2660,14 +2632,14 @@ struct Circle {
 
 // Input points can be any type with .x and .y fields; Circle output is always double.
 template<typename It>
-Circle minimum_enclosing_circle(It lo, It hi) {
+Circle min_enclosing_circle(It lo, It hi) {
   if (lo == hi) {
     return Circle(0, 0, 0);
   }
   if (lo + 1 == hi) {
     return Circle(lo->x, lo->y, 0);
   }
-  static std::mt19937 rng(std::random_device{}());
+  static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
   std::shuffle(lo, hi, rng);
   Circle res(*lo, *(lo + 1));
   for (It i = lo + 2; i != hi; ++i) {
@@ -2710,24 +2682,24 @@ struct PointI {
 
 int main() {
   vector<Point> empty;
-  Circle none = minimum_enclosing_circle(empty.begin(), empty.end());
+  Circle none = min_enclosing_circle(empty.begin(), empty.end());
   assert(EQ(none.h, 0) && EQ(none.k, 0) && EQ(none.r, 0));
 
   vector<Point> one{{2, 3}};
-  Circle single = minimum_enclosing_circle(one.begin(), one.end());
+  Circle single = min_enclosing_circle(one.begin(), one.end());
   assert(EQ(single.h, 2) && EQ(single.k, 3) && EQ(single.r, 0));
 
   vector<Point> two{{0, 0}, {4, 0}};
-  Circle diameter = minimum_enclosing_circle(two.begin(), two.end());
+  Circle diameter = min_enclosing_circle(two.begin(), two.end());
   assert(EQ(diameter.h, 2) && EQ(diameter.k, 0) && EQ(diameter.r, 2));
 
   vector<Point> v{{0, 0}, {0, 1}, {1, 0}, {1, 1}};
-  Circle res = minimum_enclosing_circle(v.begin(), v.end());
+  Circle res = min_enclosing_circle(v.begin(), v.end());
   assert(EQ(res.h, 0.5) && EQ(res.k, 0.5) && EQ(res.r, 1 / sqrt(2)));
 
   // Integer-coordinate input: Circle output is always double.
   vector<PointI> iv{{0, 0}, {0, 2}, {2, 0}, {2, 2}};
-  Circle ic = minimum_enclosing_circle(iv.begin(), iv.end());
+  Circle ic = min_enclosing_circle(iv.begin(), iv.end());
   assert(EQ(ic.h, 1.0) && EQ(ic.k, 1.0));
   return 0;
 }
@@ -2736,10 +2708,8 @@ int main() {
 Given a list of points in two dimensions, finds the closest pair using a divide-and-conquer algorithm. The points are split in half by $x$-coordinate and each half is solved recursively; the combining step then only needs to examine points within the best distance so far of the dividing line, where each point in this strip is compared to a constant number of $y$-ordered neighbors.
 
 \begin{compactitem}
-  \item \inlinecode{closest\_pair(lo, hi, \&res)} returns the minimum squared distance between any two points in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ without modifying it, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators. If \inlinecode{res} is non-null, one closest pair is stored there in lexicographic order. With fewer than two points, the maximum value of the squared-distance type is returned and \inlinecode{res} is unchanged. The function is templated on the point type and works with any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members and a lexicographic \inlinecode{operator\textless{}}.
+  \item \inlinecode{closest\_pair(lo, hi, \&res)} returns the minimum squared distance between any two points in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ without modifying it, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators. If \inlinecode{res} is non-null, one closest pair is stored there in lexicographic order. With fewer than two points, the maximum value of the squared-distance type is returned and \inlinecode{res} is unchanged. The function is templated on the point type and works with any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members and a lexicographic \inlinecode{operator\textless{}}. The distance preserves the coordinate arithmetic type, and the returned pair preserves the point type. For integer coordinates, the distance is exact provided intermediate products do not overflow.
 \end{compactitem}
-
-The returned distance preserves the coordinate arithmetic type. For integer-coordinate inputs, the result is therefore an exact squared distance provided intermediate products do not overflow. The returned pair contains the original point type.
 
 Overflow warning: squared distances grow like the square of the coordinate magnitude. For integer point types, use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) when coordinates may exceed a few tens of thousands.
 
@@ -2879,7 +2849,7 @@ Given a list of line segments in two dimensions, determine whether any pair of s
 This implementation counts endpoint contacts as intersections. See 7.2.3 for pairwise intersection predicates when that distinction matters.
 
 \begin{compactitem}
-  \item \inlinecode{find\_intersection(lo, hi, \&res1, \&res2)} returns whether any pair of segments intersect given a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of segments, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators. If an intersection is found, then one such pair of segments is stored in \inlinecode{res1} and \inlinecode{res2}. Constructing a \inlinecode{Segment} places its lexicographically smaller endpoint first, as required by the sweep. If no intersection is found, the output segments are unchanged.
+  \item \inlinecode{find\_intersecting\_pair(lo, hi, \&res1, \&res2)} returns whether any pair of segments intersect given a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of segments, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators. If an intersection is found, then one such pair of segments is stored in \inlinecode{res1} and \inlinecode{res2}. Constructing a \inlinecode{Segment} places its lexicographically smaller endpoint first, as required by the sweep. If no intersection is found, the output segments are unchanged.
 \end{compactitem}
 
 Overflow warning: \inlinecode{seg\_intersection} forms the usual quadratic cross products, but the $y$-ordering cross-multiplication (\inlinecode{ay * bdx}) is cubic in the coordinate magnitude. With 32-bit \inlinecode{int} endpoints this overflows once coordinates reach the low thousands, so use a 64-bit (\inlinecode{int64\_t}) coordinate type for any non-trivial integer inputs.
@@ -2928,7 +2898,7 @@ bool intersects(const Segment<Pt> &s1, const Segment<Pt> &s2) {
 }
 
 template<typename It>
-bool find_intersection(
+bool find_intersecting_pair(
     It lo, It hi, typename std::iterator_traits<It>::value_type *res1,
     typename std::iterator_traits<It>::value_type *res2
 ) {
@@ -3040,7 +3010,7 @@ int main() {
         Segment<Point>(Point(0, 2), Point(2, -2)), Segment<Point>(Point(0, 3), Point(9, 0))
     };
     Segment<Point> res1, res2;
-    assert(find_intersection(v.begin(), v.end(), &res1, &res2));
+    assert(find_intersecting_pair(v.begin(), v.end(), &res1, &res2));
     assert(res1.p == Point(0, 0) && res1.q == Point(2, 2));
     assert(res2.p == Point(0, 2) && res2.q == Point(2, -2));
   }
@@ -3050,19 +3020,19 @@ int main() {
         Segment<PointI>({0, 2}, {2, -2}), Segment<PointI>({0, 3}, {9, 0})
     };
     Segment<PointI> res1, res2;
-    assert(find_intersection(v.begin(), v.end(), &res1, &res2));
+    assert(find_intersecting_pair(v.begin(), v.end(), &res1, &res2));
 
     const vector<Segment<PointI>> disjoint{
         Segment<PointI>({0, 0}, {1, 0}), Segment<PointI>({0, 5}, {1, 5})
     };
-    assert(!find_intersection(disjoint.begin(), disjoint.end(), &res1, &res2));
+    assert(!find_intersecting_pair(disjoint.begin(), disjoint.end(), &res1, &res2));
   }
   {  // Shared endpoints count as intersections.
     vector<Segment<PointI>> shared{
         Segment<PointI>({0, 0}, {2, 2}), Segment<PointI>({2, 2}, {4, 0})
     };
     Segment<PointI> res1, res2;
-    assert(find_intersection(shared.begin(), shared.end(), &res1, &res2));
+    assert(find_intersecting_pair(shared.begin(), shared.end(), &res1, &res2));
   }
   return 0;
 }
@@ -3132,7 +3102,7 @@ using namespace std;
 int main() {
   vector<Point> p{{0, 0}, {1, 1}, {2, 2}, {3, 5}, {4, 6}, {3, 3}};
   assert(max_collinear_points(p) == 4);
-  p.push_back(Point(1, 1));
+  p.emplace_back(1, 1);
   assert(max_collinear_points(p) == 5);
   assert(max_collinear_points({}) == 0);
   assert(max_collinear_points({Point(2, 3)}) == 1);
@@ -3143,7 +3113,7 @@ int main() {
 Given points in the plane, produce a small set of candidate edges guaranteed to contain a minimum spanning tree under Manhattan distance $|x_1 - x_2| + |y_1 - y_2|$. The plane is swept in four rotations/reflections; in each sweep, dominance by $x + y$ identifies the only nearby candidates that can matter. Run Kruskal on the returned edges to obtain the MST.
 
 \begin{compactitem}
-  \item \inlinecode{manhattan\_mst\_edges(p)} returns $O(n)$ candidate edges as tuples (\inlinecode{weight}, \inlinecode{u}, \inlinecode{v}).
+  \item \inlinecode{manhattan\_mst\_edges(p)} returns $O(n)$ candidate edges as tuples (\inlinecode{weight}, \inlinecode{u}, \inlinecode{v}), where $n = {\inlinecodemath{p.size()}}$ and \inlinecode{u} and \inlinecode{v} are indices into \inlinecode{p}.
   \item \inlinecode{manhattan\_mst\_weight(p)} returns the MST weight by running Kruskal's algorithm on those candidate edges.
 \end{compactitem}
 
@@ -3267,10 +3237,8 @@ int main() {
 Given a convex polygon and a directed line from \inlinecode{p} to \inlinecode{q}, clips the polygon to the closed left half-plane of that line. The polygon is walked edge by edge: vertices on the left side of the line are kept, and whenever an edge crosses the line, the intersection point is appended to the output.
 
 \begin{compactitem}
-  \item \inlinecode{convex\_cut(lo, hi, p, q)} returns the portion of the polygon lying on or to the left of the directed line from \inlinecode{p} to \inlinecode{q}. The input range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ must contain the vertices of a convex polygon in boundary order, either clockwise or counterclockwise. The returned polygon preserves that boundary order. The points \inlinecode{p} and \inlinecode{q} must differ.
+  \item \inlinecode{convex\_cut(lo, hi, p, q)} returns the portion of the polygon lying on or to the left of the directed line from \inlinecode{p} to \inlinecode{q}. The input range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ must contain the vertices of a convex polygon in boundary order, either clockwise or counterclockwise. The returned polygon preserves that boundary order and uses \inlinecode{Point} with \inlinecode{double} coordinates because edge-line intersections are computed in floating point. The points \inlinecode{p} and \inlinecode{q} must differ.
 \end{compactitem}
-
-The function is templated on the input point type. Side classification is done with cross products. Edge-line intersection points are computed in floating point, and the returned polygon uses \inlinecode{Point} with \inlinecode{double} coordinates.
 
 Overflow warning: For integer-coordinate inputs, classification is exact only if the intermediate products do not overflow.
 
@@ -3533,10 +3501,10 @@ int main() {
   assert(EQ(polygon_area(square), 16));
 
   auto tighter = box;
-  tighter.push_back(HalfPlane(Point(0, 1), Point(4, 1)));  // y >= 1
+  tighter.emplace_back(Point(0, 1), Point(4, 1));  // y >= 1
   assert(EQ(polygon_area(half_plane_intersection(tighter)), 12));
 
-  box.push_back(HalfPlane(Point(2, 0), Point(2, 4)));  // x <= 2
+  box.emplace_back(Point(2, 0), Point(2, 4));  // x <= 2
   auto rect = half_plane_intersection(box);
   assert(rect.size() == 4);
   assert(EQ(polygon_area(rect), 8));
@@ -3822,12 +3790,6 @@ int line_intersection1(
   return 0;
 }
 
-struct Event {
-  double y;
-  int mask_delta;
-  Event(double y = 0, int mask_delta = 0) : y(y), mask_delta(mask_delta) {}
-};
-
 template<typename It>
 double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   if (lo1 == hi1 || lo2 == hi2) {
@@ -3869,7 +3831,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   for (int k = 0; k + 1 < static_cast<int>(x_coords.size()); k++) {
     double x = (x_coords[k] + x_coords[k + 1]) / 2;
     SweepPoint sweep0{x, 0}, sweep1{x, 1};
-    std::vector<Event> events;
+    std::vector<std::pair<double, int>> events;  // (y, mask delta)
     for (int poly = 0; poly < 2; poly++) {
       It lo = poly_lo[poly], hi = poly_hi[poly];
       for (It j = lo, i = hi - 1; j != hi; i = j++) {
@@ -3884,18 +3846,17 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
         }
       }
     }
-    std::sort(events.begin(), events.end(), [](const Event &e1, const Event &e2) {
-      return e1.y != e2.y ? e1.y < e2.y : e1.mask_delta < e2.mask_delta;
-    });
+    std::sort(events.begin(), events.end());
     double height = 0;
     int coverage[2] = {0, 0};
     for (int j = 0; j < static_cast<int>(events.size()); j++) {
+      auto [y, mask_delta] = events[j];
       if (coverage[0] != 0 && coverage[1] != 0) {
-        height += events[j].y - events[j - 1].y;
+        height += y - events[j - 1].first;
       }
-      int bit = std::abs(events[j].mask_delta);
+      int bit = std::abs(mask_delta);
       int poly = (bit == 1 ? 0 : 1);
-      coverage[poly] += events[j].mask_delta / bit;
+      coverage[poly] += mask_delta / bit;
     }
     res += height * (x_coords[k + 1] - x_coords[k]);
   }
@@ -3970,11 +3931,11 @@ Given a set $P$ of distinct two-dimensional points, a Delaunay triangulation of 
 
 This implementation produces one valid triangulation using a simple brute-force algorithm. Each candidate triangle is tested against the empty-circumcircle condition, and candidates whose edges would properly cross already accepted triangles are rejected.
 
+All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation.
+
 \begin{compactitem}
   \item \inlinecode{delaunay\_triangulation(p)} returns a Delaunay triangulation of the distinct points in \inlinecode{p} as a vector of clockwise-oriented vertex triples, or an empty vector if no triangulation exists (e.g. fewer than three points, or all points collinear).
 \end{compactitem}
-
-All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation.
 
 Overflow warning: the lifted-paraboloid test grows like the fourth power of the coordinate magnitude. With 64-bit integer coordinates, it overflows once coordinates exceed roughly $17600$. For floating-point coordinates the test is subject to the usual rounding error.
 
@@ -4114,11 +4075,11 @@ Given a set $P$ of distinct two-dimensional points, a Delaunay triangulation of 
 
 This implementation produces one valid triangulation using the Guibas-Stolfi divide-and-conquer algorithm with a quad-edge data structure. The point set is split in half, each half is triangulated recursively, and the halves are stitched together from the bottom up by a sequence of cross edges, with circumcircle tests deciding each connecting edge and deleting invalidated ones.
 
+The point type must provide exact lexicographic \inlinecode{operator\textless{}}, since sorting and duplicate removal require a strict ordering rather than epsilon equality. All arithmetic uses the point's coordinate type, so integer inputs yield an exact triangulation.
+
 \begin{compactitem}
   \item \inlinecode{delaunay\_triangulation(p)} returns the triangles of one Delaunay triangulation as a vector of counterclockwise-oriented \inlinecode{Point\textless{}T\textgreater{}} triples (\inlinecode{std::tuple}). Duplicate points are ignored. If fewer than three non-collinear unique points remain, the result is empty.
 \end{compactitem}
-
-The point type must provide exact lexicographic \inlinecode{operator\textless{}}; sorting and duplicate removal requires this strict ordering rather than epsilon equality. All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation.
 
 Overflow warning: the in-circle test grows like the fourth power of the coordinate magnitude and dominates the overflow budget. With 64-bit integer coordinates, it overflows once coordinates exceed roughly $14000$. For floating-point coordinates, the predicates are subject to the usual rounding error.
 
@@ -4418,20 +4379,19 @@ int main() {
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{3D Point}
-A 3D point class template supporting vector arithmetic, dot and cross products, distances, angles, unit vectors, normals, and rotation about an axis. Point equality and ordering are exact, while \inlinecode{EQ(p, q)} provides epsilon equality for floating-point coordinates. Integer coordinates are suitable for the exact algebraic operations \inlinecode{dot()}, \inlinecode{cross()}, and \inlinecode{sqnorm()} as long as intermediate products do not overflow; metric operations preserve floating-point coordinates and otherwise convert them to \inlinecode{double}.
-
-\inlinecode{unit()} requires a nonzero point, \inlinecode{normal(p)} requires nonparallel vectors, and \inlinecode{rotate(angle, axis)} requires a nonzero axis.
-
-Overflow warning: the exact products \inlinecode{dot()}, \inlinecode{cross()}, and \inlinecode{sqnorm()} grow like the squared coordinate magnitude. With \inlinecode{TPoint3\textless{}int\textgreater{}} these overflow a 32-bit \inlinecode{int} once coordinates exceed a few tens of thousands, so use \inlinecode{Point3L} (\inlinecode{TPoint3\textless{}int64\_t\textgreater{}}) for larger integer coordinates.
-
-Type aliases:
+A 3D point class templated on the coordinate type \inlinecode{T}. Algebraic operations preserve \inlinecode{T}, while metric operations use \inlinecode{fp\_t}, which is \inlinecode{T} for floating-point coordinates and \inlinecode{double} otherwise.
 
 \begin{compactitem}
-  \item \inlinecode{Point3I = TPoint3\textless{}int\textgreater{}}
-  \item \inlinecode{Point3L = TPoint3\textless{}int64\_t\textgreater{}}
-  \item \inlinecode{Point3D = TPoint3\textless{}double\textgreater{}}
-  \item \inlinecode{Point3LD = TPoint3\textless{}long double\textgreater{}}
+  \item \inlinecode{TPoint3\textless{}T\textgreater{}(x = 0, y = 0, z = 0)} constructs point (\inlinecode{x}, \inlinecode{y}, \inlinecode{z}).
+  \item Operators \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, and \inlinecode{/} preserve the coordinate type except that division promotes to \inlinecode{fp\_t}. Comparisons are exact and lexicographic, while \inlinecode{EQ(p, q)} uses \inlinecode{EPS} for floating-point coordinates and remains exact for other types.
+  \item \inlinecode{sqnorm()}, \inlinecode{dot(p)}, and \inlinecode{cross(p)} return exact algebraic results in coordinate type \inlinecode{T}.
+  \item \inlinecode{norm()}, \inlinecode{phi()}, and \inlinecode{theta()} return the length, azimuth, and polar angle in \inlinecode{fp\_t}.
+  \item \inlinecode{unit()} returns the unit vector and requires a nonzero point; \inlinecode{normal(p)} returns a unit normal and requires nonparallel vectors.
+  \item \inlinecode{rotate(angle, axis)} rotates the point about a nonzero \inlinecode{axis} using Rodrigues' formula.
+  \item \inlinecode{Point3I}, \inlinecode{Point3L}, \inlinecode{Point3D}, and \inlinecode{Point3LD} use \inlinecode{int}, \inlinecode{int64\_t}, \inlinecode{double}, and \inlinecode{long double} coordinates, respectively.
 \end{compactitem}
+
+Overflow warning: the exact products \inlinecode{dot()}, \inlinecode{cross()}, and \inlinecode{sqnorm()} grow like the squared coordinate magnitude. With \inlinecode{TPoint3\textless{}int\textgreater{}} these overflow a 32-bit \inlinecode{int} once coordinates exceed a few tens of thousands, so use \inlinecode{Point3L} (\inlinecode{TPoint3\textless{}int64\_t\textgreater{}}) for larger integer coordinates.
 
 \textbf{Time Complexity}: $O(1)$ per operation.
 
@@ -4470,15 +4430,12 @@ struct TPoint3 {
   TPoint3 operator+(const TPoint3 &p) const { return {x + p.x, y + p.y, z + p.z}; }
   TPoint3 operator-(const TPoint3 &p) const { return {x - p.x, y - p.y, z - p.z}; }
   TPoint3 operator*(T k) const { return {x * k, y * k, z * k}; }
-  TPoint3<fp_t> operator/(fp_t k) const { return {(fp_t)x / k, (fp_t)y / k, (fp_t)z / k}; }
+  TPoint3<fp_t> operator/(fp_t k) const { return {fp_t(x) / k, fp_t(y) / k, fp_t(z) / k}; }
   T dot(const TPoint3 &p) const { return x * p.x + y * p.y + z * p.z; }  // Overflow warning.
   T sqnorm() const { return x * x + y * y + z * z; }                     // Overflow warning.
-
-  fp_t norm() const {
-    return std::hypot(std::hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)), static_cast<fp_t>(z));
-  }
-
-  fp_t phi() const { return std::atan2(static_cast<fp_t>(y), static_cast<fp_t>(x)); }
+  fp_t norm() const { return std::hypot(std::hypot(fp_t(x), fp_t(y)), fp_t(z)); }
+  fp_t phi() const { return std::atan2(fp_t(y), fp_t(x)); }
+  fp_t theta() const { return std::atan2(std::hypot(fp_t(x), fp_t(y)), fp_t(z)); }
   TPoint3<fp_t> unit() const { return *this / norm(); }
 
   TPoint3 cross(const TPoint3 &p) const {
@@ -4487,13 +4444,9 @@ struct TPoint3 {
 
   TPoint3<fp_t> normal(const TPoint3 &p) const { return cross(p).unit(); }
 
-  fp_t theta() const {
-    return std::atan2(std::hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)), static_cast<fp_t>(z));
-  }
-
   TPoint3<fp_t> rotate(fp_t angle, const TPoint3 &axis) const {
     fp_t s = std::sin(angle), c = std::cos(angle);
-    TPoint3<fp_t> u = axis.unit(), v((fp_t)x, (fp_t)y, (fp_t)z);
+    TPoint3<fp_t> u = axis.unit(), v{fp_t(x), fp_t(y), fp_t(z)};
     return u * v.dot(u) * (1 - c) + v * c - v.cross(u) * s;
   }
 };
@@ -4539,6 +4492,7 @@ Overflow warning: for integral point types, each scalar triple product must fit 
 
 struct Point3D {
   double x, y, z;
+
   Point3D(double x = 0, double y = 0, double z = 0) : x(x), y(y), z(z) {}
   double dot(const Point3D &p) const { return x * p.x + y * p.y + z * p.z; }
 
@@ -4583,10 +4537,8 @@ int main() {
 Given points in 3D, compute the triangular faces of their convex hull with an incremental algorithm. Start with a tetrahedron, delete every visible face for each new point, and stitch the horizon edges to that point. Returned faces are oriented outward.
 
 \begin{compactitem}
-  \item \inlinecode{convex\_hull\_3d(p)} returns triangular faces as \inlinecode{Face\{a, b, c\}} triples, where each face has vertices \inlinecode{p[a]}, \inlinecode{p[b]}, and \inlinecode{p[c]}.
+  \item \inlinecode{convex\_hull\_3d(p)} returns triangular faces as \inlinecode{Face\{a, b, c\}} triples, where each face has vertices \inlinecode{p[a]}, \inlinecode{p[b]}, and \inlinecode{p[c]}. The input must contain at least four points, with no four coplanar. For coplanar or highly degenerate inputs, perturb the points slightly or use a more robust library.
 \end{compactitem}
-
-Preconditions: at least four points, and no four points coplanar. For coplanar or highly degenerate inputs, perturbing points slightly or using a more robust library is recommended.
 
 \textbf{Time Complexity}: $O(n^{2})$ per call, where $n$ is the number of points.
 
@@ -4602,6 +4554,7 @@ const double EPS = 1e-9;
 
 struct Point3D {
   double x, y, z;
+
   Point3D(double x = 0, double y = 0, double z = 0) : x(x), y(y), z(z) {}
   Point3D operator-(const Point3D &p) const { return {x - p.x, y - p.y, z - p.z}; }
   Point3D operator*(double k) const { return {x * k, y * k, z * k}; }
@@ -4716,7 +4669,7 @@ int main() {
   assert(faces.size() == 4);
   assert_outward(tetra, faces);
 
-  tetra.push_back(Point3D(1, 1, 1));
+  tetra.emplace_back(1, 1, 1);
   faces = convex_hull_3d(tetra);
   // Adding the opposite point makes a triangular bipyramid with six triangular faces.
   assert(faces.size() == 6);

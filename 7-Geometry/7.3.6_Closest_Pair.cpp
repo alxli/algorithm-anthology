@@ -10,11 +10,9 @@ line, where each point in this strip is compared to a constant number of $y$-ord
   `res` is non-null, one closest pair is stored there in lexicographic order. With fewer than two
   points, the maximum value of the squared-distance type is returned and `res` is unchanged. The
   function is templated on the point type and works with any type exposing numeric `.x` and `.y`
-  members and a lexicographic `operator<`.
-
-The returned distance preserves the coordinate arithmetic type. For integer-coordinate inputs, the
-result is therefore an exact squared distance provided intermediate products do not overflow. The
-returned pair contains the original point type.
+  members and a lexicographic `operator<`. The distance preserves the coordinate arithmetic type,
+  and the returned pair preserves the point type. For integer coordinates, the distance is exact
+  provided intermediate products do not overflow.
 
 Overflow warning: squared distances grow like the square of the coordinate magnitude. For integer
 point types, use a 64-bit coordinate type (e.g. `PointL` from 7.1.1) when coordinates may exceed a

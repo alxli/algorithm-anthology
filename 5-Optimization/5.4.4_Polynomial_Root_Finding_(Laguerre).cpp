@@ -6,20 +6,20 @@ starting point. Once a root is found it is removed by polynomial deflation, and 
 repeats on the lower-degree quotient until every root has been extracted.
 
 - `horner_eval(p, x)` evaluates a complex polynomial $p$ of degree $d$ (represented as a vector of
-  size $d + 1$ where `p[i]` stores the complex coefficient for the $x^i$ term) at `x`, using
-  Horner's method, returning a pair where the first value is the final result $p(x)$ and the second
-  value is the quotient polynomial $q$ from the identity $p(t) = (t - x)q(t) + p(x)$.
+  size $d + 1$ where `p[i]` stores the degree-`i` coefficient) at `x`, using Horner's method,
+  returning a pair where the first value is the final result $p(x)$ and the second value is the
+  quotient polynomial $q$ from the identity $p(t) = (t - x)q(t) + p(x)$. The coefficient vector must
+  be nonempty.
 - `find_one_root(p, x0, eps = 1e-15, iterations = 10000)` returns a complex root $x$ for polynomial
-  `p` (represented as a vector of size $d + 1$ where `p[i]` stores the complex coefficient for the
-  $x^i$ term) using an initial guess `x0` which should be relatively close to $x$. The root is found
-  to a tolerance of `eps` in absolute or relative error (whichever is reached first).
+  `p` (represented as a vector of size $d + 1$ where `p[i]` stores the degree-`i` coefficient) using
+  an initial guess `x0` which should be relatively close to $x$. The root is found to a tolerance of
+  `eps` in absolute or relative error (whichever is reached first). The polynomial must have degree
+  at least one and omit trailing zero coefficients; its coefficients are scaled by their largest
+  magnitude so a common factor does not affect convergence.
 - `find_all_roots(p, eps = 1e-15, iterations = 10000)` returns a vector of all complex roots for a
   complex polynomial `p`. The roots are found to a tolerance of `eps` in absolute or relative error
-  (whichever is reached first).
-
-Coefficient vectors must be nonempty and omit trailing zero coefficients. `find_one_root()` requires
-a polynomial of degree at least one and scales its coefficients by their largest magnitude so a
-common coefficient factor does not affect convergence.
+  (whichever is reached first). The coefficient vector must be nonempty and omit trailing zero
+  coefficients.
 
 Time Complexity:
 - O(n) per call to `horner_eval()`, where $n$ is the degree of the polynomial.
@@ -36,6 +36,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <complex>
 #include <random>
@@ -99,7 +100,7 @@ std::vector<cdbl> find_all_roots(const cpoly &p, dbl eps = 1e-15L, int iteration
   if (q.size() <= 1) {
     return res;
   }
-  static std::mt19937 rng(std::random_device{}());
+  static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
   std::uniform_real_distribution<dbl> unit(0.0L, 1.0L);
   while (q.size() > 2) {
     cdbl z(unit(rng), unit(rng));

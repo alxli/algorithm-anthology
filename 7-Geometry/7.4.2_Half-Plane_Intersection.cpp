@@ -147,10 +147,10 @@ int main() {
   assert(EQ(polygon_area(square), 16));
 
   auto tighter = box;
-  tighter.push_back(HalfPlane(Point(0, 1), Point(4, 1)));  // y >= 1
+  tighter.emplace_back(Point(0, 1), Point(4, 1));  // y >= 1
   assert(EQ(polygon_area(half_plane_intersection(tighter)), 12));
 
-  box.push_back(HalfPlane(Point(2, 0), Point(2, 4)));  // x <= 2
+  box.emplace_back(Point(2, 0), Point(2, 4));  // x <= 2
   auto rect = half_plane_intersection(box);
   assert(rect.size() == 4);
   assert(EQ(polygon_area(rect), 8));

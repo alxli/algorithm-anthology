@@ -52,7 +52,7 @@ std::vector<int> max_on_time_jobs(const std::vector<TimedJob> &jobs) {
   int64_t time = 0;
   for (int i : order) {
     time += jobs[i].duration;  // Overflow warning.
-    accepted.push({jobs[i].duration, i});
+    accepted.emplace(jobs[i].duration, i);
     selected[i] = true;
     if (time > jobs[i].deadline) {
       time -= accepted.top().first;

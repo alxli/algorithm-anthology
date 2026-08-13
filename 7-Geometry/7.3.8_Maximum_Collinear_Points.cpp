@@ -68,7 +68,7 @@ using namespace std;
 int main() {
   vector<Point> p{{0, 0}, {1, 1}, {2, 2}, {3, 5}, {4, 6}, {3, 3}};
   assert(max_collinear_points(p) == 4);
-  p.push_back(Point(1, 1));
+  p.emplace_back(1, 1);
   assert(max_collinear_points(p) == 5);
   assert(max_collinear_points({}) == 0);
   assert(max_collinear_points({Point(2, 3)}) == 1);

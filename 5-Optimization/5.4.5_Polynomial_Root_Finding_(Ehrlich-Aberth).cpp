@@ -10,16 +10,14 @@ reliable. Multiple or tightly clustered roots may converge slowly, and very larg
 scales may require rescaling the input or using multiprecision arithmetic.
 
 - `eval_with_derivative(p, x)` returns a pair $(p(x), p'(x))$ for a polynomial $p$ given as a vector
-  `p` where `p[i]` stores the coefficient for the $x^i$ term.
+  `p` where `p[i]` stores the degree-`i` coefficient. The vector must be nonempty.
 - `find_all_roots(p, eps = ROOT_EPS, iterations = 2000)` returns a vector of all complex roots for a
   complex polynomial given by the vector of coefficients `p`. A `vector<dbl>` overload is provided
   for polynomials with real coefficients. The roots are found to a tolerance of `eps` in absolute or
   relative error (whichever is reached first), and zero roots are removed exactly before the
-  simultaneous iteration starts.
-
-Root-finding inputs must contain at least one nonzero coefficient. After normalization, trailing
-coefficients no larger than `ZERO_EPS` relative to the largest coefficient are discarded.
-`eval_with_derivative()` requires a nonempty coefficient vector.
+  simultaneous iteration starts. The input must contain at least one nonzero coefficient; after
+  normalization, trailing coefficients no larger than `ZERO_EPS` relative to the largest coefficient
+  are discarded.
 
 Time Complexity:
 - O(n) per call to `eval_with_derivative()`, where $n$ is the degree of the polynomial.
@@ -42,7 +40,7 @@ using dbl = long double;
 using cdbl = std::complex<dbl>;
 using cpoly = std::vector<cdbl>;
 
-const dbl PI = std::acos(dbl(-1));
+const dbl PI = std::acos(dbl{-1});
 const dbl ZERO_EPS = 1e-30L;   // Treat normalized coefficients and denominators this small as zero.
 const dbl ROOT_EPS = 1e-15L;   // Stop once root updates are this small relative to the root.
 const dbl CHECK_EPS = 1e-12L;  // Residual tolerance used by the example assertions.

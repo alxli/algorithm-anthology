@@ -16,8 +16,8 @@ remaining expression counts those cleared bits and packs them into the least-sig
 producing the smallest larger integer with the same number of set bits.
 
 - `submasks(m)` returns all submasks of `m`, including `m` itself and 0, in decreasing order.
-- `next_popcount(x)` returns the smallest integer greater than `x` with the same number of set bits
-  (Gosper's hack), for `x > 0` when that next mask is representable in `Mask`.
+- `next_same_popcount(x)` returns the smallest integer greater than `x` with the same number of set
+  bits (Gosper's hack), for `x > 0` when that next mask is representable in `Mask`.
 - `masks_with_popcount(n, k)` returns all `k`-bit subsets of an `n`-bit universe as masks, in
   increasing order, where $0 \leq k \leq n < `MASK_BITS`$.
 - `subset_sum_transform(f)` overwrites `f` (indexed by mask over `n` bits) so that `f[m]` becomes
@@ -29,12 +29,12 @@ Overflow warning: All intermediate sums must be representable in the value type.
 
 Time Complexity:
 - O(2^p) per call to `submasks(m)`, where $p$ is `popcount(m)`.
-- O(1) per call to `next_popcount()`.
+- O(1) per call to `next_same_popcount()`.
 - O(\binom{n}{k}) per call to `masks_with_popcount(n, k)`.
 - O(n*2^n) per call to `subset_sum_transform(f)`, where `f` has $2^n$ entries.
 
 Space Complexity:
-- O(1) auxiliary for `next_popcount()` and `subset_sum_transform()`.
+- O(1) auxiliary for `next_same_popcount()` and `subset_sum_transform()`.
 - O(1) auxiliary and O(s) for the returned masks from `submasks(m)` and `masks_with_popcount(n, k)`,
   where $s$ is the result size.
 
@@ -61,7 +61,7 @@ std::vector<Mask> submasks(Mask m) {
   return res;
 }
 
-Mask next_popcount(Mask x) {
+Mask next_same_popcount(Mask x) {
   assert(x != 0);
   Mask c = x & (Mask{0} - x), r = x + c;
   assert(r != 0);
@@ -75,7 +75,7 @@ std::vector<Mask> masks_with_popcount(int n, int k) {
     return {0};
   }
   Mask limit = Mask{1} << n;
-  for (Mask x = (Mask{1} << k) - 1; x < limit; x = next_popcount(x)) {
+  for (Mask x = (Mask{1} << k) - 1; x < limit; x = next_same_popcount(x)) {
     res.push_back(x);
   }
   return res;
@@ -88,8 +88,8 @@ void subset_sum_transform(std::vector<T> &f) {
   int n = __builtin_ctz(static_cast<unsigned>(size));  // size = 2^n.
   for (int b = 0; b < n; b++) {
     for (int m = 0; m < size; m++) {
-      if (m & (1u << b)) {
-        f[m] += f[m ^ (1u << b)];
+      if (m & (1U << b)) {
+        f[m] += f[m ^ (1U << b)];
       }
     }
   }
@@ -102,7 +102,7 @@ using namespace std;
 int main() {
   assert((submasks(0b101) == vector<Mask>{0b101, 0b100, 0b001, 0b000}));
 
-  assert(next_popcount(0b0110) == 0b1001u);
+  assert(next_same_popcount(0b0110) == 0b1001U);
   assert(
       (masks_with_popcount(4, 2) == vector<Mask>{0b0011, 0b0101, 0b0110, 0b1001, 0b1010, 0b1100})
   );

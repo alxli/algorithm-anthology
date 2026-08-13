@@ -5,15 +5,15 @@ tree. The lowest common ancestor of two nodes $u$ and $v$ is the node that has t
 while having both $u$ and $v$ as descendants. A node is considered to be a descendant of itself.
 
 This implementation preprocesses binary ancestor jumps. During depth-first search, it records entry
-and exit times so ancestry can be tested in O(1), records each node's depth and root, and stores
-`up[u][i]`, the $2^i$-th ancestor of each node `u`. To answer `lca(u, v)`, it first handles the case
+and exit times so ancestry can be tested in O(1), records each node's depth and root, and stores in
+`up[u][i]` the ancestor $2^i$ edges above node `u`. To answer `lca(u, v)`, it first handles the case
 where one node is already an ancestor of the other, then jumps `u` upward by decreasing powers of
 two until its parent is the lowest common ancestor.
 
 - `BinaryLiftingLCA(adj)` builds the structure over a forest represented by the bidirectional
   adjacency list `adj`, whose indices represent the nodes.
-- `go_up(u, k)` returns the `k`-th ancestor of node `u`, stopping at that tree's root if `k` is
-  larger than `u`'s depth.
+- `go_up(u, k)` returns the ancestor `k` edges above node `u`. When `k == 0`, it returns `u`; values
+  larger than `u`'s depth stop at that tree's root.
 - `lca(u, v)` returns the lowest common ancestor of nodes `u` and `v`, or $-1$ if they are in
   different trees.
 - `is_ancestor(parent, child)` returns whether `parent` is an ancestor of `child`.

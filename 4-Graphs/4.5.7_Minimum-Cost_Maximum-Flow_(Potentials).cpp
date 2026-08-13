@@ -8,7 +8,8 @@ After each augmentation, $h$ is updated with the new shortest-path distances so 
 remain nonnegative on the updated residual graph.
 
 - `MinCostMaxFlow<T, C>(n)` constructs an empty residual network with nodes numbered $[0, `n`)$.
-- `add_edge(u, v, cap, cost)` adds a directed edge and returns its edge ID.
+- `add_edge(u, v, cap, cost)` adds a directed edge from `u` to `v` with capacity `cap` and per-unit
+  cost `cost`, and returns its edge ID.
 - `edge_flow(id)` returns the flow through a previously added edge.
 - `clear_flow()` resets all edge flows to zero.
 - `min_cost_flow(source, sink, target_flow)` sends up to `target_flow` additional units of flow and
@@ -134,7 +135,7 @@ class MinCostMaxFlow {
       std::priority_queue<qnode, std::vector<qnode>, std::greater<>> pq;
       dist.assign(nodes, INF_COST);
       dist[source] = 0;
-      pq.push({0, source});
+      pq.emplace(0, source);
       while (!pq.empty()) {
         auto [du, u] = pq.top();
         pq.pop();
@@ -147,7 +148,7 @@ class MinCostMaxFlow {
           if (residual(e) && dist[u] + reduced_cost < dist[e.v]) {
             dist[e.v] = dist[u] + reduced_cost;
             parent_edge[e.v] = id;
-            pq.push({dist[e.v], e.v});
+            pq.emplace(dist[e.v], e.v);
           }
         }
       }

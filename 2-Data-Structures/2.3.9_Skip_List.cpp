@@ -41,6 +41,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <chrono>
 #include <functional>
 #include <random>
 #include <utility>
@@ -61,8 +62,8 @@ class SkipList {
   int num_nodes;
   Compare comp;
 
-  static int random_level() {
-    static std::mt19937 rng(std::random_device{}());
+  static int rand_level() {
+    static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
     static std::uniform_int_distribution<int> coin(0, 1);
     int level = 1;
     while (coin(rng) && level < MAX_LEVELS) {
@@ -126,7 +127,7 @@ class SkipList {
     if (n != nullptr && !comp(k, n->key) && !comp(n->key, k)) {
       return false;
     }
-    int new_level = random_level();
+    int new_level = rand_level();
     if (new_level > curr_level) {
       for (int i = curr_level; i < new_level; i++) {
         update[i] = head;

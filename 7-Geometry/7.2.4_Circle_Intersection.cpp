@@ -5,20 +5,19 @@ by nature, so this section mostly computes in `double`. The input point `p` to `
 any type with numeric `.x` and `.y` fields, and intersection point outputs are written through a
 caller-supplied point type.
 
-Circle radii are normalized to be nonnegative. `tangent()` requires a positive radius, and lines
-passed to `intersection()` must be valid.
+Circle radii are normalized to be nonnegative.
 
 - `tangent(c, p, &l1, &l2)` determines the line(s) tangent to circle `c` that pass through point
   `p`, returning $-1$ if there is no tangent line because `p` is strictly inside `c`, $0$ if there
   is exactly one tangent line because `p` is on the boundary of `c` (in which case the line will be
   stored into pointer `l1` if it's not `nullptr`), or $1$ if there are two tangent lines because `p`
   is strictly outside of `c` (in which case the lines will be stored into pointers `l1` and `l2` if
-  they are not `nullptr`).
+  they are not `nullptr`). The circle must have positive radius.
 - `intersection(c, l, &p, &q)` determines the intersection between the circle `c` and line `l`,
   returning $-1$ if there is no intersection, $0$ if the line has one intersection point because the
   line is tangent (in which case it will be stored into pointer `p` if it's not `nullptr`), or $1$
   if there are two intersection points because the line crosses through the circle (stored
-  independently into `p` and `q` when those pointers are non-null).
+  independently into `p` and `q` when those pointers are non-null). The line must be valid.
 - `intersection(c1, c2, &p, &q)` determines the intersection points between two circles `c1` and
   `c2`, returning $-2$ if circle `c2` completely encloses circle `c1`, $-1$ if circle `c1`
   completely encloses circle `c2`, $0$ if the circles are completely disjoint, $1$ if the circles
@@ -39,7 +38,7 @@ Space Complexity:
 #include <cmath>
 #include <type_traits>
 
-const double EPS = 1e-9, PI = acos(-1.0);
+const double EPS = 1e-9, PI = std::acos(-1.0);
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
@@ -116,14 +115,14 @@ int tangent(const Circle &c, const Pt &p, Line *l1 = nullptr, Line *l2 = nullptr
     return -1;  // Point inside Circle, no intersection.
   }
   double qx = vopx / c.r, qy = vopy / c.r;
-  double n = sqnorm(qx, qy), d = qy * sqrt(n - 1.0);
+  double n = sqnorm(qx, qy), d = qy * std::sqrt(n - 1.0);
   double t1x = (qx - d) / n, t1y = c.k;
   double t2x = (qx + d) / n, t2y = c.k;
   if (!EQ(qy, 0)) {  // Common case.
     t1y += c.r * (1.0 - t1x * qx) / qy;
     t2y += c.r * (1.0 - t2x * qx) / qy;
   } else {  // Point at center horizontal, y = 0.
-    d = c.r * sqrt(1.0 - t1x * t1x);
+    d = c.r * std::sqrt(1.0 - t1x * t1x);
     t1y += d;
     t2y -= d;
   }
@@ -155,7 +154,7 @@ int intersection(const Circle &c, const Line &l, OutPt *p = nullptr, OutPt *q = 
     }
     return 0;
   }
-  double k = sqrt(std::max(0.0, disc / -aabb));
+  double k = std::sqrt(std::max(0.0, disc / -aabb));
   if (p != nullptr) {
     p->x = x0 + k * l.b + c.h;
     p->y = y0 - k * l.a + c.k;
@@ -173,7 +172,7 @@ int intersection(const Circle &c1, const Circle &c2, OutPt *p = nullptr, OutPt *
     return EQ(c1.r, c2.r) ? 3 : (c1.r > c2.r ? -1 : -2);
   }
   double d12x = c2.h - c1.h, d12y = c2.k - c1.k;
-  double d = hypot(d12x, d12y);
+  double d = std::hypot(d12x, d12y);
   if (LT(c1.r + c2.r, d)) {
     return 0;
   }
@@ -182,7 +181,7 @@ int intersection(const Circle &c1, const Circle &c2, OutPt *p = nullptr, OutPt *
   }
   double a = (c1.r * c1.r - c2.r * c2.r + d * d) / (2 * d);
   double x0 = c1.h + (d12x * a / d), y0 = c1.k + (d12y * a / d);
-  double s = sqrt(std::max(0.0, c1.r * c1.r - a * a));
+  double s = std::sqrt(std::max(0.0, c1.r * c1.r - a * a));
   double rx = -d12y * s / d, ry = d12x * s / d;
   if (EQ(rx, 0) && EQ(ry, 0)) {
     if (p != nullptr) {
@@ -211,10 +210,10 @@ double intersection_area(const Circle &c1, const Circle &c2) {
   if (LE(R + r, d)) {
     return 0;
   }
-  double alpha = std::max(-1.0, std::min(1.0, (d * d + r * r - R * R) / 2 / d / r));
-  double beta = std::max(-1.0, std::min(1.0, (d * d + R * R - r * r) / 2 / d / R));
-  return r * r * acos(alpha) + R * R * acos(beta) -
-         0.5 * sqrt((-d + r + R) * (d + r - R) * (d - r + R) * (d + r + R));
+  double alpha = std::clamp((d * d + r * r - R * R) / 2 / d / r, -1.0, 1.0);
+  double beta = std::clamp((d * d + R * R - r * r) / 2 / d / R, -1.0, 1.0);
+  return r * r * std::acos(alpha) + R * R * std::acos(beta) -
+         0.5 * std::sqrt((-d + r + R) * (d + r - R) * (d - r + R) * (d + r + R));
 }
 
 /*** Example Usage ***/
