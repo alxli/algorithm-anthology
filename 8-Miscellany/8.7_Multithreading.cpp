@@ -23,8 +23,8 @@ separate output slots or synchronization.
 #include <thread>
 #include <vector>
 
-template<typename Fun>
-void parallel_for(int n, int threads, Fun f) {
+template<typename Fn>
+void parallel_for(int n, int threads, Fn f) {
   threads = std::max(1, std::min(threads, n));
   std::vector<std::thread> workers;
   workers.reserve(threads);

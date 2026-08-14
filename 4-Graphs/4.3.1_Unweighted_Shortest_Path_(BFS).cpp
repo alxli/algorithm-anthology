@@ -92,13 +92,11 @@ int main() {
   adj[1].push_back(3);
   adj[2].push_back(3);
   bfs(vector<int>{0});
-  assert((dist == vector<int>{0, 1, 2, 2}));
-  assert((pred == vector<int>{-1, 0, 1, 1}));
+  assert((dist == vector<int>{0, 1, 2, 2}) && (pred == vector<int>{-1, 0, 1, 1}));
   assert((get_path(3) == vector<int>{0, 1, 3}));
 
   bfs(vector<int>{0, 2});
-  assert((dist == vector<int>{0, 1, 0, 1}));
-  assert((pred == vector<int>{-1, 0, -1, 2}));
+  assert((dist == vector<int>{0, 1, 0, 1}) && (pred == vector<int>{-1, 0, -1, 2}));
   assert((get_path(3) == vector<int>{2, 3}));
   return 0;
 }

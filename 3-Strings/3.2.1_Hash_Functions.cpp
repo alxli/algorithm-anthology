@@ -5,12 +5,7 @@ keys. These functions are useful for fingerprinting values, combining keys, seed
 algorithms, and defining `std::unordered_map` keys for pairs, tuples, and vectors. They are not
 suitable for passwords, signatures, or adversarial security.
 
-The standalone functions below are deterministic. The `IntHasher` functor adds a per-run random seed
-before mixing, which is useful for making integer-keyed hash tables harder to hack in open-test
-contests.
-
-The composite hashers separate the mixing primitive (`mix64`/`hash_combine64`) from each type's
-traversal of its parts, so swapping in a different mixing function only requires editing one place.
+The standalone functions below are deterministic.
 
 FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Starting from a fixed
 offset basis, it XORs each byte into the accumulator and then multiplies by a fixed prime; the `1a`
@@ -32,18 +27,11 @@ offers no protection against adversarial inputs.
 - `fnv1a32(s)` and `fnv1a64(s)` compute FNV-1a hashes of string `s`.
 - `hash_range32(lo, hi)` and `hash_range64(lo, hi)` hash a sequence of integer-like values in the
   half-open iterator range $[`lo`, `hi`)$.
-- `PairIntHasher` is a self-contained hasher for `std::pair<int, int>` keys, written without any
-  dependency on the templates below so that it can be copy-pasted on its own.
-- `IntHasher<Int>`, `PairHasher<A, B>`, `TupleHasher<Ts...>`, and `VectorHasher<T>` are hash
-  functors passed as the third template argument of `std::unordered_map` or `std::unordered_set`.
-- `GenericHasher<T>` recursively handles integer, pair, tuple, and vector keys, and falls back to
-  `std::hash<T>` for other hashable types.
 
 Time Complexity:
 - O(1) per call to the integer, combiner, and floating-point hash functions.
 - O(n) per call to string and range hashing functions, where $n$ is the number of elements
   processed.
-- O(n) per call to `VectorHasher<T>::operator()`, where $n$ is the vector size.
 
 Space Complexity:
 - O(1) auxiliary.
@@ -150,6 +138,29 @@ uint64_t hash_range64(It lo, It hi) {
   }
   return h;
 }
+
+/*
+
+Hash functors adapt common composite keys for unordered containers. `IntHasher` adds a per-run
+random seed before mixing, which makes integer-keyed hash tables harder to hack in open-test
+contests. The composite hashers separate the mixing primitive (`mix64`/`hash_combine64`) from each
+type's traversal of its parts, so swapping in a different mixer only requires editing one place.
+
+- `PairIntHasher` is a self-contained hasher for `std::pair<int, int>` keys, written without any
+  dependency on the templates below so that it can be copy-pasted on its own.
+- `IntHasher<Int>`, `PairHasher<A, B>`, `TupleHasher<Ts...>`, and `VectorHasher<T>` are hash
+  functors passed as the third template argument of `std::unordered_map` or `std::unordered_set`.
+- `GenericHasher<T>` recursively handles integer, pair, tuple, and vector keys, and falls back to
+  `std::hash<T>` for other hashable types.
+
+Time Complexity:
+- O(1) per scalar or pair hash and O(n) per vector or tuple hash, where $n$ is the number of
+  elements processed.
+
+Space Complexity:
+- O(1) auxiliary.
+
+*/
 
 template<typename Int>
 struct IntHasher {

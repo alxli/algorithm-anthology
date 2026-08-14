@@ -1,10 +1,12 @@
 /*
 
-An Eulerian trail is a path in a graph which contains every edge exactly once. An Eulerian cycle or
-circuit is an Eulerian trail which begins and ends on the same node. A directed graph has an
-Eulerian trail when all nonzero-degree nodes belong to one connected part of the underlying graph,
-and either every node has equal in-degree and out-degree or exactly one node has one extra outgoing
-edge and exactly one node has one extra incoming edge.
+Provides compact directed-graph functions and a general edge-ID class for finding Eulerian trails in
+directed or undirected multigraphs. An Eulerian trail is a path which contains every edge exactly
+once; it is an Eulerian cycle or circuit when it begins and ends on the same node.
+
+A directed graph has an Eulerian trail when all nonzero-degree nodes belong to one connected part of
+the underlying graph, and either every node has equal in-degree and out-degree or exactly one node
+has one extra outgoing edge and exactly one node has one extra incoming edge.
 
 Hierholzer's algorithm walks unused edges until stuck, then backtracks to splice each closed detour
 into the final trail. For a directed graph known to have a trail from `start`, the core algorithm
@@ -335,8 +337,7 @@ int main() {
     g.add_edge(3, 4);
     g.add_edge(4, 1);
     auto trail = g.eulerian_path(0);
-    assert((trail.nodes == vector<int>{0, 1, 3, 4, 1, 2, 0}));
-    assert(trail.is_cycle());
+    assert((trail.nodes == vector<int>{0, 1, 3, 4, 1, 2, 0}) && trail.is_cycle());
   }
   {
     // 0 ---- 2
@@ -355,16 +356,14 @@ int main() {
     auto trail = g.eulerian_path();
     vector<int> used_edges = trail.edges;
     sort(used_edges.begin(), used_edges.end());
-    assert((used_edges == vector<int>{0, 1, 2, 3, 4, 5}));
-    assert(trail.is_cycle());
+    assert((used_edges == vector<int>{0, 1, 2, 3, 4, 5}) && trail.is_cycle());
   }
   {
     EulerianGraph g(2, false);
     int a = g.add_edge(0, 1);
     int b = g.add_edge(0, 1);
     auto trail = g.eulerian_path(0);
-    assert(trail.is_cycle());
-    assert((trail.nodes == vector<int>{0, 1, 0}));
+    assert(trail.is_cycle() && (trail.nodes == vector<int>{0, 1, 0}));
     assert((trail.edges == vector<int>{a, b} || trail.edges == vector<int>{b, a}));
   }
   {
@@ -376,9 +375,7 @@ int main() {
     g.add_edge(0, 1);
     g.add_edge(1, 2);
     auto trail = g.eulerian_path();
-    assert(trail.start == 0);
-    assert((trail.nodes == vector<int>{0, 1, 2}));
-    assert(!trail.is_cycle());
+    assert(trail.start == 0 && (trail.nodes == vector<int>{0, 1, 2}) && !trail.is_cycle());
   }
   return 0;
 }

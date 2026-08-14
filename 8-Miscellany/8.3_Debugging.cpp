@@ -1,22 +1,18 @@
 /*
 
-Local-only debug printing for contest code. The macro expands to a no-op unless `LOCAL` is defined
-(e.g. by passing `-DLOCAL` to the compiler flags), so it can remain in submitted code without
-producing output.
+Local-only debug printing for contest code. `dbg`, `pr`, `dbg_rows`, and `pr_rows` expand to no-ops
+unless `LOCAL` is defined (e.g. via the compiler flag `-DLOCAL`), so they can remain in submitted
+code without producing output.
 
 - `dbg_repr(x)` returns a string representation of arithmetic types, strings, pairs, tuples,
   iterable containers, and custom types that support insertion into `std::ostream`.
-- `dbg(a, b, c)` prints the function name, line number, argument names, and values to `std::cerr`
-  when `LOCAL` is defined.
-- `pr(a, b, c)` prints only the values to `std::cerr` when `LOCAL` is defined; `pr()` prints a blank
-  line.
+- `dbg(a, b, c)` prints the function name, line number, argument names, and values to `std::cerr`.
+- `pr(a, b, c)` prints only the values to `std::cerr`; `pr()` prints a blank line.
 - `dbg_rows(rows, col_width, limit = -1)` prints the function name, line number, argument name, and
   each iterable row on a separate indexed line. A positive `col_width` right-aligns each element in
   a field of that width. Pass $0$ for ordinary container formatting. A nonnegative `limit` prints at
   most that many rows and elements per row, marking omitted entries with `...`.
 - `pr_rows(rows, col_width, limit = -1)` prints only the indexed rows with the same formatting.
-
-All four printing macros evaluate to no output when `LOCAL` is not defined.
 
 Avoid naming these helpers `to_string()` unless you want them mixed into overload resolution with
 `std::to_string()` and other user-defined `to_string()` functions. A separate name keeps debug

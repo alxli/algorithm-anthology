@@ -1,22 +1,13 @@
 /*
 
-Fast input and output wrappers based on `fread()` and `fwrite()`. For most problems,
-`ios::sync_with_stdio(false); cin.tie(nullptr);` is simpler and fast enough. Use these classes when
-input is huge or when `iostream` overhead is measurable.
+Fast input and output helpers. For most cases, it is enough to speed up standard I/O simply with
+`ios::sync_with_stdio(false); cin.tie(nullptr);`. The following classes only come into play when
+input is genuinely huge or `iostream` overhead is measurable.
 
 - `set_in(name)`, `set_out(name)`, and `set_io(iname, oname)` redirect standard input/output to
   files. For example, `set_io("task.in", "task.out")` is convenient for USACO-style problems.
-- `FastInput in(file = stdin)` constructs a faster reader from a `FILE*`.
-- `in >> x` reads a non-whitespace token into `char`, `std::string`, integral types, or floating
-  point types.
-- `FastOutput out(file = stdout)` constructs a faster writer to a `FILE*`.
-- `out << x` writes `char`, C strings, `std::string`, integral types, or floating point types.
-- `out.flush()` writes any buffered output immediately.
 
-File redirection and detected read/write failures throw `std::runtime_error`. End-of-file is not an
-error, and the parser otherwise assumes valid input. Destruction flushes output on a best-effort
-basis; call `flush()` explicitly to detect a final write failure. Floating point input/output is
-provided for convenience, not as the main performance path.
+File-redirection failures throw `std::runtime_error`.
 
 */
 
@@ -47,16 +38,25 @@ void set_io(const std::string &iname, const std::string &oname) {
   set_out(oname);
 }
 
-struct FastInput {
+/*
+
+`FastInput` reads large byte blocks with `fread()` and parses tokens from an internal buffer.
+
+- `FastInput in(file = stdin)` constructs a faster reader from a `FILE*`.
+- `in >> x` reads a non-whitespace token into `char`, `std::string`, integral types, or
+  floating-point types.
+
+Detected read failures throw `std::runtime_error`. End-of-file is not an error, and the parser
+otherwise assumes valid input. Floating-point input is provided for convenience, not as the main
+performance path.
+
+*/
+
+class FastInput {
   static constexpr int BUF_SIZE = 1 << 20;
   FILE *file;
   char buf[BUF_SIZE];
   int pos = 0, len = 0;
-
-  explicit FastInput(FILE *file_ = stdin) : file(file_) {}
-
-  FastInput(const FastInput &) = delete;
-  FastInput &operator=(const FastInput &) = delete;
 
   char get_char() {
     if (pos == len) {
@@ -84,6 +84,12 @@ struct FastInput {
       }
     }
   }
+
+ public:
+  explicit FastInput(FILE *file_ = stdin) : file(file_) {}
+
+  FastInput(const FastInput &) = delete;
+  FastInput &operator=(const FastInput &) = delete;
 
   FastInput &operator>>(char &c) {
     skip_blanks();
@@ -145,28 +151,30 @@ struct FastInput {
   }
 };
 
-struct FastOutput {
+/*
+
+`FastOutput` formats values into an internal buffer and writes them in large blocks with `fwrite()`.
+
+- `FastOutput out(file = stdout)` constructs a faster writer to a `FILE*`.
+- `out << x` writes `char`, C strings, `std::string`, integral types, or floating-point types.
+- `out.flush()` writes any buffered output immediately.
+
+Detected write failures throw `std::runtime_error`. Destruction flushes on a best-effort basis; call
+`flush()` explicitly to detect a final write failure. Floating-point output is provided for
+convenience, not as the main performance path.
+
+*/
+
+class FastOutput {
   static constexpr int BUF_SIZE = 1 << 20;
   FILE *file;
   char buf[BUF_SIZE];
   int pos = 0;
 
-  explicit FastOutput(FILE *file_ = stdout) : file(file_) {}
-
-  ~FastOutput() { flush_buffer(); }
-  FastOutput(const FastOutput &) = delete;
-  FastOutput &operator=(const FastOutput &) = delete;
-
-  bool flush_buffer() {
+  bool flush_buf() {
     int n = pos;
     pos = 0;
     return fwrite(buf, 1, n, file) == static_cast<std::size_t>(n);
-  }
-
-  void flush() {
-    if (!flush_buffer()) {
-      throw std::runtime_error("Failed to write output.");
-    }
   }
 
   void put_char(char c) {
@@ -174,6 +182,19 @@ struct FastOutput {
       flush();
     }
     buf[pos++] = c;
+  }
+
+ public:
+  explicit FastOutput(FILE *file_ = stdout) : file(file_) {}
+
+  ~FastOutput() { flush_buf(); }
+  FastOutput(const FastOutput &) = delete;
+  FastOutput &operator=(const FastOutput &) = delete;
+
+  void flush() {
+    if (!flush_buf()) {
+      throw std::runtime_error("Failed to write output.");
+    }
   }
 
   FastOutput &operator<<(char c) {
@@ -254,8 +275,7 @@ int main() {
   char ch;
   long long big;
   in >> x >> s >> y >> z >> flag >> ch >> big;
-  assert(x == 42 && s == "hello" && y == 3.5);
-  assert(z == -2147483648);
+  assert(x == 42 && s == "hello" && y == 3.5 && z == -2147483648);
   assert(flag && ch == 'Z' && big == 1234567890123LL);
   fclose(input);
 

@@ -230,6 +230,13 @@ A file containing several distinct but closely related facilities may repeat an 
 and API-bullet group for each facility. For an operator-heavy value type, document coherent groups
 of major operations rather than producing a separate bullet for every overload, but do not leave
 all callable operations in unstructured narrative prose. Type aliases may be grouped in one bullet.
+When using repeated local blocks, keep the opening paragraph as a section-level overview that names
+the major facilities; then narrow to the first facility. Do not let the first local topic read as
+though it describes the entire file. Begin every local documentation block with at least one
+non-bulleted orienting sentence; do not drop directly into API bullets.
+Do not insert a documentation block inside a cohesive copy-paste unit: when a later public API
+depends directly on preceding helpers or implementation, keep their shared documentation before
+the unit rather than separating the dependent code from what it needs.
 
 Put the conceptual model, representation policy, invariant, recurrence, or algorithm needed to
 understand an API immediately before that API or its related bullet group. Do not introduce those

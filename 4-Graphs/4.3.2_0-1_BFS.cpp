@@ -103,13 +103,11 @@ int main() {
   adj[1].emplace_back(3, 1);
   adj[2].emplace_back(3, 1);
   bfs01(vector<int>{0});
-  assert((dist == vector<int>{0, 0, 0, 1}));
-  assert((pred == vector<int>{-1, 2, 0, 2}));
+  assert((dist == vector<int>{0, 0, 0, 1}) && (pred == vector<int>{-1, 2, 0, 2}));
   assert((get_path(3) == vector<int>{0, 2, 3}));
 
   bfs01(vector<int>{1, 0});
-  assert((dist == vector<int>{0, 0, 0, 1}));
-  assert((pred == vector<int>{-1, -1, 0, 1}));
+  assert((dist == vector<int>{0, 0, 0, 1}) && (pred == vector<int>{-1, -1, 0, 1}));
   assert((get_path(3) == vector<int>{1, 3}));
   return 0;
 }

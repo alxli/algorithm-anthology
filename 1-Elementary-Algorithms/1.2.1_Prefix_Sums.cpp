@@ -15,8 +15,8 @@ correctly.
   `pref[i + 1]` equal to the sum of `a[0]` through `a[i]`.
 - `range_sum(pref, lo, hi)` returns the sum of range $[`lo`, `hi`]$.
 - `prefix_sums_2d(a)` returns a two-dimensional prefix sum table for matrix `a`.
-- `rectangle_sum(pref, r1, c1, r2, c2)` returns the sum of the rectangle with rows $[`r1`, `r2`]$
-  and columns $[`c1`, `c2`]$.
+- `rect_sum(pref, r1, c1, r2, c2)` returns the sum of the rectangle with rows $[`r1`, `r2`]$ and
+  columns $[`c1`, `c2`]$.
 - `count_subarrays_with_sum(a, target)` returns the number of contiguous subarrays whose sum is
   `target`.
 
@@ -33,7 +33,7 @@ Time Complexity:
 Space Complexity:
 - O(n) for the array returned by `prefix_sums(a)`.
 - O(R*C) for the table returned by `prefix_sums_2d(a)`.
-- O(1) auxiliary for `range_sum()` and `rectangle_sum()`.
+- O(1) auxiliary for `range_sum()` and `rect_sum()`.
 - O(n) auxiliary for `count_subarrays_with_sum(a, target)`.
 
 */
@@ -68,9 +68,7 @@ std::vector<std::vector<int64_t>> prefix_sums_2d(const std::vector<std::vector<i
   return pref;
 }
 
-int64_t rectangle_sum(
-    const std::vector<std::vector<int64_t>> &pref, int r1, int c1, int r2, int c2
-) {
+int64_t rect_sum(const std::vector<std::vector<int64_t>> &pref, int r1, int c1, int r2, int c2) {
   assert(
       !pref.empty() && !pref[0].empty() && 0 <= r1 && r1 <= r2 &&
       r2 < static_cast<int>(pref.size()) - 1 && 0 <= c1 && c1 <= c2 &&
@@ -113,8 +111,8 @@ int main() {
   };
   // clang-format on
   auto pre2 = prefix_sums_2d(grid);
-  assert(rectangle_sum(pre2, 0, 1, 1, 2) == 16);  // Rows 0-1 and columns 1-2.
-  assert(rectangle_sum(pre2, 0, 0, 1, 2) == 21);  // Whole grid.
-  assert(rectangle_sum(pre2, 1, 1, 1, 1) == 5);   // Single cell.
+  assert(rect_sum(pre2, 0, 1, 1, 2) == 16);  // Rows 0-1 and columns 1-2.
+  assert(rect_sum(pre2, 0, 0, 1, 2) == 21);  // Whole grid.
+  assert(rect_sum(pre2, 1, 1, 1, 1) == 5);   // Single cell.
   return 0;
 }

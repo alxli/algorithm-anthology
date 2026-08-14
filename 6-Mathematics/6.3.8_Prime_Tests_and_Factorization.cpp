@@ -1,68 +1,22 @@
 /*
 
-Test whether an integer is prime and compute the prime factorization of an integer $n$. The
-Miller-Rabin test writes $n - 1 = d \cdot 2^r$ and squares $a^d$ repeatedly, checking that the
-sequence behaves the only way it can for a prime; a base $a$ that breaks the pattern is a witness
-that $n$ is composite. For large composite inputs, Pollard's rho iterates a pseudorandom map modulo
-$n$; two iterates that collide modulo a hidden prime factor reveal that factor through a GCD with
-their difference. Prime factorizations are represented as sorted vectors of (`prime`, `exponent`)
-pairs. For $0$ and $1$, the prime factorization is empty.
+Provides primality tests, prime factorization, and divisor generation. Alongside generic trial
+division, it includes deterministic Miller-Rabin and Pollard's rho for signed 64-bit integers. Prime
+factorizations are represented as sorted vectors of (`prime`, `exponent`) pairs. For $0$ and $1$,
+the prime factorization is empty.
+
+Trial division tests primality and computes prime factorizations by trying possible divisors through
+the square root.
 
 - `is_prime_slow(n)` returns whether the integer `n` is prime using trial division.
 - `factorize_slow(n)` returns the prime factorization of `n` using trial division.
-- `is_probable_prime(n, k = 20)` returns whether `n` is probably prime using `k` random Miller-Rabin
-  bases. The result is guaranteed correct when `n` is prime. For composite `n`, it returns false
-  with probability at least $1 - (1 / 4)^k$. Thus a true result has one-sided error probability at
-  most $(1 / 4)^k$. This is mostly useful when adapting Miller-Rabin outside the known 64-bit
-  deterministic setting.
-- `rho_factor(n)` returns a factor of `n` that is not necessarily prime using Pollard's rho with
-  Brent's optimization. If `n` is prime, then `n` itself is returned. While this algorithm is
-  non-deterministic and may fail to detect factors on certain runs of the same input, it can be
-  retried until a nontrivial factor is found, as done in `factorize()`.
-- `is_prime(n)` returns whether the signed 64-bit integer `n` is prime using deterministic
-  Miller-Rabin bases sufficient up to and including $2^{63} - 1$.
-- `cached_sieve(n)` returns a cached linear sieve up to and including `n`, storing both primes and
-  least prime factors.
-- `merge_factors(a, b)` merges two sorted compressed factorizations.
-- `factorize_rho(n)` returns the prime factorization of a 64-bit integer using Miller-Rabin and
-  Pollard's rho without initial trial division.
-- `factorize(n, small_prime_limit = 1000000)` returns the prime factorization of a 64-bit integer
-  `n` using a combination of trial division, the Miller-Rabin primality test, and Pollard's rho
-  algorithm. `small_prime_limit` specifies the largest prime to test with trial division before
-  falling back to the rho algorithm. This supports 64-bit integers up to and including $2^{63} - 1$.
-- `divisors_from_factors(factors)` returns all divisors from a compressed factorization.
-- `divisors(n)` returns all divisors of a 64-bit integer using `factorize()` followed by
-  `divisors_from_factors()`.
-
-Modular multiplication inside Miller-Rabin and Pollard's rho uses `__uint128_t` when available for
-speed, with a slower portable double-and-add fallback to avoid overflow on compilers without 128-bit
-integers.
 
 Time Complexity:
 - O(sqrt(n)) per call to `is_prime_slow()` and `factorize_slow()`.
-- O(k*log n) modular multiplications per call to `is_probable_prime()` and O(log n) per call to
-  `is_prime()`. The portable multiplication fallback adds another O(log n) factor.
-- O(n) per call to `cached_sieve()` when rebuilding the cache, or O(1) when the existing cache is
-  large enough.
-- O(sqrt(p)) expected modular multiplications per call to `rho_factor(n)`, where $p$ is the smallest
-  prime factor of `n`. For composite `n`, this is at most O(n^{1/4}).
-- O(n^{1/4}) expected per call to `factorize_rho()`. `factorize()` additionally performs O(L/log L)
-  trial divisions, where $L$ is `small_prime_limit`, and takes O(L) time if the prime cache must be
-  rebuilt.
-- O(|a| + |b|) per call to `merge_factors()`.
-- O(d log d) per call to `divisors_from_factors()`, where $d$ is the number of divisors generated,
-  due to sorting the result.
-- O(L/log L + n^{1/4} + d log d) expected per call to `divisors()`, plus O(L) if the prime cache
-  must be rebuilt.
 
 Space Complexity:
-- O(c) cached space after sieving through $c$.
-- O(f + log n) auxiliary for recursive factorization, where $f$ is the number of compressed prime
-  factors returned.
-- O(d) output space and O(log d) auxiliary stack space for `divisors_from_factors()` and
-  `divisors()`.
-- O(1) auxiliary for the primality tests, `rho_factor()`, `factorize_slow()`, and `merge_factors()`,
-  excluding returned vectors.
+- O(1) auxiliary for `is_prime_slow()` and O(f) for the returned factorization, where $f$ is the
+  number of compressed prime factors.
 
 */
 
@@ -112,6 +66,36 @@ std::vector<std::pair<Int, int>> factorize_slow(Int n) {
   }
   return res;
 }
+
+/*
+
+The Miller-Rabin test writes $n - 1 = d \cdot 2^r$ and repeatedly squares $a^d$; a base that breaks
+the pattern required of a prime proves that $n$ is composite. Pollard's rho iterates a pseudorandom
+map modulo $n$; two iterates that collide modulo a hidden prime factor reveal that factor through a
+GCD with their difference.
+
+- `is_probable_prime(n, k = 20)` returns whether `n` is probably prime using `k` random Miller-Rabin
+  bases. The result is guaranteed correct when `n` is prime. For composite `n`, a true result has
+  one-sided error probability at most $(1 / 4)^k$.
+- `rho_factor(n)` returns a factor of `n` that is not necessarily prime using Pollard's rho with
+  Brent's optimization. If `n` is prime, then `n` itself is returned. The algorithm may need to be
+  retried to find a nontrivial factor, as done in `factorize_rho()`.
+- `is_prime(n)` returns whether the signed 64-bit integer `n` is prime using deterministic
+  Miller-Rabin bases sufficient up to and including $2^{63} - 1$.
+
+Modular multiplication uses `__uint128_t` when available, with a slower portable double-and-add
+fallback that avoids overflow on compilers without 128-bit integers.
+
+Time Complexity:
+- O(k*log n) modular multiplications per call to `is_probable_prime()` and O(log n) per call to
+  `is_prime()`. The portable multiplication fallback adds another O(log n) factor.
+- O(sqrt(p)) expected modular multiplications per call to `rho_factor(n)`, where $p$ is the smallest
+  prime factor of `n`. For composite `n`, this is at most O(n^{1/4}).
+
+Space Complexity:
+- O(1) auxiliary.
+
+*/
 
 uint64_t mulmod(uint64_t x, uint64_t n, uint64_t m) {
 #if defined(__SIZEOF_INT128__)
@@ -237,6 +221,44 @@ bool is_prime(int64_t n) {
   }
   return true;
 }
+
+/*
+
+The complete factorization routine first removes small prime factors with a cached linear sieve,
+then uses Miller-Rabin and Pollard's rho on the remaining cofactor. Factorizations remain sorted and
+compressed as (`prime`, `exponent`) pairs.
+
+- `cached_sieve(n)` returns a cached linear sieve up to and including `n`, storing both primes and
+  least prime factors.
+- `merge_factors(a, b)` merges two sorted compressed factorizations.
+- `factorize_rho(n)` returns the prime factorization of a 64-bit integer using Miller-Rabin and
+  Pollard's rho without initial trial division.
+- `factorize(n, small_prime_limit = 1000000)` returns the prime factorization of a 64-bit integer
+  `n`, first testing primes through `small_prime_limit` and then falling back to Pollard's rho. It
+  supports integers up to and including $2^{63} - 1$.
+- `divisors_from_factors(factors)` returns all divisors from a compressed factorization.
+- `divisors(n)` returns all divisors of a 64-bit integer using `factorize()` followed by
+  `divisors_from_factors()`.
+
+Time Complexity:
+- O(n) per call to `cached_sieve()` when rebuilding the cache, or O(1) when it is already large
+  enough.
+- O(n^{1/4}) expected per call to `factorize_rho()`. `factorize()` additionally performs O(L/log L)
+  trial divisions, where $L$ is `small_prime_limit`, and takes O(L) time if the cache is rebuilt.
+- O(|a| + |b|) per call to `merge_factors()`.
+- O(d log d) per call to `divisors_from_factors()`, where $d$ is the number of divisors generated.
+- O(L/log L + n^{1/4} + d log d) expected per call to `divisors()`, plus O(L) if the cache is
+  rebuilt.
+
+Space Complexity:
+- O(c) cached space after sieving through $c$.
+- O(f + log n) auxiliary for recursive factorization, where $f$ is the number of compressed prime
+  factors returned.
+- O(d) output space and O(log d) auxiliary stack space for `divisors_from_factors()` and
+  `divisors()`.
+- O(1) auxiliary for `merge_factors()`, excluding its returned vector.
+
+*/
 
 struct SieveCache {
   int limit = 1;

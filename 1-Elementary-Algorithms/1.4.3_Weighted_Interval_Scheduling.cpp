@@ -91,12 +91,10 @@ int main() {
   vector<WeightedInterval> intervals{{1, 3, 5}, {2, 5, 6}, {4, 6, 5}, {6, 7, 4}, {5, 8, 11}};
   auto [weight, selected] = select_weighted_intervals(intervals);
   // Taking ids 1 and 4 beats the earliest-finish unweighted-looking choices.
-  assert(weight == 17);
-  assert((selected == vector<int>{1, 4}));
+  assert(weight == 17 && (selected == vector<int>{1, 4}));
 
   vector<WeightedInterval> touching{{0, 2, 5}, {2, 4, 6}, {1, 3, 7}};
   auto [touching_weight, touching_selected] = select_weighted_intervals(touching);
-  assert(touching_weight == 11);
-  assert((touching_selected == vector<int>{0, 1}));
+  assert(touching_weight == 11 && (touching_selected == vector<int>{0, 1}));
   return 0;
 }

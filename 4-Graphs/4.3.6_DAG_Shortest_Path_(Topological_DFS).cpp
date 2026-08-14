@@ -107,8 +107,7 @@ int main() {
   adj[2].emplace_back(3, 1);
   adj[3].emplace_back(4, 3);
   dag_shortest_path(0);
-  assert((dist == vector<int64_t>{0, 1, 2, -1, 2}));
-  assert((pred == vector<int>{-1, 0, 1, 1, 3}));
+  assert((dist == vector<int64_t>{0, 1, 2, -1, 2}) && (pred == vector<int>{-1, 0, 1, 1, 3}));
   assert((get_path(4) == vector<int>{0, 1, 3, 4}));
   return 0;
 }

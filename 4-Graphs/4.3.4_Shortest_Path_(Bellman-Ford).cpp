@@ -97,8 +97,7 @@ int main() {
   edges.emplace_back(1, 2, 2);
   edges.emplace_back(0, 2, 5);
   assert(bellman_ford(3, 0));
-  assert((dist == vector<int64_t>{0, 1, 3}));
-  assert((pred == vector<int>{-1, 0, 1}));
+  assert((dist == vector<int64_t>{0, 1, 3}) && (pred == vector<int>{-1, 0, 1}));
   assert((get_path(2) == vector<int>{0, 1, 2}));
 
   edges = {{0, 1, -1}, {1, 0, -1}};

@@ -18,6 +18,20 @@ extreme at the front to the least useful value at the back. A new element remove
 that it dominates, while expired indices are removed from the front. Each index is again pushed and
 popped at most once.
 
+*/
+
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <deque>
+#include <functional>
+#include <tuple>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+/*
+
 The examples below cover sorted 2-sum/3-sum variants, finding the shortest subarray with sum at
 least a target when all values are nonnegative, and finding the longest subarray with at most $k$
 distinct values. They also cover the minimum or maximum of every fixed-length window and an online
@@ -52,16 +66,6 @@ Space Complexity:
 - O(k) auxiliary and O(n) for the result of `sliding_window_extrema()`.
 
 */
-
-#include <algorithm>
-#include <cassert>
-#include <cstdint>
-#include <deque>
-#include <functional>
-#include <tuple>
-#include <unordered_map>
-#include <utility>
-#include <vector>
 
 std::pair<int, int> two_sum_sorted(const std::vector<int> &a, int64_t target) {
   for (int lo = 0, hi = static_cast<int>(a.size()) - 1; lo < hi;) {
@@ -243,16 +247,13 @@ int main() {
 
   vector<int> a{2, 3, 1, 2, 4, 3};
   auto [length, lo, hi] = min_subarray_at_least(a, 7);
-  assert(length == 2);
-  assert(lo == 4 && hi == 5);  // [4, 3].
+  assert(length == 2 && lo == 4 && hi == 5);  // [4, 3].
   auto [empty_length, empty_lo, empty_hi] = min_subarray_at_least(a, 0);
-  assert(empty_length == 0);
-  assert(empty_lo == 0 && empty_hi == -1);
+  assert(empty_length == 0 && empty_lo == 0 && empty_hi == -1);
 
   vector<int> b{1, 2, 1, 3, 4, 3, 5};
   auto [longest, longest_lo, longest_hi] = max_subarray_at_most_k_distinct(b, 2);
-  assert(longest == 3);
-  assert(longest_lo == 0 && longest_hi == 2);  // [1, 2, 1].
+  assert(longest == 3 && longest_lo == 0 && longest_hi == 2);  // [1, 2, 1].
 
   vector<int> e{1, 3, -1, -3, 5, 3, 6, 7};
   assert((sliding_window_extrema(e, 3) == vector<int>{-1, -3, -3, -3, 3, 3}));

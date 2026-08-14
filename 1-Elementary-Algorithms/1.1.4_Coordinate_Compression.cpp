@@ -6,9 +6,8 @@ relative ordering of elements. That is, if $a$ is the array of original values a
 of compressed values, then every pair of indices $i, j$ in $[0, n)$ shall satisfy $a[i] < a[j]$ if
 and only if $b[i] < b[j]$.
 
-All implementations below take ranges as ForwardIterators. The comparator `comp` defines the value
-ordering: `comp(a, b)` is true when `a` precedes `b`. The two `compress()` functions rewrite a range
-in place and then discard the mapping.
+The two functions below take a ForwardIterator range, rewrite it in place, and discard the mapping.
+The comparator `comp` defines the value ordering: `comp(a, b)` is true when `a` precedes `b`.
 
 - `compress1(lo, hi, comp = std::less<>())` performs the compression by sorting the array, removing
   duplicates, and binary searching for the position of each original value.
@@ -16,31 +15,12 @@ in place and then discard the mapping.
   `std::map`, which automatically removes duplicate values and supports efficient lookups of the
   compressed values.
 
-`Compressor` is a class version that retains the sorted table of distinct values so that arbitrary
-values can be mapped to and from compressed ranks long after construction (e.g. for offline queries
-arriving separately from the array being compressed). It uses `std::less<T>` by default; to
-customize the ordering, instantiate `Compressor<T, Compare>` and pass the comparator to either
-constructor.
-
-- `Compressor<T>()` constructs an empty compressor. Register values with `add(x)`, then call
-  `build()` once before the first query.
-- `Compressor<T>(lo, hi)` constructs a compressor from the half-open iterator range $[`lo`, `hi`)$.
-- `size()` returns the number of distinct registered values $k$.
-- `value(r)` returns the original value with rank `r`, inverting `rank()`.
-- `contains(x)` returns whether `x` is a registered value.
-- `rank(x)` returns the compressed value (rank) of `x` in $[0, k)$. `x` must have been registered.
-
 Time Complexity:
-- O(n log n) per call to `compress1(lo, hi)`, `compress2(lo, hi)`, and `Compressor(lo, hi)`, where
-  $n$ is the distance between `lo` and `hi`.
-- O(1) amortized per call to `add()`, and O(m log m) per call to `build()`, where $m$ is the total
-  number of values registered.
-- O(log k) per call to `rank()` and `contains()`, where $k$ is the number of distinct values.
-- O(1) per call to `size()` and `value()`.
+- O(n log n) per call to `compress1(lo, hi)` and `compress2(lo, hi)`, where $n$ is the distance
+  between `lo` and `hi`.
 
 Space Complexity:
 - O(n) auxiliary for `compress1()` and `compress2()`.
-- O(k) storage for `Compressor`.
 
 */
 
@@ -82,6 +62,33 @@ void compress2(It lo, It hi, Compare comp = Compare{}) {
     *it = m[*it];
   }
 }
+
+/*
+
+`Compressor` retains the sorted table of distinct values so that arbitrary values can be mapped to
+and from compressed ranks long after construction, such as for offline queries arriving separately
+from the array being compressed. It uses `std::less<T>` by default; to customize the ordering,
+instantiate `Compressor<T, Compare>` and pass the comparator to either constructor.
+
+- `Compressor<T>()` constructs an empty compressor. Register values with `add(x)`, then call
+  `build()` once before the first query.
+- `Compressor<T>(lo, hi)` constructs a compressor from the half-open iterator range $[`lo`, `hi`)$.
+- `size()` returns the number of distinct registered values $k$.
+- `value(r)` returns the original value with rank `r`, inverting `rank()`.
+- `contains(x)` returns whether `x` is a registered value.
+- `rank(x)` returns the compressed value (rank) of `x` in $[0, k)$. `x` must have been registered.
+
+Time Complexity:
+- O(n log n) per call to `Compressor(lo, hi)`, where $n$ is the range length.
+- O(1) amortized per call to `add()`, and O(m log m) per call to `build()`, where $m$ is the total
+  number of values registered.
+- O(log k) per call to `rank()` and `contains()`, where $k$ is the number of distinct values.
+- O(1) per call to `size()` and `value()`.
+
+Space Complexity:
+- O(k) storage, where $k$ is the number of distinct registered values.
+
+*/
 
 template<typename T, typename Compare = std::less<T>>
 class Compressor {

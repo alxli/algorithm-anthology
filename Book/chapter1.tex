@@ -25,15 +25,13 @@ These functions are not meant to compete with standard library implementations i
 #include <type_traits>
 #include <vector>
 \end{lstlisting}
-Quicksort repeatedly selects a pivot and partitions the range so that elements comparing less than the pivot precede it, elements comparing equal stay in the middle, and elements comparing greater follow it. Divide and conquer is then applied to the two outer ranges until the original range is sorted. Despite having a worst case of $O(n^{2})$, quicksort is often faster in practice than merge sort and heapsort, which both have a worst case time complexity of $O(n \log n)$.
+Quicksort repeatedly selects a pivot and partitions the range so that elements comparing less than the pivot precede it, elements comparing equal stay in the middle, and elements comparing greater follow it. Divide and conquer is then applied to the two outer ranges until the original range is sorted. The swaps used during partitioning make quicksort unstable. Despite having a worst case of $O(n^{2})$, quicksort is often faster in practice than merge sort and heapsort, which both have a worst case time complexity of $O(n \log n)$.
 
-The pivot chosen in this implementation is always a middle element of the range to be sorted. To reduce the likelihood of encountering the worst case, the pivot can be chosen in better ways (e.g. randomly, or using the ``median of three'' technique).
+The pivot chosen in this implementation is always a middle element of the range to be sorted. Shuffling the input first or choosing each pivot randomly makes consistently unbalanced partitions unlikely. Median-of-three is another practical choice, while median-of-medians can guarantee a balanced pivot at greater constant-factor cost.
 
 \textbf{Time Complexity}: $O(n)$ best (all equal), $O(n \log n)$ average, and $O(n^{2})$ worst.
 
 \textbf{Space Complexity}: $O(\log n)$ auxiliary stack space.
-
-\textbf{Stable?}: No.
 
 \begin{lstlisting}[language=C++]
 template<typename It, typename Compare = std::less<>>
@@ -69,8 +67,6 @@ An analogous function in the C++ standard library is \inlinecode{std::stable\_so
 
 \textbf{Space Complexity}: $O(\log n)$ auxiliary stack space and $O(n)$ auxiliary heap space.
 
-\textbf{Stable?}: Yes.
-
 \begin{lstlisting}[language=C++]
 template<typename It, typename Compare = std::less<>>
 void mergesort(It lo, It hi, Compare comp = Compare{}) {
@@ -91,7 +87,7 @@ void mergesort(It lo, It hi, Compare comp = Compare{}) {
   std::copy(merged.begin(), merged.end(), lo);
 }
 \end{lstlisting}
-Heapsort first rearranges an array to satisfy the max-heap property. Then, it repeatedly pops the max element of the heap (the left, unsorted subrange), moving it to the beginning of the right, sorted subrange until the entire range is sorted. Heapsort has a better worst case time complexity than quicksort and also a better space complexity than merge sort.
+Heapsort first rearranges an array to satisfy the max-heap property. Then, it repeatedly pops the max element of the heap (the left, unsorted subrange), moving it to the beginning of the right, sorted subrange until the entire range is sorted. Heapsort has a better worst case time complexity than quicksort and also a better space complexity than merge sort, but its swaps make it unstable.
 
 The C++ standard library equivalent is calling \inlinecode{std::make\_heap(lo, hi)}, followed by \inlinecode{std::sort\_heap(lo, hi)}.
 
@@ -100,8 +96,6 @@ The C++ standard library equivalent is calling \inlinecode{std::make\_heap(lo, h
 \textbf{Time Complexity}: $O(n \log n)$ in all cases.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
-
-\textbf{Stable?}: No.
 
 \begin{lstlisting}[language=C++]
 template<typename It, typename Compare = std::less<>>
@@ -145,8 +139,6 @@ The comparison \inlinecode{comp(key, *(j - 1))} is strict, so an element never m
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\textbf{Stable?}: Yes.
-
 \begin{lstlisting}[language=C++]
 template<typename It, typename Compare = std::less<>>
 void insertion_sort(It lo, It hi, Compare comp = Compare{}) {
@@ -162,13 +154,11 @@ void insertion_sort(It lo, It hi, Compare comp = Compare{}) {
   }
 }
 \end{lstlisting}
-Comb sort is an improved bubble sort. While bubble sort compares only adjacent elements, comb sort compares elements separated by a fixed gap, decreasing that gap after every pass. Large gaps move small values near the end toward the front quickly, avoiding the slow movement of such values in bubble sort. The shrink factor $1.3$ is a common empirical choice.
+Comb sort is an improved bubble sort. While bubble sort compares only adjacent elements, comb sort compares elements separated by a fixed gap, decreasing that gap after every pass. Large gaps move small values near the end toward the front quickly, avoiding the slow movement of such values in bubble sort. These nonadjacent swaps make comb sort unstable. The shrink factor $1.3$ is a common empirical choice.
 
 \textbf{Time Complexity}: $O(n \log n)$ best and $O(n^{2})$ worst.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
-
-\textbf{Stable?}: No.
 
 \begin{lstlisting}[language=C++]
 template<typename It, typename Compare = std::less<>>
@@ -573,39 +563,16 @@ int main() {
 \subsection{Coordinate Compression}
 Given a range of $n$ numerical elements, reassign each element to an integer in the domain $[0, k)$, where $k$ is the number of distinct elements in the original range, while preserving the initial relative ordering of elements. That is, if $a$ is the array of original values and $b$ is the array of compressed values, then every pair of indices $i, j$ in $[0, n)$ shall satisfy $a[i] < a[j]$ if and only if $b[i] < b[j]$.
 
-All implementations below take ranges as ForwardIterators. The comparator \inlinecode{comp} defines the value ordering: \inlinecode{comp(a, b)} is true when \inlinecode{a} precedes \inlinecode{b}. The two \inlinecode{compress()} functions rewrite a range in place and then discard the mapping.
+The two functions below take a ForwardIterator range, rewrite it in place, and discard the mapping. The comparator \inlinecode{comp} defines the value ordering: \inlinecode{comp(a, b)} is true when \inlinecode{a} precedes \inlinecode{b}.
 
 \begin{compactitem}
   \item \inlinecode{compress1(lo, hi, comp = std::less\textless{}\textgreater{}())} performs the compression by sorting the array, removing duplicates, and binary searching for the position of each original value.
   \item \inlinecode{compress2(lo, hi, comp = std::less\textless{}\textgreater{}())} achieves the same result by inserting all values into an \inlinecode{std::map}, which automatically removes duplicate values and supports efficient lookups of the compressed values.
 \end{compactitem}
 
-\inlinecode{Compressor} is a class version that retains the sorted table of distinct values so that arbitrary values can be mapped to and from compressed ranks long after construction (e.g. for offline queries arriving separately from the array being compressed). It uses \inlinecode{std::less\textless{}T\textgreater{}} by default; to customize the ordering, instantiate \inlinecode{Compressor\textless{}T, Compare\textgreater{}} and pass the comparator to either constructor.
+\textbf{Time Complexity}: $O(n \log n)$ per call to \inlinecode{compress1(lo, hi)} and \inlinecode{compress2(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
-\begin{compactitem}
-  \item \inlinecode{Compressor\textless{}T\textgreater{}()} constructs an empty compressor. Register values with \inlinecode{add(x)}, then call \inlinecode{build()} once before the first query.
-  \item \inlinecode{Compressor\textless{}T\textgreater{}(lo, hi)} constructs a compressor from the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
-  \item \inlinecode{size()} returns the number of distinct registered values $k$.
-  \item \inlinecode{value(r)} returns the original value with rank \inlinecode{r}, inverting \inlinecode{rank()}.
-  \item \inlinecode{contains(x)} returns whether \inlinecode{x} is a registered value.
-  \item \inlinecode{rank(x)} returns the compressed value (rank) of \inlinecode{x} in $[0, k)$. \inlinecode{x} must have been registered.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(n \log n)$ per call to \inlinecode{compress1(lo, hi)}, \inlinecode{compress2(lo, hi)}, and \inlinecode{Compressor(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
-  \item $O(1)$ amortized per call to \inlinecode{add()}, and $O(m \log m)$ per call to \inlinecode{build()}, where $m$ is the total number of values registered.
-  \item $O(\log k)$ per call to \inlinecode{rank()} and \inlinecode{contains()}, where $k$ is the number of distinct values.
-  \item $O(1)$ per call to \inlinecode{size()} and \inlinecode{value()}.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n)$ auxiliary for \inlinecode{compress1()} and \inlinecode{compress2()}.
-  \item $O(k)$ storage for \inlinecode{Compressor}.
-\end{compactitem}
+\textbf{Space Complexity}: $O(n)$ auxiliary for \inlinecode{compress1()} and \inlinecode{compress2()}.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -646,7 +613,30 @@ void compress2(It lo, It hi, Compare comp = Compare{}) {
     *it = m[*it];
   }
 }
+\end{lstlisting}
+\inlinecode{Compressor} retains the sorted table of distinct values so that arbitrary values can be mapped to and from compressed ranks long after construction, such as for offline queries arriving separately from the array being compressed. It uses \inlinecode{std::less\textless{}T\textgreater{}} by default; to customize the ordering, instantiate \inlinecode{Compressor\textless{}T, Compare\textgreater{}} and pass the comparator to either constructor.
 
+\begin{compactitem}
+  \item \inlinecode{Compressor\textless{}T\textgreater{}()} constructs an empty compressor. Register values with \inlinecode{add(x)}, then call \inlinecode{build()} once before the first query.
+  \item \inlinecode{Compressor\textless{}T\textgreater{}(lo, hi)} constructs a compressor from the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
+  \item \inlinecode{size()} returns the number of distinct registered values $k$.
+  \item \inlinecode{value(r)} returns the original value with rank \inlinecode{r}, inverting \inlinecode{rank()}.
+  \item \inlinecode{contains(x)} returns whether \inlinecode{x} is a registered value.
+  \item \inlinecode{rank(x)} returns the compressed value (rank) of \inlinecode{x} in $[0, k)$. \inlinecode{x} must have been registered.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ per call to \inlinecode{Compressor(lo, hi)}, where $n$ is the range length.
+  \item $O(1)$ amortized per call to \inlinecode{add()}, and $O(m \log m)$ per call to \inlinecode{build()}, where $m$ is the total number of values registered.
+  \item $O(\log k)$ per call to \inlinecode{rank()} and \inlinecode{contains()}, where $k$ is the number of distinct values.
+  \item $O(1)$ per call to \inlinecode{size()} and \inlinecode{value()}.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(k)$ storage, where $k$ is the number of distinct registered values.
+
+\begin{lstlisting}[language=C++]
 template<typename T, typename Compare = std::less<T>>
 class Compressor {
   Compare comp;
@@ -854,7 +844,7 @@ Prefix sums can also be combined with a frequency table to count subarrays havin
   \item \inlinecode{prefix\_sums(a)} returns the prefix sum array \inlinecode{pref} of length $n + 1$, with \inlinecode{pref[0] = 0} and \inlinecode{pref[i + 1]} equal to the sum of \inlinecode{a[0]} through \inlinecode{a[i]}.
   \item \inlinecode{range\_sum(pref, lo, hi)} returns the sum of range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{prefix\_sums\_2d(a)} returns a two-dimensional prefix sum table for matrix \inlinecode{a}.
-  \item \inlinecode{rectangle\_sum(pref, r1, c1, r2, c2)} returns the sum of the rectangle with rows $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
+  \item \inlinecode{rect\_sum(pref, r1, c1, r2, c2)} returns the sum of the rectangle with rows $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
   \item \inlinecode{count\_subarrays\_with\_sum(a, target)} returns the number of contiguous subarrays whose sum is \inlinecode{target}.
 \end{compactitem}
 
@@ -874,7 +864,7 @@ Overflow warning: All prefix sums, target differences, inclusion-exclusion resul
 \begin{compactitem}
   \item $O(n)$ for the array returned by \inlinecode{prefix\_sums(a)}.
   \item $O(R \cdot C)$ for the table returned by \inlinecode{prefix\_sums\_2d(a)}.
-  \item $O(1)$ auxiliary for \inlinecode{range\_sum()} and \inlinecode{rectangle\_sum()}.
+  \item $O(1)$ auxiliary for \inlinecode{range\_sum()} and \inlinecode{rect\_sum()}.
   \item $O(n)$ auxiliary for \inlinecode{count\_subarrays\_with\_sum(a, target)}.
 \end{compactitem}
 
@@ -909,9 +899,7 @@ std::vector<std::vector<int64_t>> prefix_sums_2d(const std::vector<std::vector<i
   return pref;
 }
 
-int64_t rectangle_sum(
-    const std::vector<std::vector<int64_t>> &pref, int r1, int c1, int r2, int c2
-) {
+int64_t rect_sum(const std::vector<std::vector<int64_t>> &pref, int r1, int c1, int r2, int c2) {
   assert(
       !pref.empty() && !pref[0].empty() && 0 <= r1 && r1 <= r2 &&
       r2 < static_cast<int>(pref.size()) - 1 && 0 <= c1 && c1 <= c2 &&
@@ -953,9 +941,9 @@ int main() {
     {4, 5, 6}
   };
   auto pre2 = prefix_sums_2d(grid);
-  assert(rectangle_sum(pre2, 0, 1, 1, 2) == 16);  // Rows 0-1 and columns 1-2.
-  assert(rectangle_sum(pre2, 0, 0, 1, 2) == 21);  // Whole grid.
-  assert(rectangle_sum(pre2, 1, 1, 1, 1) == 5);   // Single cell.
+  assert(rect_sum(pre2, 0, 1, 1, 2) == 16);  // Rows 0-1 and columns 1-2.
+  assert(rect_sum(pre2, 0, 0, 1, 2) == 21);  // Whole grid.
+  assert(rect_sum(pre2, 1, 1, 1, 1) == 5);   // Single cell.
   return 0;
 }
 \end{lstlisting}
@@ -1089,6 +1077,17 @@ A sliding window applies the same idea when extending and shrinking a range chan
 
 For fixed-length windows, a monotonic deque of indices can report every minimum or maximum in linear total time. It stores only candidates that could still become the answer, ordered from the current extreme at the front to the least useful value at the back. A new element removes every older value that it dominates, while expired indices are removed from the front. Each index is again pushed and popped at most once.
 
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <deque>
+#include <functional>
+#include <tuple>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+\end{lstlisting}
 The examples below cover sorted 2-sum/3-sum variants, finding the shortest subarray with sum at least a target when all values are nonnegative, and finding the longest subarray with at most $k$ distinct values. They also cover the minimum or maximum of every fixed-length window and an online dynamic programming recurrence.
 
 \begin{compactitem}
@@ -1119,16 +1118,6 @@ The examples below cover sorted 2-sum/3-sum variants, finding the shortest subar
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <cassert>
-#include <cstdint>
-#include <deque>
-#include <functional>
-#include <tuple>
-#include <unordered_map>
-#include <utility>
-#include <vector>
-
 std::pair<int, int> two_sum_sorted(const std::vector<int> &a, int64_t target) {
   for (int lo = 0, hi = static_cast<int>(a.size()) - 1; lo < hi;) {
     int64_t sum = static_cast<int64_t>(a[lo]) + a[hi];
@@ -1303,16 +1292,13 @@ int main() {
 
   vector<int> a{2, 3, 1, 2, 4, 3};
   auto [length, lo, hi] = min_subarray_at_least(a, 7);
-  assert(length == 2);
-  assert(lo == 4 && hi == 5);  // [4, 3].
+  assert(length == 2 && lo == 4 && hi == 5);  // [4, 3].
   auto [empty_length, empty_lo, empty_hi] = min_subarray_at_least(a, 0);
-  assert(empty_length == 0);
-  assert(empty_lo == 0 && empty_hi == -1);
+  assert(empty_length == 0 && empty_lo == 0 && empty_hi == -1);
 
   vector<int> b{1, 2, 1, 3, 4, 3, 5};
   auto [longest, longest_lo, longest_hi] = max_subarray_at_most_k_distinct(b, 2);
-  assert(longest == 3);
-  assert(longest_lo == 0 && longest_hi == 2);  // [1, 2, 1].
+  assert(longest == 3 && longest_lo == 0 && longest_hi == 2);  // [1, 2, 1].
 
   vector<int> e{1, 3, -1, -3, 5, 3, 6, 7};
   assert((sliding_window_extrema(e, 3) == vector<int>{-1, -3, -3, -3, 3, 3}));
@@ -1968,8 +1954,7 @@ int main() {
   vector<int> weight{3, 4, 5, 9};
   vector<int64_t> value{4, 5, 7, 10};
   auto [best_value, items] = knapsack_01(weight, value, 8);
-  assert(best_value == 11);
-  assert((items == vector<int>{0, 2}));
+  assert(best_value == 11 && (items == vector<int>{0, 2}));
   return 0;
 }
 \end{lstlisting}
@@ -2086,15 +2071,13 @@ int main() {
   vector<int> weight{3, 4, 5};
   vector<int64_t> value{4, 5, 7};
   auto [best_value, count] = unbounded_knapsack(weight, value, 10);
-  assert(best_value == 14);
-  assert((count == vector<int>{0, 0, 2}));
+  assert(best_value == 14 && (count == vector<int>{0, 0, 2}));
 
   vector<int> coins{1, 2, 5};
   assert(count_coin_change(coins, 5) == 4);  // 5, 2+2+1, 2+1+1+1, 1*5.
 
   auto [coin_count, used] = min_coin_change(coins, 11);
-  assert(coin_count == 3);
-  assert((used == vector<int>{1, 0, 2}));
+  assert(coin_count == 3 && (used == vector<int>{1, 0, 2}));
 
   auto [impossible, empty_used] = min_coin_change(vector<int>{4, 7}, 6);
   assert(impossible == -1 && empty_used.empty());
@@ -2688,8 +2671,7 @@ int main() {
       {4, 2, 1},
   };
   auto [min_cost, path] = min_cost_grid_path(cost);
-  assert(min_cost == 7);
-  assert((path == vector<pair<int, int>>{{0, 0}, {0, 1}, {0, 2}, {1, 2}, {2, 2}}));
+  assert(min_cost == 7 && (path == vector<pair<int, int>>{{0, 0}, {0, 1}, {0, 2}, {1, 2}, {2, 2}}));
 
   vector<vector<char>> binary{
       {1, 0, 1, 0, 0},
@@ -2766,8 +2748,7 @@ int main() {
   vector<int> weight{10, 20, 30};
   vector<int> value{60, 100, 120};
   auto [best_value, fraction] = fractional_knapsack(weight, value, 50);
-  assert(fabs(best_value - 240) < 1e-9);
-  assert((fraction == vector<double>{1, 1, 2.0 / 3}));
+  assert(fabs(best_value - 240) < 1e-9 && (fraction == vector<double>{1, 1, 2.0 / 3}));
   return 0;
 }
 \end{lstlisting}
@@ -2918,13 +2899,11 @@ int main() {
   vector<WeightedInterval> intervals{{1, 3, 5}, {2, 5, 6}, {4, 6, 5}, {6, 7, 4}, {5, 8, 11}};
   auto [weight, selected] = select_weighted_intervals(intervals);
   // Taking ids 1 and 4 beats the earliest-finish unweighted-looking choices.
-  assert(weight == 17);
-  assert((selected == vector<int>{1, 4}));
+  assert(weight == 17 && (selected == vector<int>{1, 4}));
 
   vector<WeightedInterval> touching{{0, 2, 5}, {2, 4, 6}, {1, 3, 7}};
   auto [touching_weight, touching_selected] = select_weighted_intervals(touching);
-  assert(touching_weight == 11);
-  assert((touching_selected == vector<int>{0, 1}));
+  assert(touching_weight == 11 && (touching_selected == vector<int>{0, 1}));
   return 0;
 }
 \end{lstlisting}
@@ -3190,8 +3169,7 @@ int main() {
   vector<Job> jobs{{2, 100}, {1, 19}, {2, 27}, {1, 25}, {3, 15}};
   auto [profit, slot] = select_deadline_jobs(jobs);
   // Jobs 0, 2, 4 fill slots 2, 1, 3 for total profit 100 + 27 + 15.
-  assert(profit == 142);
-  assert((slot == vector<int>{2, -1, 1, -1, 3}));
+  assert(profit == 142 && (slot == vector<int>{2, -1, 1, -1, 3}));
   return 0;
 }
 \end{lstlisting}
@@ -3549,7 +3527,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Online Statistics}
-Maintains summary statistics as values arrive without storing the stream externally. Welford's algorithm computes the mean and variance using constant storage, while a pair of heaps maintains the exact median using linear storage.
+Online stream summaries update useful statistics as values arrive without storing the full stream. This section uses Welford's algorithm for the mean and variance and two balanced heaps for the median.
 
 The naive variance formula $\operatorname{Var}(X) = E[X^2] - E[X]^2$ can lose precision when the two terms are large and close together. Welford instead maintains the current mean $\bar{x}_n$ (stored as \inlinecode{avg}) and the unnormalized second central moment $M_{2,n} = \sum_{i=1}^{n}(x_i - \bar{x}_n)^2$ (stored as \inlinecode{m2}). Each new value shifts the running mean by its deviation divided by the new count, then adds the product of its deviations from the old and new means to \inlinecode{m2}.
 
@@ -3558,34 +3536,13 @@ The naive variance formula $\operatorname{Var}(X) = E[X^2] - E[X]^2$ can lose pr
   \item \inlinecode{add(x)} incorporates one more value \inlinecode{x} into the summary.
   \item \inlinecode{count()} returns the number of values seen so far.
   \item \inlinecode{mean()} returns the current arithmetic mean, or $0$ if the summary is empty.
-  \item \inlinecode{variance\_population()} returns population variance, dividing by $n$, or $0$ if the summary is empty.
-  \item \inlinecode{variance\_sample()} returns sample variance, dividing by $n - 1$, or $0$ if fewer than two values have been added.
+  \item \inlinecode{var\_pop()} returns population variance, dividing by $n$, or $0$ if the summary is empty.
+  \item \inlinecode{var\_samp()} returns sample variance, dividing by $n - 1$, or $0$ if fewer than two values have been added.
 \end{compactitem}
 
-For the median, a max-heap stores the lower half of the values and a min-heap stores the upper half. The heaps are balanced so that the lower heap has either the same number of values as the upper heap or one extra value. Their roots are therefore the middle value or values of the stream.
+\textbf{Time Complexity}: $O(1)$ per call to \inlinecode{add()} and each query.
 
-\begin{compactitem}
-  \item \inlinecode{OnlineMedian\textless{}T\textgreater{}()} constructs an empty median tracker for an ordered numeric type \inlinecode{T}.
-  \item \inlinecode{add(x)} inserts \inlinecode{x} into the median tracker.
-  \item \inlinecode{count()} and \inlinecode{empty()} return the number of values and whether the tracker is empty.
-  \item \inlinecode{lower\_median()} returns the lower of the two middle values, or the middle value for an odd count. The tracker must be nonempty.
-  \item \inlinecode{median()} returns the middle value for an odd count or the arithmetic mean of the two middle values for an even count. The tracker must be nonempty.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(1)$ per call to \inlinecode{OnlineStatistics::add()} and each \inlinecode{OnlineStatistics} query.
-  \item $O(\log n)$ per call to \inlinecode{OnlineMedian::add()}, where $n$ is the number of values stored.
-  \item $O(1)$ per \inlinecode{OnlineMedian} query.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(1)$ for \inlinecode{OnlineStatistics}.
-  \item $O(n)$ for \inlinecode{OnlineMedian}.
-\end{compactitem}
+\textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -3610,10 +3567,25 @@ class OnlineStatistics {
 
   int count() const { return n; }
   double mean() const { return avg; }
-  double variance_population() const { return n == 0 ? 0 : m2 / n; }
-  double variance_sample() const { return n <= 1 ? 0 : m2 / (n - 1); }
+  double var_pop() const { return n == 0 ? 0 : m2 / n; }
+  double var_samp() const { return n <= 1 ? 0 : m2 / (n - 1); }
 };
+\end{lstlisting}
+Maintains the exact median of a stream using linear storage. A max-heap stores the lower half of the values and a min-heap stores the upper half. The heaps are balanced so that the lower heap has either the same number of values as the upper heap or one extra value. Their roots are therefore the middle value or values of the stream.
 
+\begin{compactitem}
+  \item \inlinecode{OnlineMedian\textless{}T\textgreater{}()} constructs an empty median tracker for an ordered numeric type \inlinecode{T}.
+  \item \inlinecode{add(x)} inserts \inlinecode{x} into the median tracker.
+  \item \inlinecode{count()} and \inlinecode{empty()} return the number of values and whether the tracker is empty.
+  \item \inlinecode{lower\_median()} returns the lower of the two middle values, or the middle value for an odd count. The tracker must be nonempty.
+  \item \inlinecode{median()} returns the middle value for an odd count or the arithmetic mean of the two middle values for an even count. The tracker must be nonempty.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(\log n)$ per call to \inlinecode{add()} and $O(1)$ per query, where $n$ is the number of values.
+
+\textbf{Space Complexity}: $O(n)$ storage.
+
+\begin{lstlisting}[language=C++]
 template<typename T>
 class OnlineMedian {
   std::priority_queue<T> lower;
@@ -3663,34 +3635,27 @@ bool EQ(double a, double b) {
 
 int main() {
   OnlineStatistics empty;
-  assert(empty.count() == 0);
-  assert(EQ(empty.mean(), 0.0));
-  assert(EQ(empty.variance_population(), 0.0));
-  assert(EQ(empty.variance_sample(), 0.0));
+  assert(empty.count() == 0 && EQ(empty.mean(), 0.0));
+  assert(EQ(empty.var_pop(), 0.0) && EQ(empty.var_samp(), 0.0));
 
   OnlineStatistics singleton;
   singleton.add(7);
-  assert(singleton.count() == 1);
-  assert(EQ(singleton.mean(), 7.0));
-  assert(EQ(singleton.variance_population(), 0.0));
-  assert(EQ(singleton.variance_sample(), 0.0));
+  assert(singleton.count() == 1 && EQ(singleton.mean(), 7.0));
+  assert(EQ(singleton.var_pop(), 0.0) && EQ(singleton.var_samp(), 0.0));
 
   OnlineStatistics stats;
   for (int x = 1; x <= 5; x++) {
     stats.add(x);
   }
-  assert(stats.count() == 5);
-  assert(EQ(stats.mean(), 3.0));
-  assert(EQ(stats.variance_population(), 2.0));
-  assert(EQ(stats.variance_sample(), 2.5));
+  assert(stats.count() == 5 && EQ(stats.mean(), 3.0));
+  assert(EQ(stats.var_pop(), 2.0) && EQ(stats.var_samp(), 2.5));
 
   OnlineStatistics shifted;
   shifted.add(1e12 + 1);
   shifted.add(1e12 + 2);
   shifted.add(1e12 + 3);
   assert(EQ(shifted.mean(), 1e12 + 2));
-  assert(EQ(shifted.variance_population(), 2.0 / 3));
-  assert(EQ(shifted.variance_sample(), 1.0));
+  assert(EQ(shifted.var_pop(), 2.0 / 3) && EQ(shifted.var_samp(), 1.0));
 
   OnlineMedian<int> medians;
   assert(medians.empty() && medians.count() == 0);
@@ -3963,36 +3928,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Bitmask DP}
-Bitmask dynamic programming uses a bitmask to represent a small set or frontier, then treats that mask as the DP state. This is useful when one dimension is small enough for $2^n$ states: assignment problems can store which jobs are already used, set cover can store which elements are covered, submask DP can split a set into groups, and grid tiling can store which cells on the current frontier are already occupied.
-
-For assignment, \inlinecode{dp[mask]} is the minimum cost after assigning the first \inlinecode{popcount(mask)} workers to the selected jobs. The next worker tries every unused job. For set cover, \inlinecode{dp[mask]} is the minimum number of chosen sets needed to cover exactly the elements in \inlinecode{mask}; adding one set moves to the union mask. For set partitioning, iterating all submasks gives the recurrence \inlinecode{dp[mask] = min(dp[mask \textasciicircum{} sub] + cost[sub])}. Over all masks, this has $O(3^{n})$ transitions. For domino tiling, the mask is a profile of the current row; this technique is often called DP on a broken profile or plug DP. A domino covers exactly two edge-adjacent cells, so each piece is either horizontal ($1 \times 2$) or vertical ($2 \times 1$).
-
-\begin{compactitem}
-  \item \inlinecode{assignment\_min\_cost(cost)} returns a pair (\inlinecode{sum}, \inlinecode{job}), where \inlinecode{sum} is the minimum cost of assigning each worker to a distinct job, and \inlinecode{job[i]} is the job assigned to worker \inlinecode{i}. The input is a square matrix with one row per worker and one column per job.
-  \item \inlinecode{set\_cover(sets, universe\_size)} returns a pair (\inlinecode{count}, \inlinecode{chosen}), where \inlinecode{count} is the minimum number of sets needed to cover all elements in $[0, u)$, where $u$ is \inlinecode{universe\_size}, and \inlinecode{chosen} contains one optimal list of set indices. If no cover exists, \inlinecode{count} is $-1$ and \inlinecode{chosen} is empty. Each input set is represented as a bitmask.
-  \item \inlinecode{partition\_min\_cost(group\_cost)} returns the minimum total cost to partition all elements into disjoint nonempty groups, where \inlinecode{group\_cost[mask]} is the cost of taking \inlinecode{mask} as one group.
-  \item \inlinecode{count\_domino\_tilings(rows, cols)} returns the number of ways to tile a \inlinecode{rows} by \inlinecode{cols} rectangle with $1 \times 2$ and $2 \times 1$ dominoes.
-\end{compactitem}
-
-Overflow warning: All accumulated costs and tiling counts must fit in \inlinecode{int64\_t}.
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(n^{2} \cdot 2^{n})$ per call to \inlinecode{assignment\_min\_cost()}, where $n$ is the number of workers and jobs.
-  \item $O(s \cdot 2^{u})$ per call to \inlinecode{set\_cover()}, where $s$ is the number of sets and $u$ is \inlinecode{universe\_size}.
-  \item $O(3^{n})$ per call to \inlinecode{partition\_min\_cost()}, where $n$ is the number of elements.
-  \item $O(R \cdot C \cdot 2^{C})$ per call to \inlinecode{count\_domino\_tilings()}, where $R$ and $C$ are the number of rows and columns, respectively.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(2^{n})$ auxiliary and $O(n)$ for the returned assignment from \inlinecode{assignment\_min\_cost()}.
-  \item $O(2^{u})$ auxiliary and $O(s)$ for the returned indices from \inlinecode{set\_cover()}.
-  \item $O(2^{n})$ auxiliary for \inlinecode{partition\_min\_cost()}.
-  \item $O(2^{C})$ auxiliary for \inlinecode{count\_domino\_tilings()}.
-\end{compactitem}
+Bitmask dynamic programming uses a bitmask to represent a small set or frontier, then treats that mask as the DP state. This is useful when one dimension is small enough for $2^n$ states.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -4000,8 +3936,21 @@ Overflow warning: All accumulated costs and tiling counts must fit in \inlinecod
 #include <cstdint>
 #include <utility>
 #include <vector>
+\end{lstlisting}
+The assignment problem matches workers one-to-one with jobs while minimizing the total cost. The workers are processed in a fixed order: \inlinecode{dp[mask]} is the minimum cost after assigning the first \inlinecode{popcount(mask)} workers to the selected jobs, and the next worker tries every unused job.
 
-std::pair<int64_t, std::vector<int>> assignment_min_cost(
+\begin{compactitem}
+  \item \inlinecode{min\_cost\_assignment(cost)} returns a pair (\inlinecode{sum}, \inlinecode{job}), where \inlinecode{sum} is the minimum cost of assigning each worker to a distinct job, and \inlinecode{job[i]} is the job assigned to worker \inlinecode{i}. The input is a square matrix with one row per worker and one column per job.
+\end{compactitem}
+
+Overflow warning: The accumulated cost must fit in \inlinecode{int64\_t}.
+
+\textbf{Time Complexity}: $O(n^{2} \cdot 2^{n})$ per call to \inlinecode{min\_cost\_assignment()}, where $n$ is the number of workers and jobs.
+
+\textbf{Space Complexity}: $O(2^{n})$ auxiliary and $O(n)$ for the returned assignment from \inlinecode{min\_cost\_assignment()}.
+
+\begin{lstlisting}[language=C++]
+std::pair<int64_t, std::vector<int>> min_cost_assignment(
     const std::vector<std::vector<int64_t>> &cost
 ) {
   int n = static_cast<int>(cost.size());
@@ -4033,7 +3982,18 @@ std::pair<int64_t, std::vector<int>> assignment_min_cost(
   }
   return {dp[states - 1], job};
 }
+\end{lstlisting}
+The minimum set cover problem asks for the fewest input sets whose union contains every element of a fixed universe. Both input sets and covered subsets are represented as masks: \inlinecode{dp[mask]} is the minimum number of chosen sets needed to cover exactly the elements in \inlinecode{mask}, and adding one set moves to the union mask.
 
+\begin{compactitem}
+  \item \inlinecode{set\_cover(sets, universe\_size)} returns a pair (\inlinecode{count}, \inlinecode{chosen}), where \inlinecode{count} is the minimum number of sets needed to cover all elements in $[0, u)$, where $u$ is \inlinecode{universe\_size}, and \inlinecode{chosen} contains one optimal list of set indices. If no cover exists, \inlinecode{count} is $-1$ and \inlinecode{chosen} is empty. Each input set is represented as a bitmask.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(s \cdot 2^{u})$ per call, where $s$ is the number of sets and $u$ is \inlinecode{universe\_size}.
+
+\textbf{Space Complexity}: $O(2^{u})$ auxiliary and $O(s)$ for the returned indices.
+
+\begin{lstlisting}[language=C++]
 std::pair<int, std::vector<int>> set_cover(const std::vector<int> &sets, int universe_size) {
   assert(0 <= universe_size && universe_size < 31);
   int states = 1 << universe_size;
@@ -4070,8 +4030,21 @@ std::pair<int, std::vector<int>> set_cover(const std::vector<int> &sets, int uni
   std::reverse(chosen.begin(), chosen.end());
   return {dp[full], chosen};
 }
+\end{lstlisting}
+The minimum-cost set partition problem divides all elements into disjoint nonempty groups when the cost of every possible group is known. For each set \inlinecode{mask}, choosing a submask as one group leaves \inlinecode{mask \textasciicircum{} sub} to be partitioned, giving the recurrence \inlinecode{dp[mask] = min(dp[mask \textasciicircum{} sub] + cost[sub])}. Over all masks, this has $O(3^{n})$ transitions.
 
-int64_t partition_min_cost(const std::vector<int64_t> &group_cost) {
+\begin{compactitem}
+  \item \inlinecode{min\_cost\_partition(group\_cost)} returns the minimum total cost to partition all elements into disjoint nonempty groups, where \inlinecode{group\_cost[mask]} is the cost of taking \inlinecode{mask} as one group.
+\end{compactitem}
+
+Overflow warning: The accumulated cost must fit in \inlinecode{int64\_t}.
+
+\textbf{Time Complexity}: $O(3^{n})$ per call, where $n$ is the number of elements.
+
+\textbf{Space Complexity}: $O(2^{n})$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+int64_t min_cost_partition(const std::vector<int64_t> &group_cost) {
   int states = static_cast<int>(group_cost.size());
   assert(states > 0 && (states & (states - 1)) == 0);
   std::vector<int64_t> dp(states);
@@ -4084,7 +4057,20 @@ int64_t partition_min_cost(const std::vector<int64_t> &group_cost) {
   }
   return dp[states - 1];
 }
+\end{lstlisting}
+Domino tiling asks for the number of ways to cover a rectangle with horizontal ($1 \times 2$) and vertical ($2 \times 1$) dominoes. Processing cells in row-major order, a profile mask records which cells on the current frontier are already occupied. An occupied current cell is cleared; otherwise, placing a horizontal domino marks the next column, while placing a vertical one carries the current column into the next row. This technique is often called DP on a broken profile or plug DP.
 
+\begin{compactitem}
+  \item \inlinecode{count\_domino\_tilings(rows, cols)} returns the number of ways to tile a \inlinecode{rows} by \inlinecode{cols} rectangle with $1 \times 2$ and $2 \times 1$ dominoes.
+\end{compactitem}
+
+Overflow warning: The tiling count must fit in \inlinecode{int64\_t}.
+
+\textbf{Time Complexity}: $O(R \cdot C \cdot 2^{C})$ per call, where $R$ and $C$ are the number of rows and columns, respectively.
+
+\textbf{Space Complexity}: $O(2^{C})$ auxiliary.
+
+\begin{lstlisting}[language=C++]
 int64_t count_domino_tilings(int rows, int cols) {
   assert(rows >= 0 && cols >= 0);
   if (rows < cols) {
@@ -4126,13 +4112,11 @@ using namespace std;
 
 int main() {
   vector<vector<int64_t>> cost{{9, 2, 7}, {6, 4, 3}, {5, 8, 1}};
-  auto [assignment_cost, job] = assignment_min_cost(cost);
-  assert(assignment_cost == 9);
-  assert((job == vector<int>{1, 0, 2}));
+  auto [assignment_cost, job] = min_cost_assignment(cost);
+  assert(assignment_cost == 9 && (job == vector<int>{1, 0, 2}));
 
   auto [cover_count, chosen] = set_cover(vector<int>{0b0011, 0b0110, 0b1100, 0b1000}, 4);
-  assert(cover_count == 2);
-  assert((chosen == vector<int>{0, 2}));
+  assert(cover_count == 2 && (chosen == vector<int>{0, 2}));
 
   auto [impossible_count, impossible_chosen] = set_cover(vector<int>{0b001, 0b010}, 3);
   assert(impossible_count == -1 && impossible_chosen.empty());
@@ -4143,7 +4127,7 @@ int main() {
       6, 2, 3,  // Pairs.
       9,        // All three together.
   };
-  assert(partition_min_cost(group_cost) == 7);  // Groups {0} and {1, 2}.
+  assert(min_cost_partition(group_cost) == 7);  // Groups {0} and {1, 2}.
 
   assert(count_domino_tilings(0, 5) == 1);
   assert(count_domino_tilings(2, 3) == 3);

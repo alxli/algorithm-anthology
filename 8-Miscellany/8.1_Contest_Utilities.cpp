@@ -1,6 +1,6 @@
 /*
 
-Small contest-template helpers that are useful across many algorithms. These snippets avoid
+Small contest convenience helpers that are useful across many algorithms. These snippets avoid
 algorithm-specific policy and are meant to be pasted near the top of a solution file.
 
 A personal template may also collect shortened versions of utilities elsewhere in the anthology,
@@ -16,11 +16,12 @@ sections here to avoid duplication and let each template be assembled to taste.
 - `floor_div(a, b)` and `ceil_div(a, b)` divide signed integers with mathematical rounding toward
   negative or positive infinity. Requires nonzero `b` and the resulting quotient to be representable
   by the result type; in particular, the minimum value cannot be divided by $-1$.
-- `lb(a, x)` and `ub(a, x)` return the indices of the first elements in sorted container `a` that
-  are not less than or are greater than `x`, respectively.
+- `lb(a, x, comp = std::less<>)` and `ub(a, x, comp = std::less<>)` return lower and upper bound
+  indices in random-access sequence `a`, which must be sorted according to `comp`.
 - `sort_unique(v)` sorts a vector and removes duplicates.
 - `indices(n)` returns the vector `{0, 1, ..., n - 1}`.
-- `argsort(a)` returns the indices of `a` in ascending order of their values.
+- `argsort(a, comp = std::less<>)` returns the indices of `a` ordered by their values according to
+  `comp`; the order of indices whose values compare equal is unspecified.
 - `erase_one(c, x)` erases one existing value from an associative container, asserting that it is
   present.
 - `min_heap<T>` is a min-heap alias.
@@ -74,14 +75,14 @@ T ceil_div(T a, T b) {
   return q + (r != 0 && ((r < 0) == (b < 0)));
 }
 
-template<typename C, typename T>
-int lb(const C &a, const T &x) {
-  return static_cast<int>(std::lower_bound(a.begin(), a.end(), x) - a.begin());
+template<typename Seq, typename T, typename Compare = std::less<>>
+int lb(const Seq &a, const T &x, Compare comp = Compare{}) {
+  return static_cast<int>(std::lower_bound(a.begin(), a.end(), x, comp) - a.begin());
 }
 
-template<typename C, typename T>
-int ub(const C &a, const T &x) {
-  return static_cast<int>(std::upper_bound(a.begin(), a.end(), x) - a.begin());
+template<typename Seq, typename T, typename Compare = std::less<>>
+int ub(const Seq &a, const T &x, Compare comp = Compare{}) {
+  return static_cast<int>(std::upper_bound(a.begin(), a.end(), x, comp) - a.begin());
 }
 
 template<typename T>
@@ -96,10 +97,10 @@ std::vector<int> indices(int n) {
   return v;
 }
 
-template<typename C>
-std::vector<int> argsort(const C &a) {
+template<typename Seq, typename Compare = std::less<>>
+std::vector<int> argsort(const Seq &a, Compare comp = Compare{}) {
   std::vector<int> p = indices(static_cast<int>(a.size()));
-  std::sort(p.begin(), p.end(), [&](int i, int j) { return a[i] < a[j]; });
+  std::sort(p.begin(), p.end(), [&](int i, int j) { return comp(a[i], a[j]); });
   return p;
 }
 
@@ -115,11 +116,11 @@ using min_heap = std::priority_queue<T, std::vector<T>, std::greater<T>>;
 
 std::mt19937_64 rng(std::chrono::steady_clock::now().time_since_epoch().count());
 
-template<typename T>
-T rand_int(T lo, T hi) {
-  static_assert(std::is_integral<T>::value, "rand_int() requires an integral type");
+template<typename Int>
+Int rand_int(Int lo, Int hi) {
+  static_assert(std::is_integral<Int>::value, "rand_int() requires an integral type");
   assert(lo <= hi);
-  return std::uniform_int_distribution<T>(lo, hi)(rng);
+  return std::uniform_int_distribution<Int>(lo, hi)(rng);
 }
 
 double rand_real(double lo = 0.0, double hi = 1.0) {
@@ -127,23 +128,23 @@ double rand_real(double lo = 0.0, double hi = 1.0) {
   return std::uniform_real_distribution<double>(lo, hi)(rng);
 }
 
-template<typename Fun>
+template<typename Fn>
 class y_combinator_result {
-  Fun fun;
+  Fn fn;
 
  public:
   template<typename T>
-  explicit y_combinator_result(T &&fun_) : fun(std::forward<T>(fun_)) {}
+  explicit y_combinator_result(T &&f) : fn(std::forward<T>(f)) {}
 
   template<typename... Args>
   decltype(auto) operator()(Args &&...args) {
-    return fun(std::ref(*this), std::forward<Args>(args)...);
+    return fn(std::ref(*this), std::forward<Args>(args)...);
   }
 };
 
-template<typename Fun>
-decltype(auto) y_combinator(Fun &&fun) {
-  return y_combinator_result<std::decay_t<Fun>>(std::forward<Fun>(fun));
+template<typename Fn>
+decltype(auto) y_combinator(Fn &&f) {
+  return y_combinator_result<std::decay_t<Fn>>(std::forward<Fn>(f));
 }
 
 /*** Example Usage ***/
@@ -168,6 +169,7 @@ int main() {
   assert(sz(v) == 3);
   sort(Rall(v));
   assert((v == vector<int>{3, 2, 1}));
+  assert(lb(v, 2, greater<>{}) == 1 && ub(v, 2, greater<>{}) == 2);
   sort(All(v));
   assert(lb(v, 2) == 1 && ub(v, 2) == 2);
   assert(floor_div(7, -3) == -3);
@@ -179,6 +181,7 @@ int main() {
   assert((v == vector<int>{1, 2, 3}));
   assert((indices(4) == vector<int>{0, 1, 2, 3}));
   assert((argsort(vector<int>{30, 10, 20}) == vector<int>{1, 2, 0}));
+  assert((argsort(vector<int>{30, 10, 20}, greater<>{}) == vector<int>{0, 2, 1}));
   multiset<int> ms{1, 2, 2, 3};
   erase_one(ms, 2);
   assert(ms.count(2) == 1);

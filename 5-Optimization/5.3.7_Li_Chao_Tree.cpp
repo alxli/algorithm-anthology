@@ -32,6 +32,7 @@ Space Complexity:
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <memory>
 #include <utility>
 
 const int64_t INF = INT64_MAX / 4;
@@ -45,25 +46,16 @@ class LiChaoTree {
 
   struct Node {
     Line f;
-    Node *left, *right;
-    explicit Node(const Line &f) : f(f), left(nullptr), right(nullptr) {}
+    std::unique_ptr<Node> left, right;
+    explicit Node(const Line &f) : f(f) {}
   };
 
-  Node *root;
+  std::unique_ptr<Node> root;
   int64_t lo, hi;
 
-  static void clean_up(Node *n) {
+  static void add_line(std::unique_ptr<Node> &n, int64_t lo, int64_t hi, Line f) {
     if (n == nullptr) {
-      return;
-    }
-    clean_up(n->left);
-    clean_up(n->right);
-    delete n;
-  }
-
-  static void add_line(Node *&n, int64_t lo, int64_t hi, Line f) {
-    if (n == nullptr) {
-      n = new Node(f);
+      n = std::make_unique<Node>(f);
       return;
     }
     int64_t mid = lo + (hi - lo) / 2;
@@ -92,15 +84,14 @@ class LiChaoTree {
     }
     int64_t mid = lo + (hi - lo) / 2;
     if (x <= mid) {
-      return std::min(res, query(n->left, lo, mid, x));
+      return std::min(res, query(n->left.get(), lo, mid, x));
     }
-    return std::min(res, query(n->right, mid + 1, hi, x));
+    return std::min(res, query(n->right.get(), mid + 1, hi, x));
   }
 
  public:
-  LiChaoTree(int64_t lo, int64_t hi) : root(nullptr), lo(lo), hi(hi) { assert(lo <= hi); }
+  LiChaoTree(int64_t lo, int64_t hi) : lo(lo), hi(hi) { assert(lo <= hi); }
 
-  ~LiChaoTree() { clean_up(root); }
   LiChaoTree(const LiChaoTree &) = delete;
   LiChaoTree &operator=(const LiChaoTree &) = delete;
   void add_line(int64_t m, int64_t b) { add_line(root, lo, hi, Line(m, b)); }
@@ -108,7 +99,7 @@ class LiChaoTree {
   int64_t query(int64_t x) const {
     assert(root != nullptr);
     assert(lo <= x && x <= hi);
-    return query(root, lo, hi, x);
+    return query(root.get(), lo, hi, x);
   }
 };
 

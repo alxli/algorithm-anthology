@@ -482,9 +482,7 @@ int main() {
 \subsection{Hash Functions}
 Provides a small library of non-cryptographic hash functions and hash functors for common contest keys. These functions are useful for fingerprinting values, combining keys, seeding randomized algorithms, and defining \inlinecode{std::unordered\_map} keys for pairs, tuples, and vectors. They are not suitable for passwords, signatures, or adversarial security.
 
-The standalone functions below are deterministic. The \inlinecode{IntHasher} functor adds a per-run random seed before mixing, which is useful for making integer-keyed hash tables harder to hack in open-test contests.
-
-The composite hashers separate the mixing primitive (\inlinecode{mix64}/\inlinecode{hash\_combine64}) from each type's traversal of its parts, so swapping in a different mixing function only requires editing one place.
+The standalone functions below are deterministic.
 
 FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Starting from a fixed offset basis, it XORs each byte into the accumulator and then multiplies by a fixed prime; the \inlinecode{1a} variant XORs before multiplying, which mixes slightly better than the original FNV-1. Reach for it when the key is a string or byte buffer, whereas \inlinecode{mix32} and \inlinecode{mix64} are mixers for a single fixed-width integer. Its appeal is simplicity: a few lines, no lookup tables, and no seed, with distribution good enough for the short keys common in contests. For very long inputs a block hash such as MurmurHash or xxHash is faster and mixes more thoroughly, and because FNV-1a is unseeded it offers no protection against adversarial inputs.
 
@@ -496,9 +494,6 @@ FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Start
   \item \inlinecode{hash\_float(x)} and \inlinecode{hash\_double(x)} hash floating-point bit patterns, normalizing \inlinecode{-0.0} to \inlinecode{0.0}. Different NaN representations may still hash differently.
   \item \inlinecode{fnv1a32(s)} and \inlinecode{fnv1a64(s)} compute FNV-1a hashes of string \inlinecode{s}.
   \item \inlinecode{hash\_range32(lo, hi)} and \inlinecode{hash\_range64(lo, hi)} hash a sequence of integer-like values in the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
-  \item \inlinecode{PairIntHasher} is a self-contained hasher for \inlinecode{std::pair\textless{}int, int\textgreater{}} keys, written without any dependency on the templates below so that it can be copy-pasted on its own.
-  \item \inlinecode{IntHasher\textless{}Int\textgreater{}}, \inlinecode{PairHasher\textless{}A, B\textgreater{}}, \inlinecode{TupleHasher\textless{}Ts...\textgreater{}}, and \inlinecode{VectorHasher\textless{}T\textgreater{}} are hash functors passed as the third template argument of \inlinecode{std::unordered\_map} or \inlinecode{std::unordered\_set}.
-  \item \inlinecode{GenericHasher\textless{}T\textgreater{}} recursively handles integer, pair, tuple, and vector keys, and falls back to \inlinecode{std::hash\textless{}T\textgreater{}} for other hashable types.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -506,7 +501,6 @@ FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Start
 \begin{compactitem}
   \item $O(1)$ per call to the integer, combiner, and floating-point hash functions.
   \item $O(n)$ per call to string and range hashing functions, where $n$ is the number of elements processed.
-  \item $O(n)$ per call to \inlinecode{VectorHasher\textless{}T\textgreater{}::operator()}, where $n$ is the vector size.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
@@ -612,7 +606,20 @@ uint64_t hash_range64(It lo, It hi) {
   }
   return h;
 }
+\end{lstlisting}
+Hash functors adapt common composite keys for unordered containers. \inlinecode{IntHasher} adds a per-run random seed before mixing, which makes integer-keyed hash tables harder to hack in open-test contests. The composite hashers separate the mixing primitive (\inlinecode{mix64}/\inlinecode{hash\_combine64}) from each type's traversal of its parts, so swapping in a different mixer only requires editing one place.
 
+\begin{compactitem}
+  \item \inlinecode{PairIntHasher} is a self-contained hasher for \inlinecode{std::pair\textless{}int, int\textgreater{}} keys, written without any dependency on the templates below so that it can be copy-pasted on its own.
+  \item \inlinecode{IntHasher\textless{}Int\textgreater{}}, \inlinecode{PairHasher\textless{}A, B\textgreater{}}, \inlinecode{TupleHasher\textless{}Ts...\textgreater{}}, and \inlinecode{VectorHasher\textless{}T\textgreater{}} are hash functors passed as the third template argument of \inlinecode{std::unordered\_map} or \inlinecode{std::unordered\_set}.
+  \item \inlinecode{GenericHasher\textless{}T\textgreater{}} recursively handles integer, pair, tuple, and vector keys, and falls back to \inlinecode{std::hash\textless{}T\textgreater{}} for other hashable types.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(1)$ per scalar or pair hash and $O(n)$ per vector or tuple hash, where $n$ is the number of elements processed.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
 template<typename Int>
 struct IntHasher {
   std::size_t operator()(Int x) const {

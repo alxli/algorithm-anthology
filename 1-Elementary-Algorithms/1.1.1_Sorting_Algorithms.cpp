@@ -31,16 +31,17 @@ Instead, they demonstrate how common sorting algorithms can be concisely impleme
 Quicksort repeatedly selects a pivot and partitions the range so that elements comparing less than
 the pivot precede it, elements comparing equal stay in the middle, and elements comparing greater
 follow it. Divide and conquer is then applied to the two outer ranges until the original range is
-sorted. Despite having a worst case of O(n^2), quicksort is often faster in practice than merge sort
-and heapsort, which both have a worst case time complexity of O(n log n).
+sorted. The swaps used during partitioning make quicksort unstable. Despite having a worst case of
+O(n^2), quicksort is often faster in practice than merge sort and heapsort, which both have a worst
+case time complexity of O(n log n).
 
-The pivot chosen in this implementation is always a middle element of the range to be sorted. To
-reduce the likelihood of encountering the worst case, the pivot can be chosen in better ways (e.g.
-randomly, or using the "median of three" technique).
+The pivot chosen in this implementation is always a middle element of the range to be sorted.
+Shuffling the input first or choosing each pivot randomly makes consistently unbalanced partitions
+unlikely. Median-of-three is another practical choice, while median-of-medians can guarantee a
+balanced pivot at greater constant-factor cost.
 
 Time Complexity: O(n) best (all equal), O(n log n) average, and O(n^2) worst.
 Space Complexity: O(log n) auxiliary stack space.
-Stable?: No.
 
 */
 
@@ -83,7 +84,6 @@ implementation here will simply fail.
 
 Time Complexity: O(n log n) in all cases.
 Space Complexity: O(log n) auxiliary stack space and O(n) auxiliary heap space.
-Stable?: Yes.
 
 */
 
@@ -111,7 +111,7 @@ void mergesort(It lo, It hi, Compare comp = Compare{}) {
 Heapsort first rearranges an array to satisfy the max-heap property. Then, it repeatedly pops the
 max element of the heap (the left, unsorted subrange), moving it to the beginning of the right,
 sorted subrange until the entire range is sorted. Heapsort has a better worst case time complexity
-than quicksort and also a better space complexity than merge sort.
+than quicksort and also a better space complexity than merge sort, but its swaps make it unstable.
 
 The C++ standard library equivalent is calling `std::make_heap(lo, hi)`, followed by
 `std::sort_heap(lo, hi)`.
@@ -122,7 +122,6 @@ to the back of the unsorted range and restores the heap among the remaining elem
 
 Time Complexity: O(n log n) in all cases.
 Space Complexity: O(1) auxiliary.
-Stable?: No.
 
 */
 
@@ -174,7 +173,6 @@ compares equal to, which keeps the sort stable.
 
 Time Complexity: O(n + d), i.e. O(n) best and O(n^2) average/worst.
 Space Complexity: O(1) auxiliary.
-Stable?: Yes.
 
 */
 
@@ -197,11 +195,11 @@ void insertion_sort(It lo, It hi, Compare comp = Compare{}) {
 Comb sort is an improved bubble sort. While bubble sort compares only adjacent elements, comb sort
 compares elements separated by a fixed gap, decreasing that gap after every pass. Large gaps move
 small values near the end toward the front quickly, avoiding the slow movement of such values in
-bubble sort. The shrink factor $1.3$ is a common empirical choice.
+bubble sort. These nonadjacent swaps make comb sort unstable. The shrink factor $1.3$ is a common
+empirical choice.
 
 Time Complexity: O(n log n) best and O(n^2) worst.
 Space Complexity: O(1) auxiliary.
-Stable?: No.
 
 */
 

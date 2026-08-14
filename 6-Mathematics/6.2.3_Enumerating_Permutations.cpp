@@ -1,6 +1,7 @@
 /*
 
-A permutation is an ordered list consisting of $n$ (not necessarily distinct) elements.
+These routines enumerate and analyze reorderings of a sequence of $n$ elements; the values need not
+be distinct.
 
 The lexicographic successor is found by locating the rightmost ascent, increasing that position by
 the smallest possible amount, then reversing the suffix into its minimum order. Ranking and

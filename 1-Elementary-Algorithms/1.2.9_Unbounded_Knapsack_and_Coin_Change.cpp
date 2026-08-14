@@ -120,15 +120,13 @@ int main() {
   vector<int> weight{3, 4, 5};
   vector<int64_t> value{4, 5, 7};
   auto [best_value, count] = unbounded_knapsack(weight, value, 10);
-  assert(best_value == 14);
-  assert((count == vector<int>{0, 0, 2}));
+  assert(best_value == 14 && (count == vector<int>{0, 0, 2}));
 
   vector<int> coins{1, 2, 5};
   assert(count_coin_change(coins, 5) == 4);  // 5, 2+2+1, 2+1+1+1, 1*5.
 
   auto [coin_count, used] = min_coin_change(coins, 11);
-  assert(coin_count == 3);
-  assert((used == vector<int>{1, 0, 2}));
+  assert(coin_count == 3 && (used == vector<int>{1, 0, 2}));
 
   auto [impossible, empty_used] = min_coin_change(vector<int>{4, 7}, 6);
   assert(impossible == -1 && empty_used.empty());

@@ -570,6 +570,22 @@ def scan_docstring_structure(paths):
     for path in paths:
         lines = path.read_text().splitlines()
         ranges = list(docstring_ranges(lines))
+        for block_start, block_end in ranges:
+            if lines[block_start].startswith("/***"):
+                continue
+            first = next(
+                (i for i in range(block_start + 1, block_end) if lines[i].strip()), None
+            )
+            if first is not None and api_bullet_re.match(lines[first]):
+                issues.append(
+                    Issue(
+                        path,
+                        first + 1,
+                        "docstring-structure",
+                        "Begin each documentation block with an orienting prose sentence.",
+                        lines[first],
+                    )
+                )
         if not ranges or ranges[0][0] != 0 or lines[0].startswith("/***"):
             continue
         start, end = ranges[0]

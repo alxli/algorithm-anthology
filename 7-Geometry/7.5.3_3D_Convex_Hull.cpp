@@ -1,8 +1,8 @@
 /*
 
-Given points in 3D, compute the triangular faces of their convex hull with an incremental algorithm.
-Start with a tetrahedron, delete every visible face for each new point, and stitch the horizon edges
-to that point. Returned faces are oriented outward.
+The convex hull of points in 3D is the smallest convex polyhedron containing them. This incremental
+algorithm computes its triangular faces: start with a tetrahedron, delete every visible face for
+each new point, and stitch the horizon edges to that point. Returned faces are oriented outward.
 
 - `convex_hull_3d(p)` returns triangular faces as `Face{a, b, c}` triples, where each face has
   vertices `p[a]`, `p[b]`, and `p[c]`. The input must contain at least four points, with no four

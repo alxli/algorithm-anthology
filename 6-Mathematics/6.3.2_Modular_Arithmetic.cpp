@@ -1,14 +1,14 @@
 /*
 
-Wraps arithmetic modulo a positive compile-time constant `MOD` in a small value type. This is a
-common contest helper for dynamic programming, combinatorics, polynomial operations, and any
-calculation whose answers are taken modulo some number such as $10^9 + 7$. Runtime-chosen moduli are
-not supported.
+Provides a fixed-modulus value type and lazy factorial-based combinatorics tables. These are common
+contest helpers for dynamic programming, counting, polynomial operations, and any calculation whose
+answers are taken modulo some number such as $10^9 + 7$. Runtime-chosen moduli are not supported.
 
-The signed `auto` argument `MOD` determines the storage type: `Modular<1000000007>` uses 32-bit
-storage, while `Modular<(1LL << 61) - 1>` uses 64-bit storage. The implementation follows the
-conventional `Mint` wrapper: construction normalizes values, while hidden friend operators support
-mixed expressions such as `2 + Mint(3)` through implicit conversion.
+The `Modular<MOD>` value type wraps arithmetic modulo the positive compile-time constant `MOD`. Its
+signed `auto` argument determines the storage type: `Modular<1000000007>` uses 32-bit storage, while
+`Modular<(1LL << 61) - 1>` uses 64-bit storage. The implementation follows the conventional `Mint`
+wrapper: construction normalizes values, while hidden friend operators support mixed expressions
+such as `2 + Mint(3)` through implicit conversion.
 
 - `Modular<MOD>(x = 0)` constructs the residue class of integer `x` modulo `MOD`.
 - `value()` and `operator()()` return the stored representative in $[0, `MOD`)$.
@@ -18,14 +18,6 @@ mixed expressions such as `2 + Mint(3)` through implicit conversion.
 - `inv()` returns the multiplicative inverse, asserting the value is coprime to `MOD`.
 - Operators `+`, `-`, `*`, `/`, comparison, increment, decrement, and stream I/O are overloaded.
   Division likewise requires the divisor to be coprime to `MOD`.
-
-`ModCombinatorics<Mint>` maintains lazy factorial and inverse-factorial tables for a modular type
-`Mint`. It assumes the modulus is prime and all requested factorials are invertible.
-
-- `factorial(n)` returns $n!$ using a lazy factorial table.
-- `choose(n, k)` returns $\binom n k$ using lazy factorial and inverse-factorial tables.
-- `permute(n, k)` returns the number of ordered selections of `k` distinct elements from `n`.
-- `multichoose(n, k)` returns the number of size-`k` multisets drawn from `n` types.
 
 Overflow warning: Construction, multiplication, and inverses widen through `int64_t` for 32-bit
 storage or `__int128` for 64-bit storage. Thus $2p$ must fit the storage type and $(p - 1)^2$ must
@@ -37,11 +29,9 @@ Time Complexity:
 - O(1) per addition, subtraction, multiplication, comparison, and stream output.
 - O(log n) per call to `pow()`.
 - O(log m) per call to `inv()` and division, where $m = `MOD`$.
-- O(n) total table growth to answer factorials and combinations up to size `n`.
 
 Space Complexity:
 - O(1) auxiliary for Modular arithmetic.
-- O(n) for factorial and inverse-factorial tables grown through `choose(n, k)`.
 
 */
 
@@ -173,6 +163,24 @@ class Modular {
     return is;
   }
 };
+
+/*
+
+`ModCombinatorics<Mint>` maintains lazy factorial and inverse-factorial tables for a modular type
+`Mint`. It assumes the modulus is prime and all requested factorials are invertible.
+
+- `factorial(n)` returns $n!$ using a lazy factorial table.
+- `choose(n, k)` returns $\binom n k$ using lazy factorial and inverse-factorial tables.
+- `permute(n, k)` returns the number of ordered selections of `k` distinct elements from `n`.
+- `multichoose(n, k)` returns the number of size-`k` multisets drawn from `n` types.
+
+Time Complexity:
+- O(n) total table growth to answer calls with arguments up to $n$, then O(1) per call.
+
+Space Complexity:
+- O(n) for the factorial and inverse-factorial tables.
+
+*/
 
 template<typename Mint>
 class ModCombinatorics {

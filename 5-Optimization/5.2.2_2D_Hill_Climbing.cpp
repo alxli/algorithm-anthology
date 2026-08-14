@@ -1,7 +1,7 @@
 /*
 
 Given a continuous geometric objective $f(x, y)$ and a (possibly arbitrary) starting guess
-$(x_0, y_0)$, search for a small value using two-dimensional hill climbing.
+$(x_0, y_0)$, approximately minimize the function using two-dimensional hill climbing.
 
 The heuristic starts at the guess and evaluates one step in each of eight evenly spaced directions.
 It moves to the best improving neighbor, checks all eight directions again, and reduces the step
@@ -79,7 +79,6 @@ double f(double x, double y) {
 
 int main() {
   double x, y;
-  assert(EQ(hill_climb_min(f, 0, 0, &x, &y), 0));
-  assert(EQ(x, 2) && EQ(y, 3));
+  assert(EQ(hill_climb_min(f, 0, 0, &x, &y), 0) && EQ(x, 2) && EQ(y, 3));
   return 0;
 }

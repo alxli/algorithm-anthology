@@ -68,7 +68,6 @@ int main() {
   vector<int> weight{3, 4, 5, 9};
   vector<int64_t> value{4, 5, 7, 10};
   auto [best_value, items] = knapsack_01(weight, value, 8);
-  assert(best_value == 11);
-  assert((items == vector<int>{0, 2}));
+  assert(best_value == 11 && (items == vector<int>{0, 2}));
   return 0;
 }

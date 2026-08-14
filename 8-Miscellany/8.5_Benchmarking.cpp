@@ -31,8 +31,8 @@ class Timer {
   }
 };
 
-template<typename Fun>
-double benchmark(int iterations, Fun f) {
+template<typename Fn>
+double benchmark(int iterations, Fn f) {
   assert(iterations > 0);
   Timer timer;
   for (int i = 0; i < iterations; ++i) {

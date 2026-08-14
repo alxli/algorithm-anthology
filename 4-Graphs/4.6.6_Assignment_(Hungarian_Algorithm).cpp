@@ -125,11 +125,9 @@ int main() {
       {5, 8, 1, 8},
   };
   auto [min_cost, assignment] = min_assignment(cost);
-  assert(min_cost == 9);
-  assert((assignment == vector<int>{1, 0, 2}));
+  assert(min_cost == 9 && (assignment == vector<int>{1, 0, 2}));
 
   auto [max_value, max_jobs] = max_assignment(cost);
-  assert(max_value == 24);
-  assert((max_jobs == vector<int>{0, 3, 1}));
+  assert(max_value == 24 && (max_jobs == vector<int>{0, 3, 1}));
   return 0;
 }

@@ -1,8 +1,8 @@
 /*
 
-Maintains summary statistics as values arrive without storing the stream externally. Welford's
-algorithm computes the mean and variance using constant storage, while a pair of heaps maintains the
-exact median using linear storage.
+Online stream summaries update useful statistics as values arrive without storing the full stream.
+This section uses Welford's algorithm for the mean and variance and two balanced heaps for the
+median.
 
 The naive variance formula $\operatorname{Var}(X) = E[X^2] - E[X]^2$ can lose precision when the two
 terms are large and close together. Welford instead maintains the current mean $\bar{x}_n$ (stored
@@ -14,31 +14,15 @@ then adds the product of its deviations from the old and new means to `m2`.
 - `add(x)` incorporates one more value `x` into the summary.
 - `count()` returns the number of values seen so far.
 - `mean()` returns the current arithmetic mean, or $0$ if the summary is empty.
-- `variance_population()` returns population variance, dividing by $n$, or $0$ if the summary is
-  empty.
-- `variance_sample()` returns sample variance, dividing by $n - 1$, or $0$ if fewer than two values
-  have been added.
-
-For the median, a max-heap stores the lower half of the values and a min-heap stores the upper half.
-The heaps are balanced so that the lower heap has either the same number of values as the upper heap
-or one extra value. Their roots are therefore the middle value or values of the stream.
-
-- `OnlineMedian<T>()` constructs an empty median tracker for an ordered numeric type `T`.
-- `add(x)` inserts `x` into the median tracker.
-- `count()` and `empty()` return the number of values and whether the tracker is empty.
-- `lower_median()` returns the lower of the two middle values, or the middle value for an odd count.
-  The tracker must be nonempty.
-- `median()` returns the middle value for an odd count or the arithmetic mean of the two middle
-  values for an even count. The tracker must be nonempty.
+- `var_pop()` returns population variance, dividing by $n$, or $0$ if the summary is empty.
+- `var_samp()` returns sample variance, dividing by $n - 1$, or $0$ if fewer than two values have
+  been added.
 
 Time Complexity:
-- O(1) per call to `OnlineStatistics::add()` and each `OnlineStatistics` query.
-- O(log n) per call to `OnlineMedian::add()`, where $n$ is the number of values stored.
-- O(1) per `OnlineMedian` query.
+- O(1) per call to `add()` and each query.
 
 Space Complexity:
-- O(1) for `OnlineStatistics`.
-- O(n) for `OnlineMedian`.
+- O(1) auxiliary for all operations.
 
 */
 
@@ -64,9 +48,32 @@ class OnlineStatistics {
 
   int count() const { return n; }
   double mean() const { return avg; }
-  double variance_population() const { return n == 0 ? 0 : m2 / n; }
-  double variance_sample() const { return n <= 1 ? 0 : m2 / (n - 1); }
+  double var_pop() const { return n == 0 ? 0 : m2 / n; }
+  double var_samp() const { return n <= 1 ? 0 : m2 / (n - 1); }
 };
+
+/*
+
+Maintains the exact median of a stream using linear storage. A max-heap stores the lower half of the
+values and a min-heap stores the upper half. The heaps are balanced so that the lower heap has
+either the same number of values as the upper heap or one extra value. Their roots are therefore the
+middle value or values of the stream.
+
+- `OnlineMedian<T>()` constructs an empty median tracker for an ordered numeric type `T`.
+- `add(x)` inserts `x` into the median tracker.
+- `count()` and `empty()` return the number of values and whether the tracker is empty.
+- `lower_median()` returns the lower of the two middle values, or the middle value for an odd count.
+  The tracker must be nonempty.
+- `median()` returns the middle value for an odd count or the arithmetic mean of the two middle
+  values for an even count. The tracker must be nonempty.
+
+Time Complexity:
+- O(log n) per call to `add()` and O(1) per query, where $n$ is the number of values.
+
+Space Complexity:
+- O(n) storage.
+
+*/
 
 template<typename T>
 class OnlineMedian {
@@ -116,34 +123,27 @@ bool EQ(double a, double b) {
 
 int main() {
   OnlineStatistics empty;
-  assert(empty.count() == 0);
-  assert(EQ(empty.mean(), 0.0));
-  assert(EQ(empty.variance_population(), 0.0));
-  assert(EQ(empty.variance_sample(), 0.0));
+  assert(empty.count() == 0 && EQ(empty.mean(), 0.0));
+  assert(EQ(empty.var_pop(), 0.0) && EQ(empty.var_samp(), 0.0));
 
   OnlineStatistics singleton;
   singleton.add(7);
-  assert(singleton.count() == 1);
-  assert(EQ(singleton.mean(), 7.0));
-  assert(EQ(singleton.variance_population(), 0.0));
-  assert(EQ(singleton.variance_sample(), 0.0));
+  assert(singleton.count() == 1 && EQ(singleton.mean(), 7.0));
+  assert(EQ(singleton.var_pop(), 0.0) && EQ(singleton.var_samp(), 0.0));
 
   OnlineStatistics stats;
   for (int x = 1; x <= 5; x++) {
     stats.add(x);
   }
-  assert(stats.count() == 5);
-  assert(EQ(stats.mean(), 3.0));
-  assert(EQ(stats.variance_population(), 2.0));
-  assert(EQ(stats.variance_sample(), 2.5));
+  assert(stats.count() == 5 && EQ(stats.mean(), 3.0));
+  assert(EQ(stats.var_pop(), 2.0) && EQ(stats.var_samp(), 2.5));
 
   OnlineStatistics shifted;
   shifted.add(1e12 + 1);
   shifted.add(1e12 + 2);
   shifted.add(1e12 + 3);
   assert(EQ(shifted.mean(), 1e12 + 2));
-  assert(EQ(shifted.variance_population(), 2.0 / 3));
-  assert(EQ(shifted.variance_sample(), 1.0));
+  assert(EQ(shifted.var_pop(), 2.0 / 3) && EQ(shifted.var_samp(), 1.0));
 
   OnlineMedian<int> medians;
   assert(medians.empty() && medians.count() == 0);

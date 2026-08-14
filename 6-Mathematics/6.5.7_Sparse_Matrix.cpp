@@ -1,10 +1,12 @@
 /*
 
-A sparse matrix stores only nonzero entries, which is useful when the matrix is large but most
-values are zero. This implementation keeps both row maps and column maps in sync: `row(i)` can
-iterate all nonzeros in row `i`, while `col(j)` can iterate all nonzeros in column `j`. That
-bidirectional storage is especially useful for sparse elimination or graph-like matrix operations,
-where both row updates and column pivot lookups are common.
+Provides a sparse matrix type together with arithmetic and elimination routines. A sparse matrix
+stores only nonzero entries, which is useful when the matrix is large but most values are zero.
+
+The matrix keeps both row maps and column maps in sync: `row(i)` can iterate all nonzeros in row
+`i`, while `col(j)` can iterate all nonzeros in column `j`. That bidirectional storage is especially
+useful for sparse elimination or graph-like matrix operations, where both row updates and column
+pivot lookups are common.
 
 The class treats `T{}` as additive zero and requires `value == T{}` to be a valid zero test.
 
@@ -27,19 +29,6 @@ The class treats `T{}` as additive zero and requires `value == T{}` to be a vali
 - Operators `+=`, `-=`, and `*=` assign the corresponding result back into the left operand. In all
   of these operators, entries that cancel to zero are not stored.
 
-The elimination routines require field-like arithmetic because they divide by pivots, so use types
-such as `double`, rational numbers, or modular integers. For floating-point matrices, replace
-`is_zero()` with an epsilon comparison if small roundoff values should be erased. At each pivot
-column, sparse elimination chooses the available row with the fewest stored entries to reduce
-fill-in, although an unfriendly matrix can still become dense.
-
-- `row_reduce(a, limit)` converts columns $[0, `limit`)$ of `a` to sparse row echelon form,
-  returning the rank found in those columns.
-- `det(a)` returns the determinant of a square sparse matrix.
-- `sparse_rank(a)` returns the rank of a sparse matrix.
-- `solve_system(a, b, &x)` solves the system $ax = b$, returning $0$ for one solution, $-1$ for no
-  solution, or $-2$ for infinitely many solutions. When one solution exists, `x` is populated.
-
 Time Complexity:
 - O(log d) per call to `get()`, `set()`, and `add()`, where $d$ is the number of nonzeros in the
   touched row or column.
@@ -52,9 +41,6 @@ Time Complexity:
 - O(z*log d) per call to scalar `operator*`, where $z$ is the number of stored nonzero entries.
 - O(f*log d) per call to `operator*`, where $f$ is the number of scalar products accumulated, that
   is, the sum of `b.row(k).size()` over every stored entry `a[i][k]`.
-- O(f * log d) for sparse elimination, where $f$ is the number of entry updates performed after
-  fill-in and $d$ is a touched row or column size. In the worst case this is still cubic.
-- O(f * log d) per call to `det()`, `sparse_rank()`, and `solve_system()`.
 - O(1) per call to `num_rows()`, `num_cols()`, `nonzeros()`, `row()`, and `col()`.
 
 Space Complexity:
@@ -63,8 +49,6 @@ Space Complexity:
 - O(r_i + r_j) auxiliary for `swap_rows(i, j)`.
 - O(m) auxiliary for `multiply_vector()`, where $m$ is the number of rows.
 - O(c) auxiliary for `operator*`, where $c$ is the largest number of nonzeros in one result row.
-- O(z + m) auxiliary for elimination, in addition to the copied matrix used by `det()` and
-  `sparse_rank()` or the augmented matrix used by `solve_system()`.
 
 */
 
@@ -221,6 +205,32 @@ class SparseMatrix {
   SparseMatrix &operator*=(const SparseMatrix &b) { return *this = *this * b; }
   SparseMatrix &operator*=(const T &k) { return *this = *this * k; }
 };
+
+/*
+
+The elimination routines require field-like arithmetic because they divide by pivots, so use types
+such as `double`, rational numbers, or modular integers. For floating-point matrices, replace
+`is_zero()` with an epsilon comparison if small roundoff values should be erased. At each pivot
+column, sparse elimination chooses the available row with the fewest stored entries to reduce
+fill-in, although an unfriendly matrix can still become dense.
+
+- `row_reduce(a, limit)` converts columns $[0, `limit`)$ of `a` to sparse row echelon form,
+  returning the rank found in those columns.
+- `det(a)` returns the determinant of a square sparse matrix.
+- `sparse_rank(a)` returns the rank of a sparse matrix.
+- `solve_system(a, b, &x)` solves the system $ax = b$, returning $0$ for one solution, $-1$ for no
+  solution, or $-2$ for infinitely many solutions. When one solution exists, `x` is populated.
+
+Time Complexity:
+- O(f * log d) for sparse elimination, where $f$ is the number of entry updates performed after
+  fill-in and $d$ is a touched row or column size. In the worst case this is still cubic.
+- O(f * log d) per call to `det()`, `sparse_rank()`, and `solve_system()`.
+
+Space Complexity:
+- O(z + m) auxiliary for elimination, in addition to the copied matrix used by `det()` and
+  `sparse_rank()` or the augmented matrix used by `solve_system()`.
+
+*/
 
 template<typename T>
 int row_reduce(SparseMatrix<T> &a, int limit) {

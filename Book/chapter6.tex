@@ -233,19 +233,15 @@ These are lightweight standalone helpers for the occasional modular computation.
 \begin{lstlisting}[language=C++]
 int64_t addmod(int64_t a, int64_t b, int64_t m) {
   assert(m > 0);
-  a %= m;
-  b %= m;
-  if (a < 0) a += m;
-  if (b < 0) b += m;
+  if ((a %= m) < 0) a += m;
+  if ((b %= m) < 0) b += m;
   return a >= m - b ? a - (m - b) : a + b;
 }
 
 int64_t submod(int64_t a, int64_t b, int64_t m) {
   assert(m > 0);
-  a %= m;
-  b %= m;
-  if (a < 0) a += m;
-  if (b < 0) b += m;
+  if ((a %= m) < 0) a += m;
+  if ((b %= m) < 0) b += m;
   return a >= b ? a - b : m - (b - a);
 }
 
@@ -819,7 +815,7 @@ int main() {
 {3,1} {3,2} {3,3}
 \end{exampleoutput}
 \subsection{Enumerating Permutations}
-A permutation is an ordered list consisting of $n$ (not necessarily distinct) elements.
+These routines enumerate and analyze reorderings of a sequence of $n$ elements; the values need not be distinct.
 
 The lexicographic successor is found by locating the rightmost ascent, increasing that position by the smallest possible amount, then reversing the suffix into its minimum order. Ranking and unranking permutations use the factorial number system: each position contributes the number of unused smaller values before the chosen one, scaled by the number of possible suffix permutations. The cycle decomposition views a permutation as a function on indices and follows each unvisited orbit until it returns to its start.
 
@@ -2075,9 +2071,9 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Modular Arithmetic}
-Wraps arithmetic modulo a positive compile-time constant \inlinecode{MOD} in a small value type. This is a common contest helper for dynamic programming, combinatorics, polynomial operations, and any calculation whose answers are taken modulo some number such as $10^9 + 7$. Runtime-chosen moduli are not supported.
+Provides a fixed-modulus value type and lazy factorial-based combinatorics tables. These are common contest helpers for dynamic programming, counting, polynomial operations, and any calculation whose answers are taken modulo some number such as $10^9 + 7$. Runtime-chosen moduli are not supported.
 
-The signed \inlinecode{auto} argument \inlinecode{MOD} determines the storage type: \inlinecode{Modular\textless{}1000000007\textgreater{}} uses 32-bit storage, while \inlinecode{Modular\textless{}(1LL \textless{}\textless{} 61) - 1\textgreater{}} uses 64-bit storage. The implementation follows the conventional \inlinecode{Mint} wrapper: construction normalizes values, while hidden friend operators support mixed expressions such as \inlinecode{2 + Mint(3)} through implicit conversion.
+The \inlinecode{Modular\textless{}MOD\textgreater{}} value type wraps arithmetic modulo the positive compile-time constant \inlinecode{MOD}. Its signed \inlinecode{auto} argument determines the storage type: \inlinecode{Modular\textless{}1000000007\textgreater{}} uses 32-bit storage, while \inlinecode{Modular\textless{}(1LL \textless{}\textless{} 61) - 1\textgreater{}} uses 64-bit storage. The implementation follows the conventional \inlinecode{Mint} wrapper: construction normalizes values, while hidden friend operators support mixed expressions such as \inlinecode{2 + Mint(3)} through implicit conversion.
 
 \begin{compactitem}
   \item \inlinecode{Modular\textless{}MOD\textgreater{}(x = 0)} constructs the residue class of integer \inlinecode{x} modulo \inlinecode{MOD}.
@@ -2088,15 +2084,6 @@ The signed \inlinecode{auto} argument \inlinecode{MOD} determines the storage ty
   \item Operators \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, comparison, increment, decrement, and stream I/O are overloaded. Division likewise requires the divisor to be coprime to \inlinecode{MOD}.
 \end{compactitem}
 
-\inlinecode{ModCombinatorics\textless{}Mint\textgreater{}} maintains lazy factorial and inverse-factorial tables for a modular type \inlinecode{Mint}. It assumes the modulus is prime and all requested factorials are invertible.
-
-\begin{compactitem}
-  \item \inlinecode{factorial(n)} returns $n!$ using a lazy factorial table.
-  \item \inlinecode{choose(n, k)} returns $\binom n k$ using lazy factorial and inverse-factorial tables.
-  \item \inlinecode{permute(n, k)} returns the number of ordered selections of \inlinecode{k} distinct elements from \inlinecode{n}.
-  \item \inlinecode{multichoose(n, k)} returns the number of size-\inlinecode{k} multisets drawn from \inlinecode{n} types.
-\end{compactitem}
-
 Overflow warning: Construction, multiplication, and inverses widen through \inlinecode{int64\_t} for 32-bit storage or \inlinecode{\_\_int128} for 64-bit storage. Thus $2p$ must fit the storage type and $(p - 1)^2$ must fit the intermediate type. On compilers without \inlinecode{\_\_int128}, only 32-bit moduli are supported. Estimating a 64-bit product with \inlinecode{long double} is not used because it silently loses the needed precision on platforms where \inlinecode{long double} is only 64 bits.
 
 \Needspace*{3\baselineskip}
@@ -2105,15 +2092,9 @@ Overflow warning: Construction, multiplication, and inverses widen through \inli
   \item $O(1)$ per addition, subtraction, multiplication, comparison, and stream output.
   \item $O(\log n)$ per call to \inlinecode{pow()}.
   \item $O(\log m)$ per call to \inlinecode{inv()} and division, where $m = {\inlinecodemath{MOD}}$.
-  \item $O(n)$ total table growth to answer factorials and combinations up to size \inlinecode{n}.
 \end{compactitem}
 
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(1)$ auxiliary for Modular arithmetic.
-  \item $O(n)$ for factorial and inverse-factorial tables grown through \inlinecode{choose(n, k)}.
-\end{compactitem}
+\textbf{Space Complexity}: $O(1)$ auxiliary for Modular arithmetic.
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -2242,7 +2223,21 @@ class Modular {
     return is;
   }
 };
+\end{lstlisting}
+\inlinecode{ModCombinatorics\textless{}Mint\textgreater{}} maintains lazy factorial and inverse-factorial tables for a modular type \inlinecode{Mint}. It assumes the modulus is prime and all requested factorials are invertible.
 
+\begin{compactitem}
+  \item \inlinecode{factorial(n)} returns $n!$ using a lazy factorial table.
+  \item \inlinecode{choose(n, k)} returns $\binom n k$ using lazy factorial and inverse-factorial tables.
+  \item \inlinecode{permute(n, k)} returns the number of ordered selections of \inlinecode{k} distinct elements from \inlinecode{n}.
+  \item \inlinecode{multichoose(n, k)} returns the number of size-\inlinecode{k} multisets drawn from \inlinecode{n} types.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n)$ total table growth to answer calls with arguments up to $n$, then $O(1)$ per call.
+
+\textbf{Space Complexity}: $O(n)$ for the factorial and inverse-factorial tables.
+
+\begin{lstlisting}[language=C++]
 template<typename Mint>
 class ModCombinatorics {
   std::vector<Mint> fact, inv_fact;
@@ -2921,45 +2916,18 @@ sieve(n=10000000): 0.042641s
 segmented_sieve([1000000000, 1005000000]): 0.01969s
 \end{exampleoutput}
 \subsection{Prime Tests and Factorization}
-Test whether an integer is prime and compute the prime factorization of an integer $n$. The Miller-Rabin test writes $n - 1 = d \cdot 2^r$ and squares $a^d$ repeatedly, checking that the sequence behaves the only way it can for a prime; a base $a$ that breaks the pattern is a witness that $n$ is composite. For large composite inputs, Pollard's rho iterates a pseudorandom map modulo $n$; two iterates that collide modulo a hidden prime factor reveal that factor through a GCD with their difference. Prime factorizations are represented as sorted vectors of (\inlinecode{prime}, \inlinecode{exponent}) pairs. For $0$ and $1$, the prime factorization is empty.
+Provides primality tests, prime factorization, and divisor generation. Alongside generic trial division, it includes deterministic Miller-Rabin and Pollard's rho for signed 64-bit integers. Prime factorizations are represented as sorted vectors of (\inlinecode{prime}, \inlinecode{exponent}) pairs. For $0$ and $1$, the prime factorization is empty.
+
+Trial division tests primality and computes prime factorizations by trying possible divisors through the square root.
 
 \begin{compactitem}
   \item \inlinecode{is\_prime\_slow(n)} returns whether the integer \inlinecode{n} is prime using trial division.
   \item \inlinecode{factorize\_slow(n)} returns the prime factorization of \inlinecode{n} using trial division.
-  \item \inlinecode{is\_probable\_prime(n, k = 20)} returns whether \inlinecode{n} is probably prime using \inlinecode{k} random Miller-Rabin bases. The result is guaranteed correct when \inlinecode{n} is prime. For composite \inlinecode{n}, it returns false with probability at least $1 - (1 / 4)^k$. Thus a true result has one-sided error probability at most $(1 / 4)^k$. This is mostly useful when adapting Miller-Rabin outside the known 64-bit deterministic setting.
-  \item \inlinecode{rho\_factor(n)} returns a factor of \inlinecode{n} that is not necessarily prime using Pollard's rho with Brent's optimization. If \inlinecode{n} is prime, then \inlinecode{n} itself is returned. While this algorithm is non-deterministic and may fail to detect factors on certain runs of the same input, it can be retried until a nontrivial factor is found, as done in \inlinecode{factorize()}.
-  \item \inlinecode{is\_prime(n)} returns whether the signed 64-bit integer \inlinecode{n} is prime using deterministic Miller-Rabin bases sufficient up to and including $2^{63} - 1$.
-  \item \inlinecode{cached\_sieve(n)} returns a cached linear sieve up to and including \inlinecode{n}, storing both primes and least prime factors.
-  \item \inlinecode{merge\_factors(a, b)} merges two sorted compressed factorizations.
-  \item \inlinecode{factorize\_rho(n)} returns the prime factorization of a 64-bit integer using Miller-Rabin and Pollard's rho without initial trial division.
-  \item \inlinecode{factorize(n, small\_prime\_limit = 1000000)} returns the prime factorization of a 64-bit integer \inlinecode{n} using a combination of trial division, the Miller-Rabin primality test, and Pollard's rho algorithm. \inlinecode{small\_prime\_limit} specifies the largest prime to test with trial division before falling back to the rho algorithm. This supports 64-bit integers up to and including $2^{63} - 1$.
-  \item \inlinecode{divisors\_from\_factors(factors)} returns all divisors from a compressed factorization.
-  \item \inlinecode{divisors(n)} returns all divisors of a 64-bit integer using \inlinecode{factorize()} followed by \inlinecode{divisors\_from\_factors()}.
 \end{compactitem}
 
-Modular multiplication inside Miller-Rabin and Pollard's rho uses \inlinecode{\_\_uint128\_t} when available for speed, with a slower portable double-and-add fallback to avoid overflow on compilers without 128-bit integers.
+\textbf{Time Complexity}: $O(\sqrt{n})$ per call to \inlinecode{is\_prime\_slow()} and \inlinecode{factorize\_slow()}.
 
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(\sqrt{n})$ per call to \inlinecode{is\_prime\_slow()} and \inlinecode{factorize\_slow()}.
-  \item $O(k \cdot \log n)$ modular multiplications per call to \inlinecode{is\_probable\_prime()} and $O(\log n)$ per call to \inlinecode{is\_prime()}. The portable multiplication fallback adds another $O(\log n)$ factor.
-  \item $O(n)$ per call to \inlinecode{cached\_sieve()} when rebuilding the cache, or $O(1)$ when the existing cache is large enough.
-  \item $O(\sqrt{p})$ expected modular multiplications per call to \inlinecode{rho\_factor(n)}, where $p$ is the smallest prime factor of \inlinecode{n}. For composite \inlinecode{n}, this is at most $O(n^{1/4})$.
-  \item $O(n^{1/4})$ expected per call to \inlinecode{factorize\_rho()}. \inlinecode{factorize()} additionally performs $O(L/\log L)$ trial divisions, where $L$ is \inlinecode{small\_prime\_limit}, and takes $O(L)$ time if the prime cache must be rebuilt.
-  \item $O(|a| + |b|)$ per call to \inlinecode{merge\_factors()}.
-  \item $O(d \log d)$ per call to \inlinecode{divisors\_from\_factors()}, where $d$ is the number of divisors generated, due to sorting the result.
-  \item $O(L/\log L + n^{1/4} + d \log d)$ expected per call to \inlinecode{divisors()}, plus $O(L)$ if the prime cache must be rebuilt.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(c)$ cached space after sieving through $c$.
-  \item $O(f + \log n)$ auxiliary for recursive factorization, where $f$ is the number of compressed prime factors returned.
-  \item $O(d)$ output space and $O(\log d)$ auxiliary stack space for \inlinecode{divisors\_from\_factors()} and \inlinecode{divisors()}.
-  \item $O(1)$ auxiliary for the primality tests, \inlinecode{rho\_factor()}, \inlinecode{factorize\_slow()}, and \inlinecode{merge\_factors()}, excluding returned vectors.
-\end{compactitem}
+\textbf{Space Complexity}: $O(1)$ auxiliary for \inlinecode{is\_prime\_slow()} and $O(f)$ for the returned factorization, where $f$ is the number of compressed prime factors.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -3008,7 +2976,27 @@ std::vector<std::pair<Int, int>> factorize_slow(Int n) {
   }
   return res;
 }
+\end{lstlisting}
+The Miller-Rabin test writes $n - 1 = d \cdot 2^r$ and repeatedly squares $a^d$; a base that breaks the pattern required of a prime proves that $n$ is composite. Pollard's rho iterates a pseudorandom map modulo $n$; two iterates that collide modulo a hidden prime factor reveal that factor through a GCD with their difference.
 
+\begin{compactitem}
+  \item \inlinecode{is\_probable\_prime(n, k = 20)} returns whether \inlinecode{n} is probably prime using \inlinecode{k} random Miller-Rabin bases. The result is guaranteed correct when \inlinecode{n} is prime. For composite \inlinecode{n}, a true result has one-sided error probability at most $(1 / 4)^k$.
+  \item \inlinecode{rho\_factor(n)} returns a factor of \inlinecode{n} that is not necessarily prime using Pollard's rho with Brent's optimization. If \inlinecode{n} is prime, then \inlinecode{n} itself is returned. The algorithm may need to be retried to find a nontrivial factor, as done in \inlinecode{factorize\_rho()}.
+  \item \inlinecode{is\_prime(n)} returns whether the signed 64-bit integer \inlinecode{n} is prime using deterministic Miller-Rabin bases sufficient up to and including $2^{63} - 1$.
+\end{compactitem}
+
+Modular multiplication uses \inlinecode{\_\_uint128\_t} when available, with a slower portable double-and-add fallback that avoids overflow on compilers without 128-bit integers.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(k \cdot \log n)$ modular multiplications per call to \inlinecode{is\_probable\_prime()} and $O(\log n)$ per call to \inlinecode{is\_prime()}. The portable multiplication fallback adds another $O(\log n)$ factor.
+  \item $O(\sqrt{p})$ expected modular multiplications per call to \inlinecode{rho\_factor(n)}, where $p$ is the smallest prime factor of \inlinecode{n}. For composite \inlinecode{n}, this is at most $O(n^{1/4})$.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
 uint64_t mulmod(uint64_t x, uint64_t n, uint64_t m) {
 #if defined(__SIZEOF_INT128__)
   return static_cast<uint64_t>(static_cast<__uint128_t>(x) * n % m);
@@ -3133,7 +3121,38 @@ bool is_prime(int64_t n) {
   }
   return true;
 }
+\end{lstlisting}
+The complete factorization routine first removes small prime factors with a cached linear sieve, then uses Miller-Rabin and Pollard's rho on the remaining cofactor. Factorizations remain sorted and compressed as (\inlinecode{prime}, \inlinecode{exponent}) pairs.
 
+\begin{compactitem}
+  \item \inlinecode{cached\_sieve(n)} returns a cached linear sieve up to and including \inlinecode{n}, storing both primes and least prime factors.
+  \item \inlinecode{merge\_factors(a, b)} merges two sorted compressed factorizations.
+  \item \inlinecode{factorize\_rho(n)} returns the prime factorization of a 64-bit integer using Miller-Rabin and Pollard's rho without initial trial division.
+  \item \inlinecode{factorize(n, small\_prime\_limit = 1000000)} returns the prime factorization of a 64-bit integer \inlinecode{n}, first testing primes through \inlinecode{small\_prime\_limit} and then falling back to Pollard's rho. It supports integers up to and including $2^{63} - 1$.
+  \item \inlinecode{divisors\_from\_factors(factors)} returns all divisors from a compressed factorization.
+  \item \inlinecode{divisors(n)} returns all divisors of a 64-bit integer using \inlinecode{factorize()} followed by \inlinecode{divisors\_from\_factors()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to \inlinecode{cached\_sieve()} when rebuilding the cache, or $O(1)$ when it is already large enough.
+  \item $O(n^{1/4})$ expected per call to \inlinecode{factorize\_rho()}. \inlinecode{factorize()} additionally performs $O(L/\log L)$ trial divisions, where $L$ is \inlinecode{small\_prime\_limit}, and takes $O(L)$ time if the cache is rebuilt.
+  \item $O(|a| + |b|)$ per call to \inlinecode{merge\_factors()}.
+  \item $O(d \log d)$ per call to \inlinecode{divisors\_from\_factors()}, where $d$ is the number of divisors generated.
+  \item $O(L/\log L + n^{1/4} + d \log d)$ expected per call to \inlinecode{divisors()}, plus $O(L)$ if the cache is rebuilt.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(c)$ cached space after sieving through $c$.
+  \item $O(f + \log n)$ auxiliary for recursive factorization, where $f$ is the number of compressed prime factors returned.
+  \item $O(d)$ output space and $O(\log d)$ auxiliary stack space for \inlinecode{divisors\_from\_factors()} and \inlinecode{divisors()}.
+  \item $O(1)$ auxiliary for \inlinecode{merge\_factors()}, excluding its returned vector.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
 struct SieveCache {
   int limit = 1;
   std::vector<int> least{0, 1}, primes;
@@ -6213,7 +6232,9 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Sparse Matrix}
-A sparse matrix stores only nonzero entries, which is useful when the matrix is large but most values are zero. This implementation keeps both row maps and column maps in sync: \inlinecode{row(i)} can iterate all nonzeros in row \inlinecode{i}, while \inlinecode{col(j)} can iterate all nonzeros in column \inlinecode{j}. That bidirectional storage is especially useful for sparse elimination or graph-like matrix operations, where both row updates and column pivot lookups are common.
+Provides a sparse matrix type together with arithmetic and elimination routines. A sparse matrix stores only nonzero entries, which is useful when the matrix is large but most values are zero.
+
+The matrix keeps both row maps and column maps in sync: \inlinecode{row(i)} can iterate all nonzeros in row \inlinecode{i}, while \inlinecode{col(j)} can iterate all nonzeros in column \inlinecode{j}. That bidirectional storage is especially useful for sparse elimination or graph-like matrix operations, where both row updates and column pivot lookups are common.
 
 The class treats \inlinecode{T\{\}} as additive zero and requires \inlinecode{value == T\{\}} to be a valid zero test.
 
@@ -6236,15 +6257,6 @@ The class treats \inlinecode{T\{\}} as additive zero and requires \inlinecode{va
   \item Operators \inlinecode{+=}, \inlinecode{-=}, and \inlinecode{*=} assign the corresponding result back into the left operand. In all of these operators, entries that cancel to zero are not stored.
 \end{compactitem}
 
-The elimination routines require field-like arithmetic because they divide by pivots, so use types such as \inlinecode{double}, rational numbers, or modular integers. For floating-point matrices, replace \inlinecode{is\_zero()} with an epsilon comparison if small roundoff values should be erased. At each pivot column, sparse elimination chooses the available row with the fewest stored entries to reduce fill-in, although an unfriendly matrix can still become dense.
-
-\begin{compactitem}
-  \item \inlinecode{row\_reduce(a, limit)} converts columns $[0, {\inlinecodemath{limit}})$ of \inlinecode{a} to sparse row echelon form, returning the rank found in those columns.
-  \item \inlinecode{det(a)} returns the determinant of a square sparse matrix.
-  \item \inlinecode{sparse\_rank(a)} returns the rank of a sparse matrix.
-  \item \inlinecode{solve\_system(a, b, \&x)} solves the system $ax = b$, returning $0$ for one solution, $-1$ for no solution, or $-2$ for infinitely many solutions. When one solution exists, \inlinecode{x} is populated.
-\end{compactitem}
-
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
@@ -6254,8 +6266,6 @@ The elimination routines require field-like arithmetic because they divide by pi
   \item $O((z_a + z_b) \cdot \log d)$ per call to \inlinecode{operator+} and \inlinecode{operator-}, where $z_a$ and $z_b$ are the operand nonzero counts.
   \item $O(z \cdot \log d)$ per call to scalar \inlinecode{operator*}, where $z$ is the number of stored nonzero entries.
   \item $O(f \cdot \log d)$ per call to \inlinecode{operator*}, where $f$ is the number of scalar products accumulated, that is, the sum of \inlinecode{b.row(k).size()} over every stored entry \inlinecode{a[i][k]}.
-  \item $O(f \cdot \log d)$ for sparse elimination, where $f$ is the number of entry updates performed after fill-in and $d$ is a touched row or column size. In the worst case this is still cubic.
-  \item $O(f \cdot \log d)$ per call to \inlinecode{det()}, \inlinecode{sparse\_rank()}, and \inlinecode{solve\_system()}.
   \item $O(1)$ per call to \inlinecode{num\_rows()}, \inlinecode{num\_cols()}, \inlinecode{nonzeros()}, \inlinecode{row()}, and \inlinecode{col()}.
 \end{compactitem}
 
@@ -6267,7 +6277,6 @@ The elimination routines require field-like arithmetic because they divide by pi
   \item $O(r_i + r_j)$ auxiliary for \inlinecode{swap\_rows(i, j)}.
   \item $O(m)$ auxiliary for \inlinecode{multiply\_vector()}, where $m$ is the number of rows.
   \item $O(c)$ auxiliary for \inlinecode{operator*}, where $c$ is the largest number of nonzeros in one result row.
-  \item $O(z + m)$ auxiliary for elimination, in addition to the copied matrix used by \inlinecode{det()} and \inlinecode{sparse\_rank()} or the augmented matrix used by \inlinecode{solve\_system()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -6424,7 +6433,26 @@ class SparseMatrix {
   SparseMatrix &operator*=(const SparseMatrix &b) { return *this = *this * b; }
   SparseMatrix &operator*=(const T &k) { return *this = *this * k; }
 };
+\end{lstlisting}
+The elimination routines require field-like arithmetic because they divide by pivots, so use types such as \inlinecode{double}, rational numbers, or modular integers. For floating-point matrices, replace \inlinecode{is\_zero()} with an epsilon comparison if small roundoff values should be erased. At each pivot column, sparse elimination chooses the available row with the fewest stored entries to reduce fill-in, although an unfriendly matrix can still become dense.
 
+\begin{compactitem}
+  \item \inlinecode{row\_reduce(a, limit)} converts columns $[0, {\inlinecodemath{limit}})$ of \inlinecode{a} to sparse row echelon form, returning the rank found in those columns.
+  \item \inlinecode{det(a)} returns the determinant of a square sparse matrix.
+  \item \inlinecode{sparse\_rank(a)} returns the rank of a sparse matrix.
+  \item \inlinecode{solve\_system(a, b, \&x)} solves the system $ax = b$, returning $0$ for one solution, $-1$ for no solution, or $-2$ for infinitely many solutions. When one solution exists, \inlinecode{x} is populated.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(f \cdot \log d)$ for sparse elimination, where $f$ is the number of entry updates performed after fill-in and $d$ is a touched row or column size. In the worst case this is still cubic.
+  \item $O(f \cdot \log d)$ per call to \inlinecode{det()}, \inlinecode{sparse\_rank()}, and \inlinecode{solve\_system()}.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(z + m)$ auxiliary for elimination, in addition to the copied matrix used by \inlinecode{det()} and \inlinecode{sparse\_rank()} or the augmented matrix used by \inlinecode{solve\_system()}.
+
+\begin{lstlisting}[language=C++]
 template<typename T>
 int row_reduce(SparseMatrix<T> &a, int limit) {
   assert(0 <= limit && limit <= a.num_cols());

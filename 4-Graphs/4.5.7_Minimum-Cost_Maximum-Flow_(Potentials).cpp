@@ -204,12 +204,10 @@ int main() {
   g.add_edge(3, 5, 2, 1);
   g.add_edge(4, 5, 3, 1);
   auto [flow, cost] = g.min_cost_flow(0, 5, 5);
-  assert(flow == 5);
-  assert(cost == 16);
+  assert(flow == 5 && cost == 16);
   assert(g.edge_flow(id01) == 3);
   g.clear_flow();
   auto [flow2, cost2] = g.min_cost_flow(0, 5, 5);
-  assert(flow2 == 5);
-  assert(cost2 == 16);
+  assert(flow2 == 5 && cost2 == 16);
   return 0;
 }

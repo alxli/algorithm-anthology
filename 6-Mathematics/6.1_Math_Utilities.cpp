@@ -269,19 +269,15 @@ the `Modular` ("Mint") class in section 6.3.2.
 
 int64_t addmod(int64_t a, int64_t b, int64_t m) {
   assert(m > 0);
-  a %= m;
-  b %= m;
-  if (a < 0) a += m;
-  if (b < 0) b += m;
+  if ((a %= m) < 0) a += m;
+  if ((b %= m) < 0) b += m;
   return a >= m - b ? a - (m - b) : a + b;
 }
 
 int64_t submod(int64_t a, int64_t b, int64_t m) {
   assert(m > 0);
-  a %= m;
-  b %= m;
-  if (a < 0) a += m;
-  if (b < 0) b += m;
+  if ((a %= m) < 0) a += m;
+  if ((b %= m) < 0) b += m;
   return a >= b ? a - b : m - (b - a);
 }
 

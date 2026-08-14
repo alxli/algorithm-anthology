@@ -143,8 +143,7 @@ int main() {
       HalfPlane(Point(0, 4), Point(0, 0)),
   };
   auto square = half_plane_intersection(box);
-  assert(square.size() == 4);
-  assert(EQ(polygon_area(square), 16));
+  assert(square.size() == 4 && EQ(polygon_area(square), 16));
 
   auto tighter = box;
   tighter.emplace_back(Point(0, 1), Point(4, 1));  // y >= 1
@@ -152,8 +151,7 @@ int main() {
 
   box.emplace_back(Point(2, 0), Point(2, 4));  // x <= 2
   auto rect = half_plane_intersection(box);
-  assert(rect.size() == 4);
-  assert(EQ(polygon_area(rect), 8));
+  assert(rect.size() == 4 && EQ(polygon_area(rect), 8));
 
   vector<HalfPlane> empty{
       HalfPlane(Point(0, 0), Point(1, 0)),  // y >= 0

@@ -139,8 +139,7 @@ int main() {
       {4, 2, 1},
   };
   auto [min_cost, path] = min_cost_grid_path(cost);
-  assert(min_cost == 7);
-  assert((path == vector<pair<int, int>>{{0, 0}, {0, 1}, {0, 2}, {1, 2}, {2, 2}}));
+  assert(min_cost == 7 && (path == vector<pair<int, int>>{{0, 0}, {0, 1}, {0, 2}, {1, 2}, {2, 2}}));
 
   vector<vector<char>> binary{
       {1, 0, 1, 0, 0},
