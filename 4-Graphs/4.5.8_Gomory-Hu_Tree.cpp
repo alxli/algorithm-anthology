@@ -11,10 +11,10 @@ $s$ side of that cut are reparented under $s$, gradually refining the cut-equiva
 
 - `gomory_hu(n, edges)` returns the `n - 1` edges of a Gomory-Hu tree as tuples (`u`, `v`, `weight`)
   for an undirected, weighted graph with `n` nodes and `edges` of the same shape.
-- `min_cut_value(n, tree, source, sink)` returns the minimum cut value between nodes `source` and
-  `sink` in $[0, `n`)$ using the tree returned by `gomory_hu()`. For many pairwise cut queries on
-  the same tree, it is more efficient to prebuild the tree adjacency once and answer minimum
-  edge-on-path queries with LCA/binary lifting instead of calling `min_cut_value()` each time.
+- `min_cut_value(tree, source, sink)` returns the minimum cut value between nodes `source` and
+  `sink` using the tree returned by `gomory_hu()`. For many pairwise cut queries on the same tree,
+  it is more efficient to prebuild the tree adjacency once and answer minimum edge-on-path queries
+  with LCA/binary lifting instead of calling `min_cut_value()` each time.
 
 Time Complexity:
 - O(n) calls to maximum flow. With the included Dinic implementation, this is O(n^3*m) in the worst
@@ -29,6 +29,7 @@ Space Complexity:
 #include <algorithm>
 #include <cassert>
 #include <limits>
+#include <optional>
 #include <queue>
 #include <tuple>
 #include <utility>
@@ -157,7 +158,8 @@ std::vector<Edge<T>> gomory_hu(int n, const std::vector<Edge<T>> &edges) {
 }
 
 template<typename T>
-T min_cut_value(int n, const std::vector<Edge<T>> &tree, int source, int sink) {
+T min_cut_value(const std::vector<Edge<T>> &tree, int source, int sink) {
+  int n = static_cast<int>(tree.size()) + 1;
   assert(0 <= source && source < n && 0 <= sink && sink < n && source != sink);
   // For many queries, prebuild this adjacency and add LCA/binary lifting for min edge on path.
   std::vector<std::vector<std::pair<int, T>>> adj(n);
@@ -166,22 +168,22 @@ T min_cut_value(int n, const std::vector<Edge<T>> &tree, int source, int sink) {
     adj[v].emplace_back(u, w);
   }
   std::vector<char> seen(n);
-  auto dfs = [&](auto &&dfs, int u, T best) -> T {
+  auto dfs = [&](auto &&dfs, int u, T best) -> std::optional<T> {
     if (u == sink) {
       return best;
     }
     seen[u] = true;
     for (auto [v, w] : adj[u]) {
       if (!seen[v]) {
-        T res = dfs(dfs, v, std::min(best, w));
-        if (res != -1) {
+        auto res = dfs(dfs, v, std::min(best, w));
+        if (res) {
           return res;
         }
       }
     }
-    return static_cast<T>(-1);
+    return std::nullopt;
   };
-  return dfs(dfs, source, std::numeric_limits<T>::max());
+  return *dfs(dfs, source, std::numeric_limits<T>::max());
 }
 
 /*** Example Usage ***/
@@ -200,9 +202,11 @@ int main() {
   };
   auto tree = gomory_hu(4, edges);
   assert((tree == vector<Edge<int>>{{1, 0, 5}, {2, 1, 5}, {3, 2, 6}}));
-  assert(min_cut_value(4, tree, 0, 1) == 5);
-  assert(min_cut_value(4, tree, 0, 2) == 5);
-  assert(min_cut_value(4, tree, 0, 3) == 5);
-  assert(min_cut_value(4, tree, 2, 3) == 6);
+  assert(min_cut_value(tree, 0, 1) == 5);
+  assert(min_cut_value(tree, 0, 2) == 5);
+  assert(min_cut_value(tree, 0, 3) == 5);
+  assert(min_cut_value(tree, 2, 3) == 6);
+  vector<Edge<uint64_t>> wide_tree{{0, 1, numeric_limits<uint64_t>::max()}};
+  assert(min_cut_value(wide_tree, 0, 1) == numeric_limits<uint64_t>::max());
   return 0;
 }

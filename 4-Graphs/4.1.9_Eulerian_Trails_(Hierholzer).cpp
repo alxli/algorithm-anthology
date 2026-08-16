@@ -131,7 +131,7 @@ class EulerianGraph {
   std::vector<std::vector<int>> adj;
   bool directed;
 
-  bool valid_degrees(int start) const {
+  int select_start(int start) const {
     int n = static_cast<int>(adj.size());
     if (directed) {
       std::vector<int> indeg(n), outdeg(n);
@@ -139,30 +139,28 @@ class EulerianGraph {
         outdeg[eu]++;
         indeg[ev]++;
       }
-      int source = -1, sink = -1;
+      int source = -1, sources = 0, sinks = 0, first = -1;
       for (int u = 0; u < n; u++) {
+        if (outdeg[u] > 0 && first == -1) {
+          first = u;
+        }
         int diff = outdeg[u] - indeg[u];
         if (diff == 1) {
-          if (source != -1) {
-            return false;
-          }
           source = u;
+          sources++;
         } else if (diff == -1) {
-          if (sink != -1) {
-            return false;
-          }
-          sink = u;
+          sinks++;
         } else if (diff != 0) {
-          return false;
+          return -1;
         }
       }
-      if ((source == -1) != (sink == -1)) {
-        return false;
+      if (sources != sinks || sources > 1) {
+        return -1;
       }
       if (start != -1) {
-        return source == -1 ? outdeg[start] > 0 : start == source;
+        return source == -1 ? (outdeg[start] > 0 ? start : -1) : (start == source ? start : -1);
       }
-      return true;
+      return source == -1 ? first : source;
     }
     std::vector<int> degree(n);
     for (const auto &[eu, ev] : edges) {
@@ -170,56 +168,25 @@ class EulerianGraph {
       degree[ev]++;
     }
     std::vector<int> odd;
+    int first = -1;
     for (int u = 0; u < n; u++) {
+      if (degree[u] > 0 && first == -1) {
+        first = u;
+      }
       if (degree[u] % 2 == 1) {
         odd.push_back(u);
       }
     }
     if (!odd.empty() && odd.size() != 2) {
-      return false;
+      return -1;
     }
     if (start != -1) {
-      return odd.empty() ? degree[start] > 0 : (start == odd[0] || start == odd[1]);
+      if (odd.empty()) {
+        return degree[start] > 0 ? start : -1;
+      }
+      return start == odd[0] || start == odd[1] ? start : -1;
     }
-    return true;
-  }
-
-  int choose_start() const {
-    int n = static_cast<int>(adj.size());
-    if (directed) {
-      std::vector<int> indeg(n), outdeg(n);
-      for (const auto &[eu, ev] : edges) {
-        outdeg[eu]++;
-        indeg[ev]++;
-      }
-      for (int u = 0; u < n; u++) {
-        if (outdeg[u] - indeg[u] == 1) {
-          return u;
-        }
-      }
-      for (int u = 0; u < n; u++) {
-        if (outdeg[u] > 0) {
-          return u;
-        }
-      }
-    } else {
-      std::vector<int> degree(n);
-      for (const auto &[eu, ev] : edges) {
-        degree[eu]++;
-        degree[ev]++;
-      }
-      for (int u = 0; u < n; u++) {
-        if (degree[u] % 2 == 1) {
-          return u;
-        }
-      }
-      for (int u = 0; u < n; u++) {
-        if (degree[u] > 0) {
-          return u;
-        }
-      }
-    }
-    return 0;
+    return odd.empty() ? first : odd[0];
   }
 
   std::vector<int> build_nodes(int start, const std::vector<int> &trail_edges) const {
@@ -266,11 +233,9 @@ class EulerianGraph {
       int s = (start == -1 ? 0 : start);
       return EulerianTrail{s, {}, {s}};
     }
-    if (!valid_degrees(start)) {
-      return EulerianTrail{};
-    }
+    start = select_start(start);
     if (start == -1) {
-      start = choose_start();
+      return EulerianTrail{};
     }
     std::vector<char> used(m);
     std::vector<int> ptr(n), node_stack{start}, edge_stack{-1}, trail_edges;

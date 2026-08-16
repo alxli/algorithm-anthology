@@ -24,7 +24,7 @@ workers are processed in a fixed order: `dp[mask]` is the minimum cost after ass
 Overflow warning: The accumulated cost must fit in `int64_t`.
 
 Time Complexity:
-- O(n^2*2^n) per call to `min_cost_assignment()`, where $n$ is the number of workers and jobs.
+- O(n*2^n) per call to `min_cost_assignment()`, where $n$ is the number of workers and jobs.
 
 Space Complexity:
 - O(2^n) auxiliary and O(n) for the returned assignment from `min_cost_assignment()`.
@@ -178,8 +178,11 @@ Space Complexity:
 
 int64_t count_domino_tilings(int rows, int cols) {
   assert(rows >= 0 && cols >= 0);
+  if (rows == 0 || cols == 0) {
+    return 1;
+  }
   if (rows < cols) {
-    return count_domino_tilings(cols, rows);
+    std::swap(rows, cols);
   }
   assert(cols < 31);
   int states = 1 << cols;
@@ -233,7 +236,7 @@ int main() {
   };
   assert(min_cost_partition(group_cost) == 7);  // Groups {0} and {1, 2}.
 
-  assert(count_domino_tilings(0, 5) == 1);
+  assert(count_domino_tilings(0, 1000000000) == 1);
   assert(count_domino_tilings(2, 3) == 3);
   assert(count_domino_tilings(3, 3) == 0);
   assert(count_domino_tilings(4, 4) == 36);

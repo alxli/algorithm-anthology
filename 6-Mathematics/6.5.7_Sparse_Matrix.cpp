@@ -21,7 +21,7 @@ The class treats `T{}` as additive zero and requires `value == T{}` to be a vali
 - `col(j)` returns a map from row index to value for the nonzero entries in column `j`.
 - `swap_rows(i, j)` swaps two rows while keeping the column maps synchronized.
 - `transpose()` transposes the matrix in place.
-- `multiply_vector(x)` returns the matrix-vector product with vector `x`.
+- `a * x` returns the matrix-vector product with vector `x`.
 - `a + b` and `a - b` return the sum and difference of two matrices with identical dimensions.
 - `a * b` returns the matrix product, requiring `a.num_cols()` to equal `b.num_rows()`. Only pairs
   of stored entries are ever multiplied.
@@ -32,8 +32,8 @@ The class treats `T{}` as additive zero and requires `value == T{}` to be a vali
 Time Complexity:
 - O(log d) per call to `get()`, `set()`, and `add()`, where $d$ is the number of nonzeros in the
   touched row or column.
-- O(1) per call to `transpose()` and O(z) per call to `multiply_vector()`, where $z$ is the number
-  of stored nonzero entries.
+- O(1) per call to `transpose()` and O(z) per matrix-vector product, where $z$ is the number of
+  stored nonzero entries.
 - O((r_i + r_j)*log d) per call to `swap_rows(i, j)`, where $r_i$ and $r_j$ are the sizes of the two
   rows.
 - O((z_a + z_b)*log d) per call to `operator+` and `operator-`, where $z_a$ and $z_b$ are the
@@ -47,7 +47,7 @@ Space Complexity:
 - O(z) storage.
 - O(1) auxiliary for `get()`, `set()`, `add()`, `row()`, `col()`, and `transpose()`.
 - O(r_i + r_j) auxiliary for `swap_rows(i, j)`.
-- O(m) auxiliary for `multiply_vector()`, where $m$ is the number of rows.
+- O(m) for the vector returned by matrix-vector multiplication, where $m$ is the number of rows.
 - O(c) auxiliary for `operator*`, where $c$ is the largest number of nonzeros in one result row.
 
 */
@@ -128,7 +128,7 @@ class SparseMatrix {
     std::swap(rvals, cvals);
   }
 
-  std::vector<T> multiply_vector(const std::vector<T> &x) const {
+  std::vector<T> operator*(const std::vector<T> &x) const {
     assert(static_cast<int>(x.size()) == cols);
     std::vector<T> res(rows);
     for (int i = 0; i < rows; i++) {
@@ -385,7 +385,7 @@ int main() {
   assert(a.col(2).begin()->first == 1);
 
   vector<int64_t> x{10, 20, 30, 40};
-  assert((a.multiply_vector(x) == vector<int64_t>{60, 120, 280}));
+  assert((a * x == vector<int64_t>{60, 120, 280}));
 
   a.add(0, 1, -3);  // Entries that become zero are removed from both row and column maps.
   assert(a.get(0, 1) == 0);

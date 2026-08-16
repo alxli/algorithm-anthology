@@ -30,10 +30,11 @@ the Chinese remainder routines combine compatible congruences into one residue c
   Fold it pairwise to merge more than two congruences.
 - `garner_restore(a, p)` returns the smallest nonnegative solution whose residue modulo `p[i]` is
   `a[i]` at every valid index. The entries of `p` must be pairwise coprime (unlike `crt`, which
-  allows shared factors). The exact solution is unique modulo the product of all moduli, so that
-  product and the final answer must fit in `int64_t`.
+  allows shared factors) and positive, and `a` and `p` must have equal sizes. The exact solution is
+  unique modulo the product of all moduli, so that product and the final answer must fit in
+  `int64_t`.
 - `garner_restore_mod(a, p, m)` returns that same CRT solution modulo `m`. This is the right variant
-  when the product of the moduli is too large to fit in `int64_t`.
+  when the product of the moduli is too large to fit in `int64_t`; `m` must be positive.
 
 Overflow warning: Every intermediate and result of the templated signed-integer helpers must be
 representable by `Int`; in particular, the minimum value of `Int` cannot be negated or divided by
@@ -181,8 +182,13 @@ bool crt(int64_t r1, int64_t m1, int64_t r2, int64_t m2, int64_t *r, int64_t *m)
 }
 
 std::vector<int64_t> garner_digits(const std::vector<int> &a, const std::vector<int> &p) {
+  assert(a.size() == p.size());
   int n = static_cast<int>(a.size());
-  std::vector<int64_t> x(a.begin(), a.end());
+  std::vector<int64_t> x(n);
+  for (int i = 0; i < n; i++) {
+    assert(p[i] > 0);
+    x[i] = mod(static_cast<int64_t>(a[i]), static_cast<int64_t>(p[i]));
+  }
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < i; j++) {
       // Reduce mod p[i] each step; otherwise x[i] compounds to ~p^i and overflows int64_t.
@@ -194,6 +200,7 @@ std::vector<int64_t> garner_digits(const std::vector<int> &a, const std::vector<
 }
 
 int64_t garner_restore(const std::vector<int> &a, const std::vector<int> &p) {
+  assert(a.size() == p.size());
   int n = static_cast<int>(a.size());
   if (n == 0) {
     return 0;
@@ -208,6 +215,7 @@ int64_t garner_restore(const std::vector<int> &a, const std::vector<int> &p) {
 }
 
 int64_t garner_restore_mod(const std::vector<int> &a, const std::vector<int> &p, int64_t m) {
+  assert(a.size() == p.size() && m > 0);
   int n = static_cast<int>(a.size());
   if (n == 0) {
     return 0;
@@ -265,6 +273,7 @@ int main() {
     }
     assert(x == 11);
   }
+  assert(garner_restore(vector<int>{-1}, vector<int>{5}) == 4);
 #if defined(__SIZEOF_INT128__)
   {  // Garner modulo another number works even when the product of CRT moduli is too large.
     vector<int> p{1000000007, 1000000009, 1000000033};

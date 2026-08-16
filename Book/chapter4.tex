@@ -1267,7 +1267,7 @@ class EulerianGraph {
   std::vector<std::vector<int>> adj;
   bool directed;
 
-  bool valid_degrees(int start) const {
+  int select_start(int start) const {
     int n = static_cast<int>(adj.size());
     if (directed) {
       std::vector<int> indeg(n), outdeg(n);
@@ -1275,30 +1275,28 @@ class EulerianGraph {
         outdeg[eu]++;
         indeg[ev]++;
       }
-      int source = -1, sink = -1;
+      int source = -1, sources = 0, sinks = 0, first = -1;
       for (int u = 0; u < n; u++) {
+        if (outdeg[u] > 0 && first == -1) {
+          first = u;
+        }
         int diff = outdeg[u] - indeg[u];
         if (diff == 1) {
-          if (source != -1) {
-            return false;
-          }
           source = u;
+          sources++;
         } else if (diff == -1) {
-          if (sink != -1) {
-            return false;
-          }
-          sink = u;
+          sinks++;
         } else if (diff != 0) {
-          return false;
+          return -1;
         }
       }
-      if ((source == -1) != (sink == -1)) {
-        return false;
+      if (sources != sinks || sources > 1) {
+        return -1;
       }
       if (start != -1) {
-        return source == -1 ? outdeg[start] > 0 : start == source;
+        return source == -1 ? (outdeg[start] > 0 ? start : -1) : (start == source ? start : -1);
       }
-      return true;
+      return source == -1 ? first : source;
     }
     std::vector<int> degree(n);
     for (const auto &[eu, ev] : edges) {
@@ -1306,56 +1304,25 @@ class EulerianGraph {
       degree[ev]++;
     }
     std::vector<int> odd;
+    int first = -1;
     for (int u = 0; u < n; u++) {
+      if (degree[u] > 0 && first == -1) {
+        first = u;
+      }
       if (degree[u] % 2 == 1) {
         odd.push_back(u);
       }
     }
     if (!odd.empty() && odd.size() != 2) {
-      return false;
+      return -1;
     }
     if (start != -1) {
-      return odd.empty() ? degree[start] > 0 : (start == odd[0] || start == odd[1]);
+      if (odd.empty()) {
+        return degree[start] > 0 ? start : -1;
+      }
+      return start == odd[0] || start == odd[1] ? start : -1;
     }
-    return true;
-  }
-
-  int choose_start() const {
-    int n = static_cast<int>(adj.size());
-    if (directed) {
-      std::vector<int> indeg(n), outdeg(n);
-      for (const auto &[eu, ev] : edges) {
-        outdeg[eu]++;
-        indeg[ev]++;
-      }
-      for (int u = 0; u < n; u++) {
-        if (outdeg[u] - indeg[u] == 1) {
-          return u;
-        }
-      }
-      for (int u = 0; u < n; u++) {
-        if (outdeg[u] > 0) {
-          return u;
-        }
-      }
-    } else {
-      std::vector<int> degree(n);
-      for (const auto &[eu, ev] : edges) {
-        degree[eu]++;
-        degree[ev]++;
-      }
-      for (int u = 0; u < n; u++) {
-        if (degree[u] % 2 == 1) {
-          return u;
-        }
-      }
-      for (int u = 0; u < n; u++) {
-        if (degree[u] > 0) {
-          return u;
-        }
-      }
-    }
-    return 0;
+    return odd.empty() ? first : odd[0];
   }
 
   std::vector<int> build_nodes(int start, const std::vector<int> &trail_edges) const {
@@ -1402,11 +1369,9 @@ class EulerianGraph {
       int s = (start == -1 ? 0 : start);
       return EulerianTrail{s, {}, {s}};
     }
-    if (!valid_degrees(start)) {
-      return EulerianTrail{};
-    }
+    start = select_start(start);
     if (start == -1) {
-      start = choose_start();
+      return EulerianTrail{};
     }
     std::vector<char> used(m);
     std::vector<int> ptr(n), node_stack{start}, edge_stack{-1}, trail_edges;
@@ -2963,22 +2928,20 @@ void bfs(const std::vector<int> &starts) {
   pred.assign(n, -1);
   std::queue<int> q;
   for (int start : starts) {
-    if (dist[start] == 0) {
-      continue;
+    if (dist[start] > 0) {
+      dist[start] = 0;
+      q.push(start);
     }
-    dist[start] = 0;
-    q.push(start);
   }
   while (!q.empty()) {
     int u = q.front();
     q.pop();
     for (int v : adj[u]) {
-      if (dist[v] != INF) {
-        continue;
+      if (dist[v] == INF) {
+        dist[v] = dist[u] + 1;
+        pred[v] = u;
+        q.push(v);
       }
-      dist[v] = dist[u] + 1;
-      pred[v] = u;
-      q.push(v);
     }
   }
 }
@@ -3065,11 +3028,10 @@ void bfs01(const std::vector<int> &starts) {
   pred.assign(n, -1);
   std::deque<int> dq;
   for (int start : starts) {
-    if (dist[start] == 0) {
-      continue;
+    if (dist[start] > 0) {
+      dist[start] = 0;
+      dq.push_back(start);
     }
-    dist[start] = 0;
-    dq.push_back(start);
   }
   while (!dq.empty()) {
     int u = dq.front();
@@ -4000,8 +3962,7 @@ The lowest common ancestor of two leaves is exactly the merge step that first co
 
 \begin{compactitem}
   \item \inlinecode{KruskalReconstructionTree(n, edges)} builds the tree from a connected graph whose weighted edges are stored as (\inlinecode{weight}, \inlinecode{u}, \inlinecode{v}), where the \inlinecode{n} original nodes are numbered $[0, {\inlinecodemath{n}})$. Parallel edges are supported.
-  \item \inlinecode{root()} returns the reconstruction-tree root.
-  \item \inlinecode{max\_edge\_on\_path(u, v)} returns the maximum edge weight on the MST path between original nodes \inlinecode{u} and \inlinecode{v}.
+  \item \inlinecode{max\_edge\_on\_path(u, v)} returns the maximum edge weight on the MST path between original nodes \inlinecode{u} and \inlinecode{v}, which must be distinct.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -4011,7 +3972,7 @@ The lowest common ancestor of two leaves is exactly the merge step that first co
   \item $O(\log n)$ per call to \inlinecode{max\_edge\_on\_path()}.
 \end{compactitem}
 
-\textbf{Space Complexity}: $O(n \log n)$ for the reconstruction tree and LCA table, plus $O(m)$ auxiliary during construction.
+\textbf{Space Complexity}: $O(n \log n)$ object storage for the LCA table and node values, plus $O(n + m)$ auxiliary during construction.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -4022,25 +3983,9 @@ The lowest common ancestor of two leaves is exactly the merge step that first co
 #include <vector>
 
 class KruskalReconstructionTree {
-  std::vector<int> dsu_root, dsu_tree_root, depth, tin, tout;
-  std::vector<std::vector<int>> up, tree;
+  std::vector<int> tin, tout;
+  std::vector<std::vector<int>> up;
   std::vector<int64_t> value;
-  int timer = 0, root_node = -1;
-
-  int find(int u) { return dsu_root[u] == u ? u : dsu_root[u] = find(dsu_root[u]); }
-
-  void dfs_lca(int u, int p) {
-    tin[u] = timer++;
-    up[0][u] = p;
-    for (int k = 1; k < static_cast<int>(up.size()); k++) {
-      up[k][u] = up[k - 1][up[k - 1][u]];
-    }
-    for (int v : tree[u]) {
-      depth[v] = depth[u] + 1;
-      dfs_lca(v, u);
-    }
-    tout[u] = timer;
-  }
 
   bool is_ancestor(int u, int v) const { return tin[u] <= tin[v] && tout[v] <= tout[u]; }
 
@@ -4060,22 +4005,22 @@ class KruskalReconstructionTree {
   }
 
  public:
-  KruskalReconstructionTree(int n, std::vector<std::tuple<int64_t, int, int>> edges)
-      : dsu_root(2 * n - 1),
-        dsu_tree_root(2 * n - 1),
-        depth(2 * n - 1),
-        tin(2 * n - 1),
-        tout(2 * n - 1),
-        tree(2 * n - 1),
-        value(2 * n - 1) {
+  KruskalReconstructionTree(int n, std::vector<std::tuple<int64_t, int, int>> edges) {
     assert(n > 0);
+    int total_nodes = 2 * n - 1;
+    std::vector<int> dsu_root(total_nodes), dsu_tree_root(total_nodes);
+    std::vector<std::vector<int>> tree(total_nodes);
+    value.resize(total_nodes);
     std::iota(dsu_root.begin(), dsu_root.begin() + n, 0);
     std::iota(dsu_tree_root.begin(), dsu_tree_root.begin() + n, 0);
+    auto find = [&](auto &&find, int u) -> int {
+      return dsu_root[u] == u ? u : dsu_root[u] = find(find, dsu_root[u]);
+    };
     std::sort(edges.begin(), edges.end());
     int nodes = n;
     for (auto [w, u, v] : edges) {
-      u = find(u);
-      v = find(v);
+      u = find(find, u);
+      v = find(find, v);
       if (u == v) {
         continue;
       }
@@ -4089,17 +4034,32 @@ class KruskalReconstructionTree {
       nodes++;
     }
     assert(nodes == 2 * n - 1);
-    root_node = nodes - 1;
     int lg = 1;
     while ((1 << lg) <= nodes) {
       lg++;
     }
+    tin.resize(nodes);
+    tout.resize(nodes);
     up.assign(lg, std::vector<int>(nodes));
-    dfs_lca(root_node, root_node);
+    int timer = 0;
+    auto dfs = [&](auto &&dfs, int u, int p) -> void {
+      tin[u] = timer++;
+      up[0][u] = p;
+      for (int k = 1; k < lg; k++) {
+        up[k][u] = up[k - 1][up[k - 1][u]];
+      }
+      for (int v : tree[u]) {
+        dfs(dfs, v, u);
+      }
+      tout[u] = timer;
+    };
+    dfs(dfs, nodes - 1, nodes - 1);
   }
 
-  int root() const { return root_node; }
-  int64_t max_edge_on_path(int u, int v) const { return value[lca(u, v)]; }
+  int64_t max_edge_on_path(int u, int v) const {
+    assert(u != v);
+    return value[lca(u, v)];
+  }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -4127,7 +4087,6 @@ int main() {
   //  4 (2)  2
   //  / |
   // 0  1
-  assert(tree.root() == 6);
   assert(tree.max_edge_on_path(0, 2) == 4);
   assert(tree.max_edge_on_path(0, 3) == 5);
   assert(tree.max_edge_on_path(2, 3) == 5);
@@ -5515,7 +5474,7 @@ The algorithm starts with every node attached to node $0$, then performs $n - 1$
 
 \begin{compactitem}
   \item \inlinecode{gomory\_hu(n, edges)} returns the \inlinecode{n - 1} edges of a Gomory-Hu tree as tuples (\inlinecode{u}, \inlinecode{v}, \inlinecode{weight}) for an undirected, weighted graph with \inlinecode{n} nodes and \inlinecode{edges} of the same shape.
-  \item \inlinecode{min\_cut\_value(n, tree, source, sink)} returns the minimum cut value between nodes \inlinecode{source} and \inlinecode{sink} in $[0, {\inlinecodemath{n}})$ using the tree returned by \inlinecode{gomory\_hu()}. For many pairwise cut queries on the same tree, it is more efficient to prebuild the tree adjacency once and answer minimum edge-on-path queries with LCA/binary lifting instead of calling \inlinecode{min\_cut\_value()} each time.
+  \item \inlinecode{min\_cut\_value(tree, source, sink)} returns the minimum cut value between nodes \inlinecode{source} and \inlinecode{sink} using the tree returned by \inlinecode{gomory\_hu()}. For many pairwise cut queries on the same tree, it is more efficient to prebuild the tree adjacency once and answer minimum edge-on-path queries with LCA/binary lifting instead of calling \inlinecode{min\_cut\_value()} each time.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -5531,6 +5490,7 @@ The algorithm starts with every node attached to node $0$, then performs $n - 1$
 #include <algorithm>
 #include <cassert>
 #include <limits>
+#include <optional>
 #include <queue>
 #include <tuple>
 #include <utility>
@@ -5659,7 +5619,8 @@ std::vector<Edge<T>> gomory_hu(int n, const std::vector<Edge<T>> &edges) {
 }
 
 template<typename T>
-T min_cut_value(int n, const std::vector<Edge<T>> &tree, int source, int sink) {
+T min_cut_value(const std::vector<Edge<T>> &tree, int source, int sink) {
+  int n = static_cast<int>(tree.size()) + 1;
   assert(0 <= source && source < n && 0 <= sink && sink < n && source != sink);
   // For many queries, prebuild this adjacency and add LCA/binary lifting for min edge on path.
   std::vector<std::vector<std::pair<int, T>>> adj(n);
@@ -5668,22 +5629,22 @@ T min_cut_value(int n, const std::vector<Edge<T>> &tree, int source, int sink) {
     adj[v].emplace_back(u, w);
   }
   std::vector<char> seen(n);
-  auto dfs = [&](auto &&dfs, int u, T best) -> T {
+  auto dfs = [&](auto &&dfs, int u, T best) -> std::optional<T> {
     if (u == sink) {
       return best;
     }
     seen[u] = true;
     for (auto [v, w] : adj[u]) {
       if (!seen[v]) {
-        T res = dfs(dfs, v, std::min(best, w));
-        if (res != -1) {
+        auto res = dfs(dfs, v, std::min(best, w));
+        if (res) {
           return res;
         }
       }
     }
-    return static_cast<T>(-1);
+    return std::nullopt;
   };
-  return dfs(dfs, source, std::numeric_limits<T>::max());
+  return *dfs(dfs, source, std::numeric_limits<T>::max());
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -5703,10 +5664,12 @@ int main() {
   };
   auto tree = gomory_hu(4, edges);
   assert((tree == vector<Edge<int>>{{1, 0, 5}, {2, 1, 5}, {3, 2, 6}}));
-  assert(min_cut_value(4, tree, 0, 1) == 5);
-  assert(min_cut_value(4, tree, 0, 2) == 5);
-  assert(min_cut_value(4, tree, 0, 3) == 5);
-  assert(min_cut_value(4, tree, 2, 3) == 6);
+  assert(min_cut_value(tree, 0, 1) == 5);
+  assert(min_cut_value(tree, 0, 2) == 5);
+  assert(min_cut_value(tree, 0, 3) == 5);
+  assert(min_cut_value(tree, 2, 3) == 6);
+  vector<Edge<uint64_t>> wide_tree{{0, 1, numeric_limits<uint64_t>::max()}};
+  assert(min_cut_value(wide_tree, 0, 1) == numeric_limits<uint64_t>::max());
   return 0;
 }
 \end{lstlisting}
@@ -7203,53 +7166,39 @@ The graph must be simple: the implementation stores one color per ordered node p
 #include <utility>
 #include <vector>
 
-class EdgeColoring {
-  int n;
-  std::vector<std::vector<int>> color;  // color[u][v] is the color of edge (u, v), or 0 if none.
-
-  bool is_free(int x, int c) const {
+std::vector<int> edge_coloring(int n, const std::vector<std::pair<int, int>> &edges) {
+  std::vector<std::vector<int>> color(n, std::vector<int>(n));
+  auto is_free = [&](int x, int c) {
     for (int w = 0; w < n; w++) {
       if (color[x][w] == c) {
         return false;
       }
     }
     return true;
-  }
-
-  int free_color(int x) const {
+  };
+  auto free_color = [&](int x) {
     int c = 1;
     while (!is_free(x, c)) {
       c++;
     }
     return c;
-  }
-
-  void set_color(int u, int v, int c) {
+  };
+  auto set_color = [&](int u, int v, int c) {
     color[u][v] = c;
     color[v][u] = c;
-  }
-
+  };
   // Flip colors c and d along the maximal alternating path of those colors starting at x.
-  void invert_path(int x, int d, int c) {
+  auto flip_path = [&](auto &&self, int x, int d, int c) -> void {
     for (int w = 0; w < n; w++) {
       if (color[x][w] == d) {
         set_color(x, w, 0);
-        invert_path(w, c, d);
+        self(self, w, c, d);
         set_color(x, w, c);
         return;
       }
     }
-  }
-
- public:
-  EdgeColoring(int n, const std::vector<std::pair<int, int>> &edges)
-      : n(n), color(n, std::vector<int>(n)) {
-    for (const auto &e : edges) {
-      add_edge(e.first, e.second);
-    }
-  }
-
-  void add_edge(int u, int v) {
+  };
+  for (auto [u, v] : edges) {
     // Build a maximal fan of u starting at v: fan[0] = v, and color(u, fan[i+1]) is free at fan[i].
     std::vector<int> fan{v};
     std::vector<char> used(n);
@@ -7269,7 +7218,7 @@ class EdgeColoring {
       used[next] = true;
     }
     int c = free_color(u), d = free_color(fan.back());
-    invert_path(u, d, c);
+    flip_path(flip_path, u, d, c);
     // Find the prefix of the fan to rotate: the first node on which d is now free.
     int k = 0;
     while (k < static_cast<int>(fan.size()) && color[u][fan[k]] != d && !is_free(fan[k], d)) {
@@ -7280,19 +7229,12 @@ class EdgeColoring {
     }
     set_color(u, fan[k], d);
   }
-
-  std::vector<int> coloring(const std::vector<std::pair<int, int>> &edges) const {
-    std::vector<int> result;
-    result.reserve(edges.size());
-    for (const auto &e : edges) {
-      result.push_back(color[e.first][e.second] - 1);  // Shift internal 1..D+1 colors to 0..D.
-    }
-    return result;
+  std::vector<int> res;
+  res.reserve(edges.size());
+  for (auto [u, v] : edges) {
+    res.push_back(color[u][v] - 1);  // Shift internal 1..D+1 colors to 0..D.
   }
-};
-
-std::vector<int> edge_coloring(int n, const std::vector<std::pair<int, int>> &edges) {
-  return EdgeColoring(n, edges).coloring(edges);
+  return res;
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}

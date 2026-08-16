@@ -31,9 +31,9 @@ Time Complexity:
   of `s`.
 
 Space Complexity:
-- O(n) for storage of the suffix and LCP arrays.
-- O(n) auxiliary for the constructor.
-- O(1) auxiliary for all other operations.
+- O(n) object storage for the input string and suffix array.
+- O(n) auxiliary for the constructor and `lcp_array()`, plus O(n) for the returned LCP array.
+- O(1) auxiliary for `suffix_array()` and `find()`.
 
 */
 
@@ -47,23 +47,24 @@ using std::string;
 
 class SuffixArrayManberMyers {
   string s;
-  std::vector<int> sa, rk;
+  std::vector<int> sa;
 
  public:
-  explicit SuffixArrayManberMyers(const string &s) : s(s), sa(s.size()), rk(s.size()) {
+  explicit SuffixArrayManberMyers(const string &s) : s(s), sa(s.size()) {
     int n = static_cast<int>(s.size());
+    std::vector<int> rank(n);
     std::iota(sa.begin(), sa.end(), 0);
     for (int i = 0; i < n; i++) {
-      rk[i] = static_cast<unsigned char>(s[i]);
+      rank[i] = static_cast<unsigned char>(s[i]);
     }
-    std::vector<std::pair<int, int>> rk2(n);
+    std::vector<std::pair<int, int>> rank2(n);
     for (int gap = 1; gap < n; gap *= 2) {
       for (int i = 0; i < n; i++) {
-        rk2[i] = {rk[i], i + gap < n ? rk[i + gap] + 1 : 0};
+        rank2[i] = {rank[i], i + gap < n ? rank[i + gap] + 1 : 0};
       }
-      std::sort(sa.begin(), sa.end(), [&](int i, int j) { return rk2[i] < rk2[j]; });
+      std::sort(sa.begin(), sa.end(), [&](int i, int j) { return rank2[i] < rank2[j]; });
       for (int i = 0; i < n; i++) {
-        rk[sa[i]] = (i > 0 && rk2[sa[i - 1]] == rk2[sa[i]]) ? rk[sa[i - 1]] : i;
+        rank[sa[i]] = (i > 0 && rank2[sa[i - 1]] == rank2[sa[i]]) ? rank[sa[i - 1]] : i;
       }
     }
   }

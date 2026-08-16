@@ -31,9 +31,9 @@ Time Complexity:
   of `s`.
 
 Space Complexity:
-- O(n) for storage of the suffix and LCP arrays.
-- O(n) auxiliary for the constructor.
-- O(1) auxiliary for all other operations.
+- O(n) object storage for the input string and suffix array.
+- O(n) auxiliary for the constructor and `lcp_array()`, plus O(n) for the returned LCP array.
+- O(1) auxiliary for `suffix_array()` and `find()`.
 
 */
 

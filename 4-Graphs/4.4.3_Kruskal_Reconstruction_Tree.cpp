@@ -12,9 +12,8 @@ turns bottleneck path queries into ordinary LCA queries on the reconstruction tr
 - `KruskalReconstructionTree(n, edges)` builds the tree from a connected graph whose weighted edges
   are stored as (`weight`, `u`, `v`), where the `n` original nodes are numbered $[0, `n`)$. Parallel
   edges are supported.
-- `root()` returns the reconstruction-tree root.
 - `max_edge_on_path(u, v)` returns the maximum edge weight on the MST path between original nodes
-  `u` and `v`.
+  `u` and `v`, which must be distinct.
 
 Time Complexity:
 - O(m log m + n log n) for construction, where $n$ is the number of nodes and $m$ is the number of
@@ -22,7 +21,8 @@ Time Complexity:
 - O(log n) per call to `max_edge_on_path()`.
 
 Space Complexity:
-- O(n log n) for the reconstruction tree and LCA table, plus O(m) auxiliary during construction.
+- O(n log n) object storage for the LCA table and node values, plus O(n + m) auxiliary during
+  construction.
 
 */
 
@@ -34,25 +34,9 @@ Space Complexity:
 #include <vector>
 
 class KruskalReconstructionTree {
-  std::vector<int> dsu_root, dsu_tree_root, depth, tin, tout;
-  std::vector<std::vector<int>> up, tree;
+  std::vector<int> tin, tout;
+  std::vector<std::vector<int>> up;
   std::vector<int64_t> value;
-  int timer = 0, root_node = -1;
-
-  int find(int u) { return dsu_root[u] == u ? u : dsu_root[u] = find(dsu_root[u]); }
-
-  void dfs_lca(int u, int p) {
-    tin[u] = timer++;
-    up[0][u] = p;
-    for (int k = 1; k < static_cast<int>(up.size()); k++) {
-      up[k][u] = up[k - 1][up[k - 1][u]];
-    }
-    for (int v : tree[u]) {
-      depth[v] = depth[u] + 1;
-      dfs_lca(v, u);
-    }
-    tout[u] = timer;
-  }
 
   bool is_ancestor(int u, int v) const { return tin[u] <= tin[v] && tout[v] <= tout[u]; }
 
@@ -72,22 +56,22 @@ class KruskalReconstructionTree {
   }
 
  public:
-  KruskalReconstructionTree(int n, std::vector<std::tuple<int64_t, int, int>> edges)
-      : dsu_root(2 * n - 1),
-        dsu_tree_root(2 * n - 1),
-        depth(2 * n - 1),
-        tin(2 * n - 1),
-        tout(2 * n - 1),
-        tree(2 * n - 1),
-        value(2 * n - 1) {
+  KruskalReconstructionTree(int n, std::vector<std::tuple<int64_t, int, int>> edges) {
     assert(n > 0);
+    int total_nodes = 2 * n - 1;
+    std::vector<int> dsu_root(total_nodes), dsu_tree_root(total_nodes);
+    std::vector<std::vector<int>> tree(total_nodes);
+    value.resize(total_nodes);
     std::iota(dsu_root.begin(), dsu_root.begin() + n, 0);
     std::iota(dsu_tree_root.begin(), dsu_tree_root.begin() + n, 0);
+    auto find = [&](auto &&find, int u) -> int {
+      return dsu_root[u] == u ? u : dsu_root[u] = find(find, dsu_root[u]);
+    };
     std::sort(edges.begin(), edges.end());
     int nodes = n;
     for (auto [w, u, v] : edges) {
-      u = find(u);
-      v = find(v);
+      u = find(find, u);
+      v = find(find, v);
       if (u == v) {
         continue;
       }
@@ -101,17 +85,32 @@ class KruskalReconstructionTree {
       nodes++;
     }
     assert(nodes == 2 * n - 1);
-    root_node = nodes - 1;
     int lg = 1;
     while ((1 << lg) <= nodes) {
       lg++;
     }
+    tin.resize(nodes);
+    tout.resize(nodes);
     up.assign(lg, std::vector<int>(nodes));
-    dfs_lca(root_node, root_node);
+    int timer = 0;
+    auto dfs = [&](auto &&dfs, int u, int p) -> void {
+      tin[u] = timer++;
+      up[0][u] = p;
+      for (int k = 1; k < lg; k++) {
+        up[k][u] = up[k - 1][up[k - 1][u]];
+      }
+      for (int v : tree[u]) {
+        dfs(dfs, v, u);
+      }
+      tout[u] = timer;
+    };
+    dfs(dfs, nodes - 1, nodes - 1);
   }
 
-  int root() const { return root_node; }
-  int64_t max_edge_on_path(int u, int v) const { return value[lca(u, v)]; }
+  int64_t max_edge_on_path(int u, int v) const {
+    assert(u != v);
+    return value[lca(u, v)];
+  }
 };
 
 /*** Example Usage ***/
@@ -138,7 +137,6 @@ int main() {
   //  4 (2)  2
   //  / |
   // 0  1
-  assert(tree.root() == 6);
   assert(tree.max_edge_on_path(0, 2) == 4);
   assert(tree.max_edge_on_path(0, 3) == 5);
   assert(tree.max_edge_on_path(2, 3) == 5);

@@ -8,17 +8,16 @@ processed one at a time while maintaining the current minimum enclosing circle. 
 lies outside the current circle, the circle is rebuilt with that point constrained to lie on the
 boundary. The final circle is determined by at most three boundary points.
 
-- `min_enclosing_circle(lo, hi)` returns the minimum enclosing circle for the range $[`lo`, `hi`)$
-  of points, where `lo` and `hi` must be random-access iterators. The input range is shuffled in
-  place. The point type may be any type exposing numeric `.x` and `.y` members. The returned circle
-  always uses `double` coordinates, so integer-coordinate inputs are accepted.
+- `min_enclosing_circle(p)` returns the minimum enclosing circle for the points in `p`. The point
+  type may be any type exposing numeric `.x` and `.y` members. The returned circle always uses
+  `double` coordinates, so integer-coordinate inputs are accepted.
 
 Time Complexity:
-- O(n) expected time per call, where $n$ is the distance between `lo` and `hi`, or O(n^3) in the
-  worst-case for a particular shuffle order.
+- O(n) expected time per call, where $n$ is the number of points, or O(n^3) in the worst case for a
+  particular shuffle order.
 
 Space Complexity:
-- O(1) auxiliary.
+- O(n) auxiliary for the shuffled copy of the points.
 
 */
 
@@ -28,6 +27,7 @@ Space Complexity:
 #include <random>
 #include <stdexcept>
 #include <type_traits>
+#include <vector>
 
 const double EPS = 1e-9;
 
@@ -92,30 +92,30 @@ struct Circle {
 };
 
 // Input points can be any type with .x and .y fields; Circle output is always double.
-template<typename It>
-Circle min_enclosing_circle(It lo, It hi) {
-  if (lo == hi) {
+template<typename Pt>
+Circle min_enclosing_circle(std::vector<Pt> p) {
+  if (p.empty()) {
     return Circle(0, 0, 0);
   }
-  if (lo + 1 == hi) {
-    return Circle(lo->x, lo->y, 0);
+  if (p.size() == 1) {
+    return Circle(p[0].x, p[0].y, 0);
   }
   static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
-  std::shuffle(lo, hi, rng);
-  Circle res(*lo, *(lo + 1));
-  for (It i = lo + 2; i != hi; ++i) {
-    if (res.contains(*i)) {
+  std::shuffle(p.begin(), p.end(), rng);
+  Circle res(p[0], p[1]);
+  for (int i = 2; i < static_cast<int>(p.size()); i++) {
+    if (res.contains(p[i])) {
       continue;
     }
-    res = Circle(*lo, *i);
-    for (It j = lo + 1; j != i; ++j) {
-      if (res.contains(*j)) {
+    res = Circle(p[0], p[i]);
+    for (int j = 1; j < i; j++) {
+      if (res.contains(p[j])) {
         continue;
       }
-      res = Circle(*i, *j);
-      for (It k = lo; k != j; ++k) {
-        if (!res.contains(*k)) {
-          res = Circle(*i, *j, *k);
+      res = Circle(p[i], p[j]);
+      for (int k = 0; k < j; k++) {
+        if (!res.contains(p[k])) {
+          res = Circle(p[i], p[j], p[k]);
         }
       }
     }
@@ -126,7 +126,6 @@ Circle min_enclosing_circle(It lo, It hi) {
 /*** Example Usage ***/
 
 #include <cassert>
-#include <vector>
 using namespace std;
 
 struct Point {
@@ -142,24 +141,24 @@ struct PointI {
 
 int main() {
   vector<Point> empty;
-  Circle none = min_enclosing_circle(empty.begin(), empty.end());
+  Circle none = min_enclosing_circle(empty);
   assert(EQ(none.h, 0) && EQ(none.k, 0) && EQ(none.r, 0));
 
   vector<Point> one{{2, 3}};
-  Circle single = min_enclosing_circle(one.begin(), one.end());
+  Circle single = min_enclosing_circle(one);
   assert(EQ(single.h, 2) && EQ(single.k, 3) && EQ(single.r, 0));
 
   vector<Point> two{{0, 0}, {4, 0}};
-  Circle diameter = min_enclosing_circle(two.begin(), two.end());
+  Circle diameter = min_enclosing_circle(two);
   assert(EQ(diameter.h, 2) && EQ(diameter.k, 0) && EQ(diameter.r, 2));
 
   vector<Point> v{{0, 0}, {0, 1}, {1, 0}, {1, 1}};
-  Circle res = min_enclosing_circle(v.begin(), v.end());
+  Circle res = min_enclosing_circle(v);
   assert(EQ(res.h, 0.5) && EQ(res.k, 0.5) && EQ(res.r, 1 / sqrt(2)));
 
   // Integer-coordinate input: Circle output is always double.
   vector<PointI> iv{{0, 0}, {0, 2}, {2, 0}, {2, 2}};
-  Circle ic = min_enclosing_circle(iv.begin(), iv.end());
+  Circle ic = min_enclosing_circle(iv);
   assert(EQ(ic.h, 1.0) && EQ(ic.k, 1.0));
   return 0;
 }

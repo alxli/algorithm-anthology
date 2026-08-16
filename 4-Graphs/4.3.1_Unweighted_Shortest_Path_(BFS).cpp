@@ -44,22 +44,20 @@ void bfs(const std::vector<int> &starts) {
   pred.assign(n, -1);
   std::queue<int> q;
   for (int start : starts) {
-    if (dist[start] == 0) {
-      continue;
+    if (dist[start] > 0) {
+      dist[start] = 0;
+      q.push(start);
     }
-    dist[start] = 0;
-    q.push(start);
   }
   while (!q.empty()) {
     int u = q.front();
     q.pop();
     for (int v : adj[u]) {
-      if (dist[v] != INF) {
-        continue;
+      if (dist[v] == INF) {
+        dist[v] = dist[u] + 1;
+        pred[v] = u;
+        q.push(v);
       }
-      dist[v] = dist[u] + 1;
-      pred[v] = u;
-      q.push(v);
     }
   }
 }

@@ -21,6 +21,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <cstdint>
 #include <numeric>
@@ -228,9 +229,6 @@ The complete factorization routine first removes small prime factors with a cach
 then uses Miller-Rabin and Pollard's rho on the remaining cofactor. Factorizations remain sorted and
 compressed as (`prime`, `exponent`) pairs.
 
-- `cached_sieve(n)` returns a cached linear sieve up to and including `n`, storing both primes and
-  least prime factors.
-- `merge_factors(a, b)` merges two sorted compressed factorizations.
 - `factorize_rho(n)` returns the prime factorization of a 64-bit integer using Miller-Rabin and
   Pollard's rho without initial trial division.
 - `factorize(n, small_prime_limit = 1000000)` returns the prime factorization of a 64-bit integer
@@ -241,11 +239,8 @@ compressed as (`prime`, `exponent`) pairs.
   `divisors_from_factors()`.
 
 Time Complexity:
-- O(n) per call to `cached_sieve()` when rebuilding the cache, or O(1) when it is already large
-  enough.
 - O(n^{1/4}) expected per call to `factorize_rho()`. `factorize()` additionally performs O(L/log L)
   trial divisions, where $L$ is `small_prime_limit`, and takes O(L) time if the cache is rebuilt.
-- O(|a| + |b|) per call to `merge_factors()`.
 - O(d log d) per call to `divisors_from_factors()`, where $d$ is the number of divisors generated.
 - O(L/log L + n^{1/4} + d log d) expected per call to `divisors()`, plus O(L) if the cache is
   rebuilt.
@@ -256,17 +251,15 @@ Space Complexity:
   factors returned.
 - O(d) output space and O(log d) auxiliary stack space for `divisors_from_factors()` and
   `divisors()`.
-- O(1) auxiliary for `merge_factors()`, excluding its returned vector.
 
 */
 
-struct SieveCache {
-  int limit = 1;
-  std::vector<int> least{0, 1}, primes;
-};
-
-SieveCache &cached_sieve(int n) {
-  static SieveCache cache;
+static const auto &cached_sieve(int n) {
+  struct Cache {
+    int limit = 1;
+    std::vector<int> least{0, 1}, primes;
+  };
+  static Cache cache;
   if (n <= cache.limit) {
     return cache;
   }
@@ -290,50 +283,43 @@ SieveCache &cached_sieve(int n) {
 
 using Factors = std::vector<std::pair<int64_t, int>>;
 
-Factors merge_factors(const Factors &a, const Factors &b) {
+Factors factorize_rho(int64_t n) {
+  std::vector<int64_t> factors;
+  auto collect = [&](auto &&collect, int64_t value) -> void {
+    if (value <= 1) {
+      return;
+    }
+    if (is_prime(value)) {
+      factors.push_back(value);
+      return;
+    }
+    int64_t p;
+    do {
+      p = rho_factor(value);
+    } while (p == value);
+    collect(collect, p);
+    collect(collect, value / p);
+  };
+  collect(collect, n);
+  std::sort(factors.begin(), factors.end());
   Factors res;
-  int i = 0, j = 0;
-  while (i < static_cast<int>(a.size()) || j < static_cast<int>(b.size())) {
-    if (i < static_cast<int>(a.size()) && j < static_cast<int>(b.size()) &&
-        a[i].first == b[j].first) {
-      res.emplace_back(a[i].first, a[i].second + b[j].second);
-      i++;
-      j++;
-    } else if (
-        j == static_cast<int>(b.size()) ||
-        (i < static_cast<int>(a.size()) && a[i].first < b[j].first)
-    ) {
-      res.push_back(a[i++]);
+  for (int64_t p : factors) {
+    if (res.empty() || res.back().first != p) {
+      res.emplace_back(p, 1);
     } else {
-      res.push_back(b[j++]);
+      res.back().second++;
     }
   }
   return res;
 }
 
-Factors factorize_rho(int64_t n) {
-  if (n <= 1) {
-    return {};
-  }
-  if (n % 2 == 0) {
-    return merge_factors(Factors{{2, 1}}, factorize_rho(n / 2));
-  }
-  if (is_prime(n)) {
-    return {{n, 1}};
-  }
-  int64_t p;
-  do {
-    p = rho_factor(n);
-  } while (p == n);
-  return merge_factors(factorize_rho(p), factorize_rho(n / p));
-}
-
 Factors factorize(int64_t n, int small_prime_limit = 1000000) {
+  assert(small_prime_limit >= 1);
   if (n <= 1) {
     return {};
   }
-  const SieveCache &sieve = cached_sieve(small_prime_limit);
-  if (n <= sieve.limit) {
+  const auto &sieve = cached_sieve(small_prime_limit);
+  if (n <= small_prime_limit) {
     Factors res;
     while (n > 1) {
       int p = sieve.least[n], cnt = 0;
@@ -360,7 +346,9 @@ Factors factorize(int64_t n, int small_prime_limit = 1000000) {
       res.emplace_back(p, cnt);
     }
   }
-  return merge_factors(res, factorize_rho(n));
+  Factors tail = factorize_rho(n);
+  res.insert(res.end(), tail.begin(), tail.end());
+  return res;
 }
 
 std::vector<int64_t> divisors_from_factors(const Factors &factors) {
@@ -406,7 +394,6 @@ num:                    factorize_slow():   factorize():
 
 ***/
 
-#include <cassert>
 #include <ctime>
 #include <iomanip>
 #include <iostream>

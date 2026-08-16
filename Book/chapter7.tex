@@ -856,9 +856,9 @@ int main() {
 Common axis-aligned rectangle calculations in two dimensions. The functions are templated on the point type \inlinecode{Pt}, which should accept \inlinecode{Point}, \inlinecode{PointD}, or \inlinecode{PointI} from 7.1.1, or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields.
 
 \begin{compactitem}
-  \item \inlinecode{point\_in\_rectangle(p, v, w, h, include\_boundary = true)} returns whether \inlinecode{p} is inside the axis-aligned rectangle whose opposite corners are \inlinecode{v} and (\inlinecode{v.x + w}, \inlinecode{v.y + h}). Negative widths and heights are supported. The \inlinecode{include\_boundary} flag controls whether boundary points count.
-  \item \inlinecode{point\_in\_rectangle(p, a, b, include\_boundary = true)} returns whether \inlinecode{p} is inside the axis-aligned rectangle with opposite corners \inlinecode{a} and \inlinecode{b}.
-  \item \inlinecode{rectangle\_intersection(a1, b1, a2, b2, \&p, \&q, include\_boundary = true)} finds the intersection of two axis-aligned rectangles, where \inlinecode{a1}/\inlinecode{b1} and \inlinecode{a2}/\inlinecode{b2} are opposite-corner pairs. Returns $-1$ if the rectangles are disjoint, $0$ if they partially intersect, $1$ if the first rectangle is completely inside the second, and $2$ if the second rectangle is completely inside the first. If an intersection exists, its lower-left and upper-right corners are stored in \inlinecode{p} and \inlinecode{q} when those pointers are non-null. The \inlinecode{include\_boundary} flag controls whether boundary-only contact counts as intersecting.
+  \item \inlinecode{point\_in\_rect(p, v, w, h, include\_boundary = true)} returns whether \inlinecode{p} is inside the axis-aligned rectangle whose opposite corners are \inlinecode{v} and (\inlinecode{v.x + w}, \inlinecode{v.y + h}). Negative widths and heights are supported. The \inlinecode{include\_boundary} flag controls whether boundary points count.
+  \item \inlinecode{point\_in\_rect(p, a, b, include\_boundary = true)} returns whether \inlinecode{p} is inside the axis-aligned rectangle with opposite corners \inlinecode{a} and \inlinecode{b}.
+  \item \inlinecode{rect\_intersection(a1, b1, a2, b2, \&p, \&q, include\_boundary = true)} finds the intersection of two axis-aligned rectangles, where \inlinecode{a1}/\inlinecode{b1} and \inlinecode{a2}/\inlinecode{b2} are opposite-corner pairs. Returns $-1$ if the rectangles are disjoint, $0$ if they partially intersect, $1$ if the first rectangle is completely inside the second, and $2$ if the second rectangle is completely inside the first. If an intersection exists, its lower-left and upper-right corners are stored in \inlinecode{p} and \inlinecode{q} when those pointers are non-null. The \inlinecode{include\_boundary} flag controls whether boundary-only contact counts as intersecting.
 \end{compactitem}
 
 Overflow warning: For integer-coordinate inputs, comparisons are exact as long as intermediate coordinate additions, subtractions, and min/max values do not overflow.
@@ -891,28 +891,26 @@ template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
 template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
 
 template<typename Pt, typename T>
-bool point_in_rectangle(
-    const Pt &p, const Pt &v, const T &w, const T &h, bool include_boundary = true
-) {
+bool point_in_rect(const Pt &p, const Pt &v, const T &w, const T &h, bool include_boundary = true) {
   if (w < 0) {
-    return point_in_rectangle(p, Pt(v.x + w, v.y), -w, h, include_boundary);
+    return point_in_rect(p, Pt(v.x + w, v.y), -w, h, include_boundary);
   }
   if (h < 0) {
-    return point_in_rectangle(p, Pt(v.x, v.y + h), w, -h, include_boundary);
+    return point_in_rect(p, Pt(v.x, v.y + h), w, -h, include_boundary);
   }
   return include_boundary ? (GE(p.x, v.x) && LE(p.x, v.x + w) && GE(p.y, v.y) && LE(p.y, v.y + h))
                           : (GT(p.x, v.x) && LT(p.x, v.x + w) && GT(p.y, v.y) && LT(p.y, v.y + h));
 }
 
 template<typename Pt>
-bool point_in_rectangle(const Pt &p, const Pt &a, const Pt &b, bool include_boundary = true) {
+bool point_in_rect(const Pt &p, const Pt &a, const Pt &b, bool include_boundary = true) {
   auto xl = std::min(a.x, b.x), yl = std::min(a.y, b.y);
   auto xh = std::max(a.x, b.x), yh = std::max(a.y, b.y);
-  return point_in_rectangle(p, Pt(xl, yl), xh - xl, yh - yl, include_boundary);
+  return point_in_rect(p, Pt(xl, yl), xh - xl, yh - yl, include_boundary);
 }
 
 template<typename Pt>
-int rectangle_intersection(
+int rect_intersection(
     const Pt &a1, const Pt &b1, const Pt &a2, const Pt &b2, Pt *p = nullptr, Pt *q = nullptr,
     const bool include_boundary = true
 ) {
@@ -925,9 +923,7 @@ int rectangle_intersection(
   // The intersection is the overlap of the two coordinate intervals.
   auto ixl = std::max(xl1, xl2), ixh = std::min(xh1, xh2);
   auto iyl = std::max(yl1, yl2), iyh = std::min(yh1, yh2);
-  bool disjoint =
-      include_boundary ? (GT(ixl, ixh) || GT(iyl, iyh)) : (GE(ixl, ixh) || GE(iyl, iyh));
-  if (disjoint) {
+  if (include_boundary ? (GT(ixl, ixh) || GT(iyl, iyh)) : (GE(ixl, ixh) || GE(iyl, iyh))) {
     return -1;  // Completely disjoint.
   }
   // Opposing corners of the overlap: bottom-left in p, top-right in q.
@@ -959,26 +955,25 @@ struct Point {
 };
 
 int main() {
-  assert(point_in_rectangle(Point(0, -1), Point(0, -3), 3, 2));
-  assert(!point_in_rectangle(Point(0, -1), Point(0, -3), 3, 2, false));
-  assert(point_in_rectangle(Point(2, -2), Point(3, -3), -3, 2));
-  assert(!point_in_rectangle(Point(0, 0), Point(3, -1), -3, -2));
-  assert(point_in_rectangle(Point(2, -2), Point(3, -3), Point(0, -1)));
-  assert(!point_in_rectangle(Point(0, -1), Point(3, -3), Point(0, -1), false));
-  assert(!point_in_rectangle(Point(-1, -2), Point(3, -3), Point(0, -1)));
+  assert(point_in_rect(Point(0, -1), Point(0, -3), 3, 2));
+  assert(!point_in_rect(Point(0, -1), Point(0, -3), 3, 2, false));
+  assert(point_in_rect(Point(2, -2), Point(3, -3), -3, 2));
+  assert(!point_in_rect(Point(0, 0), Point(3, -1), -3, -2));
+  assert(point_in_rect(Point(2, -2), Point(3, -3), Point(0, -1)));
+  assert(!point_in_rect(Point(0, -1), Point(3, -3), Point(0, -1), false));
+  assert(!point_in_rect(Point(-1, -2), Point(3, -3), Point(0, -1)));
 
   Point p, q;
   // Output coordinates come directly from input coordinates via min/max, so exact equality is safe.
-  assert(-1 == rectangle_intersection(Point(0, 0), Point(1, 1), Point(2, 2), Point(3, 3)));
-  assert(0 == rectangle_intersection(Point(1, 1), Point(7, 7), Point(5, 5), Point(0, 0), &p, &q));
+  assert(-1 == rect_intersection(Point(0, 0), Point(1, 1), Point(2, 2), Point(3, 3)));
+  assert(0 == rect_intersection(Point(1, 1), Point(7, 7), Point(5, 5), Point(0, 0), &p, &q));
   assert(p == Point(1, 1) && q == Point(5, 5));
-  assert(1 == rectangle_intersection(Point(1, 1), Point(0, 0), Point(0, 0), Point(1, 10), &p, &q));
+  assert(1 == rect_intersection(Point(1, 1), Point(0, 0), Point(0, 0), Point(1, 10), &p, &q));
   assert(p == Point(0, 0) && q == Point(1, 1));
-  assert(2 == rectangle_intersection(Point(0, 5), Point(5, 7), Point(1, 6), Point(2, 5), &p, &q));
+  assert(2 == rect_intersection(Point(0, 5), Point(5, 7), Point(1, 6), Point(2, 5), &p, &q));
   assert(p == Point(1, 5) && q == Point(2, 6));
   assert(
-      -1 ==
-      rectangle_intersection(Point(0, 0), Point(1, 1), Point(1, 1), Point(2, 2), &p, &q, false)
+      -1 == rect_intersection(Point(0, 0), Point(1, 1), Point(1, 1), Point(2, 2), &p, &q, false)
   );
   return 0;
 }
@@ -2208,23 +2203,22 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Convex Hull and Diametral Pair}
-The convex hull of points in two dimensions is the smallest convex set containing them. A diametral pair is a pair of input points at maximum distance. Monotone chain computes the hull by sorting the points lexicographically and building the lower and upper boundaries in one pass each, popping any point that would fail to create a counter-clockwise turn. Rotating calipers then walks two antipodal pointers around the hull, advancing whichever increases the separation and visiting every candidate diametral pair in linear time. The functions are templated on the iterator type; the value type of the iterator is used as the point type. Both functions accept either floating-point or integral coordinates, and use exact comparisons for integral points.
+The convex hull of points in two dimensions is the smallest convex set containing them. A diametral pair is a pair of input points at maximum distance. Monotone chain computes the hull by sorting the points lexicographically and building the lower and upper boundaries in one pass each, popping any point that would fail to create a counter-clockwise turn. Rotating calipers then walks two antipodal pointers around the hull, advancing whichever increases the separation and visiting every candidate diametral pair in linear time. Both functions accept either floating-point or integral coordinates, and use exact comparisons for integral points.
 
 \begin{compactitem}
-  \item \inlinecode{convex\_hull(lo, hi)} returns the convex hull in counter-clockwise order for a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of points. Duplicate input points and collinear points along hull edges are omitted. To instead return the hull points in clockwise order, replace the cross product comparisons \inlinecode{\textless{}= 0} with \inlinecode{\textgreater{}= 0}.
-  \item \inlinecode{diametral\_pair(lo, hi)} returns the maximum-distance pair of points.
+  \item \inlinecode{convex\_hull(p)} returns the convex hull of points \inlinecode{p} in counter-clockwise order. Duplicate input points and collinear points along hull edges are omitted. To instead return the hull points in clockwise order, replace the cross product comparisons \inlinecode{\textless{}= 0} with \inlinecode{\textgreater{}= 0}.
+  \item \inlinecode{diametral\_pair(p)} returns the maximum-distance pair of points in \inlinecode{p}.
 \end{compactitem}
 
 Overflow warning: \inlinecode{cross()} and the squared distance in \inlinecode{diametral\_pair()} grow like the squared coordinate magnitude. With 32-bit \inlinecode{int} coordinates they overflow once coordinates exceed a few tens of thousands; use a 64-bit (\inlinecode{int64\_t}) coordinate type for larger integer inputs.
 
-\textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the number of points.
 
 \textbf{Space Complexity}: $O(n)$ auxiliary for storage of the convex hull.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
-#include <iterator>
 #include <random>
 #include <utility>
 #include <vector>
@@ -2236,10 +2230,8 @@ auto cross(const Pt &a, const Pt &b, const Pt &o) {
 }
 
 // Convex hull: exact for integer-coordinate points.
-template<typename It>
-auto convex_hull(It lo, It hi) {
-  using Pt = typename std::iterator_traits<It>::value_type;
-  std::vector<Pt> p(lo, hi);
+template<typename Pt>
+std::vector<Pt> convex_hull(std::vector<Pt> p) {
   std::sort(p.begin(), p.end());
   auto same_point = [](const Pt &a, const Pt &b) { return !(a < b) && !(b < a); };
   p.erase(std::unique(p.begin(), p.end(), same_point), p.end());
@@ -2267,10 +2259,9 @@ auto convex_hull(It lo, It hi) {
 }
 
 // Diametral pair: squared-distance comparisons are exact for integer-coordinate points.
-template<typename It>
-auto diametral_pair(It lo, It hi) {
-  using Pt = typename std::iterator_traits<It>::value_type;
-  auto h = convex_hull(lo, hi);
+template<typename Pt>
+std::pair<Pt, Pt> diametral_pair(const std::vector<Pt> &p) {
+  auto h = convex_hull(p);
   int m = static_cast<int>(h.size());
   if (m == 0) {
     return std::pair<Pt, Pt>{};
@@ -2333,19 +2324,17 @@ int main() {
     mt19937 rng(1234567);  // Fixed seed for reproducibility.
     shuffle(v.begin(), v.end(), rng);
     vector<PointI> h{{-1, 3}, {0, 0}, {2, 1}, {1, 3}};
-    assert(convex_hull(v.begin(), v.end()) == h);
+    assert(convex_hull(v) == h);
   }
   {
-    vector<PointI> v{{0, 0}, {3, 0}, {0, 3}, {1, 1}, {4, 4}};
-    auto [p1, p2] = diametral_pair(v.begin(), v.end());
-    assert(p1 == PointI(0, 0));
-    assert(p2 == PointI(4, 4));
+    auto [p1, p2] = diametral_pair(vector<PointI>{{0, 0}, {3, 0}, {0, 3}, {1, 1}, {4, 4}});
+    assert(p1 == PointI(0, 0) && p2 == PointI(4, 4));
   }
   {
     vector<PointI> v{{0, 0}, {4, 0}, {4, 4}, {0, 4}, {2, 2}};
-    auto h = convex_hull(v.begin(), v.end());
+    auto h = convex_hull(v);
     assert(h.size() == 4);  // interior point (2,2) excluded
-    auto [p1, p2] = diametral_pair(v.begin(), v.end());
+    auto [p1, p2] = diametral_pair(v);
     // diametral pair is exact
     assert(
         (p1 == PointI(0, 0) && p2 == PointI(4, 4)) || (p1 == PointI(4, 4) && p2 == PointI(0, 0)) ||
@@ -2353,9 +2342,7 @@ int main() {
     );
   }
   {
-    vector<PointI> v{{2, 3}, {2, 3}, {2, 3}};
-    vector<PointI> expected{{2, 3}};
-    assert(convex_hull(v.begin(), v.end()) == expected);
+    assert((convex_hull(vector<PointI>{{2, 3}, {2, 3}, {2, 3}}) == vector<PointI>{{2, 3}}));
   }
   return 0;
 }
@@ -2553,12 +2540,12 @@ Given a set of points in two dimensions, finds the unique circle of minimum radi
 This implementation uses Welzl's randomized incremental algorithm. The points are shuffled and processed one at a time while maintaining the current minimum enclosing circle. Whenever a point lies outside the current circle, the circle is rebuilt with that point constrained to lie on the boundary. The final circle is determined by at most three boundary points.
 
 \begin{compactitem}
-  \item \inlinecode{min\_enclosing\_circle(lo, hi)} returns the minimum enclosing circle for the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of points, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators. The input range is shuffled in place. The point type may be any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members. The returned circle always uses \inlinecode{double} coordinates, so integer-coordinate inputs are accepted.
+  \item \inlinecode{min\_enclosing\_circle(p)} returns the minimum enclosing circle for the points in \inlinecode{p}. The point type may be any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members. The returned circle always uses \inlinecode{double} coordinates, so integer-coordinate inputs are accepted.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n)$ expected time per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}, or $O(n^{3})$ in the worst-case for a particular shuffle order.
+\textbf{Time Complexity}: $O(n)$ expected time per call, where $n$ is the number of points, or $O(n^{3})$ in the worst case for a particular shuffle order.
 
-\textbf{Space Complexity}: $O(1)$ auxiliary.
+\textbf{Space Complexity}: $O(n)$ auxiliary for the shuffled copy of the points.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -2567,6 +2554,7 @@ This implementation uses Welzl's randomized incremental algorithm. The points ar
 #include <random>
 #include <stdexcept>
 #include <type_traits>
+#include <vector>
 
 const double EPS = 1e-9;
 
@@ -2631,30 +2619,30 @@ struct Circle {
 };
 
 // Input points can be any type with .x and .y fields; Circle output is always double.
-template<typename It>
-Circle min_enclosing_circle(It lo, It hi) {
-  if (lo == hi) {
+template<typename Pt>
+Circle min_enclosing_circle(std::vector<Pt> p) {
+  if (p.empty()) {
     return Circle(0, 0, 0);
   }
-  if (lo + 1 == hi) {
-    return Circle(lo->x, lo->y, 0);
+  if (p.size() == 1) {
+    return Circle(p[0].x, p[0].y, 0);
   }
   static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
-  std::shuffle(lo, hi, rng);
-  Circle res(*lo, *(lo + 1));
-  for (It i = lo + 2; i != hi; ++i) {
-    if (res.contains(*i)) {
+  std::shuffle(p.begin(), p.end(), rng);
+  Circle res(p[0], p[1]);
+  for (int i = 2; i < static_cast<int>(p.size()); i++) {
+    if (res.contains(p[i])) {
       continue;
     }
-    res = Circle(*lo, *i);
-    for (It j = lo + 1; j != i; ++j) {
-      if (res.contains(*j)) {
+    res = Circle(p[0], p[i]);
+    for (int j = 1; j < i; j++) {
+      if (res.contains(p[j])) {
         continue;
       }
-      res = Circle(*i, *j);
-      for (It k = lo; k != j; ++k) {
-        if (!res.contains(*k)) {
-          res = Circle(*i, *j, *k);
+      res = Circle(p[i], p[j]);
+      for (int k = 0; k < j; k++) {
+        if (!res.contains(p[k])) {
+          res = Circle(p[i], p[j], p[k]);
         }
       }
     }
@@ -2666,7 +2654,6 @@ Circle min_enclosing_circle(It lo, It hi) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <vector>
 using namespace std;
 
 struct Point {
@@ -2682,24 +2669,24 @@ struct PointI {
 
 int main() {
   vector<Point> empty;
-  Circle none = min_enclosing_circle(empty.begin(), empty.end());
+  Circle none = min_enclosing_circle(empty);
   assert(EQ(none.h, 0) && EQ(none.k, 0) && EQ(none.r, 0));
 
   vector<Point> one{{2, 3}};
-  Circle single = min_enclosing_circle(one.begin(), one.end());
+  Circle single = min_enclosing_circle(one);
   assert(EQ(single.h, 2) && EQ(single.k, 3) && EQ(single.r, 0));
 
   vector<Point> two{{0, 0}, {4, 0}};
-  Circle diameter = min_enclosing_circle(two.begin(), two.end());
+  Circle diameter = min_enclosing_circle(two);
   assert(EQ(diameter.h, 2) && EQ(diameter.k, 0) && EQ(diameter.r, 2));
 
   vector<Point> v{{0, 0}, {0, 1}, {1, 0}, {1, 1}};
-  Circle res = min_enclosing_circle(v.begin(), v.end());
+  Circle res = min_enclosing_circle(v);
   assert(EQ(res.h, 0.5) && EQ(res.k, 0.5) && EQ(res.r, 1 / sqrt(2)));
 
   // Integer-coordinate input: Circle output is always double.
   vector<PointI> iv{{0, 0}, {0, 2}, {2, 0}, {2, 2}};
-  Circle ic = min_enclosing_circle(iv.begin(), iv.end());
+  Circle ic = min_enclosing_circle(iv);
   assert(EQ(ic.h, 1.0) && EQ(ic.k, 1.0));
   return 0;
 }
@@ -2708,12 +2695,12 @@ int main() {
 Given a list of points in two dimensions, finds the closest pair using a divide-and-conquer algorithm. The points are split in half by $x$-coordinate and each half is solved recursively; the combining step then only needs to examine points within the best distance so far of the dividing line, where each point in this strip is compared to a constant number of $y$-ordered neighbors.
 
 \begin{compactitem}
-  \item \inlinecode{closest\_pair(lo, hi, \&res)} returns the minimum squared distance between any two points in the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ without modifying it, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators. If \inlinecode{res} is non-null, one closest pair is stored there in lexicographic order. With fewer than two points, the maximum value of the squared-distance type is returned and \inlinecode{res} is unchanged. The function is templated on the point type and works with any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members and a lexicographic \inlinecode{operator\textless{}}. The distance preserves the coordinate arithmetic type, and the returned pair preserves the point type. For integer coordinates, the distance is exact provided intermediate products do not overflow.
+  \item \inlinecode{closest\_pair(p, \&res)} returns the minimum squared distance between any two points in \inlinecode{p}. If \inlinecode{res} is non-null, one closest pair is stored there in lexicographic order. With fewer than two points, the maximum value of the squared-distance type is returned and \inlinecode{res} is unchanged. The point type may be any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members and a lexicographic \inlinecode{operator\textless{}}. The distance preserves the coordinate arithmetic type, and the returned pair preserves the point type. For integer coordinates, the distance is exact provided intermediate products do not overflow.
 \end{compactitem}
 
 Overflow warning: squared distances grow like the square of the coordinate magnitude. For integer point types, use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) when coordinates may exceed a few tens of thousands.
 
-\textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the number of points.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -2788,11 +2775,10 @@ void closest_pair_rec(It lo, It hi, std::vector<Pt> &tmp, T &best, std::pair<Pt,
   tmp.clear();
 }
 
-template<typename It, typename Pt = typename std::iterator_traits<It>::value_type>
-auto closest_pair(It lo, It hi, std::pair<Pt, Pt> *res = nullptr) {
-  using T = decltype(sqdist(*lo, *lo));
+template<typename Pt>
+auto closest_pair(std::vector<Pt> p, std::pair<Pt, Pt> *res = nullptr) {
+  using T = decltype(sqdist(p[0], p[0]));
   T best = std::numeric_limits<T>::max();
-  std::vector<Pt> p(lo, hi);
   std::sort(p.begin(), p.end(), [](const Pt &a, const Pt &b) {
     return a.x != b.x ? a.x < b.x : a.y < b.y;
   });
@@ -2830,14 +2816,14 @@ struct PointI {
 int main() {
   vector<Point> v{{2, 3}, {12, 30}, {40, 50}, {5, 1}, {12, 10}, {3, 4}};
   pair<Point, Point> res;
-  assert(EQ(closest_pair(v.begin(), v.end(), &res), 2));
+  assert(EQ(closest_pair(v, &res), 2));
   auto [p1, p2] = res;
   assert(p1 == Point(2, 3) && p2 == Point(3, 4));
 
   // Integer-coordinate input: exact pair selection, int squared distance returned.
   vector<PointI> iv{{0, 0}, {10, 10}, {3, 4}};
   pair<PointI, PointI> ires;
-  assert(closest_pair(iv.begin(), iv.end(), &ires) == 25);
+  assert(closest_pair(iv, &ires) == 25);
   auto [i1, i2] = ires;
   assert(i1 == PointI(0, 0) && i2 == PointI(3, 4));
   return 0;
@@ -2921,22 +2907,21 @@ Given a list of line segments in two dimensions, determine whether any pair of s
 This implementation counts endpoint contacts as intersections. See 7.2.3 for pairwise intersection predicates when that distinction matters.
 
 \begin{compactitem}
-  \item \inlinecode{find\_intersecting\_pair(lo, hi, \&res1, \&res2)} returns whether any pair of segments intersect given a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of segments, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators. If an intersection is found, then one such pair of segments is stored in \inlinecode{res1} and \inlinecode{res2}. Constructing a \inlinecode{Segment} places its lexicographically smaller endpoint first, as required by the sweep. If no intersection is found, the output segments are unchanged.
+  \item \inlinecode{find\_intersecting\_pair(segs)} returns the indices of one pair of intersecting segments, or \inlinecode{std::nullopt} if none exist. Constructing a \inlinecode{Segment} places its lexicographically smaller endpoint first, as required by the sweep.
 \end{compactitem}
 
-Overflow warning: \inlinecode{seg\_intersection} forms the usual quadratic cross products, but the $y$-ordering cross-multiplication (\inlinecode{ay * bdx}) is cubic in the coordinate magnitude. With 32-bit \inlinecode{int} endpoints this overflows once coordinates reach the low thousands, so use a 64-bit (\inlinecode{int64\_t}) coordinate type for any non-trivial integer inputs.
+Overflow warning: \inlinecode{seg\_intersection} forms the usual quadratic cross products, but the $y$-ordering cross-multiplication (\inlinecode{ay * bdx}) is cubic in the coordinate magnitude. Use \inlinecode{int64\_t} coordinates for modest integer inputs and a wider intermediate type when these cubic products may exceed it.
 
-\textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the number of segments.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\textbf{Space Complexity}: $O(n)$ auxiliary, where $n$ is the number of segments.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <iterator>
+#include <optional>
 #include <set>
 #include <tuple>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -2960,7 +2945,6 @@ bool seg_intersection(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
 template<typename Pt>
 struct Segment {
   Pt p, q;
-  Segment() = default;
   Segment(const Pt &p, const Pt &q) : p(std::min(p, q)), q(std::max(p, q)) {}
 };
 
@@ -2969,21 +2953,17 @@ bool intersects(const Segment<Pt> &s1, const Segment<Pt> &s2) {
   return seg_intersection(s1.p, s1.q, s2.p, s2.q);
 }
 
-template<typename It>
-bool find_intersecting_pair(
-    It lo, It hi, typename std::iterator_traits<It>::value_type *res1,
-    typename std::iterator_traits<It>::value_type *res2
-) {
-  using Pt = std::decay_t<decltype(lo->p)>;
+template<typename Pt>
+std::optional<std::pair<int, int>> find_intersecting_pair(const std::vector<Segment<Pt>> &segs) {
   struct Event {
     Pt p;
     bool is_end;
-    It seg;
+    int seg;
   };
   std::vector<Event> e;
-  for (It it = lo; it != hi; ++it) {
-    e.push_back(Event{it->p, false, it});
-    e.push_back(Event{it->q, true, it});
+  for (int i = 0; i < static_cast<int>(segs.size()); i++) {
+    e.push_back(Event{segs[i].p, false, i});
+    e.push_back(Event{segs[i].q, true, i});
   }
   std::sort(e.begin(), e.end(), [](const Event &a, const Event &b) {
     return std::tie(a.p.x, a.is_end, a.p.y, a.seg) < std::tie(b.p.x, b.is_end, b.p.y, b.seg);
@@ -2991,8 +2971,7 @@ bool find_intersecting_pair(
   // Compare y-values at sweep coordinate x without division: y = (p.y*dx + dy*(x - p.x)) / dx.
   // Vertical segments use their lower endpoint.
   auto ycmp = [](const auto &a, const auto &b, auto x) {
-    // Overflow risk for integer Pt: the final cross-multiply is ~O(max_coord^3); use 64-bit
-    // coordinates for non-trivial integer inputs.
+    // Overflow risk for integer Pt: the final cross-multiply is ~O(max_coord^3).
     auto adx = a.q.x - a.p.x, bdx = b.q.x - b.p.x;
     auto ay = a.p.y * adx + (a.q.y - a.p.y) * (x - a.p.x);
     auto by = b.p.y * bdx + (b.q.y - b.p.y) * (x - b.p.x);
@@ -3007,48 +2986,43 @@ bool find_intersecting_pair(
     auto lhs = ay * bdx, rhs = by * adx;
     return (lhs < rhs) ? -1 : ((rhs < lhs) ? 1 : 0);
   };
-  auto cmp = [lo, ycmp](It a, It b) {
+  auto cmp = [&segs, ycmp](int a, int b) {
     if (a == b) {
       return false;
     }
-    auto x = std::max(a->p.x, b->p.x);
-    int order = ycmp(*a, *b, x);
-    return (order == 0) ? (a - lo < b - lo) : (order < 0);
+    auto x = std::max(segs[a].p.x, segs[b].p.x);
+    int order = ycmp(segs[a], segs[b], x);
+    return (order == 0) ? (a < b) : (order < 0);
   };
-  using ActiveSet = std::set<It, decltype(cmp)>;
+  using ActiveSet = std::set<int, decltype(cmp)>;
   ActiveSet s(cmp);
-  std::vector<typename ActiveSet::iterator> position(hi - lo);
+  std::vector<typename ActiveSet::iterator> position(segs.size());
+  auto result = [](int i, int j) { return std::pair{std::min(i, j), std::max(i, j)}; };
   for (const auto &ev : e) {
-    It seg = ev.seg;
+    int seg = ev.seg;
     if (!ev.is_end) {
       auto it = s.insert(seg).first;
-      position[seg - lo] = it;
+      position[seg] = it;
       auto next = it;
-      if (++next != s.end() && intersects(**next, *seg)) {
-        *res1 = **next;
-        *res2 = *seg;
-        return true;
+      if (++next != s.end() && intersects(segs[*next], segs[seg])) {
+        return result(*next, seg);
       }
-      if (it != s.begin() && intersects(**--it, *seg)) {
-        *res1 = **it;
-        *res2 = *seg;
-        return true;
+      if (it != s.begin() && intersects(segs[*--it], segs[seg])) {
+        return result(*it, seg);
       }
     } else {
-      auto it = position[seg - lo];
+      auto it = position[seg];
       auto next = it;
       if (++next != s.end() && it != s.begin()) {
         auto prev = it;
-        if (intersects(**next, **--prev)) {
-          *res1 = **next;
-          *res2 = **prev;
-          return true;
+        if (intersects(segs[*next], segs[*--prev])) {
+          return result(*next, *prev);
         }
       }
       s.erase(it);
     }
   }
-  return false;
+  return std::nullopt;
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -3060,19 +3034,13 @@ using namespace std;
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
-  bool operator!=(const Point &p) const { return !(*this == p); }
   bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
-  bool operator>(const Point &p) const { return p < *this; }
 };
 
 struct PointI {
   int x, y;
   PointI(int x = 0, int y = 0) : x(x), y(y) {}
-  bool operator==(const PointI &p) const { return x == p.x && y == p.y; }
-  bool operator!=(const PointI &p) const { return !(*this == p); }
   bool operator<(const PointI &p) const { return x != p.x ? x < p.x : y < p.y; }
-  bool operator>(const PointI &p) const { return p < *this; }
 };
 
 int main() {
@@ -3081,30 +3049,29 @@ int main() {
         Segment<Point>(Point(0, 0), Point(2, 2)), Segment<Point>(Point(3, 0), Point(0, -1)),
         Segment<Point>(Point(0, 2), Point(2, -2)), Segment<Point>(Point(0, 3), Point(9, 0))
     };
-    Segment<Point> res1, res2;
-    assert(find_intersecting_pair(v.begin(), v.end(), &res1, &res2));
-    assert(res1.p == Point(0, 0) && res1.q == Point(2, 2));
-    assert(res2.p == Point(0, 2) && res2.q == Point(2, -2));
+    assert((find_intersecting_pair(v) == pair{0, 2}));
   }
   {  // Integer-coordinate segments: detection is exact.
     vector<Segment<PointI>> v{
         Segment<PointI>({0, 0}, {2, 2}), Segment<PointI>({3, 0}, {0, -1}),
         Segment<PointI>({0, 2}, {2, -2}), Segment<PointI>({0, 3}, {9, 0})
     };
-    Segment<PointI> res1, res2;
-    assert(find_intersecting_pair(v.begin(), v.end(), &res1, &res2));
+    assert((find_intersecting_pair(v) == pair{0, 2}));
 
     const vector<Segment<PointI>> disjoint{
         Segment<PointI>({0, 0}, {1, 0}), Segment<PointI>({0, 5}, {1, 5})
     };
-    assert(!find_intersecting_pair(disjoint.begin(), disjoint.end(), &res1, &res2));
+    assert(!find_intersecting_pair(disjoint));
+    const vector<Segment<PointI>> duplicate{
+        Segment<PointI>({0, 0}, {2, 2}), Segment<PointI>({0, 0}, {2, 2})
+    };
+    assert((find_intersecting_pair(duplicate) == pair{0, 1}));
   }
   {  // Shared endpoints count as intersections.
     vector<Segment<PointI>> shared{
         Segment<PointI>({0, 0}, {2, 2}), Segment<PointI>({2, 2}, {4, 0})
     };
-    Segment<PointI> res1, res2;
-    assert(find_intersecting_pair(shared.begin(), shared.end(), &res1, &res2));
+    assert((find_intersecting_pair(shared) == pair{0, 1}));
   }
   return 0;
 }
@@ -3789,15 +3756,15 @@ int main() {
 Given two simple (non-self-intersecting) polygons, determine the areas of their intersection and union using a sweep line algorithm and the inclusion-exclusion principle. Every vertex and every pairwise edge intersection contributes its $x$-coordinate as a sweep boundary, so within each vertical slab between consecutive boundaries the two borders cannot cross, and the slab's overlap is accumulated exactly from trapezoid areas. The union then follows by inclusion-exclusion as the sum of the individual areas minus the intersection.
 
 \begin{compactitem}
-  \item \inlinecode{intersection\_area(lo1, hi1, lo2, hi2)} returns the intersection area of two polygons respectively specified by two ranges $[{\inlinecodemath{lo1}}, {\inlinecodemath{hi1}})$ and $[{\inlinecodemath{lo2}}, {\inlinecodemath{hi2}})$ of vertices in boundary order, where \inlinecode{lo1}, \inlinecode{hi1}, \inlinecode{lo2}, and \inlinecode{hi2} must be random-access iterators.
-  \item \inlinecode{union\_area(lo1, hi1, lo2, hi2)} returns the union area of two polygons respectively specified by two ranges $[{\inlinecodemath{lo1}}, {\inlinecodemath{hi1}})$ and $[{\inlinecodemath{lo2}}, {\inlinecodemath{hi2}})$ of vertices in boundary order, where \inlinecode{lo1}, \inlinecode{hi1}, \inlinecode{lo2}, and \inlinecode{hi2} must be random-access iterators.
+  \item \inlinecode{intersection\_area(a, b)} returns the intersection area of polygons \inlinecode{a} and \inlinecode{b}, whose vertices are listed in boundary order.
+  \item \inlinecode{union\_area(a, b)} returns the union area of polygons \inlinecode{a} and \inlinecode{b}.
 \end{compactitem}
 
 Overflow warning: the segment-intersection tests form cross products in the input point's coordinate type, which grow like the squared coordinate magnitude. For integral point types, use 64-bit coordinates (e.g. \inlinecode{PointL} from 7.1.1) if necessary.
 
-\textbf{Time Complexity}: $O(n \cdot m \cdot (n + m) \cdot \log\left(n + m\right))$ per call to \inlinecode{intersection\_area(lo1, hi1, lo2, hi2)} and \inlinecode{union\_area(lo1, hi1, lo2, hi2)}, where $n$ is the number of vertices in the first polygon and $m$ is the number of vertices in the second polygon (or $O(N^{3} \log N)$ for $N = n + m$).
+\textbf{Time Complexity}: $O(n \cdot m \cdot (n + m) \cdot \log\left(n + m\right))$ per call to \inlinecode{intersection\_area()} and \inlinecode{union\_area()}, where $n$ is the number of vertices in the first polygon and $m$ is the number of vertices in the second polygon (or $O(N^{3} \log N)$ for $N = n + m$).
 
-\textbf{Space Complexity}: $O(n \cdot m)$ auxiliary for \inlinecode{intersection\_area(lo1, hi1, lo2, hi2)} and \inlinecode{union\_area(lo1, hi1, lo2, hi2)}, where $n$ and $m$ are the respective polygon sizes.
+\textbf{Space Complexity}: $O(n \cdot m)$ auxiliary for \inlinecode{intersection\_area()} and \inlinecode{union\_area()}, where $n$ and $m$ are the respective polygon sizes.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -3911,34 +3878,37 @@ int line_intersection1(
   return 0;
 }
 
-template<typename It>
-double intersection_area(It lo1, It hi1, It lo2, It hi2) {
-  if (lo1 == hi1 || lo2 == hi2) {
+template<typename Pt>
+double intersection_area(const std::vector<Pt> &a, const std::vector<Pt> &b) {
+  if (a.empty() || b.empty()) {
     return 0;
   }
   struct SweepPoint {
     double x, y;
   };  // For line intersection with the sweep line.
-  std::vector<It> poly_lo{lo1, lo2}, poly_hi{hi1, hi2};
+  const std::vector<Pt> *polys[2] = {&a, &b};
   int orientation[2];
-  for (int poly = 0; poly < 2; poly++) {
+  for (int id = 0; id < 2; id++) {
+    const auto &p = *polys[id];
+    int n = static_cast<int>(p.size());
     double area = 0;
-    for (It i = poly_lo[poly], j = poly_hi[poly] - 1; i != poly_hi[poly]; j = i++) {
-      area += (static_cast<double>(j->x) - i->x) * (static_cast<double>(j->y) + i->y);
+    for (int i = 0, j = n - 1; i < n; j = i++) {
+      area += (static_cast<double>(p[j].x) - p[i].x) * (static_cast<double>(p[j].y) + p[i].y);
     }
-    orientation[poly] = (area < 0 ? 1 : (area > 0 ? -1 : 0));
+    orientation[id] = (area < 0 ? 1 : (area > 0 ? -1 : 0));
   }
   std::vector<double> x_coords;
-  for (It it = lo1; it != hi1; ++it) {
-    x_coords.push_back(it->x);
+  for (const Pt &p : a) {
+    x_coords.push_back(p.x);
   }
-  for (It it = lo2; it != hi2; ++it) {
-    x_coords.push_back(it->x);
+  for (const Pt &p : b) {
+    x_coords.push_back(p.x);
   }
-  for (It i1 = lo1, j1 = hi1 - 1; i1 != hi1; j1 = i1++) {
-    for (It i2 = lo2, j2 = hi2 - 1; i2 != hi2; j2 = i2++) {
+  int n = static_cast<int>(a.size()), m = static_cast<int>(b.size());
+  for (int i1 = 0, j1 = n - 1; i1 < n; j1 = i1++) {
+    for (int i2 = 0, j2 = m - 1; i2 < m; j2 = i2++) {
       double outx, outy;
-      if (seg_intersection1(*i1, *j1, *i2, *j2, &outx, &outy) == 0) {
+      if (seg_intersection1(a[i1], a[j1], b[i2], b[j2], &outx, &outy) == 0) {
         x_coords.push_back(outx);
       }
     }
@@ -3953,16 +3923,17 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
     double x = (x_coords[k] + x_coords[k + 1]) / 2;
     SweepPoint sweep0{x, 0}, sweep1{x, 1};
     std::vector<std::pair<double, int>> events;  // (y, mask delta)
-    for (int poly = 0; poly < 2; poly++) {
-      It lo = poly_lo[poly], hi = poly_hi[poly];
-      for (It j = lo, i = hi - 1; j != hi; i = j++) {
+    for (int id = 0; id < 2; id++) {
+      const auto &p = *polys[id];
+      int size = static_cast<int>(p.size());
+      for (int j = 0, i = size - 1; j < size; i = j++) {
         double px, py;
-        if (line_intersection1(*j, *i, sweep0, sweep1, &px, &py) == 0) {
-          double y = py, x0 = i->x, x1 = j->x;
+        if (line_intersection1(p[j], p[i], sweep0, sweep1, &px, &py) == 0) {
+          double y = py, x0 = p[i].x, x1 = p[j].x;
           if (x0 < x && x1 > x) {
-            events.emplace_back(y, orientation[poly] * (1 << poly));
+            events.emplace_back(y, orientation[id] * (1 << id));
           } else if (x0 > x && x1 < x) {
-            events.emplace_back(y, -orientation[poly] * (1 << poly));
+            events.emplace_back(y, -orientation[id] * (1 << id));
           }
         }
       }
@@ -3984,21 +3955,22 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   return res;
 }
 
-template<typename It>
-double polygon_area(It lo, It hi) {
-  if (lo == hi) {
+template<typename Pt>
+double polygon_area(const std::vector<Pt> &p) {
+  if (p.empty()) {
     return 0;
   }
+  int n = static_cast<int>(p.size());
   double area = 0;
-  for (It i = lo, j = hi - 1; i != hi; j = i++) {
-    area += (static_cast<double>(j->x) - i->x) * (static_cast<double>(j->y) + i->y);
+  for (int i = 0, j = n - 1; i < n; j = i++) {
+    area += (static_cast<double>(p[j].x) - p[i].x) * (static_cast<double>(p[j].y) + p[i].y);
   }
   return fabs(area / 2.0);
 }
 
-template<typename It>
-double union_area(It lo1, It hi1, It lo2, It hi2) {
-  return polygon_area(lo1, hi1) + polygon_area(lo2, hi2) - intersection_area(lo1, hi1, lo2, hi2);
+template<typename Pt>
+double union_area(const std::vector<Pt> &a, const std::vector<Pt> &b) {
+  return polygon_area(a) + polygon_area(b) - intersection_area(a, b);
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -4036,14 +4008,14 @@ int main() {
   s.emplace_back(0, 3);
   s.emplace_back(-3, 3);
   s.emplace_back(-3, 0);
-  assert(EQ(1.5, intersection_area(p.begin(), p.end(), s.begin(), s.end())));
-  assert(EQ(12.5, union_area(p.begin(), p.end(), s.begin(), s.end())));
+  assert(EQ(1.5, intersection_area(p, s)));
+  assert(EQ(12.5, union_area(p, s)));
 
   // Integer-coordinate polygons are accepted (computation proceeds in double).
   vector<PointI> ip{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
   vector<PointI> is{{0, 0}, {0, 3}, {-3, 3}, {-3, 0}};
-  assert(EQ(1.5, intersection_area(ip.begin(), ip.end(), is.begin(), is.end())));
-  assert(EQ(12.5, union_area(ip.begin(), ip.end(), is.begin(), is.end())));
+  assert(EQ(1.5, intersection_area(ip, is)));
+  assert(EQ(12.5, union_area(ip, is)));
   return 0;
 }
 \end{lstlisting}

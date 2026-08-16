@@ -32,10 +32,12 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
 int mobius(int n) {
+  assert(n > 0);
   if (n == 1) {
     return 1;
   }
@@ -56,6 +58,7 @@ int mobius(int n) {
 }
 
 std::vector<int> mobius_sieve(int n) {
+  assert(n >= 0);
   std::vector<int> mu(n + 1), primes;
   std::vector<char> composite(n + 1);
   if (n >= 1) {
@@ -82,6 +85,7 @@ std::vector<int> mobius_sieve(int n) {
 }
 
 int64_t count_coprime(int64_t n, int64_t m) {
+  assert(n >= 0 && m > 0);
   std::vector<int64_t> primes;
   for (int64_t p = 2; p <= m / p; p++) {
     if (m % p == 0) {

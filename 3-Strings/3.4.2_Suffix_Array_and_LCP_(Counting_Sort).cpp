@@ -32,9 +32,9 @@ Time Complexity:
   of `s`.
 
 Space Complexity:
-- O(n) for storage of the suffix and LCP arrays.
-- O(n) auxiliary for the constructor.
-- O(1) auxiliary for all other operations.
+- O(n) object storage for the input string and suffix array.
+- O(n) auxiliary for the constructor and `lcp_array()`, plus O(n) for the returned LCP array.
+- O(1) auxiliary for `suffix_array()` and `find()`.
 
 */
 
@@ -47,31 +47,32 @@ using std::string;
 
 class SuffixArrayCountingSort {
   string s;
-  std::vector<int> sa, rk;
+  std::vector<int> sa;
 
  public:
-  explicit SuffixArrayCountingSort(const string &s) : s(s), sa(s.size()), rk(s.size()) {
+  explicit SuffixArrayCountingSort(const string &s) : s(s), sa(s.size()) {
     int n = static_cast<int>(s.size());
+    std::vector<int> rank(n);
     std::iota(sa.rbegin(), sa.rend(), 0);
     for (int i = 0; i < n; i++) {
-      rk[i] = static_cast<unsigned char>(s[i]);
+      rank[i] = static_cast<unsigned char>(s[i]);
     }
     std::stable_sort(sa.begin(), sa.end(), [&](int i, int j) {
       return static_cast<unsigned char>(s[i]) < static_cast<unsigned char>(s[j]);
     });
     for (int gap = 1; gap < n; gap *= 2) {
-      std::vector<int> prev_rk(rk), prev_sa(sa), cnt(n);
+      std::vector<int> prev_rank(rank), prev_sa(sa), cnt(n);
       std::iota(cnt.begin(), cnt.end(), 0);
       for (int i = 0; i < n; i++) {
-        rk[sa[i]] = (i > 0 && prev_rk[sa[i - 1]] == prev_rk[sa[i]] && sa[i - 1] + gap < n &&
-                     prev_rk[sa[i - 1] + gap / 2] == prev_rk[sa[i] + gap / 2])
-                        ? rk[sa[i - 1]]
-                        : i;
+        rank[sa[i]] = (i > 0 && prev_rank[sa[i - 1]] == prev_rank[sa[i]] && sa[i - 1] + gap < n &&
+                       prev_rank[sa[i - 1] + gap / 2] == prev_rank[sa[i] + gap / 2])
+                          ? rank[sa[i - 1]]
+                          : i;
       }
       for (int i = 0; i < n; i++) {
         int s1 = prev_sa[i] - gap;
         if (s1 >= 0) {
-          sa[cnt[rk[s1]]++] = s1;
+          sa[cnt[rank[s1]]++] = s1;
         }
       }
     }

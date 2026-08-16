@@ -53,7 +53,7 @@ Epsilon Comparisons:
 \begin{compactitem}
   \item \inlinecode{EQ()}, \inlinecode{NE()}, \inlinecode{LT()}, \inlinecode{GT()}, \inlinecode{LE()}, and \inlinecode{GE()} relationally compare two values $x$ and $y$. Arguments may be of different types; the common type governs behavior. If the common type is a floating-point type, exactly equal values (including same-signed infinities) compare equal; otherwise absolute-error epsilon comparison is used. Values within \inlinecode{EPS} of each other are considered equal, and \inlinecode{LT}/\inlinecode{GT}/\inlinecode{LE}/\inlinecode{GE} shift the boundary by \inlinecode{EPS} accordingly. Otherwise exact comparison is used (\inlinecode{==}, \inlinecode{\textless{}}, etc.). The branch is selected with \inlinecode{if constexpr}, so exact types without floating-point arithmetic (e.g. integers, \inlinecode{Modular}, \inlinecode{Rational}) compose as well.
   \item \inlinecode{rEQ(ref, val)} returns whether \inlinecode{val} equals reference \inlinecode{ref} within relative error \inlinecode{EPS}. The tolerance scales with $|{\inlinecodemath{ref}}|$, so \inlinecode{rEQ(ref, val)} is NOT the same as \inlinecode{rEQ(val, ref)}. Use this when one argument is a known exact value and the other is a computed approximation. Degenerates to exact comparison when \inlinecode{ref} is $0$, since the tolerance collapses to $0$; use \inlinecode{EQ} near zero.
-  \item \inlinecode{rEQ\_sym(x, y)} is the symmetric (commutative) variant: tolerance scales with $\max(|{\inlinecodemath{x}}|, |{\inlinecodemath{y}}|)$, so the result is the same regardless of argument order. Still degenerates near zero when both arguments are close to $0$. For both relative comparisons, exactly equal infinities compare equal, while unequal infinities and comparisons between finite and non-finite values compare unequal.
+  \item \inlinecode{rEQ\_sym(a, b)} is the symmetric (commutative) variant: tolerance scales with $\max(|{\inlinecodemath{a}}|, |{\inlinecodemath{b}}|)$, so the result is the same regardless of argument order. Still degenerates near zero when both arguments are close to $0$. For both relative comparisons, exactly equal infinities compare equal, while unequal infinities and comparisons between finite and non-finite values compare unequal. Non-floating common types use exact equality.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -80,20 +80,22 @@ template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool rEQ(T ref, U val) {
   C x = C(ref), y = C(val);
   if (x == y) return true;
-  if constexpr (std::is_floating_point_v<C>) {
-    if (!std::isfinite(x) || !std::isfinite(y)) return false;
+  if constexpr (!std::is_floating_point_v<C>) {
+    return false;
   }
+  if (!std::isfinite(x) || !std::isfinite(y)) return false;
   return std::fabs(x - y) <= EPS * std::fabs(x);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
-bool rEQ_sym(T x, U y) {
-  C a = C(x), b = C(y);
-  if (a == b) return true;
-  if constexpr (std::is_floating_point_v<C>) {
-    if (!std::isfinite(a) || !std::isfinite(b)) return false;
+bool rEQ_sym(T a, U b) {
+  C x = C(a), y = C(b);
+  if (x == y) return true;
+  if constexpr (!std::is_floating_point_v<C>) {
+    return false;
   }
-  return std::fabs(a - b) <= EPS * std::max(std::fabs(a), std::fabs(b));
+  if (!std::isfinite(x) || !std::isfinite(y)) return false;
+  return std::fabs(x - y) <= EPS * std::max(std::fabs(x), std::fabs(y));
 }
 \end{lstlisting}
 Sign Functions:
@@ -339,6 +341,7 @@ int main() {
   assert(EQ(M_PI, 3.14159265359));
   assert(EQ(M_INF, M_INF) && rEQ(M_INF, M_INF) && rEQ_sym(M_INF, M_INF));
   assert(!rEQ(M_INF, 0.0) && !rEQ_sym(M_INF, -M_INF));
+  assert(!rEQ(1000000000000LL, 1000000000001LL));
   assert(EQ(M_E, 2.718281828459));
   assert(EQ(M_PHI, 1.61803398875));
 
@@ -1501,15 +1504,19 @@ Increasing partitions of 8:
 {1,2,5} {1,3,4} {1,7} {2,6} {3,5} {8}
 \end{exampleoutput}
 \subsection{Generic Combinatorial Enumeration}
-Rank, unrank, and enumerate combinatorial sequences in lexicographic order using only a prefix counting oracle. This is useful when the objects are too numerous to precompute, but there is a simple dynamic-programming formula for the number of valid completions after a fixed prefix. Derived classes of \inlinecode{AbstractEnumerator} implement \inlinecode{count(prefix)}, which returns how many valid full sequences begin with that prefix.
+Ranks, unranks, and enumerates combinatorial sequences in lexicographic order using only a prefix counting oracle. This is useful when the objects are too numerous to precompute, but there is a simple dynamic-programming formula for the number of valid completions after a fixed prefix.
 
-Let $A$ be the number of candidate values considered at each position (the base class \inlinecode{range}), $L$ be the output sequence length (the base class \inlinecode{length}), and $T$ be \inlinecode{total\_count()}, the number of valid sequences. The base class tries candidate values in $[0, A)$ at each of the $L$ positions, asking \inlinecode{count()} how many completions each prefix admits. The concrete classes may still use their own conventional constructor names, such as \inlinecode{n} and \inlinecode{k} for combinations.
+\inlinecode{Enumerator(range, length, count)} considers values in $[0, {\inlinecodemath{range}})$ at each position of a length-\inlinecode{length} sequence. The callback \inlinecode{count(prefix)} returns the number of valid full sequences beginning with \inlinecode{prefix}; it may capture a precomputed dynamic-programming table or other state. The factory functions below supply this oracle for the principal combinatorial families, while the class remains available directly for custom families. The range and length must be nonnegative; the factory arguments must satisfy $0 \leq k \leq n$.
 
 \begin{compactitem}
-  \item \inlinecode{to\_rank(a)} returns an integer representing the 0-based rank of the combinatorial sequence \inlinecode{a}.
+  \item \inlinecode{arrangements(n, k)} returns an enumerator for the length-$k$ arrangements of $[0, n)$.
+  \item \inlinecode{permutations(n)} returns an enumerator for the permutations of $[0, n)$.
+  \item \inlinecode{combinations(n, k)} returns an enumerator for the size-$k$ subsets of $[0, n)$, represented as strictly increasing sequences.
+  \item \inlinecode{partitions(n)} returns an enumerator for the additive partitions of $n$, represented as non-increasing length-$n$ sequences padded with zeros.
+  \item \inlinecode{to\_rank(a)} returns the 0-based rank of the valid combinatorial sequence \inlinecode{a}.
   \item \inlinecode{from\_rank(r)} returns a combinatorial sequence of integers that is lexicographically ranked \inlinecode{r}, where \inlinecode{r} is a 0-based rank in the range $[0, {\inlinecodemath{total\_count()}})$.
   \item \inlinecode{total\_count()} returns the number of valid sequences.
-  \item \inlinecode{enumerate(f)} calls the function \inlinecode{f(lo, hi)} on every specified combinatorial sequence in lexicographically increasing order, where \inlinecode{lo} and \inlinecode{hi} are two random-access iterators to a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of integers.
+  \item \inlinecode{enumerate(f)} calls the function \inlinecode{f(a)} on every specified combinatorial sequence \inlinecode{a} in lexicographically increasing order.
 \end{compactitem}
 
 Overflow warning: All exact counts and ranks must fit in \inlinecode{int64\_t}.
@@ -1517,38 +1524,42 @@ Overflow warning: All exact counts and ranks must fit in \inlinecode{int64\_t}.
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(A \cdot L)$ calls to \inlinecode{count()} per call to \inlinecode{to\_rank()} and \inlinecode{from\_rank()}.
-  \item $O(T \cdot A \cdot L)$ calls to \inlinecode{count()} per call to \inlinecode{enumerate()}, excluding the cost of the callback \inlinecode{f}.
-  \item $O(A \cdot (\min\left(L, A - L\right) + 1))$ constructor time for \inlinecode{CombinationEnumerator} and $O(L^{2})$ constructor time for \inlinecode{PartitionEnumerator} to build their tables.
-  \item The actual running time multiplies these bounds by the subclass cost of \inlinecode{count()}. In the implementations below, \inlinecode{CombinationEnumerator::count()} is $O(1)$, while \inlinecode{ArrangementEnumerator::count()} and \inlinecode{PartitionEnumerator::count()} are $O(L)$.
+  \item $O(A \cdot L \cdot C)$ per call to \inlinecode{to\_rank()} and \inlinecode{from\_rank()}, where $A$ is \inlinecode{range}, $L$ is \inlinecode{length}, and $C$ is the cost of \inlinecode{count()}.
+  \item $O(T \cdot A \cdot L \cdot C)$ per call to \inlinecode{enumerate()}, excluding the cost of the callback \inlinecode{f}, where $T$ is \inlinecode{total\_count()}.
+  \item $O(A \cdot (\min\left(L, A - L\right) + 1))$ per call to \inlinecode{combinations()} and $O(L^{2})$ per call to \inlinecode{partitions()}; the other factories take $O(1)$ time per call.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(L)$ auxiliary for \inlinecode{to\_rank()}, \inlinecode{from\_rank()}, and \inlinecode{enumerate()}, excluding output storage.
-  \item $O(1)$ object storage for \inlinecode{ArrangementEnumerator} and \inlinecode{PermutationEnumerator}.
-  \item $O(A \cdot (\min\left(L, A - L\right) + 1))$ object storage for \inlinecode{CombinationEnumerator} and $O(L^{2})$ object storage for \inlinecode{PartitionEnumerator} tables.
+  \item $O(S)$ object storage, where $S$ is the state captured by \inlinecode{count()}.
+  \item $O(A \cdot (\min\left(L, A - L\right) + 1))$ object storage for \inlinecode{combinations()} and $O(L^{2})$ for \inlinecode{partitions()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <numeric>
+#include <utility>
 #include <vector>
 
-class AbstractEnumerator {
- protected:
+template<typename Count>
+class Enumerator {
   int range, length;
-
-  AbstractEnumerator(int r, int l) : range(r), length(l) {}
-  virtual int64_t count(const std::vector<int> &prefix) = 0;
+  Count count;
 
  public:
-  virtual ~AbstractEnumerator() = default;
+  Enumerator(int range, int length, Count count) : range(range), length(length), count(count) {
+    assert(range >= 0 && length >= 0);
+  }
+
   int64_t total_count() { return count({}); }
 
   int64_t to_rank(const std::vector<int> &a) {
+    assert(static_cast<int>(a.size()) == length);
+    assert(std::all_of(a.begin(), a.end(), [&](int x) { return 0 <= x && x < range; }));
     int64_t res = 0;
     std::vector<int> prefix;
     for (int i = 0; i < static_cast<int>(a.size()); i++) {
@@ -1561,6 +1572,7 @@ class AbstractEnumerator {
   }
 
   std::vector<int> from_rank(int64_t r) {
+    assert(0 <= r && r < total_count());
     std::vector<int> a;
     for (int i = 0; i < length; i++) {
       a.push_back(0);
@@ -1575,179 +1587,173 @@ class AbstractEnumerator {
     return a;
   }
 
-  // Accepts any callable f(lo, hi), including capturing lambdas and functors.
+  // Accepts any callable f(a), including capturing lambdas and functors.
   template<typename Fn>
   void enumerate(Fn f) {
     int64_t total = total_count();
     for (int64_t i = 0; i < total; i++) {
       std::vector<int> curr = from_rank(i);
-      f(curr.begin(), curr.end());
+      f(curr);
     }
   }
 };
 
-class ArrangementEnumerator : public AbstractEnumerator {
- public:
-  ArrangementEnumerator(int n, int k) : AbstractEnumerator(n, k) {}
-
-  int64_t count(const std::vector<int> &prefix) override {
-    int n = static_cast<int>(prefix.size());
-    for (int i = 0; i < n - 1; i++) {
-      if (prefix[i] == prefix[n - 1]) {
+auto arrangements(int n, int k) {
+  assert(n >= 0 && 0 <= k && k <= n);
+  auto count = [=](const std::vector<int> &prefix) -> int64_t {
+    int len = static_cast<int>(prefix.size());
+    for (int i = 0; i < len - 1; i++) {
+      if (prefix[i] == prefix[len - 1]) {
         return 0;
       }
     }
     int64_t res = 1;
-    for (int i = 0; i < length - n; i++) {
-      res *= range - n - i;
+    for (int i = 0; i < k - len; i++) {
+      res *= n - len - i;  // Overflow warning.
     }
     return res;
-  }
-};
+  };
+  return Enumerator(n, k, count);
+}
 
-class PermutationEnumerator : public ArrangementEnumerator {
- public:
-  explicit PermutationEnumerator(int n) : ArrangementEnumerator(n, n) {}
-};
+auto permutations(int n) {
+  return arrangements(n, n);
+}
 
-class CombinationEnumerator : public AbstractEnumerator {
-  std::vector<std::vector<int64_t>> table;
-
-  int64_t combinations(int n, int k) const {
-    return (k < 0 || k > n) ? 0 : table[n][std::min(k, n - k)];
-  }
-
- public:
-  CombinationEnumerator(int n, int k)
-      : AbstractEnumerator(n, k), table(n + 1, std::vector<int64_t>(std::min(k, n - k) + 1)) {
-    int max_col = static_cast<int>(table[0].size()) - 1;
-    for (int i = 0; i <= n; i++) {
-      for (int j = 0; j <= std::min(i, max_col); j++) {
-        table[i][j] = (j == 0) ? 1 : table[i - 1][j - 1] + table[i - 1][j];  // Overflow warning.
-      }
+auto combinations(int n, int k) {
+  assert(n >= 0 && 0 <= k && k <= n);
+  std::vector<std::vector<int64_t>> table(n + 1, std::vector<int64_t>(std::min(k, n - k) + 1));
+  int max_col = static_cast<int>(table[0].size()) - 1;
+  for (int i = 0; i <= n; i++) {
+    for (int j = 0; j <= std::min(i, max_col); j++) {
+      table[i][j] = (j == 0) ? 1 : table[i - 1][j - 1] + table[i - 1][j];  // Overflow warning.
     }
   }
-
-  int64_t count(const std::vector<int> &prefix) override {
-    int n = static_cast<int>(prefix.size());
-    if (n >= 2 && prefix[n - 1] <= prefix[n - 2]) {
+  auto count = [n, k, table = std::move(table)](const std::vector<int> &pref) -> int64_t {
+    int len = static_cast<int>(pref.size());
+    if (len >= 2 && pref[len - 1] <= pref[len - 2]) {
       return 0;
     }
-    if (n == 0) {
-      return combinations(range, length);
-    }
-    return combinations(range - prefix[n - 1] - 1, length - n);
-  }
-};
+    int rem = len == 0 ? n : n - pref.back() - 1;
+    int choose = k - len;
+    return (choose < 0 || choose > rem) ? 0 : table[rem][std::min(choose, rem - choose)];
+  };
+  return Enumerator(n, k, std::move(count));
+}
 
-class PartitionEnumerator : public AbstractEnumerator {
-  std::vector<std::vector<int64_t>> table;
-
- public:
-  explicit PartitionEnumerator(int n)
-      : AbstractEnumerator(n + 1, n), table(n + 1, std::vector<int64_t>(n + 1)) {
-    std::vector<std::vector<int64_t>> tmp(table);
-    tmp[0][0] = 1;
-    for (int i = 1; i <= n; i++) {
-      for (int j = 1; j <= i; j++) {
-        tmp[i][j] = tmp[i - 1][j - 1] + tmp[i - j][j];
-      }
-    }
-    for (int i = 1; i <= n; i++) {
-      for (int j = 1; j <= n; j++) {
-        table[i][j] = tmp[i][j] + table[i][j - 1];
+auto partitions(int n) {
+  assert(n >= 0);
+  std::vector<std::vector<int64_t>> table(n + 1, std::vector<int64_t>(n + 1));
+  std::fill(table[0].begin(), table[0].end(), 1);
+  for (int sum = 1; sum <= n; sum++) {
+    for (int max_part = 1; max_part <= n; max_part++) {
+      table[sum][max_part] = table[sum][max_part - 1];
+      if (max_part <= sum) {
+        table[sum][max_part] += table[sum - max_part][max_part];  // Overflow warning.
       }
     }
   }
-
-  int64_t count(const std::vector<int> &prefix) override {
-    int n = static_cast<int>(prefix.size());
-    int sum = std::accumulate(prefix.begin(), prefix.end(), 0);
-    if (sum == range - 1) {
+  auto count = [n, table = std::move(table)](const std::vector<int> &pref) -> int64_t {
+    int len = static_cast<int>(pref.size());
+    int sum = std::accumulate(pref.begin(), pref.end(), 0);
+    if (sum == n) {
       return 1;
     }
-    if (sum > range - 1 || (n > 0 && prefix[n - 1] == 0) ||
-        (n >= 2 && prefix[n - 1] > prefix[n - 2])) {
+    if (sum > n || (len > 0 && pref.back() == 0) || (len >= 2 && pref[len - 1] > pref[len - 2])) {
       return 0;
     }
-    if (n == 0) {
-      return table[range - sum - 1][range - 1];
-    }
-    return table[range - sum - 1][prefix[n - 1]];
-  }
-};
+    return table[n - sum][len == 0 ? n : pref.back()];
+  };
+  return Enumerator(n + 1, n, std::move(count));
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 #include <iostream>
 using namespace std;
 
-template<typename It>
-void print_range(It lo, It hi) {
+void print_sequence(const vector<int> &a) {
   cout << "{";
-  for (; lo != hi; ++lo) {
-    cout << *lo << (lo == hi - 1 ? "" : ",");
+  for (int i = 0; i < static_cast<int>(a.size()); i++) {
+    cout << a[i] << (i + 1 == static_cast<int>(a.size()) ? "" : ",");
   }
   cout << "} ";
 }
 
 int main() {
-  {
-    cout << "3 permute 2 arrangements:" << endl;
-    ArrangementEnumerator arr(3, 2);
-    int count = 0;
-    arr.enumerate([&](auto lo, auto hi) {
-      print_range(lo, hi);
-      count++;
-    });
-    assert(count == 6);
-    assert((arr.from_rank(5) == vector<int>{2, 1}));
-    assert(arr.to_rank(vector<int>{2, 1}) == 5);
-    cout << endl;
-  }
-  {
-    cout << "\nPermutations of [0, 3):" << endl;
-    PermutationEnumerator perm(3);
-    int count = 0;
-    perm.enumerate([&](auto lo, auto hi) {
-      print_range(lo, hi);
-      count++;
-    });
-    assert(count == 6);
-    cout << endl;
-  }
-  {
-    cout << "\n4 choose 3 combinations:" << endl;
-    CombinationEnumerator comb(4, 3);
-    int count = 0;
-    comb.enumerate([&](auto lo, auto hi) {
-      print_range(lo, hi);
-      count++;
-    });
-    assert(count == 4);
-    assert((comb.from_rank(3) == vector<int>{1, 2, 3}));
-    assert(comb.to_rank(vector<int>{1, 2, 3}) == 3);
-    CombinationEnumerator narrow(67, 1);
-    assert(narrow.total_count() == 67);
-    CombinationEnumerator full(67, 67);
-    assert(full.total_count() == 1);
-    CombinationEnumerator central(66, 33);
-    assert(central.total_count() == 7219428434016265740LL);
-    cout << endl;
-  }
-  {
-    cout << "\nPartition of 4:" << endl;
-    PartitionEnumerator part(4);
-    int count = 0;
-    part.enumerate([&](auto lo, auto hi) {
-      print_range(lo, hi);
-      count++;
-    });
-    assert(count == 5);
-    cout << endl;
-  }
+  cout << "3 permute 2 arrangements:" << endl;
+  auto arr = arrangements(3, 2);
+  int count = 0;
+  arr.enumerate([&](const auto &a) {
+    print_sequence(a);
+    count++;
+  });
+  assert(count == 6);
+  assert((arr.from_rank(5) == vector<int>{2, 1}));
+  assert(arr.to_rank(vector<int>{2, 1}) == 5);
+
+  cout << "\n\nPermutations of [0, 3):" << endl;
+  auto perm = permutations(3);
+  count = 0;
+  perm.enumerate([&](const auto &a) {
+    print_sequence(a);
+    count++;
+  });
+  assert(count == 6);
+
+  cout << "\n\n4 choose 3 combinations:" << endl;
+  auto comb = combinations(4, 3);
+  count = 0;
+  comb.enumerate([&](const auto &a) {
+    print_sequence(a);
+    count++;
+  });
+  assert(count == 4);
+  assert((comb.from_rank(3) == vector<int>{1, 2, 3}));
+  assert(comb.to_rank(vector<int>{1, 2, 3}) == 3);
+  assert(combinations(67, 1).total_count() == 67);
+  assert(combinations(67, 67).total_count() == 1);
+  assert(combinations(66, 33).total_count() == 7219428434016265740LL);
+
+  cout << "\n\nPartitions of 4:" << endl;
+  auto part = partitions(4);
+  count = 0;
+  part.enumerate([&](const auto &a) {
+    print_sequence(a);
+    count++;
+  });
+  assert(count == 5);
+
+  int length = 4;
+  auto count_completions = [length](const vector<int> &pref) -> int64_t {
+    if (static_cast<int>(pref.size()) > length) {
+      return 0;
+    }
+    for (int i = 0; i < static_cast<int>(pref.size()); i++) {
+      if (pref[i] < 0 || pref[i] > 1 || (i > 0 && pref[i - 1] == 1 && pref[i] == 1)) {
+        return 0;
+      }
+    }
+    int64_t after_zero = 1, after_one = 1;
+    for (int i = static_cast<int>(pref.size()); i < length; i++) {
+      int64_t next_zero = after_zero + after_one;  // Overflow warning.
+      after_one = after_zero;
+      after_zero = next_zero;
+    }
+    return pref.empty() || pref.back() == 0 ? after_zero : after_one;
+  };
+  Enumerator e(2, length, count_completions);
+  cout << "\n\nLength-4 binary strings without consecutive ones:" << endl;
+  count = 0;
+  e.enumerate([&](const auto &a) {
+    print_sequence(a);
+    count++;
+  });
+  assert(count == 8 && e.total_count() == 8);
+  assert((e.from_rank(7) == vector<int>{1, 0, 1, 0}));
+  assert(e.to_rank(vector<int>{1, 0, 1, 0}) == 7);
+  cout << endl;
   return 0;
 }
 \end{lstlisting}
@@ -1761,8 +1767,11 @@ Permutations of [0, 3):
 4 choose 3 combinations:
 {0,1,2} {0,1,3} {0,2,3} {1,2,3}
 
-Partition of 4:
+Partitions of 4:
 {1,1,1,1} {2,1,1,0} {2,2,0,0} {3,1,0,0} {4,0,0,0}
+
+Length-4 binary strings without consecutive ones:
+{0,0,0,0} {0,0,0,1} {0,0,1,0} {0,1,0,0} {0,1,0,1} {1,0,0,0} {1,0,0,1} {1,0,1,0}
 \end{exampleoutput}
 
 \section{\texorpdfstring{Number Theory}{6.3 Number Theory}}
@@ -1780,8 +1789,8 @@ Core integer and modular-arithmetic operations built around the Euclidean algori
   \item \inlinecode{mod\_inverse(a, m)} returns an integer $x$ such that $ax \equiv 1 \pmod m$, where the arguments must satisfy $m > 0$ and $\gcd(a, m) = 1$.
   \item \inlinecode{mod\_inverse\_table(p)} returns a vector \inlinecode{v} where \inlinecode{v[i]} is the modular inverse of \inlinecode{i} modulo the prime \inlinecode{p} for every valid index \inlinecode{i}.
   \item \inlinecode{crt(r1, m1, r2, m2, \&r, \&m)} merges the two congruences $x \equiv r_1 \pmod{m_1}$ and $x \equiv r_2 \pmod{m_2}$ for arbitrary moduli (not necessarily coprime). It returns whether the system is consistent, and on success sets \inlinecode{m} to \inlinecode{lcm(m\_1, m\_2)} and \inlinecode{r} to the unique solution in $[0, {\inlinecodemath{m}})$. Both moduli must be positive, and their least common multiple must fit in \inlinecode{int64\_t}. Fold it pairwise to merge more than two congruences.
-  \item \inlinecode{garner\_restore(a, p)} returns the smallest nonnegative solution whose residue modulo \inlinecode{p[i]} is \inlinecode{a[i]} at every valid index. The entries of \inlinecode{p} must be pairwise coprime (unlike \inlinecode{crt}, which allows shared factors). The exact solution is unique modulo the product of all moduli, so that product and the final answer must fit in \inlinecode{int64\_t}.
-  \item \inlinecode{garner\_restore\_mod(a, p, m)} returns that same CRT solution modulo \inlinecode{m}. This is the right variant when the product of the moduli is too large to fit in \inlinecode{int64\_t}.
+  \item \inlinecode{garner\_restore(a, p)} returns the smallest nonnegative solution whose residue modulo \inlinecode{p[i]} is \inlinecode{a[i]} at every valid index. The entries of \inlinecode{p} must be pairwise coprime (unlike \inlinecode{crt}, which allows shared factors) and positive, and \inlinecode{a} and \inlinecode{p} must have equal sizes. The exact solution is unique modulo the product of all moduli, so that product and the final answer must fit in \inlinecode{int64\_t}.
+  \item \inlinecode{garner\_restore\_mod(a, p, m)} returns that same CRT solution modulo \inlinecode{m}. This is the right variant when the product of the moduli is too large to fit in \inlinecode{int64\_t}; \inlinecode{m} must be positive.
 \end{compactitem}
 
 Overflow warning: Every intermediate and result of the templated signed-integer helpers must be representable by \inlinecode{Int}; in particular, the minimum value of \inlinecode{Int} cannot be negated or divided by $-1$.
@@ -1932,8 +1941,13 @@ bool crt(int64_t r1, int64_t m1, int64_t r2, int64_t m2, int64_t *r, int64_t *m)
 }
 
 std::vector<int64_t> garner_digits(const std::vector<int> &a, const std::vector<int> &p) {
+  assert(a.size() == p.size());
   int n = static_cast<int>(a.size());
-  std::vector<int64_t> x(a.begin(), a.end());
+  std::vector<int64_t> x(n);
+  for (int i = 0; i < n; i++) {
+    assert(p[i] > 0);
+    x[i] = mod(static_cast<int64_t>(a[i]), static_cast<int64_t>(p[i]));
+  }
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < i; j++) {
       // Reduce mod p[i] each step; otherwise x[i] compounds to ~p^i and overflows int64_t.
@@ -1945,6 +1959,7 @@ std::vector<int64_t> garner_digits(const std::vector<int> &a, const std::vector<
 }
 
 int64_t garner_restore(const std::vector<int> &a, const std::vector<int> &p) {
+  assert(a.size() == p.size());
   int n = static_cast<int>(a.size());
   if (n == 0) {
     return 0;
@@ -1959,6 +1974,7 @@ int64_t garner_restore(const std::vector<int> &a, const std::vector<int> &p) {
 }
 
 int64_t garner_restore_mod(const std::vector<int> &a, const std::vector<int> &p, int64_t m) {
+  assert(a.size() == p.size() && m > 0);
   int n = static_cast<int>(a.size());
   if (n == 0) {
     return 0;
@@ -2017,6 +2033,7 @@ int main() {
     }
     assert(x == 11);
   }
+  assert(garner_restore(vector<int>{-1}, vector<int>{5}) == 4);
 #if defined(__SIZEOF_INT128__)
   {  // Garner modulo another number works even when the product of CRT moduli is too large.
     vector<int> p{1000000007, 1000000009, 1000000033};
@@ -2931,6 +2948,7 @@ Trial division tests primality and computes prime factorizations by trying possi
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <cstdint>
 #include <numeric>
@@ -3125,8 +3143,6 @@ bool is_prime(int64_t n) {
 The complete factorization routine first removes small prime factors with a cached linear sieve, then uses Miller-Rabin and Pollard's rho on the remaining cofactor. Factorizations remain sorted and compressed as (\inlinecode{prime}, \inlinecode{exponent}) pairs.
 
 \begin{compactitem}
-  \item \inlinecode{cached\_sieve(n)} returns a cached linear sieve up to and including \inlinecode{n}, storing both primes and least prime factors.
-  \item \inlinecode{merge\_factors(a, b)} merges two sorted compressed factorizations.
   \item \inlinecode{factorize\_rho(n)} returns the prime factorization of a 64-bit integer using Miller-Rabin and Pollard's rho without initial trial division.
   \item \inlinecode{factorize(n, small\_prime\_limit = 1000000)} returns the prime factorization of a 64-bit integer \inlinecode{n}, first testing primes through \inlinecode{small\_prime\_limit} and then falling back to Pollard's rho. It supports integers up to and including $2^{63} - 1$.
   \item \inlinecode{divisors\_from\_factors(factors)} returns all divisors from a compressed factorization.
@@ -3136,9 +3152,7 @@ The complete factorization routine first removes small prime factors with a cach
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to \inlinecode{cached\_sieve()} when rebuilding the cache, or $O(1)$ when it is already large enough.
   \item $O(n^{1/4})$ expected per call to \inlinecode{factorize\_rho()}. \inlinecode{factorize()} additionally performs $O(L/\log L)$ trial divisions, where $L$ is \inlinecode{small\_prime\_limit}, and takes $O(L)$ time if the cache is rebuilt.
-  \item $O(|a| + |b|)$ per call to \inlinecode{merge\_factors()}.
   \item $O(d \log d)$ per call to \inlinecode{divisors\_from\_factors()}, where $d$ is the number of divisors generated.
   \item $O(L/\log L + n^{1/4} + d \log d)$ expected per call to \inlinecode{divisors()}, plus $O(L)$ if the cache is rebuilt.
 \end{compactitem}
@@ -3149,17 +3163,15 @@ The complete factorization routine first removes small prime factors with a cach
   \item $O(c)$ cached space after sieving through $c$.
   \item $O(f + \log n)$ auxiliary for recursive factorization, where $f$ is the number of compressed prime factors returned.
   \item $O(d)$ output space and $O(\log d)$ auxiliary stack space for \inlinecode{divisors\_from\_factors()} and \inlinecode{divisors()}.
-  \item $O(1)$ auxiliary for \inlinecode{merge\_factors()}, excluding its returned vector.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-struct SieveCache {
-  int limit = 1;
-  std::vector<int> least{0, 1}, primes;
-};
-
-SieveCache &cached_sieve(int n) {
-  static SieveCache cache;
+static const auto &cached_sieve(int n) {
+  struct Cache {
+    int limit = 1;
+    std::vector<int> least{0, 1}, primes;
+  };
+  static Cache cache;
   if (n <= cache.limit) {
     return cache;
   }
@@ -3183,50 +3195,43 @@ SieveCache &cached_sieve(int n) {
 
 using Factors = std::vector<std::pair<int64_t, int>>;
 
-Factors merge_factors(const Factors &a, const Factors &b) {
+Factors factorize_rho(int64_t n) {
+  std::vector<int64_t> factors;
+  auto collect = [&](auto &&collect, int64_t value) -> void {
+    if (value <= 1) {
+      return;
+    }
+    if (is_prime(value)) {
+      factors.push_back(value);
+      return;
+    }
+    int64_t p;
+    do {
+      p = rho_factor(value);
+    } while (p == value);
+    collect(collect, p);
+    collect(collect, value / p);
+  };
+  collect(collect, n);
+  std::sort(factors.begin(), factors.end());
   Factors res;
-  int i = 0, j = 0;
-  while (i < static_cast<int>(a.size()) || j < static_cast<int>(b.size())) {
-    if (i < static_cast<int>(a.size()) && j < static_cast<int>(b.size()) &&
-        a[i].first == b[j].first) {
-      res.emplace_back(a[i].first, a[i].second + b[j].second);
-      i++;
-      j++;
-    } else if (
-        j == static_cast<int>(b.size()) ||
-        (i < static_cast<int>(a.size()) && a[i].first < b[j].first)
-    ) {
-      res.push_back(a[i++]);
+  for (int64_t p : factors) {
+    if (res.empty() || res.back().first != p) {
+      res.emplace_back(p, 1);
     } else {
-      res.push_back(b[j++]);
+      res.back().second++;
     }
   }
   return res;
 }
 
-Factors factorize_rho(int64_t n) {
-  if (n <= 1) {
-    return {};
-  }
-  if (n % 2 == 0) {
-    return merge_factors(Factors{{2, 1}}, factorize_rho(n / 2));
-  }
-  if (is_prime(n)) {
-    return {{n, 1}};
-  }
-  int64_t p;
-  do {
-    p = rho_factor(n);
-  } while (p == n);
-  return merge_factors(factorize_rho(p), factorize_rho(n / p));
-}
-
 Factors factorize(int64_t n, int small_prime_limit = 1000000) {
+  assert(small_prime_limit >= 1);
   if (n <= 1) {
     return {};
   }
-  const SieveCache &sieve = cached_sieve(small_prime_limit);
-  if (n <= sieve.limit) {
+  const auto &sieve = cached_sieve(small_prime_limit);
+  if (n <= small_prime_limit) {
     Factors res;
     while (n > 1) {
       int p = sieve.least[n], cnt = 0;
@@ -3253,7 +3258,9 @@ Factors factorize(int64_t n, int small_prime_limit = 1000000) {
       res.emplace_back(p, cnt);
     }
   }
-  return merge_factors(res, factorize_rho(n));
+  Factors tail = factorize_rho(n);
+  res.insert(res.end(), tail.begin(), tail.end());
+  return res;
 }
 
 std::vector<int64_t> divisors_from_factors(const Factors &factors) {
@@ -3282,7 +3289,6 @@ std::vector<int64_t> divisors(int64_t n) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
 #include <ctime>
 #include <iomanip>
 #include <iostream>
@@ -3604,10 +3610,12 @@ Inclusion-exclusion itself counts the size of a union by alternately adding and 
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
 int mobius(int n) {
+  assert(n > 0);
   if (n == 1) {
     return 1;
   }
@@ -3628,6 +3636,7 @@ int mobius(int n) {
 }
 
 std::vector<int> mobius_sieve(int n) {
+  assert(n >= 0);
   std::vector<int> mu(n + 1), primes;
   std::vector<char> composite(n + 1);
   if (n >= 1) {
@@ -3654,6 +3663,7 @@ std::vector<int> mobius_sieve(int n) {
 }
 
 int64_t count_coprime(int64_t n, int64_t m) {
+  assert(n >= 0 && m > 0);
   std::vector<int64_t> primes;
   for (int64_t p = 2; p <= m / p; p++) {
     if (m % p == 0) {
@@ -5100,11 +5110,12 @@ Basic matrix operations defined on a two-dimensional vector of numeric values. M
   \item \inlinecode{make\_matrix\textless{}T\textgreater{}(m, n, v)} constructs and returns an $m$ by $n$ matrix with 0-based indices (row indices $[0, {\inlinecodemath{m}})$ and column indices $[0, {\inlinecodemath{n}})$), where every value is initialized to \inlinecode{v}.
   \item \inlinecode{identity\_matrix\textless{}T\textgreater{}(n)} returns the \inlinecode{n} by \inlinecode{n} identity matrix, that is, a matrix where each \inlinecode{a[i][j]} equals $1$ if \inlinecode{i} = \inlinecode{j}, or $0$ otherwise.
   \item \inlinecode{rows(a)} returns the number of rows in matrix \inlinecode{a}.
-  \item \inlinecode{columns(a)} returns the number of columns in matrix \inlinecode{a}.
+  \item \inlinecode{cols(a)} returns the number of columns in matrix \inlinecode{a}.
   \item \inlinecode{a[i][j]} may be used to access or modify the specified entry of \inlinecode{a}.
   \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, and \inlinecode{!=} define lexicographical comparison based on that of \inlinecode{std::vector}.
   \item Operators \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, and \inlinecode{/=} define scalar addition, subtraction, multiplication, and division involving a matrix and a numeric scalar value.
-  \item Operators \inlinecode{*} and \inlinecode{*=} define vector and matrix multiplication.
+  \item \inlinecode{a * v} returns the matrix-vector product as a vector.
+  \item Operators \inlinecode{*} and \inlinecode{*=} define matrix multiplication.
 \end{compactitem}
 
 Exponentiation uses iterative binary exponentiation: keep an accumulated result, square the base each round, and multiply it when the current exponent bit is set. The power sum uses the block identity that $\begin{bmatrix} A & A \\ 0 & I \end{bmatrix}^p$ has $A + A^2 + \dots + A^p$ in its upper-right block.
@@ -5118,19 +5129,21 @@ Exponentiation uses iterative binary exponentiation: keep an accumulated result,
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(m \cdot n)$ per construction, output, comparison, or scalar-arithmetic operation on $m$ by $n$ matrices.
-  \item $O(1)$ per call to \inlinecode{rows()} and \inlinecode{columns()}.
+  \item $O(1)$ per call to \inlinecode{rows()} and \inlinecode{cols()}.
   \item $O(m \cdot n)$ per matrix-matrix addition or subtraction of $m$ by $n$ matrices.
   \item $O(n^{3} \log p)$ per exponentiation of an $n$ by $n$ matrix to power $p$.
   \item $O(n^{3} \log p)$ per call to \inlinecode{power\_sum()} for an $n$ by $n$ matrix and power $p$.
+  \item $O(m \cdot n)$ per multiplication of an $m$ by $n$ matrix by a vector of length $n$.
   \item $O(m \cdot n \cdot k)$ per multiplication of an $m$ by $n$ matrix by an $n$ by $k$ matrix.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(1)$ auxiliary for \inlinecode{rows()}, \inlinecode{columns()}, \inlinecode{a[i][j]} access, comparison and scalar compound operators.
+  \item $O(1)$ auxiliary for \inlinecode{rows()}, \inlinecode{cols()}, \inlinecode{a[i][j]} access, comparison and scalar compound operators.
   \item $O(n^{2})$ auxiliary for exponentiation of an $n$ by $n$ matrix to power $p$.
   \item $O(n^{2})$ auxiliary for \inlinecode{power\_sum()} of an $n$ by $n$ matrix up to power $p$.
+  \item $O(m)$ for the vector returned by matrix-vector multiplication.
   \item $O(m \cdot n)$ auxiliary for all non-in-place operations returning an $m$ by $n$ matrix.
 \end{compactitem}
 
@@ -5164,7 +5177,7 @@ int rows(const Matrix<T> &a) {
 }
 
 template<typename T>
-int columns(const Matrix<T> &a) {
+int cols(const Matrix<T> &a) {
   return a.empty() ? 0 : static_cast<int>(a[0].size());
 }
 
@@ -5174,7 +5187,7 @@ std::ostream &operator<<(std::ostream &out, const Matrix<T> &a) {
   auto precision = out.precision();
   out << std::fixed << std::setprecision(5);
   for (int i = 0; i < rows(a); i++) {
-    for (int j = 0; j < columns(a); j++) {
+    for (int j = 0; j < cols(a); j++) {
       out << std::setw(10) << a[i][j];
     }
     out << std::endl;
@@ -5187,7 +5200,7 @@ std::ostream &operator<<(std::ostream &out, const Matrix<T> &a) {
 template<typename T, typename U>
 Matrix<T> &operator+=(Matrix<T> &a, const U &v) {
   for (int i = 0; i < rows(a); i++) {
-    for (int j = 0; j < columns(a); j++) {
+    for (int j = 0; j < cols(a); j++) {
       a[i][j] += v;
     }
   }
@@ -5197,7 +5210,7 @@ Matrix<T> &operator+=(Matrix<T> &a, const U &v) {
 template<typename T, typename U>
 Matrix<T> &operator-=(Matrix<T> &a, const U &v) {
   for (int i = 0; i < rows(a); i++) {
-    for (int j = 0; j < columns(a); j++) {
+    for (int j = 0; j < cols(a); j++) {
       a[i][j] -= v;
     }
   }
@@ -5207,7 +5220,7 @@ Matrix<T> &operator-=(Matrix<T> &a, const U &v) {
 template<typename T, typename U>
 Matrix<T> &operator*=(Matrix<T> &a, const U &v) {
   for (int i = 0; i < rows(a); i++) {
-    for (int j = 0; j < columns(a); j++) {
+    for (int j = 0; j < cols(a); j++) {
       a[i][j] *= v;
     }
   }
@@ -5217,7 +5230,7 @@ Matrix<T> &operator*=(Matrix<T> &a, const U &v) {
 template<typename T, typename U>
 Matrix<T> &operator/=(Matrix<T> &a, const U &v) {
   for (int i = 0; i < rows(a); i++) {
-    for (int j = 0; j < columns(a); j++) {
+    for (int j = 0; j < cols(a); j++) {
       a[i][j] /= v;
     }
   }
@@ -5226,9 +5239,9 @@ Matrix<T> &operator/=(Matrix<T> &a, const U &v) {
 
 template<typename T>
 Matrix<T> &operator+=(Matrix<T> &a, const Matrix<T> &b) {
-  assert(rows(a) == rows(b) && columns(a) == columns(b));
+  assert(rows(a) == rows(b) && cols(a) == cols(b));
   for (int i = 0; i < rows(a); i++) {
-    for (int j = 0; j < columns(a); j++) {
+    for (int j = 0; j < cols(a); j++) {
       a[i][j] += b[i][j];
     }
   }
@@ -5237,9 +5250,9 @@ Matrix<T> &operator+=(Matrix<T> &a, const Matrix<T> &b) {
 
 template<typename T>
 Matrix<T> &operator-=(Matrix<T> &a, const Matrix<T> &b) {
-  assert(rows(a) == rows(b) && columns(a) == columns(b));
+  assert(rows(a) == rows(b) && cols(a) == cols(b));
   for (int i = 0; i < rows(a); i++) {
-    for (int j = 0; j < columns(a); j++) {
+    for (int j = 0; j < cols(a); j++) {
       a[i][j] -= b[i][j];
     }
   }
@@ -5259,29 +5272,27 @@ Matrix<T> operator-(const Matrix<T> &a, const Matrix<T> &b) {
 }
 
 template<typename T>
-Matrix<T> &operator*=(Matrix<T> &a, const std::vector<T> &v) {
-  assert(columns(a) == static_cast<int>(v.size()) && !v.empty());
-  int cols = columns(a);
+std::vector<T> operator*(const Matrix<T> &a, const std::vector<T> &v) {
+  assert(cols(a) == static_cast<int>(v.size()));
+  std::vector<T> res(rows(a));
   for (int i = 0; i < rows(a); i++) {
-    T sum = 0;
-    for (int j = 0; j < cols; j++) {
-      sum += a[i][j] * v[j];
+    for (int j = 0; j < cols(a); j++) {
+      res[i] += a[i][j] * v[j];
     }
-    a[i].assign(1, sum);
   }
-  return a;
+  return res;
 }
 
 template<typename T>
 Matrix<T> operator*(const Matrix<T> &a, const Matrix<T> &b) {
-  assert(columns(a) == rows(b));
-  Matrix<T> res = make_matrix<T>(rows(a), columns(b));
+  assert(cols(a) == rows(b));
+  Matrix<T> res = make_matrix<T>(rows(a), cols(b));
   // The k loop sits outside j so the inner loop walks res[i] and b[k] contiguously instead of
   // striding down a column of b. Each res[i][j] still accumulates in increasing k, so results are
   // unchanged, including for floating-point types.
   for (int i = 0; i < rows(a); i++) {
     for (int k = 0; k < rows(b); k++) {
-      for (int j = 0; j < columns(b); j++) {
+      for (int j = 0; j < cols(b); j++) {
         res[i][j] += a[i][k] * b[k][j];
       }
     }
@@ -5312,13 +5323,13 @@ Matrix<T> operator*(const U &v, const Matrix<T> &a) { return a * v; }
 
 template<typename T, typename U>
 Matrix<T> operator-(const U &v, const Matrix<T> &a) {
-  Matrix<T> m = make_matrix<T>(rows(a), columns(a), v);
+  Matrix<T> m = make_matrix<T>(rows(a), cols(a), v);
   return m -= a;
 }
 
 template<typename T>
 Matrix<T> operator^(Matrix<T> a, uint64_t p) {
-  assert(rows(a) == columns(a));
+  assert(rows(a) == cols(a));
   Matrix<T> res = identity_matrix<T>(rows(a));
   while (p > 0) {
     if (p & 1) {
@@ -5339,7 +5350,7 @@ Matrix<T> &operator^=(Matrix<T> &a, uint64_t p) {
 
 template<typename T>
 Matrix<T> power_sum(const Matrix<T> &a, uint64_t p) {
-  assert(rows(a) == columns(a));
+  assert(rows(a) == cols(a));
   int n = rows(a);
   if (p == 0) {
     return make_matrix<T>(n, n);
@@ -5372,8 +5383,7 @@ int main() {
   using matrix = Matrix<int>;
   matrix m = make_matrix(5, 5, 10) + 10;
   vector<int> v{1, 2, 3, 4, 5};
-  matrix mv{{300}, {300}, {300}, {300}, {300}};
-  assert(m * v == mv);
+  assert((m * v == vector<int>{300, 300, 300, 300, 300}));
 
   m[0][0] += 5;
   assert(m[0][0] == 25 && m[1][1] == 20);
@@ -5382,7 +5392,7 @@ int main() {
   assert(power_sum(m, 3) == m + m * m + (m ^ 3));
 
   Matrix<double> d = make_matrix<double>(2, 2, 0.5);
-  assert(rows(d) == 2 && columns(d) == 2);
+  assert(rows(d) == 2 && cols(d) == 2);
   assert((d + 0.25)[0][0] == 0.75);
   return 0;
 }
@@ -6250,7 +6260,7 @@ The class treats \inlinecode{T\{\}} as additive zero and requires \inlinecode{va
   \item \inlinecode{col(j)} returns a map from row index to value for the nonzero entries in column \inlinecode{j}.
   \item \inlinecode{swap\_rows(i, j)} swaps two rows while keeping the column maps synchronized.
   \item \inlinecode{transpose()} transposes the matrix in place.
-  \item \inlinecode{multiply\_vector(x)} returns the matrix-vector product with vector \inlinecode{x}.
+  \item \inlinecode{a * x} returns the matrix-vector product with vector \inlinecode{x}.
   \item \inlinecode{a + b} and \inlinecode{a - b} return the sum and difference of two matrices with identical dimensions.
   \item \inlinecode{a * b} returns the matrix product, requiring \inlinecode{a.num\_cols()} to equal \inlinecode{b.num\_rows()}. Only pairs of stored entries are ever multiplied.
   \item \inlinecode{a * k} returns \inlinecode{a} scaled by the value \inlinecode{k}. Scaling by zero yields an empty matrix.
@@ -6261,7 +6271,7 @@ The class treats \inlinecode{T\{\}} as additive zero and requires \inlinecode{va
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(\log d)$ per call to \inlinecode{get()}, \inlinecode{set()}, and \inlinecode{add()}, where $d$ is the number of nonzeros in the touched row or column.
-  \item $O(1)$ per call to \inlinecode{transpose()} and $O(z)$ per call to \inlinecode{multiply\_vector()}, where $z$ is the number of stored nonzero entries.
+  \item $O(1)$ per call to \inlinecode{transpose()} and $O(z)$ per matrix-vector product, where $z$ is the number of stored nonzero entries.
   \item $O((r_i + r_j) \cdot \log d)$ per call to \inlinecode{swap\_rows(i, j)}, where $r_i$ and $r_j$ are the sizes of the two rows.
   \item $O((z_a + z_b) \cdot \log d)$ per call to \inlinecode{operator+} and \inlinecode{operator-}, where $z_a$ and $z_b$ are the operand nonzero counts.
   \item $O(z \cdot \log d)$ per call to scalar \inlinecode{operator*}, where $z$ is the number of stored nonzero entries.
@@ -6275,7 +6285,7 @@ The class treats \inlinecode{T\{\}} as additive zero and requires \inlinecode{va
   \item $O(z)$ storage.
   \item $O(1)$ auxiliary for \inlinecode{get()}, \inlinecode{set()}, \inlinecode{add()}, \inlinecode{row()}, \inlinecode{col()}, and \inlinecode{transpose()}.
   \item $O(r_i + r_j)$ auxiliary for \inlinecode{swap\_rows(i, j)}.
-  \item $O(m)$ auxiliary for \inlinecode{multiply\_vector()}, where $m$ is the number of rows.
+  \item $O(m)$ for the vector returned by matrix-vector multiplication, where $m$ is the number of rows.
   \item $O(c)$ auxiliary for \inlinecode{operator*}, where $c$ is the largest number of nonzeros in one result row.
 \end{compactitem}
 
@@ -6356,7 +6366,7 @@ class SparseMatrix {
     std::swap(rvals, cvals);
   }
 
-  std::vector<T> multiply_vector(const std::vector<T> &x) const {
+  std::vector<T> operator*(const std::vector<T> &x) const {
     assert(static_cast<int>(x.size()) == cols);
     std::vector<T> res(rows);
     for (int i = 0; i < rows; i++) {
@@ -6607,7 +6617,7 @@ int main() {
   assert(a.col(2).begin()->first == 1);
 
   vector<int64_t> x{10, 20, 30, 40};
-  assert((a.multiply_vector(x) == vector<int64_t>{60, 120, 280}));
+  assert((a * x == vector<int64_t>{60, 120, 280}));
 
   a.add(0, 1, -3);  // Entries that become zero are removed from both row and column maps.
   assert(a.get(0, 1) == 0);
@@ -6963,7 +6973,7 @@ The code aliases one modular field element as \inlinecode{Coeff} and one coeffic
   \item \inlinecode{antiderivative(a)} returns the formal antiderivative of \inlinecode{a} with constant term zero.
 \end{compactitem}
 
-For formal power series, the inverse modulo $x^n$ is a series $b$ satisfying $a \cdot b \equiv 1 \pmod{x^n}$. Series division uses this inverse, and logarithm follows from $(\log a)' = a'/a$. Exponential and square root use Newton iteration, doubling the number of correct coefficients each round. Power factors $a = x^t c b$, where $b(0) = 1$, and applies $a^k = x^{tk} c^k \exp(k \log b)$. To handle a square root whose constant term is not $1$, factor \inlinecode{a[0]} out and multiply back one of its modular square roots (see 6.3.5); if the lowest nonzero coefficient sits at an odd power of $x$, no square root exists.
+For formal power series, the inverse modulo $x^n$ is a series $b$ satisfying $a \cdot b \equiv 1 \pmod{x^n}$. Series division uses this inverse, and logarithm follows from $(\log a)' = a'/a$. Exponential and square root use Newton iteration, doubling the number of correct coefficients each round. Power factors $a = x^t c b$, where $b(0) = 1$, and applies $a^k = x^{tk} c^k \exp(k \log b)$. To extend the normalized square-root implementation, factor out the lowest power of $x$, normalize its constant term, then multiply back its modular square root (see 6.3.5); an odd lowest nonzero power has no square root.
 
 \begin{compactitem}
   \item \inlinecode{inverse(a, n)} returns the first \inlinecode{n} coefficients of \inlinecode{1 / a}, requiring \inlinecode{a[0]} to be nonzero.

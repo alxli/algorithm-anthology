@@ -44,22 +44,22 @@ class RangeTree {
   };
 
   std::vector<IndexedPoint> points;
-  std::vector<std::vector<std::pair<int, T>>> columns;
+  std::vector<std::vector<std::pair<int, T>>> cols;
 
   void build(int n, int lo, int hi) {
     if (points[lo].x == points[hi].x) {
       for (int i = lo; i <= hi; i++) {
-        columns[n].emplace_back(i, points[i].y);
+        cols[n].emplace_back(i, points[i].y);
       }
       return;
     }
     int l = n * 2 + 1, r = n * 2 + 2, mid = lo + (hi - lo) / 2;
     build(l, lo, mid);
     build(r, mid + 1, hi);
-    columns[n].resize(columns[l].size() + columns[r].size());
+    cols[n].resize(cols[l].size() + cols[r].size());
     std::merge(
-        columns[l].begin(), columns[l].end(), columns[r].begin(), columns[r].end(),
-        columns[n].begin(), [](const auto &a, const auto &b) { return a.second < b.second; }
+        cols[l].begin(), cols[l].end(), cols[r].begin(), cols[r].end(), cols[n].begin(),
+        [](const auto &a, const auto &b) { return a.second < b.second; }
     );
   }
 
@@ -71,12 +71,12 @@ class RangeTree {
       return;
     }
     if (!(points[lo].x < x1 || x2 < points[hi].x)) {
-      if (!columns[n].empty() && !(y2 < y1)) {
-        auto it = std::lower_bound(
-            columns[n].begin(), columns[n].end(), y1,
-            [](const auto &a, const T &value) { return a.second < value; }
-        );
-        for (; it != columns[n].end() && it->second <= y2; ++it) {
+      if (!cols[n].empty() && !(y2 < y1)) {
+        auto it =
+            std::lower_bound(cols[n].begin(), cols[n].end(), y1, [](const auto &a, const T &value) {
+              return a.second < value;
+            });
+        for (; it != cols[n].end() && it->second <= y2; ++it) {
           const IndexedPoint &p = points[it->first];
           res.emplace_back(p.original_index, p.x, p.y);
         }
@@ -98,7 +98,7 @@ class RangeTree {
     for (It it = lo; it != hi; ++it) {
       points.push_back({it->first, it->second, index++});
     }
-    columns.resize(4 * n + 1);
+    cols.resize(4 * n + 1);
     std::sort(points.begin(), points.end(), [](const IndexedPoint &a, const IndexedPoint &b) {
       return a.x != b.x ? a.x < b.x : a.y < b.y;
     });

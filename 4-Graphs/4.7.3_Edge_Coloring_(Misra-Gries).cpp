@@ -33,53 +33,39 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-class EdgeColoring {
-  int n;
-  std::vector<std::vector<int>> color;  // color[u][v] is the color of edge (u, v), or 0 if none.
-
-  bool is_free(int x, int c) const {
+std::vector<int> edge_coloring(int n, const std::vector<std::pair<int, int>> &edges) {
+  std::vector<std::vector<int>> color(n, std::vector<int>(n));
+  auto is_free = [&](int x, int c) {
     for (int w = 0; w < n; w++) {
       if (color[x][w] == c) {
         return false;
       }
     }
     return true;
-  }
-
-  int free_color(int x) const {
+  };
+  auto free_color = [&](int x) {
     int c = 1;
     while (!is_free(x, c)) {
       c++;
     }
     return c;
-  }
-
-  void set_color(int u, int v, int c) {
+  };
+  auto set_color = [&](int u, int v, int c) {
     color[u][v] = c;
     color[v][u] = c;
-  }
-
+  };
   // Flip colors c and d along the maximal alternating path of those colors starting at x.
-  void invert_path(int x, int d, int c) {
+  auto flip_path = [&](auto &&self, int x, int d, int c) -> void {
     for (int w = 0; w < n; w++) {
       if (color[x][w] == d) {
         set_color(x, w, 0);
-        invert_path(w, c, d);
+        self(self, w, c, d);
         set_color(x, w, c);
         return;
       }
     }
-  }
-
- public:
-  EdgeColoring(int n, const std::vector<std::pair<int, int>> &edges)
-      : n(n), color(n, std::vector<int>(n)) {
-    for (const auto &e : edges) {
-      add_edge(e.first, e.second);
-    }
-  }
-
-  void add_edge(int u, int v) {
+  };
+  for (auto [u, v] : edges) {
     // Build a maximal fan of u starting at v: fan[0] = v, and color(u, fan[i+1]) is free at fan[i].
     std::vector<int> fan{v};
     std::vector<char> used(n);
@@ -99,7 +85,7 @@ class EdgeColoring {
       used[next] = true;
     }
     int c = free_color(u), d = free_color(fan.back());
-    invert_path(u, d, c);
+    flip_path(flip_path, u, d, c);
     // Find the prefix of the fan to rotate: the first node on which d is now free.
     int k = 0;
     while (k < static_cast<int>(fan.size()) && color[u][fan[k]] != d && !is_free(fan[k], d)) {
@@ -110,19 +96,12 @@ class EdgeColoring {
     }
     set_color(u, fan[k], d);
   }
-
-  std::vector<int> coloring(const std::vector<std::pair<int, int>> &edges) const {
-    std::vector<int> result;
-    result.reserve(edges.size());
-    for (const auto &e : edges) {
-      result.push_back(color[e.first][e.second] - 1);  // Shift internal 1..D+1 colors to 0..D.
-    }
-    return result;
+  std::vector<int> res;
+  res.reserve(edges.size());
+  for (auto [u, v] : edges) {
+    res.push_back(color[u][v] - 1);  // Shift internal 1..D+1 colors to 0..D.
   }
-};
-
-std::vector<int> edge_coloring(int n, const std::vector<std::pair<int, int>> &edges) {
-  return EdgeColoring(n, edges).coloring(edges);
+  return res;
 }
 
 /*** Example Usage ***/

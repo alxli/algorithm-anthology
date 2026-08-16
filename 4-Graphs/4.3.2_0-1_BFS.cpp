@@ -48,11 +48,10 @@ void bfs01(const std::vector<int> &starts) {
   pred.assign(n, -1);
   std::deque<int> dq;
   for (int start : starts) {
-    if (dist[start] == 0) {
-      continue;
+    if (dist[start] > 0) {
+      dist[start] = 0;
+      dq.push_back(start);
     }
-    dist[start] = 0;
-    dq.push_back(start);
   }
   while (!dq.empty()) {
     int u = dq.front();

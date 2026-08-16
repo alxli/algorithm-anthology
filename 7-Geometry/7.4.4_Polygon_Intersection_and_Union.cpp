@@ -7,25 +7,22 @@ vertical slab between consecutive boundaries the two borders cannot cross, and t
 accumulated exactly from trapezoid areas. The union then follows by inclusion-exclusion as the sum
 of the individual areas minus the intersection.
 
-- `intersection_area(lo1, hi1, lo2, hi2)` returns the intersection area of two polygons respectively
-  specified by two ranges $[`lo1`, `hi1`)$ and $[`lo2`, `hi2`)$ of vertices in boundary order, where
-  `lo1`, `hi1`, `lo2`, and `hi2` must be random-access iterators.
-- `union_area(lo1, hi1, lo2, hi2)` returns the union area of two polygons respectively specified by
-  two ranges $[`lo1`, `hi1`)$ and $[`lo2`, `hi2`)$ of vertices in boundary order, where `lo1`,
-  `hi1`, `lo2`, and `hi2` must be random-access iterators.
+- `intersection_area(a, b)` returns the intersection area of polygons `a` and `b`, whose vertices
+  are listed in boundary order.
+- `union_area(a, b)` returns the union area of polygons `a` and `b`.
 
 Overflow warning: the segment-intersection tests form cross products in the input point's coordinate
 type, which grow like the squared coordinate magnitude. For integral point types, use 64-bit
 coordinates (e.g. `PointL` from 7.1.1) if necessary.
 
 Time Complexity:
-- O(n*m*(n + m)*log(n + m)) per call to `intersection_area(lo1, hi1, lo2, hi2)` and
-  `union_area(lo1, hi1, lo2, hi2)`, where $n$ is the number of vertices in the first polygon and $m$
-  is the number of vertices in the second polygon (or O(N^3 log N) for $N = n + m$).
+- O(n*m*(n + m)*log(n + m)) per call to `intersection_area()` and `union_area()`, where $n$ is the
+  number of vertices in the first polygon and $m$ is the number of vertices in the second polygon
+  (or O(N^3 log N) for $N = n + m$).
 
 Space Complexity:
-- O(n*m) auxiliary for `intersection_area(lo1, hi1, lo2, hi2)` and `union_area(lo1, hi1, lo2, hi2)`,
-  where $n$ and $m$ are the respective polygon sizes.
+- O(n*m) auxiliary for `intersection_area()` and `union_area()`, where $n$ and $m$ are the
+  respective polygon sizes.
 
 */
 
@@ -140,34 +137,37 @@ int line_intersection1(
   return 0;
 }
 
-template<typename It>
-double intersection_area(It lo1, It hi1, It lo2, It hi2) {
-  if (lo1 == hi1 || lo2 == hi2) {
+template<typename Pt>
+double intersection_area(const std::vector<Pt> &a, const std::vector<Pt> &b) {
+  if (a.empty() || b.empty()) {
     return 0;
   }
   struct SweepPoint {
     double x, y;
   };  // For line intersection with the sweep line.
-  std::vector<It> poly_lo{lo1, lo2}, poly_hi{hi1, hi2};
+  const std::vector<Pt> *polys[2] = {&a, &b};
   int orientation[2];
-  for (int poly = 0; poly < 2; poly++) {
+  for (int id = 0; id < 2; id++) {
+    const auto &p = *polys[id];
+    int n = static_cast<int>(p.size());
     double area = 0;
-    for (It i = poly_lo[poly], j = poly_hi[poly] - 1; i != poly_hi[poly]; j = i++) {
-      area += (static_cast<double>(j->x) - i->x) * (static_cast<double>(j->y) + i->y);
+    for (int i = 0, j = n - 1; i < n; j = i++) {
+      area += (static_cast<double>(p[j].x) - p[i].x) * (static_cast<double>(p[j].y) + p[i].y);
     }
-    orientation[poly] = (area < 0 ? 1 : (area > 0 ? -1 : 0));
+    orientation[id] = (area < 0 ? 1 : (area > 0 ? -1 : 0));
   }
   std::vector<double> x_coords;
-  for (It it = lo1; it != hi1; ++it) {
-    x_coords.push_back(it->x);
+  for (const Pt &p : a) {
+    x_coords.push_back(p.x);
   }
-  for (It it = lo2; it != hi2; ++it) {
-    x_coords.push_back(it->x);
+  for (const Pt &p : b) {
+    x_coords.push_back(p.x);
   }
-  for (It i1 = lo1, j1 = hi1 - 1; i1 != hi1; j1 = i1++) {
-    for (It i2 = lo2, j2 = hi2 - 1; i2 != hi2; j2 = i2++) {
+  int n = static_cast<int>(a.size()), m = static_cast<int>(b.size());
+  for (int i1 = 0, j1 = n - 1; i1 < n; j1 = i1++) {
+    for (int i2 = 0, j2 = m - 1; i2 < m; j2 = i2++) {
       double outx, outy;
-      if (seg_intersection1(*i1, *j1, *i2, *j2, &outx, &outy) == 0) {
+      if (seg_intersection1(a[i1], a[j1], b[i2], b[j2], &outx, &outy) == 0) {
         x_coords.push_back(outx);
       }
     }
@@ -182,16 +182,17 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
     double x = (x_coords[k] + x_coords[k + 1]) / 2;
     SweepPoint sweep0{x, 0}, sweep1{x, 1};
     std::vector<std::pair<double, int>> events;  // (y, mask delta)
-    for (int poly = 0; poly < 2; poly++) {
-      It lo = poly_lo[poly], hi = poly_hi[poly];
-      for (It j = lo, i = hi - 1; j != hi; i = j++) {
+    for (int id = 0; id < 2; id++) {
+      const auto &p = *polys[id];
+      int size = static_cast<int>(p.size());
+      for (int j = 0, i = size - 1; j < size; i = j++) {
         double px, py;
-        if (line_intersection1(*j, *i, sweep0, sweep1, &px, &py) == 0) {
-          double y = py, x0 = i->x, x1 = j->x;
+        if (line_intersection1(p[j], p[i], sweep0, sweep1, &px, &py) == 0) {
+          double y = py, x0 = p[i].x, x1 = p[j].x;
           if (x0 < x && x1 > x) {
-            events.emplace_back(y, orientation[poly] * (1 << poly));
+            events.emplace_back(y, orientation[id] * (1 << id));
           } else if (x0 > x && x1 < x) {
-            events.emplace_back(y, -orientation[poly] * (1 << poly));
+            events.emplace_back(y, -orientation[id] * (1 << id));
           }
         }
       }
@@ -213,21 +214,22 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   return res;
 }
 
-template<typename It>
-double polygon_area(It lo, It hi) {
-  if (lo == hi) {
+template<typename Pt>
+double polygon_area(const std::vector<Pt> &p) {
+  if (p.empty()) {
     return 0;
   }
+  int n = static_cast<int>(p.size());
   double area = 0;
-  for (It i = lo, j = hi - 1; i != hi; j = i++) {
-    area += (static_cast<double>(j->x) - i->x) * (static_cast<double>(j->y) + i->y);
+  for (int i = 0, j = n - 1; i < n; j = i++) {
+    area += (static_cast<double>(p[j].x) - p[i].x) * (static_cast<double>(p[j].y) + p[i].y);
   }
   return fabs(area / 2.0);
 }
 
-template<typename It>
-double union_area(It lo1, It hi1, It lo2, It hi2) {
-  return polygon_area(lo1, hi1) + polygon_area(lo2, hi2) - intersection_area(lo1, hi1, lo2, hi2);
+template<typename Pt>
+double union_area(const std::vector<Pt> &a, const std::vector<Pt> &b) {
+  return polygon_area(a) + polygon_area(b) - intersection_area(a, b);
 }
 
 /*** Example Usage ***/
@@ -264,13 +266,13 @@ int main() {
   s.emplace_back(0, 3);
   s.emplace_back(-3, 3);
   s.emplace_back(-3, 0);
-  assert(EQ(1.5, intersection_area(p.begin(), p.end(), s.begin(), s.end())));
-  assert(EQ(12.5, union_area(p.begin(), p.end(), s.begin(), s.end())));
+  assert(EQ(1.5, intersection_area(p, s)));
+  assert(EQ(12.5, union_area(p, s)));
 
   // Integer-coordinate polygons are accepted (computation proceeds in double).
   vector<PointI> ip{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
   vector<PointI> is{{0, 0}, {0, 3}, {-3, 3}, {-3, 0}};
-  assert(EQ(1.5, intersection_area(ip.begin(), ip.end(), is.begin(), is.end())));
-  assert(EQ(12.5, union_area(ip.begin(), ip.end(), is.begin(), is.end())));
+  assert(EQ(1.5, intersection_area(ip, is)));
+  assert(EQ(12.5, union_area(ip, is)));
   return 0;
 }

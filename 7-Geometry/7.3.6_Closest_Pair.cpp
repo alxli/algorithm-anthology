@@ -5,21 +5,20 @@ algorithm. The points are split in half by $x$-coordinate and each half is solve
 combining step then only needs to examine points within the best distance so far of the dividing
 line, where each point in this strip is compared to a constant number of $y$-ordered neighbors.
 
-- `closest_pair(lo, hi, &res)` returns the minimum squared distance between any two points in the
-  range $[`lo`, `hi`)$ without modifying it, where `lo` and `hi` must be random-access iterators. If
+- `closest_pair(p, &res)` returns the minimum squared distance between any two points in `p`. If
   `res` is non-null, one closest pair is stored there in lexicographic order. With fewer than two
   points, the maximum value of the squared-distance type is returned and `res` is unchanged. The
-  function is templated on the point type and works with any type exposing numeric `.x` and `.y`
-  members and a lexicographic `operator<`. The distance preserves the coordinate arithmetic type,
-  and the returned pair preserves the point type. For integer coordinates, the distance is exact
-  provided intermediate products do not overflow.
+  point type may be any type exposing numeric `.x` and `.y` members and a lexicographic `operator<`.
+  The distance preserves the coordinate arithmetic type, and the returned pair preserves the point
+  type. For integer coordinates, the distance is exact provided intermediate products do not
+  overflow.
 
 Overflow warning: squared distances grow like the square of the coordinate magnitude. For integer
 point types, use a 64-bit coordinate type (e.g. `PointL` from 7.1.1) when coordinates may exceed a
 few tens of thousands.
 
 Time Complexity:
-- O(n log n) per call, where $n$ is the distance between `lo` and `hi`.
+- O(n log n) per call, where $n$ is the number of points.
 
 Space Complexity:
 - O(n) auxiliary heap space.
@@ -92,11 +91,10 @@ void closest_pair_rec(It lo, It hi, std::vector<Pt> &tmp, T &best, std::pair<Pt,
   tmp.clear();
 }
 
-template<typename It, typename Pt = typename std::iterator_traits<It>::value_type>
-auto closest_pair(It lo, It hi, std::pair<Pt, Pt> *res = nullptr) {
-  using T = decltype(sqdist(*lo, *lo));
+template<typename Pt>
+auto closest_pair(std::vector<Pt> p, std::pair<Pt, Pt> *res = nullptr) {
+  using T = decltype(sqdist(p[0], p[0]));
   T best = std::numeric_limits<T>::max();
-  std::vector<Pt> p(lo, hi);
   std::sort(p.begin(), p.end(), [](const Pt &a, const Pt &b) {
     return a.x != b.x ? a.x < b.x : a.y < b.y;
   });
@@ -133,14 +131,14 @@ struct PointI {
 int main() {
   vector<Point> v{{2, 3}, {12, 30}, {40, 50}, {5, 1}, {12, 10}, {3, 4}};
   pair<Point, Point> res;
-  assert(EQ(closest_pair(v.begin(), v.end(), &res), 2));
+  assert(EQ(closest_pair(v, &res), 2));
   auto [p1, p2] = res;
   assert(p1 == Point(2, 3) && p2 == Point(3, 4));
 
   // Integer-coordinate input: exact pair selection, int squared distance returned.
   vector<PointI> iv{{0, 0}, {10, 10}, {3, 4}};
   pair<PointI, PointI> ires;
-  assert(closest_pair(iv.begin(), iv.end(), &ires) == 25);
+  assert(closest_pair(iv, &ires) == 25);
   auto [i1, i2] = ires;
   assert(i1 == PointI(0, 0) && i2 == PointI(3, 4));
   return 0;

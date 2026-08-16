@@ -9,13 +9,14 @@ constructible from $0$ and $1$ and support the arithmetic operators used by the 
 - `identity_matrix<T>(n)` returns the `n` by `n` identity matrix, that is, a matrix where each
   `a[i][j]` equals $1$ if `i` = `j`, or $0$ otherwise.
 - `rows(a)` returns the number of rows in matrix `a`.
-- `columns(a)` returns the number of columns in matrix `a`.
+- `cols(a)` returns the number of columns in matrix `a`.
 - `a[i][j]` may be used to access or modify the specified entry of `a`.
 - Operators `<`, `>`, `<=`, `>=`, `==`, and `!=` define lexicographical comparison based on that of
   `std::vector`.
 - Operators `+`, `-`, `*`, `/`, `+=`, `-=`, `*=`, and `/=` define scalar addition, subtraction,
   multiplication, and division involving a matrix and a numeric scalar value.
-- Operators `*` and `*=` define vector and matrix multiplication.
+- `a * v` returns the matrix-vector product as a vector.
+- Operators `*` and `*=` define matrix multiplication.
 
 Exponentiation uses iterative binary exponentiation: keep an accumulated result, square the base
 each round, and multiply it when the current exponent bit is set. The power sum uses the block
@@ -30,17 +31,18 @@ upper-right block.
 Time Complexity:
 - O(m*n) per construction, output, comparison, or scalar-arithmetic operation on $m$ by $n$
   matrices.
-- O(1) per call to `rows()` and `columns()`.
+- O(1) per call to `rows()` and `cols()`.
 - O(m*n) per matrix-matrix addition or subtraction of $m$ by $n$ matrices.
 - O(n^3 log p) per exponentiation of an $n$ by $n$ matrix to power $p$.
 - O(n^3 log p) per call to `power_sum()` for an $n$ by $n$ matrix and power $p$.
+- O(m*n) per multiplication of an $m$ by $n$ matrix by a vector of length $n$.
 - O(m*n*k) per multiplication of an $m$ by $n$ matrix by an $n$ by $k$ matrix.
 
 Space Complexity:
-- O(1) auxiliary for `rows()`, `columns()`, `a[i][j]` access, comparison and scalar compound
-  operators.
+- O(1) auxiliary for `rows()`, `cols()`, `a[i][j]` access, comparison and scalar compound operators.
 - O(n^2) auxiliary for exponentiation of an $n$ by $n$ matrix to power $p$.
 - O(n^2) auxiliary for `power_sum()` of an $n$ by $n$ matrix up to power $p$.
+- O(m) for the vector returned by matrix-vector multiplication.
 - O(m*n) auxiliary for all non-in-place operations returning an $m$ by $n$ matrix.
 
 */
@@ -74,7 +76,7 @@ int rows(const Matrix<T> &a) {
 }
 
 template<typename T>
-int columns(const Matrix<T> &a) {
+int cols(const Matrix<T> &a) {
   return a.empty() ? 0 : static_cast<int>(a[0].size());
 }
 
@@ -84,7 +86,7 @@ std::ostream &operator<<(std::ostream &out, const Matrix<T> &a) {
   auto precision = out.precision();
   out << std::fixed << std::setprecision(5);
   for (int i = 0; i < rows(a); i++) {
-    for (int j = 0; j < columns(a); j++) {
+    for (int j = 0; j < cols(a); j++) {
       out << std::setw(10) << a[i][j];
     }
     out << std::endl;
@@ -97,7 +99,7 @@ std::ostream &operator<<(std::ostream &out, const Matrix<T> &a) {
 template<typename T, typename U>
 Matrix<T> &operator+=(Matrix<T> &a, const U &v) {
   for (int i = 0; i < rows(a); i++) {
-    for (int j = 0; j < columns(a); j++) {
+    for (int j = 0; j < cols(a); j++) {
       a[i][j] += v;
     }
   }
@@ -107,7 +109,7 @@ Matrix<T> &operator+=(Matrix<T> &a, const U &v) {
 template<typename T, typename U>
 Matrix<T> &operator-=(Matrix<T> &a, const U &v) {
   for (int i = 0; i < rows(a); i++) {
-    for (int j = 0; j < columns(a); j++) {
+    for (int j = 0; j < cols(a); j++) {
       a[i][j] -= v;
     }
   }
@@ -117,7 +119,7 @@ Matrix<T> &operator-=(Matrix<T> &a, const U &v) {
 template<typename T, typename U>
 Matrix<T> &operator*=(Matrix<T> &a, const U &v) {
   for (int i = 0; i < rows(a); i++) {
-    for (int j = 0; j < columns(a); j++) {
+    for (int j = 0; j < cols(a); j++) {
       a[i][j] *= v;
     }
   }
@@ -127,7 +129,7 @@ Matrix<T> &operator*=(Matrix<T> &a, const U &v) {
 template<typename T, typename U>
 Matrix<T> &operator/=(Matrix<T> &a, const U &v) {
   for (int i = 0; i < rows(a); i++) {
-    for (int j = 0; j < columns(a); j++) {
+    for (int j = 0; j < cols(a); j++) {
       a[i][j] /= v;
     }
   }
@@ -136,9 +138,9 @@ Matrix<T> &operator/=(Matrix<T> &a, const U &v) {
 
 template<typename T>
 Matrix<T> &operator+=(Matrix<T> &a, const Matrix<T> &b) {
-  assert(rows(a) == rows(b) && columns(a) == columns(b));
+  assert(rows(a) == rows(b) && cols(a) == cols(b));
   for (int i = 0; i < rows(a); i++) {
-    for (int j = 0; j < columns(a); j++) {
+    for (int j = 0; j < cols(a); j++) {
       a[i][j] += b[i][j];
     }
   }
@@ -147,9 +149,9 @@ Matrix<T> &operator+=(Matrix<T> &a, const Matrix<T> &b) {
 
 template<typename T>
 Matrix<T> &operator-=(Matrix<T> &a, const Matrix<T> &b) {
-  assert(rows(a) == rows(b) && columns(a) == columns(b));
+  assert(rows(a) == rows(b) && cols(a) == cols(b));
   for (int i = 0; i < rows(a); i++) {
-    for (int j = 0; j < columns(a); j++) {
+    for (int j = 0; j < cols(a); j++) {
       a[i][j] -= b[i][j];
     }
   }
@@ -169,29 +171,27 @@ Matrix<T> operator-(const Matrix<T> &a, const Matrix<T> &b) {
 }
 
 template<typename T>
-Matrix<T> &operator*=(Matrix<T> &a, const std::vector<T> &v) {
-  assert(columns(a) == static_cast<int>(v.size()) && !v.empty());
-  int cols = columns(a);
+std::vector<T> operator*(const Matrix<T> &a, const std::vector<T> &v) {
+  assert(cols(a) == static_cast<int>(v.size()));
+  std::vector<T> res(rows(a));
   for (int i = 0; i < rows(a); i++) {
-    T sum = 0;
-    for (int j = 0; j < cols; j++) {
-      sum += a[i][j] * v[j];
+    for (int j = 0; j < cols(a); j++) {
+      res[i] += a[i][j] * v[j];
     }
-    a[i].assign(1, sum);
   }
-  return a;
+  return res;
 }
 
 template<typename T>
 Matrix<T> operator*(const Matrix<T> &a, const Matrix<T> &b) {
-  assert(columns(a) == rows(b));
-  Matrix<T> res = make_matrix<T>(rows(a), columns(b));
+  assert(cols(a) == rows(b));
+  Matrix<T> res = make_matrix<T>(rows(a), cols(b));
   // The k loop sits outside j so the inner loop walks res[i] and b[k] contiguously instead of
   // striding down a column of b. Each res[i][j] still accumulates in increasing k, so results are
   // unchanged, including for floating-point types.
   for (int i = 0; i < rows(a); i++) {
     for (int k = 0; k < rows(b); k++) {
-      for (int j = 0; j < columns(b); j++) {
+      for (int j = 0; j < cols(b); j++) {
         res[i][j] += a[i][k] * b[k][j];
       }
     }
@@ -224,13 +224,13 @@ Matrix<T> operator*(const U &v, const Matrix<T> &a) { return a * v; }
 
 template<typename T, typename U>
 Matrix<T> operator-(const U &v, const Matrix<T> &a) {
-  Matrix<T> m = make_matrix<T>(rows(a), columns(a), v);
+  Matrix<T> m = make_matrix<T>(rows(a), cols(a), v);
   return m -= a;
 }
 
 template<typename T>
 Matrix<T> operator^(Matrix<T> a, uint64_t p) {
-  assert(rows(a) == columns(a));
+  assert(rows(a) == cols(a));
   Matrix<T> res = identity_matrix<T>(rows(a));
   while (p > 0) {
     if (p & 1) {
@@ -251,7 +251,7 @@ Matrix<T> &operator^=(Matrix<T> &a, uint64_t p) {
 
 template<typename T>
 Matrix<T> power_sum(const Matrix<T> &a, uint64_t p) {
-  assert(rows(a) == columns(a));
+  assert(rows(a) == cols(a));
   int n = rows(a);
   if (p == 0) {
     return make_matrix<T>(n, n);
@@ -283,8 +283,7 @@ int main() {
   using matrix = Matrix<int>;
   matrix m = make_matrix(5, 5, 10) + 10;
   vector<int> v{1, 2, 3, 4, 5};
-  matrix mv{{300}, {300}, {300}, {300}, {300}};
-  assert(m * v == mv);
+  assert((m * v == vector<int>{300, 300, 300, 300, 300}));
 
   m[0][0] += 5;
   assert(m[0][0] == 25 && m[1][1] == 20);
@@ -293,7 +292,7 @@ int main() {
   assert(power_sum(m, 3) == m + m * m + (m ^ 3));
 
   Matrix<double> d = make_matrix<double>(2, 2, 0.5);
-  assert(rows(d) == 2 && columns(d) == 2);
+  assert(rows(d) == 2 && cols(d) == 2);
   assert((d + 0.25)[0][0] == 0.75);
   return 0;
 }

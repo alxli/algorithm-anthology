@@ -4,16 +4,16 @@ Common axis-aligned rectangle calculations in two dimensions. The functions are 
 point type `Pt`, which should accept `Point`, `PointD`, or `PointI` from 7.1.1, or any struct with
 numeric `.x` and `.y` fields.
 
-- `point_in_rectangle(p, v, w, h, include_boundary = true)` returns whether `p` is inside the
+- `point_in_rect(p, v, w, h, include_boundary = true)` returns whether `p` is inside the
   axis-aligned rectangle whose opposite corners are `v` and (`v.x + w`, `v.y + h`). Negative widths
   and heights are supported. The `include_boundary` flag controls whether boundary points count.
-- `point_in_rectangle(p, a, b, include_boundary = true)` returns whether `p` is inside the
-  axis-aligned rectangle with opposite corners `a` and `b`.
-- `rectangle_intersection(a1, b1, a2, b2, &p, &q, include_boundary = true)` finds the intersection
-  of two axis-aligned rectangles, where `a1`/`b1` and `a2`/`b2` are opposite-corner pairs. Returns
-  $-1$ if the rectangles are disjoint, $0$ if they partially intersect, $1$ if the first rectangle
-  is completely inside the second, and $2$ if the second rectangle is completely inside the first.
-  If an intersection exists, its lower-left and upper-right corners are stored in `p` and `q` when
+- `point_in_rect(p, a, b, include_boundary = true)` returns whether `p` is inside the axis-aligned
+  rectangle with opposite corners `a` and `b`.
+- `rect_intersection(a1, b1, a2, b2, &p, &q, include_boundary = true)` finds the intersection of two
+  axis-aligned rectangles, where `a1`/`b1` and `a2`/`b2` are opposite-corner pairs. Returns $-1$ if
+  the rectangles are disjoint, $0$ if they partially intersect, $1$ if the first rectangle is
+  completely inside the second, and $2$ if the second rectangle is completely inside the first. If
+  an intersection exists, its lower-left and upper-right corners are stored in `p` and `q` when
   those pointers are non-null. The `include_boundary` flag controls whether boundary-only contact
   counts as intersecting.
 
@@ -53,28 +53,26 @@ template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
 // clang-format on
 
 template<typename Pt, typename T>
-bool point_in_rectangle(
-    const Pt &p, const Pt &v, const T &w, const T &h, bool include_boundary = true
-) {
+bool point_in_rect(const Pt &p, const Pt &v, const T &w, const T &h, bool include_boundary = true) {
   if (w < 0) {
-    return point_in_rectangle(p, Pt(v.x + w, v.y), -w, h, include_boundary);
+    return point_in_rect(p, Pt(v.x + w, v.y), -w, h, include_boundary);
   }
   if (h < 0) {
-    return point_in_rectangle(p, Pt(v.x, v.y + h), w, -h, include_boundary);
+    return point_in_rect(p, Pt(v.x, v.y + h), w, -h, include_boundary);
   }
   return include_boundary ? (GE(p.x, v.x) && LE(p.x, v.x + w) && GE(p.y, v.y) && LE(p.y, v.y + h))
                           : (GT(p.x, v.x) && LT(p.x, v.x + w) && GT(p.y, v.y) && LT(p.y, v.y + h));
 }
 
 template<typename Pt>
-bool point_in_rectangle(const Pt &p, const Pt &a, const Pt &b, bool include_boundary = true) {
+bool point_in_rect(const Pt &p, const Pt &a, const Pt &b, bool include_boundary = true) {
   auto xl = std::min(a.x, b.x), yl = std::min(a.y, b.y);
   auto xh = std::max(a.x, b.x), yh = std::max(a.y, b.y);
-  return point_in_rectangle(p, Pt(xl, yl), xh - xl, yh - yl, include_boundary);
+  return point_in_rect(p, Pt(xl, yl), xh - xl, yh - yl, include_boundary);
 }
 
 template<typename Pt>
-int rectangle_intersection(
+int rect_intersection(
     const Pt &a1, const Pt &b1, const Pt &a2, const Pt &b2, Pt *p = nullptr, Pt *q = nullptr,
     const bool include_boundary = true
 ) {
@@ -87,9 +85,7 @@ int rectangle_intersection(
   // The intersection is the overlap of the two coordinate intervals.
   auto ixl = std::max(xl1, xl2), ixh = std::min(xh1, xh2);
   auto iyl = std::max(yl1, yl2), iyh = std::min(yh1, yh2);
-  bool disjoint =
-      include_boundary ? (GT(ixl, ixh) || GT(iyl, iyh)) : (GE(ixl, ixh) || GE(iyl, iyh));
-  if (disjoint) {
+  if (include_boundary ? (GT(ixl, ixh) || GT(iyl, iyh)) : (GE(ixl, ixh) || GE(iyl, iyh))) {
     return -1;  // Completely disjoint.
   }
   // Opposing corners of the overlap: bottom-left in p, top-right in q.
@@ -120,26 +116,25 @@ struct Point {
 };
 
 int main() {
-  assert(point_in_rectangle(Point(0, -1), Point(0, -3), 3, 2));
-  assert(!point_in_rectangle(Point(0, -1), Point(0, -3), 3, 2, false));
-  assert(point_in_rectangle(Point(2, -2), Point(3, -3), -3, 2));
-  assert(!point_in_rectangle(Point(0, 0), Point(3, -1), -3, -2));
-  assert(point_in_rectangle(Point(2, -2), Point(3, -3), Point(0, -1)));
-  assert(!point_in_rectangle(Point(0, -1), Point(3, -3), Point(0, -1), false));
-  assert(!point_in_rectangle(Point(-1, -2), Point(3, -3), Point(0, -1)));
+  assert(point_in_rect(Point(0, -1), Point(0, -3), 3, 2));
+  assert(!point_in_rect(Point(0, -1), Point(0, -3), 3, 2, false));
+  assert(point_in_rect(Point(2, -2), Point(3, -3), -3, 2));
+  assert(!point_in_rect(Point(0, 0), Point(3, -1), -3, -2));
+  assert(point_in_rect(Point(2, -2), Point(3, -3), Point(0, -1)));
+  assert(!point_in_rect(Point(0, -1), Point(3, -3), Point(0, -1), false));
+  assert(!point_in_rect(Point(-1, -2), Point(3, -3), Point(0, -1)));
 
   Point p, q;
   // Output coordinates come directly from input coordinates via min/max, so exact equality is safe.
-  assert(-1 == rectangle_intersection(Point(0, 0), Point(1, 1), Point(2, 2), Point(3, 3)));
-  assert(0 == rectangle_intersection(Point(1, 1), Point(7, 7), Point(5, 5), Point(0, 0), &p, &q));
+  assert(-1 == rect_intersection(Point(0, 0), Point(1, 1), Point(2, 2), Point(3, 3)));
+  assert(0 == rect_intersection(Point(1, 1), Point(7, 7), Point(5, 5), Point(0, 0), &p, &q));
   assert(p == Point(1, 1) && q == Point(5, 5));
-  assert(1 == rectangle_intersection(Point(1, 1), Point(0, 0), Point(0, 0), Point(1, 10), &p, &q));
+  assert(1 == rect_intersection(Point(1, 1), Point(0, 0), Point(0, 0), Point(1, 10), &p, &q));
   assert(p == Point(0, 0) && q == Point(1, 1));
-  assert(2 == rectangle_intersection(Point(0, 5), Point(5, 7), Point(1, 6), Point(2, 5), &p, &q));
+  assert(2 == rect_intersection(Point(0, 5), Point(5, 7), Point(1, 6), Point(2, 5), &p, &q));
   assert(p == Point(1, 5) && q == Point(2, 6));
   assert(
-      -1 ==
-      rectangle_intersection(Point(0, 0), Point(1, 1), Point(1, 1), Point(2, 2), &p, &q, false)
+      -1 == rect_intersection(Point(0, 0), Point(1, 1), Point(1, 1), Point(2, 2), &p, &q, false)
   );
   return 0;
 }

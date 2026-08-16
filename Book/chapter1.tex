@@ -1827,13 +1827,13 @@ Maximal sum submatrix:
 -1 8
 \end{exampleoutput}
 \subsection{Longest Increasing Subsequence}
-Given a range of elements, determine a longest subsequence where all elements are in strictly increasing order. The subsequence is not necessarily contiguous or unique, so only one such answer will be found. The answer is computed by scanning left to right while maintaining, for each length, the smallest possible tail value of an increasing subsequence of that length. Each element extends or improves one of these tails, located in $O(\log n)$ by binary search; predecessor links then reconstruct the subsequence. The comparator \inlinecode{comp} defines the ordering and defaults to \inlinecode{std::less\textless{}\textgreater{}}. This implementation requires random-access iterators.
+Given an array of elements, determine a longest subsequence where all elements are in strictly increasing order. The subsequence is not necessarily contiguous or unique, so only one such answer will be found. The answer is computed by scanning left to right while maintaining, for each length, the smallest possible tail value of an increasing subsequence of that length. Each element extends or improves one of these tails, located in $O(\log n)$ by binary search; predecessor links then reconstruct the subsequence. The comparator \inlinecode{comp} defines the ordering and defaults to \inlinecode{std::less\textless{}\textgreater{}}.
 
 \begin{compactitem}
-  \item \inlinecode{longest\_increasing\_subsequence(lo, hi, comp = std::less\textless{}\textgreater{}())} returns the indices relative to \inlinecode{lo} of one longest strictly increasing subsequence of $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ according to \inlinecode{comp}, in order.
+  \item \inlinecode{longest\_increasing\_subsequence(a, comp = std::less\textless{}\textgreater{}())} returns the indices of one longest strictly increasing subsequence of \inlinecode{a} according to \inlinecode{comp}, in order.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the size of \inlinecode{a}.
 
 \textbf{Space Complexity}: $O(n)$ auxiliary and $O(n)$ for the returned indices.
 
@@ -1842,23 +1842,22 @@ Given a range of elements, determine a longest subsequence where all elements ar
 #include <functional>
 #include <vector>
 
-template<typename It, typename Compare = std::less<>>
-std::vector<int> longest_increasing_subsequence(It lo, It hi, Compare comp = Compare{}) {
-  int n = static_cast<int>(hi - lo);
+template<typename T, typename Compare = std::less<>>
+std::vector<int> longest_increasing_subsequence(const std::vector<T> &a, Compare comp = Compare{}) {
+  int n = static_cast<int>(a.size());
   if (n == 0) {
     return {};
   }
   int len = 0;
   // prev[i] = index of the predecessor of element i in its LIS (or -1 for the first LIS element).
-  // tail[i] = index (into [lo, hi)) of the last element of the best known LIS of length i + 1.
+  // tail[i] = index of the last element of the best known LIS of length i + 1.
   std::vector<int> prev(n), tail(n);
   for (int i = 0; i < n; i++) {
     // Find the tail to extend or improve. Comparing by value through the stored indices keeps tail
-    // index-based for reconstruction; use an upper-bound search to allow a non-decreasing result.
+    // index-based for reconstruction. Switch to an upper-bound search for a non-decreasing result.
     int pos = static_cast<int>(
         std::lower_bound(
-            tail.begin(), tail.begin() + len, i,
-            [&](int t, int x) { return comp(*(lo + t), *(lo + x)); }
+            tail.begin(), tail.begin() + len, i, [&](int t, int x) { return comp(a[t], a[x]); }
         ) -
         tail.begin()
     );
@@ -1884,12 +1883,10 @@ using namespace std;
 
 int main() {
   vector<int> a{-2, -5, 1, 9, 10, 8, 11, 10, 13, 11};
-  assert((longest_increasing_subsequence(a.begin(), a.end()) == vector<int>{1, 2, 3, 4, 6, 8}));
+  assert((longest_increasing_subsequence(a) == vector<int>{1, 2, 3, 4, 6, 8}));
 
   vector<int> b{1, 4, 3, 2};
-  assert(
-      (longest_increasing_subsequence(b.begin(), b.end(), greater<int>()) == vector<int>{1, 2, 3})
-  );
+  assert((longest_increasing_subsequence(b, greater<int>()) == vector<int>{1, 2, 3}));
   return 0;
 }
 \end{lstlisting}
@@ -3945,7 +3942,7 @@ The assignment problem matches workers one-to-one with jobs while minimizing the
 
 Overflow warning: The accumulated cost must fit in \inlinecode{int64\_t}.
 
-\textbf{Time Complexity}: $O(n^{2} \cdot 2^{n})$ per call to \inlinecode{min\_cost\_assignment()}, where $n$ is the number of workers and jobs.
+\textbf{Time Complexity}: $O(n \cdot 2^{n})$ per call to \inlinecode{min\_cost\_assignment()}, where $n$ is the number of workers and jobs.
 
 \textbf{Space Complexity}: $O(2^{n})$ auxiliary and $O(n)$ for the returned assignment from \inlinecode{min\_cost\_assignment()}.
 
@@ -4073,8 +4070,11 @@ Overflow warning: The tiling count must fit in \inlinecode{int64\_t}.
 \begin{lstlisting}[language=C++]
 int64_t count_domino_tilings(int rows, int cols) {
   assert(rows >= 0 && cols >= 0);
+  if (rows == 0 || cols == 0) {
+    return 1;
+  }
   if (rows < cols) {
-    return count_domino_tilings(cols, rows);
+    std::swap(rows, cols);
   }
   assert(cols < 31);
   int states = 1 << cols;
@@ -4129,7 +4129,7 @@ int main() {
   };
   assert(min_cost_partition(group_cost) == 7);  // Groups {0} and {1, 2}.
 
-  assert(count_domino_tilings(0, 5) == 1);
+  assert(count_domino_tilings(0, 1000000000) == 1);
   assert(count_domino_tilings(2, 3) == 3);
   assert(count_domino_tilings(3, 3) == 0);
   assert(count_domino_tilings(4, 4) == 36);
@@ -5182,8 +5182,8 @@ The meet-in-the-middle method splits the collection in half, enumerates every su
 Pisinger's algorithm targets the opposite regime: nonnegative weights whose maximum value is small, with possibly many items. Let $W$ be the largest weight. It greedily takes a maximal prefix with sum $s$ that fits the target; because the next weight is at most $W$ and does not fit, $s$ is greater than \inlinecode{target} $- W$. The prefix itself is feasible, so the optimum lies between $s$ and \inlinecode{target} and only that width-$W$ window matters. A balanced sweep explores exchanges that add later items to sums below the target and remove earlier items from sums above it. For each sum, it retains the farthest prefix boundary reached, which dominates smaller boundaries because it permits at least the same future exchanges. This gives a running time linear in the number of items times $W$, independent of the target beyond that window. This routine is sometimes called ``fast knapsack,'' a slight misnomer: it maximizes a subset sum rather than packing items with distinct values, so it is really the bounded-weight case of subset sum rather than the 0-1 value knapsack.
 
 \begin{compactitem}
-  \item \inlinecode{max\_subset\_sum\_at\_most(lo, hi, target)} returns a pair (\inlinecode{sum}, \inlinecode{items}) containing that maximum sum and the selected item indices relative to \inlinecode{lo}. Values may be negative. The range is supplied as random-access iterators, and \inlinecode{target} must be nonnegative.
-  \item \inlinecode{max\_subset\_sum\_bounded(lo, hi, target)} returns the maximum sum of any subset of the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ that does not exceed \inlinecode{target}. All weights and \inlinecode{target} must be nonnegative integers. This is faster than meet-in-the-middle when the largest weight is small relative to $2^{n/2}$.
+  \item \inlinecode{max\_subset\_sum\_at\_most(values, target)} returns a pair (\inlinecode{sum}, \inlinecode{items}) containing that maximum sum and the selected item indices. Values may be negative, and \inlinecode{target} must be nonnegative.
+  \item \inlinecode{max\_subset\_sum\_bounded(weights, target)} returns the maximum sum of any subset of \inlinecode{weights} that does not exceed \inlinecode{target}. All weights and \inlinecode{target} must be nonnegative integers. This is faster than meet-in-the-middle when the largest weight is small relative to $2^{n/2}$.
 \end{compactitem}
 
 Overflow warning: All subset sums and intermediate differences in \inlinecode{max\_subset\_sum\_at\_most()} must fit in \inlinecode{int64\_t}.
@@ -5191,7 +5191,7 @@ Overflow warning: All subset sums and intermediate differences in \inlinecode{ma
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(2^{n/2})$ per call to \inlinecode{max\_subset\_sum\_at\_most()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+  \item $O(n \cdot 2^{n/2})$ per call to \inlinecode{max\_subset\_sum\_at\_most()}, where $n$ is the number of values.
   \item $O(n \cdot W)$ per call to \inlinecode{max\_subset\_sum\_bounded()}, where $n$ is the number of items and $W$ is the largest weight.
 \end{compactitem}
 
@@ -5210,20 +5210,22 @@ Overflow warning: All subset sums and intermediate differences in \inlinecode{ma
 #include <utility>
 #include <vector>
 
-template<typename It>
-std::pair<int64_t, std::vector<int>> max_subset_sum_at_most(It lo, It hi, int64_t target) {
-  int n = static_cast<int>(hi - lo);
-  assert(target >= 0 && n >= 0 && n / 2 < 63 && n - n / 2 < 63);
+std::pair<int64_t, std::vector<int>> max_subset_sum_at_most(
+    const std::vector<int> &values, int64_t target
+) {
+  assert(target >= 0);
+  int n = static_cast<int>(values.size());
+  assert(n / 2 < 63 && n - n / 2 < 63);
   int64_t llen = 1LL << (n / 2), rlen = 1LL << (n - n / 2);
   std::vector<int64_t> lsum(llen);
   std::vector<std::pair<int64_t, int64_t>> rsum(rlen);
   for (int64_t mask = 1; mask < llen; mask++) {
     int bit = __builtin_ctzll(mask);
-    lsum[mask] = lsum[mask ^ (1LL << bit)] + *(lo + bit);  // Overflow warning.
+    lsum[mask] = lsum[mask ^ (1LL << bit)] + values[bit];  // Overflow warning.
   }
   for (int64_t mask = 1; mask < rlen; mask++) {
     int bit = __builtin_ctzll(mask);
-    rsum[mask].first = rsum[mask ^ (1LL << bit)].first + *(lo + n / 2 + bit);
+    rsum[mask].first = rsum[mask ^ (1LL << bit)].first + values[n / 2 + bit];
     rsum[mask].second = mask;
   }
   std::sort(rsum.begin(), rsum.end());
@@ -5256,25 +5258,23 @@ std::pair<int64_t, std::vector<int>> max_subset_sum_at_most(It lo, It hi, int64_
   return {best, items};
 }
 
-template<typename It>
-int64_t max_subset_sum_bounded(It lo, It hi, int target) {
-  int n = static_cast<int>(hi - lo);
-  assert(target >= 0 && n >= 0);
-  for (It it = lo; it != hi; ++it) {
-    int64_t weight = *it;
-    assert(0 <= weight && weight <= INT_MAX);
+int max_subset_sum_bounded(const std::vector<int> &weights, int target) {
+  assert(target >= 0);
+  for (int w : weights) {
+    assert(w >= 0);
   }
+  int n = static_cast<int>(weights.size());
   // Greedily take a prefix while it still fits; the optimum then lies within one weight of target.
   int sum = 0, b = 0;
-  while (b < n && static_cast<int>(*(lo + b)) <= target - sum) {
-    sum += static_cast<int>(*(lo + b++));
+  while (b < n && weights[b] <= target - sum) {
+    sum += weights[b++];
   }
   if (b == n) {
     return sum;  // Every item fits, so the whole collection is the best subset.
   }
   int m = 0;
-  for (It it = lo; it != hi; ++it) {
-    m = std::max(m, static_cast<int>(*it));
+  for (int w : weights) {
+    m = std::max(m, w);
   }
   // reach[s - target + m] = largest prefix boundary that can realize a balanced subset of sum s.
   // Only sums within m of target are tracked, which is where the optimum must lie.
@@ -5282,14 +5282,12 @@ int64_t max_subset_sum_bounded(It lo, It hi, int target) {
   reach[sum - target + m] = b;
   for (int i = b; i < n; i++) {
     std::vector<int> prev = reach;
-    int wi = static_cast<int>(*(lo + i));
     for (int x = 0; x < m; x++) {  // Add item i to sums currently below target.
-      reach[x + wi] = std::max(reach[x + wi], prev[x]);
+      reach[x + weights[i]] = std::max(reach[x + weights[i]], prev[x]);
     }
     for (int x = 2 * m - 1; x > m; x--) {  // Drop an earlier item from sums above target.
       for (int j = std::max(0, prev[x]); j < reach[x]; j++) {
-        int wj = static_cast<int>(*(lo + j));
-        reach[x - wj] = std::max(reach[x - wj], j);
+        reach[x - weights[j]] = std::max(reach[x - weights[j]], j);
       }
     }
   }
@@ -5308,21 +5306,21 @@ using namespace std;
 
 int main() {
   vector<int> a{9, 1, 5, 0, 1, 11, 5};
-  auto [sum, items] = max_subset_sum_at_most(a.begin(), a.end(), 8);
+  auto [sum, items] = max_subset_sum_at_most(a, 8);
   int64_t selected_sum = 0;
   for (int i : items) {
     selected_sum += a[i];
   }
   assert(sum == 7 && selected_sum == sum);
   vector<int> b{-7, -3, -2, 5, 8};
-  assert(max_subset_sum_at_most(b.begin(), b.end(), 0).first == 0);
+  assert(max_subset_sum_at_most(b, 0).first == 0);
 
   // The bounded-weight method agrees with meet-in-the-middle on nonnegative inputs.
-  assert(max_subset_sum_bounded(a.begin(), a.end(), 8) == 7);
+  assert(max_subset_sum_bounded(a, 8) == 7);
   vector<int> c{3, 34, 4, 12, 5, 2};
-  assert(max_subset_sum_bounded(c.begin(), c.end(), 9) == 9);     // 4 + 5.
-  assert(max_subset_sum_bounded(c.begin(), c.end(), 10) == 10);   // 3 + 5 + 2.
-  assert(max_subset_sum_bounded(c.begin(), c.end(), 100) == 60);  // All items fit.
+  assert(max_subset_sum_bounded(c, 9) == 9);     // 4 + 5.
+  assert(max_subset_sum_bounded(c, 10) == 10);   // 3 + 5 + 2.
+  assert(max_subset_sum_bounded(c, 100) == 60);  // All items fit.
   return 0;
 }
 \end{lstlisting}

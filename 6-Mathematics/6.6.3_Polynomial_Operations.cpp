@@ -21,9 +21,9 @@ For formal power series, the inverse modulo $x^n$ is a series $b$ satisfying
 $a \cdot b \equiv 1 \pmod{x^n}$. Series division uses this inverse, and logarithm follows from
 $(\log a)' = a'/a$. Exponential and square root use Newton iteration, doubling the number of correct
 coefficients each round. Power factors $a = x^t c b$, where $b(0) = 1$, and applies
-$a^k = x^{tk} c^k \exp(k \log b)$. To handle a square root whose constant term is not $1$, factor
-`a[0]` out and multiply back one of its modular square roots (see 6.3.5); if the lowest nonzero
-coefficient sits at an odd power of $x$, no square root exists.
+$a^k = x^{tk} c^k \exp(k \log b)$. To extend the normalized square-root implementation, factor out
+the lowest power of $x$, normalize its constant term, then multiply back its modular square root
+(see 6.3.5); an odd lowest nonzero power has no square root.
 
 - `inverse(a, n)` returns the first `n` coefficients of `1 / a`, requiring `a[0]` to be nonzero.
 - `series_divide(a, b, n)` returns the first `n` coefficients of the formal power series `a / b`,

@@ -60,11 +60,11 @@ Epsilon Comparisons:
   tolerance scales with $|`ref`|$, so `rEQ(ref, val)` is NOT the same as `rEQ(val, ref)`. Use this
   when one argument is a known exact value and the other is a computed approximation. Degenerates to
   exact comparison when `ref` is $0$, since the tolerance collapses to $0$; use `EQ` near zero.
-- `rEQ_sym(x, y)` is the symmetric (commutative) variant: tolerance scales with
-  $\max(|`x`|, |`y`|)$, so the result is the same regardless of argument order. Still degenerates
+- `rEQ_sym(a, b)` is the symmetric (commutative) variant: tolerance scales with
+  $\max(|`a`|, |`b`|)$, so the result is the same regardless of argument order. Still degenerates
   near zero when both arguments are close to $0$. For both relative comparisons, exactly equal
   infinities compare equal, while unequal infinities and comparisons between finite and non-finite
-  values compare unequal.
+  values compare unequal. Non-floating common types use exact equality.
 
 */
 
@@ -93,20 +93,22 @@ template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool rEQ(T ref, U val) {
   C x = C(ref), y = C(val);
   if (x == y) return true;
-  if constexpr (std::is_floating_point_v<C>) {
-    if (!std::isfinite(x) || !std::isfinite(y)) return false;
+  if constexpr (!std::is_floating_point_v<C>) {
+    return false;
   }
+  if (!std::isfinite(x) || !std::isfinite(y)) return false;
   return std::fabs(x - y) <= EPS * std::fabs(x);
 }
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
-bool rEQ_sym(T x, U y) {
-  C a = C(x), b = C(y);
-  if (a == b) return true;
-  if constexpr (std::is_floating_point_v<C>) {
-    if (!std::isfinite(a) || !std::isfinite(b)) return false;
+bool rEQ_sym(T a, U b) {
+  C x = C(a), y = C(b);
+  if (x == y) return true;
+  if constexpr (!std::is_floating_point_v<C>) {
+    return false;
   }
-  return std::fabs(a - b) <= EPS * std::max(std::fabs(a), std::fabs(b));
+  if (!std::isfinite(x) || !std::isfinite(y)) return false;
+  return std::fabs(x - y) <= EPS * std::max(std::fabs(x), std::fabs(y));
 }
 
 /*
@@ -379,6 +381,7 @@ int main() {
   assert(EQ(M_PI, 3.14159265359));
   assert(EQ(M_INF, M_INF) && rEQ(M_INF, M_INF) && rEQ_sym(M_INF, M_INF));
   assert(!rEQ(M_INF, 0.0) && !rEQ_sym(M_INF, -M_INF));
+  assert(!rEQ(1000000000000LL, 1000000000001LL));
   assert(EQ(M_E, 2.718281828459));
   assert(EQ(M_PHI, 1.61803398875));
 
