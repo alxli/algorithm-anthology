@@ -102,18 +102,6 @@ class OnlineBridges {
     }
   }
 
-  int find_2ecc(int u) {
-    if (u == -1) {
-      return -1;
-    }
-    return dsu_2ecc[u] == u ? u : dsu_2ecc[u] = find_2ecc(dsu_2ecc[u]);
-  }
-
-  int find_cc(int u) {
-    u = find_2ecc(u);
-    return dsu_cc[u] == u ? u : dsu_cc[u] = find_cc(dsu_cc[u]);
-  }
-
   void add_edge(int u, int v) {
     u = find_2ecc(u);
     v = find_2ecc(v);
@@ -137,6 +125,18 @@ class OnlineBridges {
   }
 
   int bridge_count() const { return num_bridges; }
+
+  int find_2ecc(int u) {
+    if (u == -1) {
+      return -1;
+    }
+    return dsu_2ecc[u] == u ? u : dsu_2ecc[u] = find_2ecc(dsu_2ecc[u]);
+  }
+
+  int find_cc(int u) {
+    u = find_2ecc(u);
+    return dsu_cc[u] == u ? u : dsu_cc[u] = find_cc(dsu_cc[u]);
+  }
 };
 
 /*** Example Usage ***/

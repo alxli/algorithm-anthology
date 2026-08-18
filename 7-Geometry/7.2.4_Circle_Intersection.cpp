@@ -138,8 +138,20 @@ int tangent(const Circle &c, const Pt &p, Line *l1 = nullptr, Line *l2 = nullptr
   return 1;
 }
 
+// Guard to check outputs are real coordinates, since intersections are generally not integral.
+template<typename OutPt>
+constexpr bool is_float_pt =
+    std::is_floating_point_v<decltype(OutPt::x)> && std::is_floating_point_v<decltype(OutPt::y)>;
+
 template<typename OutPt>
 int intersection(const Circle &c, const Line &l, OutPt *p = nullptr, OutPt *q = nullptr) {
+  static_assert(is_float_pt<OutPt>, "output point coordinates must be floating-point");
+  auto set_out = [](auto *out, auto x, auto y) {
+    if (out != nullptr) {
+      out->x = x;
+      out->y = y;
+    }
+  };
   double v = c.h * l.a + c.k * l.b + l.c;
   double aabb = l.a * l.a + l.b * l.b;
   double disc = v * v / aabb - c.r * c.r;
@@ -148,26 +160,24 @@ int intersection(const Circle &c, const Line &l, OutPt *p = nullptr, OutPt *q = 
   }
   double x0 = -l.a * v / aabb, y0 = -l.b * v / aabb;
   if (disc > -EPS) {
-    if (p != nullptr) {
-      p->x = x0 + c.h;
-      p->y = y0 + c.k;
-    }
+    set_out(p, x0 + c.h, y0 + c.k);
     return 0;
   }
   double k = std::sqrt(std::max(0.0, disc / -aabb));
-  if (p != nullptr) {
-    p->x = x0 + k * l.b + c.h;
-    p->y = y0 - k * l.a + c.k;
-  }
-  if (q != nullptr) {
-    q->x = x0 - k * l.b + c.h;
-    q->y = y0 + k * l.a + c.k;
-  }
+  set_out(p, x0 + k * l.b + c.h, y0 - k * l.a + c.k);
+  set_out(q, x0 - k * l.b + c.h, y0 + k * l.a + c.k);
   return 1;
 }
 
 template<typename OutPt>
 int intersection(const Circle &c1, const Circle &c2, OutPt *p = nullptr, OutPt *q = nullptr) {
+  static_assert(is_float_pt<OutPt>, "output point coordinates must be floating-point");
+  auto set_out = [](auto *out, auto x, auto y) {
+    if (out != nullptr) {
+      out->x = x;
+      out->y = y;
+    }
+  };
   if (EQ(c1.h, c2.h) && EQ(c1.k, c2.k)) {
     return EQ(c1.r, c2.r) ? 3 : (c1.r > c2.r ? -1 : -2);
   }
@@ -184,20 +194,11 @@ int intersection(const Circle &c1, const Circle &c2, OutPt *p = nullptr, OutPt *
   double s = std::sqrt(std::max(0.0, c1.r * c1.r - a * a));
   double rx = -d12y * s / d, ry = d12x * s / d;
   if (EQ(rx, 0) && EQ(ry, 0)) {
-    if (p != nullptr) {
-      p->x = x0;
-      p->y = y0;
-    }
+    set_out(p, x0, y0);
     return 1;
   }
-  if (p != nullptr) {
-    p->x = x0 - rx;
-    p->y = y0 - ry;
-  }
-  if (q != nullptr) {
-    q->x = x0 + rx;
-    q->y = y0 + ry;
-  }
+  set_out(p, x0 - rx, y0 - ry);
+  set_out(q, x0 + rx, y0 + ry);
   return 2;
 }
 

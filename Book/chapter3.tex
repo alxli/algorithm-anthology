@@ -484,11 +484,11 @@ Provides a small library of non-cryptographic hash functions and hash functors f
 
 The standalone functions below are deterministic.
 
-FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Starting from a fixed offset basis, it XORs each byte into the accumulator and then multiplies by a fixed prime; the \inlinecode{1a} variant XORs before multiplying, which mixes slightly better than the original FNV-1. Reach for it when the key is a string or byte buffer, whereas \inlinecode{mix32} and \inlinecode{mix64} are mixers for a single fixed-width integer. Its appeal is simplicity: a few lines, no lookup tables, and no seed, with distribution good enough for the short keys common in contests. For very long inputs a block hash such as MurmurHash or xxHash is faster and mixes more thoroughly, and because FNV-1a is unseeded it offers no protection against adversarial inputs.
+FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Starting from a fixed offset basis, it XORs each byte into the accumulator and then multiplies by a fixed prime; the \inlinecode{1a} variant XORs before multiplying, which mixes slightly better than the original FNV-1. Reach for it when the key is a string or byte buffer, whereas \inlinecode{fmix32} and \inlinecode{splitmix64} are mixers for a single fixed-width integer. Its appeal is simplicity: a few lines, no lookup tables, and no seed, with distribution good enough for the short keys common in contests. For very long inputs a block hash such as MurmurHash or xxHash is faster and mixes more thoroughly, and because FNV-1a is unseeded it offers no protection against adversarial inputs.
 
 \begin{compactitem}
-  \item \inlinecode{mix32(x)} mixes a 32-bit unsigned integer \inlinecode{x}, using MurmurHash3's fmix32 mixer.
-  \item \inlinecode{mix64(x)} mixes a 64-bit unsigned integer \inlinecode{x}, using the SplitMix64 mixer.
+  \item \inlinecode{fmix32(x)} mixes a 32-bit unsigned integer \inlinecode{x}, using MurmurHash3's finalizer.
+  \item \inlinecode{splitmix64(x)} mixes a 64-bit unsigned integer \inlinecode{x}.
   \item \inlinecode{hash32(x)} and \inlinecode{hash64(x)} hash any integer type that can be converted to \inlinecode{uint32\_t} or \inlinecode{uint64\_t}, respectively.
   \item \inlinecode{hash\_combine32(h, x)} and \inlinecode{hash\_combine64(h, x)} fold another already-hashed value into an existing hash accumulator.
   \item \inlinecode{hash\_float(x)} and \inlinecode{hash\_double(x)} hash floating-point bit patterns, normalizing \inlinecode{-0.0} to \inlinecode{0.0}. Different NaN representations may still hash differently.
@@ -518,8 +518,7 @@ FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Start
 #include <utility>
 #include <vector>
 
-// MurmurHash3's fmix32 mixer.
-uint32_t mix32(uint32_t x) {
+uint32_t fmix32(uint32_t x) {
   x ^= x >> 16;
   x *= 0x85ebca6bU;
   x ^= x >> 13;
@@ -527,8 +526,7 @@ uint32_t mix32(uint32_t x) {
   return x ^ (x >> 16);
 }
 
-// SplitMix64 mixer.
-uint64_t mix64(uint64_t x) {
+uint64_t splitmix64(uint64_t x) {
   x += 0x9e3779b97f4a7c15ULL;
   x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
   x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
@@ -537,20 +535,20 @@ uint64_t mix64(uint64_t x) {
 
 template<typename Int>
 uint32_t hash32(Int x) {
-  return mix32(static_cast<uint32_t>(x));
+  return fmix32(static_cast<uint32_t>(x));
 }
 
 template<typename Int>
 uint64_t hash64(Int x) {
-  return mix64(static_cast<uint64_t>(x));
+  return splitmix64(static_cast<uint64_t>(x));
 }
 
 uint32_t hash_combine32(uint32_t h, uint32_t x) {
-  return mix32(h ^ (x + 0x9e3779b9U + (h << 6) + (h >> 2)));
+  return fmix32(h ^ (x + 0x9e3779b9U + (h << 6) + (h >> 2)));
 }
 
 uint64_t hash_combine64(uint64_t h, uint64_t x) {
-  return mix64(h ^ (x + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2)));
+  return splitmix64(h ^ (x + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2)));
 }
 
 uint32_t hash_float(float x) {
@@ -559,7 +557,7 @@ uint32_t hash_float(float x) {
   }
   uint32_t bits = 0;
   std::memcpy(&bits, &x, sizeof(bits));
-  return mix32(bits);
+  return fmix32(bits);
 }
 
 uint64_t hash_double(double x) {
@@ -568,7 +566,7 @@ uint64_t hash_double(double x) {
   }
   uint64_t bits = 0;
   std::memcpy(&bits, &x, sizeof(bits));
-  return mix64(bits);
+  return splitmix64(bits);
 }
 
 uint32_t fnv1a32(const std::string &s) {
@@ -607,7 +605,7 @@ uint64_t hash_range64(It lo, It hi) {
   return h;
 }
 \end{lstlisting}
-Hash functors adapt common composite keys for unordered containers. \inlinecode{IntHasher} adds a per-run random seed before mixing, which makes integer-keyed hash tables harder to hack in open-test contests. The composite hashers separate the mixing primitive (\inlinecode{mix64}/\inlinecode{hash\_combine64}) from each type's traversal of its parts, so swapping in a different mixer only requires editing one place.
+Hash functors adapt common composite keys for unordered containers. \inlinecode{IntHasher} adds a per-run random seed before mixing, which makes integer-keyed hash tables harder to hack in open-test contests. The composite hashers separate the mixing primitive (\inlinecode{splitmix64}/\inlinecode{hash\_combine64}) from each type's traversal of its parts, so swapping in another mixer only requires editing one place.
 
 \begin{compactitem}
   \item \inlinecode{PairIntHasher} is a self-contained hasher for \inlinecode{std::pair\textless{}int, int\textgreater{}} keys, written without any dependency on the templates below so that it can be copy-pasted on its own.
@@ -624,7 +622,7 @@ template<typename Int>
 struct IntHasher {
   std::size_t operator()(Int x) const {
     static const uint64_t RAND_SEED = std::chrono::steady_clock::now().time_since_epoch().count();
-    return static_cast<std::size_t>(mix64(static_cast<uint64_t>(x) + RAND_SEED));
+    return static_cast<std::size_t>(splitmix64(static_cast<uint64_t>(x) + RAND_SEED));
   }
 };
 
@@ -644,8 +642,8 @@ struct ScalarHasher {
 
 // A self-contained hasher for std::pair<int, int> keys: copy just this struct when you do not need
 // the rest of this file. The two 32-bit halves pack losslessly into one 64-bit word, which the
-// SplitMix64 mixer (the same one used by mix64 above) then scrambles. Add a random seed to key
-// before mixing, as IntHasher does, if you need anti-hacking protection.
+// an inlined copy of splitmix64() above then scrambles. Add a random seed to key before
+// mixing, as IntHasher does, if you need anti-hacking protection.
 struct PairIntHasher {
   std::size_t operator()(const std::pair<int, int> &p) const {
     uint64_t key = (static_cast<uint64_t>(static_cast<uint32_t>(p.first)) << 32) |
@@ -712,10 +710,10 @@ struct GenericHasher<std::vector<T>> : VectorHasher<T> {};
 using namespace std;
 
 int main() {
-  assert(mix32(123U) == mix32(123U));
-  assert(mix32(123U) != mix32(124U));
+  assert(fmix32(123U) == fmix32(123U));
+  assert(fmix32(123U) != fmix32(124U));
   assert(hash32(-1) == hash32(-1));
-  assert(hash64(123) == mix64(123ULL));
+  assert(hash64(123) == splitmix64(123ULL));
   assert(hash_float(-0.0F) == hash_float(0.0F));
   assert(hash_double(-0.0) == hash_double(0.0));
   assert(fnv1a32("abc") == fnv1a32("abc"));
@@ -828,8 +826,7 @@ uint64_t hash_mul(uint64_t a, uint64_t b) {
 #endif
 }
 
-// SplitMix64 mixer.
-uint64_t mix64(uint64_t x) {
+uint64_t splitmix64(uint64_t x) {
   x += 0x9e3779b97f4a7c15ULL;
   x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
   x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
@@ -841,7 +838,7 @@ struct ValueHasher {
   // +1 ensures the result is in [1, HASH_MOD) and never zero; a zero element in a polynomial
   // hash is invisible and enables trivial collisions.
   uint64_t operator()(const T &x) const {
-    return mix64(static_cast<uint64_t>(x)) % (HASH_MOD - 1) + 1;
+    return splitmix64(static_cast<uint64_t>(x)) % (HASH_MOD - 1) + 1;
   }
 };
 
@@ -922,7 +919,7 @@ struct PointHasher {
     // points never collide pre-mix (a small-multiplier combine like a * C + b would).
     uint64_t key = (static_cast<uint64_t>(static_cast<uint32_t>(p.first)) << 32) |
                    static_cast<uint32_t>(p.second);
-    return mix64(key) % (HASH_MOD - 1) + 1;
+    return splitmix64(key) % (HASH_MOD - 1) + 1;
   }
 };
 
@@ -1011,13 +1008,13 @@ class HashDeque {
   static const uint64_t BASE1 = 131, BASE2 = 137;              // Nonzero modulo MOD1 and MOD2.
 
   // Products and sums of residues below 2^30 stay under 2^60, so 64-bit arithmetic never overflows.
-  static uint64_t powmod(uint64_t b, uint64_t e, uint64_t m) {
-    uint64_t res = 1;
-    for (b %= m; e > 0; e >>= 1) {
-      if (e & 1) {
-        res = res * b % m;
+  static uint64_t powmod(uint64_t x, uint64_t n, uint64_t m) {
+    uint64_t res = 1 % m;
+    for (x %= m; n > 0; n >>= 1) {
+      if (n & 1) {
+        res = res * x % m;
       }
-      b = b * b % m;
+      x = x * x % m;
     }
     return res;
   }
@@ -1128,10 +1125,10 @@ int main() {
   // An arbitrary element type via a custom hasher: a deque of whole words.
   auto whash = [](const string &w) -> uint64_t { return hash<string>{}(w); };
   HashDeque<string, decltype(whash)> sentence(whash), reversed(whash);
-  for (string w : {string("the"), string("quick"), string("fox")}) {
+  for (auto w : {"the", "quick", "fox"}) {
     sentence.push_back(w);
   }
-  for (string w : {string("fox"), string("quick"), string("the")}) {
+  for (auto w : {"fox", "quick", "the"}) {
     reversed.push_front(w);  // Same word sequence, assembled from the front.
   }
   assert(sentence == reversed);
@@ -1156,6 +1153,7 @@ Element values must be nonnegative. As with any polynomial hash, comparing subse
 \begin{compactitem}
   \item \inlinecode{DynamicRollingHash(a)} builds prefix hashes over the integer sequence \inlinecode{a}.
   \item \inlinecode{size()} returns the length of the sequence.
+  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{set(i, x)} assigns the value at index \inlinecode{i} to \inlinecode{x}.
   \item \inlinecode{hash(lo, hi)} returns the hash pair of the half-open subsequence $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$. Equal ranges always have equal hash pairs, while equal hash pairs indicate equal ranges with high probability.
 \end{compactitem}
@@ -1164,8 +1162,8 @@ Element values must be nonnegative. As with any polynomial hash, comparing subse
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ per call to the constructor, where $n$ is the length of the sequence.
+  \item $O(1)$ per call to \inlinecode{size()} and \inlinecode{at()}.
   \item $O(\log n)$ per call to \inlinecode{set()} and \inlinecode{hash()}.
-  \item $O(1)$ per call to \inlinecode{size()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1191,13 +1189,13 @@ class DynamicRollingHash {
   std::vector<uint64_t> ft1, ft2;            // Fenwick trees, 1-indexed of size len + 1.
 
   // Products and sums of residues below 2^30 stay under 2^60, so 64-bit arithmetic never overflows.
-  static uint64_t powmod(uint64_t b, uint64_t e, uint64_t m) {
-    uint64_t res = 1;
-    for (b %= m; e > 0; e >>= 1) {
-      if (e & 1) {
-        res = res * b % m;
+  static uint64_t powmod(uint64_t x, uint64_t n, uint64_t m) {
+    uint64_t res = 1 % m;
+    for (x %= m; n > 0; n >>= 1) {
+      if (n & 1) {
+        res = res * x % m;
       }
-      b = b * b % m;
+      x = x * x % m;
     }
     return res;
   }
@@ -1241,6 +1239,11 @@ class DynamicRollingHash {
 
   int size() const { return len; }
 
+  int at(int i) const {
+    assert(0 <= i && i < len);
+    return cur[i];
+  }
+
   void set(int i, int x) {
     assert(0 <= i && i < len && x >= 0);
     uint64_t old1 = static_cast<uint64_t>(cur[i]) % MOD1 * pw1[i] % MOD1;
@@ -1280,6 +1283,7 @@ int main() {
 
   // A single element's hash is invariant under where an equal value sits.
   assert(h.hash(1, 2) == h.hash(4, 5));  // both 'b'.
+  assert(h.at(0) == 'x' && h.at(1) == 'b');
   return 0;
 }
 \end{lstlisting}
@@ -1320,8 +1324,7 @@ class ZobristHash {
   std::unordered_map<T, uint64_t> tokens;
   uint64_t state;
 
-  // SplitMix64 mixer.
-  static uint64_t mix64(uint64_t x) {
+  static uint64_t splitmix64(uint64_t x) {
     x += 0x9e3779b97f4a7c15ULL;
     x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
     x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
@@ -1335,7 +1338,7 @@ class ZobristHash {
     if (auto it = tokens.find(x); it != tokens.end()) {
       return it->second;
     }
-    state = mix64(state);
+    state = splitmix64(state);
     tokens[x] = state;
     return state;
   }
@@ -1550,6 +1553,140 @@ int main() {
   assert(find_substring_z("ABC ABCDAB ABCDABCDA", "ABCDABD") == string::npos);
   assert(find_substring_z("aaa", "aa") == 0);  // First overlapping occurrence.
   assert(find_substring_z("abc", "") == 0);
+  return 0;
+}
+\end{lstlisting}
+\subsection{String Searching (Boyer-Moore)}
+Given a single string (needle) and subsequent queries of texts (haystacks) to be searched, determine the positions in which the needle occurs within the given haystacks using the Boyer-Moore algorithm. Unlike KMP and the Z algorithm, which compare left to right and inspect every character of the haystack, Boyer-Moore aligns the needle and compares right to left, which lets a single mismatch prove that many alignments are impossible. Most alignments are then skipped entirely, so a long needle over a large alphabet is typically matched in sublinear time.
+
+Two precomputed rules propose a shift, and the algorithm takes the larger of the two.
+
+The bad character rule looks at the haystack character that caused the mismatch. If it occurs in the needle, slide the needle so that its last occurrence lines up with that position; if it does not occur at all, slide past the position entirely. This rule is what makes a large alphabet cheap, since a character absent from the needle skips a full needle length.
+
+The good suffix rule looks at the suffix of the needle that did match before the mismatch. The needle can only be reused where that suffix appears again, so slide to the next occurrence of the matched suffix within the needle, or, when none remains, to the longest prefix of the needle that is also a suffix of the matched part. Both cases come from one border table, computed exactly as in KMP but on the reversed needle.
+
+Dropping the good suffix rule and keying the bad character shift on the window's last character rather than the mismatched one gives the Boyer-Moore-Horspool variant: only the $O(A)$ table, shorter to write under pressure, and nearly as fast in practice. Library routines such as \inlinecode{std::string::find} and \inlinecode{memmem()} are usually built on one of these.
+
+\begin{compactitem}
+  \item \inlinecode{BoyerMoore(needle)} constructs the two shift tables for a nonempty string \inlinecode{needle} that is to be searched for subsequently in \inlinecode{haystack} queries.
+  \item \inlinecode{find\_in(haystack)} returns the first position that \inlinecode{needle} occurs in \inlinecode{haystack}, or \inlinecode{std::string::npos} if it cannot be found.
+  \item \inlinecode{find\_all\_in(haystack)} returns the positions of every occurrence of \inlinecode{needle} in \inlinecode{haystack}, in increasing order. Overlapping occurrences are all reported, since after a match the needle only advances by its period.
+\end{compactitem}
+
+Speed here is average-case, not worst-case: reporting every occurrence of a periodic needle such as \inlinecode{"aaaa"} in a run of one character rescans the matched part each time, giving $O(n \cdot m)$ until the Galil rule, which remembers how much of the needle a shift by the period already matched, restores $O(n + m)$. Prefer KMP in section 3.3.1 when the guarantee matters more than the average.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(m + A)$ per call to the constructor, where $m$ is the length of \inlinecode{needle} and $A$ is the alphabet size.
+  \item $O(n/m)$ per call to \inlinecode{find\_in()} in the best case and $O(n \cdot m)$ in the worst case, where $n$ is the length of \inlinecode{haystack}.
+  \item $O(n \cdot m)$ per call to \inlinecode{find\_all\_in()} in the worst case, plus $O(z)$ for reporting $z$ matches.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(m + A)$ for storage of the shift tables.
+  \item $O(1)$ auxiliary for \inlinecode{find\_in()}, and $O(z)$ for the vector returned by \inlinecode{find\_all\_in()}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <climits>
+#include <cstddef>
+#include <string>
+#include <vector>
+using std::string;
+
+const int ALPHABET = 1 << CHAR_BIT;
+
+class BoyerMoore {
+  string needle;
+  std::vector<int> last, good_suffix;
+
+  // Returns the first occurrence at or after start, or -1 if there is none.
+  int find_from(const string &haystack, int start) const {
+    int n = static_cast<int>(haystack.size()), m = static_cast<int>(needle.size());
+    for (int i = start; i + m <= n;) {
+      int j = m - 1;
+      while (j >= 0 && needle[j] == haystack[i + j]) {
+        j--;
+      }
+      if (j < 0) {
+        return i;
+      }
+      i += std::max(good_suffix[j + 1], j - last[static_cast<unsigned char>(haystack[i + j])]);
+    }
+    return -1;
+  }
+
+ public:
+  explicit BoyerMoore(const string &needle) : needle(needle), last(ALPHABET, -1) {
+    assert(!needle.empty());
+    int m = static_cast<int>(needle.size());
+    for (int i = 0; i < m; i++) {
+      last[static_cast<unsigned char>(needle[i])] = i;
+    }
+    // border[i] is one past the start of the widest border of the suffix beginning at index i.
+    good_suffix.assign(m + 1, 0);
+    std::vector<int> border(m + 1);
+    border[m] = m + 1;
+    for (int i = m, j = m + 1; i > 0;) {
+      while (j <= m && needle[i - 1] != needle[j - 1]) {
+        if (good_suffix[j] == 0) {  // The first shift proposed for a suffix is the smallest one.
+          good_suffix[j] = j - i;
+        }
+        j = border[j];
+      }
+      border[--i] = --j;
+    }
+    // Suffixes with no other occurrence fall back to the widest prefix that is also a suffix.
+    for (int i = 0, j = border[0]; i <= m; i++) {
+      if (good_suffix[i] == 0) {
+        good_suffix[i] = j;
+      }
+      if (i == j) {
+        j = border[j];
+      }
+    }
+  }
+
+  size_t find_in(const string &haystack) const {
+    int pos = find_from(haystack, 0);
+    return pos < 0 ? string::npos : static_cast<size_t>(pos);
+  }
+
+  std::vector<int> find_all_in(const string &haystack) const {
+    std::vector<int> res;
+    for (int pos = find_from(haystack, 0); pos >= 0;
+         pos = find_from(haystack, pos + good_suffix[0])) {
+      res.push_back(pos);
+    }
+    return res;
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+using namespace std;
+
+int main() {
+  BoyerMoore needle("needle");
+  assert(needle.find_in("haystack with a needle in it") == 16);
+  assert(needle.find_in("haystack without one") == string::npos);
+  assert(needle.find_in("needle") == 0);
+  assert(needle.find_in("need") == string::npos);  // A haystack shorter than the needle.
+
+  // A character absent from the needle lets the search skip a whole needle length.
+  assert(BoyerMoore("abcd").find_in("xxxxxxxxabcd") == 8);
+
+  // Overlapping occurrences are all reported.
+  assert((BoyerMoore("aa").find_all_in("aaaa") == vector<int>{0, 1, 2}));
+  assert((BoyerMoore("aba").find_all_in("abababa") == vector<int>{0, 2, 4}));
+  assert(BoyerMoore("ab").find_all_in("cccc").empty());
+
   return 0;
 }
 \end{lstlisting}
@@ -3893,6 +4030,76 @@ Aligned strings:
 AGGGCT
 A_GGCA
 \end{exampleoutput}
+\subsection{Wildcard Matching}
+Decide whether a pattern of literal characters, single-character wildcards, and multi-character wildcards matches an entire text. The wildcard \inlinecode{?} matches exactly one character, and \inlinecode{*} matches any run of characters including the empty one. This is glob matching rather than regular expression matching, so there is no alternation and no repetition of a group.
+
+Let $m(i, j)$ mean that the first $i$ characters of the text are matched by the first $j$ characters of the pattern. A literal or \inlinecode{?} consumes one character from each side, so it depends only on $m(i - 1, j - 1)$. A \inlinecode{*} either matches nothing, leaving $m(i, j - 1)$, or absorbs one more text character, leaving $m(i - 1, j)$; every longer run is covered by repeating that second case, which is what keeps the table two-dimensional instead of requiring a loop over run lengths. Only the previous row is ever read, so one row of storage suffices.
+
+\begin{compactitem}
+  \item \inlinecode{wildcard\_match(text, pattern)} returns whether \inlinecode{pattern} matches all of \inlinecode{text}, where \inlinecode{?} matches any single character and \inlinecode{*} matches any sequence of characters.
+\end{compactitem}
+
+A greedy walk needs only $O(1)$ space: remember the most recent \inlinecode{*} and the text position it was reached at, then on a mismatch advance the text and resume just after that \inlinecode{*}. Backtracking to the latest \inlinecode{*} suffices, since an earlier one absorbs whatever a later gives up. It runs in $O(n + m)$ on ordinary inputs but stays $O(n \cdot m)$ in the worst case, since each mismatch can rescan the pattern from the last \inlinecode{*}. The table is what generalizes, to counting matches or allowing bounded mismatches.
+
+\textbf{Time Complexity}: $O(n \cdot m)$ per call, where $n$ and $m$ are the lengths of \inlinecode{text} and \inlinecode{pattern}.
+
+\textbf{Space Complexity}: $O(m)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <string>
+#include <vector>
+
+bool wildcard_match(const std::string &text, const std::string &pattern) {
+  int n = static_cast<int>(text.size()), m = static_cast<int>(pattern.size());
+  std::vector<char> prev(m + 1), curr(m + 1);
+  prev[0] = true;
+  for (int j = 1; j <= m; j++) {  // An all-star prefix is the only way to match an empty text.
+    prev[j] = prev[j - 1] && pattern[j - 1] == '*';
+  }
+  for (int i = 1; i <= n; i++) {
+    curr[0] = false;
+    for (int j = 1; j <= m; j++) {
+      if (pattern[j - 1] == '*') {
+        curr[j] = curr[j - 1] || prev[j];  // Match nothing, or absorb one more character.
+      } else if (pattern[j - 1] == '?' || pattern[j - 1] == text[i - 1]) {
+        curr[j] = prev[j - 1];
+      } else {
+        curr[j] = false;
+      }
+    }
+    prev.swap(curr);
+  }
+  return prev[m];
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  assert(wildcard_match("", ""));
+  assert(wildcard_match("", "*"));
+  assert(wildcard_match("", "***"));
+  assert(!wildcard_match("", "?"));
+  assert(!wildcard_match("abc", ""));
+
+  assert(wildcard_match("abc", "abc"));
+  assert(wildcard_match("abc", "a?c"));
+  assert(wildcard_match("abc", "a*"));
+  assert(wildcard_match("abc", "*c"));
+  assert(wildcard_match("abcde", "a*d?"));
+  assert(!wildcard_match("abc", "a?"));  // The pattern must cover the whole text.
+  assert(!wildcard_match("abc", "*d*"));
+
+  // The wildcard must not consume characters the literals still need.
+  assert(wildcard_match("aaa", "*a"));
+  assert(!wildcard_match("aab", "*a"));
+  assert(wildcard_match("mississippi", "m*i*s*p?"));
+  assert(!wildcard_match("mississippi", "m*i*s*x*"));
+  return 0;
+}
+\end{lstlisting}
 \subsection{Palindrome DP}
 Solves basic palindrome dynamic programming problems on a string. The core interval state considers substring $[l, r]$: if the two endpoints match, they can wrap an optimal answer for the inside substring; otherwise, at least one endpoint must be skipped or inserted around the other side. Since each state depends on shorter substrings, intervals are processed by increasing length.
 

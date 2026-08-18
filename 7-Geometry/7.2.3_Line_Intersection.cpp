@@ -8,11 +8,11 @@ caller-supplied arguments, so they may differ from the input type, e.g. integer 
 floating-point output point.
 
 - `line_intersection(a1, b1, c1, a2, b2, c2, &p)` intersects lines $a_1 x + b_1 y + c_1 = 0$ and
-  $a_2 x + b_2 y + c_2 = 0$, returning $-1$ (parallel), $0$ (one point, stored into `p`), or $1$
-  (identical). Both coefficient triples must represent valid lines.
+  $a_2 x + b_2 y + c_2 = 0$, returning $-1$ (parallel), $0$ (one point, stored into `p` if it is not
+  `nullptr`), or $1$ (identical). Both coefficient triples must represent valid lines.
 - `line_intersection(p1, p2, p3, p4, &p)` intersects the infinite lines determined by points `p1`,
-  `p2`, `p3`, and `p4`, returning $-1$ (parallel), $0$ (one point, stored into `p`), or $1$
-  (identical). The points in each pair must differ.
+  `p2`, `p3`, and `p4`, returning $-1$ (parallel), $0$ (one point, stored into `p` if it is not
+  `nullptr`), or $1$ (identical). The points in each pair must differ.
 - `seg_intersection(a, b, c, d, &p, &q, include_boundary = true)` intersects segments `a`-`b` and
   `c`-`d`, returning $-1$ (none), $0$ (one point), or $1$ (overlapping segment). The
   `include_boundary` flag controls whether segments that meet only at an endpoint count as
@@ -61,25 +61,30 @@ bool LE(T a, U b) {
   return !LT(b, a);
 }
 
+// Guard to check outputs are real coordinates, since intersections are generally not integral.
+template<typename OutPt>
+constexpr bool is_float_pt =
+    std::is_floating_point_v<decltype(OutPt::x)> && std::is_floating_point_v<decltype(OutPt::y)>;
+
 template<typename OutPt>
 int line_intersection(double a1, double b1, double c1, double a2, double b2, double c2, OutPt *p) {
-  // Cramer's rule for a1*x + b1*y = -c1, a2*x + b2*y = -c2.
-  double det = a1 * b2 - a2 * b1;
-  if (EQ(det, 0)) {  // Parallel (lines need not be given in normalized form).
+  static_assert(is_float_pt<OutPt>, "output point coordinates must be floating-point");
+  double det = a1 * b2 - a2 * b1;  // Cramer's rule for a1*x + b1*y = -c1, a2*x + b2*y = -c2.
+  if (EQ(det, 0)) {                // Parallel (lines need not be given in normalized form).
     // Identical iff the other two 2x2 determinants also vanish.
     return (EQ(a1 * c2 - a2 * c1, 0) && EQ(b1 * c2 - b2 * c1, 0)) ? 1 : -1;
   }
-  p->x = (b1 * c2 - b2 * c1) / det;
-  if (!EQ(b1, 0)) {
-    p->y = -(a1 * p->x + c1) / b1;
-  } else {
-    p->y = -(a2 * p->x + c2) / b2;
+  if (p != nullptr) {
+    double x = (b1 * c2 - b2 * c1) / det;  // Local x to ensure y is derived from full-precision x.
+    p->x = x;
+    p->y = !EQ(b1, 0) ? -(a1 * x + c1) / b1 : -(a2 * x + c2) / b2;
   }
   return 0;
 }
 
 template<typename Pt, typename OutPt>
 int line_intersection(const Pt &p1, const Pt &p2, const Pt &p3, const Pt &p4, OutPt *p) {
+  static_assert(is_float_pt<OutPt>, "output point coordinates must be floating-point");
   auto a1 = p2.y - p1.y, b1 = p1.x - p2.x;
   auto c1 = -(p1.x * p2.y - p2.x * p1.y);
   auto a2 = p4.y - p3.y, b2 = p3.x - p4.x;
@@ -89,8 +94,10 @@ int line_intersection(const Pt &p1, const Pt &p2, const Pt &p3, const Pt &p4, Ou
   if (EQ(det, 0)) {
     return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
   }
-  p->x = static_cast<double>(x) / det;
-  p->y = static_cast<double>(y) / det;
+  if (p != nullptr) {
+    p->x = static_cast<double>(x) / det;
+    p->y = static_cast<double>(y) / det;
+  }
   return 0;
 }
 
@@ -108,6 +115,13 @@ int seg_intersection(
     const Pt &a, const Pt &b, const Pt &c, const Pt &d, OutPt *p = nullptr, OutPt *q = nullptr,
     const bool include_boundary = true
 ) {
+  static_assert(is_float_pt<OutPt>, "output point coordinates must be floating-point");
+  auto set_out = [](auto *out, auto x, auto y) {
+    if (out != nullptr) {
+      out->x = x;
+      out->y = y;
+    }
+  };
   auto ab_x = b.x - a.x, ab_y = b.y - a.y;
   auto ac_x = c.x - a.x, ac_y = c.y - a.y;
   auto cd_x = d.x - c.x, cd_y = d.y - c.y;
@@ -115,20 +129,14 @@ int seg_intersection(
   auto cd2 = cd_x * cd_x + cd_y * cd_y;
   if (EQ(ab2, 0)) {
     if (include_boundary && point_on_segment(a, c, d)) {
-      if (p != nullptr) {
-        p->x = static_cast<double>(a.x);
-        p->y = static_cast<double>(a.y);
-      }
+      set_out(p, a.x, a.y);
       return 0;  // Degenerate: first segment is a point intersecting the second segment.
     }
     return -1;  // Degenerate: first segment is a point not intersecting the second segment.
   }
   if (EQ(cd2, 0)) {
     if (include_boundary && point_on_segment(c, a, b)) {
-      if (p != nullptr) {
-        p->x = static_cast<double>(c.x);
-        p->y = static_cast<double>(c.y);
-      }
+      set_out(p, c.x, c.y);
       return 0;  // Degenerate: second segment is a point intersecting the first segment.
     }
     return -1;  // Degenerate: second segment is a point not intersecting the first segment.
@@ -138,20 +146,14 @@ int seg_intersection(
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
     Pt res1 = std::max(std::min(a, b), std::min(c, d));
     Pt res2 = std::min(std::max(a, b), std::max(c, d));
-    bool overlap = include_boundary ? !(res2 < res1) : (res1 < res2);
-    if (overlap) {
+    if (include_boundary ? !(res2 < res1) : (res1 < res2)) {
       if (res1 == res2) {
-        if (p != nullptr) {
-          p->x = static_cast<double>(res1.x);
-          p->y = static_cast<double>(res1.y);
-        }
+        set_out(p, res1.x, res1.y);
         return 0;  // Collinear and overlapping: touch at one endpoint.
       }
-      if (p != nullptr && q != nullptr) {
-        p->x = static_cast<double>(res1.x);
-        p->y = static_cast<double>(res1.y);
-        q->x = static_cast<double>(res2.x);
-        q->y = static_cast<double>(res2.y);
+      if (p != nullptr && q != nullptr) {  // Both ends are reported, or neither is.
+        set_out(p, res1.x, res1.y);
+        set_out(q, res2.x, res2.y);
       }
       return 1;  // Collinear and overlapping: overlap is a segment.
     }
@@ -169,11 +171,8 @@ int seg_intersection(
   bool u_ok = c1_pos ? (include_boundary ? (LE(0, c2) && LE(c2, c1)) : (LT(0, c2) && LT(c2, c1)))
                      : (include_boundary ? (LE(c1, c2) && LE(c2, 0)) : (LT(c1, c2) && LT(c2, 0)));
   if (t_ok && u_ok) {
-    if (p != nullptr) {
-      double t = static_cast<double>(t_num) / c1;
-      p->x = static_cast<double>(a.x + t * ab_x);
-      p->y = static_cast<double>(a.y + t * ab_y);
-    }
+    double t = static_cast<double>(t_num) / c1;
+    set_out(p, a.x + t * ab_x, a.y + t * ab_y);
     return 0;  // Non-parallel with one intersection.
   }
   return -1;  // Non-parallel with no intersection.
@@ -201,8 +200,7 @@ int seg_intersection(
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
     Pt res1 = std::max(std::min(a, b), std::min(c, d));
     Pt res2 = std::min(std::max(a, b), std::max(c, d));
-    bool overlap = include_boundary ? !(res2 < res1) : (res1 < res2);
-    if (overlap) {
+    if (include_boundary ? !(res2 < res1) : (res1 < res2)) {
       return (res1 == res2) ? 0 : 1;
     }
     return -1;
@@ -261,7 +259,6 @@ struct PointI {
 
 int main() {
   Point p, q;
-
   assert(line_intersection(-1.0, 1.0, 0.0, 1.0, 1.0, -3.0, &p) == 0);
   assert(EQ(p, Point(1.5, 1.5)));
   assert(line_intersection(Point(0, 0), Point(1, 1), Point(0, 4), Point(4, 0), &p) == 0);

@@ -57,15 +57,6 @@ class EdmondsKarp {
     adj[v].push_back(Edge{v, u, static_cast<int>(adj[u].size()) - 1, 0, 0});
   }
 
-  void clear_flow() {
-    for (auto &edges : adj) {
-      for (Edge &e : edges) {
-        e.flow = 0;
-      }
-    }
-    flow = 0;
-  }
-
   T max_flow(int source, int sink) {
     assert(source != sink);
     while (true) {
@@ -96,6 +87,15 @@ class EdmondsKarp {
       flow += aug;
     }
     return flow;
+  }
+
+  void clear_flow() {
+    for (auto &edges : adj) {
+      for (Edge &e : edges) {
+        e.flow = 0;
+      }
+    }
+    flow = 0;
   }
 
   std::vector<char> min_cut(int source) const {

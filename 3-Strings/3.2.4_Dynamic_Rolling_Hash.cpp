@@ -26,14 +26,15 @@ trailing zeros cannot make a shorter sequence collide with a longer one.
 
 - `DynamicRollingHash(a)` builds prefix hashes over the integer sequence `a`.
 - `size()` returns the length of the sequence.
+- `at(i)` returns the value at index `i`.
 - `set(i, x)` assigns the value at index `i` to `x`.
 - `hash(lo, hi)` returns the hash pair of the half-open subsequence $[`lo`, `hi`)$. Equal ranges
   always have equal hash pairs, while equal hash pairs indicate equal ranges with high probability.
 
 Time Complexity:
 - O(n log n) per call to the constructor, where $n$ is the length of the sequence.
+- O(1) per call to `size()` and `at()`.
 - O(log n) per call to `set()` and `hash()`.
-- O(1) per call to `size()`.
 
 Space Complexity:
 - O(n) for storage.
@@ -56,13 +57,13 @@ class DynamicRollingHash {
   std::vector<uint64_t> ft1, ft2;            // Fenwick trees, 1-indexed of size len + 1.
 
   // Products and sums of residues below 2^30 stay under 2^60, so 64-bit arithmetic never overflows.
-  static uint64_t powmod(uint64_t b, uint64_t e, uint64_t m) {
-    uint64_t res = 1;
-    for (b %= m; e > 0; e >>= 1) {
-      if (e & 1) {
-        res = res * b % m;
+  static uint64_t powmod(uint64_t x, uint64_t n, uint64_t m) {
+    uint64_t res = 1 % m;
+    for (x %= m; n > 0; n >>= 1) {
+      if (n & 1) {
+        res = res * x % m;
       }
-      b = b * b % m;
+      x = x * x % m;
     }
     return res;
   }
@@ -106,6 +107,11 @@ class DynamicRollingHash {
 
   int size() const { return len; }
 
+  int at(int i) const {
+    assert(0 <= i && i < len);
+    return cur[i];
+  }
+
   void set(int i, int x) {
     assert(0 <= i && i < len && x >= 0);
     uint64_t old1 = static_cast<uint64_t>(cur[i]) % MOD1 * pw1[i] % MOD1;
@@ -144,5 +150,6 @@ int main() {
 
   // A single element's hash is invariant under where an equal value sits.
   assert(h.hash(1, 2) == h.hash(4, 5));  // both 'b'.
+  assert(h.at(0) == 'x' && h.at(1) == 'b');
   return 0;
 }

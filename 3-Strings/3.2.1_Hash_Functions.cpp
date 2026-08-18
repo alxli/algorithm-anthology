@@ -10,14 +10,14 @@ The standalone functions below are deterministic.
 FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Starting from a fixed
 offset basis, it XORs each byte into the accumulator and then multiplies by a fixed prime; the `1a`
 variant XORs before multiplying, which mixes slightly better than the original FNV-1. Reach for it
-when the key is a string or byte buffer, whereas `mix32` and `mix64` are mixers for a single
+when the key is a string or byte buffer, whereas `fmix32` and `splitmix64` are mixers for a single
 fixed-width integer. Its appeal is simplicity: a few lines, no lookup tables, and no seed, with
 distribution good enough for the short keys common in contests. For very long inputs a block hash
 such as MurmurHash or xxHash is faster and mixes more thoroughly, and because FNV-1a is unseeded it
 offers no protection against adversarial inputs.
 
-- `mix32(x)` mixes a 32-bit unsigned integer `x`, using MurmurHash3's fmix32 mixer.
-- `mix64(x)` mixes a 64-bit unsigned integer `x`, using the SplitMix64 mixer.
+- `fmix32(x)` mixes a 32-bit unsigned integer `x`, using MurmurHash3's finalizer.
+- `splitmix64(x)` mixes a 64-bit unsigned integer `x`.
 - `hash32(x)` and `hash64(x)` hash any integer type that can be converted to `uint32_t` or
   `uint64_t`, respectively.
 - `hash_combine32(h, x)` and `hash_combine64(h, x)` fold another already-hashed value into an
@@ -50,8 +50,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-// MurmurHash3's fmix32 mixer.
-uint32_t mix32(uint32_t x) {
+uint32_t fmix32(uint32_t x) {
   x ^= x >> 16;
   x *= 0x85ebca6bU;
   x ^= x >> 13;
@@ -59,8 +58,7 @@ uint32_t mix32(uint32_t x) {
   return x ^ (x >> 16);
 }
 
-// SplitMix64 mixer.
-uint64_t mix64(uint64_t x) {
+uint64_t splitmix64(uint64_t x) {
   x += 0x9e3779b97f4a7c15ULL;
   x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
   x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
@@ -69,20 +67,20 @@ uint64_t mix64(uint64_t x) {
 
 template<typename Int>
 uint32_t hash32(Int x) {
-  return mix32(static_cast<uint32_t>(x));
+  return fmix32(static_cast<uint32_t>(x));
 }
 
 template<typename Int>
 uint64_t hash64(Int x) {
-  return mix64(static_cast<uint64_t>(x));
+  return splitmix64(static_cast<uint64_t>(x));
 }
 
 uint32_t hash_combine32(uint32_t h, uint32_t x) {
-  return mix32(h ^ (x + 0x9e3779b9U + (h << 6) + (h >> 2)));
+  return fmix32(h ^ (x + 0x9e3779b9U + (h << 6) + (h >> 2)));
 }
 
 uint64_t hash_combine64(uint64_t h, uint64_t x) {
-  return mix64(h ^ (x + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2)));
+  return splitmix64(h ^ (x + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2)));
 }
 
 uint32_t hash_float(float x) {
@@ -91,7 +89,7 @@ uint32_t hash_float(float x) {
   }
   uint32_t bits = 0;
   std::memcpy(&bits, &x, sizeof(bits));
-  return mix32(bits);
+  return fmix32(bits);
 }
 
 uint64_t hash_double(double x) {
@@ -100,7 +98,7 @@ uint64_t hash_double(double x) {
   }
   uint64_t bits = 0;
   std::memcpy(&bits, &x, sizeof(bits));
-  return mix64(bits);
+  return splitmix64(bits);
 }
 
 uint32_t fnv1a32(const std::string &s) {
@@ -143,8 +141,8 @@ uint64_t hash_range64(It lo, It hi) {
 
 Hash functors adapt common composite keys for unordered containers. `IntHasher` adds a per-run
 random seed before mixing, which makes integer-keyed hash tables harder to hack in open-test
-contests. The composite hashers separate the mixing primitive (`mix64`/`hash_combine64`) from each
-type's traversal of its parts, so swapping in a different mixer only requires editing one place.
+contests. The composite hashers separate the mixing primitive (`splitmix64`/`hash_combine64`) from
+each type's traversal of its parts, so swapping in another mixer only requires editing one place.
 
 - `PairIntHasher` is a self-contained hasher for `std::pair<int, int>` keys, written without any
   dependency on the templates below so that it can be copy-pasted on its own.
@@ -166,7 +164,7 @@ template<typename Int>
 struct IntHasher {
   std::size_t operator()(Int x) const {
     static const uint64_t RAND_SEED = std::chrono::steady_clock::now().time_since_epoch().count();
-    return static_cast<std::size_t>(mix64(static_cast<uint64_t>(x) + RAND_SEED));
+    return static_cast<std::size_t>(splitmix64(static_cast<uint64_t>(x) + RAND_SEED));
   }
 };
 
@@ -186,8 +184,8 @@ struct ScalarHasher {
 
 // A self-contained hasher for std::pair<int, int> keys: copy just this struct when you do not need
 // the rest of this file. The two 32-bit halves pack losslessly into one 64-bit word, which the
-// SplitMix64 mixer (the same one used by mix64 above) then scrambles. Add a random seed to key
-// before mixing, as IntHasher does, if you need anti-hacking protection.
+// an inlined copy of splitmix64() above then scrambles. Add a random seed to key before
+// mixing, as IntHasher does, if you need anti-hacking protection.
 struct PairIntHasher {
   std::size_t operator()(const std::pair<int, int> &p) const {
     uint64_t key = (static_cast<uint64_t>(static_cast<uint32_t>(p.first)) << 32) |
@@ -253,10 +251,10 @@ struct GenericHasher<std::vector<T>> : VectorHasher<T> {};
 using namespace std;
 
 int main() {
-  assert(mix32(123U) == mix32(123U));
-  assert(mix32(123U) != mix32(124U));
+  assert(fmix32(123U) == fmix32(123U));
+  assert(fmix32(123U) != fmix32(124U));
   assert(hash32(-1) == hash32(-1));
-  assert(hash64(123) == mix64(123ULL));
+  assert(hash64(123) == splitmix64(123ULL));
   assert(hash_float(-0.0F) == hash_float(0.0F));
   assert(hash_double(-0.0) == hash_double(0.0));
   assert(fnv1a32("abc") == fnv1a32("abc"));

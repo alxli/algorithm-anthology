@@ -113,13 +113,11 @@ int main() {
   d2.add(0, 0, 1, 2, 1);  // Add 1 to rows 0-1 and columns 0-2.
   d2.add(1, 1, 2, 3, 2);  // Add 2 to rows 1-2 and columns 1-3.
   d2.add(2, 0, 2, 0, 5);  // Single cell update.
-  // clang-format off
   vector<vector<int64_t>> expected2{
-    {1, 1, 1, 0},
-    {1, 3, 3, 2},
-    {5, 2, 2, 2}
+      {1, 1, 1, 0},
+      {1, 3, 3, 2},
+      {5, 2, 2, 2},
   };
-  // clang-format on
   assert(d2.build() == expected2);
   return 0;
 }

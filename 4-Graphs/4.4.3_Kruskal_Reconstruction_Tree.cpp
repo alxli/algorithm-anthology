@@ -84,7 +84,7 @@ class KruskalReconstructionTree {
       dsu_tree_root[nodes] = nodes;
       nodes++;
     }
-    assert(nodes == 2 * n - 1);
+    assert(nodes == total_nodes);
     int lg = 1;
     while ((1 << lg) <= nodes) {
       lg++;

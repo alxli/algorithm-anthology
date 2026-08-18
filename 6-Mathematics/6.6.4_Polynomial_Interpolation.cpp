@@ -33,13 +33,13 @@ Space Complexity:
 
 const int64_t MOD = 998244353;
 
-int64_t powmod(int64_t b, int64_t e, int64_t m) {
-  int64_t res = 1;
-  for (b %= m; e > 0; e >>= 1) {
-    if (e & 1) {
-      res = res * b % m;
+int64_t powmod(int64_t x, int64_t n, int64_t m) {
+  int64_t res = 1 % m;
+  for (x %= m; n > 0; n >>= 1) {
+    if (n & 1) {
+      res = res * x % m;
     }
-    b = b * b % m;
+    x = x * x % m;
   }
   return res;
 }

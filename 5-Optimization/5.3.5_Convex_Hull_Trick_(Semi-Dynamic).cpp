@@ -2,7 +2,7 @@
 
 Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, answer queries at specified
 $x$-coordinates, each asking for the minimum $y$-value over all given lines. This is useful for
-dynamic programming recurrences of the form `dp[i] = min(m[j] * x[i] + b[j])`. Only the lower
+dynamic programming recurrences of the form $dp(i) = \min_j (m_j x_i + b_j)$. Only the lower
 envelope of the lines can ever answer a query, so each added line pops previously stored lines that
 it renders useless, and ascending queries advance a pointer along the envelope so every line is
 visited at most twice.

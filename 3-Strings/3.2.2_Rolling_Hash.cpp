@@ -77,8 +77,7 @@ uint64_t hash_mul(uint64_t a, uint64_t b) {
 #endif
 }
 
-// SplitMix64 mixer.
-uint64_t mix64(uint64_t x) {
+uint64_t splitmix64(uint64_t x) {
   x += 0x9e3779b97f4a7c15ULL;
   x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
   x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
@@ -90,7 +89,7 @@ struct ValueHasher {
   // +1 ensures the result is in [1, HASH_MOD) and never zero; a zero element in a polynomial
   // hash is invisible and enables trivial collisions.
   uint64_t operator()(const T &x) const {
-    return mix64(static_cast<uint64_t>(x)) % (HASH_MOD - 1) + 1;
+    return splitmix64(static_cast<uint64_t>(x)) % (HASH_MOD - 1) + 1;
   }
 };
 
@@ -170,7 +169,7 @@ struct PointHasher {
     // points never collide pre-mix (a small-multiplier combine like a * C + b would).
     uint64_t key = (static_cast<uint64_t>(static_cast<uint32_t>(p.first)) << 32) |
                    static_cast<uint32_t>(p.second);
-    return mix64(key) % (HASH_MOD - 1) + 1;
+    return splitmix64(key) % (HASH_MOD - 1) + 1;
   }
 };
 

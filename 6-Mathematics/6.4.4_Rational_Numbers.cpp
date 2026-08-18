@@ -10,14 +10,13 @@ arithmetic operations.
   1 as the denominator.
 - `operator<<` outputs the rational number as a string consisting of possibly a minus sign followed
   by the numerator, followed by a slash, followed by the denominator.
-- `v.to_string()`, `v.to_llong()`, `v.to_double()`, and `v.to_ldouble()` return the rational `v`
-  converted to an `std::string`, `int64_t`, `double`, and `long double` respectively with potential
-  truncation or approximation for the primitive types. Equivalent conversions are also available
-  through explicit casts to `int`, `long long`, `double`, and `long double`.
-- `v.to_arithmetic<T>()` is the general form behind the three numeric conversions above, returning
-  `v` as any arithmetic type `T` readable from a stream. Integral `T` truncates toward zero.
-- `v.abs()`, `abs(v)`, `v.floor()`, and `v.ceil()` return the absolute value, floor, and ceiling of
-  rational `v`.
+- `to_string()`, `to_llong()`, `to_double()`, and `to_ldouble()` return the rational converted to an
+  `std::string`, `int64_t`, `double`, and `long double` respectively with potential truncation or
+  approximation for the primitive types. Equivalent conversions are also available through explicit
+  casts to `int`, `long long`, `double`, and `long double`.
+- `to_arithmetic<T>()` is the general form behind the three numeric conversions above, returning the
+  rational as any arithmetic type `T` readable from a stream. Integral `T` truncates toward zero.
+- `abs()`, `floor()`, and `ceil()` return the absolute value, floor, and ceiling.
 - Operators `<`, `>`, `<=`, `>=`, `==`, `!=`, `+`, `-`, `*`, `/`, `%`, `++`, `--`, `+=`, `-=`, `*=`,
   `/=`, and `%=` are defined analogous to those on numerical primitives. The comparisons and binary
   arithmetic are hidden friends, so a raw integer operand works on either side.
@@ -166,6 +165,7 @@ class Rational {
 /*** Example Usage ***/
 
 #include <cmath>
+using namespace std;
 
 bool EQ(double a, double b) {
   return fabs(a - b) < 1e-9;
@@ -185,5 +185,35 @@ int main() {
   assert(2 + Rational(1, 2) == Rational(5, 2));
   assert(1 < Rational(3, 2) && Rational(3, 2) < 2);
   assert(2 % Rational(3, 4) == Rational(1, 2));
+
+  // Construction reduces the fraction and moves any sign onto the numerator.
+  assert(Rational(2, 4).to_string() == "1/2");
+  assert(Rational(1, -2).to_string() == "-1/2");
+  assert(Rational(5).to_string() == "5/1");
+
+  // Arithmetic between rationals reduces the result too.
+  assert(Rational(1, 2) + Rational(1, 3) == Rational(5, 6));
+  assert(Rational(1, 2) - Rational(1, 3) == Rational(1, 6));
+  assert(Rational(2, 3) * Rational(3, 4) == Rational(1, 2));
+  assert(Rational(1, 2) / Rational(3, 4) == Rational(2, 3));
+
+  // Rounding takes a different branch on each sign, and is exact on whole numbers.
+  assert(Rational(7, 2).floor() == 3 && Rational(7, 2).ceil() == 4);
+  assert(Rational(-7, 2).floor() == -4 && Rational(-7, 2).ceil() == -3);
+  assert(Rational(4, 2).floor() == 2 && Rational(4, 2).ceil() == 2);
+  assert(Rational(-7, 2).abs() == Rational(7, 2) && abs(Rational(-7, 2)) == Rational(7, 2));
+
+  // The named conversions and the general form behind them.
+  assert(Rational(7, 2).to_llong() == 3 && EQ(Rational(7, 2).to_double(), 3.5));
+  assert(Rational(7, 2).to_arithmetic<int>() == 3);
+
+  // Stream input reads one integer, and output prints the reduced fraction.
+  Rational streamed;
+  istringstream in("7");
+  in >> streamed;
+  assert(streamed == 7);
+  ostringstream out;
+  out << Rational(-3, 6);
+  assert(out.str() == "-1/2");
   return 0;
 }

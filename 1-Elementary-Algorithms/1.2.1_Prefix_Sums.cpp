@@ -104,12 +104,10 @@ int main() {
   assert(count_subarrays_with_sum(a, 4) == 2);
   assert(count_subarrays_with_sum(vector<int>{0, 0, 0}, 0) == 6);
 
-  // clang-format off
   vector<vector<int>> grid{
-    {1, 2, 3},
-    {4, 5, 6}
+      {1, 2, 3},
+      {4, 5, 6},
   };
-  // clang-format on
   auto pre2 = prefix_sums_2d(grid);
   assert(rect_sum(pre2, 0, 1, 1, 2) == 16);  // Rows 0-1 and columns 1-2.
   assert(rect_sum(pre2, 0, 0, 1, 2) == 21);  // Whole grid.

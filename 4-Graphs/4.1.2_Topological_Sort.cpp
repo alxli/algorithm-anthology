@@ -65,15 +65,15 @@ std::vector<int> toposort_dfs() {
 
 std::vector<int> toposort_kahn() {
   int n = static_cast<int>(adj.size());
-  std::vector<int> indegree(n), res;
+  std::vector<int> indeg(n), res;
   for (int u = 0; u < n; u++) {
     for (int v : adj[u]) {
-      indegree[v]++;
+      indeg[v]++;
     }
   }
   std::queue<int> q;
   for (int i = 0; i < n; i++) {
-    if (indegree[i] == 0) {
+    if (indeg[i] == 0) {
       q.push(i);
     }
   }
@@ -82,7 +82,7 @@ std::vector<int> toposort_kahn() {
     q.pop();
     res.push_back(u);
     for (int v : adj[u]) {
-      if (--indegree[v] == 0) {
+      if (--indeg[v] == 0) {
         q.push(v);
       }
     }

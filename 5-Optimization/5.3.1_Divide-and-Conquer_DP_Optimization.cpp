@@ -1,19 +1,21 @@
 /*
 
-Computes one layer of a dynamic program of the form `dp_cur[i] = min(dp_prev[k] + cost(k, i))`,
-where $`k` \in [0, `i`]$. Let `opt[i]` be the smallest index `k` attaining this minimum.
-Divide-and-conquer optimization applies when `opt[i]` $\leq$ `opt[i + 1]`, so the best transition
-index moves only to the right as `i` increases.
+Computes one layer $t$ of a dynamic program of the form
+$dp_t(i) = \min_{0 \leq k \leq i} (dp_{t-1}(k) + C(k, i))$, where $C(k, i)$ is the cost of moving
+from state $k$ of the previous layer to state $i$ of the current one. Let $opt(i)$ be the smallest
+$k$ attaining this minimum. Divide-and-conquer optimization applies when $opt(i) \leq opt(i + 1)$,
+so the best transition index moves only to the right as $i$ increases.
 
-To compute `dp_cur[lo..hi]`, evaluate its midpoint and record its best transition as `best_k`.
-Monotonicity restricts every optimum in the left half to indices at most `best_k`, and every optimum
-in the right half to indices at least `best_k`. Recursively applying these bounds avoids checking
-every transition for every state. The caller must verify the required monotonicity property.
+To compute $dp_t$ over a range of states, evaluate its midpoint and record the best transition index
+$k^*$ found there. Monotonicity restricts every optimum in the left half to indices at most $k^*$,
+and every optimum in the right half to indices at least $k^*$. Recursively applying these bounds
+avoids checking every transition for every state. The caller must verify the required monotonicity
+property.
 
 - `compute_dp_layer(dp_prev, dp_cur, lo, hi, opt_lo, opt_hi, cost)` fills `dp_cur[lo..hi]` using
-  candidate transition indices in [`opt_lo`, `opt_hi`]. The template parameter `cost` must be
-  callable such that `cost(k, i)` returns the transition cost from previous state `k` to current
-  state `i`.
+  candidate transition indices in [`opt_lo`, `opt_hi`], where `dp_prev` holds $dp_{t-1}$ and
+  `dp_cur` receives $dp_t$. The template parameter `cost` must be callable such that `cost(k, i)`
+  returns $C(k, i)$, the transition cost from previous state `k` to current state `i`.
 
 Time Complexity:
 - O(n log n) calls to `cost()` per call, when computing one layer whose states each have O(n)

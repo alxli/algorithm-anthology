@@ -11,8 +11,8 @@ degrees.
   degrees (e.g. $-630$ becomes $90$).
 - `reduce_rad(t)` takes an angle `t` radians and returns an equivalent angle in the range
   $[0, 2\pi)$ radians (e.g. $720.5$ becomes $0.5$).
-- `polar_point(r, t)` returns a two-dimensional Cartesian point given radius `r` and angle `t`
-  radians in polar coordinates (see `std::polar()`).
+- `polar_x(r, t)` and `polar_y(r, t)` return the Cartesian coordinates of the point at radius `r`
+  and angle `t` radians in polar coordinates (see `std::polar()`).
 - `polar_angle(p)` returns the angle in radians of the line segment from $(0, 0)$ to point `p`,
   relative counterclockwise to the positive $x$-axis.
 - `angle(a, o, b)` returns the smallest angle in radians formed by the points `a`, `o`, `b` with
@@ -81,9 +81,12 @@ double reduce_rad(double t) {
   return (t >= 2 * PI) ? std::fmod(t, 2 * PI) : t;
 }
 
-template<typename OutPt>
-OutPt polar_point(double r, double t) {
-  return OutPt(r * std::cos(t), r * std::sin(t));
+double polar_x(double r, double t) {
+  return r * std::cos(t);
+}
+
+double polar_y(double r, double t) {
+  return r * std::sin(t);
 }
 
 template<typename Pt>
@@ -139,8 +142,8 @@ struct Point {
 int main() {
   assert(EQ(123, reduce_deg(-8 * 360 + 123)));
   assert(EQ(1.2345, reduce_rad(2 * PI * 8 + 1.2345)));
-  assert(EQ(polar_point<Point>(4, PI), Point(-4, 0)));
-  assert(EQ(polar_point<Point>(4, -PI / 2), Point(0, -4)));
+  assert(EQ(-4, polar_x(4, PI)) && EQ(0, polar_y(4, PI)));
+  assert(EQ(0, polar_x(4, -PI / 2)) && EQ(-4, polar_y(4, -PI / 2)));
   assert(EQ(45, polar_angle(Point(5, 5)) * RAD));
   assert(EQ(135 * DEG, polar_angle(Point(-4, 4))));
   assert(EQ(90 * DEG, angle(Point(5, 0), Point(0, 5), Point(-5, 0))));

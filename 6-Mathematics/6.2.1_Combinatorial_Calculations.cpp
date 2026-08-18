@@ -7,10 +7,15 @@ be nonnegative, and all moduli must be positive. All return values and table ent
 - `factorial(n, m = MOD)` returns $n! \bmod m$.
 - `factorial_without_p(n, p = MOD)` returns $n!$ modulo the prime $p$ after removing every factor of
   $p$ from the factorial.
+- `legendre(n, p)` returns the exponent of the prime $p$ in the factorization of $n!$, where $p$
+  must be at least $2$.
 - `binomial_table(n, m = MOD)` returns the first $n + 1$ rows of Pascal's triangle as a
   two-dimensional vector $t$ such that $t[i][j] = \binom{i}{j} \bmod m$.
 - `permute(n, k, m = MOD)` returns $(n \mathbin{\text{permute}} k) \bmod m$.
 - `choose(n, k, p = MOD)` returns $\binom{n}{k} \bmod p$, where $p$ is prime and $n < p$.
+- `choose_lucas(n, k, p = MOD)` returns $\binom{n}{k} \bmod p$ for any 64-bit `n` and `k`, where $p$
+  is prime. It is only practical for a small $p$, since each base-$p$ digit costs a call to
+  `choose()`.
 - `multichoose(n, k, p = MOD)` returns $(n \mathbin{\text{multichoose}} k) \bmod p$, where $p$ is
   prime and $n + k - 1 < p$ when $n > 0$.
 - `catalan(n, p = MOD)` returns the $n$-th Catalan number mod $p$, where $p$ is prime and $2n < p$.
@@ -23,15 +28,34 @@ be nonnegative, and all moduli must be positive. All return values and table ent
 - `eulerian2(n, k, m = MOD)` returns the $(n, k)$ Eulerian number of the 2nd kind mod $m$, where
   $n > k$.
 
+Legendre's formula sums $\lfloor n/p^i \rfloor$ over every $i \geq 1$, counting how many of
+$1, \dots, n$ are divisible by each power of $p$, which totals the exponent of $p$ in $n!$. It
+answers questions such as how many trailing zeros $n!$ has in base $p$. Paired with Kummer's
+theorem, which equates the exponent of $p$ in $\binom{n}{k}$ with the number of carries when adding
+$k$ and $n - k$ in base $p$, it also decides when a binomial coefficient is divisible by $p$.
+
+Lucas' theorem reduces a binomial coefficient modulo a prime to a product over base-$p$ digits:
+$\binom{n}{k} \equiv \prod_i \binom{n_i}{k_i} \pmod p$, where $n_i$ and $k_i$ are the $i$-th digits
+of $n$ and $k$ in base $p$. The product is $0$ as soon as some $k_i$ exceeds $n_i$. For a composite
+modulus, factor it into prime powers, apply the generalized version of the theorem to each factor,
+and recombine the residues with the Chinese remainder theorem of section 6.3.2.
+
+Every routine here recomputes its answer from scratch, which is what suits a handful of values or a
+modulus that varies between calls. When a solution instead needs thousands of binomial coefficients
+against one fixed modulus, precompute factorials and inverse factorials: the combinatorics tables of
+section 6.3.3 amortize O(n) of table growth and then answer each query in O(1).
+
 Overflow warning: Modular products use ordinary `int64_t` multiplication, so the square of the
 chosen modulus must fit in `int64_t`.
 
 Time Complexity:
 - O(n) per call to `factorial()`.
 - O(p log_p(n)) per call to `factorial_without_p()`.
+- O(log_p(n)) per call to `legendre()`.
 - O(n^2) per call to `binomial_table()`.
 - O(k) per call to `permute()`.
 - O(min(k, n - k)) per call to `choose()`.
+- O(p log_p(n)) per call to `choose_lucas()`.
 - O(k) per call to `multichoose()`.
 - O(n) per call to `catalan()`.
 - O(n^2) per call to `partitions(n, m)`.
@@ -46,6 +70,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
@@ -74,6 +99,15 @@ int64_t factorial_without_p(int64_t n, int64_t p = MOD) {
   return res % p;
 }
 
+int64_t legendre(int64_t n, int64_t p) {
+  assert(p >= 2);
+  int64_t res = 0;
+  for (int64_t q = n / p; q > 0; q /= p) {  // Dividing repeatedly avoids overflowing p^i.
+    res += q;
+  }
+  return res;
+}
+
 std::vector<std::vector<int64_t>> binomial_table(int n, int64_t m = MOD) {
   std::vector<std::vector<int64_t>> t(n + 1);
   for (int i = 0; i <= n; i++) {
@@ -100,14 +134,14 @@ int64_t permute(int n, int k, int64_t m = MOD) {
 }
 
 int64_t powmod(int64_t x, int64_t n, int64_t m) {
-  int64_t a = 1, b = x % m;
-  for (; n > 0; n >>= 1) {
+  int64_t res = 1 % m;
+  for (x %= m; n > 0; n >>= 1) {
     if (n & 1) {
-      a = a * b % m;
+      res = res * x % m;
     }
-    b = b * b % m;
+    x = x * x % m;
   }
-  return a % m;
+  return res;
 }
 
 int64_t choose(int n, int k, int64_t p = MOD) {
@@ -125,6 +159,23 @@ int64_t choose(int n, int k, int64_t p = MOD) {
     den = den * i % p;
   }
   return num * powmod(den, p - 2, p) % p;
+}
+
+int64_t choose_lucas(int64_t n, int64_t k, int64_t p = MOD) {
+  if (k < 0 || k > n) {
+    return 0;
+  }
+  int64_t res = 1;
+  while (n > 0) {  // Since k never exceeds n, k is also exhausted when n reaches 0.
+    int64_t ni = n % p, ki = k % p;
+    if (ki > ni) {
+      return 0;
+    }
+    res = res * choose(static_cast<int>(ni), static_cast<int>(ki), p) % p;
+    n /= p;
+    k /= p;
+  }
+  return res;
 }
 
 int64_t multichoose(int n, int k, int64_t p = MOD) {
@@ -230,8 +281,20 @@ int main() {
   assert(factorial(10) == 3628800);
   assert(factorial_without_p(123456) == 639390503);
   assert(factorial_without_p(7, 5) == 3);  // 7! / 5 = 1008 = 3 (mod 5).
+  assert(legendre(10, 2) == 8);            // 10! = 2^8 * 3^4 * 5^2 * 7.
+  assert(legendre(100, 5) == 24);          // 100! ends in 24 zeros.
   assert(permute(10, 4) == 5040);
   assert(choose(20, 7) == 77520);
+  assert(choose_lucas(20, 7) == 77520);
+  auto mod7 = binomial_table(30, 7);
+  for (int i = 0; i <= 30; i++) {
+    for (int j = 0; j <= i; j++) {
+      assert(choose_lucas(i, j, 7) == mod7[i][j]);
+    }
+  }
+  // By Lucas' theorem mod 2, a binomial coefficient is odd exactly when k is a submask of n.
+  assert(choose_lucas((1LL << 40) - 1, 12345, 2) == 1);
+  assert(choose_lucas(1LL << 40, 1, 2) == 0);
   assert(multichoose(20, 7) == 657800);
   assert(catalan(10) == 16796);
   assert(partitions(4) == 5);

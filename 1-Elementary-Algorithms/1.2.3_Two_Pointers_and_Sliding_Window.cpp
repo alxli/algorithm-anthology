@@ -187,11 +187,11 @@ not decrease.
 
 - `MonotoneQueue<T>()` constructs an empty queue for minimum queries. Instantiate
   `MonotoneQueue<T, std::greater<T>>` for maximum queries.
+- `empty()` returns whether the queue has no active candidates.
 - `push(index, value)` inserts candidate `value` with timestamp `index`, removing dominated
   candidates from the back.
 - `expire(first_valid)` removes candidates whose indices are less than `first_valid`.
 - `top()` returns the best active (`index`, `value`) pair. The queue must be nonempty.
-- `empty()` returns whether the queue has no active candidates.
 
 Time Complexity:
 - O(n) for any sequence of $n$ calls to `push(index, value)` and `expire(first_valid)`.

@@ -38,8 +38,7 @@ class ZobristHash {
   std::unordered_map<T, uint64_t> tokens;
   uint64_t state;
 
-  // SplitMix64 mixer.
-  static uint64_t mix64(uint64_t x) {
+  static uint64_t splitmix64(uint64_t x) {
     x += 0x9e3779b97f4a7c15ULL;
     x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
     x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
@@ -53,7 +52,7 @@ class ZobristHash {
     if (auto it = tokens.find(x); it != tokens.end()) {
       return it->second;
     }
-    state = mix64(state);
+    state = splitmix64(state);
     tokens[x] = state;
     return state;
   }

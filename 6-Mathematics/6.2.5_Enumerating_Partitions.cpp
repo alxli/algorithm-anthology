@@ -129,7 +129,6 @@ Increasing partitions of 8:
 
 ***/
 
-#include <algorithm>
 #include <cassert>
 #include <iostream>
 using namespace std;

@@ -72,13 +72,13 @@ class HashDeque {
   static const uint64_t BASE1 = 131, BASE2 = 137;              // Nonzero modulo MOD1 and MOD2.
 
   // Products and sums of residues below 2^30 stay under 2^60, so 64-bit arithmetic never overflows.
-  static uint64_t powmod(uint64_t b, uint64_t e, uint64_t m) {
-    uint64_t res = 1;
-    for (b %= m; e > 0; e >>= 1) {
-      if (e & 1) {
-        res = res * b % m;
+  static uint64_t powmod(uint64_t x, uint64_t n, uint64_t m) {
+    uint64_t res = 1 % m;
+    for (x %= m; n > 0; n >>= 1) {
+      if (n & 1) {
+        res = res * x % m;
       }
-      b = b * b % m;
+      x = x * x % m;
     }
     return res;
   }
@@ -188,10 +188,10 @@ int main() {
   // An arbitrary element type via a custom hasher: a deque of whole words.
   auto whash = [](const string &w) -> uint64_t { return hash<string>{}(w); };
   HashDeque<string, decltype(whash)> sentence(whash), reversed(whash);
-  for (string w : {string("the"), string("quick"), string("fox")}) {
+  for (auto w : {"the", "quick", "fox"}) {
     sentence.push_back(w);
   }
-  for (string w : {string("fox"), string("quick"), string("the")}) {
+  for (auto w : {"fox", "quick", "the"}) {
     reversed.push_front(w);  // Same word sequence, assembled from the front.
   }
   assert(sentence == reversed);

@@ -35,7 +35,7 @@ Space Complexity:
 
 template<typename Pt>
 auto sqdist(const Pt &a, const Pt &b) {
-  auto dx = a.x - b.x, dy = a.y - b.y;
+  auto dx = b.x - a.x, dy = b.y - a.y;
   return dx * dx + dy * dy;  // Overflow warning.
 }
 

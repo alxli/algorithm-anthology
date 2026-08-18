@@ -96,23 +96,20 @@ std::vector<int> immediate_dominators(int start) {
 using namespace std;
 
 int main() {
-  {
-    // 0 ---> 1 ---+   +-------> 4
-    // |           |  /          |
-    // v           v /           v
-    // 2 --------> 3 ---> 5 ---> 6
-    adj = {{1, 2}, {3}, {3}, {4, 5}, {6}, {6}, {}};
-    assert((immediate_dominators(0) == vector<int>{0, 0, 0, 0, 3, 3, 3}));
-  }
-  {
-    // Node 3 is reachable through either 1 or 2, so neither one dominates it.
-    // 4 ---> 1 -----+
-    // |     ^|      |
-    // |   /  |      |
-    // v /    v      v
-    // 0 ---> 2 ---> 3
-    adj = {{1, 2}, {2, 3}, {3}, {}, {0, 1}};
-    assert((immediate_dominators(4) == vector<int>{4, 4, 4, 4, 4}));
-  }
+  // 0 ---> 1 ---+   +-------> 4
+  // |           |  /          |
+  // v           v /           v
+  // 2 --------> 3 ---> 5 ---> 6
+  adj = {{1, 2}, {3}, {3}, {4, 5}, {6}, {6}, {}};
+  assert((immediate_dominators(0) == vector<int>{0, 0, 0, 0, 3, 3, 3}));
+
+  // Node 3 is reachable through either 1 or 2, so neither one dominates it.
+  // 4 ---> 1 -----+
+  // |     ^|      |
+  // |   /  |      |
+  // v /    v      v
+  // 0 ---> 2 ---> 3
+  adj = {{1, 2}, {2, 3}, {3}, {}, {0, 1}};
+  assert((immediate_dominators(4) == vector<int>{4, 4, 4, 4, 4}));
   return 0;
 }

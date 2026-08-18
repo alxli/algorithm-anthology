@@ -115,13 +115,6 @@ class Dinic {
 
   T edge_flow(int id) const { return edges[id].flow; }
 
-  void clear_flow() {
-    for (Edge &e : edges) {
-      e.flow = 0;
-    }
-    flow = 0;
-  }
-
   T max_flow(int source, int sink) {
     assert(source != sink);
     while (bfs(source, sink)) {
@@ -135,6 +128,13 @@ class Dinic {
       }
     }
     return flow;
+  }
+
+  void clear_flow() {
+    for (Edge &e : edges) {
+      e.flow = 0;
+    }
+    flow = 0;
   }
 
   std::vector<char> min_cut(int source) const {

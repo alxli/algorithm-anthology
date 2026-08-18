@@ -1,6 +1,6 @@
 \chapter{\texorpdfstring{Optimization}{5. Optimization}}
 
-\section{\texorpdfstring{Binary Search}{5.1 Binary Search}}
+\section{\texorpdfstring{Searching Sorted Data}{5.1 Searching Sorted Data}}
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Binary Search}
@@ -146,21 +146,176 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Interpolation Search}
+Given a sorted range of numeric values, find a target by guessing where it should be rather than always probing the middle. Binary search halves the range because it only asks whether the target is smaller or larger than the probe; interpolation search additionally uses how much smaller or larger. Assuming the values rise roughly linearly across the range, the target's position is estimated by linear interpolation between the two endpoints, the same way a reader opens a dictionary near the back to look up a word starting with ``s''.
+
+Each probe reduces the expected distance to the target from $n$ to $\sqrt{n}$ when the values are drawn from a uniform distribution, which gives $O(\log \log n)$ probes: for a billion sorted integers that is about five probes rather than thirty. The bound depends entirely on the distribution. Clustered values push the estimate to one end repeatedly and degrade the search to $O(n)$ probes, so this is the rare algorithm whose worst case is worse than the method it replaces. Use it when the data is known to be near-uniform, such as generated IDs, timestamps at a fixed rate, or hash values, and use binary search otherwise.
+
+\begin{compactitem}
+  \item \inlinecode{interpolation\_search(lo, hi, key)} returns an iterator to an occurrence of \inlinecode{key} in the sorted random-access range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, or \inlinecode{hi} if \inlinecode{key} does not occur. The value type must support subtraction and conversion to \inlinecode{double}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(\log \log n)$ per call on uniformly distributed values and $O(n)$ in the worst case, where $n$ is the range length.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <iterator>
+
+template<typename It, typename T>
+It interpolation_search(It lo, It hi, const T &key) {
+  It last = hi;
+  while (lo < hi && key >= *lo && key <= *(hi - 1)) {
+    if (*(hi - 1) == *lo) {  // A constant span holds the key only if it equals that value.
+      return *lo == key ? lo : last;
+    }
+    // Estimate the offset by where the key falls between the endpoint values.
+    double fraction = static_cast<double>(key - *lo) / static_cast<double>(*(hi - 1) - *lo);
+    auto span = std::distance(lo, hi) - 1;
+    It probe =
+        lo + static_cast<typename std::iterator_traits<It>::difference_type>(fraction * span);
+    if (*probe == key) {
+      return probe;
+    }
+    if (*probe < key) {
+      lo = probe + 1;
+    } else {
+      hi = probe;
+    }
+  }
+  return last;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <vector>
+using namespace std;
+
+int main() {
+  vector<int> a{2, 4, 6, 8, 10, 12, 14, 16, 18, 20};
+  for (int i = 0; i < static_cast<int>(a.size()); i++) {
+    assert(interpolation_search(a.begin(), a.end(), a[i]) - a.begin() == i);
+  }
+  assert(interpolation_search(a.begin(), a.end(), 5) == a.end());
+  assert(interpolation_search(a.begin(), a.end(), 1) == a.end());   // Below the range.
+  assert(interpolation_search(a.begin(), a.end(), 99) == a.end());  // Above the range.
+  assert(interpolation_search(a.begin(), a.begin(), 2) == a.begin());
+
+  // Heavily clustered values still return the right answer, only more slowly.
+  vector<int> skewed{1, 1, 1, 1, 1, 1000000};
+  assert(*interpolation_search(skewed.begin(), skewed.end(), 1000000) == 1000000);
+  assert(*interpolation_search(skewed.begin(), skewed.end(), 1) == 1);
+  assert(interpolation_search(skewed.begin(), skewed.end(), 7) == skewed.end());
+  return 0;
+}
+\end{lstlisting}
+\subsection{Sorted Matrix Search}
+Given a matrix whose every row is sorted left to right and every column sorted top to bottom, find a target value. Such a matrix is not sorted overall, since a cell says nothing about the cells diagonally adjacent to it, so a single binary search over the flattened grid does not apply.
+
+Starting at the top-right corner makes each comparison decisive. That cell is the largest in its row and the smallest in its column, so if it exceeds the target then no cell in its column can match and the whole column is discarded, while if it is smaller then no cell in its row can match and the row is discarded. Either way one row or one column disappears per comparison, so the walk visits at most $R + C$ cells while descending a staircase-shaped boundary. The bottom-left corner works the same way with the directions swapped; the other two corners are useless, since they are extreme in both directions at once and a comparison there rules out nothing.
+
+\begin{compactitem}
+  \item \inlinecode{search\_sorted\_matrix(a, key)} returns the position (\inlinecode{row}, \inlinecode{col}) of an occurrence of \inlinecode{key} in the row-wise and column-wise sorted matrix \inlinecode{a}, or $(-1, -1)$ if \inlinecode{key} does not occur.
+  \item \inlinecode{count\_at\_most(a, key)} returns how many entries of \inlinecode{a} are less than or equal to \inlinecode{key}, by measuring the same staircase boundary rather than stopping at a match. Combined with the binary search of section 5.1.1 over the value range, it yields the 1-based $k$-th smallest entry in $O((R + C) \log\left(\max - \min\right))$ time without materializing the sorted order.
+\end{compactitem}
+
+A matrix sorted in reading order, every row beginning after the previous ends, is the easier problem of binary searching one sorted sequence of length $R \cdot C$.
+
+\textbf{Time Complexity}: $O(R + C)$ per call, where $R$ and $C$ are the row and column counts.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <cstdint>
+#include <utility>
+#include <vector>
+
+template<typename T>
+std::pair<int, int> search_sorted_matrix(const std::vector<std::vector<T>> &a, const T &key) {
+  int rows = static_cast<int>(a.size());
+  int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
+  for (int r = 0, c = cols - 1; r < rows && c >= 0;) {
+    if (a[r][c] < key) {
+      r++;  // Every cell left in this row is even smaller.
+    } else if (key < a[r][c]) {
+      c--;  // Every cell below in this column is even larger.
+    } else {
+      return {r, c};
+    }
+  }
+  return {-1, -1};
+}
+
+template<typename T>
+int64_t count_at_most(const std::vector<std::vector<T>> &a, const T &key) {
+  int rows = static_cast<int>(a.size());
+  int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
+  int64_t res = 0;
+  for (int r = 0, c = cols - 1; r < rows;) {
+    if (c >= 0 && key < a[r][c]) {
+      c--;
+    } else {
+      res += c + 1;  // The row's first c + 1 entries are all at most key.
+      r++;
+    }
+  }
+  return res;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  //   1   4   7  11
+  //   2   5   8  12
+  //   3   6   9  16
+  //  10  13  14  17
+  vector<vector<int>> a{{1, 4, 7, 11}, {2, 5, 8, 12}, {3, 6, 9, 16}, {10, 13, 14, 17}};
+  assert(search_sorted_matrix(a, 5) == make_pair(1, 1));
+  assert(search_sorted_matrix(a, 1) == make_pair(0, 0));   // Top-left corner.
+  assert(search_sorted_matrix(a, 17) == make_pair(3, 3));  // Bottom-right corner.
+  assert(search_sorted_matrix(a, 11) == make_pair(0, 3));  // The starting cell itself.
+  assert(search_sorted_matrix(a, 15) == make_pair(-1, -1));
+
+  assert(count_at_most(a, 0) == 0);
+  assert(count_at_most(a, 5) == 5);  // 1, 2, 3, 4, and 5.
+  assert(count_at_most(a, 100) == 16);
+
+  vector<vector<int>> single{{42}};
+  assert(search_sorted_matrix(single, 42) == make_pair(0, 0));
+  assert(search_sorted_matrix(single, 7) == make_pair(-1, -1));
+  return 0;
+}
+\end{lstlisting}
 \subsection{Local Minimum}
 Finds a non-strict local minimum in an array, that is, an index $i$ whose value is no greater than the values at its existing neighbors. Unlike ternary search, this does not require the array to be unimodal, but the result is only a local minimum and need not be the global minimum.
 
 Compare the middle element with its right neighbor. If the sequence slopes downward, the right half contains a local minimum; otherwise, the middle element or the left half contains one. Each comparison therefore discards half of the remaining indices.
 
+The same argument works in two dimensions, where a local minimum is a cell no greater than its four orthogonal neighbors. Scan the middle column for its smallest entry; if that entry is no greater than its left and right neighbors it is a local minimum, and otherwise the smaller of those two neighbors lies in a half that must contain one. The half discarded cannot be entered again, because crossing back would require passing through a cell larger than the one just left, so recursing on the surviving half halves the columns each time. Scanning a column costs $O(R)$, giving $O(R \log C)$.
+
 \begin{compactitem}
   \item \inlinecode{local\_min\_index(a)} returns the index of a non-strict local minimum in the nonempty array \inlinecode{a}. Either endpoint may be returned when it is no greater than its sole neighbor.
+  \item \inlinecode{local\_min\_cell(a)} returns the position (\inlinecode{row}, \inlinecode{col}) of a non-strict local minimum in the nonempty grid \inlinecode{a}, whose rows must all have the same nonzero length.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(\log n)$ comparisons per call, where $n$ is the size of \inlinecode{a}.
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(\log n)$ comparisons per call to \inlinecode{local\_min\_index()}, where $n$ is the size of \inlinecode{a}.
+  \item $O(R \cdot \log\left(C\right))$ comparisons per call to \inlinecode{local\_min\_cell()}, where $R$ and $C$ are the grid dimensions.
+\end{compactitem}
 
-\textbf{Space Complexity}: $O(1)$ auxiliary.
+\textbf{Space Complexity}: $O(1)$ auxiliary for both operations.
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <utility>
 #include <vector>
 
 template<typename T>
@@ -177,6 +332,31 @@ int local_min_index(const std::vector<T> &a) {
   }
   return lo;
 }
+
+template<typename T>
+std::pair<int, int> local_min_cell(const std::vector<std::vector<T>> &a) {
+  int rows = static_cast<int>(a.size());
+  assert(rows > 0 && !a[0].empty());
+  int lo = 0, hi = static_cast<int>(a[0].size()) - 1;
+  while (true) {
+    int mid = lo + (hi - lo) / 2, best = 0;
+    for (int r = 1; r < rows; r++) {  // Smallest entry of the middle column.
+      if (a[r][mid] < a[best][mid]) {
+        best = r;
+      }
+    }
+    bool descends_left = mid > lo && a[best][mid - 1] < a[best][mid];
+    bool descends_right = mid < hi && a[best][mid + 1] < a[best][mid];
+    if (!descends_left && !descends_right) {
+      return {best, mid};  // No neighbor is smaller, so this cell is a local minimum.
+    }
+    if (descends_left && (!descends_right || a[best][mid - 1] <= a[best][mid + 1])) {
+      hi = mid - 1;
+    } else {
+      lo = mid + 1;
+    }
+  }
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -190,11 +370,27 @@ int main() {
   vector<int> duplicates{4, 2, 2, 3};
   int i = local_min_index(duplicates);
   assert((i == 1 || i == 2) && duplicates[i] == 2);
+
+  vector<vector<int>> grid{
+      {9, 8, 7},
+      {4, 1, 6},
+      {5, 2, 3},
+  };
+  assert(local_min_cell(grid) == make_pair(1, 1));  // The value 1 beats all four neighbors.
+  assert(local_min_cell(vector<vector<int>>{{5}}) == make_pair(0, 0));
+
+  // Every cell of a monotone grid slopes toward the corner, which is the only local minimum.
+  vector<vector<int>> slope{
+      {1, 2, 3},
+      {2, 3, 4},
+      {3, 4, 5},
+  };
+  assert(local_min_cell(slope) == make_pair(0, 0));
   return 0;
 }
 \end{lstlisting}
 
-\section{\texorpdfstring{Unimodal and Continuous Search}{5.2 Unimodal and Continuous Search}}
+\section{\texorpdfstring{Continuous Optimization}{5.2 Continuous Optimization}}
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Ternary and Golden Section Search}
@@ -204,17 +400,21 @@ Ternary search splits the interval into thirds. It is the simplest to reason abo
 
 Golden-section search places the probes at the golden ratio so that one probe is reused as an interior point of the next, smaller interval. It therefore performs only one new evaluation per iteration while shrinking the interval by a factor of $1/\varphi$ (about $0.618$), and reaches a given accuracy in roughly $2.4$ times fewer evaluations than ternary search. Prefer it when the function is expensive to evaluate.
 
+Brent's method keeps the golden-section guarantee while converging much faster on the smooth functions that occur in practice. It tracks the three best points seen so far, fits a parabola through them, and jumps to that parabola's vertex, which is superlinear once the interval is small enough for the function to look quadratic. A proposed vertex is accepted only when it lands inside the current interval and moves less than half the step before last; otherwise the method takes a golden-section step instead, so it never loses the guaranteed interval reduction. Unlike the two searches above, it stops early once the interval is smaller than the tolerance rather than always running a fixed number of iterations.
+
 The discrete version operates on an integer domain, narrowing by thirds until at most three candidates remain and then scanning them. It returns the index of the optimum rather than a real coordinate. As with ternary search on reals, the function must be strictly unimodal.
 
 \begin{compactitem}
   \item \inlinecode{ternary\_search\_min(lo, hi, f, eps = 1e-12)} and \inlinecode{ternary\_search\_max(lo, hi, f, eps = 1e-12)} return a \inlinecode{double} \inlinecode{x} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ optimizing the continuous unimodal function \inlinecode{f}, to within the optional absolute error \inlinecode{eps}.
   \item \inlinecode{golden\_section\_min(lo, hi, f, eps = 1e-12)} and \inlinecode{golden\_section\_max(lo, hi, f, eps = 1e-12)} do the same with one function evaluation per iteration.
+  \item \inlinecode{brent\_min(lo, hi, f, eps = 1e-12)} and \inlinecode{brent\_max(lo, hi, f, eps = 1e-12)} do the same, fitting a parabola through the three best points when that fit is well behaved and falling back to a golden-section step when it is not.
   \item \inlinecode{discrete\_ternary\_min(lo, hi, f)} and \inlinecode{discrete\_ternary\_max(lo, hi, f)} return the integer index in range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ optimizing the unimodal function \inlinecode{f}, breaking ties toward the smaller index.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
+  \item $O(\log\left(n / {\inlinecodemath{eps}}\right))$ calls to \inlinecode{f()} per call to \inlinecode{brent\_min()} and \inlinecode{brent\_max()} in the worst case, and far fewer once the parabolic steps take over.
   \item $O(\log\left(n / {\inlinecodemath{eps}}\right))$ calls to \inlinecode{f()} per continuous-search call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}. Golden-section makes about half as many per iteration as ternary search.
   \item $O(\log n)$ calls to \inlinecode{f()} per discrete-search call.
 \end{compactitem}
@@ -222,6 +422,8 @@ The discrete version operates on an integer domain, narrowing by thirds until at
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
 \begin{lstlisting}[language=C++]
+#include <cmath>
+
 template<typename Fn>
 double ternary_search_min(double lo, double hi, Fn f, double eps = 1e-12) {
   while (hi - lo > eps) {
@@ -266,6 +468,80 @@ double golden_section_min(double lo, double hi, Fn f, double eps = 1e-12) {
 template<typename Fn>
 double golden_section_max(double lo, double hi, Fn f, double eps = 1e-12) {
   return golden_section_min(lo, hi, [&](double x) { return -f(x); }, eps);
+}
+
+template<typename Fn>
+double brent_min(double lo, double hi, Fn f, double eps = 1e-12) {
+  const double GOLD = 0.3819660112501051;  // (3 - sqrt(5)) / 2, the golden-section fraction.
+  double x = lo + GOLD * (hi - lo), w = x, v = x;
+  double fx = f(x), fw = fx, fv = fx;
+  double step = 0, prev_step = 0;
+  for (int i = 0; i < 200; i++) {
+    double mid = (lo + hi) / 2, tol = eps * std::fabs(x) + eps;
+    if (std::fabs(x - mid) <= 2 * tol - (hi - lo) / 2) {
+      break;
+    }
+    double p = 0, q = 0;
+    if (std::fabs(prev_step) > tol) {
+      // Fit a parabola through the three best points and solve for its vertex.
+      double r = (x - w) * (fx - fv), s = (x - v) * (fx - fw);
+      p = (x - v) * s - (x - w) * r;
+      q = 2 * (s - r);
+      if (q > 0) {
+        p = -p;
+      } else {
+        q = -q;
+      }
+    }
+    double old_step = prev_step;
+    prev_step = step;
+    // Accept the vertex only if it stays inside the interval and at least halves the last step.
+    if (std::fabs(p) < std::fabs(q * old_step / 2) && p > q * (lo - x) && p < q * (hi - x)) {
+      step = p / q;
+      if (x + step - lo < 2 * tol || hi - (x + step) < 2 * tol) {
+        step = x < mid ? tol : -tol;
+      }
+    } else {
+      prev_step = (x < mid ? hi : lo) - x;
+      step = GOLD * prev_step;
+    }
+    double u = x + (std::fabs(step) >= tol ? step : (step > 0 ? tol : -tol));
+    double fu = f(u);
+    if (fu <= fx) {
+      if (u < x) {
+        hi = x;
+      } else {
+        lo = x;
+      }
+      v = w;
+      fv = fw;
+      w = x;
+      fw = fx;
+      x = u;
+      fx = fu;
+    } else {
+      if (u < x) {
+        lo = u;
+      } else {
+        hi = u;
+      }
+      if (fu <= fw || w == x) {
+        v = w;
+        fv = fw;
+        w = u;
+        fw = fu;
+      } else if (fu <= fv || v == x || v == w) {
+        v = u;
+        fv = fu;
+      }
+    }
+  }
+  return x;
+}
+
+template<typename Fn>
+double brent_max(double lo, double hi, Fn f, double eps = 1e-12) {
+  return brent_min(lo, hi, [&f](double x) { return -f(x); }, eps);
 }
 
 template<typename Int, typename Fn>
@@ -317,6 +593,8 @@ int main() {
   assert(EQ(golden_section_min(-1000, 1000, up), -2));
   assert(EQ(ternary_search_max(-1000, 1000, down), 2.0 / 19));
   assert(EQ(golden_section_max(-1000, 1000, down), 2.0 / 19));
+  assert(EQ(brent_min(-1000, 1000, up), -2));
+  assert(EQ(brent_max(-1000, 1000, down), 2.0 / 19));
 
   // Discrete unimodal arrays: a valley and a peak.
   vector<int> valley{5, 3, 1, 2, 4, 6};
@@ -501,17 +779,161 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Gradient Descent}
+Given a differentiable objective $f$ over $\mathbb{R}^n$ and a starting guess, approximately minimize the function by repeatedly stepping against the gradient. The gradient points in the direction of steepest increase, so moving the opposite way lowers $f$ for a small enough step; the whole difficulty is choosing how far to move, since too large a step overshoots and diverges while too small a step never arrives.
+
+Backtracking answers this by trying a full step and halving it until the Armijo condition $f(x - t\nabla f) \leq f(x) - c\,t\,\|\nabla f\|^2$ holds, which accepts a step only when it delivers a fixed fraction of the decrease that the gradient predicts. It needs no tuning and is the default to reach for. Adam instead keeps exponentially decaying averages of the gradient and of its squared entries, then divides one by the square root of the other, so each coordinate gets a step scaled to its own recent gradient magnitude. That makes it far less sensitive to badly scaled variables and to noisy gradients, at the cost of a learning rate to choose.
+
+\begin{compactitem}
+  \item \inlinecode{numeric\_gradient(f, x, h = 1e-6)} returns the gradient of \inlinecode{f} at \inlinecode{x} estimated by central differences, using a step scaled by the magnitude of each coordinate.
+  \item \inlinecode{gradient\_descent\_min(f, grad, x0, ...)} returns (\inlinecode{value}, \inlinecode{point}) for an approximate minimum of \inlinecode{f} reached from the initial guess \inlinecode{x0}, taking backtracking steps against \inlinecode{grad(x)}. Optional parameters default to \inlinecode{eps = 1e-9}, \inlinecode{iterations = 10000}, and \inlinecode{step\_max = 1}, where \inlinecode{eps} is the gradient norm below which the search stops and \inlinecode{step\_max} is the first step length tried.
+  \item \inlinecode{adam\_min(f, grad, x0, ...)} returns (\inlinecode{value}, \inlinecode{point}) for an approximate minimum of \inlinecode{f} reached from \inlinecode{x0} using Adam. Optional parameters default to \inlinecode{rate = 0.01}, \inlinecode{iterations = 10000}, \inlinecode{eps = 1e-9}, \inlinecode{beta1 = 0.9}, and \inlinecode{beta2 = 0.999}, where \inlinecode{rate} is the learning rate and the two decay factors, both required to lie in $[0, 1)$, control the two running averages.
+\end{compactitem}
+
+Both routines find a local minimum, and only a convex $f$ makes that the global one, as with the logistic regression of section 6.7.5. Prefer the golden-section search of section 5.2.1 in one dimension, or the hill climbing of section 5.2.2 and annealing of section 5.2.3 when no gradient is available, since a numeric gradient costs $2n$ evaluations per step and half the usable precision.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ calls to \inlinecode{f()} per call to \inlinecode{numeric\_gradient()}, where $n$ is the number of variables.
+  \item $O(k(C_g + l \cdot C_f))$ per call to \inlinecode{gradient\_descent\_min()}, where $k$ is the number of iterations performed, $l$ is the number of trial steps per line search, and $C_f$ and $C_g$ are the costs of evaluating \inlinecode{f} and \inlinecode{grad}.
+  \item $O(k(C_g + n))$ per call to \inlinecode{adam\_min()}, where $k$ is the number of iterations performed.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(n)$ auxiliary for all operations.
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cmath>
+#include <cstddef>
+#include <utility>
+#include <vector>
+
+template<typename Fn>
+std::vector<double> numeric_gradient(Fn f, const std::vector<double> &x, double h = 1e-6) {
+  std::vector<double> res(x.size()), p(x);
+  for (size_t i = 0; i < x.size(); i++) {
+    double step = h * (1 + std::fabs(x[i]));
+    p[i] = x[i] + step;
+    double hi = f(p);
+    p[i] = x[i] - step;
+    double lo = f(p);
+    p[i] = x[i];
+    res[i] = (hi - lo) / (2 * step);
+  }
+  return res;
+}
+
+template<typename Fn, typename Grad>
+std::pair<double, std::vector<double>> gradient_descent_min(
+    Fn f, Grad grad, std::vector<double> x, double eps = 1e-9, int iterations = 10000,
+    double step_max = 1
+) {
+  static const double ARMIJO = 1e-4, STEP_MIN = 1e-18;
+  double res = f(x);
+  std::vector<double> next(x.size());
+  for (int it = 0; it < iterations; it++) {
+    std::vector<double> g = grad(x);
+    double norm2 = 0;
+    for (double v : g) {
+      norm2 += v * v;
+    }
+    if (std::sqrt(norm2) < eps) {
+      break;
+    }
+    bool moved = false;
+    for (double step = step_max; step > STEP_MIN; step /= 2) {
+      for (size_t i = 0; i < x.size(); i++) {
+        next[i] = x[i] - step * g[i];
+      }
+      double value = f(next);
+      if (value <= res - ARMIJO * step * norm2) {
+        x = next;
+        res = value;
+        moved = true;
+        break;
+      }
+    }
+    if (!moved) {
+      break;
+    }
+  }
+  return std::make_pair(res, x);
+}
+
+template<typename Fn, typename Grad>
+std::pair<double, std::vector<double>> adam_min(
+    Fn f, Grad grad, std::vector<double> x, double rate = 0.01, int iterations = 10000,
+    double eps = 1e-9, double beta1 = 0.9, double beta2 = 0.999
+) {
+  static const double EPS = 1e-8;
+  assert(0 <= beta1 && beta1 < 1 && 0 <= beta2 && beta2 < 1);
+  std::vector<double> m(x.size()), v(x.size());
+  for (int t = 1; t <= iterations; t++) {
+    std::vector<double> g = grad(x);
+    double norm2 = 0;
+    for (double d : g) {
+      norm2 += d * d;
+    }
+    if (std::sqrt(norm2) < eps) {
+      break;
+    }
+    double c1 = 1 - std::pow(beta1, t), c2 = 1 - std::pow(beta2, t);
+    for (size_t i = 0; i < x.size(); i++) {
+      m[i] = beta1 * m[i] + (1 - beta1) * g[i];
+      v[i] = beta2 * v[i] + (1 - beta2) * g[i] * g[i];
+      x[i] -= rate * (m[i] / c1) / (std::sqrt(v[i] / c2) + EPS);
+    }
+  }
+  return std::make_pair(f(x), x);
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+using namespace std;
+
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-6;
+}
+
+// Ill-conditioned paraboloid with global minimum at f(2, 3) = 0.
+double f(const vector<double> &x) {
+  return 100 * (x[0] - 2) * (x[0] - 2) + (x[1] - 3) * (x[1] - 3);
+}
+
+vector<double> grad(const vector<double> &x) {
+  return {200 * (x[0] - 2), 2 * (x[1] - 3)};
+}
+
+int main() {
+  vector<double> x0{0, 0};
+  vector<double> g = numeric_gradient(f, x0);
+  assert(EQ(g[0], -400) && EQ(g[1], -6));
+
+  pair<double, vector<double>> res = gradient_descent_min(f, grad, x0);
+  assert(EQ(res.first, 0) && EQ(res.second[0], 2) && EQ(res.second[1], 3));
+
+  res = adam_min(f, grad, x0, 0.05, 100000);
+  assert(EQ(res.first, 0) && EQ(res.second[0], 2) && EQ(res.second[1], 3));
+
+  // A gradient is not required: central differences suffice, at 2n evaluations per step.
+  res = gradient_descent_min(f, [](const vector<double> &x) { return numeric_gradient(f, x); }, x0);
+  assert(EQ(res.first, 0));
+  return 0;
+}
+\end{lstlisting}
 
 \section{\texorpdfstring{Dynamic Programming Tricks}{5.3 Dynamic Programming Tricks}}
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Divide-and-Conquer DP Optimization}
-Computes one layer of a dynamic program of the form \inlinecode{dp\_cur[i] = min(dp\_prev[k] + cost(k, i))}, where ${\inlinecodemath{k}} \in [0, {\inlinecodemath{i}}]$. Let \inlinecode{opt[i]} be the smallest index \inlinecode{k} attaining this minimum. Divide-and-conquer optimization applies when \inlinecode{opt[i]} $\leq$ \inlinecode{opt[i + 1]}, so the best transition index moves only to the right as \inlinecode{i} increases.
+Computes one layer $t$ of a dynamic program of the form $dp_t(i) = \min_{0 \leq k \leq i} (dp_{t-1}(k) + C(k, i))$, where $C(k, i)$ is the cost of moving from state $k$ of the previous layer to state $i$ of the current one. Let $opt(i)$ be the smallest $k$ attaining this minimum. Divide-and-conquer optimization applies when $opt(i) \leq opt(i + 1)$, so the best transition index moves only to the right as $i$ increases.
 
-To compute \inlinecode{dp\_cur[lo..hi]}, evaluate its midpoint and record its best transition as \inlinecode{best\_k}. Monotonicity restricts every optimum in the left half to indices at most \inlinecode{best\_k}, and every optimum in the right half to indices at least \inlinecode{best\_k}. Recursively applying these bounds avoids checking every transition for every state. The caller must verify the required monotonicity property.
+To compute $dp_t$ over a range of states, evaluate its midpoint and record the best transition index $k^*$ found there. Monotonicity restricts every optimum in the left half to indices at most $k^*$, and every optimum in the right half to indices at least $k^*$. Recursively applying these bounds avoids checking every transition for every state. The caller must verify the required monotonicity property.
 
 \begin{compactitem}
-  \item \inlinecode{compute\_dp\_layer(dp\_prev, dp\_cur, lo, hi, opt\_lo, opt\_hi, cost)} fills \inlinecode{dp\_cur[lo..hi]} using candidate transition indices in [\inlinecode{opt\_lo}, \inlinecode{opt\_hi}]. The template parameter \inlinecode{cost} must be callable such that \inlinecode{cost(k, i)} returns the transition cost from previous state \inlinecode{k} to current state \inlinecode{i}.
+  \item \inlinecode{compute\_dp\_layer(dp\_prev, dp\_cur, lo, hi, opt\_lo, opt\_hi, cost)} fills \inlinecode{dp\_cur[lo..hi]} using candidate transition indices in [\inlinecode{opt\_lo}, \inlinecode{opt\_hi}], where \inlinecode{dp\_prev} holds $dp_{t-1}$ and \inlinecode{dp\_cur} receives $dp_t$. The template parameter \inlinecode{cost} must be callable such that \inlinecode{cost(k, i)} returns $C(k, i)$, the transition cost from previous state \inlinecode{k} to current state \inlinecode{i}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ calls to \inlinecode{cost()} per call, when computing one layer whose states each have $O(n)$ possible transitions.
@@ -706,12 +1128,12 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Knuth DP Optimization}
-Computes minimum costs for every half-open interval $[{\inlinecodemath{l}}, {\inlinecodemath{r}})$ using the recurrence \inlinecode{dp[l][r] = min(dp[l][k] + dp[k][r]) + cost(l, r)}. Each state chooses a split \inlinecode{k} strictly inside the interval and pays \inlinecode{cost(l, r)} after solving the two resulting subintervals.
+Computes minimum costs for every half-open interval $[l, r)$ using the recurrence $dp(l, r) = \min_{l < k < r} (dp(l, k) + dp(k, r)) + C(l, r)$. Each state chooses a split $k$ strictly inside the interval and pays $C(l, r)$ after solving the two resulting subintervals.
 
-A direct implementation checks every split and takes $O(n^{3})$. Knuth optimization applies when the smallest optimal splits satisfy \inlinecode{opt[l][r - 1]} $\leq$ \inlinecode{opt[l][r]} $\leq$ \inlinecode{opt[l + 1][r]}. The two neighboring states therefore bound the splits that must be checked for \inlinecode{dp[l][r]}, reducing the total number of candidate checks to $O(n^{2})$. Common applications include optimal binary search trees and some range merging problems. The caller must verify the required monotonicity property for the chosen \inlinecode{cost(l, r)}; the quadrangle inequality and interval monotonicity of the cost are common sufficient conditions.
+A direct implementation checks every split and takes $O(n^{3})$. Knuth optimization applies when the smallest optimal splits satisfy $opt(l, r - 1) \leq opt(l, r) \leq opt(l + 1, r)$. The two neighboring states therefore bound the splits that must be checked for $dp(l, r)$, reducing the total number of candidate checks to $O(n^{2})$. Common applications include optimal binary search trees and some range merging problems. The caller must verify the required monotonicity property for the chosen $C(l, r)$. The common sufficient conditions are interval monotonicity and the quadrangle inequality $C(a, c) + C(b, d) \leq C(a, d) + C(b, c)$ for $a \leq b \leq c \leq d$, which is the Monge condition of section 5.3.2 written for an interval cost.
 
 \begin{compactitem}
-  \item \inlinecode{knuth\_interval\_dp(n, cost, \&opt\_out)} computes minimum costs for all half-open intervals $[{\inlinecodemath{l}}, {\inlinecodemath{r}})$ over \inlinecode{n} items. The template parameter \inlinecode{cost} must be callable such that \inlinecode{cost(l, r)} returns the interval cost added after choosing the best split. If the optional pointer \inlinecode{opt\_out} is supplied, it is filled with the chosen split points.
+  \item \inlinecode{knuth\_interval\_dp(n, cost, \&opt\_out)} computes minimum costs for all half-open intervals $[l, r)$ over \inlinecode{n} items. The template parameter \inlinecode{cost} must be callable such that \inlinecode{cost(l, r)} returns $C(l, r)$, the interval cost added after choosing the best split. If the optional pointer \inlinecode{opt\_out} is supplied, it is filled with the chosen split points.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n^{2})$ calls to \inlinecode{cost()} and $O(n^{2})$ candidate split checks per call.
@@ -854,7 +1276,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Convex Hull Trick (Semi-Dynamic)}
-Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, answer queries at specified $x$-coordinates, each asking for the minimum $y$-value over all given lines. This is useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])}. Only the lower envelope of the lines can ever answer a query, so each added line pops previously stored lines that it renders useless, and ascending queries advance a pointer along the envelope so every line is visited at most twice.
+Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, answer queries at specified $x$-coordinates, each asking for the minimum $y$-value over all given lines. This is useful for dynamic programming recurrences of the form $dp(i) = \min_j (m_j x_i + b_j)$. Only the lower envelope of the lines can ever answer a query, so each added line pops previously stored lines that it renders useless, and ascending queries advance a pointer along the envelope so every line is visited at most twice.
 
 The following implementation is a concise, semi-dynamic version of the convex hull optimization technique. It supports an interlaced sequence of \inlinecode{add\_line()} and \inlinecode{query()} calls, as long as the preconditions of descending \inlinecode{m} and ascending \inlinecode{x} are satisfied. As a result, it may be necessary to sort the lines and queries before calling the functions. In that case, the overall time complexity will be dominated by the sorting step.
 
@@ -944,7 +1366,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Convex Hull Trick (Fully-Dynamic)}
-Maintains a dynamic set of lines $y = mx + b$ and answers minimum value queries at integer points. Lines and queries may arrive in arbitrary order, making this useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])} without monotone slopes or query coordinates. The same interface can answer maximum queries when constructed with \inlinecode{query\_max = true}.
+Maintains a dynamic set of lines $y = mx + b$ and answers minimum value queries at integer points. Lines and queries may arrive in arbitrary order, making this useful for dynamic programming recurrences of the form $dp(i) = \min_j (m_j x_i + b_j)$ without monotone slopes or query coordinates. The same interface can answer maximum queries when constructed with \inlinecode{query\_max = true}.
 
 This fully dynamic convex hull stores the envelope in a self-balancing binary search tree (\inlinecode{std::set}). Inserting a line removes any neighbors it dominates, and each remaining line records the last coordinate where it is optimal, so a query is one tree lookup. Unlike a Li Chao tree, this structure requires no fixed coordinate domain and its complexity depends on the number of lines rather than the domain width. Prefer it when the domain is unknown or very large, or when maximum queries are needed; a Li Chao tree is often simpler when a manageable domain is known.
 
@@ -953,6 +1375,8 @@ This fully dynamic convex hull stores the envelope in a self-balancing binary se
   \item \inlinecode{add\_line(m, b)} inserts line $y = mx + b$. Lines may be added in any order.
   \item \inlinecode{query(x)} returns the best $y$-value among all inserted lines at coordinate \inlinecode{x}. At least one line must have been inserted, and query coordinates may be supplied in any order.
 \end{compactitem}
+
+Lines cannot be removed. Each insertion erases every line it dominates, and restoring them is the dynamic convex hull problem rather than a local repair, since one deletion can revive arbitrarily many. When deletions are needed and the operation order is known in advance, the Li Chao tree of the next section rolls insertions back instead.
 
 Overflow warning: minimization negates the coefficients, border updates subtract slopes/intercepts, and \inlinecode{query()} evaluates \inlinecode{m * x + b}, so those intermediate values must fit in \inlinecode{int64\_t}.
 
@@ -985,9 +1409,8 @@ class FullyDynamicCHT {
   std::multiset<Line> hull;
   bool query_max;
 
-  using HullIter = std::multiset<Line>::iterator;
-
-  bool update_border(HullIter x, HullIter y) {
+  template<class It>
+  bool update_border(It x, It y) {
     if (y == hull.end()) {
       x->xhi = INT64_MAX;
       return false;
@@ -1060,24 +1483,34 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Li Chao Tree}
-Maintains a dynamic set of lines $y = mx + b$ and answers minimum value queries at integer points. Lines and queries may arrive in arbitrary order, making this useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])} without monotone slopes or query coordinates.
+Maintains a dynamic set of lines $y = mx + b$ and answers minimum value queries at integer points. Lines and queries may arrive in arbitrary order, making this useful for dynamic programming recurrences of the form $dp(i) = \min_j (m_j x_i + b_j)$ without monotone slopes or query coordinates.
 
 A Li Chao tree fixes an inclusive coordinate domain $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ and stores one line at each node of a dynamic segment tree. Inserting a line keeps the line that wins at the midpoint and recurses only into the half where the other line may still win; a query takes the best value along one root-to-leaf path. Prefer this structure when the domain is known and manageable. The fully dynamic convex hull in the previous section needs no fixed domain and also supports maximum queries, while a Li Chao tree has a simpler invariant and is easier to extend to lines active only on subintervals.
+
+No line can be removed once inserted, since a node records only the winner at its midpoint and never what that line beat. Insertions can instead be undone in reverse order: \inlinecode{add\_line()} replaces the line at $O(\log d)$ nodes and creates at most one, so remembering each previous line restores the tree exactly. Pairing that with a segment tree over the time axis gives arbitrary deletion offline, the construction that section 4.2.10 applies to a rollback disjoint set.
 
 \begin{compactitem}
   \item \inlinecode{LiChaoTree(lo, hi)} constructs an empty tree over integer domain $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{add\_line(m, b)} inserts line $y = mx + b$. Lines may be added in any order.
   \item \inlinecode{query(x)} returns the minimum $y$-value among all inserted lines at coordinate \inlinecode{x}. At least one line must have been inserted, and query coordinates may be supplied in any order.
+  \item \inlinecode{snapshot()} returns a token representing the current history size.
+  \item \inlinecode{rollback(snapshot)} undoes all insertions made after \inlinecode{snapshot}.
 \end{compactitem}
 
 Overflow warning: each comparison and query evaluates \inlinecode{m * x + b}, which must fit in \inlinecode{int64\_t}. The difference \inlinecode{hi - lo} must also fit in \inlinecode{int64\_t}.
 
-\textbf{Time Complexity}: $O(\log d)$ per call to \inlinecode{add\_line()} and \inlinecode{query()}, where $d$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(\log d)$ per call to \inlinecode{add\_line()} and \inlinecode{query()}, where $d$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+  \item $O(1)$ per call to \inlinecode{snapshot()}, and $O(\log d)$ per line undone by \inlinecode{rollback()}.
+\end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ node storage for $n$ lines inserted, since each insertion creates at most one node.
+  \item $O(\log d)$ history per inserted line that has not been rolled back.
   \item $O(\log d)$ auxiliary stack space per operation.
 \end{compactitem}
 
@@ -1087,6 +1520,7 @@ Overflow warning: each comparison and query evaluates \inlinecode{m * x + b}, wh
 #include <cstdint>
 #include <memory>
 #include <utility>
+#include <vector>
 
 const int64_t INF = INT64_MAX / 4;
 
@@ -1103,18 +1537,31 @@ class LiChaoTree {
     explicit Node(const Line &f) : f(f) {}
   };
 
+  // One insertion either replaces a node's line or creates the node, so recording the previous
+  // state of each node it touches is enough to restore the tree exactly.
+  struct Undo {
+    Node *node;                   // Node whose line was replaced, or null if a node was created.
+    Line prev;                    // The line that node held before.
+    std::unique_ptr<Node> *slot;  // Owner of the created node, when node is null.
+    Undo(Node *node, const Line &prev, std::unique_ptr<Node> *slot)
+        : node(node), prev(prev), slot(slot) {}
+  };
+
   std::unique_ptr<Node> root;
   int64_t lo, hi;
+  std::vector<Undo> trail;
 
-  static void add_line(std::unique_ptr<Node> &n, int64_t lo, int64_t hi, Line f) {
+  void add_line(std::unique_ptr<Node> &n, int64_t lo, int64_t hi, Line f) {
     if (n == nullptr) {
       n = std::make_unique<Node>(f);
+      trail.emplace_back(nullptr, Line(), &n);
       return;
     }
     int64_t mid = lo + (hi - lo) / 2;
     bool left_better = f.eval(lo) < n->f.eval(lo);
     bool mid_better = f.eval(mid) < n->f.eval(mid);
     if (mid_better) {
+      trail.emplace_back(n.get(), n->f, nullptr);
       std::swap(f, n->f);
     }
     if (lo == hi) {
@@ -1154,6 +1601,21 @@ class LiChaoTree {
     assert(lo <= x && x <= hi);
     return query(root.get(), lo, hi, x);
   }
+
+  int snapshot() const { return static_cast<int>(trail.size()); }
+
+  void rollback(int snapshot) {
+    assert(0 <= snapshot && snapshot <= static_cast<int>(trail.size()));
+    while (static_cast<int>(trail.size()) > snapshot) {
+      const Undo &u = trail.back();
+      if (u.slot != nullptr) {
+        u.slot->reset();
+      } else {
+        u.node->f = u.prev;
+      }
+      trail.pop_back();
+    }
+  }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -1172,6 +1634,13 @@ int main() {
   assert(h.query(2) == 4);
   assert(h.query(1) == 3);
   assert(h.query(3) == 5);
+
+  // Insertions undo in reverse order, which is what makes offline deletion possible.
+  int token = h.snapshot();
+  h.add_line(-1, -9);
+  assert(h.query(3) == -12);
+  h.rollback(token);
+  assert(h.query(3) == 5);
   return 0;
 }
 \end{lstlisting}
@@ -1185,14 +1654,18 @@ Finds an $x$ in an interval $[a, b]$ for a continuous function $f$ such that $f(
 \begin{compactitem}
   \item \inlinecode{bisection\_root(f, a, b, iterations = 100)} returns a root in an interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a continuous function $f$ where either endpoint is a root or the endpoint values have opposite signs, using the bisection method.
   \item \inlinecode{falsi\_illinois\_root(f, a, b, iterations = 100)} returns a root in an interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a continuous function $f$ under the same endpoint conditions, using the Illinois algorithm variant of the false position (a.k.a. regula falsi) method.
+  \item \inlinecode{brent\_root(f, a, b, eps = 1e-15, iterations = 100)} returns a root under the same endpoint conditions using Brent's method, stopping early once the bracket is narrower than \inlinecode{eps}.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n)$ calls to \inlinecode{f()} per call to \inlinecode{bisection\_root()} and \inlinecode{falsi\_illinois\_root()}, where $n$ is the number of iterations.
+Brent's method is the one to reach for when the number of evaluations matters. It proposes the root of the inverse quadratic through its three most recent points, which converges superlinearly on smooth functions, and it falls back to secant steps when two of those values coincide. Any proposal that leaves the bracket, or that fails to at least halve the step taken two iterations earlier, is discarded in favor of a bisection step. That guard is what keeps the guaranteed bracketing of bisection while retaining the speed of interpolation, so Brent's method is the default root finder in most numerical libraries.
 
-\textbf{Space Complexity}: $O(1)$ auxiliary for both operations.
+\textbf{Time Complexity}: $O(n)$ calls to \inlinecode{f()} per call to \inlinecode{bisection\_root()}, \inlinecode{falsi\_illinois\_root()}, and \inlinecode{brent\_root()}, where $n$ is the number of iterations. Brent's method usually returns after far fewer than the iteration limit, since it stops once the bracket is narrower than \inlinecode{eps}.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <cmath>
 
 template<typename Fn>
 double bisection_root(Fn f, double a, double b, int iterations = 100) {
@@ -1257,6 +1730,62 @@ double falsi_illinois_root(Fn f, double a, double b, int iterations = 100) {
   }
   return m;
 }
+
+template<typename Fn>
+double brent_root(Fn f, double a, double b, double eps = 1e-15, int iterations = 100) {
+  double fa = f(a), fb = f(b);
+  assert(a <= b && ((fa <= 0 && fb >= 0) || (fa >= 0 && fb <= 0)));
+  if (fa == 0) {
+    return a;
+  }
+  if (fb == 0) {
+    return b;
+  }
+  if (std::fabs(fa) < std::fabs(fb)) {  // Keep b as the better of the two endpoints.
+    std::swap(a, b);
+    std::swap(fa, fb);
+  }
+  double c = a, fc = fa, d = c;
+  bool bisected = true;
+  for (int i = 0; i < iterations && fb != 0 && std::fabs(b - a) > eps; i++) {
+    double s;
+    if (fa != fc && fb != fc) {
+      s = a * fb * fc / ((fa - fb) * (fa - fc)) + b * fa * fc / ((fb - fa) * (fb - fc)) +
+          c * fa * fb / ((fc - fa) * (fc - fb));
+    } else {
+      s = b - fb * (b - a) / (fb - fa);
+    }
+    // Reject an interpolated point that leaves the bracket or converges too slowly, so that the
+    // step count stays within a constant factor of plain bisection.
+    double lo = (3 * a + b) / 4, hi = b;
+    if (lo > hi) {
+      std::swap(lo, hi);
+    }
+    double last = bisected ? std::fabs(b - c) : std::fabs(c - d);
+    if (!(lo < s && s < hi) || std::fabs(s - b) >= last / 2 || last < eps) {
+      s = a + (b - a) / 2;
+      bisected = true;
+    } else {
+      bisected = false;
+    }
+    double fs = f(s);
+    d = c;
+    c = b;
+    fc = fb;
+    if ((fa < 0) == (fs < 0)) {
+      a = s;
+      fa = fs;
+    } else {
+      b = s;
+      fb = fs;
+    }
+    if (std::fabs(fa) < std::fabs(fb)) {
+      std::swap(a, b);
+      std::swap(fa, fb);
+    }
+  }
+  return b;
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -1270,8 +1799,14 @@ double f(double x) {
 int main() {
   assert(fabs(f(bisection_root(f, 1, 3))) < 1e-10);
   assert(fabs(f(falsi_illinois_root(f, 1, 3))) < 1e-10);
+  assert(fabs(f(brent_root(f, 1, 3))) < 1e-10);
   assert(bisection_root(f, 0, 1) == 0);
   assert(falsi_illinois_root(f, 0, 1) == 0);
+  assert(brent_root(f, 0, 1) == 0);
+
+  // A function whose flat tail defeats plain false position but not the bisection fallback.
+  auto flat = [](double x) { return x * x * x - 2 * x - 5; };
+  assert(fabs(flat(brent_root(flat, 2, 100))) < 1e-9);
   return 0;
 }
 \end{lstlisting}
@@ -1919,8 +2454,125 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Ordinary Differential Equations}
+Given an initial value $y(t_0) = y_0$ and a derivative $y'(t) = f(t, y)$, an initial value problem asks for $y$ at some later time. Since only the slope is known, the solution is traced by stepping forward: estimate the slope over a short interval \inlinecode{h}, move along it, and repeat. The methods below differ only in how many slope samples each step averages, which is what determines how quickly the error vanishes as \inlinecode{h} shrinks.
+
+The forward Euler method takes the slope at the current point and follows it for the whole step. Each step therefore misses the curvature of the solution, leaving an error per step proportional to $h^2$ that accumulates to $O(h)$ over a fixed interval. The midpoint method spends one extra evaluation to sample the slope halfway across the step and uses that instead, which cancels the leading error term and leaves $O(h^{2})$. Classical Runge-Kutta combines four samples, one at the start, two at the middle, and one at the end, weighted so that every error term through $h^4$ cancels, leaving $O(h^{4})$. Halving $h$ therefore buys $16$ times the accuracy for twice the work, which is why this method is the usual default.
+
+The state is a vector, so a system of equations is integrated exactly like a single one. A higher-order equation becomes such a system by naming its derivatives: $y'' = g(t, y, y')$ turns into the pair $y_0' = y_1$ and $y_1' = g(t, y_0, y_1)$.
+
+\begin{compactitem}
+  \item \inlinecode{euler(f, t0, y0, t1, steps)} returns the state at time \inlinecode{t1}, advancing from state \inlinecode{y0} at time \inlinecode{t0} in \inlinecode{steps} equal steps of the forward Euler method, where \inlinecode{steps} must be positive. The derivative \inlinecode{f(t, y)} returns a vector of the same length as \inlinecode{y}.
+  \item \inlinecode{midpoint(f, t0, y0, t1, steps)} and \inlinecode{runge\_kutta(f, t0, y0, t1, steps)} do the same using the midpoint method and classical fourth-order Runge-Kutta.
+\end{compactitem}
+
+A \inlinecode{t1} below \inlinecode{t0} integrates backwards, since the step is then negative. None of these adapt their step, so doubling \inlinecode{steps} should shrink the change in the answer by roughly $2^p$ for a method of order $p$; when it does not, the problem is stiff and needs an implicit method.
+
+\textbf{Time Complexity}: $O(s)$ calls to \inlinecode{f()} per call to \inlinecode{euler()}, $O(2s)$ per call to \inlinecode{midpoint()}, and $O(4s)$ per call to \inlinecode{runge\_kutta()}, where $s$ is \inlinecode{steps}.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary and $O(n)$ for the returned state, where $n$ is the number of equations.
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cstddef>
+#include <vector>
+
+using State = std::vector<double>;
+
+template<typename Fn>
+State euler(Fn f, double t0, const State &y0, double t1, int steps) {
+  assert(steps > 0);
+  double h = (t1 - t0) / steps;
+  State y = y0;
+  for (int i = 0; i < steps; i++) {
+    State k = f(t0 + i * h, y);
+    for (size_t j = 0; j < y.size(); j++) {
+      y[j] += h * k[j];
+    }
+  }
+  return y;
+}
+
+template<typename Fn>
+State midpoint(Fn f, double t0, const State &y0, double t1, int steps) {
+  assert(steps > 0);
+  double h = (t1 - t0) / steps;
+  State y = y0;
+  for (int i = 0; i < steps; i++) {
+    double t = t0 + i * h;
+    State k1 = f(t, y), half = y;
+    for (size_t j = 0; j < y.size(); j++) {
+      half[j] += h / 2 * k1[j];
+    }
+    State k2 = f(t + h / 2, half);
+    for (size_t j = 0; j < y.size(); j++) {
+      y[j] += h * k2[j];
+    }
+  }
+  return y;
+}
+
+template<typename Fn>
+State runge_kutta(Fn f, double t0, const State &y0, double t1, int steps) {
+  assert(steps > 0);
+  double h = (t1 - t0) / steps;
+  State y = y0, probe = y0;
+  for (int i = 0; i < steps; i++) {
+    double t = t0 + i * h;
+    State k1 = f(t, y);
+    for (size_t j = 0; j < y.size(); j++) {
+      probe[j] = y[j] + h / 2 * k1[j];
+    }
+    State k2 = f(t + h / 2, probe);
+    for (size_t j = 0; j < y.size(); j++) {
+      probe[j] = y[j] + h / 2 * k2[j];
+    }
+    State k3 = f(t + h / 2, probe);
+    for (size_t j = 0; j < y.size(); j++) {
+      probe[j] = y[j] + h * k3[j];
+    }
+    State k4 = f(t + h, probe);
+    for (size_t j = 0; j < y.size(); j++) {
+      y[j] += h / 6 * (k1[j] + 2 * k2[j] + 2 * k3[j] + k4[j]);
+    }
+  }
+  return y;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cmath>
+using namespace std;
+
+const double PI = acos(-1.0), E = exp(1.0);
+
+int main() {
+  // y' = y, so y(1) = e starting from y(0) = 1.
+  auto exponential = [](double, const State &y) { return State{y[0]}; };
+  assert(fabs(euler(exponential, 0, State{1}, 1, 1000)[0] - E) < 2e-3);
+  assert(fabs(midpoint(exponential, 0, State{1}, 1, 1000)[0] - E) < 1e-6);
+  assert(fabs(runge_kutta(exponential, 0, State{1}, 1, 1000)[0] - E) < 1e-12);
+
+  // Quartering the step size should cut the fourth-order error by about 256.
+  double coarse = fabs(runge_kutta(exponential, 0, State{1}, 1, 10)[0] - E);
+  double fine = fabs(runge_kutta(exponential, 0, State{1}, 1, 40)[0] - E);
+  assert(coarse / fine > 100);
+
+  // The harmonic oscillator y'' = -y as the system y0' = y1, y1' = -y0, whose orbit is a circle.
+  auto oscillator = [](double, const State &y) { return State{y[1], -y[0]}; };
+  State full_turn = runge_kutta(oscillator, 0, State{1, 0}, 2 * PI, 2000);
+  assert(fabs(full_turn[0] - 1) < 1e-9 && fabs(full_turn[1]) < 1e-9);
+
+  // Integrating backwards returns to the starting state.
+  State there = runge_kutta(oscillator, 0, State{1, 0}, 3.0, 500);
+  State back = runge_kutta(oscillator, 3.0, there, 0, 500);
+  assert(fabs(back[0] - 1) < 1e-9 && fabs(back[1]) < 1e-9);
+  return 0;
+}
+\end{lstlisting}
 \subsection{Linear Programming (Simplex)}
-Solves a linear programming problem using Dantzig's simplex algorithm. The canonical form of a linear programming problem is to maximize (or minimize) the dot product $cx$, subject to $ax \leq b$ and $x \geq 0$, where $x$ is a vector of unknowns to be solved, $c$ is a vector of coefficients, $a$ is a matrix of constraint coefficients, and $b$ is a vector of bounds.
+Solves a linear programming problem using Dantzig's simplex algorithm. The canonical form of a linear programming problem is to maximize (or minimize) the dot product $cx$, subject to $Ax \leq b$ and $x \geq 0$, where $x$ is a vector of unknowns to be solved, $c$ is a vector of coefficients, $A$ is a matrix of constraint coefficients, and $b$ is a vector of bounds.
 
 The simplex algorithm walks between vertices of the feasible polytope, at each step pivoting to an adjacent vertex that improves the objective, until no improving move remains (an optimum is reached) or an unbounded improving direction is found.
 

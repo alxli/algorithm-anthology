@@ -2,41 +2,30 @@
 
 \section{\texorpdfstring{Math Utilities}{6.1 Math Utilities}}
 \setcounter{section}{1}
-Common mathematical constants and functions, many of which have standard library counterparts. The implementations below are educational and may not be as heavily optimized as the library versions.
+\setcounter{subsection}{0}
+\subsection{Floating-Point Comparison}
+Floating-point results carry rounding error, so two values that should be equal in exact arithmetic usually differ in their last bits. Comparing them with \inlinecode{==} is therefore a bug in almost every numeric setting, and the helpers below compare within a tolerance instead. This section also collects the mathematical constants and the sign inspections that the rest of the anthology uses.
 
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ per call to most operations.
-  \item $O(1)$ per call to \inlinecode{mulmod()} with \inlinecode{\_\_uint128\_t}, or $O(\log n)$ with the portable fallback, where $n$ is the second argument.
-  \item $O(\log n)$ calls to \inlinecode{mulmod()} per call to \inlinecode{powmod(x, n, m)}.
-  \item $O(d \cdot e)$ per call to \inlinecode{convert\_base(d, a, b)}, where $d$ is the number of input digits and $e$ is the number of output digits.
-  \item $O(\log_{b}\left(x + 1\right) + 1)$ per call to \inlinecode{to\_base()}.
-  \item $O(x / 1000 + 1)$ per call to \inlinecode{to\_roman()} due to the repeated \inlinecode{M} prefix.
+  \item \inlinecode{M\_PI}, \inlinecode{M\_E}, \inlinecode{M\_PHI}, \inlinecode{M\_INF}, and \inlinecode{M\_NAN} are the usual constants, computed rather than assumed so that no platform-specific macro is required.
+  \item \inlinecode{EQ()}, \inlinecode{NE()}, \inlinecode{LT()}, \inlinecode{GT()}, \inlinecode{LE()}, and \inlinecode{GE()} relationally compare two values $x$ and $y$. Arguments may be of different types; the common type governs behavior. If the common type is a floating-point type, exactly equal values (including same-signed infinities) compare equal; otherwise absolute-error epsilon comparison is used. Values within \inlinecode{EPS} of each other are considered equal, and \inlinecode{LT}/\inlinecode{GT}/\inlinecode{LE}/\inlinecode{GE} shift the boundary by \inlinecode{EPS} accordingly. Otherwise exact comparison is used (\inlinecode{==}, \inlinecode{\textless{}}, etc.). The branch is selected with \inlinecode{if constexpr}, so exact types without floating-point arithmetic (e.g. integers, \inlinecode{Modular}, \inlinecode{Rational}) compose as well.
+  \item \inlinecode{rEQ(ref, val)} returns whether \inlinecode{val} equals reference \inlinecode{ref} within relative error \inlinecode{EPS}. The tolerance scales with $|{\inlinecodemath{ref}}|$, so \inlinecode{rEQ(ref, val)} is NOT the same as \inlinecode{rEQ(val, ref)}. Use this when one argument is a known exact value and the other is a computed approximation. Degenerates to exact comparison when \inlinecode{ref} is $0$, since the tolerance collapses to $0$; use \inlinecode{EQ} near zero.
+  \item \inlinecode{rEQ\_sym(a, b)} is the symmetric (commutative) variant: tolerance scales with $\max(|{\inlinecodemath{a}}|, |{\inlinecodemath{b}}|)$, so the result is the same regardless of argument order. Still degenerates near zero when both arguments are close to $0$. For both relative comparisons, exactly equal infinities compare equal, while unequal infinities and comparisons between finite and non-finite values compare unequal. Non-floating common types use exact equality.
+  \item \inlinecode{sgn(x)} returns $-1$ (if $x < 0$), $0$ (if $x = 0$), or $1$ (if $x > 0$). Unlike \inlinecode{std::signbit()} or \inlinecode{std::copysign()}, this does not handle the sign of \inlinecode{NaN}.
+  \item \inlinecode{sign\_bit(x)} is analogous to \inlinecode{std::signbit()}, returning whether the sign bit of the floating point number is set to true. If so, then \inlinecode{x} is considered ``negative.'' Note that this works as expected on \inlinecode{+0.0}, \inlinecode{-0.0}, \inlinecode{Inf}, \inlinecode{-Inf}, \inlinecode{NaN}, as well as \inlinecode{-NaN}. Warning: This assumes that the sign bit is the leading (most significant) bit in the internal IEEE representation and that bytes are stored in little-endian order.
+  \item \inlinecode{copy\_sign(x, y)} is analogous to \inlinecode{std::copysign()}, returning a number with the magnitude of \inlinecode{x} but the sign of \inlinecode{y}.
 \end{compactitem}
 
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(1)$ auxiliary for most operations.
-  \item $O(d + e)$ auxiliary for \inlinecode{convert\_base(d, a, b)}, where $d$ is the number of input digits and $e$ is the number of output digits.
-  \item $O(e)$ auxiliary for \inlinecode{to\_base(x, b)}, where $e$ is the number of output digits.
-  \item $O(x / 1000 + 1)$ auxiliary for \inlinecode{to\_roman(x)}.
-\end{compactitem}
+\textbf{Time Complexity}: $O(1)$ per call to all operations.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
-#include <cassert>
-#include <chrono>
 #include <climits>
 #include <cmath>
-#include <cstdint>
 #include <limits>
-#include <random>
-#include <string>
 #include <type_traits>
-#include <utility>
-#include <vector>
 
 #ifndef M_PI
 const double M_PI = std::acos(-1.0);  // Or std::numbers::pi in C++20 and later.
@@ -47,16 +36,7 @@ const double M_E = std::exp(1.0);  // or std::numbers::e and std::numbers::e_v<>
 const double M_PHI = (1.0 + std::sqrt(5.0)) / 2.0;
 const double M_INF = std::numeric_limits<double>::infinity();
 const double M_NAN = std::numeric_limits<double>::quiet_NaN();
-\end{lstlisting}
-Epsilon Comparisons:
 
-\begin{compactitem}
-  \item \inlinecode{EQ()}, \inlinecode{NE()}, \inlinecode{LT()}, \inlinecode{GT()}, \inlinecode{LE()}, and \inlinecode{GE()} relationally compare two values $x$ and $y$. Arguments may be of different types; the common type governs behavior. If the common type is a floating-point type, exactly equal values (including same-signed infinities) compare equal; otherwise absolute-error epsilon comparison is used. Values within \inlinecode{EPS} of each other are considered equal, and \inlinecode{LT}/\inlinecode{GT}/\inlinecode{LE}/\inlinecode{GE} shift the boundary by \inlinecode{EPS} accordingly. Otherwise exact comparison is used (\inlinecode{==}, \inlinecode{\textless{}}, etc.). The branch is selected with \inlinecode{if constexpr}, so exact types without floating-point arithmetic (e.g. integers, \inlinecode{Modular}, \inlinecode{Rational}) compose as well.
-  \item \inlinecode{rEQ(ref, val)} returns whether \inlinecode{val} equals reference \inlinecode{ref} within relative error \inlinecode{EPS}. The tolerance scales with $|{\inlinecodemath{ref}}|$, so \inlinecode{rEQ(ref, val)} is NOT the same as \inlinecode{rEQ(val, ref)}. Use this when one argument is a known exact value and the other is a computed approximation. Degenerates to exact comparison when \inlinecode{ref} is $0$, since the tolerance collapses to $0$; use \inlinecode{EQ} near zero.
-  \item \inlinecode{rEQ\_sym(a, b)} is the symmetric (commutative) variant: tolerance scales with $\max(|{\inlinecodemath{a}}|, |{\inlinecodemath{b}}|)$, so the result is the same regardless of argument order. Still degenerates near zero when both arguments are close to $0$. For both relative comparisons, exactly equal infinities compare equal, while unequal infinities and comparisons between finite and non-finite values compare unequal. Non-floating common types use exact equality.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
 const double EPS = 1e-9;
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
@@ -97,40 +77,61 @@ bool rEQ_sym(T a, U b) {
   if (!std::isfinite(x) || !std::isfinite(y)) return false;
   return std::fabs(x - y) <= EPS * std::max(std::fabs(x), std::fabs(y));
 }
-\end{lstlisting}
-Sign Functions:
 
-\begin{compactitem}
-  \item \inlinecode{sgn(x)} returns $-1$ (if $x < 0$), $0$ (if $x = 0$), or $1$ (if $x > 0$). Unlike \inlinecode{std::signbit()} or \inlinecode{std::copysign()}, this does not handle the sign of \inlinecode{NaN}.
-  \item \inlinecode{sign\_bit(x)} is analogous to \inlinecode{std::signbit()}, returning whether the sign bit of the floating point number is set to true. If so, then \inlinecode{x} is considered ``negative.'' Note that this works as expected on \inlinecode{+0.0}, \inlinecode{-0.0}, \inlinecode{Inf}, \inlinecode{-Inf}, \inlinecode{NaN}, as well as \inlinecode{-NaN}. Warning: This assumes that the sign bit is the leading (most significant) bit in the internal IEEE representation and that bytes are stored in little-endian order.
-  \item \inlinecode{copy\_sign(x, y)} is analogous to \inlinecode{std::copysign()}, returning a number with the magnitude of \inlinecode{x} but the sign of \inlinecode{y}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
 template<typename T>
 int sgn(const T &x) {
   return (T{0} < x) - (x < T{0});
 }
 
-template<typename Double>
-bool sign_bit(Double x) {
+template<typename Dbl>
+bool sign_bit(Dbl x) {
   return (((unsigned char *)&x)[sizeof(x) - 1] >> (CHAR_BIT - 1)) & 1;
 }
 
-template<typename Double>
-Double copy_sign(Double x, Double y) {
+template<typename Dbl>
+Dbl copy_sign(Dbl x, Dbl y) {
   return sign_bit(y) ? -std::fabs(x) : std::fabs(x);
 }
 \end{lstlisting}
-Rounding Functions:
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  assert(EQ(M_PI, 3.14159265359));
+  assert(EQ(M_E, 2.718281828459) && EQ(M_PHI, 1.61803398875));
+  assert(EQ(M_INF, M_INF) && rEQ(M_INF, M_INF) && rEQ_sym(M_INF, M_INF));
+  assert(!rEQ(M_INF, 0.0) && !rEQ_sym(M_INF, -M_INF));
+  assert(!rEQ(1000000000000LL, 1000000000001LL));
+
+  double x = -12345.6789;
+  assert((-M_INF < x) && (x < M_INF));
+  assert((M_INF + x == M_INF) && (M_INF - x == M_INF));
+  assert((M_NAN != x) && (M_NAN != M_INF) && (M_NAN != M_NAN));
+  assert(!(M_NAN < x) && !(M_NAN > x) && !(M_NAN <= x) && !(M_NAN >= x));
+  assert(isnan(0.0 * M_INF) && isnan(M_INF - M_INF));
+
+  assert(sgn(x) == -1 && sgn(0.0) == 0 && sgn(5678) == 1);
+  assert(sign_bit(x) && !sign_bit(0.0) && sign_bit(-0.0));
+  assert(!sign_bit(M_INF) && sign_bit(-M_INF));
+  assert(!sign_bit(M_NAN) && sign_bit(-M_NAN));
+  assert(copy_sign(1.0, +2.0) == +1.0 && copy_sign(M_INF, -2.0) == -M_INF);
+  assert(copy_sign(1.0, -2.0) == -1.0 && sign_bit(copy_sign(M_NAN, -2.0)));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Rounding}
+Rounding is only ambiguous at a tie, when a value sits exactly halfway between two integers, and the rule chosen for that case is what distinguishes the functions below. The choice matters more than it appears: always rounding ties away from zero biases a sum of many rounded values upward, which is why financial and statistical work usually rounds ties to even instead, spreading them evenly between the two neighbors.
 
 \begin{compactitem}
   \item \inlinecode{floor0(x)} returns \inlinecode{x} rounded down, symmetrically towards zero. This function is analogous to \inlinecode{std::trunc()}.
-  \item \inlinecode{ceil0(x)} returns \inlinecode{x} rounded up, symmetrically away from zero. This function is analogous to \inlinecode{std::round()}.
+  \item \inlinecode{ceil0(x)} returns \inlinecode{x} rounded up, symmetrically away from zero. It mirrors \inlinecode{floor0()} and has no \inlinecode{\textless{}cmath\textgreater{}} equivalent, since \inlinecode{std::ceil()} rounds towards positive infinity rather than outward.
   \item \inlinecode{round\_half\_up(x)} returns \inlinecode{x} rounded half up, towards positive infinity.
   \item \inlinecode{round\_half\_down(x)} returns \inlinecode{x} rounded half down, towards negative infinity.
   \item \inlinecode{round\_half\_to0(x)} returns \inlinecode{x} rounded half down, symmetrically towards zero.
-  \item \inlinecode{round\_half\_from0(x)} returns \inlinecode{x} rounded half up, symmetrically away from zero.
+  \item \inlinecode{round\_half\_from0(x)} returns \inlinecode{x} rounded half up, symmetrically away from zero. This function is analogous to \inlinecode{std::round()}.
   \item \inlinecode{round\_half\_even(x, eps = 1e-9)} returns \inlinecode{x} rounded half to even, using \inlinecode{eps} to detect ties for banker's rounding.
   \item \inlinecode{round\_half\_alternate(x)} returns \inlinecode{x} rounded, where ties are broken by alternating rounds towards positive and negative infinity.
   \item \inlinecode{round\_half\_alternate0(x)} returns \inlinecode{x} rounded, where ties are broken by alternating symmetric rounds towards and away from zero.
@@ -138,47 +139,57 @@ Rounding Functions:
   \item \inlinecode{round\_n\_places(x, n, round)} returns \inlinecode{x} rounded to \inlinecode{n} digits after the decimal, using the specified rounding function \inlinecode{round(x)}.
 \end{compactitem}
 
+Every function propagates \inlinecode{+0.0}, \inlinecode{-0.0}, \inlinecode{Inf}, \inlinecode{-Inf}, \inlinecode{NaN}, and \inlinecode{-NaN} exactly with the same sign, as \inlinecode{std::round()} does. The four built on adding or subtracting $0.5$ before flooring are otherwise exact except at $0.5 - 2^{-54}$, which rounds up to $1$ because the sum is already $1$ before flooring; prefer \inlinecode{std::round()} or \inlinecode{round\_half\_even()} where that last bit matters.
+
+\textbf{Time Complexity}: $O(1)$ per call to all operations.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
+
 \begin{lstlisting}[language=C++]
-template<typename Double>
-Double floor0(const Double &x) {
-  Double res = std::floor(std::fabs(x));
-  return (x < 0.0) ? -res : res;
+#include <chrono>
+#include <cmath>
+#include <random>
+
+template<typename Dbl>
+Dbl floor0(const Dbl &x) {
+  Dbl res = std::floor(std::fabs(x));
+  return std::signbit(x) ? -res : res;
 }
 
-template<typename Double>
-Double ceil0(const Double &x) {
-  Double res = std::ceil(std::fabs(x));
-  return (x < 0.0) ? -res : res;
+template<typename Dbl>
+Dbl ceil0(const Dbl &x) {
+  Dbl res = std::ceil(std::fabs(x));
+  return std::signbit(x) ? -res : res;
 }
 
-template<typename Double>
-Double round_half_up(const Double &x) {
-  return std::floor(x + 0.5);
+template<typename Dbl>
+Dbl round_half_up(const Dbl &x) {
+  return std::copysign(std::floor(x + 0.5), x);  // copysign() only ever fixes a zero result.
 }
 
-template<typename Double>
-Double round_half_down(const Double &x) {
-  return std::ceil(x - 0.5);
+template<typename Dbl>
+Dbl round_half_down(const Dbl &x) {
+  return std::copysign(std::ceil(x - 0.5), x);  // copysign() only ever fixes a zero result.
 }
 
-template<typename Double>
-Double round_half_to0(const Double &x) {
-  Double res = round_half_down(std::fabs(x));
-  return (x < 0.0) ? -res : res;
+template<typename Dbl>
+Dbl round_half_to0(const Dbl &x) {
+  Dbl res = round_half_down(std::fabs(x));
+  return std::signbit(x) ? -res : res;
 }
 
-template<typename Double>
-Double round_half_from0(const Double &x) {
-  Double res = round_half_up(std::fabs(x));
-  return (x < 0.0) ? -res : res;
+template<typename Dbl>
+Dbl round_half_from0(const Dbl &x) {
+  Dbl res = round_half_up(std::fabs(x));
+  return std::signbit(x) ? -res : res;
 }
 
-template<typename Double>
-Double round_half_even(const Double &x, const Double &eps = 1e-9) {
-  if (x < 0.0) {
+template<typename Dbl>
+Dbl round_half_even(const Dbl &x, const Dbl &eps = 1e-9) {
+  if (std::signbit(x)) {
     return -round_half_even(-x, eps);
   }
-  Double ipart;
+  Dbl ipart;
   std::modf(x, &ipart);
   if (std::fabs(x - (ipart + 0.5)) < eps) {  // exactly halfway: break the tie towards even
     return (std::fmod(ipart, 2.0) < eps) ? ipart : ceil0(ipart + 0.5);
@@ -186,106 +197,121 @@ Double round_half_even(const Double &x, const Double &eps = 1e-9) {
   return round_half_from0(x);
 }
 
-template<typename Double>
-Double round_half_alternate(const Double &x) {
-  Double up = round_half_up(x), down = round_half_down(x);
-  if (up == down) {
+template<typename Dbl>
+Dbl round_half_alternate(const Dbl &x) {
+  Dbl up = round_half_up(x), down = round_half_down(x);
+  if (std::isnan(x) || up == down) {  // A NaN must not consume a toggle: NaN == NaN is false.
     return up;
   }
   static bool round_up = false;
   return (round_up = !round_up) ? up : down;
 }
 
-template<typename Double>
-Double round_half_alternate0(const Double &x) {
-  Double away = round_half_from0(x), toward = round_half_to0(x);
-  if (away == toward) {
+template<typename Dbl>
+Dbl round_half_alternate0(const Dbl &x) {
+  Dbl away = round_half_from0(x), toward = round_half_to0(x);
+  if (std::isnan(x) || away == toward) {  // A NaN must not consume a toggle.
     return away;
   }
   static bool round_away = false;
   return (round_away = !round_away) ? away : toward;
 }
 
-template<typename Double>
-Double round_half_random(const Double &x) {
-  Double away = round_half_from0(x), toward = round_half_to0(x);
-  if (away == toward) {
+template<typename Dbl>
+Dbl round_half_random(const Dbl &x) {
+  Dbl away = round_half_from0(x), toward = round_half_to0(x);
+  if (std::isnan(x) || away == toward) {
     return away;
   }
   static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
   return (rng() % 2 == 0) ? away : toward;
 }
 
-template<typename Double, typename RoundFn>
-Double round_n_places(const Double &x, unsigned int n, RoundFn round) {
-  Double scale = std::pow(Double{10}, n);
+template<typename Dbl, typename RoundFn>
+Dbl round_n_places(const Dbl &x, unsigned int n, RoundFn round) {
+  Dbl scale = std::pow(Dbl{10}, n);
   return round(x * scale) / scale;
 }
 \end{lstlisting}
-Modular Arithmetic:
-
-\begin{compactitem}
-  \item \inlinecode{addmod(a, b, m)} and \inlinecode{submod(a, b, m)} respectively return addition and subtraction modulo \inlinecode{m}, each result in $[0, {\inlinecodemath{m}})$. Both operands may be negative or unreduced; they are normalized before arithmetic to avoid signed overflow. The modulus \inlinecode{m} must be positive.
-  \item \inlinecode{mulmod(x, n, m)} returns \inlinecode{x} multiplied by \inlinecode{n}, modulo \inlinecode{m}. This is done in a way to avoid overflow: on compilers with \inlinecode{\_\_uint128\_t} it uses one wide product, while the portable fallback uses double-and-add multiplication. The fallback is slower by a logarithmic factor, but avoids relying on nonstandard 128-bit integers. Unlike \inlinecode{addmod}/\inlinecode{submod}, this takes unsigned operands and supports a full 64-bit modulus.
-  \item \inlinecode{powmod(x, n, m)} returns \inlinecode{x} raised to the power \inlinecode{n}, modulo \inlinecode{m}.
-\end{compactitem}
-
-These are lightweight standalone helpers for the occasional modular computation. For a full value type that wraps a fixed modulus with overloaded operators, modular inverses, and combinatorics, see the \inlinecode{Modular} (``Mint'') class in section 6.3.2.
-
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-int64_t addmod(int64_t a, int64_t b, int64_t m) {
-  assert(m > 0);
-  if ((a %= m) < 0) a += m;
-  if ((b %= m) < 0) b += m;
-  return a >= m - b ? a - (m - b) : a + b;
+#include <cassert>
+#include <limits>
+using namespace std;
+
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-9;
 }
 
-int64_t submod(int64_t a, int64_t b, int64_t m) {
-  assert(m > 0);
-  if ((a %= m) < 0) a += m;
-  if ((b %= m) < 0) b += m;
-  return a >= b ? a - b : m - (b - a);
-}
+int main() {
+  assert(EQ(floor0(1.5), 1.0) && EQ(ceil0(1.5), 2.0));
+  assert(EQ(floor0(-1.5), -1.0) && EQ(ceil0(-1.5), -2.0));
+  // Both round outward at any fraction, unlike std::round() which rounds to the nearest.
+  assert(EQ(floor0(1.8), 1.0) && EQ(ceil0(1.2), 2.0) && EQ(ceil0(-1.2), -2.0));
 
-uint64_t mulmod(uint64_t x, uint64_t n, uint64_t m) {
-  assert(m > 0);
-#if defined(__SIZEOF_INT128__)
-  return static_cast<uint64_t>(static_cast<__uint128_t>(x) * n % m);
-#else
-  uint64_t a = 0, b = x % m;
-  for (; n > 0; n >>= 1) {
-    if (n & 1) {
-      a = a >= m - b ? a - (m - b) : a + b;
-    }
-    b = b >= m - b ? b - (m - b) : b + b;
-  }
-  return a;
-#endif
-}
+  // NaN, the infinities, and the sign of zero are all preserved, as std::round() does.
+  const double M_INF = numeric_limits<double>::infinity();
+  const double M_NAN = numeric_limits<double>::quiet_NaN();
+  assert(isnan(round_half_even(M_NAN)) && isinf(ceil0(-M_INF)));
+  assert(signbit(round_half_from0(-0.0)) && !signbit(round_half_down(0.0)));
+  assert(EQ(round_half_up(+1.5), +2) && EQ(round_half_down(+1.5), +1));
+  assert(EQ(round_half_up(-1.5), -1) && EQ(round_half_down(-1.5), -2));
+  assert(EQ(round_half_to0(+1.5), +1) && EQ(round_half_from0(+1.5), +2));
+  assert(EQ(round_half_to0(-1.5), -1) && EQ(round_half_from0(-1.5), -2));
+  assert(EQ(round_half_even(+1.5), +2) && EQ(round_half_even(-1.5), -2));
+  assert(EQ(round_half_even(3.1), 3) && EQ(round_half_even(3.4), 3));  // Non-ties round normally.
 
-uint64_t powmod(uint64_t x, uint64_t n, uint64_t m) {
-  assert(m > 0);
-  uint64_t a = 1, b = x;
-  for (; n > 0; n >>= 1) {
-    if (n & 1) {
-      a = mulmod(a, b, m);
-    }
-    b = mulmod(b, b, m);
-  }
-  return a % m;
+  double alt1 = round_half_alternate(+1.5);
+  assert(EQ(round_half_alternate(+1.2), +1));  // Non-ties do not consume an alternating turn.
+  double alt2 = round_half_alternate(+1.5);
+  assert(!EQ(alt1, alt2));
+  double alt01 = round_half_alternate0(-1.5);
+  assert(EQ(round_half_alternate0(-1.2), -1));
+  double alt02 = round_half_alternate0(-1.5);
+  assert(!EQ(alt01, alt02));
+
+  assert(EQ(round_n_places(-1.23456, 3, round_half_to0<double>), -1.235));
+  return 0;
 }
 \end{lstlisting}
-Base Conversion:
+\subsection{Base Conversion}
+A positional numeral is a sequence of digits weighted by powers of its base, so converting between bases is repeated division: divide by the target base, record the remainder as the next digit, and continue with the quotient. Doing that division on a digit vector rather than on a machine integer is what lets \inlinecode{convert\_base()} handle values far larger than any built-in type. Roman numerals are the counterexample that shows what positional notation buys, being additive with a subtractive special case and having no digit for zero.
 
 \begin{compactitem}
-  \item \inlinecode{to\_base(x, b = 10)} returns the digits of the unsigned integer \inlinecode{x} in base \inlinecode{b}, where index 0 of the result stores the least significant digit.
+  \item \inlinecode{to\_base(x, b = 10)} returns the digits of the unsigned integer \inlinecode{x} in base \inlinecode{b}, where index $0$ of the result stores the least significant digit.
   \item \inlinecode{to\_roman(x)} returns the Roman numeral representation of the unsigned integer \inlinecode{x} as a string.
+  \item \inlinecode{from\_roman(s)} returns the value of the Roman numeral \inlinecode{s}, which must consist of Roman digits. Subtractive pairs such as \inlinecode{"IX"} are handled, but the numeral is not otherwise validated, so a malformed one such as \inlinecode{"IC"} simply returns the value its symbols imply.
   \item \inlinecode{convert\_base(d, a, b)} converts an integer in base \inlinecode{a} as a vector \inlinecode{d} of digits (where \inlinecode{d[0]} is the least significant digit) to base \inlinecode{b} as a vector of digits (again with index 0 holding the least significant digit). This uses repeated long division, so the value itself does not need to fit in a machine integer.
 \end{compactitem}
 
 Overflow warning: Each intermediate \inlinecode{rem*a + digit} must fit in \inlinecode{uint64\_t}.
 
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(\log_{b}\left(x + 1\right) + 1)$ per call to \inlinecode{to\_base()}.
+  \item $O(x / 1000 + 1)$ per call to \inlinecode{to\_roman()} due to the repeated \inlinecode{M} prefix.
+  \item $O(n)$ per call to \inlinecode{from\_roman()}, where $n$ is the length of the numeral.
+  \item $O(d \cdot e)$ per call to \inlinecode{convert\_base(d, a, b)}, where $d$ is the number of input digits and $e$ is the number of output digits.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(e)$ auxiliary for \inlinecode{to\_base(x, b)}, where $e$ is the number of output digits.
+  \item $O(x / 1000 + 1)$ auxiliary for \inlinecode{to\_roman(x)}.
+  \item $O(1)$ auxiliary for \inlinecode{from\_roman()}.
+  \item $O(d + e)$ auxiliary for \inlinecode{convert\_base(d, a, b)}.
+\end{compactitem}
+
 \begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cstdint>
+#include <map>
+#include <string>
+#include <vector>
+
 std::vector<int> to_base(unsigned int x, int b = 10) {
   assert(b >= 2);
   std::vector<int> res;
@@ -303,6 +329,20 @@ std::string to_roman(unsigned int x) {
   std::string prefix(x / 1000, 'M');
   x %= 1000;
   return prefix + h[x / 100] + t[x / 10 % 10] + o[x % 10];
+}
+
+unsigned int from_roman(const std::string &s) {
+  static const std::map<char, unsigned int> VALUES = {{'I', 1},   {'V', 5},   {'X', 10},  {'L', 50},
+                                                      {'C', 100}, {'D', 500}, {'M', 1000}};
+  unsigned int res = 0;
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
+    auto it = VALUES.find(s[i]);
+    assert(it != VALUES.end());
+    auto next = i + 1 < static_cast<int>(s.size()) ? VALUES.find(s[i + 1]) : VALUES.end();
+    // A smaller symbol before a larger one is subtracted, as the IV in XIV.
+    res += next != VALUES.end() && it->second < next->second ? -it->second : it->second;
+  }
+  return res;
 }
 
 std::vector<int> convert_base(const std::vector<int> &d, int a, int b) {
@@ -335,70 +375,220 @@ std::vector<int> convert_base(const std::vector<int> &d, int a, int b) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
 using namespace std;
 
 int main() {
-  assert(EQ(M_PI, 3.14159265359));
-  assert(EQ(M_INF, M_INF) && rEQ(M_INF, M_INF) && rEQ_sym(M_INF, M_INF));
-  assert(!rEQ(M_INF, 0.0) && !rEQ_sym(M_INF, -M_INF));
-  assert(!rEQ(1000000000000LL, 1000000000001LL));
-  assert(EQ(M_E, 2.718281828459));
-  assert(EQ(M_PHI, 1.61803398875));
-
-  double x = -12345.6789;
-  assert((-M_INF < x) && (x < M_INF));
-  assert((M_INF + x == M_INF) && (M_INF - x == M_INF));
-  assert((M_INF + M_INF == M_INF) && (-M_INF - M_INF == -M_INF));
-  assert((M_NAN != x) && (M_NAN != M_INF) && (M_NAN != M_NAN));
-  assert(!(M_NAN < x) && !(M_NAN > x) && !(M_NAN <= x) && !(M_NAN >= x));
-  assert(isnan(0.0 * M_INF) && isnan(0.0 * -M_INF) && isnan(M_INF / -M_INF));
-  assert(isnan(M_NAN) && isnan(-M_NAN) && isnan(M_INF - M_INF));
-
-  assert(sgn(x) == -1 && sgn(0.0) == 0 && sgn(5678) == 1);
-  assert(sign_bit(x) && !sign_bit(0.0) && sign_bit(-0.0));
-  assert(!sign_bit(M_INF) && sign_bit(-M_INF));
-  assert(!sign_bit(M_NAN) && sign_bit(-M_NAN));
-  assert(copy_sign(1.0, +2.0) == +1.0 && copy_sign(M_INF, -2.0) == -M_INF);
-  assert(copy_sign(1.0, -2.0) == -1.0 && sign_bit(copy_sign(M_NAN, -2.0)));
-
-  assert(EQ(floor0(1.5), 1.0) && EQ(ceil0(1.5), 2.0));
-  assert(EQ(floor0(-1.5), -1.0) && EQ(ceil0(-1.5), -2.0));
-  assert(EQ(round_half_up(+1.5), +2) && EQ(round_half_down(+1.5), +1));
-  assert(EQ(round_half_up(-1.5), -1) && EQ(round_half_down(-1.5), -2));
-  assert(EQ(round_half_to0(+1.5), +1) && EQ(round_half_from0(+1.5), +2));
-  assert(EQ(round_half_to0(-1.5), -1) && EQ(round_half_from0(-1.5), -2));
-  assert(EQ(round_half_even(+1.5), +2) && EQ(round_half_even(-1.5), -2));
-  assert(EQ(round_half_even(3.1), 3) && EQ(round_half_even(3.4), 3));  // non-ties round normally
-  double alt1 = round_half_alternate(+1.5);
-  assert(EQ(round_half_alternate(+1.2), +1));  // Non-ties do not consume an alternating turn.
-  double alt2 = round_half_alternate(+1.5);
-  assert(NE(alt1, alt2));
-  double alt01 = round_half_alternate0(-1.5);
-  assert(EQ(round_half_alternate0(-1.2), -1));
-  double alt02 = round_half_alternate0(-1.5);
-  assert(NE(alt01, alt02));
-  assert(EQ(round_n_places(-1.23456, 3, round_half_to0<double>), -1.235));
-
-  assert(addmod(7, 8, 10) == 5 && submod(2, 5, 10) == 7);
-  // Negative and unreduced operands are normalized into [0, m).
-  assert(addmod(-3, -4, 10) == 3 && submod(-3, 4, 10) == 3);
-  assert(addmod(25, -7, 10) == 8);
-  assert(addmod(INT64_MAX - 1, INT64_MAX - 1, INT64_MAX) == INT64_MAX - 2);
-
-  assert(powmod(2, 10, 1000000007) == 1024);
-  assert(powmod(2, 62, 1000000) == 387904);
-  assert(powmod(10001, 10001, 100000) == 10001);
-
   assert(to_roman(1234) == "MCCXXXIV");
   assert(to_roman(5678) == "MMMMMDCLXXVIII");
+  assert(from_roman("MCCXXXIV") == 1234);
+  assert(from_roman("IX") == 9 && from_roman("MMXXVI") == 2026);
+
   vector<int> digits{6, 5, 4, 3, 2, 1};
-  vector<int> base20 = to_base(123456, 20);
-  assert(convert_base(base20, 20, 10) == digits);
+  assert(convert_base(to_base(123456, 20), 20, 10) == digits);
   assert(convert_base(vector<int>{0, 0, 0}, 10, 2) == vector<int>{0});
 
   vector<int> big_decimal(30, 9);  // 10^30 - 1, larger than uint64_t.
-  vector<int> big_binary = convert_base(big_decimal, 10, 2);
-  assert(convert_base(big_binary, 2, 10) == big_decimal);
+  assert(convert_base(convert_base(big_decimal, 10, 2), 2, 10) == big_decimal);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Date and Time}
+Date questions become ordinary arithmetic once dates are converted to a day count. These functions use the proleptic Gregorian calendar, which applies the modern leap rule to every year, including those before the calendar was adopted, and they count days from the Unix epoch of 1970-01-01.
+
+The conversion follows Howard Hinnant's closed-form algorithm, which shifts the year to start in March so that the leap day falls at the end of the year and never interrupts the month lengths. The remaining months then have lengths that repeat in a pattern whose running total is exactly $\lfloor (153m + 2)/5 \rfloor$ days, and whole $400$-year eras of $146097$ days handle the leap rule without a single division-by-$100$ special case. Both directions are branch-light formulas rather than loops over years, so a date thousands of years away costs the same as tomorrow.
+
+\begin{compactitem}
+  \item \inlinecode{is\_leap\_year(y)} returns whether year \inlinecode{y} has a February 29.
+  \item \inlinecode{days\_in\_month(y, m)} returns the length of month \inlinecode{m} of year \inlinecode{y}, where \inlinecode{m} is in $[1, 12]$.
+  \item \inlinecode{days\_from\_civil(y, m, d)} returns the number of days from 1970-01-01 to the date \inlinecode{y}-\inlinecode{m}-\inlinecode{d}, which is negative for earlier dates. The date must be valid.
+  \item \inlinecode{civil\_from\_days(days)} returns the tuple (\inlinecode{year}, \inlinecode{month}, \inlinecode{day}) of the date that many days from 1970-01-01, inverting \inlinecode{days\_from\_civil()}.
+  \item \inlinecode{day\_of\_week(y, m, d)} returns the weekday of the date, from $0$ for Sunday to $6$ for Saturday.
+  \item \inlinecode{days\_between(y1, m1, d1, y2, m2, d2)} returns the number of days from the first date to the second, which is negative when the second date is earlier.
+\end{compactitem}
+
+Unix time counts seconds from the same epoch, and is exactly $86400$ times the day count plus the seconds elapsed within the day. That decomposition is exact only because Unix time ignores leap seconds: it is not a count of elapsed SI seconds but a label that repeats one value during a positive leap second, which is what keeps every day $86400$ seconds long.
+
+\begin{compactitem}
+  \item \inlinecode{seconds\_from\_hms(h, m, s)} returns the seconds elapsed since midnight, and \inlinecode{hms\_from\_seconds(seconds)} returns the tuple (\inlinecode{hour}, \inlinecode{minute}, \inlinecode{second}) inverting it.
+  \item \inlinecode{timestamp\_from\_civil(y, m, d, hh = 0, mm = 0, ss = 0)} returns the Unix timestamp of that instant.
+  \item \inlinecode{civil\_from\_timestamp(t)} returns the \inlinecode{DateTime} of a Unix timestamp, which may be negative for instants before the epoch.
+\end{compactitem}
+
+ISO 8601 numbers weeks from the one containing the first Thursday of the year, and assigns a date to the year of its own week's Thursday. Early January therefore often belongs to the previous ISO year and late December to the next, which is the mistake this replaces: 2021-01-01 is ISO week $53$ of $2020$.
+
+\begin{compactitem}
+  \item \inlinecode{iso\_week\_date(y, m, d)} returns the tuple (\inlinecode{iso\_year}, \inlinecode{week}, \inlinecode{weekday}) of the date, where \inlinecode{week} counts from $1$ and \inlinecode{weekday} runs from $1$ for Monday to $7$ for Sunday.
+\end{compactitem}
+
+Easter follows the anonymous Gregorian computus, which locates the paschal full moon from the year's place in the $19$-year Metonic cycle, corrects for the century's leap and lunar drift, then advances to the following Sunday.
+
+\begin{compactitem}
+  \item \inlinecode{easter(y)} returns the (\inlinecode{month}, \inlinecode{day}) of Easter Sunday in the Gregorian year \inlinecode{y}, which must be at least $1583$.
+\end{compactitem}
+
+Dates are ordinary \inlinecode{int} values with no range checking, and the era arithmetic stays within \inlinecode{int} for any year within a few million of the epoch. The proleptic calendar disagrees with history before a country's adoption of the Gregorian one in or after 1582, where problems usually specify Julian rules instead: the simpler leap rule of every fourth year.
+
+\textbf{Time Complexity}: $O(1)$ per call to all operations.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cstdint>
+#include <tuple>
+#include <utility>
+
+struct DateTime {
+  int year, month, day, hour, minute, second;
+};
+
+bool is_leap_year(int y) {
+  return y % 4 == 0 && (y % 100 != 0 || y % 400 == 0);
+}
+
+int days_in_month(int y, int m) {
+  assert(m >= 1 && m <= 12);
+  static const int lengths[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+  return m == 2 && is_leap_year(y) ? 29 : lengths[m - 1];
+}
+
+int days_from_civil(int y, int m, int d) {
+  y -= m <= 2;  // Start the year in March, so that February 29 is the final day of a year.
+  int era = (y >= 0 ? y : y - 399) / 400;
+  int yoe = y - era * 400;  // Year of era, in [0, 399].
+  int doy =
+      (153 * (m + (m > 2 ? -3 : 9)) + 2) / 5 + d - 1;  // Day of March-based year, in [0, 365].
+  int doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;     // Day of era, in [0, 146096].
+  return era * 146097 + doe - 719468;                  // 719468 is the day of era of 1970-01-01.
+}
+
+std::tuple<int, int, int> civil_from_days(int days) {
+  days += 719468;
+  int era = (days >= 0 ? days : days - 146096) / 146097;
+  int doe = days - era * 146097;
+  int yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+  int y = yoe + era * 400;
+  int doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+  int mp = (5 * doy + 2) / 153;  // Month index of the March-based year, in [0, 11].
+  int d = doy - (153 * mp + 2) / 5 + 1;
+  int m = mp + (mp < 10 ? 3 : -9);
+  return {y + (m <= 2), m, d};
+}
+
+int day_of_week(int y, int m, int d) {
+  // 1970-01-01 was a Thursday, which is weekday 4.
+  return ((days_from_civil(y, m, d) + 4) % 7 + 7) % 7;
+}
+
+int days_between(int y1, int m1, int d1, int y2, int m2, int d2) {
+  return days_from_civil(y2, m2, d2) - days_from_civil(y1, m1, d1);
+}
+
+int seconds_from_hms(int h, int m, int s) {
+  assert(h >= 0 && h < 24 && m >= 0 && m < 60 && s >= 0 && s < 60);
+  return (h * 60 + m) * 60 + s;
+}
+
+std::tuple<int, int, int> hms_from_seconds(int seconds) {
+  assert(seconds >= 0 && seconds < 86400);
+  return {seconds / 3600, seconds / 60 % 60, seconds % 60};
+}
+
+int64_t timestamp_from_civil(int y, int m, int d, int hh = 0, int mm = 0, int ss = 0) {
+  return int64_t{86400} * days_from_civil(y, m, d) + seconds_from_hms(hh, mm, ss);
+}
+
+DateTime civil_from_timestamp(int64_t t) {
+  int64_t days = t / 86400, rest = t % 86400;
+  if (rest < 0) {  // Truncating division rounds toward zero, but the day count must floor.
+    rest += 86400;
+    days--;
+  }
+  auto [y, m, d] = civil_from_days(static_cast<int>(days));
+  auto [hh, mm, ss] = hms_from_seconds(static_cast<int>(rest));
+  return {y, m, d, hh, mm, ss};
+}
+
+std::tuple<int, int, int> iso_week_date(int y, int m, int d) {
+  int days = days_from_civil(y, m, d);
+  int weekday = ((days + 3) % 7 + 7) % 7 + 1;  // The epoch was a Thursday, ISO weekday 4.
+  int thursday = days - weekday + 4;           // This week's Thursday fixes the ISO year.
+  int iso_year = std::get<0>(civil_from_days(thursday));
+  return {iso_year, (thursday - days_from_civil(iso_year, 1, 1)) / 7 + 1, weekday};
+}
+
+std::pair<int, int> easter(int y) {
+  assert(y >= 1583);
+  int a = y % 19;                // Position in the Metonic cycle.
+  int b = y / 100, c = y % 100;  // Century and year within the century.
+  int d = b / 4, e = b % 4;      // Leap corrections for the century.
+  int f = (b + 8) / 25, g = (b - f + 1) / 3;
+  int h = (19 * a + b - d - g + 15) % 30;  // Days from March 21 to the paschal full moon.
+  int i = c / 4, k = c % 4;
+  int l = (32 + 2 * e + 2 * i - h - k) % 7;  // Days from the full moon to the next Sunday.
+  int mm = (a + 11 * h + 22 * l) / 451;      // Correction for the two latest possible dates.
+  return {(h + l - 7 * mm + 114) / 31, (h + l - 7 * mm + 114) % 31 + 1};
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  assert(is_leap_year(2024) && is_leap_year(2000));
+  assert(!is_leap_year(2023) && !is_leap_year(1900));
+  assert(days_in_month(2024, 2) == 29 && days_in_month(2023, 2) == 28);
+  assert(days_in_month(2023, 12) == 31 && days_in_month(2023, 4) == 30);
+
+  assert(days_from_civil(1970, 1, 1) == 0);
+  assert(days_from_civil(1969, 12, 31) == -1);
+  assert(days_from_civil(2000, 1, 1) == 10957);
+  assert(civil_from_days(0) == make_tuple(1970, 1, 1));
+  assert(civil_from_days(-1) == make_tuple(1969, 12, 31));
+  assert(civil_from_days(10957) == make_tuple(2000, 1, 1));
+
+  assert(day_of_week(1970, 1, 1) == 4);   // A Thursday.
+  assert(day_of_week(2000, 1, 1) == 6);   // A Saturday.
+  assert(day_of_week(1969, 7, 20) == 0);  // A Sunday.
+
+  // 2024 was a leap year, so February contributed 29 days.
+  assert(days_between(2024, 1, 1, 2025, 1, 1) == 366);
+  assert(days_between(2023, 1, 1, 2024, 1, 1) == 365);
+  assert(days_between(2024, 3, 1, 2024, 2, 1) == -29);
+
+  assert(seconds_from_hms(23, 31, 30) == 84690);
+  assert(hms_from_seconds(84690) == make_tuple(23, 31, 30));
+  assert(timestamp_from_civil(1970, 1, 1) == 0);
+  assert(timestamp_from_civil(2009, 2, 13, 23, 31, 30) == 1234567890);
+
+  auto [y, mo, d, hh, mm, ss] = civil_from_timestamp(1234567890);
+  assert(y == 2009 && mo == 2 && d == 13 && hh == 23 && mm == 31 && ss == 30);
+  auto before = civil_from_timestamp(-1);  // One second before the epoch.
+  assert(before.year == 1969 && before.month == 12 && before.day == 31);
+  assert(before.hour == 23 && before.minute == 59 && before.second == 59);
+
+  assert(iso_week_date(1970, 1, 1) == make_tuple(1970, 1, 4));
+  // An ISO year runs from the Monday of the week holding the first Thursday, so it straddles
+  // the calendar year on both sides.
+  assert(iso_week_date(2019, 12, 30) == make_tuple(2020, 1, 1));
+  assert(iso_week_date(2021, 1, 1) == make_tuple(2020, 53, 5));
+  assert(iso_week_date(2026, 8, 17) == make_tuple(2026, 34, 1));
+
+  assert(easter(2000) == make_pair(4, 23));
+  assert(easter(2024) == make_pair(3, 31));
+  assert(easter(2025) == make_pair(4, 20));
+  auto [month, day] = easter(2026);
+  assert(day_of_week(2026, month, day) == 0);  // Easter always falls on a Sunday.
+
+  // The century rule, where 2000 is a leap year but 1900 is not.
+  assert(days_between(2000, 2, 28, 2000, 3, 1) == 2);
+  assert(days_between(1900, 2, 28, 1900, 3, 1) == 1);
+  assert(civil_from_days(days_from_civil(2000, 2, 29)) == make_tuple(2000, 2, 29));
+  assert(civil_from_days(days_from_civil(1, 1, 1)) == make_tuple(1, 1, 1));
+  assert(civil_from_days(days_from_civil(-44, 3, 15)) == make_tuple(-44, 3, 15));
   return 0;
 }
 \end{lstlisting}
@@ -412,9 +602,11 @@ The following functions implement common operations in combinatorics. All size a
 \begin{compactitem}
   \item \inlinecode{factorial(n, m = MOD)} returns $n! \bmod m$.
   \item \inlinecode{factorial\_without\_p(n, p = MOD)} returns $n!$ modulo the prime $p$ after removing every factor of $p$ from the factorial.
+  \item \inlinecode{legendre(n, p)} returns the exponent of the prime $p$ in the factorization of $n!$, where $p$ must be at least $2$.
   \item \inlinecode{binomial\_table(n, m = MOD)} returns the first $n + 1$ rows of Pascal's triangle as a two-dimensional vector $t$ such that $t[i][j] = \binom{i}{j} \bmod m$.
   \item \inlinecode{permute(n, k, m = MOD)} returns $(n \mathbin{\text{permute}} k) \bmod m$.
   \item \inlinecode{choose(n, k, p = MOD)} returns $\binom{n}{k} \bmod p$, where $p$ is prime and $n < p$.
+  \item \inlinecode{choose\_lucas(n, k, p = MOD)} returns $\binom{n}{k} \bmod p$ for any 64-bit \inlinecode{n} and \inlinecode{k}, where $p$ is prime. It is only practical for a small $p$, since each base-$p$ digit costs a call to \inlinecode{choose()}.
   \item \inlinecode{multichoose(n, k, p = MOD)} returns $(n \mathbin{\text{multichoose}} k) \bmod p$, where $p$ is prime and $n + k - 1 < p$ when $n > 0$.
   \item \inlinecode{catalan(n, p = MOD)} returns the $n$-th Catalan number mod $p$, where $p$ is prime and $2n < p$.
   \item \inlinecode{partitions(n, m = MOD)} returns the number of partitions of $n$, mod $m$.
@@ -425,6 +617,12 @@ The following functions implement common operations in combinatorics. All size a
   \item \inlinecode{eulerian2(n, k, m = MOD)} returns the $(n, k)$ Eulerian number of the 2nd kind mod $m$, where $n > k$.
 \end{compactitem}
 
+Legendre's formula sums $\lfloor n/p^i \rfloor$ over every $i \geq 1$, counting how many of $1, \dots, n$ are divisible by each power of $p$, which totals the exponent of $p$ in $n!$. It answers questions such as how many trailing zeros $n!$ has in base $p$. Paired with Kummer's theorem, which equates the exponent of $p$ in $\binom{n}{k}$ with the number of carries when adding $k$ and $n - k$ in base $p$, it also decides when a binomial coefficient is divisible by $p$.
+
+Lucas' theorem reduces a binomial coefficient modulo a prime to a product over base-$p$ digits: $\binom{n}{k} \equiv \prod_i \binom{n_i}{k_i} \pmod p$, where $n_i$ and $k_i$ are the $i$-th digits of $n$ and $k$ in base $p$. The product is $0$ as soon as some $k_i$ exceeds $n_i$. For a composite modulus, factor it into prime powers, apply the generalized version of the theorem to each factor, and recombine the residues with the Chinese remainder theorem of section 6.3.2.
+
+Every routine here recomputes its answer from scratch, which is what suits a handful of values or a modulus that varies between calls. When a solution instead needs thousands of binomial coefficients against one fixed modulus, precompute factorials and inverse factorials: the combinatorics tables of section 6.3.3 amortize $O(n)$ of table growth and then answer each query in $O(1)$.
+
 Overflow warning: Modular products use ordinary \inlinecode{int64\_t} multiplication, so the square of the chosen modulus must fit in \inlinecode{int64\_t}.
 
 \Needspace*{3\baselineskip}
@@ -432,9 +630,11 @@ Overflow warning: Modular products use ordinary \inlinecode{int64\_t} multiplica
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{factorial()}.
   \item $O(p \log_{p}\left(n\right))$ per call to \inlinecode{factorial\_without\_p()}.
+  \item $O(\log_{p}\left(n\right))$ per call to \inlinecode{legendre()}.
   \item $O(n^{2})$ per call to \inlinecode{binomial\_table()}.
   \item $O(k)$ per call to \inlinecode{permute()}.
   \item $O(\min\left(k, n - k\right))$ per call to \inlinecode{choose()}.
+  \item $O(p \log_{p}\left(n\right))$ per call to \inlinecode{choose\_lucas()}.
   \item $O(k)$ per call to \inlinecode{multichoose()}.
   \item $O(n)$ per call to \inlinecode{catalan()}.
   \item $O(n^{2})$ per call to \inlinecode{partitions(n, m)}.
@@ -450,6 +650,7 @@ Overflow warning: Modular products use ordinary \inlinecode{int64\_t} multiplica
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
@@ -478,6 +679,15 @@ int64_t factorial_without_p(int64_t n, int64_t p = MOD) {
   return res % p;
 }
 
+int64_t legendre(int64_t n, int64_t p) {
+  assert(p >= 2);
+  int64_t res = 0;
+  for (int64_t q = n / p; q > 0; q /= p) {  // Dividing repeatedly avoids overflowing p^i.
+    res += q;
+  }
+  return res;
+}
+
 std::vector<std::vector<int64_t>> binomial_table(int n, int64_t m = MOD) {
   std::vector<std::vector<int64_t>> t(n + 1);
   for (int i = 0; i <= n; i++) {
@@ -504,14 +714,14 @@ int64_t permute(int n, int k, int64_t m = MOD) {
 }
 
 int64_t powmod(int64_t x, int64_t n, int64_t m) {
-  int64_t a = 1, b = x % m;
-  for (; n > 0; n >>= 1) {
+  int64_t res = 1 % m;
+  for (x %= m; n > 0; n >>= 1) {
     if (n & 1) {
-      a = a * b % m;
+      res = res * x % m;
     }
-    b = b * b % m;
+    x = x * x % m;
   }
-  return a % m;
+  return res;
 }
 
 int64_t choose(int n, int k, int64_t p = MOD) {
@@ -529,6 +739,23 @@ int64_t choose(int n, int k, int64_t p = MOD) {
     den = den * i % p;
   }
   return num * powmod(den, p - 2, p) % p;
+}
+
+int64_t choose_lucas(int64_t n, int64_t k, int64_t p = MOD) {
+  if (k < 0 || k > n) {
+    return 0;
+  }
+  int64_t res = 1;
+  while (n > 0) {  // Since k never exceeds n, k is also exhausted when n reaches 0.
+    int64_t ni = n % p, ki = k % p;
+    if (ki > ni) {
+      return 0;
+    }
+    res = res * choose(static_cast<int>(ni), static_cast<int>(ki), p) % p;
+    n /= p;
+    k /= p;
+  }
+  return res;
 }
 
 int64_t multichoose(int n, int k, int64_t p = MOD) {
@@ -635,8 +862,20 @@ int main() {
   assert(factorial(10) == 3628800);
   assert(factorial_without_p(123456) == 639390503);
   assert(factorial_without_p(7, 5) == 3);  // 7! / 5 = 1008 = 3 (mod 5).
+  assert(legendre(10, 2) == 8);            // 10! = 2^8 * 3^4 * 5^2 * 7.
+  assert(legendre(100, 5) == 24);          // 100! ends in 24 zeros.
   assert(permute(10, 4) == 5040);
   assert(choose(20, 7) == 77520);
+  assert(choose_lucas(20, 7) == 77520);
+  auto mod7 = binomial_table(30, 7);
+  for (int i = 0; i <= 30; i++) {
+    for (int j = 0; j <= i; j++) {
+      assert(choose_lucas(i, j, 7) == mod7[i][j]);
+    }
+  }
+  // By Lucas' theorem mod 2, a binomial coefficient is odd exactly when k is a submask of n.
+  assert(choose_lucas((1LL << 40) - 1, 12345, 2) == 1);
+  assert(choose_lucas(1LL << 40, 1, 2) == 0);
   assert(multichoose(20, 7) == 657800);
   assert(catalan(10) == 16796);
   assert(partitions(4) == 5);
@@ -1450,7 +1689,6 @@ void generate_increasing_partitions(int n, Fn f) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -1551,7 +1789,8 @@ class Enumerator {
   Count count;
 
  public:
-  Enumerator(int range, int length, Count count) : range(range), length(length), count(count) {
+  Enumerator(int range, int length, Count count)
+      : range(range), length(length), count(std::move(count)) {
     assert(range >= 0 && length >= 0);
   }
 
@@ -1777,6 +2016,92 @@ Length-4 binary strings without consecutive ones:
 \section{\texorpdfstring{Number Theory}{6.3 Number Theory}}
 \setcounter{section}{3}
 \setcounter{subsection}{0}
+\subsection{Mod Helpers and Binary Exponentiation}
+Modular arithmetic replaces every value by its remainder modulo \inlinecode{m}, which keeps intermediate results bounded and is what makes counting problems with astronomically large answers tractable. The operations are straightforward except for two hazards, both handled below: a sum or product can overflow the underlying integer type before the remainder is taken, and a negative operand leaves a negative remainder under C++ truncating division. Binary exponentiation squares the base while walking the bits of the exponent, so a power costs $O(\log n)$ multiplications rather than $n$; the same loop computes powers in any monoid, which is how the matrix exponentiation of section 6.5.1 and the linear recurrence of section 6.6.6 are evaluated.
+
+\begin{compactitem}
+  \item \inlinecode{addmod(a, b, m)} and \inlinecode{submod(a, b, m)} respectively return addition and subtraction modulo \inlinecode{m}, each result in $[0, {\inlinecodemath{m}})$. Both operands may be negative or unreduced; they are normalized before arithmetic to avoid signed overflow. The modulus \inlinecode{m} must be positive.
+  \item \inlinecode{mulmod(a, b, m)} returns \inlinecode{a} multiplied by \inlinecode{b}, modulo \inlinecode{m}. This is done in a way to avoid overflow: on compilers with \inlinecode{\_\_uint128\_t} it uses one wide product, while the portable fallback uses double-and-add multiplication. The fallback is slower by a logarithmic factor, but avoids relying on nonstandard 128-bit integers. Unlike \inlinecode{addmod}/\inlinecode{submod}, this takes unsigned operands and supports a full 64-bit modulus.
+  \item \inlinecode{powmod(x, n, m)} returns \inlinecode{x} raised to the power \inlinecode{n}, modulo \inlinecode{m}.
+\end{compactitem}
+
+Paste these when a solution needs a handful of modular operations; when modular arithmetic pervades one instead, the \inlinecode{Modular} value type of section 6.3.3 overloads the operators so expressions read normally. Only \inlinecode{mulmod()} has no counterpart there, since a value type multiplying in \inlinecode{int64\_t} overflows once the modulus passes about three billion, which is why it underlies the Miller-Rabin test and Pollard's rho of section 6.3.9.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to \inlinecode{addmod()} and \inlinecode{submod()}.
+  \item $O(1)$ per call to \inlinecode{mulmod()} with \inlinecode{\_\_uint128\_t}, or $O(\log b)$ with the portable fallback, where $b$ is the second argument.
+  \item $O(\log n)$ calls to \inlinecode{mulmod()} per call to \inlinecode{powmod(x, n, m)}.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cstdint>
+
+int64_t addmod(int64_t a, int64_t b, int64_t m) {
+  assert(m > 0);
+  if ((a %= m) < 0) a += m;
+  if ((b %= m) < 0) b += m;
+  return a >= m - b ? a - (m - b) : a + b;
+}
+
+int64_t submod(int64_t a, int64_t b, int64_t m) {
+  assert(m > 0);
+  if ((a %= m) < 0) a += m;
+  if ((b %= m) < 0) b += m;
+  return a >= b ? a - b : m - (b - a);
+}
+
+uint64_t mulmod(uint64_t a, uint64_t b, uint64_t m) {
+  assert(m > 0);
+#if defined(__SIZEOF_INT128__)
+  return static_cast<uint64_t>(static_cast<__uint128_t>(a) * b % m);
+#else
+  uint64_t res = 0, cur = a % m;
+  for (; b > 0; b >>= 1) {
+    if (b & 1) {
+      res = res >= m - cur ? res - (m - cur) : res + cur;
+    }
+    cur = cur >= m - cur ? cur - (m - cur) : cur + cur;
+  }
+  return res;
+#endif
+}
+
+uint64_t powmod(uint64_t x, uint64_t n, uint64_t m) {
+  assert(m > 0);
+  uint64_t res = 1 % m;
+  for (; n > 0; n >>= 1) {
+    if (n & 1) {
+      res = mulmod(res, x, m);
+    }
+    x = mulmod(x, x, m);
+  }
+  return res;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  assert(addmod(7, 8, 10) == 5 && submod(2, 5, 10) == 7);
+  // Negative and unreduced operands are normalized into [0, m).
+  assert(addmod(-3, -4, 10) == 3 && submod(-3, 4, 10) == 3);
+  assert(addmod(25, -7, 10) == 8);
+  assert(addmod(INT64_MAX - 1, INT64_MAX - 1, INT64_MAX) == INT64_MAX - 2);
+
+  assert(mulmod(INT64_MAX - 1, INT64_MAX - 1, INT64_MAX) == 1);
+  assert(powmod(2, 10, 1000000007) == 1024);
+  assert(powmod(2, 62, 1000000) == 387904);
+  assert(powmod(10001, 10001, 100000) == 10001);
+  return 0;
+}
+\end{lstlisting}
 \subsection{GCD, LCM, Mod Inverse, Chinese Remainder}
 Core integer and modular-arithmetic operations built around the Euclidean algorithm. Extended GCD produces Bezout coefficients, which solve linear Diophantine equations and modular inverses, while the Chinese remainder routines combine compatible congruences into one residue class.
 
@@ -2087,8 +2412,10 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Modular Arithmetic}
-Provides a fixed-modulus value type and lazy factorial-based combinatorics tables. These are common contest helpers for dynamic programming, counting, polynomial operations, and any calculation whose answers are taken modulo some number such as $10^9 + 7$. Runtime-chosen moduli are not supported.
+\subsection{Modular Integer and Combinatorics}
+Provides a modular integer value type together with lazy factorial-based combinatorics tables. Both are common contest helpers for dynamic programming, counting, polynomial operations, and any calculation whose answers are taken modulo some number such as $10^9 + 7$. Where the helpers of section 6.3.1 suit a few scattered operations, a value type is what makes an entire solution read in ordinary arithmetic notation while every operation reduces silently.
+
+The modulus is a template parameter rather than a member, which is a deliberate speed choice: a compile-time constant lets the compiler replace each division by a multiplication and a shift, while a modulus only known at run time forces a hardware divide costing several times as much. Storing it in a \inlinecode{static} member instead makes the same class work with a runtime modulus at that price, and is worth doing when the modulus is read from the input. A modulus above roughly $3 \times 10^9$ needs the \inlinecode{mulmod()} of section 6.3.1 in place of the plain products used here.
 
 The \inlinecode{Modular\textless{}MOD\textgreater{}} value type wraps arithmetic modulo the positive compile-time constant \inlinecode{MOD}. Its signed \inlinecode{auto} argument determines the storage type: \inlinecode{Modular\textless{}1000000007\textgreater{}} uses 32-bit storage, while \inlinecode{Modular\textless{}(1LL \textless{}\textless{} 61) - 1\textgreater{}} uses 64-bit storage. The implementation follows the conventional \inlinecode{Mint} wrapper: construction normalizes values, while hidden friend operators support mixed expressions such as \inlinecode{2 + Mint(3)} through implicit conversion.
 
@@ -2141,7 +2468,6 @@ T inverse(T a, T m) {
 template<auto MOD>
 class Modular {
   using T = decltype(MOD);
-
   static_assert(std::is_integral_v<T> && std::is_signed_v<T>);
   static_assert(MOD > 0 && MOD <= std::numeric_limits<T>::max() / 2);
 
@@ -2241,7 +2567,7 @@ class Modular {
   }
 };
 \end{lstlisting}
-\inlinecode{ModCombinatorics\textless{}Mint\textgreater{}} maintains lazy factorial and inverse-factorial tables for a modular type \inlinecode{Mint}. It assumes the modulus is prime and all requested factorials are invertible.
+\inlinecode{ModCombinatorics\textless{}Mint\textgreater{}} maintains lazy factorial and inverse-factorial tables for a modular type \inlinecode{Mint}. It assumes the modulus is prime and all requested factorials are invertible. Growing the tables costs one modular inverse rather than one per entry: after extending the factorials by repeated multiplication, a single inversion of the largest factorial seeds a backward pass in which each inverse factorial follows from the next by one multiplication.
 
 \begin{compactitem}
   \item \inlinecode{factorial(n)} returns $n!$ using a lazy factorial table.
@@ -2249,6 +2575,8 @@ class Modular {
   \item \inlinecode{permute(n, k)} returns the number of ordered selections of \inlinecode{k} distinct elements from \inlinecode{n}.
   \item \inlinecode{multichoose(n, k)} returns the number of size-\inlinecode{k} multisets drawn from \inlinecode{n} types.
 \end{compactitem}
+
+Tables pay off once a solution asks for many values against one fixed modulus, which is the usual counting or dynamic programming case. For a handful of values, or for a modulus that changes between calls, the table-free routines of section 6.2.1 compute the same quantities in $O(\min\left(k, n - k\right))$ per call and allocate nothing.
 
 \textbf{Time Complexity}: $O(n)$ total table growth to answer calls with arguments up to $n$, then $O(1)$ per call.
 
@@ -2372,6 +2700,7 @@ Modular multiplication uses \inlinecode{\_\_uint128\_t} when available for speed
 \textbf{Space Complexity}: $O(k)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <cstdint>
 #include <numeric>
 #include <set>
@@ -2379,6 +2708,7 @@ Modular multiplication uses \inlinecode{\_\_uint128\_t} when available for speed
 #include <vector>
 
 int64_t mulmod(int64_t a, int64_t b, int64_t m) {
+  assert(a >= 0 && b >= 0 && m > 0);
 #if defined(__SIZEOF_INT128__)
   return static_cast<int64_t>(static_cast<__uint128_t>(a) * b % m);
 #else
@@ -2393,13 +2723,13 @@ int64_t mulmod(int64_t a, int64_t b, int64_t m) {
 #endif
 }
 
-int64_t powmod(int64_t a, int64_t n, int64_t m) {
+int64_t powmod(int64_t x, int64_t n, int64_t m) {
   int64_t res = 1 % m;
-  for (a %= m; n > 0; n >>= 1) {
+  for (x %= m; n > 0; n >>= 1) {
     if (n & 1) {
-      res = mulmod(res, a, m);
+      res = mulmod(res, x, m);
     }
-    a = mulmod(a, a, m);
+    x = mulmod(x, x, m);
   }
   return res;
 }
@@ -2500,12 +2830,14 @@ The baby-step giant-step method writes $x = np - q$ for a block size $n$ near th
 \textbf{Space Complexity}: $O(\sqrt{m})$ auxiliary for the table.
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <numeric>
 #include <unordered_map>
 
 int64_t mulmod(int64_t a, int64_t b, int64_t m) {
+  assert(a >= 0 && b >= 0 && m > 0);
 #if defined(__SIZEOF_INT128__)
   return static_cast<int64_t>(static_cast<__uint128_t>(a) * b % m);
 #else
@@ -2597,9 +2929,11 @@ The Tonelli-Shanks algorithm handles the general case. Euler's criterion, $a^{(p
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <cstdint>
 
 int64_t mulmod(int64_t a, int64_t b, int64_t m) {
+  assert(a >= 0 && b >= 0 && m > 0);
 #if defined(__SIZEOF_INT128__)
   return static_cast<int64_t>(static_cast<__uint128_t>(a) * b % m);
 #else
@@ -2614,13 +2948,13 @@ int64_t mulmod(int64_t a, int64_t b, int64_t m) {
 #endif
 }
 
-int64_t powmod(int64_t a, int64_t n, int64_t m) {
+int64_t powmod(int64_t x, int64_t n, int64_t m) {
   int64_t res = 1 % m;
-  for (a %= m; n > 0; n >>= 1) {
+  for (x %= m; n > 0; n >>= 1) {
     if (n & 1) {
-      res = mulmod(res, a, m);
+      res = mulmod(res, x, m);
     }
-    a = mulmod(a, a, m);
+    x = mulmod(x, x, m);
   }
   return res;
 }
@@ -2773,9 +3107,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Prime Generation}
-Generate prime numbers using the Sieve of Eratosthenes, which repeatedly marks the multiples of each prime as composite.
-
-The linear sieve finds the least prime factor of each integer. When processing \inlinecode{i}, it marks \inlinecode{i * p} for each known prime \inlinecode{p} no greater than \inlinecode{least[i]}. Every composite \inlinecode{x} is therefore generated exactly once: writing \inlinecode{x = i * p}, where \inlinecode{p} is its least prime factor, gives \inlinecode{p} $\leq$ \inlinecode{least[i]}, while any representation using a larger prime is skipped. This single visit per composite gives the $O(n)$ running time.
+Generate prime numbers using the sieve of Eratosthenes, which repeatedly marks the multiples of each prime as composite. The linear sieve technique optimizes the classic sieve by finding the least prime factor of each integer. When processing \inlinecode{i}, it marks \inlinecode{i * p} for each known prime \inlinecode{p} no greater than \inlinecode{least[i]}. Every composite \inlinecode{x} is therefore generated exactly once: writing \inlinecode{x = i*p}, where \inlinecode{p} is its least prime factor, gives \inlinecode{p} $\leq$ \inlinecode{least[i]}, while any representation using a larger prime is skipped. This single visit per composite gives the $O(n)$ running time.
 
 The segmented sieve technique computes primes in a high but narrow window without sieving everything below it. Since every composite at most \inlinecode{hi} has a prime factor at most $\sqrt{{\inlinecodemath{hi}}}$, it first sieves the primes up to $\sqrt{{\inlinecodemath{hi}}}$, then uses only those primes to mark composites within $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ (each prime $p$ starting at the first of its multiples that is at least both $p^2$ and \inlinecode{lo}). This needs only $O(w + \sqrt{{\inlinecodemath{hi}}})$ space, where $w = {\inlinecodemath{hi}} - {\inlinecodemath{lo}} + 1$, instead of the $O({\inlinecodemath{hi}})$ space that sieving all of $[2, {\inlinecodemath{hi}}]$ would require.
 
@@ -2995,50 +3327,46 @@ std::vector<std::pair<Int, int>> factorize_slow(Int n) {
   return res;
 }
 \end{lstlisting}
-The Miller-Rabin test writes $n - 1 = d \cdot 2^r$ and repeatedly squares $a^d$; a base that breaks the pattern required of a prime proves that $n$ is composite. Pollard's rho iterates a pseudorandom map modulo $n$; two iterates that collide modulo a hidden prime factor reveal that factor through a GCD with their difference.
+The Miller-Rabin test writes $n - 1 = d \cdot 2^r$ and repeatedly squares $a^d$; a base that breaks the pattern required of a prime proves that $n$ is composite.
 
 \begin{compactitem}
   \item \inlinecode{is\_probable\_prime(n, k = 20)} returns whether \inlinecode{n} is probably prime using \inlinecode{k} random Miller-Rabin bases. The result is guaranteed correct when \inlinecode{n} is prime. For composite \inlinecode{n}, a true result has one-sided error probability at most $(1 / 4)^k$.
-  \item \inlinecode{rho\_factor(n)} returns a factor of \inlinecode{n} that is not necessarily prime using Pollard's rho with Brent's optimization. If \inlinecode{n} is prime, then \inlinecode{n} itself is returned. The algorithm may need to be retried to find a nontrivial factor, as done in \inlinecode{factorize\_rho()}.
   \item \inlinecode{is\_prime(n)} returns whether the signed 64-bit integer \inlinecode{n} is prime using deterministic Miller-Rabin bases sufficient up to and including $2^{63} - 1$.
 \end{compactitem}
 
 Modular multiplication uses \inlinecode{\_\_uint128\_t} when available, with a slower portable double-and-add fallback that avoids overflow on compilers without 128-bit integers.
 
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(k \cdot \log n)$ modular multiplications per call to \inlinecode{is\_probable\_prime()} and $O(\log n)$ per call to \inlinecode{is\_prime()}. The portable multiplication fallback adds another $O(\log n)$ factor.
-  \item $O(\sqrt{p})$ expected modular multiplications per call to \inlinecode{rho\_factor(n)}, where $p$ is the smallest prime factor of \inlinecode{n}. For composite \inlinecode{n}, this is at most $O(n^{1/4})$.
-\end{compactitem}
+\textbf{Time Complexity}: $O(k \cdot \log n)$ modular multiplications per call to \inlinecode{is\_probable\_prime()} and $O(\log n)$ per call to \inlinecode{is\_prime()}. The portable multiplication fallback adds another $O(\log n)$ factor.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
-uint64_t mulmod(uint64_t x, uint64_t n, uint64_t m) {
+uint64_t mulmod(uint64_t a, uint64_t b, uint64_t m) {
+  assert(m > 0);
 #if defined(__SIZEOF_INT128__)
-  return static_cast<uint64_t>(static_cast<__uint128_t>(x) * n % m);
+  return static_cast<uint64_t>(static_cast<__uint128_t>(a) * b % m);
 #else
-  uint64_t a = 0, b = x % m;
-  for (; n > 0; n >>= 1) {
-    if (n & 1) {
-      a = a >= m - b ? a - (m - b) : a + b;
+  uint64_t res = 0, cur = a % m;
+  for (; b > 0; b >>= 1) {
+    if (b & 1) {
+      res = res >= m - cur ? res - (m - cur) : res + cur;
     }
-    b = b >= m - b ? b - (m - b) : b + b;
+    cur = cur >= m - cur ? cur - (m - cur) : cur + cur;
   }
-  return a;
+  return res;
 #endif
 }
 
 uint64_t powmod(uint64_t x, uint64_t n, uint64_t m) {
-  uint64_t a = 1, b = x;
+  assert(m > 0);
+  uint64_t res = 1 % m;
   for (; n > 0; n >>= 1) {
     if (n & 1) {
-      a = mulmod(a, b, m);
+      res = mulmod(res, x, m);
     }
-    b = mulmod(b, b, m);
+    x = mulmod(x, x, m);
   }
-  return a % m;
+  return res;
 }
 
 uint64_t rand64u() {
@@ -3067,38 +3395,6 @@ bool is_probable_prime(int64_t n, int k = 20) {
     }
   }
   return true;
-}
-
-int64_t rho_factor(int64_t n) {
-  if (n % 2 == 0) {
-    return 2;
-  }
-  uint64_t y = rand64u() % (n - 1) + 1;
-  uint64_t c = rand64u() % (n - 1) + 1;
-  uint64_t m = rand64u() % (n - 1) + 1;
-  uint64_t g = 1, r = 1, q = 1, ys = 0, x = 0;
-  for (r = 1; g == 1; r <<= 1) {
-    x = y;
-    for (uint64_t i = 0; i < r; i++) {
-      y = (mulmod(y, y, n) + c) % n;
-    }
-    for (uint64_t k = 0; k < r && g == 1; k += m) {
-      ys = y;
-      int64_t lim = std::min(m, r - k);
-      for (int j = 0; j < lim; j++) {
-        y = (mulmod(y, y, n) + c) % n;
-        q = mulmod(q, (x > y) ? (x - y) : (y - x), n);
-      }
-      g = std::gcd(q, n);
-    }
-  }
-  if (g == static_cast<uint64_t>(n)) {
-    do {
-      ys = (mulmod(ys, ys, n) + c) % n;
-      g = std::gcd((x > ys) ? (x - ys) : (ys - x), n);
-    } while (g <= 1);
-  }
-  return g;
 }
 
 bool is_prime(int64_t n) {
@@ -3140,9 +3436,10 @@ bool is_prime(int64_t n) {
   return true;
 }
 \end{lstlisting}
-The complete factorization routine first removes small prime factors with a cached linear sieve, then uses Miller-Rabin and Pollard's rho on the remaining cofactor. Factorizations remain sorted and compressed as (\inlinecode{prime}, \inlinecode{exponent}) pairs.
+Pollard's rho iterates a pseudorandom map modulo $n$; two iterates that collide modulo a hidden prime factor reveal that factor through a GCD with their difference. The complete factorization routine first removes small prime factors with a cached linear sieve, then uses Miller-Rabin and Pollard's rho on the remaining cofactor. Factorizations remain sorted and compressed as (\inlinecode{prime}, \inlinecode{exponent}) pairs.
 
 \begin{compactitem}
+  \item \inlinecode{rho\_factor(n)} returns a factor of \inlinecode{n} that is not necessarily prime using Pollard's rho with Brent's optimization. If \inlinecode{n} is prime, then \inlinecode{n} itself is returned. The algorithm may need to be retried to find a nontrivial factor, as done in \inlinecode{factorize\_rho()}.
   \item \inlinecode{factorize\_rho(n)} returns the prime factorization of a 64-bit integer using Miller-Rabin and Pollard's rho without initial trial division.
   \item \inlinecode{factorize(n, small\_prime\_limit = 1000000)} returns the prime factorization of a 64-bit integer \inlinecode{n}, first testing primes through \inlinecode{small\_prime\_limit} and then falling back to Pollard's rho. It supports integers up to and including $2^{63} - 1$.
   \item \inlinecode{divisors\_from\_factors(factors)} returns all divisors from a compressed factorization.
@@ -3152,6 +3449,7 @@ The complete factorization routine first removes small prime factors with a cach
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
+  \item $O(\sqrt{p})$ expected modular multiplications per call to \inlinecode{rho\_factor(n)}, where $p$ is the smallest prime factor of \inlinecode{n}. For composite \inlinecode{n}, this is at most $O(n^{1/4})$.
   \item $O(n^{1/4})$ expected per call to \inlinecode{factorize\_rho()}. \inlinecode{factorize()} additionally performs $O(L/\log L)$ trial divisions, where $L$ is \inlinecode{small\_prime\_limit}, and takes $O(L)$ time if the cache is rebuilt.
   \item $O(d \log d)$ per call to \inlinecode{divisors\_from\_factors()}, where $d$ is the number of divisors generated.
   \item $O(L/\log L + n^{1/4} + d \log d)$ expected per call to \inlinecode{divisors()}, plus $O(L)$ if the cache is rebuilt.
@@ -3166,34 +3464,39 @@ The complete factorization routine first removes small prime factors with a cach
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-static const auto &cached_sieve(int n) {
-  struct Cache {
-    int limit = 1;
-    std::vector<int> least{0, 1}, primes;
-  };
-  static Cache cache;
-  if (n <= cache.limit) {
-    return cache;
-  }
-  cache.limit = std::max(1, n);
-  cache.least.assign(cache.limit + 1, 0);
-  cache.primes.clear();
-  for (int i = 2; i <= cache.limit; i++) {
-    if (cache.least[i] == 0) {
-      cache.least[i] = i;
-      cache.primes.push_back(i);
-    }
-    for (int p : cache.primes) {
-      if (p > cache.least[i] || i > cache.limit / p) {
-        break;
-      }
-      cache.least[i * p] = p;
-    }
-  }
-  return cache;
-}
-
 using Factors = std::vector<std::pair<int64_t, int>>;
+
+int64_t rho_factor(int64_t n) {
+  if (n % 2 == 0) {
+    return 2;
+  }
+  uint64_t y = rand64u() % (n - 1) + 1;
+  uint64_t c = rand64u() % (n - 1) + 1;
+  uint64_t m = rand64u() % (n - 1) + 1;
+  uint64_t g = 1, r = 1, q = 1, ys = 0, x = 0;
+  for (r = 1; g == 1; r <<= 1) {
+    x = y;
+    for (uint64_t i = 0; i < r; i++) {
+      y = (mulmod(y, y, n) + c) % n;
+    }
+    for (uint64_t k = 0; k < r && g == 1; k += m) {
+      ys = y;
+      int64_t lim = std::min(m, r - k);
+      for (int j = 0; j < lim; j++) {
+        y = (mulmod(y, y, n) + c) % n;
+        q = mulmod(q, (x > y) ? (x - y) : (y - x), n);
+      }
+      g = std::gcd(q, n);
+    }
+  }
+  if (g == static_cast<uint64_t>(n)) {
+    do {
+      ys = (mulmod(ys, ys, n) + c) % n;
+      g = std::gcd((x > ys) ? (x - ys) : (ys - x), n);
+    } while (g <= 1);
+  }
+  return g;
+}
 
 Factors factorize_rho(int64_t n) {
   std::vector<int64_t> factors;
@@ -3223,6 +3526,33 @@ Factors factorize_rho(int64_t n) {
     }
   }
   return res;
+}
+
+static const auto &cached_sieve(int n) {
+  struct Cache {
+    int limit = 1;
+    std::vector<int> least{0, 1}, primes;
+  };
+  static Cache cache;
+  if (n <= cache.limit) {
+    return cache;
+  }
+  cache.limit = std::max(1, n);
+  cache.least.assign(cache.limit + 1, 0);
+  cache.primes.clear();
+  for (int i = 2; i <= cache.limit; i++) {
+    if (cache.least[i] == 0) {
+      cache.least[i] = i;
+      cache.primes.push_back(i);
+    }
+    for (int p : cache.primes) {
+      if (p > cache.least[i] || i > cache.limit / p) {
+        break;
+      }
+      cache.least[i * p] = p;
+    }
+  }
+  return cache;
 }
 
 Factors factorize(int64_t n, int small_prime_limit = 1000000) {
@@ -3582,6 +3912,129 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Divisor Functions}
+The divisor-counting function $d(n)$ counts the positive divisors of $n$, and the divisor-sum function $\sigma(n)$ adds them up. Both are multiplicative, so each is determined by the prime factorization $n = \prod p_i^{e_i}$: choosing an exponent in $[0, e_i]$ for every prime gives $d(n) = \prod (e_i + 1)$, and summing the resulting geometric series for each prime gives $\sigma(n) = \prod (1 + p_i + \dots + p_i^{e_i})$. A single value is therefore computed by trial division, factoring $n$ as the divisors are accumulated.
+
+\begin{compactitem}
+  \item \inlinecode{divisor\_count(n)} returns $d(n)$, the number of positive divisors of \inlinecode{n}, which must be positive.
+  \item \inlinecode{divisor\_sum(n)} returns $\sigma(n)$, the sum of the positive divisors of \inlinecode{n}, which must be positive.
+\end{compactitem}
+
+For every value in a range, factoring each number separately is wasteful. Instead, sweep over each candidate divisor $d$ and add its contribution to every multiple of $d$. The total work is the harmonic sum $n/1 + n/2 + \dots + n/n$, which is $O(n \log n)$. The same sweep computes any divisor-indexed accumulation, such as the divisor sums used by the Mobius inversion of section 6.3.12.
+
+\begin{compactitem}
+  \item \inlinecode{divisor\_count\_table(n)} returns a vector \inlinecode{v} of length \inlinecode{n + 1} such that \inlinecode{v[i]} is the number of divisors of \inlinecode{i} for every \inlinecode{i} in $[1, {\inlinecodemath{n}}]$, with \inlinecode{v[0]} left as $0$.
+  \item \inlinecode{divisor\_sum\_table(n)} returns a vector \inlinecode{v} of length \inlinecode{n + 1} such that \inlinecode{v[i]} is the sum of the divisors of \inlinecode{i} for every \inlinecode{i} in $[1, {\inlinecodemath{n}}]$, with \inlinecode{v[0]} left as $0$.
+\end{compactitem}
+
+The aliquot sum $\sigma(n) - n$ adds the proper divisors, marking \inlinecode{n} perfect when it equals \inlinecode{n} and pairing amicable numbers when each is the other's. For an \inlinecode{n} too large for trial division, factor it with Pollard's rho in section 6.3.9 and apply the product formulas; to tabulate a high narrow window, sieve it with the primes up to $\sqrt{{\inlinecodemath{hi}}}$ as in section 6.3.8.
+
+Overflow warning: $\sigma(n)$ can be several times larger than \inlinecode{n}, so \inlinecode{divisor\_sum()} overflows \inlinecode{int64\_t} somewhat before \inlinecode{n} itself does. Trial division binds first in practice, since $\sqrt{n}$ divisions are already too slow well below that point; factor with section 6.3.9 instead.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(\sqrt{n})$ per call to \inlinecode{divisor\_count(n)} and \inlinecode{divisor\_sum(n)}.
+  \item $O(n \log n)$ per call to \inlinecode{divisor\_count\_table(n)} and \inlinecode{divisor\_sum\_table(n)}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ auxiliary for \inlinecode{divisor\_count()} and \inlinecode{divisor\_sum()}.
+  \item $O(n)$ for the vectors returned by \inlinecode{divisor\_count\_table(n)} and \inlinecode{divisor\_sum\_table(n)}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cstdint>
+#include <vector>
+
+int64_t divisor_count(int64_t n) {
+  assert(n > 0);
+  int64_t res = 1;
+  for (int64_t p = 2; p <= n / p; p++) {
+    if (n % p == 0) {
+      int e = 0;
+      for (; n % p == 0; n /= p) {
+        e++;
+      }
+      res *= e + 1;
+    }
+  }
+  if (n > 1) {  // A prime cofactor larger than the square root is left over.
+    res *= 2;
+  }
+  return res;
+}
+
+int64_t divisor_sum(int64_t n) {
+  assert(n > 0);
+  int64_t res = 1;
+  for (int64_t p = 2; p <= n / p; p++) {
+    if (n % p == 0) {
+      int64_t power = 1, series = 1;
+      for (; n % p == 0; n /= p) {
+        power *= p;
+        series += power;
+      }
+      res *= series;  // Overflow warning.
+    }
+  }
+  if (n > 1) {
+    res *= n + 1;
+  }
+  return res;
+}
+
+std::vector<int> divisor_count_table(int n) {
+  std::vector<int> res(n + 1);
+  for (int d = 1; d <= n; d++) {
+    for (int i = d; i <= n; i += d) {
+      res[i]++;
+    }
+  }
+  return res;
+}
+
+std::vector<int64_t> divisor_sum_table(int n) {
+  std::vector<int64_t> res(n + 1);
+  for (int d = 1; d <= n; d++) {
+    for (int i = d; i <= n; i += d) {
+      res[i] += d;
+    }
+  }
+  return res;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  assert(divisor_count(1) == 1);
+  assert(divisor_count(12) == 6);  // 1, 2, 3, 4, 6, and 12.
+  assert(divisor_count(999999937) == 2);
+  assert(divisor_sum(1) == 1);
+  assert(divisor_sum(12) == 28);
+  assert(divisor_sum(6) == 12);  // 6 is perfect, since its aliquot sum is 6.
+
+  // 220 and 284 are the smallest amicable pair.
+  assert(divisor_sum(220) - 220 == 284);
+  assert(divisor_sum(284) - 284 == 220);
+
+  auto counts = divisor_count_table(100);
+  auto sums = divisor_sum_table(100);
+  assert(counts[0] == 0 && sums[0] == 0);
+  for (int i = 1; i <= 100; i++) {
+    assert(counts[i] == divisor_count(i));
+    assert(sums[i] == divisor_sum(i));
+  }
+  return 0;
+}
+\end{lstlisting}
 \subsection{Mobius Function and Inclusion-Exclusion}
 The Mobius function $\mu(n)$ is the multiplicative function defined as $1$ if $n = 1$, $0$ if $n$ is divisible by the square of a prime, and $(-1)^k$ if $n$ is a product of $k$ distinct primes. It is the coefficient that appears in Mobius inversion: if $g(n) = \sum_{d \mid n} f(d)$ for all $n$, then $f(n) = \sum_{d \mid n} \mu(d) \, g(n / d)$. This formalizes the principle of inclusion-exclusion in the divisor lattice, letting one recover a summand function from its divisor sums.
 
@@ -3590,7 +4043,7 @@ Inclusion-exclusion itself counts the size of a union by alternately adding and 
 \begin{compactitem}
   \item \inlinecode{mobius(n)} returns $\mu(n)$ for a single positive \inlinecode{n} by trial division.
   \item \inlinecode{mobius\_sieve(n)} returns a vector of length $n + 1$ where index $i$ holds $\mu(i)$, computed together with a linear sieve, where \inlinecode{n} must be nonnegative.
-  \item \inlinecode{count\_coprime(n, m)} returns the number of integers in $[1, {\inlinecodemath{n}}]$ that are coprime to $m$, via inclusion-exclusion over the distinct prime factors of \inlinecode{m}, where \inlinecode{n} must be nonnegative and \inlinecode{m} must be positive.
+  \item \inlinecode{count\_coprime(n, m)} returns the number of integers in $[1, {\inlinecodemath{n}}]$ that are coprime to \inlinecode{m}, via inclusion-exclusion over the distinct prime factors of \inlinecode{m}, where \inlinecode{n} must be nonnegative and \inlinecode{m} must be positive.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -3932,7 +4385,9 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Big Integer}
-Perform operations on arbitrary precision big integers internally represented as a vector of base-\inlinecode{BASE} digits in little-endian order. \inlinecode{BASE} defaults to $10^9$ and must be a power of 10 no larger than $10^9$. Multiplication selects schoolbook, Karatsuba, or FFT from the operand size; \inlinecode{FFT\_CUTOFF} is the padded transform length where FFT takes over and normally needs no adjustment. Typical arithmetic operations involving mixed numeric primitives and strings are supported through implicit construction and hidden friend operators, as long as at least one operand is a \inlinecode{BigInt} at any given level of evaluation.
+Perform operations on arbitrary precision big integers internally represented as a vector of base-\inlinecode{BASE} digits in little-endian order. \inlinecode{BASE} defaults to $10^9$ and must be a power of 10 no larger than $10^9$. Multiplication selects schoolbook, Karatsuba, or FFT from the operand size; \inlinecode{MUL\_CUTOFF} is the padded transform length where FFT takes over and normally needs no adjustment. Division likewise splits into a quadratic loop for small divisors and a recursive one past \inlinecode{DIV\_CUTOFF} limbs, so it inherits whichever multiplication the size selects. Typical arithmetic operations involving mixed numeric primitives and strings are supported through implicit construction and hidden friend operators, as long as at least one operand is a \inlinecode{BigInt} at any given level of evaluation.
+
+Addition, subtraction, and comparisons are performed using the standard linear algorithms. Multiplication first converts limbs from base \inlinecode{BASE} to the narrower base \inlinecode{MUL\_BASE} so coefficient products fit safely, then multiplies with schoolbook, Karatsuba, or (if beyond \inlinecode{MUL\_CUTOFF}) complex FFT convolution according to the operand size, converting the result back. Division and modulo are computed together by normalized long division: scale the operands so the divisor's leading limb is large, estimate each quotient limb from the top one or two limbs of the running remainder, correct the estimate by adding the divisor back if necessary, then unscale the remainder. Beyond \inlinecode{DIV\_CUTOFF} limbs, that loop becomes the base case of Burnikel-Ziegler recursion, which halves both operands and recovers each half of the quotient from a division of the same shape, paying one multiplication per level rather than one estimate per limb.
 
 \begin{compactitem}
   \item \inlinecode{BigInt()} constructs zero, and \inlinecode{BigInt(n)} constructs a big integer from an integer \inlinecode{n}.
@@ -3940,33 +4395,35 @@ Perform operations on arbitrary precision big integers internally represented as
   \item \inlinecode{operator=} is defined to copy from another big integer or to assign from a 64-bit integer primitive.
   \item \inlinecode{size()} returns the number of digits in the base-10 representation.
   \item Operators \inlinecode{\textgreater{}\textgreater{}} and \inlinecode{\textless{}\textless{}} are defined to support stream-based input and output.
-  \item \inlinecode{v.to\_string()}, \inlinecode{v.to\_llong()}, \inlinecode{v.to\_double()}, and \inlinecode{v.to\_ldouble()} return the big integer \inlinecode{v} converted to an \inlinecode{std::string}, \inlinecode{int64\_t}, \inlinecode{double}, and \inlinecode{long double} respectively. For the latter three data types, overflow behavior is based on that of inputting from \inlinecode{std::istream}. Equivalent conversions are also available through explicit casts to \inlinecode{int}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double}.
-  \item \inlinecode{v.abs()} returns the absolute value of big integer \inlinecode{v}.
-  \item \inlinecode{a.comp(v)} returns $-1$, $0$, or $1$ depending on whether the big integers \inlinecode{a} and \inlinecode{v} compare less, equal, or greater, respectively.
-  \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on integer primitives. Addition, subtraction, and comparisons are performed using the standard linear algorithms. Multiplication first converts limbs from base \inlinecode{BASE} to the narrower base \inlinecode{MULT\_BASE} so coefficient products fit safely, then multiplies with schoolbook, Karatsuba, or complex FFT convolution according to the operand size, converting the result back. Division and modulo are computed together by normalized long division: scale the operands so the divisor's leading limb is large, estimate each quotient limb from the top one or two limbs of the running remainder, correct the estimate by adding the divisor back if necessary, then unscale the remainder.
-  \item \inlinecode{a.div(v)} returns a pair consisting of the quotient and remainder when \inlinecode{a} is divided by \inlinecode{v}.
-  \item \inlinecode{v.pow(n)} returns \inlinecode{v} raised to the nonnegative power $n$ using binary exponentiation.
-  \item \inlinecode{v.sqrt()} returns the integral part of the square root of big integer \inlinecode{v} using a digit-by-digit algorithm in the internal base.
-  \item \inlinecode{v.nth\_root(n)} returns the integral part of the $n$-th root of big integer \inlinecode{v} using binary search. Negative inputs require odd $n$.
-  \item \inlinecode{rand(n)} returns a random, positive big integer with $n$ digits.
+  \item \inlinecode{to\_string()}, \inlinecode{to\_llong()}, \inlinecode{to\_double()}, and \inlinecode{to\_ldouble()} return the big integer converted to an \inlinecode{std::string}, \inlinecode{int64\_t}, \inlinecode{double}, and \inlinecode{long double} respectively. For the latter three data types, overflow behavior is based on that of inputting from \inlinecode{std::istream}. Equivalent conversions are also available through explicit casts to \inlinecode{int}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double}.
+  \item \inlinecode{abs()} returns the absolute value.
+  \item \inlinecode{comp(v)} returns $-1$, $0$, or $1$ depending on whether the big integer compares less than, equal to, or greater than \inlinecode{v}, respectively.
+  \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on integer primitives.
+  \item \inlinecode{div(v)} returns a pair consisting of the quotient and remainder after dividing by \inlinecode{v}.
+  \item \inlinecode{pow(n)} returns the big integer raised to the nonnegative power \inlinecode{n} using binary exponentiation.
+  \item \inlinecode{mul\_pow10(n)} returns the big integer multiplied by $10^{{\inlinecodemath{n}}}$ for nonnegative \inlinecode{n}, which costs a limb shift rather than a multiplication.
+  \item \inlinecode{sqrt()} returns the integral part of the square root using a digit-by-digit algorithm in the internal base.
+  \item \inlinecode{nth\_root(n)} returns the integral part of the \inlinecode{n}-th root using Newton's method. Negative inputs require odd \inlinecode{n}.
+  \item \inlinecode{rand(d)} returns a random, positive big integer with \inlinecode{d} digits.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to the constructors, \inlinecode{size()}, \inlinecode{to\_string()}, \inlinecode{to\_llong()}, \inlinecode{to\_double()}, \inlinecode{to\_ldouble()}, \inlinecode{abs()}, \inlinecode{comp()}, \inlinecode{rand()}, and all comparison and arithmetic operators except multiplication, division, and modulo, where $n$ is total number of digits in the arguments and result for each operation.
-  \item $O(n \cdot \log\left(n\right) \cdot \log\left(\log\left(n\right)\right))$ per call to multiplication operations once operands reach \inlinecode{FFT\_CUTOFF}, and $O(n^{1.585})$ below it.
-  \item $O(n \cdot m)$ per call to division and modulo operations, where $n$ and $m$ are the number of digits in the dividend and divisor, respectively.
-  \item $O(M(d) \log n)$ per call to \inlinecode{pow()}, where $d$ is the maximum digit length reached during exponentiation and $M(d)$ denotes the cost of one multiplication of two $d$-digit big integers using the selected multiplication method above.
-  \item $O(d^{2})$ per call to \inlinecode{sqrt()}, where $d$ is the number of digits.
-  \item $O((d/k) \cdot M(d) \cdot \log k)$ per call to \inlinecode{nth\_root()}, from binary search over a $d/k$-digit answer.
+  \item $O(d)$ per call to the constructors, \inlinecode{size()}, \inlinecode{to\_string()}, \inlinecode{to\_llong()}, \inlinecode{to\_double()}, \inlinecode{to\_ldouble()}, \inlinecode{abs()}, \inlinecode{comp()}, \inlinecode{rand()}, and all comparison and arithmetic operators except multiplication, division, and modulo, where $d$ is the total number of digits in the arguments and result for each operation.
+  \item $O(d \cdot \log\left(d\right) \cdot \log\left(\log\left(d\right)\right))$ per call to multiplication operations once operands reach \inlinecode{MUL\_CUTOFF}, and $O(d^{1.585})$ below it.
+  \item $O(d \cdot m)$ per call to division and modulo operations below \inlinecode{DIV\_CUTOFF}, and $O(M(m) \log m)$ at or above it, where $d$ and $m$ are the number of digits in the dividend and divisor respectively, and $M(m)$ is the cost of one multiplication of two $m$-digit big integers.
+  \item $O(M(d) \log n)$ per call to \inlinecode{pow()}, where $n$ is the exponent and $d$ is the maximum digit length reached during exponentiation.
+  \item $O(d + n)$ per call to \inlinecode{mul\_pow10()}, where $n$ is the power of ten.
+  \item $O(d^{2})$ per call to \inlinecode{sqrt()}.
+  \item $O(M(d) \cdot \log\left(d\right) \cdot \log\left(d \cdot n\right))$ per call to \inlinecode{nth\_root()}, where $n$ is the root. Newton's iteration starts within a factor of ten of the answer and doubles the correct digits each step, so it converges in $O(\log d)$ steps, each costing one exponentiation and one division.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ for storage of the big integer.
-  \item $O(n)$ auxiliary for negation, addition, subtraction, multiplication, division, \inlinecode{abs()}, \inlinecode{sqrt()}, \inlinecode{pow()}, and \inlinecode{nth\_root()}.
+  \item $O(d)$ for storage of the big integer.
+  \item $O(d)$ auxiliary for negation, addition, subtraction, multiplication, division, \inlinecode{abs()}, \inlinecode{sqrt()}, \inlinecode{pow()}, and \inlinecode{nth\_root()}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -3993,15 +4450,16 @@ class BigInt {
   static const int BASE = 1000000000, BASE_DIGITS = 9;  // BASE must equal 10^BASE_DIGITS.
   // Multiplication rebases to half as many decimal digits per limb, so that coefficient products
   // stay exact both in int64_t and within the FFT's double precision.
-  static const int MULT_BASE = 10000, MULT_BASE_DIGITS = 4;  // Keep consistent with BASE_DIGITS.
-  static const int FFT_CUTOFF = 256;  // Padded MULT_BASE length past which FFT beats Karatsuba.
+  static const int MUL_BASE = 10000, MUL_BASE_DIGITS = 4;  // Keep consistent with BASE_DIGITS.
+  static const int MUL_CUTOFF = 256;  // Padded MUL_BASE length past which FFT beats Karatsuba.
+  static const int DIV_CUTOFF = 64;   // Divisor limb count past which recursion wins.
   static_assert(
       BASE >= 100 && BASE <= 1000000000,
-      "BASE must be between 10^2 and 10^9; below that MULT_BASE_DIGITS would round down to zero"
+      "BASE must be between 10^2 and 10^9; below that MUL_BASE_DIGITS would round down to zero"
   );
   static_assert(
-      MULT_BASE_DIGITS == BASE_DIGITS / 2 && MULT_BASE <= 10000,
-      "MULT_BASE must hold half of BASE's digits and stay exact under the FFT"
+      MUL_BASE_DIGITS == BASE_DIGITS / 2 && MUL_BASE <= 10000,
+      "MUL_BASE must hold half of BASE's digits and stay exact under the FFT"
   );
 
   using vint = std::vector<int>;
@@ -4201,6 +4659,101 @@ class BigInt {
     return res;
   }
 
+  // Schoolbook long division of nonnegative values, quadratic in the limb counts.
+  std::pair<BigInt, BigInt> div_schoolbook(const BigInt &v) const {
+    int norm = BASE / (v.digits.back() + 1);
+    BigInt an = *this * norm, bn = v * norm, q, r;
+    q.digits.resize(an.digits.size());
+    for (int i = static_cast<int>(an.digits.size()) - 1; i >= 0; i--) {
+      r *= BASE;
+      r += an.digits[i];
+      int s1 = (r.digits.size() <= bn.digits.size()) ? 0 : r.digits[bn.digits.size()];
+      int s2 = (r.digits.size() <= bn.digits.size() - 1) ? 0 : r.digits[bn.digits.size() - 1];
+      int d = (static_cast<int64_t>(s1) * BASE + s2) / bn.digits.back();
+      for (r -= bn * d; r < 0; r += bn) {
+        d--;
+      }
+      q.digits[i] = d;
+    }
+    q.normalize();
+    r.normalize();
+    return {q, r / norm};
+  }
+
+  // Burnikel-Ziegler recursive division of nonnegative values. Balanced halves replace the
+  // quadratic inner loop, paying one multiplication per level instead of one estimate per limb, so
+  // division inherits whichever multiplication the operand size selects.
+  std::pair<BigInt, BigInt> div_recursive(const BigInt &v) const {
+    auto shifted = [](const BigInt &x, int k) {  // Multiplies by BASE^k.
+      BigInt res(x);
+      if (!res.digits.empty()) {
+        res.digits.insert(res.digits.begin(), k, 0);
+      }
+      return res;
+    };
+    auto slice = [](const BigInt &x, int lo, int hi) {  // Limbs [lo, hi), or 0 if empty range.
+      BigInt res;
+      lo = std::max(lo, 0);
+      hi = std::min(hi, static_cast<int>(x.digits.size()));
+      if (lo < hi) {
+        res.digits.assign(x.digits.begin() + lo, x.digits.begin() + hi);
+      }
+      res.normalize();
+      return res;
+    };
+    // Divides at most 2n limbs by exactly n limbs whose leading limb is at least BASE / 2, where
+    // the quotient is known to be below BASE^n. Each half of the quotient comes from one
+    // three-by-two block division, which itself divides two half-size blocks by one.
+    auto rec = [&](auto &&rec, const BigInt &a, const BigInt &b,
+                   int n) -> std::pair<BigInt, BigInt> {
+      if (n % 2 != 0 || n < DIV_CUTOFF) {
+        return a.div_schoolbook(b);
+      }
+      int k = n / 2;
+      BigInt hi = slice(b, k, 2 * k), lo = slice(b, 0, k);
+      auto block = [&](const BigInt &x) {  // At most 3k limbs by b, with quotient below BASE^k.
+        BigInt q, r;
+        if (slice(x, 2 * k, 3 * k).comp(hi) < 0) {
+          std::tie(q, r) = rec(rec, slice(x, k, 3 * k), hi, k);
+        } else {
+          // The estimate saturates: the leading limbs already reach the divisor, so take the
+          // largest quotient the block can hold and recover the matching remainder.
+          q = shifted(BigInt(1), k) - 1;
+          r = slice(x, k, 3 * k) - hi * q;
+        }
+        r = shifted(r, k) + slice(x, 0, k) - q * lo;
+        while (r < 0) {  // At most twice, since the divisor's leading limb is at least BASE / 2.
+          r += b;
+          q -= 1;
+        }
+        return std::make_pair(q, r);
+      };
+      auto top = block(slice(a, k, 4 * k));
+      auto bottom = block(shifted(top.second, k) + slice(a, 0, k));
+      return {shifted(top.first, k) + bottom.first, bottom.second};
+    };
+    // Scale so the divisor's leading limb exceeds BASE / 2, then pad it to a multiple of a power
+    // of two so that every recursive split stays even until the blocks fall under DIV_CUTOFF, and
+    // consume the dividend one block at a time.
+    int scale = BASE / (v.digits.back() + 1);
+    BigInt a = *this * scale, b = v * scale;
+    int limbs = static_cast<int>(b.digits.size()), block = 1;
+    while (block * DIV_CUTOFF < limbs) {
+      block *= 2;
+    }
+    int n = (limbs + block - 1) / block * block, sigma = n - limbs;
+    a = shifted(a, sigma);
+    b = shifted(b, sigma);
+    BigInt q, r;
+    for (int i = (static_cast<int>(a.digits.size()) + n - 1) / n - 1; i >= 0; i--) {
+      auto step = rec(rec, shifted(r, n) + slice(a, i * n, (i + 1) * n), b, n);
+      q = shifted(q, n) + step.first;
+      r = step.second;
+    }
+    // Both scalings scale the remainder and leave the quotient alone.
+    return {q, slice(r, sigma, static_cast<int>(r.digits.size())) / scale};
+  }
+
  public:
   BigInt() : sign(1) {}
   BigInt(int v) { *this = static_cast<int64_t>(v); }
@@ -4219,12 +4772,9 @@ class BigInt {
   }
 
   int size() const {
-    if (digits.empty()) {
-      return 1;
-    }
-    std::ostringstream oss;
-    oss << digits.back();
-    return oss.str().length() + BASE_DIGITS * (digits.size() - 1);
+    return digits.empty() ? 1
+                          : static_cast<int>(std::to_string(digits.back()).size()) +
+                                BASE_DIGITS * (static_cast<int>(digits.size()) - 1);
   }
 
   friend std::istream &operator>>(std::istream &in, BigInt &v) {
@@ -4235,16 +4785,7 @@ class BigInt {
   }
 
   friend std::ostream &operator<<(std::ostream &out, const BigInt &v) {
-    if (v.sign == -1) {
-      out << '-';
-    }
-    out << (v.digits.empty() ? 0 : v.digits.back());
-    char old_fill = out.fill('0');
-    for (int i = static_cast<int>(v.digits.size()) - 2; i >= 0; i--) {
-      out << std::setw(BASE_DIGITS) << v.digits[i];
-    }
-    out.fill(old_fill);
-    return out;
+    return out << v.to_string();
   }
 
   std::string to_string() const {
@@ -4259,26 +4800,17 @@ class BigInt {
     return oss.str();
   }
 
-  int64_t to_llong() const {
+  template<typename T>
+  T to_arithmetic() const {
     std::stringstream ss(to_string());
-    int64_t res;
+    T res;
     ss >> res;
     return res;
   }
 
-  double to_double() const {
-    std::stringstream ss(to_string());
-    double res;
-    ss >> res;
-    return res;
-  }
-
-  long double to_ldouble() const {
-    std::stringstream ss(to_string());
-    long double res;
-    ss >> res;
-    return res;
-  }
+  int64_t to_llong() const { return to_arithmetic<int64_t>(); }
+  double to_double() const { return to_arithmetic<double>(); }
+  long double to_ldouble() const { return to_arithmetic<long double>(); }
 
   explicit operator int() const { return static_cast<int>(to_llong()); }
   explicit operator long long() const { return static_cast<long long>(to_llong()); }
@@ -4342,8 +4874,8 @@ class BigInt {
   }
 
   friend BigInt operator*(const BigInt &u, const BigInt &v) {
-    vint a = convert_base(u.digits, BASE_DIGITS, MULT_BASE_DIGITS);
-    vint b = convert_base(v.digits, BASE_DIGITS, MULT_BASE_DIGITS);
+    vint a = convert_base(u.digits, BASE_DIGITS, MUL_BASE_DIGITS);
+    vint b = convert_base(v.digits, BASE_DIGITS, MUL_BASE_DIGITS);
     int n = 1;
     while (n < 2 * static_cast<int>(std::max(a.size(), b.size()))) {
       n <<= 1;
@@ -4351,7 +4883,7 @@ class BigInt {
     a.resize(n, 0);
     b.resize(n, 0);
     vint64 c;
-    if (n < FFT_CUTOFF) {
+    if (n < MUL_CUTOFF) {
       c = karatsuba(a.begin(), a.end(), b.begin(), b.end());
     } else {
       auto at = fft(a.begin(), a.end()), bt = fft(b.begin(), b.end());
@@ -4368,10 +4900,10 @@ class BigInt {
     res.sign = u.sign * v.sign;
     for (int i = 0, carry = 0; i < static_cast<int>(c.size()); i++) {
       int64_t d = c[i] + carry;
-      res.digits.push_back(d % MULT_BASE);
-      carry = d / MULT_BASE;
+      res.digits.push_back(d % MUL_BASE);
+      carry = d / MUL_BASE;
     }
-    res.digits = convert_base(res.digits, MULT_BASE_DIGITS, BASE_DIGITS);
+    res.digits = convert_base(res.digits, MUL_BASE_DIGITS, BASE_DIGITS);
     res.normalize();
     return res;
   }
@@ -4417,25 +4949,13 @@ class BigInt {
     if (comp(digits, v.digits, 1, 1) < 0) {
       return {BigInt(0), *this};
     }
-    int norm = BASE / (v.digits.back() + 1);
-    BigInt an = abs() * norm, bn = v.abs() * norm, q, r;
-    q.digits.resize(an.digits.size());
-    for (int i = static_cast<int>(an.digits.size()) - 1; i >= 0; i--) {
-      r *= BASE;
-      r += an.digits[i];
-      int s1 = (r.digits.size() <= bn.digits.size()) ? 0 : r.digits[bn.digits.size()];
-      int s2 = (r.digits.size() <= bn.digits.size() - 1) ? 0 : r.digits[bn.digits.size() - 1];
-      int d = (static_cast<int64_t>(s1) * BASE + s2) / bn.digits.back();
-      for (r -= bn * d; r < 0; r += bn) {
-        d--;
-      }
-      q.digits[i] = d;
-    }
-    q.sign = sign * v.sign;
-    r.sign = sign;
-    q.normalize();
-    r.normalize();
-    return {q, r / norm};
+    auto res = static_cast<int>(v.digits.size()) < DIV_CUTOFF ? abs().div_schoolbook(v.abs())
+                                                              : abs().div_recursive(v.abs());
+    res.first.sign = sign * v.sign;
+    res.second.sign = sign;
+    res.first.normalize();
+    res.second.normalize();
+    return res;
   }
 
   friend BigInt operator/(const BigInt &a, const BigInt &b) { return a.div(b).first; }
@@ -4465,6 +4985,16 @@ class BigInt {
       }
       x *= x;
     }
+    return res;
+  }
+
+  // Multiplying by a power of ten is a limb shift, since BASE is a power of ten by construction.
+  BigInt mul_pow10(int n) const {
+    assert(n >= 0);
+    static const int POW10[] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000};
+    BigInt res(*this);
+    res.digits.insert(res.digits.begin(), n / BASE_DIGITS, 0);
+    res *= POW10[n % BASE_DIGITS];  // Also normalizes, which is what clears a shifted zero.
     return res;
   }
 
@@ -4517,39 +5047,23 @@ class BigInt {
     if (*this == 0) {
       return BigInt(0);
     }
+    // Newton's iteration, started just above the answer and decreasing to it.
     BigInt magnitude = abs();
-    if (n >= size()) {
-      int p = 1;
-      while (magnitude.comp(BigInt(p).pow(n)) > 0) {
-        p++;
-      }
-      BigInt root = magnitude.comp(BigInt(p).pow(n)) < 0 ? p - 1 : p;
-      return sign == -1 ? -root : root;
+    BigInt x = BigInt(10).pow(static_cast<int>(std::ceil(static_cast<double>(size()) / n))), y;
+    while (x.comp(y = (x * (n - 1) + magnitude / x.pow(n - 1)) / n) > 0) {
+      x = y;
     }
-    BigInt lo(BigInt(10).pow(static_cast<int>(std::ceil(static_cast<double>(size()) / n)) - 1));
-    BigInt hi(lo * 10), mid;
-    while (lo < hi) {
-      mid = (lo + hi) / 2;
-      int cmp = comp(digits, mid.pow(n).digits, 1, 1);
-      if (lo < mid && cmp > 0) {
-        lo = mid;
-      } else if (mid < hi && cmp < 0) {
-        hi = mid;
-      } else {
-        return (sign == -1) ? -mid : mid;
-      }
-    }
-    return (sign == -1) ? -(mid + 1) : (mid + 1);
+    return sign == -1 ? -x : x;
   }
 
-  static BigInt rand(int n) {
-    if (n == 0) {
+  static BigInt rand(int d) {
+    if (d == 0) {
       return BigInt(0);
     }
     static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
     std::uniform_int_distribution<int> first_digit(1, 9), digit(0, 9);
     std::string s(1, static_cast<char>('0' + first_digit(rng)));
-    for (int i = 1; i < n; i++) {
+    for (int i = 1; i < d; i++) {
       s += static_cast<char>('0' + digit(rng));
     }
     return BigInt(s);
@@ -4606,11 +5120,11 @@ int main() {
   mt19937 rng(1234567);  // Fixed seed for reproducibility.
   uniform_int_distribution<int> length_dist(1, 100);
   for (int i = 0; i < 20; i++) {
-    int n = length_dist(rng);
-    BigInt value(BigInt::rand(n)), root(value.sqrt()), lower(root * root), upper(root + 1);
+    int d = length_dist(rng);
+    BigInt value(BigInt::rand(d)), root(value.sqrt()), lower(root * root), upper(root + 1);
     upper *= upper;
     assert(lower <= value && value < upper);
-    uniform_int_distribution<int> divisor_length_dist(1, n);
+    uniform_int_distribution<int> divisor_length_dist(1, d);
     BigInt divisor(BigInt::rand(divisor_length_dist(rng)) + 1), quotient(value / divisor);
     lower = quotient * divisor;
     upper = divisor * (quotient + 1);
@@ -4643,7 +5157,6 @@ Division and square root generally have nonterminating decimal expansions, so bo
   \item \inlinecode{BigDecimal(s)} parses decimal string \inlinecode{s}, optionally written in scientific notation, and preserves trailing zeros in its mantissa.
   \item \inlinecode{decimal\_places()}, \inlinecode{precision()}, and \inlinecode{sign()} return the scale, the number of coefficient digits, and the sign as $-1$, $0$, or $1$, respectively.
   \item \inlinecode{unscaled\_value()} returns the underlying \inlinecode{BigInt} coefficient.
-  \item \inlinecode{to\_string()} returns ordinary decimal notation with the stored number of decimal places.
   \item \inlinecode{abs()} and \inlinecode{normalized()} return the absolute value and a value with trailing fractional zeros removed.
   \item \inlinecode{move\_point(places)} moves the decimal point right by \inlinecode{places} positions, or left if \inlinecode{places} is negative.
   \item \inlinecode{rescale(new\_scale, mode = Rounding::HalfAway)} returns the value with exactly \inlinecode{new\_scale} decimal places, rounding if the scale is reduced.
@@ -4651,6 +5164,7 @@ Division and square root generally have nonterminating decimal expansions, so bo
   \item \inlinecode{divide(v, result\_scale, mode = Rounding::HalfAway)} divides by nonzero \inlinecode{v} and rounds to exactly \inlinecode{result\_scale} decimal places.
   \item \inlinecode{sqrt(result\_scale, mode = Rounding::HalfAway)} returns the nonnegative square root rounded to exactly \inlinecode{result\_scale} decimal places.
   \item \inlinecode{pow(n)} returns the value raised to nonnegative integer power \inlinecode{n}.
+  \item \inlinecode{to\_string()} returns ordinary decimal notation with the stored number of decimal places.
   \item Stream operators and comparisons are defined, as are \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{\%}, and their compound assignments.
 \end{compactitem}
 
@@ -4659,7 +5173,8 @@ Division and square root generally have nonterminating decimal expansions, so bo
 \begin{compactitem}
   \item $O(d)$ per call to parsing, formatting, normalization, addition, subtraction, comparisons, and decimal-point movement, where $d$ is the number of relevant decimal digits.
   \item $O(M(d) \log n)$ per call to \inlinecode{pow(n)}, where $M(d)$ is the multiplication cost for the largest intermediate coefficient.
-  \item $O(d^{2})$ per call to division, remainder, rescaling to fewer places, and square root, matching the corresponding \inlinecode{BigInt} operations used here.
+  \item $O(d^{2})$ per call to square root, matching the \inlinecode{BigInt} operation used here.
+  \item Division, remainder, and rescaling to fewer places inherit the \inlinecode{BigInt} division cost of 6.4.2: $O(d \cdot m)$ below its \inlinecode{DIV\_CUTOFF} and $O(M(m) \log m)$ at or above it, where $m$ is the number of digits in the divisor.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(d)$ for stored digits, returned values, and arithmetic results.
@@ -4675,7 +5190,7 @@ class BigDecimal {
   int scale;
 
   BigDecimal(BigInt coeff, int scale) : coeff(std::move(coeff)), scale(scale) {}
-  BigInt scaled(int new_scale) const { return coeff * pow10(new_scale - scale); }
+  BigInt scaled(int new_scale) const { return coeff.mul_pow10(new_scale - scale); }
   static BigInt pow10(int n) { return BigInt(10).pow(n); }
 
   static bool round_up(bool negative, int half_cmp, const BigInt &q, Round mode) {
@@ -4684,7 +5199,7 @@ class BigDecimal {
            (mode == Round::HalfEven && (half_cmp > 0 || (half_cmp == 0 && q % 2 != 0)));
   }
 
-  static BigInt rounded_quotient(BigInt num, const BigInt &den, Round mode) {
+  static BigInt rounded_quotient(const BigInt &num, const BigInt &den, Round mode) {
     assert(den > 0);
     bool negative = num < 0;
     auto [q, r] = num.abs().div(den);
@@ -4719,7 +5234,7 @@ class BigDecimal {
     coeff = negative ? -BigInt(digits) : BigInt(digits);
     scale -= exponent;
     if (scale < 0) {
-      coeff *= pow10(-scale);
+      coeff = coeff.mul_pow10(-scale);
       scale = 0;
     }
   }
@@ -4729,17 +5244,6 @@ class BigDecimal {
   int sign() const { return (coeff > 0) - (coeff < 0); }
   const BigInt &unscaled_value() const { return coeff; }
   BigDecimal abs() const { return BigDecimal(coeff.abs(), scale); }
-
-  std::string to_string() const {
-    std::string s = coeff.abs().to_string();
-    if (static_cast<int>(s.size()) <= scale) {
-      s.insert(0, scale + 1 - s.size(), '0');
-    }
-    if (scale > 0) {
-      s.insert(s.size() - scale, 1, '.');
-    }
-    return coeff < 0 ? "-" + s : s;
-  }
 
   BigDecimal normalized() const {
     BigInt c = coeff;
@@ -4753,7 +5257,8 @@ class BigDecimal {
 
   BigDecimal move_point(int places) const {
     int new_scale = scale - places;
-    return new_scale >= 0 ? BigDecimal(coeff, new_scale) : BigDecimal(coeff * pow10(-new_scale), 0);
+    return new_scale >= 0 ? BigDecimal(coeff, new_scale)
+                          : BigDecimal(coeff.mul_pow10(-new_scale), 0);
   }
 
   BigDecimal rescale(int new_scale, Round mode = Round::HalfAway) const {
@@ -4763,11 +5268,15 @@ class BigDecimal {
                : BigDecimal(rounded_quotient(coeff, pow10(scale - new_scale), mode), new_scale);
   }
 
+  BigInt trunc() const { return rescale(0, Round::TowardZero).coeff; }
+  BigInt floor() const { return rescale(0, Round::Floor).coeff; }
+  BigInt ceil() const { return rescale(0, Round::Ceil).coeff; }
+
   BigDecimal divide(const BigDecimal &v, int result_scale, Round mode = Round::HalfAway) const {
     assert(v.coeff != 0 && result_scale >= 0);
     BigInt num = coeff.abs(), den = v.coeff.abs();
     int shift = v.scale + result_scale - scale;
-    (shift >= 0 ? num : den) *= pow10(std::abs(shift));
+    (shift >= 0 ? num : den) = (shift >= 0 ? num : den).mul_pow10(std::abs(shift));
     if ((coeff < 0) != (v.coeff < 0)) {
       num = -num;
     }
@@ -4778,16 +5287,23 @@ class BigDecimal {
     assert(coeff >= 0 && result_scale >= 0);
     BigInt num = coeff, den = 1;
     int shift = 2 * result_scale - scale;
-    (shift >= 0 ? num : den) *= pow10(std::abs(shift));
+    (shift >= 0 ? num : den) = (shift >= 0 ? num : den).mul_pow10(std::abs(shift));
     BigInt q = (num / den).sqrt();
     bool exact = q * q * den == num;
     int half_cmp = (4 * num).comp(den * (4 * q * q + 4 * q + 1));
     return BigDecimal(q + (!exact && round_up(false, half_cmp, q, mode)), result_scale);
   }
 
-  BigInt trunc() const { return rescale(0, Round::TowardZero).coeff; }
-  BigInt floor() const { return rescale(0, Round::Floor).coeff; }
-  BigInt ceil() const { return rescale(0, Round::Ceil).coeff; }
+  std::string to_string() const {
+    std::string s = coeff.abs().to_string();
+    if (static_cast<int>(s.size()) <= scale) {
+      s.insert(0, scale + 1 - s.size(), '0');
+    }
+    if (scale > 0) {
+      s.insert(s.size() - scale, 1, '.');
+    }
+    return coeff < 0 ? "-" + s : s;
+  }
 
   friend std::istream &operator>>(std::istream &in, BigDecimal &v) {
     std::string s;
@@ -4879,7 +5395,7 @@ int main() {
   assert((x += b).to_string() == "4.60");
   assert((x -= b).to_string() == "1.20");
   assert((x *= b).to_string() == "4.080");
-  assert((x %= BigDecimal("1.00")).to_string() == "0.080");
+  assert((x %= 1.0).to_string() == "0.080");
 
   assert(a.move_point(2).to_string() == "120");
   assert(a.move_point(-1).to_string() == "0.120");
@@ -4928,9 +5444,9 @@ Perform operations on rational numbers internally represented as two integers: a
   \item \inlinecode{Rational\textless{}Int\textgreater{}(n, d)} constructs a rational number with numerator \inlinecode{n} and denominator \inlinecode{d}.
   \item \inlinecode{operator\textgreater{}\textgreater{}} inputs a rational number using the next integer from the stream as the numerator and 1 as the denominator.
   \item \inlinecode{operator\textless{}\textless{}} outputs the rational number as a string consisting of possibly a minus sign followed by the numerator, followed by a slash, followed by the denominator.
-  \item \inlinecode{v.to\_string()}, \inlinecode{v.to\_llong()}, \inlinecode{v.to\_double()}, and \inlinecode{v.to\_ldouble()} return the rational \inlinecode{v} converted to an \inlinecode{std::string}, \inlinecode{int64\_t}, \inlinecode{double}, and \inlinecode{long double} respectively with potential truncation or approximation for the primitive types. Equivalent conversions are also available through explicit casts to \inlinecode{int}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double}.
-  \item \inlinecode{v.to\_arithmetic\textless{}T\textgreater{}()} is the general form behind the three numeric conversions above, returning \inlinecode{v} as any arithmetic type \inlinecode{T} readable from a stream. Integral \inlinecode{T} truncates toward zero.
-  \item \inlinecode{v.abs()}, \inlinecode{abs(v)}, \inlinecode{v.floor()}, and \inlinecode{v.ceil()} return the absolute value, floor, and ceiling of rational \inlinecode{v}.
+  \item \inlinecode{to\_string()}, \inlinecode{to\_llong()}, \inlinecode{to\_double()}, and \inlinecode{to\_ldouble()} return the rational converted to an \inlinecode{std::string}, \inlinecode{int64\_t}, \inlinecode{double}, and \inlinecode{long double} respectively with potential truncation or approximation for the primitive types. Equivalent conversions are also available through explicit casts to \inlinecode{int}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double}.
+  \item \inlinecode{to\_arithmetic\textless{}T\textgreater{}()} is the general form behind the three numeric conversions above, returning the rational as any arithmetic type \inlinecode{T} readable from a stream. Integral \inlinecode{T} truncates toward zero.
+  \item \inlinecode{abs()}, \inlinecode{floor()}, and \inlinecode{ceil()} return the absolute value, floor, and ceiling.
   \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on numerical primitives. The comparisons and binary arithmetic are hidden friends, so a raw integer operand works on either side.
 \end{compactitem}
 
@@ -5077,6 +5593,7 @@ class Rational {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cmath>
+using namespace std;
 
 bool EQ(double a, double b) {
   return fabs(a - b) < 1e-9;
@@ -5096,6 +5613,36 @@ int main() {
   assert(2 + Rational(1, 2) == Rational(5, 2));
   assert(1 < Rational(3, 2) && Rational(3, 2) < 2);
   assert(2 % Rational(3, 4) == Rational(1, 2));
+
+  // Construction reduces the fraction and moves any sign onto the numerator.
+  assert(Rational(2, 4).to_string() == "1/2");
+  assert(Rational(1, -2).to_string() == "-1/2");
+  assert(Rational(5).to_string() == "5/1");
+
+  // Arithmetic between rationals reduces the result too.
+  assert(Rational(1, 2) + Rational(1, 3) == Rational(5, 6));
+  assert(Rational(1, 2) - Rational(1, 3) == Rational(1, 6));
+  assert(Rational(2, 3) * Rational(3, 4) == Rational(1, 2));
+  assert(Rational(1, 2) / Rational(3, 4) == Rational(2, 3));
+
+  // Rounding takes a different branch on each sign, and is exact on whole numbers.
+  assert(Rational(7, 2).floor() == 3 && Rational(7, 2).ceil() == 4);
+  assert(Rational(-7, 2).floor() == -4 && Rational(-7, 2).ceil() == -3);
+  assert(Rational(4, 2).floor() == 2 && Rational(4, 2).ceil() == 2);
+  assert(Rational(-7, 2).abs() == Rational(7, 2) && abs(Rational(-7, 2)) == Rational(7, 2));
+
+  // The named conversions and the general form behind them.
+  assert(Rational(7, 2).to_llong() == 3 && EQ(Rational(7, 2).to_double(), 3.5));
+  assert(Rational(7, 2).to_arithmetic<int>() == 3);
+
+  // Stream input reads one integer, and output prints the reduced fraction.
+  Rational streamed;
+  istringstream in("7");
+  in >> streamed;
+  assert(streamed == 7);
+  ostringstream out;
+  out << Rational(-3, 6);
+  assert(out.str() == "-1/2");
   return 0;
 }
 \end{lstlisting}
@@ -5104,7 +5651,7 @@ int main() {
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Matrix Operations}
-Basic matrix operations defined on a two-dimensional vector of numeric values. Matrix arithmetic also supports modular value types such as \inlinecode{Modular\textless{}MOD\textgreater{}} from 6.3.2. The element type must be constructible from $0$ and $1$ and support the arithmetic operators used by the requested operation.
+Basic matrix operations defined on a two-dimensional vector of numeric values. Matrix arithmetic also supports modular value types such as \inlinecode{Modular\textless{}MOD\textgreater{}} from 6.3.3. The element type must be constructible from $0$ and $1$ and support the arithmetic operators used by the requested operation.
 
 \begin{compactitem}
   \item \inlinecode{make\_matrix\textless{}T\textgreater{}(m, n, v)} constructs and returns an $m$ by $n$ matrix with 0-based indices (row indices $[0, {\inlinecodemath{m}})$ and column indices $[0, {\inlinecodemath{n}})$), where every value is initialized to \inlinecode{v}.
@@ -5117,6 +5664,8 @@ Basic matrix operations defined on a two-dimensional vector of numeric values. M
   \item \inlinecode{a * v} returns the matrix-vector product as a vector.
   \item Operators \inlinecode{*} and \inlinecode{*=} define matrix multiplication.
 \end{compactitem}
+
+Multiplication is the schoolbook triple loop, which is $O(m \cdot n \cdot p)$ and is what contest constraints assume. Strassen's algorithm reaches $O(n^{2.807})$ by splitting each matrix into quarters and combining them with seven recursive products instead of eight, and Toom-Cook style refinements go lower still, but the additions that replace the saved multiplication carry large constants and worsen numerical stability. The crossover sits in the hundreds of rows even in tuned libraries, so the plain loop below is the right default; reach for a blocked or cache-oblivious ordering before reaching for a subcubic algorithm.
 
 Exponentiation uses iterative binary exponentiation: keep an accumulated result, square the base each round, and multiply it when the current exponent bit is set. The power sum uses the block identity that $\begin{bmatrix} A & A \\ 0 & I \end{bmatrix}^p$ has $A + A^2 + \dots + A^p$ in its upper-right block.
 
@@ -5784,11 +6333,11 @@ int main() {
 }
 \end{lstlisting}
 \subsection{LU Decomposition}
-The LU decomposition of a matrix $a$ with row-partial pivoting is a factorization of $a$ (after some rows are possibly permuted by a permutation matrix $p$) as a product of a lower triangular matrix $l$ and an upper triangular matrix $u$. This factorization can be used to tackle many common problems in linear algebra such as solving systems of linear equations and computing determinants. An improvement on basic row reduction, LU decomposition by row-partial pivoting keeps the relative magnitude of matrix values small, thus reducing the relative error due to rounding in computed solutions. These routines require floating-point matrix elements; use 6.5.3 for exact-field or integer determinant calculations.
+The LU decomposition of a matrix $A$ with row-partial pivoting is a factorization of $A$ (after some rows are possibly permuted by a permutation matrix $p$) as a product of a lower triangular matrix $L$ and an upper triangular matrix $U$. This factorization can be used to tackle many common problems in linear algebra such as solving systems of linear equations and computing determinants. An improvement on basic row reduction, LU decomposition by row-partial pivoting keeps the relative magnitude of matrix values small, thus reducing the relative error due to rounding in computed solutions. These routines require floating-point matrix elements; use 6.5.3 for exact-field or integer determinant calculations.
 
 \begin{compactitem}
   \item \inlinecode{lu\_decompose(a, \&perm, eps = 1e-10)} assigns floating-point matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}; it returns $0$ for even row-swap parity, $1$ for odd parity, or $-1$ for a degenerate matrix (i.e. singular for square matrices). The merged matrix stores \inlinecode{l[i][j]} in \inlinecode{lu[i][j]} when \inlinecode{i \textgreater{} j}, and \inlinecode{u[i][j]} otherwise. The diagonal entries \inlinecode{l[i][i]} are always $1$, so they are not explicitly stored. Access general entries of the lower and upper triangular matrices via \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)}. Optional output vector \inlinecode{perm} represents $p$: \inlinecode{perm[i]} is the only column containing $1$ in row \inlinecode{i}. Left-multiplying \inlinecode{a} by this permutation matrix gives the product of the separate lower and upper triangular matrices, not the merged storage matrix \inlinecode{lu} itself.
-  \item \inlinecode{solve\_system(a, b, \&x, eps = 1e-10)} solves the system of linear equations $ax = b$ given an $m$ by $n$ floating-point matrix \inlinecode{a} and a length $m$ vector \inlinecode{b}, returning $0$ if there is one solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then the output vector \inlinecode{x} is populated with the solution of length $n$; otherwise, \inlinecode{x} is unchanged.
+  \item \inlinecode{solve\_system(a, b, \&x, eps = 1e-10)} solves the system of linear equations $Ax = b$ given an $m$ by $n$ floating-point matrix \inlinecode{a} and a length $m$ vector \inlinecode{b}, returning $0$ if there is one solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then the output vector \inlinecode{x} is populated with the solution of length $n$; otherwise, \inlinecode{x} is unchanged.
   \item \inlinecode{det(a)} returns the determinant of an $n$ by $n$ floating-point matrix \inlinecode{a} using LU decomposition.
   \item \inlinecode{inverse(a)} returns the inverse of the $n$ by $n$ floating-point matrix \inlinecode{a}, or \inlinecode{std::nullopt} if \inlinecode{a} is singular.
 \end{compactitem}
@@ -6002,13 +6551,191 @@ int main() {
   {  // Singular matrices have no inverse.
     vector<vector<double>> singular{{1, 2}, {2, 4}};
     assert(!inverse(singular));
-
     // Failed operations leave their output arguments unchanged.
     vector<vector<double>> inconsistent{{1}, {1}};
     vector<double> b{1, 2}, x{99, 100};
     assert(solve_system(inconsistent, b, &x) == -1);
     assert((x == vector<double>{99, 100}));
   }
+  return 0;
+}
+\end{lstlisting}
+\subsection{QR Decomposition and Least Squares}
+The QR decomposition factors an $m$ by $n$ matrix $A$ with $m \geq n$ into $A = QR$, where $Q$ has orthonormal columns and $R$ is upper triangular. Orthonormal columns are what make the factorization useful: $Q$ preserves lengths, so multiplying by $Q^T$ rewrites a problem in a new basis without distorting distances, and a triangular system is solved by back substitution.
+
+This implementation uses Householder reflections. A Householder reflection is the mirror across the hyperplane orthogonal to a chosen vector $v$, written $I - 2vv^T/(v^Tv)$, and $v$ is chosen so that the reflection maps the part of a column below the diagonal onto the axis, zeroing it in one step. Applying one reflection per column leaves $R$, and accumulating the reflections gives $Q$. Reflecting is stable because it never scales anything: the alternative of orthogonalizing column by column with Gram-Schmidt loses orthogonality as the columns approach linear dependence, whereas reflections keep it to within rounding error.
+
+The overdetermined system $Ax = b$ usually has no solution, so least squares asks for the $x$ whose residual is shortest. Because $Q$ preserves lengths, $\|Ax - b\|$ equals $\|Rx - Q^Tb\|$, and the entries of $Q^Tb$ below row $n$ cannot be changed by any $x$; minimizing therefore means solving the square triangular system formed by the first $n$ rows, which back substitution does directly.
+
+\begin{compactitem}
+  \item \inlinecode{qr\_decompose(a, \&q, \&r)} factors the $m$ by $n$ matrix \inlinecode{a} with $m \geq n$ into an $m$ by $m$ orthogonal matrix \inlinecode{q} and an $m$ by $n$ upper triangular matrix \inlinecode{r}, whose product is \inlinecode{a}.
+  \item \inlinecode{least\_squares(a, b, eps = 1e-10)} returns the vector $x$ minimizing the Euclidean norm of ${\inlinecodemath{a}}x - {\inlinecodemath{b}}$, or \inlinecode{std::nullopt} if the columns of \inlinecode{a} are linearly dependent to within \inlinecode{eps}. The matrix \inlinecode{a} must have at least as many rows as columns, and \inlinecode{b} must have one entry per row.
+\end{compactitem}
+
+Fitting any linear model reduces to this: one row per data point, one column per basis function. Solving the normal equations $A^TAx = A^Tb$ by the row reduction of section 6.5.2 gives the same answer but squares the condition number, losing roughly twice as many digits.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(m^{2} \cdot n)$ per call to \inlinecode{qr\_decompose()}, where $m$ and $n$ are the numbers of rows and columns.
+  \item $O(m \cdot n^{2})$ per call to \inlinecode{least\_squares()}, since it never forms \inlinecode{q} explicitly.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(m^{2} + m \cdot n)$ for the matrices returned by \inlinecode{qr\_decompose()}.
+  \item $O(m \cdot n)$ auxiliary and $O(n)$ for the vector returned by \inlinecode{least\_squares()}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cmath>
+#include <optional>
+#include <vector>
+
+using Matrix = std::vector<std::vector<double>>;
+
+// Reflects the trailing rows of the given column onto the axis, returning the reflection vector.
+std::vector<double> householder_vector(const Matrix &a, int col) {
+  int m = static_cast<int>(a.size());
+  std::vector<double> v(m);
+  double norm = 0;
+  for (int i = col; i < m; i++) {
+    v[i] = a[i][col];
+    norm += v[i] * v[i];
+  }
+  norm = std::sqrt(norm);
+  // Reflect away from a[col][col] so that the subtraction below never cancels.
+  v[col] += a[col][col] >= 0 ? norm : -norm;
+  return v;
+}
+
+void qr_decompose(const Matrix &a, Matrix *q, Matrix *r) {
+  int m = static_cast<int>(a.size()), n = a.empty() ? 0 : static_cast<int>(a[0].size());
+  assert(m >= n && q != nullptr && r != nullptr);
+  *r = a;
+  q->assign(m, std::vector<double>(m));
+  for (int i = 0; i < m; i++) {
+    (*q)[i][i] = 1;
+  }
+  for (int col = 0; col < n; col++) {
+    std::vector<double> v = householder_vector(*r, col);
+    double vv = 0;
+    for (int i = col; i < m; i++) {
+      vv += v[i] * v[i];
+    }
+    if (vv == 0) {
+      continue;  // The column is already zero below the diagonal.
+    }
+    for (int j = 0; j < n; j++) {  // Apply the reflection to R from the left.
+      double dot = 0;
+      for (int i = col; i < m; i++) {
+        dot += v[i] * (*r)[i][j];
+      }
+      for (int i = col; i < m; i++) {
+        (*r)[i][j] -= 2 * dot / vv * v[i];
+      }
+    }
+    for (int j = 0; j < m; j++) {  // Accumulate the reflection into Q from the right.
+      double dot = 0;
+      for (int i = col; i < m; i++) {
+        dot += v[i] * (*q)[j][i];
+      }
+      for (int i = col; i < m; i++) {
+        (*q)[j][i] -= 2 * dot / vv * v[i];
+      }
+    }
+  }
+}
+
+std::optional<std::vector<double>> least_squares(
+    const Matrix &a, const std::vector<double> &b, double eps = 1e-10
+) {
+  int m = static_cast<int>(a.size()), n = a.empty() ? 0 : static_cast<int>(a[0].size());
+  assert(m >= n && static_cast<int>(b.size()) == m);
+  Matrix r = a;
+  std::vector<double> rhs = b;
+  for (int col = 0; col < n; col++) {
+    std::vector<double> v = householder_vector(r, col);
+    double vv = 0;
+    for (int i = col; i < m; i++) {
+      vv += v[i] * v[i];
+    }
+    if (vv == 0) {
+      continue;
+    }
+    for (int j = col; j < n; j++) {
+      double dot = 0;
+      for (int i = col; i < m; i++) {
+        dot += v[i] * r[i][j];
+      }
+      for (int i = col; i < m; i++) {
+        r[i][j] -= 2 * dot / vv * v[i];
+      }
+    }
+    double dot = 0;  // The same reflection applied to the right-hand side.
+    for (int i = col; i < m; i++) {
+      dot += v[i] * rhs[i];
+    }
+    for (int i = col; i < m; i++) {
+      rhs[i] -= 2 * dot / vv * v[i];
+    }
+  }
+  std::vector<double> x(n);
+  for (int i = n - 1; i >= 0; i--) {  // Back substitution over the triangular top block.
+    if (std::fabs(r[i][i]) < eps) {
+      return std::nullopt;
+    }
+    double sum = rhs[i];
+    for (int j = i + 1; j < n; j++) {
+      sum -= r[i][j] * x[j];
+    }
+    x[i] = sum / r[i][i];
+  }
+  return x;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cmath>
+using namespace std;
+
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-9;
+}
+
+int main() {
+  Matrix a{{12, -51, 4}, {6, 167, -68}, {-4, 24, -41}};
+  Matrix q, r;
+  qr_decompose(a, &q, &r);
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      double product = 0, orthogonal = 0;
+      for (int k = 0; k < 3; k++) {
+        product += q[i][k] * r[k][j];
+        orthogonal += q[k][i] * q[k][j];
+      }
+      assert(EQ(product, a[i][j]));                // The factors multiply back to a.
+      assert(EQ(orthogonal, i == j ? 1.0 : 0.0));  // The columns of q are orthonormal.
+      assert(i <= j || EQ(r[i][j], 0.0));          // r is upper triangular.
+    }
+  }
+
+  // An exactly solvable square system.
+  auto exact = least_squares(Matrix{{2, 1}, {1, 3}}, vector<double>{5, 10});
+  assert(exact.has_value() && EQ((*exact)[0], 1.0) && EQ((*exact)[1], 3.0));
+
+  // Fit y = c0 + c1*x to four collinear points, then to points with one outlier.
+  Matrix design{{1, 0}, {1, 1}, {1, 2}, {1, 3}};
+  auto line = least_squares(design, vector<double>{1, 3, 5, 7});
+  assert(line.has_value() && EQ((*line)[0], 1.0) && EQ((*line)[1], 2.0));
+  auto noisy = least_squares(design, vector<double>{1, 3, 5, 8});
+  assert(noisy.has_value() && EQ((*noisy)[0], 0.8) && EQ((*noisy)[1], 2.3));
+
+  // Dependent columns have no unique least-squares solution.
+  assert(!least_squares(Matrix{{1, 2}, {2, 4}, {3, 6}}, vector<double>{1, 2, 3}).has_value());
   return 0;
 }
 \end{lstlisting}
@@ -6032,13 +6759,13 @@ A direct expansion would cost a determinant per coefficient. Instead the matrix 
 
 const int64_t MOD = 998244353;
 
-int64_t powmod(int64_t b, int64_t e, int64_t m) {
-  int64_t res = 1;
-  for (b %= m; e > 0; e >>= 1) {
-    if (e & 1) {
-      res = res * b % m;
+int64_t powmod(int64_t x, int64_t n, int64_t m) {
+  int64_t res = 1 % m;
+  for (x %= m; n > 0; n >>= 1) {
+    if (n & 1) {
+      res = res * x % m;
     }
-    b = b * b % m;
+    x = x * x % m;
   }
   return res;
 }
@@ -6123,121 +6850,120 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Matrix-Tree Theorem}
-Kirchhoff's matrix-tree theorem counts the spanning trees of an undirected graph. Form the Laplacian matrix $L = D - A$, where $D$ is the diagonal matrix of degrees and $A$ is the adjacency matrix (with multiplicities for parallel edges). Every cofactor of $L$ is equal, and that common value is the number of spanning trees. Equivalently, delete any one row and the matching column from $L$ and take the determinant of what remains.
+\subsection{Eigenvalues (Jacobi)}
+An eigenvector of a square matrix is a direction the matrix does not rotate, only rescales, and the scale factor is its eigenvalue. For a real symmetric matrix, the spectral theorem guarantees that a full set of real eigenvalues exists and that eigenvectors for distinct eigenvalues are orthogonal, so the matrix is diagonalized by an orthogonal change of basis.
 
-The determinant is evaluated modulo a prime by Gaussian elimination, so the count is returned modulo \inlinecode{MOD}. Spanning-tree counts grow astronomically, so a modular count is the usual contest form; run the routine under a few different primes and combine with the Chinese remainder theorem to recover a large exact value. The same construction handles weighted graphs (sum edge weights into the Laplacian to get the weighted tree count) and, with the directed Laplacian and a fixed deleted row, counts rooted spanning arborescences.
+The Jacobi eigenvalue algorithm builds that basis one rotation at a time. It repeatedly picks the largest off-diagonal entry and applies a rotation in the plane of that entry's row and column, choosing the angle that sets the entry to zero. A rotation is a similarity transform, so it preserves the eigenvalues, and it also preserves the sum of squares of all entries; since zeroing an entry removes its square from the off-diagonal total and moves it onto the diagonal, every sweep strictly reduces the off-diagonal weight. Earlier zeros are partially refilled by later rotations, but the total decays geometrically, and the matrix converges to a diagonal one whose entries are the eigenvalues. Accumulating the rotations gives the eigenvectors.
 
 \begin{compactitem}
-  \item \inlinecode{count\_spanning\_trees(n, edges)} returns the number of spanning trees of the undirected graph on nodes $[0, {\inlinecodemath{n}})$ with the given edge list, modulo \inlinecode{MOD}. Parallel edges are honored; self-loops do not affect the count. The result is $0$ when the graph is disconnected, and $1$ when \inlinecode{n} is $1$.
+  \item \inlinecode{jacobi\_eigen(a, eps = 1e-12, iterations = 100)} returns the pair (\inlinecode{values}, \inlinecode{vectors}) for a real symmetric $n$ by $n$ matrix \inlinecode{a}. The eigenvalues in \inlinecode{values} are sorted in decreasing order, and \inlinecode{vectors[i]} is a unit eigenvector for \inlinecode{values[i]}, so the eigenvectors are rows rather than columns. Iteration stops once every off-diagonal entry is smaller than \inlinecode{eps}. The matrix must be symmetric, which is not checked; an unsymmetric one silently produces nonsense.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n^{3} + m)$ per call, where $n$ is the number of nodes and $m$ is the number of edges.
+A general matrix instead needs the roots of the characteristic polynomial of section 6.5.6, found including complex ones by the Ehrlich-Aberth iteration of section 5.4.5, though accuracy degrades with degree since polynomial roots are far more sensitive to coefficients than eigenvalues are to the matrix. When only the dominant eigenvalue is wanted, power iteration finds it with no decomposition at all, by repeatedly multiplying a random vector and renormalizing.
 
-\textbf{Space Complexity}: $O(n^{2})$ auxiliary.
+\textbf{Time Complexity}: $O(n^{3})$ per sweep and $O(n^{3} \log\left(1 / {\inlinecodemath{eps}}\right))$ per call in practice, where $n$ is the dimension of the matrix. Each rotation costs $O(n)$ and the search for the largest off-diagonal entry costs $O(n^{2})$.
+
+\textbf{Space Complexity}: $O(n^{2})$ auxiliary, and $O(n^{2})$ for the returned eigenvectors.
 
 \begin{lstlisting}[language=C++]
-#include <cstdint>
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <numeric>
 #include <utility>
 #include <vector>
 
-const int64_t MOD = 998244353;
+using Matrix = std::vector<std::vector<double>>;
 
-int64_t powmod(int64_t b, int64_t e, int64_t m) {
-  int64_t res = 1;
-  for (b %= m; e > 0; e >>= 1) {
-    if (e & 1) {
-      res = res * b % m;
-    }
-    b = b * b % m;
+std::pair<std::vector<double>, Matrix> jacobi_eigen(
+    Matrix a, double eps = 1e-12, int iterations = 100
+) {
+  int n = static_cast<int>(a.size());
+  Matrix vectors(n, std::vector<double>(n));
+  for (int i = 0; i < n; i++) {
+    vectors[i][i] = 1;
   }
-  return res;
-}
-
-int64_t count_spanning_trees(int n, const std::vector<std::pair<int, int>> &edges) {
-  if (n <= 1) {
-    return n == 1 ? 1 : 0;
-  }
-  // Build the Laplacian, then drop the last row and column to form an (n-1) by (n-1) cofactor.
-  int m = n - 1;
-  std::vector<std::vector<int64_t>> lap(m, std::vector<int64_t>(m));
-  for (const auto &e : edges) {
-    int u = e.first, v = e.second;
-    if (u == v) {
-      continue;  // Self-loops contribute nothing to the Laplacian.
-    }
-    if (u < m) {
-      lap[u][u] = (lap[u][u] + 1) % MOD;
-    }
-    if (v < m) {
-      lap[v][v] = (lap[v][v] + 1) % MOD;
-    }
-    if (u < m && v < m) {
-      lap[u][v] = (lap[u][v] - 1 + MOD) % MOD;
-      lap[v][u] = (lap[v][u] - 1 + MOD) % MOD;
-    }
-  }
-  // Determinant modulo MOD by Gaussian elimination.
-  int64_t det = 1;
-  for (int col = 0; col < m; col++) {
-    int pivot = -1;
-    for (int r = col; r < m; r++) {
-      if (lap[r][col] != 0) {
-        pivot = r;
-        break;
-      }
-    }
-    if (pivot == -1) {
-      return 0;  // Singular cofactor: the graph is disconnected.
-    }
-    if (pivot != col) {
-      std::swap(lap[pivot], lap[col]);
-      det = (MOD - det) % MOD;
-    }
-    det = det * lap[col][col] % MOD;
-    int64_t pinv = powmod(lap[col][col], MOD - 2, MOD);
-    for (int r = col + 1; r < m; r++) {
-      int64_t factor = lap[r][col] * pinv % MOD;
-      if (factor == 0) {
-        continue;
-      }
-      for (int k = col; k < m; k++) {
-        lap[r][k] = (lap[r][k] - factor * lap[col][k]) % MOD;
-        if (lap[r][k] < 0) {
-          lap[r][k] += MOD;
+  for (int sweep = 0; sweep < iterations; sweep++) {
+    int p = 0, q = 1;
+    double largest = 0;
+    for (int i = 0; i < n; i++) {
+      for (int j = i + 1; j < n; j++) {
+        if (std::fabs(a[i][j]) > largest) {
+          largest = std::fabs(a[i][j]);
+          p = i;
+          q = j;
         }
       }
     }
+    if (n < 2 || largest < eps) {
+      break;
+    }
+    // Choose the rotation angle that zeroes a[p][q], using the numerically safe form of
+    // tan(theta) rather than computing the angle itself.
+    double theta = (a[q][q] - a[p][p]) / (2 * a[p][q]);
+    double t = (theta >= 0 ? 1 : -1) / (std::fabs(theta) + std::sqrt(theta * theta + 1));
+    double c = 1 / std::sqrt(t * t + 1), s = t * c;
+    for (int k = 0; k < n; k++) {
+      double akp = a[k][p], akq = a[k][q];
+      a[k][p] = c * akp - s * akq;
+      a[k][q] = s * akp + c * akq;
+    }
+    for (int k = 0; k < n; k++) {
+      double apk = a[p][k], aqk = a[q][k];
+      a[p][k] = c * apk - s * aqk;
+      a[q][k] = s * apk + c * aqk;
+      double vpk = vectors[p][k], vqk = vectors[q][k];
+      vectors[p][k] = c * vpk - s * vqk;
+      vectors[q][k] = s * vpk + c * vqk;
+    }
   }
-  return det;
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
+  std::sort(order.begin(), order.end(), [&](int x, int y) { return a[x][x] > a[y][y]; });
+  std::vector<double> values(n);
+  Matrix sorted(n);
+  for (int i = 0; i < n; i++) {
+    values[i] = a[order[i]][order[i]];
+    sorted[i] = vectors[order[i]];
+  }
+  return {values, sorted};
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <cassert>
+#include <cmath>
 using namespace std;
 
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-9;
+}
+
 int main() {
-  // A path 0-1-2 and a single triangle each have a known number of spanning trees.
-  assert(count_spanning_trees(3, {{0, 1}, {1, 2}}) == 1);          // A tree has exactly one.
-  assert(count_spanning_trees(3, {{0, 1}, {1, 2}, {2, 0}}) == 3);  // Triangle: drop any one edge.
+  // A symmetric matrix with eigenvalues 3, 2, and 1.
+  Matrix a{{2, 0, -1}, {0, 2, 0}, {-1, 0, 2}};
+  auto [values, vectors] = jacobi_eigen(a);
+  assert(EQ(values[0], 3) && EQ(values[1], 2) && EQ(values[2], 1));
 
-  // Complete graphs: Cayley's formula gives n^(n-2) spanning trees.
-  auto complete = [](int n) {
-    vector<pair<int, int>> e;
-    for (int i = 0; i < n; i++) {
-      for (int j = i + 1; j < n; j++) {
-        e.emplace_back(i, j);
-      }
+  for (int i = 0; i < 3; i++) {
+    double norm = 0;
+    for (int k = 0; k < 3; k++) {
+      norm += vectors[i][k] * vectors[i][k];
     }
-    return count_spanning_trees(n, e);
-  };
-  assert(complete(4) == 16);   // 4^2.
-  assert(complete(5) == 125);  // 5^3.
+    assert(EQ(norm, 1));  // Eigenvectors come back normalized.
+    for (int r = 0; r < 3; r++) {
+      double image = 0;
+      for (int k = 0; k < 3; k++) {
+        image += a[r][k] * vectors[i][k];
+      }
+      assert(EQ(image, values[i] * vectors[i][r]));  // The defining equation a*v = lambda*v.
+    }
+  }
 
-  // Disconnected graphs have no spanning tree.
-  assert(count_spanning_trees(4, {{0, 1}, {2, 3}}) == 0);
+  // A diagonal matrix is already solved, and a 1-by-1 matrix is its own eigenvalue.
+  auto diagonal = jacobi_eigen(Matrix{{5, 0}, {0, -4}});
+  assert(EQ(diagonal.first[0], 5) && EQ(diagonal.first[1], -4));
+  assert(EQ(jacobi_eigen(Matrix{{7}}).first[0], 7));
   return 0;
 }
 \end{lstlisting}
@@ -6700,6 +7426,124 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Matrix-Tree Theorem}
+Kirchhoff's matrix-tree theorem counts the spanning trees of an undirected graph. Form the Laplacian matrix $L = D - A$, where $D$ is the diagonal matrix of degrees and $A$ is the adjacency matrix (with multiplicities for parallel edges). Every cofactor of $L$ is equal, and that common value is the number of spanning trees. Equivalently, delete any one row and the matching column from $L$ and take the determinant of what remains.
+
+The determinant is evaluated modulo a prime by Gaussian elimination, so the count is returned modulo \inlinecode{MOD}. Spanning-tree counts grow astronomically, so a modular count is the usual contest form; run the routine under a few different primes and combine with the Chinese remainder theorem to recover a large exact value. The same construction handles weighted graphs (sum edge weights into the Laplacian to get the weighted tree count) and, with the directed Laplacian and a fixed deleted row, counts rooted spanning arborescences.
+
+\begin{compactitem}
+  \item \inlinecode{count\_spanning\_trees(n, edges)} returns the number of spanning trees of the undirected graph on nodes $[0, {\inlinecodemath{n}})$ with the given edge list, modulo \inlinecode{MOD}. Parallel edges are honored; self-loops do not affect the count. The result is $0$ when the graph is disconnected, and $1$ when \inlinecode{n} is $1$.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n^{3} + m)$ per call, where $n$ is the number of nodes and $m$ is the number of edges.
+
+\textbf{Space Complexity}: $O(n^{2})$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <cstdint>
+#include <utility>
+#include <vector>
+
+const int64_t MOD = 998244353;
+
+int64_t powmod(int64_t x, int64_t n, int64_t m) {
+  int64_t res = 1 % m;
+  for (x %= m; n > 0; n >>= 1) {
+    if (n & 1) {
+      res = res * x % m;
+    }
+    x = x * x % m;
+  }
+  return res;
+}
+
+int64_t count_spanning_trees(int n, const std::vector<std::pair<int, int>> &edges) {
+  if (n <= 1) {
+    return n == 1 ? 1 : 0;
+  }
+  // Build the Laplacian, then drop the last row and column to form an (n-1) by (n-1) cofactor.
+  int m = n - 1;
+  std::vector<std::vector<int64_t>> lap(m, std::vector<int64_t>(m));
+  for (const auto &e : edges) {
+    int u = e.first, v = e.second;
+    if (u == v) {
+      continue;  // Self-loops contribute nothing to the Laplacian.
+    }
+    if (u < m) {
+      lap[u][u] = (lap[u][u] + 1) % MOD;
+    }
+    if (v < m) {
+      lap[v][v] = (lap[v][v] + 1) % MOD;
+    }
+    if (u < m && v < m) {
+      lap[u][v] = (lap[u][v] - 1 + MOD) % MOD;
+      lap[v][u] = (lap[v][u] - 1 + MOD) % MOD;
+    }
+  }
+  // Determinant modulo MOD by Gaussian elimination.
+  int64_t det = 1;
+  for (int col = 0; col < m; col++) {
+    int pivot = -1;
+    for (int r = col; r < m; r++) {
+      if (lap[r][col] != 0) {
+        pivot = r;
+        break;
+      }
+    }
+    if (pivot == -1) {
+      return 0;  // Singular cofactor: the graph is disconnected.
+    }
+    if (pivot != col) {
+      std::swap(lap[pivot], lap[col]);
+      det = (MOD - det) % MOD;
+    }
+    det = det * lap[col][col] % MOD;
+    int64_t pinv = powmod(lap[col][col], MOD - 2, MOD);
+    for (int r = col + 1; r < m; r++) {
+      int64_t factor = lap[r][col] * pinv % MOD;
+      if (factor == 0) {
+        continue;
+      }
+      for (int k = col; k < m; k++) {
+        lap[r][k] = (lap[r][k] - factor * lap[col][k]) % MOD;
+        if (lap[r][k] < 0) {
+          lap[r][k] += MOD;
+        }
+      }
+    }
+  }
+  return det;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // A path 0-1-2 and a single triangle each have a known number of spanning trees.
+  assert(count_spanning_trees(3, {{0, 1}, {1, 2}}) == 1);          // A tree has exactly one.
+  assert(count_spanning_trees(3, {{0, 1}, {1, 2}, {2, 0}}) == 3);  // Triangle: drop any one edge.
+
+  // Complete graphs: Cayley's formula gives n^(n-2) spanning trees.
+  auto complete = [](int n) {
+    vector<pair<int, int>> e;
+    for (int i = 0; i < n; i++) {
+      for (int j = i + 1; j < n; j++) {
+        e.emplace_back(i, j);
+      }
+    }
+    return count_spanning_trees(n, e);
+  };
+  assert(complete(4) == 16);   // 4^2.
+  assert(complete(5) == 125);  // 5^3.
+
+  // Disconnected graphs have no spanning tree.
+  assert(count_spanning_trees(4, {{0, 1}, {2, 3}}) == 0);
+  return 0;
+}
+\end{lstlisting}
 
 \section{\texorpdfstring{Polynomials and Linear Recurrences}{6.6 Polynomials and Linear Recurrences}}
 \setcounter{section}{6}
@@ -6740,13 +7584,13 @@ const int64_t ROOT = 3;
 const int MAX_POWER_OF_TWO = 23;
 const int NAIVE_CUTOFF = 150;
 
-int64_t powmod(int64_t b, int64_t e, int64_t m) {
-  int64_t res = 1;
-  for (b %= m; e > 0; e >>= 1) {
-    if (e & 1) {
-      res = res * b % m;
+int64_t powmod(int64_t x, int64_t n, int64_t m) {
+  int64_t res = 1 % m;
+  for (x %= m; n > 0; n >>= 1) {
+    if (n & 1) {
+      res = res * x % m;
     }
-    b = b * b % m;
+    x = x * x % m;
   }
   return res;
 }
@@ -7019,13 +7863,13 @@ const Coeff ROOT = 3;
 const int MAX_POWER_OF_TWO = 23;
 const int NAIVE_CUTOFF = 150;
 
-Coeff powmod(Coeff b, uint64_t e, Coeff m = MOD) {
-  Coeff res = 1;
-  for (b %= m; e > 0; e >>= 1) {
-    if (e & 1) {
-      res = res * b % m;
+Coeff powmod(Coeff x, uint64_t n, Coeff m = MOD) {
+  Coeff res = 1 % m;
+  for (x %= m; n > 0; n >>= 1) {
+    if (n & 1) {
+      res = res * x % m;
     }
-    b = b * b % m;
+    x = x * x % m;
   }
   return res;
 }
@@ -7396,13 +8240,13 @@ Coefficient recovery uses Newton's divided differences. It first replaces the sa
 
 const int64_t MOD = 998244353;
 
-int64_t powmod(int64_t b, int64_t e, int64_t m) {
-  int64_t res = 1;
-  for (b %= m; e > 0; e >>= 1) {
-    if (e & 1) {
-      res = res * b % m;
+int64_t powmod(int64_t x, int64_t n, int64_t m) {
+  int64_t res = 1 % m;
+  for (x %= m; n > 0; n >>= 1) {
+    if (n & 1) {
+      res = res * x % m;
     }
-    b = b * b % m;
+    x = x * x % m;
   }
   return res;
 }
@@ -7503,13 +8347,13 @@ The code operates modulo the prime $998244353$; change \inlinecode{MOD} to use a
 
 const int64_t MOD = 998244353;
 
-int64_t powmod(int64_t b, int64_t e, int64_t m) {
-  int64_t res = 1;
-  for (b %= m; e > 0; e >>= 1) {
-    if (e & 1) {
-      res = res * b % m;
+int64_t powmod(int64_t x, int64_t n, int64_t m) {
+  int64_t res = 1 % m;
+  for (x %= m; n > 0; n >>= 1) {
+    if (n & 1) {
+      res = res * x % m;
     }
-    b = b * b % m;
+    x = x * x % m;
   }
   return res;
 }
@@ -7577,15 +8421,17 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Linear Recurrence (Kitamasa)}
-Computes the $n$-th term of a linear recurrence modulo a prime in logarithmic time. Given a recurrence of order $L$, $s_i = c_0 s_{i-1} + c_1 s_{i-2} + \ldots + c_{L-1} s_{i-L}$, together with the first $L$ terms, the naive approach unrolls $n$ steps. Kitamasa's method instead jumps directly to index $n$ in $O(L^{2} \log n)$ by working with the characteristic polynomial. The coefficient layout matches the output of Berlekamp-Massey, so the two compose directly: guess the recurrence from sampled values, then jump to any index.
+Computes the $n$-th term of a linear recurrence modulo a prime in logarithmic time. Given a recurrence of order $L$, $s_i = c_0 s_{i-1} + c_1 s_{i-2} + \ldots + c_{L-1} s_{i-L}$, together with the first $L$ terms, the naive approach unrolls $n$ steps. Kitamasa's method instead jumps directly to index $n$ by working with the characteristic polynomial. The coefficient layout matches the output of Berlekamp-Massey, so the two compose directly: guess the recurrence from sampled values, then jump to any index.
 
 The key identity is that the $n$-th term is a fixed linear combination of the first $L$ terms, with weights given by $x^n$ reduced modulo the characteristic polynomial $f(x) = x^L - c_0 x^{L-1} - ... - c_{L-1}$. The reduction $x^L = c_0 x^{L-1} + ... + c_{L-1}$ lets any product of two degree-$<L$ polynomials be folded back to degree $<L$, so $x^n \mod f$ is obtained by binary exponentiation, and the $n$-th term is the dot product of its coefficients with the initial terms.
+
+Each doubling step is one polynomial multiplication followed by one remainder, both taken from section 6.6.3, where the multiplication is a number theoretic transform and the remainder is a Newton-iterated division. Squaring and reducing by hand instead costs $O(L^{2})$ per step, which is simpler to write but asymptotically worse; \inlinecode{MOD} is inherited from that section and must stay transform-friendly.
 
 \begin{compactitem}
   \item \inlinecode{kth\_term(rec, init, n)} returns $s_n$ modulo \inlinecode{MOD}, where \inlinecode{rec} holds the coefficients $c_0, ..., c_{L-1}$ and \inlinecode{init} holds at least $L$ initial terms $s_0, ..., s_{L-1}$. Indexing is 0-based and \inlinecode{n} $\geq 0$. Values are reduced modulo \inlinecode{MOD} internally.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(L^{2} \log n)$ per call.
+\textbf{Time Complexity}: $O(L \log L \log n)$ per call.
 
 \textbf{Space Complexity}: $O(L)$ auxiliary.
 
@@ -7594,57 +8440,33 @@ The key identity is that the $n$-th term is a fixed linear combination of the fi
 #include <cstdint>
 #include <vector>
 
-const int64_t MOD = 998244353;
-
-std::vector<int64_t> combine(
-    const std::vector<int64_t> &a, const std::vector<int64_t> &b, const std::vector<int64_t> &c
-) {
-  std::vector<int64_t> res(a.size() + b.size() - 1);
-  for (int i = 0; i < static_cast<int>(a.size()); i++) {
-    for (int j = 0; j < static_cast<int>(b.size()); j++) {
-      res[i + j] = (res[i + j] + a[i] * b[j]) % MOD;
-    }
-  }
-  int L = static_cast<int>(c.size());
-  for (int d = static_cast<int>(res.size()) - 1; d >= L; d--) {
-    if (res[d] != 0) {
-      for (int j = 0; j < L; j++) {
-        res[d - 1 - j] = (res[d - 1 - j] + res[d] * c[j]) % MOD;
-      }
-    }
-  }
-  res.resize(L);
-  return res;
-}
+#define main polynomial_example
+#include "6.6.3_Polynomial_Operations.cpp"
 
 int64_t kth_term(const std::vector<int64_t> &rec, const std::vector<int64_t> &init, int64_t n) {
   assert(n >= 0 && init.size() >= rec.size());
-  std::vector<int64_t> c(rec);
-  for (int64_t &x : c) {
-    x = (x % MOD + MOD) % MOD;
-  }
-  int L = static_cast<int>(c.size());
+  int L = static_cast<int>(rec.size());
   if (n < static_cast<int64_t>(init.size())) {
     return ((init[n] % MOD) + MOD) % MOD;
   }
   if (L == 0) {
     return 0;
   }
-  std::vector<int64_t> result(L), base(L);
-  result[0] = 1;  // The polynomial 1 = x^0.
-  if (L == 1) {
-    base[0] = c[0];  // x is congruent to c_0 modulo f.
-  } else {
-    base[1] = 1;  // The polynomial x.
+  // The characteristic polynomial f(x) = x^L - c_0 x^(L-1) - ... - c_(L-1), indexed by degree.
+  Poly f(L + 1);
+  f[L] = 1;
+  for (int j = 0; j < L; j++) {
+    f[L - 1 - j] = ((-rec[j]) % MOD + MOD) % MOD;
   }
+  Poly result{1}, base = mod(Poly{0, 1}, f);  // The polynomials x^0 and x, each modulo f.
   for (int64_t e = n; e > 0; e >>= 1) {
     if (e & 1) {
-      result = combine(result, base, c);
+      result = mod(multiply(result, base), f);
     }
-    base = combine(base, base, c);
+    base = mod(multiply(base, base), f);
   }
   int64_t ans = 0;
-  for (int j = 0; j < L; j++) {
+  for (int j = 0; j < L && j < static_cast<int>(result.size()); j++) {
     ans = (ans + result[j] * (((init[j] % MOD) + MOD) % MOD)) % MOD;
   }
   return ans;
@@ -7678,8 +8500,949 @@ int main() {
 }
 \end{lstlisting}
 
-\section{\texorpdfstring{Game Theory}{6.7 Game Theory}}
+\section{\texorpdfstring{Probability and Statistics}{6.7 Probability and Statistics}}
 \setcounter{section}{7}
+\setcounter{subsection}{0}
+\subsection{Probability Distributions}
+The following functions evaluate the standard probability distributions. For a discrete distribution, the probability mass function gives the probability of an exact outcome and the cumulative distribution function gives the probability of that outcome or any smaller one. For a continuous distribution, the density integrates to those probabilities rather than being one, so only the cumulative function is a probability. Counts must be nonnegative, and every probability argument must lie in $[0, 1]$.
+
+Every mass function here is evaluated in logarithms and exponentiated once at the end. Computing $\binom{n}{k} p^k (1 - p)^{n-k}$ directly overflows the binomial coefficient and underflows the powers long before the product itself becomes small, whereas the logarithms stay near the magnitude of the answer. \inlinecode{std::lgamma} supplies $\ln n!$ as $\ln \Gamma(n + 1)$ without forming $n!$, so the factorials never exist, and outcomes are ordered so that no cancellation occurs.
+
+Each cumulative function sums its mass function term by term, which keeps the code short and the error small but costs one term per outcome. For a single tail probability at a very large count the normal approximation with a continuity correction is the usual substitute, while \inlinecode{quantile()} inverts any of these by the bisection of section 5.1.1.
+
+\begin{compactitem}
+  \item \inlinecode{log\_factorial(n)} returns $\ln(n!)$, and \inlinecode{log\_choose(n, k)} returns $\ln \binom{n}{k}$, which is $-\infty$ when \inlinecode{k} lies outside $[0, {\inlinecodemath{n}}]$.
+  \item \inlinecode{binomial\_pmf(n, k, p)} and \inlinecode{binomial\_cdf(n, k, p)} evaluate the number of successes in \inlinecode{n} independent trials that each succeed with probability \inlinecode{p}.
+  \item \inlinecode{geometric\_pmf(k, p)} and \inlinecode{geometric\_cdf(k, p)} evaluate the number of trials up to and including the first success, so \inlinecode{k} is at least $1$ and \inlinecode{p} must be positive.
+  \item \inlinecode{negative\_binomial\_pmf(k, r, p)} and \inlinecode{negative\_binomial\_cdf(k, r, p)} evaluate the number of trials up to and including the \inlinecode{r}-th success, so \inlinecode{k} is at least \inlinecode{r}, which is at least $1$.
+  \item \inlinecode{poisson\_pmf(k, lambda)} and \inlinecode{poisson\_cdf(k, lambda)} evaluate the number of events in one unit of time when events arrive independently at nonnegative mean rate \inlinecode{lambda}.
+  \item \inlinecode{hypergeometric\_pmf(n, k, draws, hits)} and \inlinecode{hypergeometric\_cdf(n, k, draws, hits)} evaluate the number of marked items among \inlinecode{draws} items taken without replacement from a population of \inlinecode{n} items of which \inlinecode{k} are marked.
+  \item \inlinecode{normal\_pdf(x, mu = 0, sigma = 1)} and \inlinecode{normal\_cdf(x, mu = 0, sigma = 1)} evaluate the normal distribution of mean \inlinecode{mu} and positive standard deviation \inlinecode{sigma}, defaulting to the standard normal distribution.
+  \item \inlinecode{exponential\_pdf(x, lambda)} and \inlinecode{exponential\_cdf(x, lambda)} evaluate the waiting time until the next event when events arrive at positive mean rate \inlinecode{lambda}.
+  \item \inlinecode{quantile(cdf, p, lo, hi, iterations = 100)} returns the smallest $x$ in [\inlinecode{lo}, \inlinecode{hi}] whose cumulative probability \inlinecode{cdf(x)} reaches \inlinecode{p}, for any nondecreasing \inlinecode{cdf}.
+\end{compactitem}
+
+Sampling is left to \inlinecode{\textless{}random\textgreater{}}, whose \inlinecode{std::binomial\_distribution}, \inlinecode{std::poisson\_distribution}, \inlinecode{std::normal\_distribution}, and their siblings draw from exactly these families. What the standard library does not provide, and this section supplies, is the ability to evaluate and invert them.
+
+Overflow warning: \inlinecode{log\_choose()} is exact only while \inlinecode{std::lgamma} resolves neighboring integers, which holds well past the range where a \inlinecode{double} probability retains any precision.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to every mass and density function, and to \inlinecode{log\_factorial()} and \inlinecode{log\_choose()}.
+  \item $O(k)$ per call to \inlinecode{binomial\_cdf()}, \inlinecode{poisson\_cdf()}, \inlinecode{negative\_binomial\_cdf()}, and \inlinecode{hypergeometric\_cdf()}, where $k$ is the outcome whose tail is summed.
+  \item $O(1)$ per call to \inlinecode{geometric\_cdf()}, \inlinecode{normal\_cdf()}, and \inlinecode{exponential\_cdf()}, which have closed forms.
+  \item $O(n)$ calls to \inlinecode{cdf()} per call to \inlinecode{quantile()}, where $n$ is the number of iterations.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cmath>
+#include <limits>
+
+double log_factorial(int n) {
+  return std::lgamma(n + 1.0);
+}
+
+double log_choose(int n, int k) {
+  if (k < 0 || k > n) {
+    return -std::numeric_limits<double>::infinity();
+  }
+  return log_factorial(n) - log_factorial(k) - log_factorial(n - k);
+}
+
+double binomial_pmf(int n, int k, double p) {
+  if (k < 0 || k > n) {
+    return 0;
+  }
+  if (p <= 0) {
+    return k == 0 ? 1 : 0;
+  }
+  if (p >= 1) {
+    return k == n ? 1 : 0;
+  }
+  return std::exp(log_choose(n, k) + k * std::log(p) + (n - k) * std::log1p(-p));
+}
+
+double binomial_cdf(int n, int k, double p) {
+  double res = 0;
+  for (int i = 0; i <= std::min(k, n); i++) {
+    res += binomial_pmf(n, i, p);
+  }
+  return std::min(res, 1.0);
+}
+
+double geometric_pmf(int k, double p) {
+  return k < 1 ? 0 : p * std::pow(1 - p, k - 1);
+}
+
+double geometric_cdf(int k, double p) {
+  return k < 1 ? 0 : -std::expm1(k * std::log1p(-p));
+}
+
+double negative_binomial_pmf(int k, int r, double p) {
+  if (k < r || r < 1) {
+    return 0;
+  }
+  if (p >= 1) {
+    return k == r ? 1 : 0;
+  }
+  return std::exp(log_choose(k - 1, r - 1) + r * std::log(p) + (k - r) * std::log1p(-p));
+}
+
+double negative_binomial_cdf(int k, int r, double p) {
+  double res = 0;
+  for (int i = r; i <= k; i++) {
+    res += negative_binomial_pmf(i, r, p);
+  }
+  return std::min(res, 1.0);
+}
+
+double poisson_pmf(int k, double lambda) {
+  if (k < 0) {
+    return 0;
+  }
+  if (lambda <= 0) {
+    return k == 0 ? 1 : 0;
+  }
+  return std::exp(-lambda + k * std::log(lambda) - log_factorial(k));
+}
+
+double poisson_cdf(int k, double lambda) {
+  double res = 0;
+  for (int i = 0; i <= k; i++) {
+    res += poisson_pmf(i, lambda);
+  }
+  return std::min(res, 1.0);
+}
+
+double hypergeometric_pmf(int n, int k, int draws, int hits) {
+  if (hits < 0 || hits > k || draws - hits < 0 || draws - hits > n - k) {
+    return 0;
+  }
+  return std::exp(log_choose(k, hits) + log_choose(n - k, draws - hits) - log_choose(n, draws));
+}
+
+double hypergeometric_cdf(int n, int k, int draws, int hits) {
+  double res = 0;
+  for (int i = 0; i <= hits; i++) {
+    res += hypergeometric_pmf(n, k, draws, i);
+  }
+  return std::min(res, 1.0);
+}
+
+double normal_pdf(double x, double mu = 0, double sigma = 1) {
+  static const double INV_SQRT_2PI = 0.3989422804014327;
+  double z = (x - mu) / sigma;
+  return INV_SQRT_2PI / sigma * std::exp(-0.5 * z * z);
+}
+
+double normal_cdf(double x, double mu = 0, double sigma = 1) {
+  static const double INV_SQRT_2 = 0.7071067811865476;
+  return 0.5 * std::erfc(-(x - mu) * INV_SQRT_2 / sigma);
+}
+
+double exponential_pdf(double x, double lambda) {
+  return x < 0 ? 0 : lambda * std::exp(-lambda * x);
+}
+
+double exponential_cdf(double x, double lambda) {
+  return x < 0 ? 0 : -std::expm1(-lambda * x);
+}
+
+template<typename Cdf>
+double quantile(Cdf cdf, double p, double lo, double hi, int iterations = 100) {
+  for (int i = 0; i < iterations; i++) {
+    double mid = lo + (hi - lo) / 2;
+    if (cdf(mid) >= p) {
+      hi = mid;
+    } else {
+      lo = mid;
+    }
+  }
+  return hi;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-9;
+}
+
+int main() {
+  // Three fair coin flips give two heads with probability 3/8.
+  assert(EQ(binomial_pmf(3, 2, 0.5), 0.375));
+  assert(EQ(binomial_cdf(3, 3, 0.5), 1));
+  // Large counts stay finite where the binomial coefficient alone would not.
+  assert(EQ(binomial_cdf(1000, 1000, 0.5), 1));
+  assert(binomial_pmf(1000, 500, 0.5) > 0.02);
+
+  // A fair die shows its first six on the third roll with probability 25/216.
+  assert(EQ(geometric_pmf(3, 1.0 / 6), 25.0 / 216));
+  assert(EQ(geometric_cdf(1, 0.25), 0.25));
+  assert(EQ(negative_binomial_pmf(3, 2, 0.5), 0.25));
+
+  assert(EQ(poisson_pmf(0, 2), exp(-2.0)));
+  assert(EQ(poisson_cdf(1, 1), 2 * exp(-1.0)));
+
+  // Two marked items among five drawn from ten, of which four are marked.
+  assert(EQ(hypergeometric_pmf(10, 4, 5, 2), 10.0 / 21));
+  assert(EQ(hypergeometric_cdf(10, 4, 5, 4), 1));
+
+  assert(EQ(normal_cdf(0), 0.5));
+  assert(fabs(normal_cdf(1.959963984540054) - 0.975) < 1e-9);
+  assert(EQ(exponential_cdf(0, 3), 0));
+
+  // Inverting a cumulative function recovers the value that produced it.
+  assert(
+      fabs(quantile([](double x) { return normal_cdf(x); }, 0.975, -10, 10) - 1.959963984540054) <
+      1e-9
+  );
+  return 0;
+}
+\end{lstlisting}
+\subsection{Expected Value DP}
+A random process that moves between states accumulates an expected cost that satisfies one linear equation per state. If leaving state $u$ costs $c_u$ and sends the process to state $v$ with probability $p_{uv}$, then linearity of expectation gives $E[u] = c_u + \sum_v p_{uv} E[v]$, where the expected cost of a state is the immediate cost plus the average of the expected costs of its successors. Counting steps is the special case $c_u = 1$ for every non-absorbing state, and an absorbing state is one with no outgoing transitions, so that $E = c$ there.
+
+When the transition graph is acyclic, the equations can be evaluated instead of solved: process the states in reverse topological order and every successor on the right-hand side is already known. This is ordinary backward induction, and it is the reason expected-value problems are usually solved from the goal backwards rather than from the start forwards.
+
+A self-loop is the one cycle this method still handles. If the process stays in $u$ with probability $q$, then $E[u] = c_u + q E[u] + \sum_{v \neq u} p_{uv} E[v]$, and isolating $E[u]$ gives $E[u] = (c_u + \sum_{v \neq u} p_{uv} E[v]) / (1 - q)$. Equivalently, the process retries until it leaves, so the expected number of attempts is the geometric mean $1/(1 - q)$. Self-loops appear whenever a move can be rejected and repeated, such as a die roll that would overshoot the goal or a draw that repeats a coupon already held.
+
+\begin{compactitem}
+  \item \inlinecode{expected\_cost(trans, cost)} returns a vector \inlinecode{e} such that \inlinecode{e[u]} is the expected total cost accumulated from state \inlinecode{u} until the process reaches a state with no outgoing transitions. States are the indices of \inlinecode{trans}, each entry \inlinecode{trans[u]} lists the outgoing transitions of \inlinecode{u} as pairs of (\inlinecode{next\_state}, \inlinecode{probability}), and \inlinecode{cost[u]} is the cost charged on leaving \inlinecode{u}. Transition probabilities out of a state must sum to at most $1$, with any missing probability treated as ending the process.
+\end{compactitem}
+
+Aside from self-loops the transition graph must be acyclic, since a genuine cycle leaves the equations mutually dependent and they must then be solved as a linear system; two states that reach each other call for the absorbing Markov chains of section 6.7.3 instead.
+
+\textbf{Time Complexity}: $O(n + m)$ per call, where $n$ is the number of states and $m$ is the total number of transitions.
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n + m)$ auxiliary.
+  \item $O(n)$ for the returned vector.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <utility>
+#include <vector>
+
+std::vector<double> expected_cost(
+    const std::vector<std::vector<std::pair<int, double>>> &trans, const std::vector<double> &cost
+) {
+  int n = static_cast<int>(trans.size());
+  assert(static_cast<int>(cost.size()) == n);
+  std::vector<int> indeg(n);
+  for (int u = 0; u < n; u++) {
+    for (auto [v, p] : trans[u]) {
+      if (v != u) {  // Self-loops are resolved algebraically, so they do not order the states.
+        indeg[v]++;
+      }
+    }
+  }
+  std::vector<int> order, ready;
+  order.reserve(n);
+  for (int u = 0; u < n; u++) {
+    if (indeg[u] == 0) {
+      ready.push_back(u);
+    }
+  }
+  while (!ready.empty()) {
+    int u = ready.back();
+    ready.pop_back();
+    order.push_back(u);
+    for (auto [v, p] : trans[u]) {
+      if (v != u && --indeg[v] == 0) {
+        ready.push_back(v);
+      }
+    }
+  }
+  assert(static_cast<int>(order.size()) == n);  // Cycles other than self-loops are unsupported.
+  std::vector<double> res(n);
+  for (int i = n - 1; i >= 0; i--) {
+    int u = order[i];
+    double stay = 0, total = cost[u];
+    for (auto [v, p] : trans[u]) {
+      if (v == u) {
+        stay += p;
+      } else {
+        total += p * res[v];
+      }
+    }
+    assert(stay < 1);  // A state that never leaves itself has infinite expected cost.
+    res[u] = total / (1 - stay);
+  }
+  return res;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cmath>
+using namespace std;
+
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-9;
+}
+
+int main() {
+  // Roll a fair die to advance along squares [0, n], where a roll that would pass the last square
+  // is rerolled. State n is absorbing, and every roll costs one step.
+  const int n = 2;
+  vector<vector<pair<int, double>>> board(n + 1);
+  for (int i = 0; i < n; i++) {
+    for (int face = 1; face <= 6; face++) {
+      board[i].emplace_back(i + face <= n ? i + face : i, 1.0 / 6);
+    }
+  }
+  vector<double> steps(n + 1, 1);
+  steps[n] = 0;
+  auto rolls = expected_cost(board, steps);
+  assert(EQ(rolls[n], 0));
+  assert(EQ(rolls[1], 6.0));  // Only one of six faces advances from square 1.
+  assert(EQ(rolls[0], 6.0));
+  // The same equation before the self-loop is eliminated: four of six faces reroll square 0.
+  assert(EQ(rolls[0], 1 + rolls[1] / 6 + rolls[2] / 6 + 4.0 / 6 * rolls[0]));
+
+  // The coupon collector, where state k is the number of distinct coupons already held. A draw
+  // repeats a held coupon with probability k/m, which is a self-loop.
+  const int m = 8;
+  vector<vector<pair<int, double>>> coupons(m + 1);
+  for (int k = 0; k < m; k++) {
+    coupons[k].emplace_back(k, static_cast<double>(k) / m);
+    coupons[k].emplace_back(k + 1, static_cast<double>(m - k) / m);
+  }
+  vector<double> draws(m + 1, 1);
+  draws[m] = 0;
+  auto collected = expected_cost(coupons, draws);
+  double harmonic = 0;
+  for (int i = 1; i <= m; i++) {
+    harmonic += 1.0 / i;
+  }
+  assert(EQ(collected[0], m * harmonic));  // The classic m*H_m coupon collector bound.
+  return 0;
+}
+\end{lstlisting}
+\subsection{Absorbing Markov Chains}
+An absorbing Markov chain splits its states into absorbing states, which are never left once entered, and transient states, which are left forever with probability $1$. Ordering the transient states first splits the transition matrix into four blocks: $Q$ holds the probabilities between transient states, $R$ holds the probabilities from transient states into absorbing ones, and the two remaining blocks are a zero matrix and an identity matrix, since an absorbing state only ever moves to itself.
+
+The expected number of visits to transient state $j$ starting from transient state $i$ is the entry $(i, j)$ of $I + Q + Q^2 + \dots$, since the entry $(i, j)$ of $Q^k$ is the probability of being at $j$ after exactly $k$ steps. Because absorption is certain, the powers of $Q$ tend to zero and the series converges to the fundamental matrix $N = (I - Q)^{-1}$. Every other quantity follows from $N$: summing a row counts the expected visits to all transient states, which is the expected number of steps before absorption, and multiplying by $R$ takes one final step into an absorbing state.
+
+\begin{compactitem}
+  \item \inlinecode{fundamental\_matrix(q)} returns $N = (I - {\inlinecodemath{q}})^{-1}$ for the transient-to-transient matrix \inlinecode{q}, as a matrix whose entry in row $i$ and column $j$ is the expected number of visits to transient state $j$ when starting at transient state $i$, counting the starting visit itself.
+  \item \inlinecode{absorption\_steps(q)} returns a vector $t$ where $t_i$ is the expected number of steps taken from transient state $i$ until absorption.
+  \item \inlinecode{absorption\_probabilities(q, r)} returns a matrix $B$ where $B_{i,k}$ is the probability that a chain starting at transient state $i$ is eventually absorbed at absorbing state $k$, given the transient-to-absorbing matrix $R$.
+\end{compactitem}
+
+Every transient state must reach an absorbing one, which is exactly what makes $I - Q$ invertible; a state that cannot is not transient but part of a closed group to be modeled as one absorbing state, so the zero pivot is asserted rather than reported. Unlike the backward induction of section 6.7.2, cycles are no obstacle here, since the system is solved rather than evaluated.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n^{3})$ per call to \inlinecode{fundamental\_matrix()} and \inlinecode{absorption\_steps()}, where $n$ is the number of transient states.
+  \item $O(n^{3} + n^{2} \cdot k)$ per call to \inlinecode{absorption\_probabilities()}, where $k$ is the number of absorbing states.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n^{2})$ auxiliary for \inlinecode{fundamental\_matrix()} and \inlinecode{absorption\_steps()}, and $O(n^{2} + n \cdot k)$ for \inlinecode{absorption\_probabilities()}.
+  \item $O(n^{2})$ for the returned matrix from \inlinecode{fundamental\_matrix()}, $O(n)$ for the returned vector from \inlinecode{absorption\_steps()}, and $O(n \cdot k)$ for the returned matrix from \inlinecode{absorption\_probabilities()}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cmath>
+#include <vector>
+
+const double EPS = 1e-9;
+
+std::vector<std::vector<double>> fundamental_matrix(const std::vector<std::vector<double>> &q) {
+  int n = static_cast<int>(q.size());
+  // Reduce the augmented matrix [I - Q | I] to [I | N] by Gauss-Jordan elimination.
+  std::vector<std::vector<double>> a(n, std::vector<double>(2 * n));
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < n; j++) {
+      a[i][j] = (i == j ? 1.0 : 0.0) - q[i][j];
+    }
+    a[i][n + i] = 1;
+  }
+  for (int col = 0; col < n; col++) {
+    int pivot = col;
+    for (int i = col + 1; i < n; i++) {
+      if (fabs(a[i][col]) > fabs(a[pivot][col])) {
+        pivot = i;
+      }
+    }
+    assert(fabs(a[pivot][col]) > EPS);  // Some transient state never reaches an absorbing state.
+    std::swap(a[col], a[pivot]);
+    double scale = a[col][col];
+    for (int j = col; j < 2 * n; j++) {
+      a[col][j] /= scale;
+    }
+    for (int i = 0; i < n; i++) {
+      if (i != col && a[i][col] != 0) {
+        double factor = a[i][col];
+        for (int j = col; j < 2 * n; j++) {
+          a[i][j] -= factor * a[col][j];
+        }
+      }
+    }
+  }
+  std::vector<std::vector<double>> res(n, std::vector<double>(n));
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < n; j++) {
+      res[i][j] = a[i][n + j];
+    }
+  }
+  return res;
+}
+
+std::vector<double> absorption_steps(const std::vector<std::vector<double>> &q) {
+  auto visits = fundamental_matrix(q);
+  int n = static_cast<int>(visits.size());
+  std::vector<double> res(n);
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < n; j++) {
+      res[i] += visits[i][j];
+    }
+  }
+  return res;
+}
+
+std::vector<std::vector<double>> absorption_probabilities(
+    const std::vector<std::vector<double>> &q, const std::vector<std::vector<double>> &r
+) {
+  assert(q.size() == r.size());
+  auto visits = fundamental_matrix(q);
+  int n = static_cast<int>(visits.size()), k = n == 0 ? 0 : static_cast<int>(r[0].size());
+  std::vector<std::vector<double>> res(n, std::vector<double>(k));
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < n; j++) {
+      for (int c = 0; c < k; c++) {
+        res[i][c] += visits[i][j] * r[j][c];
+      }
+    }
+  }
+  return res;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cmath>
+using namespace std;
+
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-9;
+}
+
+int main() {
+  // A gambler with i of 4 dollars bets a dollar on a fair coin until going broke or reaching 4.
+  // Transient states 0, 1, and 2 stand for holding 1, 2, and 3 dollars, and the two absorbing
+  // states are ruin and victory. States 0 and 1 can each reach the other, so the transition graph
+  // is cyclic and backward induction alone does not apply.
+  vector<vector<double>> q{{0, 0.5, 0}, {0.5, 0, 0.5}, {0, 0.5, 0}};
+  vector<vector<double>> r{{0.5, 0}, {0, 0}, {0, 0.5}};
+
+  auto visits = fundamental_matrix(q);
+  assert(EQ(visits[0][0], 1.5) && EQ(visits[0][1], 1.0) && EQ(visits[0][2], 0.5));
+  assert(EQ(visits[1][0], 1.0) && EQ(visits[1][1], 2.0) && EQ(visits[1][2], 1.0));
+  assert(EQ(visits[2][0], 0.5) && EQ(visits[2][1], 1.0) && EQ(visits[2][2], 1.5));
+
+  // Starting with i dollars, the game lasts i*(4 - i) rounds on average.
+  auto steps = absorption_steps(q);
+  assert(EQ(steps[0], 3.0) && EQ(steps[1], 4.0) && EQ(steps[2], 3.0));
+
+  // A fair game is won with probability i/4.
+  auto odds = absorption_probabilities(q, r);
+  assert(EQ(odds[0][1], 0.25) && EQ(odds[1][1], 0.5) && EQ(odds[2][1], 0.75));
+  for (int i = 0; i < 3; i++) {
+    assert(EQ(odds[i][0] + odds[i][1], 1.0));  // Absorption is certain.
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Stationary Distribution}
+A Markov chain with no absorbing states never settles on a single state, but the fraction of time it spends in each state does settle. That limit is the stationary distribution: the row vector $\pi$ with $\pi P = \pi$ and $\sum_i \pi_i = 1$, which is the one distribution left unchanged by a step of the chain. It exists and is unique whenever the chain is irreducible, meaning every state can reach every other, and it is the limit of the state distribution from any starting point once the chain is also aperiodic.
+
+The defining equations are one short of determining $\pi$. Each column of $\pi P = \pi$ says that the probability flowing into a state equals the probability flowing out, and those $n$ equations sum to the trivial identity $1 = 1$, leaving the system rank $n - 1$ and any scalar multiple of a solution also a solution. Substituting the normalization $\sum_i \pi_i = 1$ for one of them pins down the scale and makes the system uniquely solvable by ordinary elimination.
+
+\begin{compactitem}
+  \item \inlinecode{stationary\_distribution(p, eps = 1e-10)} returns the stationary distribution of the $n$ by $n$ row-stochastic transition matrix \inlinecode{p}, where \inlinecode{p[i][j]} is the probability of stepping from state \inlinecode{i} to state \inlinecode{j}. It returns \inlinecode{std::nullopt} when the system is singular to within \inlinecode{eps}, which happens exactly when the chain is reducible and therefore has no unique stationary distribution.
+\end{compactitem}
+
+Two quantities follow at once: the expected number of steps to return to state $i$ is $1/\pi_i$, and on an undirected graph walked by a uniformly random incident edge, $\pi_v$ is proportional to the degree of $v$, which is why such a walk is uniform in the limit on a regular graph. Where the absorbing chains of section 6.7.3 ask what happens before the process stops, this asks what happens when it never does.
+
+\textbf{Time Complexity}: $O(n^{3})$ per call, where $n$ is the number of states.
+
+\textbf{Space Complexity}: $O(n^{2})$ auxiliary and $O(n)$ for the returned distribution.
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cmath>
+#include <optional>
+#include <vector>
+
+std::optional<std::vector<double>> stationary_distribution(
+    const std::vector<std::vector<double>> &p, double eps = 1e-10
+) {
+  int n = static_cast<int>(p.size());
+  if (n == 0) {
+    return std::vector<double>{};
+  }
+  // Build the transpose of P - I, then replace its last row with the normalization equation.
+  std::vector<std::vector<double>> a(n, std::vector<double>(n + 1));
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < n; j++) {
+      a[i][j] = p[j][i] - (i == j ? 1.0 : 0.0);
+    }
+  }
+  for (int j = 0; j < n; j++) {
+    a[n - 1][j] = 1;
+  }
+  a[n - 1][n] = 1;
+  for (int col = 0; col < n; col++) {
+    int pivot = col;
+    for (int i = col + 1; i < n; i++) {
+      if (fabs(a[i][col]) > fabs(a[pivot][col])) {
+        pivot = i;
+      }
+    }
+    if (fabs(a[pivot][col]) < eps) {
+      return std::nullopt;  // Reducible, so the stationary distribution is not unique.
+    }
+    std::swap(a[col], a[pivot]);
+    double scale = a[col][col];  // Saved, since the loop below overwrites it on its first step.
+    for (int j = col; j <= n; j++) {
+      a[col][j] /= scale;
+    }
+    for (int i = 0; i < n; i++) {
+      if (i != col && a[i][col] != 0) {
+        double factor = a[i][col];
+        for (int j = col; j <= n; j++) {
+          a[i][j] -= factor * a[col][j];
+        }
+      }
+    }
+  }
+  std::vector<double> res(n);
+  for (int i = 0; i < n; i++) {
+    res[i] = a[i][n];
+  }
+  return res;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cmath>
+using namespace std;
+
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-9;
+}
+
+int main() {
+  // A two-state chain that leaves state 0 with probability 1/4 and state 1 with probability 1/2,
+  // so it rests in state 0 twice as often.
+  auto two = stationary_distribution({{0.75, 0.25}, {0.5, 0.5}});
+  assert(two.has_value());
+  assert(EQ((*two)[0], 2.0 / 3) && EQ((*two)[1], 1.0 / 3));
+
+  // A random walk on a path of three vertices, where the middle vertex has twice the degree and so
+  // twice the stationary probability. Its expected return time is the reciprocal, 2.
+  auto path = stationary_distribution({{0, 1, 0}, {0.5, 0, 0.5}, {0, 1, 0}});
+  assert(path.has_value());
+  assert(EQ((*path)[0], 0.25) && EQ((*path)[1], 0.5) && EQ((*path)[2], 0.25));
+  assert(EQ(1 / (*path)[1], 2.0));
+
+  // A doubly stochastic chain is uniform in the limit no matter the transition probabilities.
+  auto cycle = stationary_distribution({{0, 0.3, 0.7}, {0.7, 0, 0.3}, {0.3, 0.7, 0}});
+  assert(cycle.has_value());
+  for (int i = 0; i < 3; i++) {
+    assert(EQ((*cycle)[i], 1.0 / 3));
+  }
+
+  // Two states that never reach each other admit no unique distribution.
+  assert(!stationary_distribution({{1, 0}, {0, 1}}).has_value());
+  return 0;
+}
+\end{lstlisting}
+\subsection{Statistical Learning}
+The following routines fit a model to observed data and use it to describe or predict unobserved data. Each takes its input as a \inlinecode{Points} matrix whose rows are samples and whose columns are features, so a row is one observation of the same measurements taken in the same order. Supervised routines additionally take a \inlinecode{labels} vector, parallel to the rows, holding each sample's class as an integer in $[0, {\inlinecodemath{classes}})$.
+
+Features measured on different scales distort every distance here, so call \inlinecode{standardize()} before \inlinecode{kmeans()}, \inlinecode{knn\_classify()}, or \inlinecode{logistic\_regression()} and apply the returned pair to later queries. Naive Bayes is exempt, since it fits a separate variance per feature. None of these choose \inlinecode{k} or \inlinecode{l2} for you: hold out part of the data and keep the value predicting it best.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <limits>
+#include <numeric>
+#include <random>
+#include <utility>
+#include <vector>
+
+using Points = std::vector<std::vector<double>>;
+
+double sqdist(const std::vector<double> &a, const std::vector<double> &b) {
+  double res = 0;
+  for (size_t i = 0; i < a.size(); i++) {
+    res += (a[i] - b[i]) * (a[i] - b[i]);
+  }
+  return res;
+}
+\end{lstlisting}
+Standardizing subtracts each column's mean and divides by its standard deviation, which is what makes one Euclidean distance meaningful across features recorded in different units. The population standard deviation is used, dividing by $n$ rather than $n - 1$, since these columns are the data being fit and not a sample standing in for a larger population. A column that never varies would give a zero divisor, so it reports $1$ instead and standardizes to all zeros, contributing nothing to any distance, which is exactly what a constant feature deserves.
+
+\begin{compactitem}
+  \item \inlinecode{column\_mean(points)} and \inlinecode{column\_stddev(points, mean)} return the per-column mean and population standard deviation, the latter reporting $1$ for a column that never varies.
+  \item \inlinecode{standardize(points)} rescales every column in place to zero mean and unit variance and returns the (\inlinecode{mean}, \inlinecode{stddev}) it used, while \inlinecode{standardize(x, mean, stddev)} applies a returned pair to one later sample.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n \cdot d)$ per call over $n$ rows of $d$ columns, and $O(d)$ for one sample.
+
+\textbf{Space Complexity}: $O(d)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+std::vector<double> column_mean(const Points &points) {
+  int n = static_cast<int>(points.size()), d = static_cast<int>(points[0].size());
+  std::vector<double> res(d);
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < d; j++) {
+      res[j] += points[i][j];
+    }
+  }
+  for (int j = 0; j < d; j++) {
+    res[j] /= n;
+  }
+  return res;
+}
+
+std::vector<double> column_stddev(const Points &points, const std::vector<double> &mean) {
+  int n = static_cast<int>(points.size()), d = static_cast<int>(points[0].size());
+  std::vector<double> res(d);
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < d; j++) {
+      res[j] += (points[i][j] - mean[j]) * (points[i][j] - mean[j]);
+    }
+  }
+  for (int j = 0; j < d; j++) {
+    res[j] = std::sqrt(res[j] / n);
+    if (res[j] < 1e-12) {
+      res[j] = 1;
+    }
+  }
+  return res;
+}
+
+void standardize(
+    std::vector<double> &x, const std::vector<double> &mean, const std::vector<double> &stddev
+) {
+  for (size_t j = 0; j < x.size(); j++) {
+    x[j] = (x[j] - mean[j]) / stddev[j];
+  }
+}
+
+std::pair<std::vector<double>, std::vector<double>> standardize(Points &points) {
+  std::vector<double> mean = column_mean(points), stddev = column_stddev(points, mean);
+  for (std::vector<double> &row : points) {
+    standardize(row, mean, stddev);
+  }
+  return std::make_pair(mean, stddev);
+}
+\end{lstlisting}
+$k$-means partitions the rows into $k$ clusters so that each row lies nearer to its own cluster's mean than to any other. Lloyd's algorithm alternates the two halves of that condition: assign every row to the nearest centroid, then move every centroid to the mean of the rows assigned to it. Each half can only lower the total squared distance, so the process converges, but only to a local optimum that the starting centroids decide.
+
+Choosing those starting centroids is called seeding, and $k$-means++ is the standard rule: take the first uniformly at random, then draw each remaining one with probability proportional to its squared distance from the nearest already chosen. That spreads them out instead of letting several land in one dense region, bounding the expected cost at $O(\log k)$ times optimal, which uniform choice cannot promise. The loop stops once an assignment pass changes nothing, and a cluster that loses all its rows keeps its previous centroid.
+
+\begin{compactitem}
+  \item \inlinecode{kmeans(points, k, rng, iterations = 100)} returns (\inlinecode{centroids}, \inlinecode{assignment}), partitioning the rows into \inlinecode{k} clusters, where \inlinecode{assignment[i]} is the cluster of row \inlinecode{i} and \inlinecode{centroids[c]} is the mean of cluster \inlinecode{c}. The number of rows must be at least \inlinecode{k}, which must be positive.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(i \cdot n \cdot k \cdot d)$ per call for \inlinecode{iterations} $i$, $n$ rows, and $d$ columns.
+
+\textbf{Space Complexity}: $O(n + k \cdot d)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+std::pair<Points, std::vector<int>> kmeans(
+    const Points &points, int k, std::mt19937 &rng, int iterations = 100
+) {
+  int n = static_cast<int>(points.size());
+  Points centroids;
+  centroids.push_back(points[std::uniform_int_distribution<int>(0, n - 1)(rng)]);
+  std::vector<double> best(n);
+  for (int i = 0; i < n; i++) {
+    best[i] = sqdist(points[i], centroids[0]);
+  }
+  while (static_cast<int>(centroids.size()) < k) {
+    std::discrete_distribution<int> pick(best.begin(), best.end());
+    centroids.push_back(points[pick(rng)]);
+    for (int i = 0; i < n; i++) {
+      best[i] = std::min(best[i], sqdist(points[i], centroids.back()));
+    }
+  }
+  std::vector<int> assignment(n, -1);
+  for (int it = 0; it < iterations; it++) {
+    bool changed = false;
+    for (int i = 0; i < n; i++) {
+      int nearest = 0;
+      double nearest_dist = sqdist(points[i], centroids[0]);
+      for (int c = 1; c < k; c++) {
+        double dist = sqdist(points[i], centroids[c]);
+        if (dist < nearest_dist) {
+          nearest = c;
+          nearest_dist = dist;
+        }
+      }
+      if (assignment[i] != nearest) {
+        assignment[i] = nearest;
+        changed = true;
+      }
+    }
+    if (!changed) {
+      break;
+    }
+    Points sums(k, std::vector<double>(points[0].size()));
+    std::vector<int> counts(k);
+    for (int i = 0; i < n; i++) {
+      for (size_t j = 0; j < points[i].size(); j++) {
+        sums[assignment[i]][j] += points[i][j];
+      }
+      counts[assignment[i]]++;
+    }
+    for (int c = 0; c < k; c++) {
+      if (counts[c] > 0) {
+        for (size_t j = 0; j < sums[c].size(); j++) {
+          centroids[c][j] = sums[c][j] / counts[c];
+        }
+      }
+    }
+  }
+  return std::make_pair(centroids, assignment);
+}
+\end{lstlisting}
+$k$-nearest neighbors classifies a query by letting the $k$ nearest training rows vote, which fits no model at all: the training data is the model, and all the work happens at query time. Small $k$ follows the data closely and is swayed by noise, while large $k$ smooths across genuine boundaries, so $k$ trades variance against bias. Averaging the neighbors' values rather than counting their votes turns the same routine into regression.
+
+Selecting the $k$ nearest with \inlinecode{std::nth\_element} costs linear time rather than the $O(n \log n)$ of a full sort, since the neighbors' relative order is irrelevant to the vote. Scanning every row makes each query linear in the data, which the k-d tree of section 2.6.5 improves to logarithmic on low-dimensional data; above roughly ten features the two converge and the scan below is preferable.
+
+\begin{compactitem}
+  \item \inlinecode{knn\_classify(points, labels, query, k)} returns the majority label among the \inlinecode{k} rows nearest to \inlinecode{query}, breaking a tie toward the smaller label. \inlinecode{k} must lie in $[1, n]$ for \inlinecode{n} rows.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n \cdot d)$ per call, for $n$ rows of $d$ columns.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+int knn_classify(
+    const Points &points, const std::vector<int> &labels, const std::vector<double> &query, int k
+) {
+  int n = static_cast<int>(points.size());
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
+  std::vector<double> dist(n);
+  for (int i = 0; i < n; i++) {
+    dist[i] = sqdist(points[i], query);
+  }
+  std::nth_element(order.begin(), order.begin() + (k - 1), order.end(), [&](int a, int b) {
+    return dist[a] < dist[b];
+  });
+  std::vector<int> votes(*std::max_element(labels.begin(), labels.end()) + 1);
+  for (int i = 0; i < k; i++) {
+    votes[labels[order[i]]]++;
+  }
+  return static_cast<int>(std::max_element(votes.begin(), votes.end()) - votes.begin());
+}
+\end{lstlisting}
+Naive Bayes picks the class maximizing $P(c) \prod_j P(x_j \mid c)$, which is Bayes' rule with the denominator dropped because it does not depend on the class. The independence it assumes among features given the class is almost never true, and yet the classifier is accurate anyway: the products it computes are poorly calibrated as probabilities, but the class that maximizes them is usually still the right one, since the errors tend to move every class the same way.
+
+The Gaussian variant below models each feature within each class by a normal distribution, so fitting is one pass accumulating a mean and variance per (class, feature) pair. Scores accumulate as logarithms, both because a product of hundreds of densities underflows and because the logarithm of a normal density is a plain quadratic. A feature that is constant within a class would give a zero variance and an infinite score, so variances are floored at a small fraction of the overall spread.
+
+\begin{compactitem}
+  \item \inlinecode{NaiveBayes(points, labels, classes)} fits a Gaussian naive Bayes classifier, \inlinecode{predict(x)} returns its most probable class for a sample \inlinecode{x}, and \inlinecode{log\_likelihood(x, c)} returns the unnormalized log probability that \inlinecode{x} belongs to class \inlinecode{c}. A class carried by no row is given zero prior, so it scores $-\infty$ and is never predicted.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \cdot d)$ per construction.
+  \item $O(c \cdot d)$ per call to \inlinecode{predict()} and \inlinecode{log\_likelihood()} for $n$ rows of $d$ columns and $c$ classes.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(c \cdot d)$ for storage.
+
+\begin{lstlisting}[language=C++]
+class NaiveBayes {
+  std::vector<double> log_prior;
+  Points mean, var;
+
+ public:
+  NaiveBayes(const Points &points, const std::vector<int> &labels, int classes) {
+    int n = static_cast<int>(points.size()), d = static_cast<int>(points[0].size());
+    std::vector<int> counts(classes);
+    mean.assign(classes, std::vector<double>(d));
+    var.assign(classes, std::vector<double>(d));
+    log_prior.assign(classes, 0);
+    for (int i = 0; i < n; i++) {
+      counts[labels[i]]++;
+      for (int j = 0; j < d; j++) {
+        mean[labels[i]][j] += points[i][j];
+      }
+    }
+    for (int c = 0; c < classes; c++) {
+      if (counts[c] == 0) {  // A class with no rows has zero prior, so it is never predicted.
+        log_prior[c] = -std::numeric_limits<double>::infinity();
+        continue;
+      }
+      log_prior[c] = std::log(static_cast<double>(counts[c]) / n);
+      for (int j = 0; j < d; j++) {
+        mean[c][j] /= counts[c];
+      }
+    }
+    double spread = 0;
+    for (int i = 0; i < n; i++) {
+      for (int j = 0; j < d; j++) {
+        double diff = points[i][j] - mean[labels[i]][j];
+        var[labels[i]][j] += diff * diff;
+        spread += diff * diff;
+      }
+    }
+    double floor_var = 1e-9 * spread / n + 1e-12;
+    for (int c = 0; c < classes; c++) {
+      for (int j = 0; j < d; j++) {
+        var[c][j] = counts[c] == 0 ? floor_var : std::max(var[c][j] / counts[c], floor_var);
+      }
+    }
+  }
+
+  double log_likelihood(const std::vector<double> &x, int c) const {
+    static const double LOG_2PI = 1.8378770664093453;
+    double res = log_prior[c];
+    for (size_t j = 0; j < x.size(); j++) {
+      double diff = x[j] - mean[c][j];
+      res -= 0.5 * (LOG_2PI + std::log(var[c][j]) + diff * diff / var[c][j]);
+    }
+    return res;
+  }
+
+  int predict(const std::vector<double> &x) const {
+    int best = 0;
+    double best_score = log_likelihood(x, 0);
+    for (size_t c = 1; c < log_prior.size(); c++) {
+      double score = log_likelihood(x, static_cast<int>(c));
+      if (score > best_score) {
+        best = static_cast<int>(c);
+        best_score = score;
+      }
+    }
+    return best;
+  }
+};
+\end{lstlisting}
+Logistic regression models the probability of class $1$ as $\sigma(w \cdot x)$ for the logistic function $\sigma(z) = 1/(1 + e^{-z})$, which maps any real score into $(0, 1)$. Fitting minimizes the average negative log-likelihood, a convex function whose gradient is $X^{\top}(\sigma(Xw) - y)/n$: each row pushes the weights by its own features, scaled by how wrong the current prediction is on it. Convexity makes every local minimum global, so plain gradient descent suffices.
+
+Unlike the least squares of section 6.5.5 there is no closed form, and on perfectly separable data the weights diverge as every predicted probability is driven to $0$ or $1$. The \inlinecode{l2} penalty adds $\lambda\|w\|^2$ to keep them finite, excluding the intercept so that shifting all labels does not distort it. Section 5.2.4 supplies the adaptive steps worth substituting when convergence is slow.
+
+\begin{compactitem}
+  \item \inlinecode{logistic\_predict(w, x)} returns the probability that sample \inlinecode{x} belongs to class $1$ under a weight vector \inlinecode{w} whose index $0$ is the intercept.
+  \item \inlinecode{logistic\_regression(points, labels, ...)} returns such a weight vector, fit by gradient descent over labels that are $0$ or $1$. Optional parameters default to \inlinecode{rate = 0.1}, \inlinecode{iterations = 1000}, and \inlinecode{l2 = 0}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(i \cdot n \cdot d)$ per call for \inlinecode{iterations} $i$, $n$ rows, and $d$ columns.
+
+\textbf{Space Complexity}: $O(d)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+double sigmoid(double z) {
+  return z >= 0 ? 1 / (1 + std::exp(-z)) : std::exp(z) / (1 + std::exp(z));
+}
+
+double logistic_predict(const std::vector<double> &w, const std::vector<double> &x) {
+  double z = w[0];
+  for (size_t j = 0; j < x.size(); j++) {
+    z += w[j + 1] * x[j];
+  }
+  return sigmoid(z);
+}
+
+std::vector<double> logistic_regression(
+    const Points &points, const std::vector<int> &labels, double rate = 0.1, int iterations = 1000,
+    double l2 = 0
+) {
+  int n = static_cast<int>(points.size()), d = static_cast<int>(points[0].size());
+  std::vector<double> w(d + 1), grad(d + 1);
+  for (int it = 0; it < iterations; it++) {
+    std::fill(grad.begin(), grad.end(), 0.0);
+    for (int i = 0; i < n; i++) {
+      double error = logistic_predict(w, points[i]) - labels[i];
+      grad[0] += error;
+      for (int j = 0; j < d; j++) {
+        grad[j + 1] += error * points[i][j];
+      }
+    }
+    w[0] -= rate * grad[0] / n;
+    for (int j = 1; j <= d; j++) {
+      w[j] -= rate * (grad[j] / n + l2 * w[j]);
+    }
+  }
+  return w;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // Two well-separated blobs: the first three rows lie near (0, 0) and the last three near
+  // (10, 10).
+  Points points{{0, 0}, {1, 0}, {0, 1}, {10, 10}, {11, 10}, {10, 11}};
+  vector<int> labels{0, 0, 0, 1, 1, 1};
+
+  // Standardizing puts both columns on one scale; the same pair transforms later queries.
+  Points scaled(points);
+  pair<vector<double>, vector<double>> shift = standardize(scaled);
+  vector<double> query{9, 9};
+  standardize(query, shift.first, shift.second);
+  assert(knn_classify(scaled, labels, query, 3) == 1);
+
+  mt19937 rng(1234567);
+  pair<Points, vector<int>> clustered = kmeans(points, 2, rng);
+  assert(clustered.first.size() == 2);
+  assert(clustered.second[0] == clustered.second[1] && clustered.second[1] == clustered.second[2]);
+  assert(clustered.second[3] == clustered.second[4] && clustered.second[4] == clustered.second[5]);
+  assert(clustered.second[0] != clustered.second[3]);
+
+  assert(knn_classify(points, labels, {0.5, 0.5}, 3) == 0);
+  assert(knn_classify(points, labels, {9, 9}, 3) == 1);
+
+  NaiveBayes nb(points, labels, 2);
+  assert(nb.predict({0.5, 0.5}) == 0);
+  assert(nb.predict({9, 9}) == 1);
+  // Declaring a third class that no row carries leaves it with zero prior, never predicted.
+  NaiveBayes sparse(points, labels, 3);
+  assert(isinf(sparse.log_likelihood({0.5, 0.5}, 2)));
+  assert(sparse.predict({0.5, 0.5}) == 0 && sparse.predict({9, 9}) == 1);
+
+  vector<double> w = logistic_regression(points, labels, 0.5, 2000);
+  assert(logistic_predict(w, {0.5, 0.5}) < 0.5);
+  assert(logistic_predict(w, {9, 9}) > 0.5);
+  return 0;
+}
+\end{lstlisting}
+
+\section{\texorpdfstring{Game Theory}{6.8 Game Theory}}
+\setcounter{section}{8}
 \setcounter{subsection}{0}
 \subsection{Nim}
 Solves normal-play nim and related impartial games where each position is the disjoint sum of independent piles. In normal play, the player who makes the last move wins. A nim position is losing exactly when the XOR of all pile sizes is $0$.

@@ -18,7 +18,7 @@ For production C++, prefer containers such as \inlinecode{std::list}, \inlinecod
 
 The splicing helpers use the same ``after'' convention as \inlinecode{std::forward\_list::splice\_after()}. They work naturally with a dummy head node, which makes insertions and removals at the beginning of a list match all other positions. For doubly linked list splicing, use the next section.
 
-For cycle detection, see the variants on iterated functions in 1.7.3, which can be directly adapted for linked lists.
+For cycle detection, see the variants on iterated functions in 1.8.4, which can be directly adapted for linked lists.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -156,13 +156,13 @@ The functions below use a circular sentinel node. When the list is empty, \inlin
 
 \begin{compactitem}
   \item \inlinecode{init\_list(sentinel)} initializes an empty circular list around \inlinecode{sentinel}.
+  \item \inlinecode{empty(sentinel)} returns whether the list has no data nodes.
   \item \inlinecode{insert\_after(pos, node)} inserts detached \inlinecode{node} immediately after \inlinecode{pos}.
   \item \inlinecode{insert\_before(pos, node)} inserts detached \inlinecode{node} immediately before \inlinecode{pos}.
   \item \inlinecode{erase(node)} removes \inlinecode{node} from its current list and leaves it detached.
   \item \inlinecode{push\_front(sentinel, node)} inserts detached \inlinecode{node} at the front of the list.
   \item \inlinecode{push\_back(sentinel, node)} inserts detached \inlinecode{node} at the back of the list.
   \item \inlinecode{move\_to\_front(sentinel, node)} moves an already-linked \inlinecode{node} to the front of the list.
-  \item \inlinecode{empty(sentinel)} returns whether the list has no data nodes.
   \item \inlinecode{splice(pos, node)} moves an already-linked \inlinecode{node} so it appears immediately before \inlinecode{pos}.
   \item \inlinecode{splice\_range(pos, first, last)} moves the half-open range $[{\inlinecodemath{first}}, {\inlinecodemath{last}})$ so it appears immediately before \inlinecode{pos}.
 \end{compactitem}
@@ -302,9 +302,9 @@ To implement the same cache without \inlinecode{std::list}, use the intrusive do
 
 \begin{compactitem}
   \item \inlinecode{LRUCache\textless{}K, V\textgreater{}(capacity)} constructs an empty cache holding at most \inlinecode{capacity} keys.
+  \item \inlinecode{size()} returns the number of keys currently stored.
   \item \inlinecode{get(key, \&value)} returns whether \inlinecode{key} is present. On success, it copies the associated value into \inlinecode{value} and marks the key as most recently used.
   \item \inlinecode{put(key, value)} inserts or updates \inlinecode{key}, marking it as most recently used and evicting the least recently used key if needed.
-  \item \inlinecode{size()} returns the number of keys currently stored.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(1)$ expected amortized per call to \inlinecode{get()} and \inlinecode{put()}, and $O(n)$ in the collision-heavy worst case for the hash table.
@@ -398,9 +398,858 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{LFU Cache}
+Maintains a least-frequently-used cache with fixed capacity. The cache supports lookups and updates by key, evicting the entry with the fewest accesses whenever an insertion would exceed capacity, and breaking ties among equally frequent entries by evicting the least recently used of them.
 
-\section{\texorpdfstring{Heaps and Priority Queues}{2.2 Heaps and Priority Queues}}
+The difficulty compared to the least-recently-used cache of section 2.1.3 is that frequencies form an unbounded set of buckets rather than a single ordering, so a naive implementation scans for the minimum on every eviction. The fix is to bucket the keys by frequency, keeping one list of keys per frequency in most-recently-used order, and to track the smallest occupied frequency. Every access moves a key from bucket $f$ to bucket $f + 1$, which is $O(1)$ with an iterator stored per key.
+
+The tracked minimum needs no search either. An insertion always creates a key of frequency $1$, so the minimum becomes $1$; an access raises exactly one key from the minimum bucket, so the minimum can only rise by one, and it does so only when that bucket empties. Both updates are $O(1)$, which is what makes the whole structure constant time.
+
+\begin{compactitem}
+  \item \inlinecode{LFUCache\textless{}K, V\textgreater{}(capacity)} constructs an empty cache holding at most \inlinecode{capacity} keys, which must be positive. The key type \inlinecode{K} must support \inlinecode{operator==} and have \inlinecode{std::hash\textless{}K\textgreater{}} defined.
+  \item \inlinecode{size()} returns the number of keys currently stored.
+  \item \inlinecode{freq(key)} returns the number of accesses counted for \inlinecode{key}, or $0$ if it is absent.
+  \item \inlinecode{get(key, \&value)} returns whether \inlinecode{key} is present. On success, it copies the associated value into \inlinecode{value} and counts an access.
+  \item \inlinecode{put(key, value)} inserts or updates \inlinecode{key}, counts an access, and evicts the least frequently used key if the insertion would exceed capacity.
+\end{compactitem}
+
+Frequencies grow without bound, so a long-lived cache can be held hostage by keys popular only once; real implementations periodically halve every count, ageing the statistics without reordering them.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ expected amortized per call to \inlinecode{get()}, \inlinecode{put()}, and \inlinecode{freq()}, and $O(n)$ in the collision-heavy worst case for the hash table.
+  \item $O(1)$ per call to \inlinecode{size()}.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(n)$, where $n$ is the cache capacity.
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <list>
+#include <unordered_map>
+
+template<typename K, typename V>
+class LFUCache {
+  struct Entry {
+    V value;
+    int freq;
+    typename std::list<K>::iterator pos;
+  };
+
+  int cap, min_freq;
+  std::unordered_map<K, Entry> entries;
+  std::unordered_map<int, std::list<K>> buckets;  // Keys of each frequency, newest at the front.
+
+  // Moves an existing key from its bucket to the next one up, counting one access.
+  void touch(const K &key) {
+    Entry &entry = entries[key];
+    std::list<K> &bucket = buckets[entry.freq];
+    bucket.erase(entry.pos);
+    if (bucket.empty()) {
+      buckets.erase(entry.freq);
+      if (min_freq == entry.freq) {
+        min_freq++;
+      }
+    }
+    entry.freq++;
+    buckets[entry.freq].push_front(key);
+    entry.pos = buckets[entry.freq].begin();
+  }
+
+ public:
+  explicit LFUCache(int capacity) : cap(capacity), min_freq(0) { assert(cap > 0); }
+
+  int size() const { return static_cast<int>(entries.size()); }
+
+  int freq(const K &key) const {
+    auto it = entries.find(key);
+    return it == entries.end() ? 0 : it->second.freq;
+  }
+
+  bool get(const K &key, V *value) {
+    auto it = entries.find(key);
+    if (it == entries.end()) {
+      return false;
+    }
+    if (value != nullptr) {
+      *value = it->second.value;
+    }
+    touch(key);
+    return true;
+  }
+
+  void put(const K &key, const V &value) {
+    if (entries.count(key) > 0) {
+      entries[key].value = value;
+      touch(key);
+      return;
+    }
+    if (size() == cap) {
+      // The back of the minimum bucket is the least recently used of the least frequent keys.
+      entries.erase(buckets[min_freq].back());
+      buckets[min_freq].pop_back();
+      if (buckets[min_freq].empty()) {
+        buckets.erase(min_freq);
+      }
+    }
+    min_freq = 1;
+    buckets[1].push_front(key);
+    entries[key] = Entry{value, 1, buckets[1].begin()};
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <string>
+using namespace std;
+
+int main() {
+  LFUCache<int, string> cache(2);
+  string value;
+  assert(!cache.get(1, &value));
+
+  cache.put(1, "one");
+  cache.put(2, "two");
+  assert(cache.size() == 2);
+  assert(cache.get(1, &value) && value == "one");
+  assert(cache.freq(1) == 2 && cache.freq(2) == 1);
+
+  cache.put(3, "three");  // Key 2 is the least frequently used, so it is evicted.
+  assert(!cache.get(2, &value));
+  assert(cache.get(3, &value) && value == "three");
+
+  // Keys 1 and 3 now both have frequency 2, so the least recently used of the two goes next.
+  assert(cache.freq(1) == 2 && cache.freq(3) == 2);
+  cache.put(4, "four");
+  assert(!cache.get(1, &value));
+  assert(cache.get(3, &value) && value == "three");
+
+  // Updating a stored key counts as an access rather than an insertion.
+  cache.put(3, "tres");
+  assert(cache.get(3, &value) && value == "tres" && cache.size() == 2);
+  return 0;
+}
+\end{lstlisting}
+
+\section{\texorpdfstring{Binary Trees}{2.2 Binary Trees}}
 \setcounter{section}{2}
+\setcounter{subsection}{0}
+\subsection{Binary Tree Traversal}
+The three depth-first orders of a binary tree differ only in when a node is reported relative to its subtrees: preorder before both, inorder between them, postorder after both. Recursion expresses this directly but costs stack space proportional to the height, which overflows on a degenerate tree of a hundred thousand nodes, so the versions below replace the call stack with an explicit one. Postorder is the one that resists a direct translation, since a node must be reported only after returning from its right child; visiting root, right, then left is a mirrored preorder, and reversing that sequence yields postorder.
+
+\begin{compactitem}
+  \item \inlinecode{preorder(root)}, \inlinecode{inorder(root)}, and \inlinecode{postorder(root)} return the values of the tree in each depth-first order, using an explicit stack.
+  \item \inlinecode{level\_order(root)} returns the values one depth at a time, left to right, using a queue.
+\end{compactitem}
+
+Morris traversal removes the stack entirely by threading. Before descending into a left subtree, it finds that subtree's rightmost node, which is the inorder predecessor of the current node, and points that node's empty right pointer back at the current node. On reaching the end of the subtree the walk follows the thread back up, and seeing it a second time signals that the left subtree is finished, so the node is reported and the borrowed pointer restored. Each edge is traversed at most three times, keeping the walk linear. Flattening uses the same predecessor search but keeps the rewiring: splicing the right subtree onto that node and moving the left subtree across leaves a right-leaning chain in preorder.
+
+\begin{compactitem}
+  \item \inlinecode{morris\_inorder(root)} returns the values in inorder using $O(1)$ auxiliary space, temporarily rewriting the tree's null pointers and restoring them before returning.
+  \item \inlinecode{flatten(root)} rewrites the tree in place into a right-leaning chain whose order is the tree's preorder, leaving every left pointer null and destroying the original shape.
+\end{compactitem}
+
+Since \inlinecode{morris\_inorder()} mutates the tree as it runs, it is unsafe on a tree shared between threads and leaves threads behind if an exception escapes. Computing over a tree rather than listing it is dynamic programming on a tree; see sections 4.1.4 through 4.1.7 for general rooted trees.
+
+\textbf{Time Complexity}: $O(n)$ per call to every traversal and to \inlinecode{flatten()}, where $n$ is the number of nodes.
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for each returned vector.
+  \item $O(h)$ auxiliary for the stack-based and queue-based traversals, where $h$ is the height of the tree, which is $O(n)$ in the worst case.
+  \item $O(1)$ auxiliary for \inlinecode{morris\_inorder()} and \inlinecode{flatten()}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <queue>
+#include <vector>
+
+template<typename T>
+struct TreeNode {
+  T value;
+  TreeNode *left, *right;
+
+  explicit TreeNode(const T &value) : value(value), left(nullptr), right(nullptr) {}
+};
+
+template<typename T>
+std::vector<T> preorder(TreeNode<T> *root) {
+  std::vector<T> res;
+  std::vector<TreeNode<T> *> st;
+  if (root != nullptr) {
+    st.push_back(root);
+  }
+  while (!st.empty()) {
+    TreeNode<T> *node = st.back();
+    st.pop_back();
+    res.push_back(node->value);
+    if (node->right != nullptr) {  // Pushed first so that the left child is popped first.
+      st.push_back(node->right);
+    }
+    if (node->left != nullptr) {
+      st.push_back(node->left);
+    }
+  }
+  return res;
+}
+
+template<typename T>
+std::vector<T> inorder(TreeNode<T> *root) {
+  std::vector<T> res;
+  std::vector<TreeNode<T> *> st;
+  for (TreeNode<T> *node = root; node != nullptr || !st.empty();) {
+    for (; node != nullptr; node = node->left) {
+      st.push_back(node);
+    }
+    node = st.back();
+    st.pop_back();
+    res.push_back(node->value);
+    node = node->right;
+  }
+  return res;
+}
+
+template<typename T>
+std::vector<T> postorder(TreeNode<T> *root) {
+  std::vector<T> res;
+  std::vector<TreeNode<T> *> st;
+  if (root != nullptr) {
+    st.push_back(root);
+  }
+  while (!st.empty()) {  // Root, right, left, which is postorder reversed.
+    TreeNode<T> *node = st.back();
+    st.pop_back();
+    res.push_back(node->value);
+    if (node->left != nullptr) {
+      st.push_back(node->left);
+    }
+    if (node->right != nullptr) {
+      st.push_back(node->right);
+    }
+  }
+  std::reverse(res.begin(), res.end());
+  return res;
+}
+
+template<typename T>
+std::vector<T> level_order(TreeNode<T> *root) {
+  std::vector<T> res;
+  std::queue<TreeNode<T> *> q;
+  if (root != nullptr) {
+    q.push(root);
+  }
+  while (!q.empty()) {
+    TreeNode<T> *node = q.front();
+    q.pop();
+    res.push_back(node->value);
+    if (node->left != nullptr) {
+      q.push(node->left);
+    }
+    if (node->right != nullptr) {
+      q.push(node->right);
+    }
+  }
+  return res;
+}
+
+template<typename T>
+std::vector<T> morris_inorder(TreeNode<T> *root) {
+  std::vector<T> res;
+  for (TreeNode<T> *node = root; node != nullptr;) {
+    if (node->left == nullptr) {
+      res.push_back(node->value);
+      node = node->right;
+      continue;
+    }
+    TreeNode<T> *pred = node->left;
+    while (pred->right != nullptr && pred->right != node) {
+      pred = pred->right;
+    }
+    if (pred->right == nullptr) {  // First visit: thread the predecessor back to this node.
+      pred->right = node;
+      node = node->left;
+    } else {  // Second visit: the left subtree is done, so restore and report.
+      pred->right = nullptr;
+      res.push_back(node->value);
+      node = node->right;
+    }
+  }
+  return res;
+}
+
+template<typename T>
+void flatten(TreeNode<T> *root) {
+  for (TreeNode<T> *node = root; node != nullptr; node = node->right) {
+    if (node->left != nullptr) {
+      TreeNode<T> *pred = node->left;
+      while (pred->right != nullptr) {
+        pred = pred->right;
+      }
+      pred->right = node->right;  // Splice the right subtree below the left subtree's last node.
+      node->right = node->left;
+      node->left = nullptr;
+    }
+  }
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  //     4
+  //    / \.
+  //   2   6
+  //  / \   \.
+  // 1   3   7
+  TreeNode<int> n1(1), n2(2), n3(3), n4(4), n6(6), n7(7);
+  n4.left = &n2;
+  n4.right = &n6;
+  n2.left = &n1;
+  n2.right = &n3;
+  n6.right = &n7;
+
+  assert((preorder(&n4) == vector<int>{4, 2, 1, 3, 6, 7}));
+  assert((inorder(&n4) == vector<int>{1, 2, 3, 4, 6, 7}));
+  assert((postorder(&n4) == vector<int>{1, 3, 2, 7, 6, 4}));
+  assert((level_order(&n4) == vector<int>{4, 2, 6, 1, 3, 7}));
+  assert((morris_inorder(&n4) == vector<int>{1, 2, 3, 4, 6, 7}));
+
+  // The threads are undone, so the tree is unchanged and a second walk agrees.
+  assert(n3.right == nullptr && n1.right == nullptr);
+  assert(morris_inorder(&n4) == inorder(&n4));
+  assert(inorder<int>(nullptr).empty() && morris_inorder<int>(nullptr).empty());
+
+  // A left-leaning chain, the shape that makes a recursive walk overflow the stack.
+  TreeNode<int> a(1), b(2), c(3);
+  c.left = &b;
+  b.left = &a;
+  assert((morris_inorder(&c) == vector<int>{1, 2, 3}));
+  assert((postorder(&c) == vector<int>{1, 2, 3}));
+
+  // Flattening leaves a right-leaning chain in preorder, so a walk of it is that preorder.
+  vector<int> before = preorder(&n4);
+  flatten(&n4);
+  assert(n4.left == nullptr && preorder(&n4) == before);
+  for (TreeNode<int> *node = &n4; node != nullptr; node = node->right) {
+    assert(node->left == nullptr);
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Binary Tree Encodings}
+An encoding of a binary tree is a sequence the tree can be rebuilt from, and a single traversal is not one, since many shapes share the same preorder. A pair of traversals usually is: an inorder together with either a preorder or a postorder pins the shape down, because the inorder splits the values into a left group and a right group once the root is known, and the other traversal is what identifies that root. Preorder puts the root first, postorder puts it last, and each recursion then knows exactly how many values belong to each side.
+
+Written naively, locating the root inside the inorder range costs a linear scan and the construction degenerates to $O(n^{2})$ on a skewed tree. Hashing each value to its inorder position first makes every lookup $O(1)$ expected, so the whole build is linear expected time. This is why the values must be distinct: with duplicates, the position of a root in the inorder sequence is ambiguous and no traversal pair determines a unique tree.
+
+\begin{compactitem}
+  \item \inlinecode{build\_from\_preorder\_inorder(pre, in)} returns the root of the tree with the given preorder and inorder traversals, or \inlinecode{nullptr} when they are empty. Both sequences must be the same length and contain the same distinct values.
+  \item \inlinecode{build\_from\_postorder\_inorder(post, in)} does the same from a postorder and an inorder traversal.
+\end{compactitem}
+
+The construction routines allocate each node with \inlinecode{new} and return raw pointers. Thus the caller owns the resulting tree and should eventually delete its nodes in long-running programs. Contest programs commonly omit this cleanup when the tree is needed until program termination, since the operating system reclaims the process's memory on exit.
+
+A third encoding needs only one traversal, because recording the null children removes the ambiguity that made a pair necessary. A preorder in which every absent child becomes a sentinel token reconstructs the tree by reading the tokens back in order, and unlike a traversal pair it tolerates duplicate values, the shape now being explicit rather than inferred.
+
+\begin{compactitem}
+  \item \inlinecode{serialize(root)} returns the tree as a whitespace-separated preorder string, writing \inlinecode{\#} for each null child. The value type must support stream output.
+  \item \inlinecode{deserialize(s)} rebuilds the tree that \inlinecode{serialize()} produced. The value type must support stream input. Its returned nodes are allocated with \inlinecode{new} and have the same ownership convention as the construction routines above.
+\end{compactitem}
+
+Serialization is what lets a subtree be used as a key: two subtrees are identical exactly when their serializations match, which turns finding duplicate subtrees, or memoizing over tree shapes, into hashing strings. Prefer hashing a canonical encoding this way over comparing trees pairwise. Note that this encoding is specific to binary trees; section 4.1.8 encodes labeled general trees instead.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ expected per call to both construction routines, where n is the number of nodes, from the hash lookups of inorder positions.
+  \item $O(n)$ per call to \inlinecode{serialize()} and \inlinecode{deserialize()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for the allocated tree nodes.
+  \item $O(n)$ auxiliary for the position map, and $O(h)$ auxiliary stack space, where h is the height of the tree.
+  \item $O(n)$ for the string returned by \inlinecode{serialize()}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+template<typename T>
+struct TreeNode {
+  T value;
+  TreeNode *left, *right;
+
+  explicit TreeNode(const T &value) : value(value), left(nullptr), right(nullptr) {}
+};
+
+template<typename T>
+TreeNode<T> *build_from_preorder_inorder(const std::vector<T> &pre, const std::vector<T> &in) {
+  assert(pre.size() == in.size());
+  int n = static_cast<int>(pre.size());
+  std::unordered_map<T, int> pos;
+  for (int i = 0; i < n; i++) {
+    pos[in[i]] = i;
+  }
+  assert(static_cast<int>(pos.size()) == n);
+  int next = 0;
+  auto rec = [&](auto &&rec, int lo, int hi) -> TreeNode<T> * {
+    if (lo > hi) {
+      return nullptr;
+    }
+    const T &value = pre[next++];
+    int mid = pos[value];
+    TreeNode<T> *node = new TreeNode<T>(value);
+    node->left = rec(rec, lo, mid - 1);
+    node->right = rec(rec, mid + 1, hi);
+    return node;
+  };
+  return rec(rec, 0, n - 1);
+}
+
+template<typename T>
+TreeNode<T> *build_from_postorder_inorder(const std::vector<T> &post, const std::vector<T> &in) {
+  assert(post.size() == in.size());
+  int n = static_cast<int>(post.size());
+  std::unordered_map<T, int> pos;
+  for (int i = 0; i < n; i++) {
+    pos[in[i]] = i;
+  }
+  assert(static_cast<int>(pos.size()) == n);
+  int next = n - 1;
+  auto rec = [&](auto &&rec, int lo, int hi) -> TreeNode<T> * {
+    if (lo > hi) {
+      return nullptr;
+    }
+    const T &value = post[next--];
+    TreeNode<T> *node = new TreeNode<T>(value);
+    int mid = pos[value];
+    node->right = rec(rec, mid + 1, hi);  // Postorder ends with the root, so the right side first.
+    node->left = rec(rec, lo, mid - 1);
+    return node;
+  };
+  return rec(rec, 0, n - 1);
+}
+
+template<typename T>
+std::string serialize(TreeNode<T> *root) {
+  std::ostringstream out;
+  auto rec = [&](auto &&rec, TreeNode<T> *node) -> void {
+    if (node == nullptr) {
+      out << "# ";
+      return;
+    }
+    out << node->value << " ";
+    rec(rec, node->left);
+    rec(rec, node->right);
+  };
+  rec(rec, root);
+  return out.str();
+}
+
+template<typename T>
+TreeNode<T> *deserialize(const std::string &s) {
+  std::istringstream in(s);
+  auto rec = [&](auto &&rec) -> TreeNode<T> * {
+    std::string token;
+    if (!(in >> token) || token == "#") {
+      return nullptr;
+    }
+    std::istringstream parse(token);
+    T value;
+    parse >> value;
+    TreeNode<T> *node = new TreeNode<T>(value);
+    node->left = rec(rec);
+    node->right = rec(rec);
+    return node;
+  };
+  return rec(rec);
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+template<typename T>
+vector<T> inorder(TreeNode<T> *root) {
+  vector<T> res;
+  auto rec = [&](auto &&rec, TreeNode<T> *node) -> void {
+    if (node != nullptr) {
+      rec(rec, node->left);
+      res.push_back(node->value);
+      rec(rec, node->right);
+    }
+  };
+  rec(rec, root);
+  return res;
+}
+
+int main() {
+  //     4
+  //    / \.
+  //   2   6
+  //  / \   \.
+  // 1   3   7
+  vector<int> pre{4, 2, 1, 3, 6, 7}, in{1, 2, 3, 4, 6, 7}, post{1, 3, 2, 7, 6, 4};
+
+  TreeNode<int> *root = build_from_preorder_inorder(pre, in);
+  assert(root->value == 4 && root->left->value == 2 && root->right->value == 6);
+  assert(root->right->left == nullptr && root->right->right->value == 7);
+  assert(inorder(root) == in);
+
+  TreeNode<int> *same = build_from_postorder_inorder(post, in);
+  assert(serialize(same) == serialize(root));
+
+  // The serialized form round-trips, and matching strings mean identical subtrees.
+  assert(inorder(deserialize<int>(serialize(root))) == in);
+  assert(serialize(root->left) != serialize(root->right));
+
+  assert(build_from_preorder_inorder(vector<int>{}, vector<int>{}) == nullptr);
+  assert(serialize<int>(nullptr) == "# ");
+  assert(deserialize<int>("# ") == nullptr);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Binary Tree Queries}
+Nearly every question about a binary tree is answered by one recursion over it, and the questions differ only in what that recursion carries. Three shapes cover almost all of them. The first passes information upward, each node combining what its children return, as \inlinecode{height()} and \inlinecode{size()} do. The second passes information downward, each node extending what its parent handed it, as a running path sum does. The third does both at once and is the shape most often gotten wrong, because the value a node returns is not the answer recorded there: in \inlinecode{diameter()} a node returns the longest downward path through it but records the sum of its two longest, which is a path no parent can extend.
+
+\begin{compactitem}
+  \item \inlinecode{height(root)} returns the number of nodes on the longest root-to-leaf path, so an empty tree has height $0$ and a leaf has height $1$.
+  \item \inlinecode{size(root)} returns the number of nodes.
+  \item \inlinecode{is\_balanced(root)} returns whether every node's two subtrees differ in height by at most $1$.
+\end{compactitem}
+
+Balance is a condition on every node, not only the root. Checking it by calling \inlinecode{height()} at each node costs $O(n^{2})$ on a skewed tree, so the recursion below returns a height instead and reserves $-1$ for ``already unbalanced'', answering in one pass.
+
+Validating a search tree is where carrying information downward is not optional: comparing a node only against its own children accepts trees that are not search trees at all, since a value deep in a left subtree can exceed the root while every local comparison passes. The recursion carries the open interval a subtree may occupy, using a null pointer for an absent bound so that no sentinel value of \inlinecode{T} is needed. Walking the tree in order and checking that values increase, using the traversal of section 2.2.1, is the alternative.
+
+\begin{compactitem}
+  \item \inlinecode{has\_path\_sum(root, target)} returns whether some root-to-leaf path has values summing to \inlinecode{target}. An empty tree has no such path, whatever the target.
+  \item \inlinecode{root\_to\_leaf\_paths(root)} returns every root-to-leaf path, each as the values along it.
+  \item \inlinecode{depth(root, target)} returns the number of edges from \inlinecode{root} down to the node \inlinecode{target}, or $-1$ if that node is not in the tree.
+  \item \inlinecode{is\_bst(root)} returns whether the tree satisfies the binary search tree property, using strict ordering so that equal values are rejected.
+\end{compactitem}
+
+Counting downward paths by trying every start node is $O(n^{2})$. Instead, keep the running sum from the root and note that a path ending here with sum \inlinecode{target} belongs to an ancestor whose own running sum was smaller by exactly \inlinecode{target}: the prefix-sum trick of section 1.2.1, lifted from an array to a root-to-node path. A map counts the ancestors' running sums, each node undoing its own entry on the way back out so that only genuine ancestors match. It is ordered here for genericity, costing a logarithmic factor that an \inlinecode{unordered\_map} removes for hashable \inlinecode{T}. Storing another key instead counts paths whose sum is divisible by \inlinecode{k}, or whose values exclusive-or to a target.
+
+\begin{compactitem}
+  \item \inlinecode{diameter(root)} returns the number of edges on the longest path between any two nodes, which is $0$ for a single node and for an empty tree.
+  \item \inlinecode{max\_path\_sum(root)} returns the largest sum along any downward-then-upward path between two nodes, for a nonempty tree whose values may be negative. A child subtree contributes only when its best downward sum is positive, so an all-negative tree returns its largest single value.
+  \item \inlinecode{count\_paths\_with\_sum(root, target)} returns the number of downward paths, not necessarily starting at the root, whose values sum to \inlinecode{target}.
+\end{compactitem}
+
+Comparing against the two targets while unwinding is all \inlinecode{lca()} needs, with no parent pointers and no preprocessing: a node whose subtrees each report a find is the meeting point, and a node reporting one find passes it upward. That is $O(n)$ per query rather than the $O(1)$ after preprocessing of sections 2.8.4 and 2.8.5, so prefer it for a handful of queries. A tree is symmetric exactly when \inlinecode{same\_tree()} holds between one half and the mirror of the other, so no separate routine is needed.
+
+\begin{compactitem}
+  \item \inlinecode{invert(root)} mirrors the tree in place by swapping every node's children.
+  \item \inlinecode{same\_tree(a, b)} returns whether two trees have the same shape and the same values.
+  \item \inlinecode{lca(root, a, b)} returns the lowest node having both \inlinecode{a} and \inlinecode{b} in its subtree, counting a node as its own ancestor. Both nodes must belong to the tree; if only one does, that one is returned.
+  \item \inlinecode{distance(root, a, b)} returns the number of edges on the path between the two nodes, which is the depth of each below their lowest common ancestor.
+\end{compactitem}
+
+For a tree held as an adjacency list, or one of arbitrary degree, these computations become the tree dynamic programming of sections 4.1.4 through 4.1.7.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to every operation except \inlinecode{count\_paths\_with\_sum()}, where $n$ is the number of nodes.
+  \item $O(n \log n)$ per call to \inlinecode{count\_paths\_with\_sum()} from the ordered map, or $O(n)$ expected with an unordered one.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(h)$ auxiliary stack space, where $h$ is the height of the tree, which is $O(n)$ in the worst case.
+  \item $O(h)$ auxiliary for the running sums of \inlinecode{count\_paths\_with\_sum()}, one per ancestor.
+  \item $O(n \cdot h)$ for the paths returned by \inlinecode{root\_to\_leaf\_paths()}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cstdint>
+#include <map>
+#include <utility>
+#include <vector>
+
+template<typename T>
+struct TreeNode {
+  T value;
+  TreeNode *left, *right;
+
+  explicit TreeNode(const T &value) : value(value), left(nullptr), right(nullptr) {}
+};
+
+template<typename T>
+int height(TreeNode<T> *root) {
+  return root == nullptr ? 0 : 1 + std::max(height(root->left), height(root->right));
+}
+
+template<typename T>
+int size(TreeNode<T> *root) {
+  return root == nullptr ? 0 : 1 + size(root->left) + size(root->right);
+}
+
+template<typename T>
+bool is_balanced(TreeNode<T> *root) {
+  // Returns the height, or -1 once any subtree below has been found unbalanced.
+  auto rec = [&](auto &&rec, TreeNode<T> *node) -> int {
+    if (node == nullptr) {
+      return 0;
+    }
+    int left = rec(rec, node->left), right = rec(rec, node->right);
+    if (left < 0 || right < 0 || std::abs(left - right) > 1) {
+      return -1;
+    }
+    return 1 + std::max(left, right);
+  };
+  return rec(rec, root) >= 0;
+}
+
+template<typename T>
+bool has_path_sum(TreeNode<T> *root, const T &target) {
+  if (root == nullptr) {
+    return false;
+  }
+  if (root->left == nullptr && root->right == nullptr) {
+    return root->value == target;
+  }
+  T rest = target - root->value;
+  return has_path_sum(root->left, rest) || has_path_sum(root->right, rest);
+}
+
+template<typename T>
+std::vector<std::vector<T>> root_to_leaf_paths(TreeNode<T> *root) {
+  std::vector<std::vector<T>> res;
+  std::vector<T> path;
+  auto rec = [&](auto &&rec, TreeNode<T> *node) -> void {
+    if (node == nullptr) {
+      return;
+    }
+    path.push_back(node->value);
+    if (node->left == nullptr && node->right == nullptr) {
+      res.push_back(path);
+    } else {
+      rec(rec, node->left);
+      rec(rec, node->right);
+    }
+    path.pop_back();
+  };
+  rec(rec, root);
+  return res;
+}
+
+template<typename T>
+int depth(TreeNode<T> *root, TreeNode<T> *target) {
+  if (root == nullptr || root == target) {
+    return root == nullptr ? -1 : 0;
+  }
+  int left = depth(root->left, target);
+  if (left >= 0) {
+    return left + 1;
+  }
+  int right = depth(root->right, target);
+  return right >= 0 ? right + 1 : -1;
+}
+
+template<typename T>
+bool is_bst(TreeNode<T> *root) {
+  // A null bound means unconstrained, so no sentinel value of T is required.
+  auto rec = [&](auto &&rec, TreeNode<T> *node, const T *lo, const T *hi) -> bool {
+    if (node == nullptr) {
+      return true;
+    }
+    if ((lo != nullptr && !(*lo < node->value)) || (hi != nullptr && !(node->value < *hi))) {
+      return false;
+    }
+    return rec(rec, node->left, lo, &node->value) && rec(rec, node->right, &node->value, hi);
+  };
+  return rec(rec, root, nullptr, nullptr);
+}
+
+template<typename T>
+int diameter(TreeNode<T> *root) {
+  int best = 0;
+  // Returns the edge count of the longest downward path, while recording the longest path through.
+  auto rec = [&](auto &&rec, TreeNode<T> *node) -> int {
+    if (node == nullptr) {
+      return -1;
+    }
+    int left = rec(rec, node->left) + 1, right = rec(rec, node->right) + 1;
+    best = std::max(best, left + right);
+    return std::max(left, right);
+  };
+  rec(rec, root);
+  return best;
+}
+
+template<typename T>
+T max_path_sum(TreeNode<T> *root) {
+  T best = root->value;
+  auto rec = [&](auto &&rec, TreeNode<T> *node) -> T {
+    if (node == nullptr) {
+      return T{};
+    }
+    // A subtree joins the path only when it adds something, so a negative branch is dropped.
+    T left = std::max(T{}, rec(rec, node->left)), right = std::max(T{}, rec(rec, node->right));
+    best = std::max(best, node->value + left + right);
+    return node->value + std::max(left, right);
+  };
+  rec(rec, root);
+  return best;
+}
+
+template<typename T>
+int64_t count_paths_with_sum(TreeNode<T> *root, const T &target) {
+  std::map<T, int> seen{{T{}, 1}};  // The empty prefix, so paths starting at the root are counted.
+  int64_t res = 0;
+  auto rec = [&](auto &&rec, TreeNode<T> *node, T prefix) -> void {
+    if (node == nullptr) {
+      return;
+    }
+    prefix = prefix + node->value;
+    auto it = seen.find(prefix - target);
+    if (it != seen.end()) {
+      res += it->second;
+    }
+    seen[prefix]++;
+    rec(rec, node->left, prefix);
+    rec(rec, node->right, prefix);
+    if (--seen[prefix] == 0) {  // Undone on the way out, leaving only true ancestors behind.
+      seen.erase(prefix);
+    }
+  };
+  rec(rec, root, T{});
+  return res;
+}
+
+template<typename T>
+void invert(TreeNode<T> *root) {
+  if (root != nullptr) {
+    std::swap(root->left, root->right);
+    invert(root->left);
+    invert(root->right);
+  }
+}
+
+template<typename T>
+bool same_tree(TreeNode<T> *a, TreeNode<T> *b) {
+  if (a == nullptr || b == nullptr) {
+    return a == b;
+  }
+  return a->value == b->value && same_tree(a->left, b->left) && same_tree(a->right, b->right);
+}
+
+template<typename T>
+TreeNode<T> *lca(TreeNode<T> *root, TreeNode<T> *a, TreeNode<T> *b) {
+  if (root == nullptr || root == a || root == b) {
+    return root;
+  }
+  TreeNode<T> *left = lca(root->left, a, b), *right = lca(root->right, a, b);
+  if (left != nullptr && right != nullptr) {
+    return root;  // Targets found on opposite sides, so this node is where they meet.
+  }
+  return left != nullptr ? left : right;
+}
+
+template<typename T>
+int distance(TreeNode<T> *root, TreeNode<T> *a, TreeNode<T> *b) {
+  TreeNode<T> *meet = lca(root, a, b);
+  return depth(meet, a) + depth(meet, b);
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  //     4
+  //    / \.
+  //   2   6
+  //  / \   \.
+  // 1   3   7
+  TreeNode<int> n1(1), n2(2), n3(3), n4(4), n6(6), n7(7);
+  n4.left = &n2;
+  n4.right = &n6;
+  n2.left = &n1;
+  n2.right = &n3;
+  n6.right = &n7;
+
+  assert(height(&n4) == 3 && size(&n4) == 6);
+  assert(height<int>(nullptr) == 0 && size<int>(nullptr) == 0);
+  assert(is_balanced(&n4));
+
+  assert(has_path_sum(&n4, 7));   // 4 + 2 + 1
+  assert(has_path_sum(&n4, 17));  // 4 + 6 + 7
+  assert(!has_path_sum(&n4, 6));  // 4 + 2 stops at an internal node.
+  assert((root_to_leaf_paths(&n4) == vector<vector<int>>{{4, 2, 1}, {4, 2, 3}, {4, 6, 7}}));
+
+  assert(diameter(&n4) == 4);       // The path 1, 2, 4, 6, 7 has four edges.
+  assert(max_path_sum(&n4) == 22);  // The path 3, 2, 4, 6, 7.
+
+  assert(lca(&n4, &n1, &n3) == &n2);
+  assert(lca(&n4, &n1, &n7) == &n4);
+  assert(lca(&n4, &n6, &n7) == &n6);  // A node is its own ancestor.
+  assert(depth(&n4, &n7) == 2 && depth(&n4, &n4) == 0);
+  assert(distance(&n4, &n1, &n7) == 4 && distance(&n4, &n1, &n3) == 2);
+
+  // The fixture happens to be a search tree, since its inorder is 1, 2, 3, 4, 6, 7.
+  assert(is_bst(&n4));
+
+  // Every local comparison passes here, yet 4 sits in the right subtree of 5.
+  //     5
+  //    / \.
+  //   1   6
+  //      / \.
+  //     4   7
+  TreeNode<int> b5(5), b1(1), b6(6), b4(4), b7(7);
+  b5.left = &b1;
+  b5.right = &b6;
+  b6.left = &b4;
+  b6.right = &b7;
+  assert(!is_bst(&b5));
+
+  // Downward paths summing to 7: the whole left spine 4, 2, 1 and the single node 7.
+  assert(count_paths_with_sum(&n4, 7) == 2);
+  assert(count_paths_with_sum(&n4, 100) == 0);
+
+  // A left-leaning chain is as unbalanced as a tree gets, and every value is on one path.
+  TreeNode<int> a(1), b(2), c(3);
+  c.left = &b;
+  b.left = &a;
+  assert(!is_balanced(&c) && height(&c) == 3 && diameter(&c) == 2);
+
+  // Negative values: only branches that add something join the best path.
+  TreeNode<int> neg(-5), worse(-9);
+  neg.left = &worse;
+  assert(max_path_sum(&neg) == -5);
+
+  TreeNode<int> m1(1), m2(2), m3(3);
+  m2.left = &m1;
+  m2.right = &m3;
+  assert(same_tree(&m2, &n2));  // A separate copy of the subtree rooted at 2.
+  invert(&m2);
+  assert(m2.left == &m3 && m2.right == &m1 && !same_tree(&m2, &n2));
+  return 0;
+}
+\end{lstlisting}
+
+\section{\texorpdfstring{Heaps and Priority Queues}{2.3 Heaps and Priority Queues}}
+\setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Binary Heap}
 Maintains a priority queue, returning the minimum element by default. The comparator \inlinecode{comp} defines priority: \inlinecode{comp(a, b)} is true when \inlinecode{a} has higher priority than \inlinecode{b}, so \inlinecode{std::greater\textless{}T\textgreater{}} instead creates a max-priority queue. A binary heap stores a heap-ordered binary tree implicitly in an array, where the children of the node at index $i$ live at indices $2i + 1$ and $2i + 2$. Insertion appends the new element and bubbles it up toward the root, while extraction moves the last element to the root and sifts it down. To customize the ordering, instantiate \inlinecode{BinaryHeap\textless{}T, Compare\textgreater{}} and pass the comparator to either constructor.
@@ -1046,8 +1895,8 @@ int main() {
 }
 \end{lstlisting}
 
-\section{\texorpdfstring{Dictionaries and Ordered Sets}{2.3 Dictionaries and Ordered Sets}}
-\setcounter{section}{3}
+\section{\texorpdfstring{Dictionaries and Ordered Sets}{2.4 Dictionaries and Ordered Sets}}
+\setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Treap}
 Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible key appears at most once in the collection. A binary search tree (a.k.a. BST) implements this map by inserting and deleting keys into a binary tree while upholding the BST property: for each node in the BST, every node in its left subtree has a lesser key and every node in its right subtree has a greater key.
@@ -1347,7 +2196,7 @@ The comparator \inlinecode{comp} defines the key ordering: \inlinecode{comp(a, b
   \item \inlinecode{entries()} returns all key-value entries in comparator order.
 \end{compactitem}
 
-The comparator-aware navigation routines \inlinecode{min()}, \inlinecode{max()}, \inlinecode{lower\_bound(k)}, \inlinecode{upper\_bound(k)}, \inlinecode{prev(k)}, and \inlinecode{next(k)} from the treap in 2.3.1 depend only on the BST property and may be adapted here as needed.
+The comparator-aware navigation routines \inlinecode{min()}, \inlinecode{max()}, \inlinecode{lower\_bound(k)}, \inlinecode{upper\_bound(k)}, \inlinecode{prev(k)}, and \inlinecode{next(k)} from the treap in 2.4.1 depend only on the BST property and may be adapted here as needed.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -1591,7 +2440,7 @@ The comparator \inlinecode{comp} defines the key ordering: \inlinecode{comp(a, b
   \item \inlinecode{entries()} returns all key-value entries in comparator order.
 \end{compactitem}
 
-The comparator-aware navigation routines \inlinecode{min()}, \inlinecode{max()}, \inlinecode{lower\_bound(k)}, \inlinecode{upper\_bound(k)}, \inlinecode{prev(k)}, and \inlinecode{next(k)} from the treap in 2.3.1 depend only on the BST property and may be adapted here as needed.
+The comparator-aware navigation routines \inlinecode{min()}, \inlinecode{max()}, \inlinecode{lower\_bound(k)}, \inlinecode{upper\_bound(k)}, \inlinecode{prev(k)}, and \inlinecode{next(k)} from the treap in 2.4.1 depend only on the BST property and may be adapted here as needed.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -1611,7 +2460,6 @@ The comparator-aware navigation routines \inlinecode{min()}, \inlinecode{max()},
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <functional>
 #include <utility>
 #include <vector>
@@ -1960,7 +2808,7 @@ The comparator \inlinecode{comp} defines the key ordering: \inlinecode{comp(a, b
   \item \inlinecode{entries()} returns all key-value entries in comparator order.
 \end{compactitem}
 
-The comparator-aware navigation routines \inlinecode{min()}, \inlinecode{max()}, \inlinecode{lower\_bound(k)}, \inlinecode{upper\_bound(k)}, \inlinecode{prev(k)}, and \inlinecode{next(k)} from the treap in 2.3.1 depend only on the BST property and may be adapted here as needed.
+The comparator-aware navigation routines \inlinecode{min()}, \inlinecode{max()}, \inlinecode{lower\_bound(k)}, \inlinecode{upper\_bound(k)}, \inlinecode{prev(k)}, and \inlinecode{next(k)} from the treap in 2.4.1 depend only on the BST property and may be adapted here as needed.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -2188,7 +3036,7 @@ The comparator \inlinecode{comp} defines the key ordering: \inlinecode{comp(a, b
   \item \inlinecode{entries()} returns all key-value entries in comparator order.
 \end{compactitem}
 
-The comparator-aware navigation routines \inlinecode{min()}, \inlinecode{max()}, \inlinecode{lower\_bound(k)}, \inlinecode{upper\_bound(k)}, \inlinecode{prev(k)}, and \inlinecode{next(k)} from the treap in 2.3.1 depend only on the BST property and may be adapted here as needed. For contest use on GNU C++ judges, PBDS ordered trees provide the same order-statistic operations with much less code; see 8.6. This implementation is useful when PBDS is unavailable or when customizing tree internals.
+The comparator-aware navigation routines \inlinecode{min()}, \inlinecode{max()}, \inlinecode{lower\_bound(k)}, \inlinecode{upper\_bound(k)}, \inlinecode{prev(k)}, and \inlinecode{next(k)} from the treap in 2.4.1 depend only on the BST property and may be adapted here as needed. For contest use on GNU C++ judges, PBDS ordered trees provide the same order-statistic operations with much less code; see 8.6. This implementation is useful when PBDS is unavailable or when customizing tree internals.
 
 The order-statistic API matches GNU PBDS naming and 0-based rank conventions.
 
@@ -2368,7 +3216,6 @@ class SBTree {
   bool empty() const { return root == nullptr; }
   bool insert(const K &k, const V &v) { return insert(root, k, v); }
   bool erase(const K &k) { return erase(root, k); }
-  int order_of_key(const K &x) const { return order_of_key(root, x); }
 
   const V *find(const K &k) const {
     Node *n = root;
@@ -2388,6 +3235,8 @@ class SBTree {
     assert(0 <= k && k < size(root));
     return find_by_order(root, k);
   }
+
+  int order_of_key(const K &x) const { return order_of_key(root, x); }
 
   std::vector<std::pair<K, V>> entries() const {
     std::vector<std::pair<K, V>> res;
@@ -2720,10 +3569,544 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{B-Tree}
+Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible key appears at most once in the collection. A B-tree is a balanced search tree whose nodes hold many entries instead of one. Every node except the root stores between $d - 1$ and $2d - 1$ entries for a chosen minimum degree $d$, an internal node with $k$ entries has exactly $k + 1$ children, and every leaf sits at the same depth. The height is $O(\log_{d}\left(n\right))$, and a search examines only that many nodes.
+
+The point is the unit of cost. When reading a node is far more expensive than comparing keys inside one (as with disk blocks or cache lines), the height is what matters rather than the comparison count, and packing hundreds of entries per node makes a tree of billions of keys three or four nodes deep. This is why B-trees hold filesystem and database indexes while BSTs hold in-memory indexes.
+
+Balance is maintained without any rebalancing pass. Descending to insert, the search splits every full node it meets, so a node always has room for the median that a split of its child pushes up, and the split cannot cascade back upward. Descending to erase, it does the reverse: before entering a child with only $d - 1$ entries, it borrows one from an adjacent sibling, or merges the child with one, so that a deletion never leaves a node underfull. Each pass therefore visits each level once.
+
+\begin{compactitem}
+  \item \inlinecode{BTree\textless{}K, V, MIN\_DEGREE\textgreater{}()} constructs an empty map, where the minimum degree must be at least $2$ and defaults to $3$.
+  \item \inlinecode{size()} and \inlinecode{empty()} return the number of entries and whether the map is empty.
+  \item \inlinecode{height()} returns the number of levels, which is $0$ for an empty map.
+  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{nullptr} if the key was not found.
+  \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v}, returning \inlinecode{true} if a new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k}, returning whether it was present.
+  \item \inlinecode{entries()} returns all key-value entries in sorted order.
+\end{compactitem}
+
+Only \inlinecode{operator\textless{}} is required of \inlinecode{K}. The tree grows in height solely by splitting a full root, and shrinks solely when the root's last two children merge, which is what keeps every leaf at one depth.
+
+For an in-memory ordered dictionary the treap of section 2.4.1 or the standard \inlinecode{std::map} is smaller, simpler, and faster; reach for this shape when node reads dominate, or when a problem statement describes a tree of exactly this kind.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(d \log_{d}\left(n\right))$ per call to \inlinecode{insert()}, \inlinecode{erase()}, and \inlinecode{find()}, where $n$ is the number of entries. The searches within a node are linear in $d$, which is negligible against the cost of reaching the node in the setting the structure is designed for.
+  \item $O(1)$ per call to \inlinecode{size()}, \inlinecode{empty()}, and \inlinecode{height()}.
+  \item $O(n)$ per call to \inlinecode{entries()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the entries.
+  \item $O(\log_{d}\left(n\right))$ auxiliary stack space per operation, and $O(n)$ for the vector returned by \inlinecode{entries()}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <utility>
+#include <vector>
+
+template<typename K, typename V, int MIN_DEGREE = 3>
+class BTree {
+  static_assert(MIN_DEGREE >= 2, "a B-tree node must hold at least one entry");
+
+  using Entry = std::pair<K, V>;
+
+  struct Node {
+    std::vector<Entry> entries;
+    std::vector<Node *> children;
+
+    bool leaf() const { return children.empty(); }
+    bool full() const { return static_cast<int>(entries.size()) == 2 * MIN_DEGREE - 1; }
+    bool minimal() const { return static_cast<int>(entries.size()) < MIN_DEGREE; }
+  };
+
+  Node *root;
+  int num_nodes, levels;
+
+  // Returns the first position whose key is not less than the target.
+  static int lower_position(const Node *n, const K &key) {
+    auto by_key = [](const Entry &e, const K &k) { return e.first < k; };
+    auto it = std::lower_bound(n->entries.begin(), n->entries.end(), key, by_key);
+    return static_cast<int>(it - n->entries.begin());
+  }
+
+  // Splits the full child at i, lifting its median entry into the parent, which must not be full.
+  static void split_child(Node *parent, int i) {
+    Node *left = parent->children[i], *right = new Node();
+    right->entries.assign(left->entries.begin() + MIN_DEGREE, left->entries.end());
+    if (!left->leaf()) {
+      right->children.assign(left->children.begin() + MIN_DEGREE, left->children.end());
+      left->children.resize(MIN_DEGREE);
+    }
+    parent->entries.insert(parent->entries.begin() + i, left->entries[MIN_DEGREE - 1]);
+    parent->children.insert(parent->children.begin() + i + 1, right);
+    left->entries.resize(MIN_DEGREE - 1);
+  }
+
+  static void insert_nonfull(Node *n, const Entry &entry) {
+    int i = lower_position(n, entry.first);
+    if (n->leaf()) {
+      n->entries.insert(n->entries.begin() + i, entry);
+      return;
+    }
+    if (n->children[i]->full()) {
+      split_child(n, i);
+      if (n->entries[i].first < entry.first) {  // The lifted median now sits before the key.
+        i++;
+      }
+    }
+    insert_nonfull(n->children[i], entry);
+  }
+
+  // Restores at least MIN_DEGREE entries in child i by borrowing from a sibling or merging with
+  // one, then returns the child to descend into, which merging may shift left.
+  static Node *ensure_not_minimal(Node *parent, int i) {
+    Node *child = parent->children[i];
+    if (!child->minimal()) {
+      return child;
+    }
+    Node *left = i > 0 ? parent->children[i - 1] : nullptr;
+    Node *right =
+        i + 1 < static_cast<int>(parent->children.size()) ? parent->children[i + 1] : nullptr;
+    if (left != nullptr && !left->minimal()) {  // Rotate an entry across through the parent.
+      child->entries.insert(child->entries.begin(), parent->entries[i - 1]);
+      parent->entries[i - 1] = left->entries.back();
+      left->entries.pop_back();
+      if (!left->leaf()) {
+        child->children.insert(child->children.begin(), left->children.back());
+        left->children.pop_back();
+      }
+      return child;
+    }
+    if (right != nullptr && !right->minimal()) {
+      child->entries.push_back(parent->entries[i]);
+      parent->entries[i] = right->entries.front();
+      right->entries.erase(right->entries.begin());
+      if (!right->leaf()) {
+        child->children.push_back(right->children.front());
+        right->children.erase(right->children.begin());
+      }
+      return child;
+    }
+    // Both neighbors are minimal, so fold the separating entry and one sibling into the child.
+    if (left != nullptr) {
+      left->entries.push_back(parent->entries[i - 1]);
+      left->entries.insert(left->entries.end(), child->entries.begin(), child->entries.end());
+      left->children.insert(left->children.end(), child->children.begin(), child->children.end());
+      parent->entries.erase(parent->entries.begin() + i - 1);
+      parent->children.erase(parent->children.begin() + i);
+      delete child;
+      return left;
+    }
+    child->entries.push_back(parent->entries[i]);
+    child->entries.insert(child->entries.end(), right->entries.begin(), right->entries.end());
+    child->children.insert(child->children.end(), right->children.begin(), right->children.end());
+    parent->entries.erase(parent->entries.begin() + i);
+    parent->children.erase(parent->children.begin() + i + 1);
+    delete right;
+    return child;
+  }
+
+  // The key is taken by value: callers pass a key stored in the tree, and a merge below may erase
+  // from the very vector a reference would point into.
+  static bool erase(Node *n, K key) {
+    int i = lower_position(n, key);
+    bool here = i < static_cast<int>(n->entries.size()) && !(key < n->entries[i].first);
+    if (n->leaf()) {
+      if (!here) {
+        return false;
+      }
+      n->entries.erase(n->entries.begin() + i);
+      return true;
+    }
+    if (!here) {
+      return erase(ensure_not_minimal(n, i), key);
+    }
+    if (!n->children[i]->minimal()) {  // Replace with the predecessor and delete that instead.
+      Node *walk = n->children[i];
+      while (!walk->leaf()) {
+        walk = walk->children.back();
+      }
+      n->entries[i] = walk->entries.back();
+      return erase(n->children[i], n->entries[i].first);
+    }
+    if (!n->children[i + 1]->minimal()) {  // Or the successor.
+      Node *walk = n->children[i + 1];
+      while (!walk->leaf()) {
+        walk = walk->children.front();
+      }
+      n->entries[i] = walk->entries.front();
+      return erase(n->children[i + 1], n->entries[i].first);
+    }
+    // Both children are minimal, so fold them and the entry between them into one node, which is
+    // where the entry now lives. Borrowing would rotate a different entry down and lose this one.
+    Node *left = n->children[i], *right = n->children[i + 1];
+    left->entries.push_back(n->entries[i]);
+    left->entries.insert(left->entries.end(), right->entries.begin(), right->entries.end());
+    left->children.insert(left->children.end(), right->children.begin(), right->children.end());
+    n->entries.erase(n->entries.begin() + i);
+    n->children.erase(n->children.begin() + i + 1);
+    delete right;
+    return erase(left, key);
+  }
+
+  static void collect(const Node *n, std::vector<Entry> *out) {
+    for (int i = 0; i < static_cast<int>(n->entries.size()); i++) {
+      if (!n->leaf()) {
+        collect(n->children[i], out);
+      }
+      out->push_back(n->entries[i]);
+    }
+    if (!n->leaf()) {
+      collect(n->children.back(), out);
+    }
+  }
+
+  static void clean_up(Node *n) {
+    if (n != nullptr) {
+      for (Node *child : n->children) {
+        clean_up(child);
+      }
+      delete n;
+    }
+  }
+
+ public:
+  BTree() : root(new Node()), num_nodes(0), levels(1) {}
+
+  BTree(const BTree &) = delete;
+  BTree &operator=(const BTree &) = delete;
+  ~BTree() { clean_up(root); }
+  int size() const { return num_nodes; }
+  bool empty() const { return num_nodes == 0; }
+  int height() const { return num_nodes == 0 ? 0 : levels; }
+
+  const V *find(const K &k) const {
+    for (const Node *n = root; n != nullptr;) {
+      int i = lower_position(n, k);
+      if (i < static_cast<int>(n->entries.size()) && !(k < n->entries[i].first)) {
+        return &n->entries[i].second;
+      }
+      n = n->leaf() ? nullptr : n->children[i];
+    }
+    return nullptr;
+  }
+
+  bool insert(const K &k, const V &v) {
+    if (find(k) != nullptr) {
+      return false;
+    }
+    if (root->full()) {  // The only way the tree grows taller.
+      Node *grown = new Node();
+      grown->children.push_back(root);
+      split_child(grown, 0);
+      root = grown;
+      levels++;
+    }
+    insert_nonfull(root, Entry(k, v));
+    num_nodes++;
+    return true;
+  }
+
+  bool erase(const K &k) {
+    // The descent merges nodes on the way down whether or not the key turns out to be present,
+    // so an emptied root must be collapsed even when nothing was removed.
+    bool removed = erase(root, k);
+    if (root->entries.empty() && !root->leaf()) {  // The only way the tree grows shorter.
+      Node *old = root;
+      root = root->children[0];
+      old->children.clear();
+      delete old;
+      levels--;
+    }
+    num_nodes -= removed;
+    return removed;
+  }
+
+  std::vector<Entry> entries() const {
+    std::vector<Entry> res;
+    res.reserve(num_nodes);
+    collect(root, &res);
+    return res;
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <vector>
+using namespace std;
+
+int main() {
+  BTree<int, int> tree;  // Minimum degree 3, so a node holds 2 to 5 entries.
+  assert(tree.empty() && tree.height() == 0 && tree.find(1) == nullptr);
+
+  for (int x : {10, 20, 5, 6, 12, 30, 7, 17}) {
+    assert(tree.insert(x, x * x));
+  }
+  assert(!tree.insert(10, 0));  // Duplicate keys are rejected and the old value preserved.
+  assert(tree.size() == 8 && *tree.find(10) == 100 && tree.find(18) == nullptr);
+
+  vector<int> keys;
+  for (const auto &entry : tree.entries()) {
+    keys.push_back(entry.first);
+  }
+  assert((keys == vector<int>{5, 6, 7, 10, 12, 17, 20, 30}));
+
+  // Enough entries to split the root, which is the only way the height changes.
+  BTree<int, int> deep;
+  for (int x = 0; x < 100; x++) {
+    deep.insert(x, -x);
+  }
+  assert(deep.size() == 100 && deep.height() == 4);
+  assert(deep.entries().front().first == 0 && deep.entries().back().first == 99);
+
+  // Erasing from an internal node pulls up a neighbouring entry rather than leaving a gap.
+  assert(tree.erase(10) && !tree.erase(10));
+  assert(tree.size() == 7 && tree.find(10) == nullptr && *tree.find(12) == 144);
+  for (int x : {5, 6, 7, 12, 17, 20, 30}) {
+    assert(tree.erase(x));
+  }
+  assert(tree.empty() && tree.entries().empty());
+
+  // Deleting every entry in order collapses the height back to one level.
+  for (int x = 0; x < 100; x++) {
+    assert(deep.erase(x));
+  }
+  assert(deep.empty() && deep.height() == 0);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Skip List}
+Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible key appears at most once in the collection. The comparator \inlinecode{comp} defines the key ordering: \inlinecode{comp(a, b)} is true when \inlinecode{a} precedes \inlinecode{b}. A skip list maintains a linked hierarchy of sorted subsequences with each successive subsequence skipping over fewer elements than the previous one. Each new node joins a number of levels decided by repeated coin flips, and a search starts at the sparsest level, moving forward until the next key would overshoot and then dropping down a level, which makes operations take $O(\log n)$ with high probability. The comparator defaults to \inlinecode{std::less\textless{}K\textgreater{}}; to customize the ordering, instantiate \inlinecode{SkipList\textless{}K, V, Compare\textgreater{}} and pass the comparator to the constructor.
+
+\begin{compactitem}
+  \item \inlinecode{SkipList\textless{}K, V\textgreater{}()} constructs an empty map.
+  \item \inlinecode{size()} returns the size of the map.
+  \item \inlinecode{empty()} returns whether the map is empty.
+  \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if a new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
+  \item \inlinecode{find(k)} returns a pointer to the const value associated with key \inlinecode{k}, or \inlinecode{nullptr} if the key was not found.
+  \item \inlinecode{operator[k]} returns a reference to key \inlinecode{k}'s associated value (which may be modified), or if necessary, inserts and returns a new entry with the default constructed value if key \inlinecode{k} was not originally found.
+  \item \inlinecode{entries()} returns all key-value entries in comparator order.
+\end{compactitem}
+
+The sentinel node requires \inlinecode{K} and \inlinecode{V} to be default constructible.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
+  \item $O(\log n)$ on average per call to \inlinecode{insert()}, \inlinecode{erase()}, \inlinecode{find()}, and \inlinecode{operator[]}, where $n$ is the number of entries currently in the map.
+  \item $O(n)$ per call to \inlinecode{entries()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the map elements.
+  \item $O(1)$ auxiliary for all operations because the maximum number of levels is fixed at $32$.
+  \item $O(n)$ for the vector returned by \inlinecode{entries()}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <chrono>
+#include <functional>
+#include <random>
+#include <utility>
+#include <vector>
+
+template<typename K, typename V, typename Compare = std::less<K>>
+class SkipList {
+  static const int MAX_LEVELS = 32;  // log2(max possible keys)
+
+  struct Node {
+    K key;
+    V value;
+    std::vector<Node *> next;
+
+    Node(const K &k, const V &v, int levels) : key(k), value(v), next(levels, nullptr) {}
+  } *head;
+
+  int num_nodes;
+  Compare comp;
+
+  static int rand_level() {
+    static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
+    static std::uniform_int_distribution<int> coin(0, 1);
+    int level = 1;
+    while (coin(rng) && level < MAX_LEVELS) {
+      level++;
+    }
+    return level;
+  }
+
+  static int node_level(const std::vector<Node *> &v) {
+    int i = 0;
+    while (i < static_cast<int>(v.size()) && v[i] != nullptr) {
+      i++;
+    }
+    return std::max(1, i);
+  }
+
+  Node *find_node(const K &k) const {
+    Node *n = head;
+    for (int i = node_level(n->next); i-- > 0;) {
+      while (n->next[i] != nullptr && comp(n->next[i]->key, k)) {
+        n = n->next[i];
+      }
+    }
+    n = n->next[0];
+    return (n != nullptr && !comp(k, n->key) && !comp(n->key, k)) ? n : nullptr;
+  }
+
+ public:
+  explicit SkipList(Compare comp = Compare{})
+      : head(new Node(K{}, V{}, MAX_LEVELS)), num_nodes(0), comp(std::move(comp)) {
+    for (auto &ptr : head->next) {
+      ptr = nullptr;
+    }
+  }
+
+  ~SkipList() {
+    Node *n = head;
+    while (n != nullptr) {
+      Node *next = n->next[0];
+      delete n;
+      n = next;
+    }
+  }
+
+  SkipList(const SkipList &) = delete;
+  SkipList &operator=(const SkipList &) = delete;
+  int size() const { return num_nodes; }
+  bool empty() const { return num_nodes == 0; }
+
+  bool insert(const K &k, const V &v) {
+    std::vector<Node *> update(head->next);
+    int curr_level = node_level(update);
+    Node *n = head;
+    for (int i = curr_level; i-- > 0;) {
+      while (n->next[i] != nullptr && comp(n->next[i]->key, k)) {
+        n = n->next[i];
+      }
+      update[i] = n;
+    }
+    n = n->next[0];
+    if (n != nullptr && !comp(k, n->key) && !comp(n->key, k)) {
+      return false;
+    }
+    int new_level = rand_level();
+    if (new_level > curr_level) {
+      for (int i = curr_level; i < new_level; i++) {
+        update[i] = head;
+      }
+    }
+    n = new Node(k, v, new_level);
+    for (int i = 0; i < new_level; i++) {
+      n->next[i] = update[i]->next[i];
+      update[i]->next[i] = n;
+    }
+    num_nodes++;
+    return true;
+  }
+
+  bool erase(const K &k) {
+    std::vector<Node *> update(head->next);
+    Node *n = head;
+    for (int i = node_level(update); i-- > 0;) {
+      while (n->next[i] != nullptr && comp(n->next[i]->key, k)) {
+        n = n->next[i];
+      }
+      update[i] = n;
+    }
+    n = n->next[0];
+    if (n != nullptr && !comp(k, n->key) && !comp(n->key, k)) {
+      for (int i = 0; i < static_cast<int>(n->next.size()); i++) {
+        update[i]->next[i] = n->next[i];
+      }
+      delete n;
+      num_nodes--;
+      return true;
+    }
+    return false;
+  }
+
+  const V *find(const K &k) const {
+    Node *n = find_node(k);
+    return n == nullptr ? nullptr : &(n->value);
+  }
+
+  V &operator[](const K &k) {
+    Node *n = find_node(k);
+    if (n != nullptr) {
+      return n->value;
+    }
+    insert(k, V{});
+    return find_node(k)->value;
+  }
+
+  std::vector<std::pair<K, V>> entries() const {
+    std::vector<std::pair<K, V>> res;
+    res.reserve(num_nodes);
+    Node *n = head->next[0];
+    while (n != nullptr) {
+      res.emplace_back(n->key, n->value);
+      n = n->next[0];
+    }
+    return res;
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  SkipList<int, char> l;
+  assert(l.empty());
+  l.insert(2, 'b');
+  l.insert(1, 'a');
+  l.insert(3, 'c');
+  l.insert(5, 'e');
+  assert(l.insert(4, 'd'));
+  assert(!l.empty() && l.size() == 5);
+  assert(*l.find(4) == 'd');
+  assert(!l.insert(4, 'd'));
+  assert(l.size() == 5);
+  assert(
+      (l.entries() == vector<pair<int, char>>{{1, 'a'}, {2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}})
+  );
+  assert(l.erase(1));
+  assert(!l.erase(1));
+  assert(l.find(1) == nullptr);
+  assert(l.size() == 4);
+  assert((l.entries() == vector<pair<int, char>>{{2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}}));
+
+  SkipList<int, char, greater<int>> descending;
+  for (int key : {2, 1, 3}) {
+    descending.insert(key, '0' + key);
+  }
+  assert((descending.entries() == vector<pair<int, char>>{{3, '3'}, {2, '2'}, {1, '1'}}));
+  assert(*descending.find(2) == '2');
+  assert(descending.erase(2) && descending.find(2) == nullptr);
+  return 0;
+}
+\end{lstlisting}
 \subsection{Hash Table (Chaining)}
 Maintain an unordered map: a collection of key-value pairs in which each key appears at most once. Keys are hashed into buckets, and this implementation resolves collisions by chaining the entries in each bucket into a linked list. The hash and key-equality policies follow the conventions of \inlinecode{std::unordered\_map}.
 
-Compared with the open-addressing version (2.3.8), chaining keeps each entry at a stable address: a rehash never moves existing nodes, so pointers from \inlinecode{find()} and references from \inlinecode{operator[]} stay valid, and load factors above 1 are tolerated gracefully. The costs are a separate allocation per entry and cache-unfriendly pointer chasing during traversal.
+Compared with the open-addressing version (2.4.10), chaining keeps each entry at a stable address: a rehash never moves existing nodes, so pointers from \inlinecode{find()} and references from \inlinecode{operator[]} stay valid, and load factors above 1 are tolerated gracefully. The costs are a separate allocation per entry and cache-unfriendly pointer chasing during traversal.
 
 \begin{compactitem}
   \item \inlinecode{ChainingHashMap\textless{}K, V\textgreater{}(buckets = 128)} constructs an empty map with the positive number of buckets given by \inlinecode{buckets}, using \inlinecode{std::hash\textless{}K\textgreater{}} and \inlinecode{std::equal\_to\textless{}K\textgreater{}}.
@@ -2901,7 +4284,7 @@ struct Hasher {
     return k * 2654435761U;  // Or just return k.
   }
 
-  // SplitMix64 mixer (see 3.2.1's mix64).
+  // SplitMix64.
   uint32_t operator()(uint64_t k) const {
     k += RAND_SEED;
     k = (k ^ (k >> 30)) * 0xbf58476d1ce4e5b9ULL;
@@ -2978,7 +4361,7 @@ Maintain an unordered map: a collection of key-value pairs in which each key app
 
 Linear probing checks slots $i$, $i + 1$, $i + 2$, ... (modulo the table size) until the desired key or an empty slot is found. Other probe-step schemes include quadratic probing and double hashing, but these require additional table-sizing and coprimality conditions to guarantee correct coverage of the table. The \inlinecode{next\_bucket()} helper includes a commented quadratic-probing alternative for power-of-two table sizes.
 
-Compared with the chaining version (2.3.7), open addressing stores entries contiguously, so it is more cache-friendly and needs no per-entry allocation. The costs: deletions must leave tombstones, the load factor must stay well below 1, and, unlike chaining or \inlinecode{std::unordered\_map}, a pointer from \inlinecode{find()} or reference from \inlinecode{operator[]} is invalidated as soon as a later insertion rehashes and relocates the entries.
+Compared with the chaining version (2.4.9), open addressing stores entries contiguously, so it is more cache-friendly and needs no per-entry allocation. The costs: deletions must leave tombstones, the load factor must stay well below 1, and, unlike chaining or \inlinecode{std::unordered\_map}, a pointer from \inlinecode{find()} or reference from \inlinecode{operator[]} is invalidated as soon as a later insertion rehashes and relocates the entries.
 
 \begin{compactitem}
   \item \inlinecode{ProbingHashMap\textless{}K, V\textgreater{}(buckets = 128)} constructs an empty map with the positive number of slots given by \inlinecode{buckets}, using \inlinecode{std::hash\textless{}K\textgreater{}} and \inlinecode{std::equal\_to\textless{}K\textgreater{}}.
@@ -3222,7 +4605,7 @@ struct Hasher {
     return k * 2654435761U;  // Or just return k.
   }
 
-  // SplitMix64 mixer (see 3.2.1's mix64).
+  // SplitMix64.
   uint32_t operator()(uint64_t k) const {
     k += RAND_SEED;
     k = (k ^ (k >> 30)) * 0xbf58476d1ce4e5b9ULL;
@@ -3294,228 +4677,9 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Skip List}
-Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible key appears at most once in the collection. The comparator \inlinecode{comp} defines the key ordering: \inlinecode{comp(a, b)} is true when \inlinecode{a} precedes \inlinecode{b}. A skip list maintains a linked hierarchy of sorted subsequences with each successive subsequence skipping over fewer elements than the previous one. Each new node joins a number of levels decided by repeated coin flips, and a search starts at the sparsest level, moving forward until the next key would overshoot and then dropping down a level, which makes operations take $O(\log n)$ with high probability. The comparator defaults to \inlinecode{std::less\textless{}K\textgreater{}}; to customize the ordering, instantiate \inlinecode{SkipList\textless{}K, V, Compare\textgreater{}} and pass the comparator to the constructor.
 
-\begin{compactitem}
-  \item \inlinecode{SkipList\textless{}K, V\textgreater{}()} constructs an empty map.
-  \item \inlinecode{size()} returns the size of the map.
-  \item \inlinecode{empty()} returns whether the map is empty.
-  \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if a new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
-  \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
-  \item \inlinecode{find(k)} returns a pointer to the const value associated with key \inlinecode{k}, or \inlinecode{nullptr} if the key was not found.
-  \item \inlinecode{operator[k]} returns a reference to key \inlinecode{k}'s associated value (which may be modified), or if necessary, inserts and returns a new entry with the default constructed value if key \inlinecode{k} was not originally found.
-  \item \inlinecode{entries()} returns all key-value entries in comparator order.
-\end{compactitem}
-
-The sentinel node requires \inlinecode{K} and \inlinecode{V} to be default constructible.
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
-  \item $O(\log n)$ on average per call to \inlinecode{insert()}, \inlinecode{erase()}, \inlinecode{find()}, and \inlinecode{operator[]}, where $n$ is the number of entries currently in the map.
-  \item $O(n)$ per call to \inlinecode{entries()}.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n)$ for storage of the map elements.
-  \item $O(1)$ auxiliary for all operations because the maximum number of levels is fixed at $32$.
-  \item $O(n)$ for the vector returned by \inlinecode{entries()}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <chrono>
-#include <functional>
-#include <random>
-#include <utility>
-#include <vector>
-
-template<typename K, typename V, typename Compare = std::less<K>>
-class SkipList {
-  static const int MAX_LEVELS = 32;  // log2(max possible keys)
-
-  struct Node {
-    K key;
-    V value;
-    std::vector<Node *> next;
-
-    Node(const K &k, const V &v, int levels) : key(k), value(v), next(levels, nullptr) {}
-  } *head;
-
-  int num_nodes;
-  Compare comp;
-
-  static int rand_level() {
-    static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
-    static std::uniform_int_distribution<int> coin(0, 1);
-    int level = 1;
-    while (coin(rng) && level < MAX_LEVELS) {
-      level++;
-    }
-    return level;
-  }
-
-  static int node_level(const std::vector<Node *> &v) {
-    int i = 0;
-    while (i < static_cast<int>(v.size()) && v[i] != nullptr) {
-      i++;
-    }
-    return std::max(1, i);
-  }
-
-  Node *find_node(const K &k) const {
-    Node *n = head;
-    for (int i = node_level(n->next); i-- > 0;) {
-      while (n->next[i] != nullptr && comp(n->next[i]->key, k)) {
-        n = n->next[i];
-      }
-    }
-    n = n->next[0];
-    return (n != nullptr && !comp(k, n->key) && !comp(n->key, k)) ? n : nullptr;
-  }
-
- public:
-  explicit SkipList(Compare comp = Compare{})
-      : head(new Node(K{}, V{}, MAX_LEVELS)), num_nodes(0), comp(std::move(comp)) {
-    for (auto &ptr : head->next) {
-      ptr = nullptr;
-    }
-  }
-
-  ~SkipList() {
-    Node *n = head;
-    while (n != nullptr) {
-      Node *next = n->next[0];
-      delete n;
-      n = next;
-    }
-  }
-
-  SkipList(const SkipList &) = delete;
-  SkipList &operator=(const SkipList &) = delete;
-  int size() const { return num_nodes; }
-  bool empty() const { return num_nodes == 0; }
-
-  bool insert(const K &k, const V &v) {
-    std::vector<Node *> update(head->next);
-    int curr_level = node_level(update);
-    Node *n = head;
-    for (int i = curr_level; i-- > 0;) {
-      while (n->next[i] != nullptr && comp(n->next[i]->key, k)) {
-        n = n->next[i];
-      }
-      update[i] = n;
-    }
-    n = n->next[0];
-    if (n != nullptr && !comp(k, n->key) && !comp(n->key, k)) {
-      return false;
-    }
-    int new_level = rand_level();
-    if (new_level > curr_level) {
-      for (int i = curr_level; i < new_level; i++) {
-        update[i] = head;
-      }
-    }
-    n = new Node(k, v, new_level);
-    for (int i = 0; i < new_level; i++) {
-      n->next[i] = update[i]->next[i];
-      update[i]->next[i] = n;
-    }
-    num_nodes++;
-    return true;
-  }
-
-  bool erase(const K &k) {
-    std::vector<Node *> update(head->next);
-    Node *n = head;
-    for (int i = node_level(update); i-- > 0;) {
-      while (n->next[i] != nullptr && comp(n->next[i]->key, k)) {
-        n = n->next[i];
-      }
-      update[i] = n;
-    }
-    n = n->next[0];
-    if (n != nullptr && !comp(k, n->key) && !comp(n->key, k)) {
-      for (int i = 0; i < static_cast<int>(n->next.size()); i++) {
-        update[i]->next[i] = n->next[i];
-      }
-      delete n;
-      num_nodes--;
-      return true;
-    }
-    return false;
-  }
-
-  const V *find(const K &k) const {
-    Node *n = find_node(k);
-    return n == nullptr ? nullptr : &(n->value);
-  }
-
-  V &operator[](const K &k) {
-    Node *n = find_node(k);
-    if (n != nullptr) {
-      return n->value;
-    }
-    insert(k, V{});
-    return find_node(k)->value;
-  }
-
-  std::vector<std::pair<K, V>> entries() const {
-    std::vector<std::pair<K, V>> res;
-    res.reserve(num_nodes);
-    Node *n = head->next[0];
-    while (n != nullptr) {
-      res.emplace_back(n->key, n->value);
-      n = n->next[0];
-    }
-    return res;
-  }
-};
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-using namespace std;
-
-int main() {
-  SkipList<int, char> l;
-  assert(l.empty());
-  l.insert(2, 'b');
-  l.insert(1, 'a');
-  l.insert(3, 'c');
-  l.insert(5, 'e');
-  assert(l.insert(4, 'd'));
-  assert(!l.empty() && l.size() == 5);
-  assert(*l.find(4) == 'd');
-  assert(!l.insert(4, 'd'));
-  assert(l.size() == 5);
-  assert(
-      (l.entries() == vector<pair<int, char>>{{1, 'a'}, {2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}})
-  );
-  assert(l.erase(1));
-  assert(!l.erase(1));
-  assert(l.find(1) == nullptr);
-  assert(l.size() == 4);
-  assert((l.entries() == vector<pair<int, char>>{{2, 'b'}, {3, 'c'}, {4, 'd'}, {5, 'e'}}));
-
-  SkipList<int, char, greater<int>> descending;
-  for (int key : {2, 1, 3}) {
-    descending.insert(key, '0' + key);
-  }
-  assert((descending.entries() == vector<pair<int, char>>{{3, '3'}, {2, '2'}, {1, '1'}}));
-  assert(*descending.find(2) == '2');
-  assert(descending.erase(2) && descending.find(2) == nullptr);
-  return 0;
-}
-\end{lstlisting}
-
-\section{\texorpdfstring{Range Queries in One Dimension}{2.4 Range Queries in One Dimension}}
-\setcounter{section}{4}
+\section{\texorpdfstring{Range Queries in One Dimension}{2.5 Range Queries in One Dimension}}
+\setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Sparse Table}
 Given a static array, precompute a table that answers range minimum queries in constant time. More generally, the sparse table works for any range query whose combining operation is both associative and idempotent (i.e. \inlinecode{combine(x, x)} must equal \inlinecode{x}). The canonical examples are ``min'', ``max'', ``gcd'', and the bitwise ``and'' and ``or''.
@@ -4063,11 +5227,7 @@ class SegTree {
   }
 
   int size() const { return len; }
-
-  T at(int i) const {
-    assert(0 <= i && i < len);
-    return query(i, i);
-  }
+  T at(int i) const { return query(i, i); }
 
   T query(int lo, int hi) const {
     assert(0 <= lo && lo <= hi && hi < len);
@@ -4291,21 +5451,14 @@ class LazySegTree {
   }
 
   int size() const { return len; }
-
-  T at(int i) {
-    assert(0 <= i && i < len);
-    return query(i, i);
-  }
+  T at(int i) { return query(i, i); }
 
   T query(int lo, int hi) {
     assert(0 <= lo && lo <= hi && hi < len);
     return query(0, 0, len - 1, lo, hi);
   }
 
-  void update(int i, const T &d) {
-    assert(0 <= i && i < len);
-    update(0, 0, len - 1, i, i, d);
-  }
+  void update(int i, const T &d) { update(i, i, d); }
 
   void update(int lo, int hi, const T &d) {
     assert(0 <= lo && lo <= hi && hi < len);
@@ -4378,7 +5531,7 @@ The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which 
 
 For the boundary-search functions, \inlinecode{pred()} takes aggregate \inlinecode{T} values. For \inlinecode{combine = min}, \inlinecode{pred(mn) = (mn \textgreater{} x)} makes \inlinecode{max\_right()} stop at the first value \inlinecode{\textless{}= x} when extending right, while \inlinecode{min\_left()} stops just after the first such value when extending left. With nonnegative values and \inlinecode{combine = sum}, \inlinecode{pred(sum) = (sum \textless{}= x)} finds the longest extension with sum at most \inlinecode{x}.
 
-Both boundary searches are iterative to demonstrate how the flat-array layout can avoid recursion. They decompose the search range into $O(\log n)$ canonical nodes, scan those nodes in order while accumulating their aggregates, then descend inside the first node that makes \inlinecode{pred} false. A recursive descent like the one in 2.4.5 is equally valid and may be easier to adapt.
+Both boundary searches are iterative to demonstrate how the flat-array layout can avoid recursion. They decompose the search range into $O(\log n)$ canonical nodes, scan those nodes in order while accumulating their aggregates, then descend inside the first node that makes \inlinecode{pred} false. A recursive descent like the one in 2.5.5 is equally valid and may be easier to adapt.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -4563,7 +5716,7 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies
 
 For the boundary-search functions, \inlinecode{pred()} takes aggregate \inlinecode{T} values. For \inlinecode{combine = min}, \inlinecode{pred(mn) = (mn \textgreater{} x)} makes \inlinecode{max\_right()} stop at the first value \inlinecode{\textless{}= x} when extending right, while \inlinecode{min\_left()} stops just after the first such value when extending left. With nonnegative values and \inlinecode{combine = sum}, \inlinecode{pred(sum) = (sum \textless{}= x)} finds the longest extension with sum at most \inlinecode{x}.
 
-Both boundary searches are iterative to demonstrate how the flat-array layout can avoid recursion. They push lazy deltas along the endpoints, decompose the search range into $O(\log n)$ canonical nodes, scan those nodes in order while accumulating their aggregates, then push and descend inside the first node that makes \inlinecode{pred} false. A recursive descent like the one in 2.4.6 is equally valid and may be easier to adapt.
+Both boundary searches are iterative to demonstrate how the flat-array layout can avoid recursion. They push lazy deltas along the endpoints, decompose the search range into $O(\log n)$ canonical nodes, scan those nodes in order while accumulating their aggregates, then push and descend inside the first node that makes \inlinecode{pred} false. A recursive descent like the one in 2.5.6 is equally valid and may be easier to adapt.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -4709,10 +5862,7 @@ class IterativeLazySegTree {
     }
   }
 
-  void update(int i, const T &d) {
-    assert(0 <= i && i < len);
-    update(i, i, d);
-  }
+  void update(int i, const T &d) { update(i, i, d); }
 
   template<typename Pred>
   int max_right(int lo, const Pred &pred) {
@@ -4820,10 +5970,10 @@ The break condition is what makes this efficient: a potential-function argument 
   \item \inlinecode{SegTreeBeats\textless{}T\textgreater{}(n, v = T\{\})} constructs an array of size \inlinecode{n}, indices $[0, {\inlinecodemath{n}})$, all equal to \inlinecode{v}.
   \item \inlinecode{SegTreeBeats\textless{}T\textgreater{}(lo, hi)} constructs an array from the half-open random-access iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{size()} returns the size of the array.
-  \item \inlinecode{chmin(lo, hi, t)} replaces \inlinecode{a[i]} with \inlinecode{min(a[i], t)} for every \inlinecode{i} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
+  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{query\_sum(lo, hi)} returns the sum of \inlinecode{a[i]} over \inlinecode{i} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{query\_max(lo, hi)} returns the maximum of \inlinecode{a[i]} over \inlinecode{i} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
-  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
+  \item \inlinecode{chmin(lo, hi, t)} replaces \inlinecode{a[i]} with \inlinecode{min(a[i], t)} for every \inlinecode{i} in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -4962,11 +6112,7 @@ class SegTreeBeats {
   }
 
   int size() const { return len; }
-
-  void chmin(int lo, int hi, const T &t) {
-    assert(0 <= lo && lo <= hi && hi < len);
-    chmin(0, 0, len - 1, lo, hi, t);
-  }
+  T at(int i) { return query_sum(i, i); }
 
   T query_sum(int lo, int hi) {
     assert(0 <= lo && lo <= hi && hi < len);
@@ -4978,9 +6124,9 @@ class SegTreeBeats {
     return query_max(0, 0, len - 1, lo, hi);
   }
 
-  T at(int i) {
-    assert(0 <= i && i < len);
-    return query_sum(0, 0, len - 1, i, i);
+  void chmin(int lo, int hi, const T &t) {
+    assert(0 <= lo && lo <= hi && hi < len);
+    chmin(0, 0, len - 1, lo, hi, t);
   }
 };
 \end{lstlisting}
@@ -5224,20 +6370,14 @@ class SparseSegTree {
   SparseSegTree(const SparseSegTree &) = delete;
   SparseSegTree &operator=(const SparseSegTree &) = delete;
 
-  T at(int i) {
-    assert(0 <= i && i < N);
-    return query(i, i);
-  }
+  T at(int i) { return query(i, i); }
 
   T query(int lo, int hi) {
     assert(0 <= lo && lo <= hi && hi < N);
     return query(root, 0, N - 1, lo, hi);
   }
 
-  void update(int i, const T &d) {
-    assert(0 <= i && i < N);
-    update(i, i, d);
-  }
+  void update(int i, const T &d) { update(i, i, d); }
 
   void update(int lo, int hi, const T &d) {
     assert(0 <= lo && lo <= hi && hi < N);
@@ -5294,116 +6434,131 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Persistent Segment Tree}
-Maintain immutable versions of a fixed-size array while supporting point updates and range aggregate queries. Each update creates a new root by copying only the $O(\log n)$ nodes on the path from the root to the updated leaf. All unchanged subtrees are shared with previous versions, and updates may branch from any stored version.
+Maintain immutable versions of a fixed-size array while supporting range updates and range aggregate queries. Each update creates a new version by copying only the $O(\log n)$ nodes on the path it descends, sharing every unchanged subtree with the version it came from. Earlier versions are never disturbed, and an update may branch from any of them, so versions form a tree rather than a line.
 
-The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return \inlinecode{a + b}.
+Lazy propagation normally works by pushing a pending update down into both children before descending, which rewrites nodes that older versions still point at and so would destroy them here. The fix is to never push. A node keeps its pending delta permanently, and a query accumulates the deltas it passes on the way down, adding each one's contribution to the span it covers. Since a node is only ever read together with its ancestors, an update that stops at a node is still seen by every query that reaches below it, and the nodes above are the only ones that need copying.
 
-The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at a single updated index. The default definition below supports updates that ``set'' the chosen array index to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return \inlinecode{v + d}.
+The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default code below assumes a numerical array type, defining queries for the ``sum'' of the target range. Another possible query operation is ``min'', in which case \inlinecode{combine(a, b)} should return \inlinecode{min(a, b)}.
+
+Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range increment for range-sum queries. For range-min/range-max queries, \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d}.
+
+Deltas here must also commute, which they need not for usual lazy propagation. Namely, for every value and length, \inlinecode{apply\_delta(apply\_delta(v, d1, len), d2, len)} must equal \inlinecode{apply\_delta(apply\_delta(v, d2, len), d1, len)}, so that \inlinecode{compose\_deltas(d1, d2)} and \inlinecode{compose\_deltas(d2, d1)} act identically on every aggregate. The reason is that an update stopping high in the tree leaves the older deltas below it untouched, so a query composes the deltas it passes in order of depth rather than in the order they were applied. Range increment satisfies this and range assignment does not, which is why the latter is the default there and is unavailable here. Pushing each delta into fresh copies of both children instead of leaving it in place lifts the restriction, at the cost of copying two nodes per level rather than one.
 
 \begin{compactitem}
   \item \inlinecode{PersistentSegTree\textless{}T\textgreater{}(n, v = T\{\})} constructs version $0$ of an array of size \inlinecode{n} with indices $[0, {\inlinecodemath{n}})$, and all values initialized to \inlinecode{v}.
   \item \inlinecode{PersistentSegTree\textless{}T\textgreater{}(lo, hi)} constructs version $0$ from the half-open random-access iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
-  \item \inlinecode{size()} returns the size of every version of the array.
-  \item \inlinecode{versions()} returns the number of stored versions. Versions are numbered starting from $0$.
-  \item \inlinecode{at(version, i)} returns the value at index \inlinecode{i} in the specified version.
-  \item \inlinecode{query(version, lo, hi)} returns the aggregate of the values at indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ in the specified version. If \inlinecode{lo == hi}, then the single specified value is returned.
-  \item \inlinecode{update(version, i, d)} creates and returns a new version in which the value at index \inlinecode{i} is assigned to \inlinecode{apply\_delta(v, d)}. The specified version remains unchanged.
+  \item \inlinecode{size()} returns the size of every version of the array, and \inlinecode{versions()} the number of stored versions, which occupy $[0, {\inlinecodemath{versions()}})$.
+  \item \inlinecode{query(version, lo, hi)} returns the aggregate of the values at indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ in the given version. If \inlinecode{lo == hi}, then the single specified value is returned.
+  \item \inlinecode{update(version, lo, hi, d)} creates and returns a new version in which the delta \inlinecode{d} has been applied to the value at each array index in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$. The given version is unchanged.
 \end{compactitem}
-
-The boundary-search routines \inlinecode{max\_right(lo, pred)} and \inlinecode{min\_left(hi, pred)} from the recursive point-update segment tree in 2.4.5 use the same traversal here and may be adapted by starting at \inlinecode{roots[version]} and following the child indices stored in each node.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to either constructor, where $n$ is the size of the array.
   \item $O(1)$ per call to \inlinecode{size()} and \inlinecode{versions()}.
-  \item $O(\log n)$ per call to \inlinecode{at()}, \inlinecode{query()}, and \inlinecode{update()}.
+  \item $O(\log n)$ per call to \inlinecode{query()} and \inlinecode{update()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n + q \log n)$ for storage after $q$ updates.
-  \item $O(\log n)$ auxiliary stack space for construction, \inlinecode{at()}, \inlinecode{query()}, and \inlinecode{update()}.
-  \item $O(1)$ auxiliary for \inlinecode{size()} and \inlinecode{versions()}.
+  \item $O(\log n)$ auxiliary stack space per call to \inlinecode{query()} and \inlinecode{update()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <cassert>
+#include <optional>
 #include <vector>
 
 template<typename T>
 class PersistentSegTree {
-  static T combine(const T &a, const T &b) { return std::min(a, b); }
-  static T apply_delta(const T &, const T &d) { return d; }
+  static T combine(const T &a, const T &b) { return a + b; }
+  static T apply_delta(const T &v, const T &d, int len) { return v + d * len; }
+  static T compose_deltas(const T &d1, const T &d2) { return d1 + d2; }
 
   struct Node {
     T value;
+    std::optional<T> delta;  // Empty when no update is pending on this node's descendants.
     int left, right;
 
-    explicit Node(const T &value, int left = -1, int right = -1)
-        : value(value), left(left), right(right) {}
+    Node(const T &value, const std::optional<T> &delta, int left = -1, int right = -1)
+        : value(value), delta(delta), left(left), right(right) {}
   };
 
   int len;
   std::vector<Node> nodes;
   std::vector<int> roots;
 
+  int make(const T &value, const std::optional<T> &delta, int left, int right) {
+    nodes.emplace_back(value, delta, left, right);
+    return static_cast<int>(nodes.size()) - 1;
+  }
+
   template<typename Gen>
   int build(int lo, int hi, const Gen &gen) {
     if (lo == hi) {
-      nodes.emplace_back(gen(lo));
-      return static_cast<int>(nodes.size()) - 1;
+      return make(gen(lo), std::nullopt, -1, -1);
     }
     int mid = lo + (hi - lo) / 2;
-    int left = build(lo, mid, gen);
-    int right = build(mid + 1, hi, gen);
-    nodes.emplace_back(combine(nodes[left].value, nodes[right].value), left, right);
-    return static_cast<int>(nodes.size()) - 1;
+    int left = build(lo, mid, gen), right = build(mid + 1, hi, gen);
+    return make(combine(nodes[left].value, nodes[right].value), std::nullopt, left, right);
   }
 
-  T query(int i, int lo, int hi, int tgt_lo, int tgt_hi) const {
-    if (lo == tgt_lo && hi == tgt_hi) {
-      return nodes[i].value;
+  // The carried argument accumulates every ancestor's delta, since none are pushed down.
+  T query(int i, int lo, int hi, int tgt_lo, int tgt_hi, const std::optional<T> &carried) const {
+    if (tgt_lo <= lo && hi <= tgt_hi) {
+      return carried ? apply_delta(nodes[i].value, *carried, hi - lo + 1) : nodes[i].value;
     }
     int mid = lo + (hi - lo) / 2;
-    if (tgt_lo <= mid && mid < tgt_hi) {
-      return combine(
-          query(nodes[i].left, lo, mid, tgt_lo, mid),
-          query(nodes[i].right, mid + 1, hi, mid + 1, tgt_hi)
+    std::optional<T> below = carried;
+    if (nodes[i].delta) {
+      below = below ? compose_deltas(*below, *nodes[i].delta) : *nodes[i].delta;
+    }
+    if (tgt_hi <= mid) {
+      return query(nodes[i].left, lo, mid, tgt_lo, tgt_hi, below);
+    }
+    if (tgt_lo > mid) {
+      return query(nodes[i].right, mid + 1, hi, tgt_lo, tgt_hi, below);
+    }
+    return combine(
+        query(nodes[i].left, lo, mid, tgt_lo, mid, below),
+        query(nodes[i].right, mid + 1, hi, mid + 1, tgt_hi, below)
+    );
+  }
+
+  int update(int i, int lo, int hi, int tgt_lo, int tgt_hi, const T &d) {
+    if (tgt_lo <= lo && hi <= tgt_hi) {
+      // The delta stays here; every query below this node will pick it up on the way past.
+      return make(
+          apply_delta(nodes[i].value, d, hi - lo + 1),
+          nodes[i].delta ? compose_deltas(*nodes[i].delta, d) : d, nodes[i].left, nodes[i].right
       );
-    }
-    if (tgt_lo <= mid) {
-      return query(nodes[i].left, lo, mid, tgt_lo, tgt_hi);
-    }
-    return query(nodes[i].right, mid + 1, hi, tgt_lo, tgt_hi);
-  }
-
-  int update(int i, int lo, int hi, int target, const T &d) {
-    if (lo == hi) {
-      nodes.emplace_back(apply_delta(nodes[i].value, d));
-      return static_cast<int>(nodes.size()) - 1;
     }
     int mid = lo + (hi - lo) / 2;
     int left = nodes[i].left, right = nodes[i].right;
-    if (target <= mid) {
-      left = update(left, lo, mid, target, d);
-    } else {
-      right = update(right, mid + 1, hi, target, d);
+    if (tgt_lo <= mid) {
+      left = update(left, lo, mid, tgt_lo, tgt_hi, d);
     }
-    nodes.emplace_back(combine(nodes[left].value, nodes[right].value), left, right);
-    return static_cast<int>(nodes.size()) - 1;
+    if (tgt_hi > mid) {
+      right = update(right, mid + 1, hi, tgt_lo, tgt_hi, d);
+    }
+    T merged = combine(nodes[left].value, nodes[right].value);
+    return make(
+        nodes[i].delta ? apply_delta(merged, *nodes[i].delta, hi - lo + 1) : merged, nodes[i].delta,
+        left, right
+    );
   }
 
  public:
   explicit PersistentSegTree(int n, const T &v = T{}) : len(n) {
-    assert(len > 0);
-    roots.push_back(build(0, len - 1, [&](int) { return v; }));
+    assert(n > 0);
+    roots.push_back(build(0, n - 1, [&](int) { return v; }));
   }
 
   template<typename It>
-  PersistentSegTree(It lo, It hi) : len(hi - lo) {
+  PersistentSegTree(It lo, It hi) : len(static_cast<int>(hi - lo)) {
     assert(len > 0);
     roots.push_back(build(0, len - 1, [&](int i) { return *(lo + i); }));
   }
@@ -5411,44 +6566,46 @@ class PersistentSegTree {
   int size() const { return len; }
   int versions() const { return static_cast<int>(roots.size()); }
 
-  T at(int version, int i) const {
-    assert(0 <= version && version < versions());
-    assert(0 <= i && i < len);
-    return query(version, i, i);
-  }
-
   T query(int version, int lo, int hi) const {
-    assert(0 <= version && version < versions());
-    assert(0 <= lo && lo <= hi && hi < len);
-    return query(roots[version], 0, len - 1, lo, hi);
+    assert(version >= 0 && version < versions() && lo >= 0 && lo <= hi && hi < len);
+    return query(roots[version], 0, len - 1, lo, hi, std::nullopt);
   }
 
-  int update(int version, int i, const T &d) {
-    assert(0 <= version && version < versions());
-    assert(0 <= i && i < len);
-    roots.push_back(update(roots[version], 0, len - 1, i, d));
-    return static_cast<int>(roots.size()) - 1;
+  int update(int version, int lo, int hi, const T &d) {
+    assert(version >= 0 && version < versions() && lo >= 0 && lo <= hi && hi < len);
+    roots.push_back(update(roots[version], 0, len - 1, lo, hi, d));
+    return versions() - 1;
   }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
 using namespace std;
 
 int main() {
-  vector<int> a{6, -2, 1, 8, 10};
+  vector<int> a{1, 2, 3, 4, 5};
   PersistentSegTree<int> t(a.begin(), a.end());
-  int v1 = t.update(0, 2, 4);
-  int v2 = t.update(0, 1, 7);  // Branch from version 0 rather than version 1.
+  assert(t.size() == 5 && t.versions() == 1);
+  assert(t.query(0, 0, 4) == 15 && t.query(0, 1, 3) == 9);
 
-  assert(t.size() == 5);
-  assert(t.versions() == 3);
-  assert(t.at(0, 2) == 1);
-  assert(t.at(v1, 2) == 4);
-  assert(t.query(0, 0, 3) == -2);
-  assert(t.query(v1, 0, 3) == -2);
-  assert(t.query(v2, 0, 3) == 1);
+  int v1 = t.update(0, 1, 3, 10);  // Adds 10 to indices 1, 2, and 3.
+  assert(v1 == 1);
+  assert(t.query(1, 1, 3) == 39 && t.query(1, 0, 4) == 45);
+  assert(t.query(1, 0, 0) == 1 && t.query(1, 4, 4) == 5);
+  assert(t.query(0, 1, 3) == 9);  // Version 0 is untouched.
+
+  // Updates compose, and any version may be branched from more than once.
+  int v2 = t.update(1, 0, 4, 1);
+  assert(t.query(2, 0, 4) == 50);
+  int v3 = t.update(1, 0, 1, 100);
+  assert(v3 == 3 && t.query(3, 0, 1) == 213 && t.query(2, 0, 1) == 15);
+
+  // A partially overlapping update reaches the same leaves through different nodes.
+  int v4 = t.update(3, 1, 2, 5);
+  assert(t.query(4, 1, 1) == 117 && t.query(4, 2, 2) == 18 && t.query(4, 3, 3) == 14);
+  assert(t.versions() == 5 && v2 == 2 && v4 == 4);
   return 0;
 }
 \end{lstlisting}
@@ -5699,7 +6856,7 @@ int main() {
 \subsection{Cartesian Tree}
 Build the min-Cartesian tree of an array in linear time. A Cartesian tree is a binary tree whose inorder traversal is the original array order and whose heap property is determined by array values. The comparator \inlinecode{comp} defines the value ordering and defaults to \inlinecode{std::less\textless{}\textgreater{}}, producing a min-Cartesian tree in which each parent precedes or is equivalent to its children. Each subtree therefore represents a contiguous array interval whose first value in comparator order is at the subtree root. Equivalent values are broken by position, so the earlier one becomes an ancestor of the later one.
 
-With the default comparator, this gives a direct connection to range minimum queries: the minimum index in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ is the lowest common ancestor of indices \inlinecode{lo} and \inlinecode{hi}. The included search finds that node without extra LCA preprocessing. Starting at the root, it moves right while the current index is left of the range and left while it is right of the range; the first index inside the range is its minimum. This takes $O(h)$ time for tree height $h$, which can be $O(n)$ for a skewed tree. For many worst-case-fast queries, preprocess the tree for LCA or use the sparse table in 2.4.1 instead. The explicit tree is also useful for interval divide-and-conquer and tree DP; the largest-rectangle application is implemented directly with a monotone stack in 1.2.4.
+With the default comparator, this gives a direct connection to range minimum queries: the minimum index in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ is the lowest common ancestor of indices \inlinecode{lo} and \inlinecode{hi}. The included search finds that node without extra LCA preprocessing. Starting at the root, it moves right while the current index is left of the range and left while it is right of the range; the first index inside the range is its minimum. This takes $O(h)$ time for tree height $h$, which can be $O(n)$ for a skewed tree. For many worst-case-fast queries, preprocess the tree for LCA or use the sparse table in 2.5.1 instead. The explicit tree is also useful for interval divide-and-conquer and tree DP; the largest-rectangle application is implemented directly with a monotone stack in 1.2.4.
 
 \begin{compactitem}
   \item \inlinecode{CartesianTree(a, comp = std::less\textless{}\textgreater{}())} constructs the tree for array \inlinecode{a}.
@@ -5805,12 +6962,12 @@ Range reversal is also propagated lazily. Since \inlinecode{combine()} may be or
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{query(lo, hi)} returns the aggregate of the values at indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{update(lo, hi, d)} applies the delta \inlinecode{d} to every index in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
-  \item \inlinecode{update(i, d)} applies the delta \inlinecode{d} to the single index \inlinecode{i}.
-  \item \inlinecode{reverse(lo, hi)} reverses the order of the values in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{insert(i, v)} inserts a new value \inlinecode{v} before index \inlinecode{i}, shifting later elements one position right.
   \item \inlinecode{erase(i)} removes the element at index \inlinecode{i}, shifting later elements one position left.
+  \item \inlinecode{update(i, d)} applies the delta \inlinecode{d} to the single index \inlinecode{i}.
   \item \inlinecode{push\_back(v)} appends a new value \inlinecode{v} to the end of the array.
   \item \inlinecode{pop\_back()} removes the last element of the array.
+  \item \inlinecode{reverse(lo, hi)} reverses the order of the values in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
 \end{compactitem}
 
 The query and update operations match those of the point- and range-update segment trees in this section; \inlinecode{insert()}, \inlinecode{erase()}, \inlinecode{push\_back()}, and \inlinecode{pop\_back()} are additionally analogous to those of \inlinecode{std::vector} (here, \inlinecode{insert()} and \inlinecode{erase()} take an index instead of an iterator).
@@ -5832,6 +6989,7 @@ The query and update operations match those of the point- and range-update segme
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <cstdint>
@@ -5839,7 +6997,7 @@ The query and update operations match those of the point- and range-update segme
 
 template<typename T>
 class ImplicitTreap {
-  static T combine(const T &a, const T &b) { return a < b ? a : b; }
+  static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T apply_delta(const T &v, const T &d, int64_t len) { return d; }
   static T compose_deltas(const T &d1, const T &d2) { return d2; }
 
@@ -6024,23 +7182,6 @@ class ImplicitTreap {
   int size() const { return size(root); }
   bool empty() const { return root == nullptr; }
 
-  void insert(int i, const T &v) {
-    assert(0 <= i && i <= size());
-    insert(root, new Node(v), i);
-  }
-
-  void erase(int i) {
-    assert(0 <= i && i < size());
-    erase(root, i);
-  }
-
-  void push_back(const T &v) { insert(size(), v); }
-
-  void pop_back() {
-    assert(!empty());
-    erase(size() - 1);
-  }
-
   T at(int i) const {
     assert(0 <= i && i < size());
     return select(root, i)->value;
@@ -6067,7 +7208,19 @@ class ImplicitTreap {
     merge(root, t, r1);
   }
 
+  void insert(int i, const T &v) {
+    assert(0 <= i && i <= size());
+    insert(root, new Node(v), i);
+  }
+
+  void erase(int i) {
+    assert(0 <= i && i < size());
+    erase(root, i);
+  }
+
   void update(int i, const T &d) { update(i, i, d); }
+  void push_back(const T &v) { insert(size(), v); }
+  void pop_back() { erase(size() - 1); }
 
   void reverse(int lo, int hi) {
     assert(0 <= lo && lo <= hi && hi < size());
@@ -6134,8 +7287,8 @@ int main() {
 }
 \end{lstlisting}
 
-\section{\texorpdfstring{Range Queries in Two Dimensions}{2.5 Range Queries in Two Dimensions}}
-\setcounter{section}{5}
+\section{\texorpdfstring{Range Queries in Two Dimensions}{2.6 Range Queries in Two Dimensions}}
+\setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{2D Segment Tree}
 Maintain a dense two-dimensional array while supporting point assignments and rectangle queries. A 2D segment tree applies the ordinary segment-tree decomposition independently to rows and columns: each row-tree node contains a complete segment tree over its columns, so a rectangle decomposes into $O(\log\left(R\right) \cdot \log\left(C\right))$ canonical blocks.
@@ -6150,9 +7303,9 @@ Use this when the grid is small enough for $O(R \cdot C)$ storage and queries ne
   \item \inlinecode{SegTree2D\textless{}T\textgreater{}(rows, cols, v = T\{\})} constructs a \inlinecode{rows} by \inlinecode{cols} array with 0-based indices, with all entries initialized to \inlinecode{v}.
   \item \inlinecode{SegTree2D\textless{}T\textgreater{}(a)} constructs the tree from the matrix \inlinecode{a}.
   \item \inlinecode{num\_rows()} and \inlinecode{num\_cols()} return the dimensions of the array.
-  \item \inlinecode{update(r, c, d)} applies delta \inlinecode{d} to the entry at index (\inlinecode{r}, \inlinecode{c}).
   \item \inlinecode{at(r, c)} returns the value at index (\inlinecode{r}, \inlinecode{c}).
   \item \inlinecode{query(r1, c1, r2, c2)} returns the aggregate over the rectangle with rows in $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns in $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
+  \item \inlinecode{update(r, c, d)} applies delta \inlinecode{d} to the entry at index (\inlinecode{r}, \inlinecode{c}).
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -6224,7 +7377,7 @@ class SegTree2D {
   }
 
   explicit SegTree2D(const std::vector<std::vector<T>> &a)
-      : rows(static_cast<int>(a.size())), cols(rows == 0 ? 0 : static_cast<int>(a[0].size())) {
+      : rows(static_cast<int>(a.size())), cols(a.empty() ? 0 : static_cast<int>(a[0].size())) {
     assert(rows > 0 && cols > 0);
     build([&](int r, int c) { return a[r][c]; });
   }
@@ -6235,21 +7388,6 @@ class SegTree2D {
   T at(int r, int c) const {
     assert(0 <= r && r < rows && 0 <= c && c < cols);
     return tree[r + rows][c + cols];
-  }
-
-  void update(int r, int c, const T &d) {
-    assert(0 <= r && r < rows && 0 <= c && c < cols);
-    int row = r + rows, col = c + cols;
-    tree[row][col] = apply_delta(tree[row][col], d);
-    for (int j = col; j > 1; j /= 2) {
-      tree[row][j / 2] = combine(tree[row][j], tree[row][j ^ 1]);
-    }
-    for (row /= 2; row > 0; row /= 2) {
-      tree[row][col] = combine(tree[2 * row][col], tree[2 * row + 1][col]);
-      for (int j = col; j > 1; j /= 2) {
-        tree[row][j / 2] = combine(tree[row][j], tree[row][j ^ 1]);
-      }
-    }
   }
 
   T query(int r1, int c1, int r2, int c2) const {
@@ -6267,6 +7405,21 @@ class SegTree2D {
       }
     }
     return *res;
+  }
+
+  void update(int r, int c, const T &d) {
+    assert(0 <= r && r < rows && 0 <= c && c < cols);
+    int row = r + rows, col = c + cols;
+    tree[row][col] = apply_delta(tree[row][col], d);
+    for (int j = col; j > 1; j /= 2) {
+      tree[row][j / 2] = combine(tree[row][j], tree[row][j ^ 1]);
+    }
+    for (row /= 2; row > 0; row /= 2) {
+      tree[row][col] = combine(tree[2 * row][col], tree[2 * row + 1][col]);
+      for (int j = col; j > 1; j /= 2) {
+        tree[row][j / 2] = combine(tree[row][j], tree[row][j ^ 1]);
+      }
+    }
   }
 };
 \end{lstlisting}
@@ -6300,7 +7453,7 @@ The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which 
 
 Rows and columns are split independently, so every rectangle query decomposes into $O(\log\left(R\right) \cdot \log\left(C\right))$ canonical rectangles regardless of whether it is thin, off-center, or otherwise adversarially placed.
 
-Use the dense 2D segment tree in the previous section when the grid is modest enough for $O(R \cdot C)$ storage; it is simpler and faster. Use this sparse version when the coordinate range is huge but only a small fraction of cells are updated. For dense additive rectangle sums, prefer the 2D Fenwick tree in 2.6.5.
+Use the dense 2D segment tree in the previous section when the grid is modest enough for $O(R \cdot C)$ storage; it is simpler and faster. Use this sparse version when the coordinate range is huge but only a small fraction of cells are updated. For dense additive rectangle sums, prefer the 2D Fenwick tree in 2.7.5.
 
 \begin{compactitem}
   \item \inlinecode{SparseSegTree2D\textless{}T, R, C\textgreater{}(v = T\{\})} constructs a two-dimensional array over rows $[0, {\inlinecodemath{R}})$ and columns $[0, {\inlinecodemath{C}})$. All array values are implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
@@ -6492,10 +7645,7 @@ class SparseSegTree2D {
   SparseSegTree2D(const SparseSegTree2D &) = delete;
   SparseSegTree2D &operator=(const SparseSegTree2D &) = delete;
 
-  T at(int r, int c) const {
-    assert(0 <= r && r < R && 0 <= c && c < C);
-    return query(r, c, r, c);
-  }
+  T at(int r, int c) const { return query(r, c, r, c); }
 
   T query(int r1, int c1, int r2, int c2) const {
     assert(0 <= r1 && r1 <= r2 && r2 < R);
@@ -6944,8 +8094,8 @@ int main() {
 }
 \end{lstlisting}
 
-\section{\texorpdfstring{Fenwick Trees}{2.6 Fenwick Trees}}
-\setcounter{section}{6}
+\section{\texorpdfstring{Fenwick Trees}{2.7 Fenwick Trees}}
+\setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Fenwick Tree (Point Update, Range Query)}
 Maintain a numerical array while supporting point increments and range-sum queries. A Fenwick tree (also called a binary indexed tree) stores partial prefix sums: each internal entry \inlinecode{tree[i]} holds the sum of a block of indices whose length is the lowest set bit of \inlinecode{i}. A point update touches $O(\log n)$ covering blocks, and a prefix-sum query combines $O(\log n)$ disjoint blocks.
@@ -7097,7 +8247,8 @@ class FenwickRUPQ {
   int len;
   std::vector<T> tree;
 
-  void add_helper(int i, const T &x) {
+  // Adds x to the value at every index from i onward.
+  void add_suffix(int i, const T &x) {
     for (i++; i <= len + 1; i += i & -i) {
       tree[i] += x;
     }
@@ -7107,16 +8258,12 @@ class FenwickRUPQ {
   explicit FenwickRUPQ(int n) : len(n), tree(n + 2) {}
 
   int size() const { return len; }
-
-  void add(int i, const T &x) {
-    assert(0 <= i && i < len);
-    add(i, i, x);
-  }
+  void add(int i, const T &x) { add(i, i, x); }
 
   void add(int lo, int hi, const T &x) {
     assert(0 <= lo && lo <= hi && hi < len);
-    add_helper(lo, x);
-    add_helper(hi + 1, -x);
+    add_suffix(lo, x);
+    add_suffix(hi + 1, -x);
   }
 
   T at(int i) const {
@@ -7157,7 +8304,7 @@ Maintain a numerical array while supporting range increments and range-sum queri
 \begin{compactitem}
   \item \inlinecode{FenwickRURQ\textless{}T\textgreater{}(n)} constructs an array with 0-based indices $[0, {\inlinecodemath{n}})$, with all values initialized to $0$.
   \item \inlinecode{size()} returns the size of the array.
-  \item \inlinecode{add(i, x)} increments the value at index \inlinecode{i} by \inlinecode{x}.
+  \item \inlinecode{add(i, x)} adds \inlinecode{x} to the value at index \inlinecode{i}.
   \item \inlinecode{add(lo, hi, x)} adds \inlinecode{x} to the values at all indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{set(i, x)} assigns the value at index \inlinecode{i} to \inlinecode{x}.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
@@ -7333,7 +8480,8 @@ class SparseFenwick {
     return 0;
   }
 
-  void add_helper(int at, const T &mul, const T &add) {
+  // Adds the linear correction mul*i + add to every index from at onward.
+  void add_suffix(int at, const T &mul, const T &add) {
     assert(1 <= at && at <= N + 1);
     for (int i = at; i <= N; i += i & -i) {
       tmul[i] += mul;
@@ -7348,8 +8496,8 @@ class SparseFenwick {
     assert(0 <= lo && lo <= hi && hi < N);
     lo++;
     hi++;
-    add_helper(lo, x, x * (lo - 1));  // Overflow warning.
-    add_helper(hi + 1, -x, -x * hi);
+    add_suffix(lo, x, x * (lo - 1));  // Overflow warning.
+    add_suffix(hi + 1, -x, -x * hi);
   }
 
   void set(int i, const T &x) { add(i, x - at(i)); }
@@ -7530,12 +8678,12 @@ Choose this for huge sparse grids when the operation is additive: point or recta
 
 \begin{compactitem}
   \item \inlinecode{SparseFenwick2D\textless{}T, R, C\textgreater{}()} constructs a 2D array over rows $[0, {\inlinecodemath{R}})$ and columns $[0, {\inlinecodemath{C}})$. All values are implicitly initialized to $0$; nodes are allocated lazily as indices are touched.
-  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
-  \item \inlinecode{add(r1, c1, r2, c2, x)} adds \inlinecode{x} to all indices in the rectangle with rows $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
-  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
   \item \inlinecode{sum(r, c)} returns the sum of the rectangle with rows $[0, {\inlinecodemath{r}}]$ and columns $[0, {\inlinecodemath{c}}]$.
   \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with rows in $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns in $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
+  \item \inlinecode{add(r1, c1, r2, c2, x)} adds \inlinecode{x} to all indices in the rectangle with rows $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
   \item \inlinecode{at(r, c)} returns the value at index (\inlinecode{r}, \inlinecode{c}).
+  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
+  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
 \end{compactitem}
 
 The value type \inlinecode{T} must represent $0$ and support addition, subtraction, and multiplication by integer coordinates.
@@ -7562,14 +8710,12 @@ class SparseFenwick2D {
 
   std::unordered_map<int64_t, T> t1, t2, t3, t4;
 
-  template<typename Map>
-  static T get(const Map &tree, int r, int c) {
+  static T get(const std::unordered_map<int64_t, T> &tree, int r, int c) {
     auto it = tree.find(static_cast<int64_t>(r) * (C + 1) + c);
     return it == tree.end() ? T{} : it->second;
   }
 
-  template<typename Map>
-  static void add(Map &tree, int r, int c, const T &x) {
+  static void add(std::unordered_map<int64_t, T> &tree, int r, int c, const T &x) {
     assert(0 <= r && r <= R && 0 <= c && c <= C);
     for (int i = r + 1; i <= R; i += i & -i) {
       for (int j = c + 1; j <= C; j += j & -j) {
@@ -7578,7 +8724,8 @@ class SparseFenwick2D {
     }
   }
 
-  void add_helper(int r, int c, const T &x) {
+  // Adds x to every cell with row at least r and column at least c.
+  void add_quadrant(int r, int c, const T &x) {
     add(t1, 0, 0, x);
     add(t1, 0, c, -x);
     add(t2, 0, c, x * c);
@@ -7591,20 +8738,6 @@ class SparseFenwick2D {
   }
 
  public:
-  void add(int r, int c, const T &x) { add(r, c, r, c, x); }
-
-  void add(int r1, int c1, int r2, int c2, const T &x) {
-    assert(0 <= r1 && r1 <= r2 && r2 < R);
-    assert(0 <= c1 && c1 <= c2 && c2 < C);
-    add_helper(r2 + 1, c2 + 1, x);
-    add_helper(r1, c2 + 1, -x);
-    add_helper(r2 + 1, c1, -x);
-    add_helper(r1, c1, x);
-  }
-
-  void set(int r, int c, const T &x) { add(r, c, x - at(r, c)); }
-  T at(int r, int c) const { return sum(r, c, r, c); }
-
   T sum(int r, int c) const {
     assert(-1 <= r && r < R && -1 <= c && c < C);
     r++;
@@ -7626,6 +8759,19 @@ class SparseFenwick2D {
     assert(0 <= c1 && c1 <= c2 && c2 < C);
     return sum(r2, c2) + sum(r1 - 1, c1 - 1) - sum(r1 - 1, c2) - sum(r2, c1 - 1);
   }
+
+  void add(int r1, int c1, int r2, int c2, const T &x) {
+    assert(0 <= r1 && r1 <= r2 && r2 < R);
+    assert(0 <= c1 && c1 <= c2 && c2 < C);
+    add_quadrant(r2 + 1, c2 + 1, x);
+    add_quadrant(r1, c2 + 1, -x);
+    add_quadrant(r2 + 1, c1, -x);
+    add_quadrant(r1, c1, x);
+  }
+
+  T at(int r, int c) const { return sum(r, c, r, c); }
+  void add(int r, int c, const T &x) { add(r, c, r, c, x); }
+  void set(int r, int c, const T &x) { add(r, c, x - at(r, c)); }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -7823,8 +8969,8 @@ int main() {
 }
 \end{lstlisting}
 
-\section{\texorpdfstring{Disjoint Sets and Tree Structures}{2.7 Disjoint Sets and Tree Structures}}
-\setcounter{section}{7}
+\section{\texorpdfstring{Disjoint Sets and Tree Structures}{2.8 Disjoint Sets and Tree Structures}}
+\setcounter{section}{8}
 \setcounter{subsection}{0}
 \subsection{Disjoint Set Union}
 Maintain a set of elements partitioned into non-overlapping subsets. Each partition is identified by a unique representative called its root. Each subset is stored as a tree whose nodes point toward its root: finding a representative follows parent pointers, redirecting visited nodes straight to the root along the way (path compression), while unions attach the smaller tree beneath the root of the larger one (union-by-size). Together these keep the trees nearly flat. Union-by-size is interchangeable with the union-by-rank strategy used by Sparse Disjoint Set Union and yields the same complexity bounds, but union-by-size additionally supports \inlinecode{set\_size()} queries.
@@ -8150,7 +9296,6 @@ This implementation preprocesses binary ancestor jumps. During depth-first searc
   \item \inlinecode{BinaryLiftingLCA(adj)} builds the structure over a forest represented by the bidirectional adjacency list \inlinecode{adj}, whose indices represent the nodes.
   \item \inlinecode{go\_up(u, k)} returns the ancestor \inlinecode{k} edges above node \inlinecode{u}. When \inlinecode{k == 0}, it returns \inlinecode{u}; values larger than \inlinecode{u}'s depth stop at that tree's root.
   \item \inlinecode{lca(u, v)} returns the lowest common ancestor of nodes \inlinecode{u} and \inlinecode{v}, or $-1$ if they are in different trees.
-  \item \inlinecode{is\_ancestor(parent, child)} returns whether \inlinecode{parent} is an ancestor of \inlinecode{child}.
   \item \inlinecode{dist(u, v)} returns the number of edges on the path between nodes \inlinecode{u} and \inlinecode{v}, or $-1$ if they are in different trees.
 \end{compactitem}
 
@@ -8159,7 +9304,6 @@ This implementation preprocesses binary ancestor jumps. During depth-first searc
 \begin{compactitem}
   \item $O(n \log n)$ for construction, where $n$ is the number of nodes.
   \item $O(\log n)$ per call to \inlinecode{go\_up()}, \inlinecode{lca()}, and \inlinecode{dist()}.
-  \item $O(1)$ per call to \inlinecode{is\_ancestor()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -8167,7 +9311,7 @@ This implementation preprocesses binary ancestor jumps. During depth-first searc
 \begin{compactitem}
   \item $O(n \log n)$ to store the binary ancestor table.
   \item $O(n)$ auxiliary stack space for construction.
-  \item $O(1)$ auxiliary for \inlinecode{go\_up()}, \inlinecode{lca()}, \inlinecode{is\_ancestor()}, and \inlinecode{dist()}.
+  \item $O(1)$ auxiliary for \inlinecode{go\_up()}, \inlinecode{lca()}, and \inlinecode{dist()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -8178,44 +9322,44 @@ This implementation preprocesses binary ancestor jumps. During depth-first searc
 class BinaryLiftingLCA {
   std::vector<std::vector<int>> up;
   std::vector<int> tin, tout, depth, root;
-  int len, timer;
+  int len;
 
-  void dfs(const std::vector<std::vector<int>> &adj, int u, int p, int r, int d) {
-    tin[u] = timer++;
-    depth[u] = d;
-    root[u] = r;
-    up[u][0] = p;
-    for (int i = 1; i < len; i++) {
-      up[u][i] = up[up[u][i - 1]][i - 1];
-    }
-    for (int v : adj[u]) {
-      if (v != p) {
-        dfs(adj, v, u, r, d + 1);
-      }
-    }
-    tout[u] = timer++;
+  bool is_ancestor(int parent, int child) const {
+    assert(0 <= parent && parent < static_cast<int>(root.size()));
+    assert(0 <= child && child < static_cast<int>(root.size()));
+    return root[parent] == root[child] && tin[parent] <= tin[child] && tout[child] <= tout[parent];
   }
 
  public:
   explicit BinaryLiftingLCA(const std::vector<std::vector<int>> &adj)
-      : tin(adj.size()), tout(adj.size()), depth(adj.size()), root(adj.size(), -1), timer(0) {
+      : tin(adj.size()), tout(adj.size()), depth(adj.size()), root(adj.size(), -1) {
     int n = static_cast<int>(adj.size());
     len = 1;
     while ((1 << len) <= std::max(1, n)) {
       len++;
     }
     up.assign(n, std::vector<int>(len));
-    for (int u = 0; u < n; u++) {
-      if (root[u] == -1) {
-        dfs(adj, u, u, u, 0);
+    int timer = 0;
+    for (int r = 0; r < n; r++) {
+      if (root[r] == -1) {
+        auto dfs = [&](auto &&dfs, int u, int p, int d) -> void {
+          tin[u] = timer++;
+          depth[u] = d;
+          root[u] = r;
+          up[u][0] = p;
+          for (int i = 1; i < len; i++) {
+            up[u][i] = up[up[u][i - 1]][i - 1];
+          }
+          for (int v : adj[u]) {
+            if (v != p) {
+              dfs(dfs, v, u, d + 1);
+            }
+          }
+          tout[u] = timer++;
+        };
+        dfs(dfs, r, r, 0);
       }
     }
-  }
-
-  bool is_ancestor(int parent, int child) const {
-    assert(0 <= parent && parent < static_cast<int>(root.size()));
-    assert(0 <= child && child < static_cast<int>(root.size()));
-    return root[parent] == root[child] && tin[parent] <= tin[child] && tout[child] <= tout[parent];
   }
 
   int go_up(int u, int k) const {
@@ -8325,19 +9469,6 @@ class EulerTourLCA {
   std::vector<int> root, depth, first, order, minpos;
   int len;
 
-  void dfs(const std::vector<std::vector<int>> &adj, int u, int r, int d) {
-    root[u] = r;
-    depth[u] = d;
-    first[u] = static_cast<int>(order.size());
-    order.push_back(u);
-    for (int v : adj[u]) {
-      if (depth[v] == -1) {
-        dfs(adj, v, r, d + 1);
-        order.push_back(u);
-      }
-    }
-  }
-
   int better(int a, int b) const { return depth[a] < depth[b] ? a : b; }
 
   void build(int i, int lo, int hi) {
@@ -8371,9 +9502,21 @@ class EulerTourLCA {
   explicit EulerTourLCA(const std::vector<std::vector<int>> &adj)
       : root(adj.size(), -1), depth(adj.size(), -1), first(adj.size(), -1) {
     int n = static_cast<int>(adj.size());
-    for (int u = 0; u < n; u++) {
-      if (depth[u] == -1) {
-        dfs(adj, u, u, 0);
+    for (int r = 0; r < n; r++) {
+      if (depth[r] == -1) {
+        auto dfs = [&](auto &&dfs, int u, int r, int d) -> void {
+          root[u] = r;
+          depth[u] = d;
+          first[u] = static_cast<int>(order.size());
+          order.push_back(u);
+          for (int v : adj[u]) {
+            if (depth[v] == -1) {
+              dfs(dfs, v, r, d + 1);
+              order.push_back(u);
+            }
+          }
+        };
+        dfs(dfs, r, r, 0);
       }
     }
     len = static_cast<int>(order.size());
@@ -8466,22 +9609,7 @@ The construction sorts the subset by depth-first entry time, which lists the nod
 class VirtualTree {
   std::vector<std::vector<int>> up;
   std::vector<int> tin, tout, depth;
-  int len, timer;
-
-  void dfs(const std::vector<std::vector<int>> &adj, int u, int p, int d) {
-    tin[u] = timer++;
-    depth[u] = d;
-    up[u][0] = p;
-    for (int i = 1; i < len; i++) {
-      up[u][i] = up[up[u][i - 1]][i - 1];
-    }
-    for (int v : adj[u]) {
-      if (v != p) {
-        dfs(adj, v, u, d + 1);
-      }
-    }
-    tout[u] = timer++;
-  }
+  int len;
 
  public:
   struct Tree {
@@ -8491,7 +9619,7 @@ class VirtualTree {
   };
 
   VirtualTree(const std::vector<std::vector<int>> &adj, int root)
-      : tin(adj.size()), tout(adj.size()), depth(adj.size()), timer(0) {
+      : tin(adj.size()), tout(adj.size()), depth(adj.size()) {
     int n = static_cast<int>(adj.size());
     assert(0 <= root && root < n);
     len = 1;
@@ -8499,20 +9627,28 @@ class VirtualTree {
       len++;
     }
     up.assign(n, std::vector<int>(len));
-    dfs(adj, root, root, 0);
+    int timer = 0;
+    auto dfs = [&](auto &&dfs, int u, int p, int d) -> void {
+      tin[u] = timer++;
+      depth[u] = d;
+      up[u][0] = p;
+      for (int i = 1; i < len; i++) {
+        up[u][i] = up[up[u][i - 1]][i - 1];
+      }
+      for (int v : adj[u]) {
+        if (v != p) {
+          dfs(dfs, v, u, d + 1);
+        }
+      }
+      tout[u] = timer++;
+    };
+    dfs(dfs, root, root, 0);
   }
 
   bool is_ancestor(int parent, int child) const {
     assert(0 <= parent && parent < static_cast<int>(tin.size()));
     assert(0 <= child && child < static_cast<int>(tin.size()));
     return tin[parent] <= tin[child] && tout[child] <= tout[parent];
-  }
-
-  // Depth of u in the original tree; depth(child) - depth(parent) is the length of the original
-  // path that a compressed virtual-tree edge stands for.
-  int depth_of(int u) const {
-    assert(0 <= u && u < static_cast<int>(depth.size()));
-    return depth[u];
   }
 
   int lca(int u, int v) const {
@@ -8530,6 +9666,13 @@ class VirtualTree {
       }
     }
     return up[u][0];
+  }
+
+  // Depth of u in the original tree; depth(child) - depth(parent) is the length of the original
+  // path that a compressed virtual-tree edge stands for.
+  int depth_of(int u) const {
+    assert(0 <= u && u < static_cast<int>(depth.size()));
+    return depth[u];
   }
 
   Tree build(std::vector<int> nodes) const {
@@ -8639,7 +9782,6 @@ The aggregate is defined by a commutative, associative \inlinecode{combine()}. T
   \item \inlinecode{TreePathQueries\textless{}W\textgreater{}(adj)} builds the structure over a forest given by a weighted, bidirectional adjacency list \inlinecode{adj}, whose indices represent the nodes and where \inlinecode{adj[u]} holds pairs (\inlinecode{v}, \inlinecode{w}) for each edge \inlinecode{u}-\inlinecode{v} of weight \inlinecode{w}. Each connected component is rooted at its first node reached by the constructor's outer loop.
   \item \inlinecode{lca(u, v)} returns the lowest common ancestor of \inlinecode{u} and \inlinecode{v}, or $-1$ if they lie in different trees.
   \item \inlinecode{kth\_ancestor(u, k)} returns the ancestor \inlinecode{k} edges above \inlinecode{u} (\inlinecode{k = 0} returns \inlinecode{u}), stopping at that tree's root if \inlinecode{k} exceeds \inlinecode{u}'s depth.
-  \item \inlinecode{is\_ancestor(parent, child)} returns whether \inlinecode{parent} is an ancestor of \inlinecode{child}.
   \item \inlinecode{path\_query(u, v)} returns the combined weight of the edges on the path from \inlinecode{u} to \inlinecode{v}. The nodes must be distinct and lie in the same tree.
 \end{compactitem}
 
@@ -8648,7 +9790,6 @@ The aggregate is defined by a commutative, associative \inlinecode{combine()}. T
 \begin{compactitem}
   \item $O(n \log n)$ for construction, where $n$ is the number of nodes.
   \item $O(\log n)$ per call to \inlinecode{lca()}, \inlinecode{kth\_ancestor()}, and \inlinecode{path\_query()}.
-  \item $O(1)$ per call to \inlinecode{is\_ancestor()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -8656,7 +9797,7 @@ The aggregate is defined by a commutative, associative \inlinecode{combine()}. T
 \begin{compactitem}
   \item $O(n \log n)$ to store the binary ancestor and aggregate tables.
   \item $O(n)$ auxiliary stack space for construction.
-  \item $O(1)$ auxiliary for \inlinecode{lca()}, \inlinecode{kth\_ancestor()}, \inlinecode{is\_ancestor()}, and \inlinecode{path\_query()}.
+  \item $O(1)$ auxiliary for \inlinecode{lca()}, \inlinecode{kth\_ancestor()}, and \inlinecode{path\_query()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -8673,38 +9814,12 @@ class TreePathQueries {
   std::vector<std::vector<int>> up;
   std::vector<std::vector<W>> agg;  // agg[u][i] = combined weight of the 2^i edges above u.
   std::vector<int> tin, tout, depth, root;
-  int len, timer;
+  int len;
 
-  void dfs(int u, int p, int r, int d, const std::vector<std::vector<std::pair<int, W>>> &adj) {
-    tin[u] = timer++;
-    depth[u] = d;
-    root[u] = r;
-    up[u][0] = p;
-    for (int i = 1; i < len; i++) {
-      up[u][i] = up[up[u][i - 1]][i - 1];
-      if ((1 << i) <= d) {
-        agg[u].push_back(combine(agg[u][i - 1], agg[up[u][i - 1]][i - 1]));
-      }
-    }
-    for (const auto &[v, w] : adj[u]) {
-      if (v != p) {
-        agg[v].push_back(w);  // The edge into a child is stored on the child.
-        dfs(v, u, r, d + 1, adj);
-      }
-    }
-    tout[u] = timer++;
-  }
-
-  // Combined weight of the k edges on the upward path of k steps from u.
-  std::optional<W> climb(int u, int k) const {
-    std::optional<W> res;
-    for (int i = 0; i < len; i++) {
-      if ((k & (1 << i)) != 0) {
-        res = res ? combine(*res, agg[u][i]) : agg[u][i];
-        u = up[u][i];
-      }
-    }
-    return res;
+  bool is_ancestor(int parent, int child) const {
+    assert(0 <= parent && parent < static_cast<int>(root.size()));
+    assert(0 <= child && child < static_cast<int>(root.size()));
+    return root[parent] == root[child] && tin[parent] <= tin[child] && tout[child] <= tout[parent];
   }
 
  public:
@@ -8713,36 +9828,38 @@ class TreePathQueries {
         tin(adj.size()),
         tout(adj.size()),
         depth(adj.size()),
-        root(adj.size(), -1),
-        timer(0) {
+        root(adj.size(), -1) {
     int n = static_cast<int>(adj.size());
     len = 1;
     while ((1 << len) <= std::max(1, n)) {
       len++;
     }
     up.assign(n, std::vector<int>(len));
-    for (int u = 0; u < n; u++) {
-      if (root[u] == -1) {
-        dfs(u, u, u, 0, adj);
+    int timer = 0;
+    for (int r = 0; r < n; r++) {
+      if (root[r] == -1) {
+        auto dfs = [&](auto &&dfs, int u, int p, int d) -> void {
+          tin[u] = timer++;
+          depth[u] = d;
+          root[u] = r;
+          up[u][0] = p;
+          for (int i = 1; i < len; i++) {
+            up[u][i] = up[up[u][i - 1]][i - 1];
+            if ((1 << i) <= d) {
+              agg[u].push_back(combine(agg[u][i - 1], agg[up[u][i - 1]][i - 1]));
+            }
+          }
+          for (const auto &[v, w] : adj[u]) {
+            if (v != p) {
+              agg[v].push_back(w);  // The edge into a child is stored on the child.
+              dfs(dfs, v, u, d + 1);
+            }
+          }
+          tout[u] = timer++;
+        };
+        dfs(dfs, r, r, 0);
       }
     }
-  }
-
-  bool is_ancestor(int parent, int child) const {
-    assert(0 <= parent && parent < static_cast<int>(root.size()));
-    assert(0 <= child && child < static_cast<int>(root.size()));
-    return root[parent] == root[child] && tin[parent] <= tin[child] && tout[child] <= tout[parent];
-  }
-
-  int kth_ancestor(int u, int k) const {
-    assert(0 <= u && u < static_cast<int>(root.size()) && k >= 0);
-    k = std::min(k, depth[u]);
-    for (int i = 0; i < len; i++) {
-      if ((k & (1 << i)) != 0) {
-        u = up[u][i];
-      }
-    }
-    return u;
   }
 
   int lca(int u, int v) const {
@@ -8765,18 +9882,34 @@ class TreePathQueries {
     return up[u][0];
   }
 
+  int kth_ancestor(int u, int k) const {
+    assert(0 <= u && u < static_cast<int>(root.size()) && k >= 0);
+    k = std::min(k, depth[u]);
+    for (int i = 0; i < len; i++) {
+      if ((k & (1 << i)) != 0) {
+        u = up[u][i];
+      }
+    }
+    return u;
+  }
+
   W path_query(int u, int v) const {
     int l = lca(u, v);
     assert(l != -1 && u != v);
+    // Combined weight of the k edges on the upward path of k steps from a node.
+    auto climb = [&](int from, int k) -> std::optional<W> {
+      std::optional<W> res;
+      for (int i = 0; i < len; i++) {
+        if ((k & (1 << i)) != 0) {
+          res = res ? combine(*res, agg[from][i]) : agg[from][i];
+          from = up[from][i];
+        }
+      }
+      return res;
+    };
     std::optional<W> left = climb(u, depth[u] - depth[l]);
     std::optional<W> right = climb(v, depth[v] - depth[l]);
-    if (!left) {
-      return *right;
-    }
-    if (!right) {
-      return *left;
-    }
-    return combine(*left, *right);
+    return !left ? *right : (!right ? *left : combine(*left, *right));
   }
 };
 \end{lstlisting}
@@ -8831,9 +9964,9 @@ The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{c
 
 \begin{compactitem}
   \item \inlinecode{HeavyLight\textless{}T, VALUES\_ON\_EDGES = true\textgreater{}(adj, v)} constructs a new heavy-light decomposition on a forest defined by the adjacency list \inlinecode{adj}, with all values initialized to \inlinecode{v}. Its entries must be valid indices into \inlinecode{adj}, and no duplicate edges should exist. Set \inlinecode{VALUES\_ON\_EDGES} to false to store values on nodes instead.
+  \item \inlinecode{for\_each\_path(u, v, include\_lca, f)} decomposes the path from node \inlinecode{u} to node \inlinecode{v} into heavy path ranges and calls \inlinecode{f(path, lo, hi, up)} on each range, where \inlinecode{up} says the path segment is traversed upward from \inlinecode{u} toward the LCA. If \inlinecode{VALUES\_ON\_EDGES = true}, pass \inlinecode{include\_lca = false} to skip the LCA's node slot. Returns false if \inlinecode{u} and \inlinecode{v} are in different trees.
   \item \inlinecode{query(u, v)} returns the result of \inlinecode{combine()} applied to all values on the path from node \inlinecode{u} to node \inlinecode{v}. The nodes must be in the same tree and, when values are on edges, must be distinct.
   \item \inlinecode{update(u, v, d)} modifies all values on the path from node \inlinecode{u} to node \inlinecode{v} by applying the delta \inlinecode{d}. The nodes must be in the same tree.
-  \item \inlinecode{for\_each\_path(u, v, include\_lca, f)} decomposes the path from node \inlinecode{u} to node \inlinecode{v} into heavy path ranges and calls \inlinecode{f(path, lo, hi, up)} on each range, where \inlinecode{up} says the path segment is traversed upward from \inlinecode{u} toward the LCA. If \inlinecode{VALUES\_ON\_EDGES = true}, pass \inlinecode{include\_lca = false} to skip the LCA's node slot. Returns false if \inlinecode{u} and \inlinecode{v} are in different trees.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -8865,41 +9998,10 @@ class HeavyLight {
   static T apply_delta(const T &v, const T &d, int len) { return d; }
   static T compose_deltas(const T &old, const T &d) { return d; }
 
-  std::vector<std::vector<int>> adj;
   std::vector<std::vector<T>> value;
   std::vector<std::vector<std::optional<T>>> delta;
   std::vector<std::vector<int>> len;
-  std::vector<int> size, parent, root, tin, tout, path, pathlen, pathpos, pathroot;
-  int counter, paths;
-
-  void dfs(int u, int p, int r) {
-    tin[u] = counter++;
-    parent[u] = p;
-    root[u] = r;
-    size[u] = 1;
-    for (int v : adj[u]) {
-      if (v != p) {
-        dfs(v, u, r);
-        size[u] += size[v];
-      }
-    }
-    tout[u] = counter++;
-  }
-
-  int new_path(int u) {
-    pathroot[paths] = u;
-    return paths++;
-  }
-
-  void build_paths(int u, int path_id) {
-    path[u] = path_id;
-    pathpos[u] = pathlen[path_id]++;
-    for (int v : adj[u]) {
-      if (v != parent[u]) {
-        build_paths(v, (2 * size[v] >= size[u]) ? path_id : new_path(v));
-      }
-    }
-  }
+  std::vector<int> parent, root, tin, tout, path, pathpos, pathroot;
 
   inline T applied_value(int path_id, int i) {
     return delta[path_id][i] ? apply_delta(value[path_id][i], *delta[path_id][i], len[path_id][i])
@@ -8972,22 +10074,46 @@ class HeavyLight {
 
  public:
   explicit HeavyLight(const std::vector<std::vector<int>> &adj, const T &v = T{})
-      : adj(adj),
-        size(adj.size()),
-        parent(adj.size()),
+      : parent(adj.size()),
         root(adj.size(), -1),
         tin(adj.size()),
         tout(adj.size()),
         path(adj.size()),
-        pathlen(adj.size()),
         pathpos(adj.size()),
-        pathroot(adj.size()),
-        counter(0),
-        paths(0) {
-    for (int u = 0; u < static_cast<int>(adj.size()); u++) {
+        pathroot(adj.size()) {
+    int n = static_cast<int>(adj.size()), counter = 0, paths = 0;
+    std::vector<int> subtree(n), pathlen(n);
+    auto dfs = [&](auto &&dfs, int u, int p, int r) -> void {
+      tin[u] = counter++;
+      parent[u] = p;
+      root[u] = r;
+      subtree[u] = 1;
+      for (int w : adj[u]) {
+        if (w != p) {
+          dfs(dfs, w, u, r);
+          subtree[u] += subtree[w];
+        }
+      }
+      tout[u] = counter++;
+    };
+    auto new_path = [&](int u) {
+      pathroot[paths] = u;
+      return paths++;
+    };
+    // Label each node with its heavy path and its position along that path.
+    auto label = [&](auto &&label, int u, int path_id) -> void {
+      path[u] = path_id;
+      pathpos[u] = pathlen[path_id]++;
+      for (int w : adj[u]) {
+        if (w != parent[u]) {
+          label(label, w, (2 * subtree[w] >= subtree[u]) ? path_id : new_path(w));
+        }
+      }
+    };
+    for (int u = 0; u < n; u++) {
       if (root[u] == -1) {
-        dfs(u, -1, u);
-        build_paths(u, new_path(u));
+        dfs(dfs, u, -1, u);
+        label(label, u, new_path(u));
       }
     }
     value.resize(paths);
@@ -9037,8 +10163,7 @@ class HeavyLight {
   T query(int u, int v) {
     assert(0 <= u && u < static_cast<int>(root.size()));
     assert(0 <= v && v < static_cast<int>(root.size()));
-    assert(root[u] == root[v]);
-    assert(!VALUES_ON_EDGES || u != v);
+    assert(root[u] == root[v] && (!VALUES_ON_EDGES || u != v));
     std::optional<T> res;
     for_each_path(u, v, !VALUES_ON_EDGES, [&](int path_id, int lo, int hi, bool) {
       if (auto part = query(path_id, lo, hi)) {
@@ -9303,14 +10428,6 @@ class EulerTourTree {
     return a != nullptr && b != nullptr && root(a) == root(b);
   }
 
-  void reroot(int u) {
-    assert(0 <= u && u < n);
-    Node *a = any_occurrence(u);
-    if (a != nullptr) {
-      make_first(a);
-    }
-  }
-
   bool link(int u, int v) {
     assert(0 <= u && u < n && 0 <= v && v < n);
     if (u == v || adj[u].count(v) || connected(u, v)) {
@@ -9346,6 +10463,14 @@ class EulerTourTree {
     delete uv;
     delete vu;
     return true;
+  }
+
+  void reroot(int u) {
+    assert(0 <= u && u < n);
+    Node *a = any_occurrence(u);
+    if (a != nullptr) {
+      make_first(a);
+    }
   }
 
   std::vector<int> component_nodes(int u) const {

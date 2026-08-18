@@ -3,9 +3,9 @@
 Computes the $n$-th term of a linear recurrence modulo a prime in logarithmic time. Given a
 recurrence of order $L$, $s_i = c_0 s_{i-1} + c_1 s_{i-2} + \ldots + c_{L-1} s_{i-L}$, together with
 the first $L$ terms, the naive approach unrolls $n$ steps. Kitamasa's method instead jumps directly
-to index $n$ in O(L^2 log n) by working with the characteristic polynomial. The coefficient layout
-matches the output of Berlekamp-Massey, so the two compose directly: guess the recurrence from
-sampled values, then jump to any index.
+to index $n$ by working with the characteristic polynomial. The coefficient layout matches the
+output of Berlekamp-Massey, so the two compose directly: guess the recurrence from sampled values,
+then jump to any index.
 
 The key identity is that the $n$-th term is a fixed linear combination of the first $L$ terms, with
 weights given by $x^n$ reduced modulo the characteristic polynomial
@@ -14,12 +14,18 @@ any product of two degree-$<L$ polynomials be folded back to degree $<L$, so $x^
 obtained by binary exponentiation, and the $n$-th term is the dot product of its coefficients with
 the initial terms.
 
+Each doubling step is one polynomial multiplication followed by one remainder, both taken from
+section 6.6.3, where the multiplication is a number theoretic transform and the remainder is a
+Newton-iterated division. Squaring and reducing by hand instead costs O(L^2) per step, which is
+simpler to write but asymptotically worse; `MOD` is inherited from that section and must stay
+transform-friendly.
+
 - `kth_term(rec, init, n)` returns $s_n$ modulo `MOD`, where `rec` holds the coefficients
   $c_0, ..., c_{L-1}$ and `init` holds at least $L$ initial terms $s_0, ..., s_{L-1}$. Indexing is
   0-based and `n` $\geq 0$. Values are reduced modulo `MOD` internally.
 
 Time Complexity:
-- O(L^2 log n) per call.
+- O(L log L log n) per call.
 
 Space Complexity:
 - O(L) auxiliary.
@@ -30,57 +36,34 @@ Space Complexity:
 #include <cstdint>
 #include <vector>
 
-const int64_t MOD = 998244353;
-
-std::vector<int64_t> combine(
-    const std::vector<int64_t> &a, const std::vector<int64_t> &b, const std::vector<int64_t> &c
-) {
-  std::vector<int64_t> res(a.size() + b.size() - 1);
-  for (int i = 0; i < static_cast<int>(a.size()); i++) {
-    for (int j = 0; j < static_cast<int>(b.size()); j++) {
-      res[i + j] = (res[i + j] + a[i] * b[j]) % MOD;
-    }
-  }
-  int L = static_cast<int>(c.size());
-  for (int d = static_cast<int>(res.size()) - 1; d >= L; d--) {
-    if (res[d] != 0) {
-      for (int j = 0; j < L; j++) {
-        res[d - 1 - j] = (res[d - 1 - j] + res[d] * c[j]) % MOD;
-      }
-    }
-  }
-  res.resize(L);
-  return res;
-}
+#define main polynomial_example
+#include "6.6.3_Polynomial_Operations.cpp"
+#undef main
 
 int64_t kth_term(const std::vector<int64_t> &rec, const std::vector<int64_t> &init, int64_t n) {
   assert(n >= 0 && init.size() >= rec.size());
-  std::vector<int64_t> c(rec);
-  for (int64_t &x : c) {
-    x = (x % MOD + MOD) % MOD;
-  }
-  int L = static_cast<int>(c.size());
+  int L = static_cast<int>(rec.size());
   if (n < static_cast<int64_t>(init.size())) {
     return ((init[n] % MOD) + MOD) % MOD;
   }
   if (L == 0) {
     return 0;
   }
-  std::vector<int64_t> result(L), base(L);
-  result[0] = 1;  // The polynomial 1 = x^0.
-  if (L == 1) {
-    base[0] = c[0];  // x is congruent to c_0 modulo f.
-  } else {
-    base[1] = 1;  // The polynomial x.
+  // The characteristic polynomial f(x) = x^L - c_0 x^(L-1) - ... - c_(L-1), indexed by degree.
+  Poly f(L + 1);
+  f[L] = 1;
+  for (int j = 0; j < L; j++) {
+    f[L - 1 - j] = ((-rec[j]) % MOD + MOD) % MOD;
   }
+  Poly result{1}, base = mod(Poly{0, 1}, f);  // The polynomials x^0 and x, each modulo f.
   for (int64_t e = n; e > 0; e >>= 1) {
     if (e & 1) {
-      result = combine(result, base, c);
+      result = mod(multiply(result, base), f);
     }
-    base = combine(base, base, c);
+    base = mod(multiply(base, base), f);
   }
   int64_t ans = 0;
-  for (int j = 0; j < L; j++) {
+  for (int j = 0; j < L && j < static_cast<int>(result.size()); j++) {
     ans = (ans + result[j] * (((init[j] % MOD) + MOD) % MOD)) % MOD;
   }
   return ans;

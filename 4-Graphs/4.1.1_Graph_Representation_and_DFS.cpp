@@ -113,51 +113,48 @@ class Graph {
 using namespace std;
 
 int main() {
-  {
-    //           0
-    //       /  /  |
-    //      v  v   v
-    //      1  6   7
-    //    / |     / |
-    //   v  v    v  v
-    //   2  5    8  11
-    //  / |     /|
-    // v  v    v v
-    // 3  4    9 10
-    Graph g;
-    g.add_edge(0, 1);
-    g.add_edge(0, 6);
-    g.add_edge(0, 7);
-    g.add_edge(1, 2);
-    g.add_edge(1, 5);
-    g.add_edge(2, 3);
-    g.add_edge(2, 4);
-    g.add_edge(7, 8);
-    g.add_edge(7, 11);
-    g.add_edge(8, 9);
-    g.add_edge(8, 10);
-    vector<int> order;
-    g.dfs(0, [&](int u) { order.push_back(u); });
-    assert((order == vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}));
-    assert(g.size() == 12 && g[0].size() == 3);
-    assert(g.is_dag());
-    assert(!g.has_cycle());
-  }
-  {
-    //       0
-    //     /  |
-    //    1   2
-    //  / |
-    // 3  4
-    Graph tree(false);
-    tree.add_edge(0, 1);
-    tree.add_edge(0, 2);
-    tree.add_edge(1, 3);
-    tree.add_edge(1, 4);
-    assert(tree.is_forest());
-    assert(!tree.is_dag());
-    tree.add_edge(2, 3);
-    assert(!tree.is_forest());
-  }
+  //           0
+  //       /  /  |
+  //      v  v   v
+  //      1  6   7
+  //    / |     / |
+  //   v  v    v  v
+  //   2  5    8  11
+  //  / |     /|
+  // v  v    v v
+  // 3  4    9 10
+  Graph g;
+  g.add_edge(0, 1);
+  g.add_edge(0, 6);
+  g.add_edge(0, 7);
+  g.add_edge(1, 2);
+  g.add_edge(1, 5);
+  g.add_edge(2, 3);
+  g.add_edge(2, 4);
+  g.add_edge(7, 8);
+  g.add_edge(7, 11);
+  g.add_edge(8, 9);
+  g.add_edge(8, 10);
+  vector<int> order;
+  g.dfs(0, [&](int u) { order.push_back(u); });
+  assert((order == vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}));
+  assert(g.size() == 12 && g[0].size() == 3);
+  assert(g.is_dag());
+  assert(!g.has_cycle());
+
+  //       0
+  //     /  |
+  //    1   2
+  //  / |
+  // 3  4
+  Graph tree(false);
+  tree.add_edge(0, 1);
+  tree.add_edge(0, 2);
+  tree.add_edge(1, 3);
+  tree.add_edge(1, 4);
+  assert(tree.is_forest());
+  assert(!tree.is_dag());
+  tree.add_edge(2, 3);
+  assert(!tree.is_forest());
   return 0;
 }

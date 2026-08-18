@@ -15,7 +15,6 @@ File-redirection failures throw `std::runtime_error`.
 #include <cctype>
 #include <cstddef>
 #include <cstdio>
-#include <cstdlib>
 #include <limits>
 #include <stdexcept>
 #include <string>

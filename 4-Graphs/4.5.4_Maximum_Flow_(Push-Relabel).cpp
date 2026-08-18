@@ -33,8 +33,7 @@ Space Complexity:
 #include <queue>
 #include <vector>
 
-std::vector<std::vector<int64_t>> cap;
-std::vector<std::vector<int64_t>> f;
+std::vector<std::vector<int64_t>> cap, f;
 
 int64_t push_relabel(int source, int sink) {
   assert(source != sink);

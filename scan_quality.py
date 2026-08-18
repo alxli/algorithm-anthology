@@ -15,7 +15,7 @@ REPEATED_LITERAL_DEFAULT_THRESHOLD = 3
 signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
 KNOWN_LONG_DOCSTRING_LINES = {
-    Path("6-Mathematics/6.7.2_Nim_Product.cpp"): {8},
+    Path("6-Mathematics/6.8.2_Nim_Product.cpp"): {8},
 }
 
 EXAMPLE_OUTPUT_WITHOUT_DIRECT_PRINT = {
@@ -28,8 +28,8 @@ EXAMPLE_STD_QUALIFICATION_ALLOWLIST = {
 }
 
 BRACED_PUSH_ALLOWLIST = {
-    Path("1-Elementary-Algorithms/1.6.6_Binary_Trie.cpp"): {"child"},
-    Path("2-Data-Structures/2.5.3_2D_Range_Tree.cpp"): {"points"},
+    Path("1-Elementary-Algorithms/1.7.6_Binary_Trie.cpp"): {"child"},
+    Path("2-Data-Structures/2.6.3_2D_Range_Tree.cpp"): {"points"},
     Path("3-Strings/3.7.2_Shunting_Yard_and_Postfix_Evaluation.cpp"): {"op_stack"},
     Path("4-Graphs/4.2.5_Articulation_Points,_Biconnected_Components,_Block-Cut_Forest.cpp"):
         {"bccs"},
@@ -40,7 +40,7 @@ TYPE_PRESERVING_CMATH_FILES = {
     Path("5-Optimization/5.4.3_Polynomial_Root_Finding_(Differentiation).cpp"),
     Path("5-Optimization/5.4.4_Polynomial_Root_Finding_(Laguerre).cpp"),
     Path("5-Optimization/5.4.5_Polynomial_Root_Finding_(Ehrlich-Aberth).cpp"),
-    Path("6-Mathematics/6.1_Math_Utilities.cpp"),
+    Path("6-Mathematics/6.1.1_Floating-Point_Comparison.cpp"),
     Path("6-Mathematics/6.5.2_Row_Reduction.cpp"),
     Path("6-Mathematics/6.5.3_Determinant_and_Inverse.cpp"),
     Path("6-Mathematics/6.5.4_LU_Decomposition.cpp"),
@@ -67,8 +67,8 @@ UNQUALIFIED_STD_CMATH_RE = re.compile(
     r"exp|log|log2|modf|fmod)\s*\("
 )
 UNQUALIFIED_CMATH_NAME_ALLOWLIST = {
-    Path("6-Mathematics/6.1_Math_Utilities.cpp"): {"round"},
-    Path("6-Mathematics/6.3.2_Modular_Arithmetic.cpp"): {"pow"},
+    Path("6-Mathematics/6.1.2_Rounding.cpp"): {"round"},
+    Path("6-Mathematics/6.3.3_Modular_Integer_and_Combinatorics.cpp"): {"pow"},
     Path("6-Mathematics/6.4.2_Big_Integer.cpp"): {"pow", "sqrt"},
     Path("6-Mathematics/6.4.3_Big_Decimal.cpp"): {"pow", "sqrt", "floor", "ceil"},
     Path("6-Mathematics/6.4.4_Rational_Numbers.cpp"): {"floor", "ceil"},
@@ -1006,7 +1006,7 @@ def scan_example_markers(paths):
         if not match:
             continue
         marker = match.group(0).splitlines()[0]
-        body = text[match.end():]
+        body = strip_block_comments_and_strings(text[match.end():])
         has_print = bool(print_re.search(body))
         has_output_marker = "Output" in marker
         line = text[: match.start()].count("\n") + 1
@@ -1362,6 +1362,20 @@ def scan_code_consistency(paths):
                     )
                 )
     return issues
+
+
+def strip_block_comments_and_strings(text):
+    """Strip comments and string literals from a multi-line block of C++ source.
+
+    Detectors that search for identifiers must run on code only. Prose in a comment can otherwise
+    match a keyword by accident, as "puts both columns on one scale" once matched `puts`.
+    """
+    lines = []
+    in_block_comment = False
+    for line in text.splitlines():
+        code, in_block_comment = strip_cpp_comments_and_strings(line, in_block_comment)
+        lines.append(code)
+    return "\n".join(lines)
 
 
 def strip_cpp_comments_and_strings(line, in_block_comment):
@@ -2487,6 +2501,58 @@ def run_git_diff_check():
     return proc.returncode == 0, output
 
 
+def scan_section_cross_references(paths):
+    """Flags prose that points at a section number which does not exist, or at its own section.
+
+    References are matched against the flattened docstring rather than line by line, since a
+    reference may wrap onto the next line or end a sentence, and both forms hid real breakage
+    when sections were renumbered.
+    """
+    issues = []
+    sections = {}
+    for path in paths:
+        match = re.match(r"^(\d+\.\d+(?:\.\d+)?)_", path.name)
+        if match:
+            sections[match.group(1)] = path
+    # Either a keyword-introduced reference or a bare parenthesized one, which is how several
+    # stale references survived an earlier renumbering. The parenthesized form requires all three
+    # parts, since a bare decimal in parentheses is far more often a number than a section.
+    reference_re = re.compile(
+        r"(?:see|See|sections?|in|from|of)\s+(\d\.\d+(?:\.\d+)?)(?![\d.])"
+        r"|\((\d\.\d+\.\d+)\)"
+    )
+    for path in paths:
+        own = re.match(r"^(\d+\.\d+(?:\.\d+)?)_", path.name)
+        own = own.group(1) if own else None
+        lines = path.read_text().splitlines()
+        for start, end in docstring_ranges(lines):
+            block = lines[start : end + 1]
+            flat = " ".join(" ".join(block).split())
+            for match in reference_re.finditer(flat):
+                ref = match.group(1) or match.group(2)
+                if ref not in sections:
+                    issues.append(
+                        Issue(
+                            path,
+                            start + 1,
+                            "cross-reference",
+                            f"Section {ref} does not exist; update the reference.",
+                            f"-> {ref}",
+                        )
+                    )
+                elif ref == own:
+                    issues.append(
+                        Issue(
+                            path,
+                            start + 1,
+                            "cross-reference",
+                            f"Section {ref} refers to itself; the target was probably renumbered.",
+                            f"-> {ref}",
+                        )
+                    )
+    return issues
+
+
 def main():
     paths = list(cpp_files())
     issues = []
@@ -2515,6 +2581,7 @@ def main():
     issues.extend(scan_documented_api_names(paths))
     issues.extend(scan_repeated_literal_defaults(paths))
     issues.extend(scan_contextual_math_style(paths))
+    issues.extend(scan_section_cross_references(paths))
 
     ok, diff_output = run_git_diff_check()
     if not ok:

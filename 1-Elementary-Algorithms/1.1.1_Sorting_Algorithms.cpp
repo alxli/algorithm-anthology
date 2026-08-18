@@ -8,11 +8,16 @@ specified to replace the default `operator<`.
 - `quicksort(lo, hi, comp = std::less<>)` sorts the range using quicksort.
 - `mergesort(lo, hi, comp = std::less<>)` sorts the range using merge sort, which is stable.
 - `heapsort(lo, hi, comp = std::less<>)` sorts the range using heapsort.
+- `combsort(lo, hi, comp = std::less<>)` sorts the range using comb sort.
 - `insertion_sort(lo, hi, comp = std::less<>)` sorts the range using insertion sort, which is
   stable.
-- `combsort(lo, hi, comp = std::less<>)` sorts the range using comb sort.
+- `shellsort(lo, hi, comp = std::less<>)` sorts the range using shell sort.
+- `counting_sort(lo, hi, keys, key)` sorts the range by the index that `key(element)` returns in
+  $[0, `keys`)$, which is stable; unlike the shared interface above, it takes no comparator.
 - `radix_sort(lo, hi)` sorts an integer range using least-significant-byte radix sort; unlike the
   shared interface above, it takes no comparator.
+- `bitonic_sort(lo, hi, comp = std::less<>)` sorts a range of any length using a compare-exchange
+  sequence generated from that length.
 
 These functions are not meant to compete with standard library implementations in terms of speed.
 Instead, they demonstrate how common sorting algorithms can be concisely implemented in C++.
@@ -158,6 +163,37 @@ void heapsort(It lo, It hi, Compare comp = Compare{}) {
 
 /*
 
+Comb sort is an improved bubble sort. While bubble sort compares only adjacent elements, comb sort
+compares elements separated by a fixed gap, decreasing that gap after every pass. Large gaps move
+small values near the end toward the front quickly, avoiding the slow movement of such values in
+bubble sort. These nonadjacent swaps make comb sort unstable. The shrink factor $1.3$ is a common
+empirical choice.
+
+Time Complexity: O(n log n) best and O(n^2) worst.
+Space Complexity: O(1) auxiliary.
+
+*/
+
+template<typename It, typename Compare = std::less<>>
+void combsort(It lo, It hi, Compare comp = Compare{}) {
+  int gap = static_cast<int>(hi - lo);
+  bool swapped = true;
+  while (gap > 1 || swapped) {
+    if (gap > 1) {
+      gap = gap * 10 / 13;
+    }
+    swapped = false;
+    for (It it = lo; it + gap < hi; ++it) {
+      if (comp(*(it + gap), *it)) {
+        std::iter_swap(it, it + gap);
+        swapped = true;
+      }
+    }
+  }
+}
+
+/*
+
 Insertion sort builds the sorted range one element at a time. It scans left to right, and for each
 element shifts the larger elements of the already-sorted prefix one position to the right to open a
 slot where the element belongs. Although its average and worst cases are quadratic, it is simple,
@@ -192,33 +228,81 @@ void insertion_sort(It lo, It hi, Compare comp = Compare{}) {
 
 /*
 
-Comb sort is an improved bubble sort. While bubble sort compares only adjacent elements, comb sort
-compares elements separated by a fixed gap, decreasing that gap after every pass. Large gaps move
-small values near the end toward the front quickly, avoiding the slow movement of such values in
-bubble sort. These nonadjacent swaps make comb sort unstable. The shrink factor $1.3$ is a common
-empirical choice.
+Shell sort is insertion sort performed on subsequences of elements a fixed gap apart, repeating with
+smaller gaps until the final pass uses a gap of one and is an ordinary insertion sort. The earlier
+passes are what make that final pass cheap: each one leaves the range closer to sorted, and
+insertion sort runs in time proportional to the number of remaining inversions. Comparing elements a
+gap apart also moves a value many positions in one step, which is what insertion sort alone cannot
+do. Like comb sort above, the nonadjacent swaps make it unstable.
 
-Time Complexity: O(n log n) best and O(n^2) worst.
+The gap sequence determines the bound, and choosing it well is the whole difficulty. This
+implementation uses Ciura's empirical sequence, extended upward by a factor of $2.25$, which is the
+fastest known for small and medium ranges though it has no proven bound. The theoretical choices are
+Sedgewick's sequence at O(n^{4/3}) and Pratt's at O(n log^2 n), the latter being slower in practice
+despite the better bound.
+
+Time Complexity: O(n log n) best, and O(n^{4/3}) or better in practice for the gaps used here.
 Space Complexity: O(1) auxiliary.
 
 */
 
 template<typename It, typename Compare = std::less<>>
-void combsort(It lo, It hi, Compare comp = Compare{}) {
-  int gap = static_cast<int>(hi - lo);
-  bool swapped = true;
-  while (gap > 1 || swapped) {
-    if (gap > 1) {
-      gap = gap * 10 / 13;
+void shellsort(It lo, It hi, Compare comp = Compare{}) {
+  static const int GAPS[] = {1, 4, 10, 23, 57, 132, 301, 701, 1577, 3548, 7983, 17962};
+  int n = static_cast<int>(hi - lo), count = sizeof(GAPS) / sizeof(GAPS[0]);
+  for (int g = count - 1; g >= 0; g--) {
+    int gap = GAPS[g];
+    if (gap >= n) {
+      continue;
     }
-    swapped = false;
-    for (It it = lo; it + gap < hi; ++it) {
-      if (comp(*(it + gap), *it)) {
-        std::iter_swap(it, it + gap);
-        swapped = true;
+    for (It it = lo + gap; it < hi; ++it) {
+      typename std::iterator_traits<It>::value_type key = *it;
+      It j = it;
+      while (j - lo >= gap && comp(key, *(j - gap))) {
+        *j = *(j - gap);
+        j -= gap;
       }
+      *j = key;
     }
   }
+}
+
+/*
+
+Counting sort sorts values from a small integer range by counting how many times each value occurs,
+converting those counts into starting offsets with a prefix sum, and then placing each element at
+the offset for its key. It never compares two elements, so the O(n log n) lower bound for comparison
+sorts does not apply, and it runs in linear time whenever the range of keys is proportional to the
+number of elements.
+
+Placing elements in a second pass over the input from right to left keeps the sort stable, which is
+what makes it usable as the inner pass of the radix sort below. The `key` function maps an element
+to an index in $[0, `keys`)$, so records can be sorted by one field while carrying the rest.
+
+Time Complexity: O(n + k) for $n$ elements with $k$ possible keys.
+Space Complexity: O(n + k) auxiliary.
+
+*/
+
+template<typename It, typename KeyFn>
+void counting_sort(It lo, It hi, int keys, KeyFn key) {
+  if (hi - lo < 2) {
+    return;
+  }
+  std::vector<int> count(keys);
+  for (It it = lo; it != hi; ++it) {
+    count[key(*it)]++;
+  }
+  for (int i = 1; i < keys; ++i) {
+    count[i] += count[i - 1];
+  }
+  using T = typename std::iterator_traits<It>::value_type;
+  std::vector<T> res(hi - lo);
+  for (It it = hi; it != lo;) {
+    --it;
+    res[--count[key(*it)]] = *it;
+  }
+  std::copy(res.begin(), res.end(), lo);
 }
 
 /*
@@ -250,8 +334,8 @@ void radix_sort(It lo, It hi) {
   const int radix_base = 1 << radix_bits;  // e.g. 2^8 = 256
   const int radix_mask = radix_base - 1;   // e.g. 2^8 - 1 = 0xFF
   using T = typename std::iterator_traits<It>::value_type;
-  static_assert(std::is_integral<T>::value && !std::is_same<T, bool>::value);
-  using U = typename std::make_unsigned<T>::type;
+  static_assert(std::is_integral_v<T> && !std::is_same_v<T, bool>);
+  using U = typename std::make_unsigned_t<T>;
   const int num_bits = sizeof(T) * CHAR_BIT;
   // Sort on an unsigned key. For signed types, flipping the sign bit sends the most negative value
   // to 0, mapping the signed order onto the unsigned order; logical shifts then extract each digit.
@@ -277,27 +361,81 @@ void radix_sort(It lo, It hi) {
   }
 }
 
+/*
+
+Bitonic sort is a sorting network: a fixed sequence of compare-exchanges on fixed positions, each
+swapping its pair when out of order. The sequence depends only on how many elements there are, never
+on what they are, so no comparison branches on data. It sorts the first half ascending and the
+second half descending, leaving a bitonic sequence that rises and then falls, which a fixed pattern
+of halving compare-exchanges merges. Splitting each merge at the largest power of two below its
+length is what admits lengths that are not powers of two, which the textbook formulation requires.
+
+Its O(n log^2 n) comparators exceed the O(n log n) comparisons of a comparison sort, so run one at a
+time it loses to every sort above, as the benchmark below shows. What it buys instead is that each
+group of comparators is independent and may run at once, which is why networks are the standard
+choice across SIMD lanes and on a GPU. The same independence pays off at a small size fixed at
+compile time: unrolled into branchless minimum and maximum, a network sorts eight integers about an
+order of magnitude faster than a general sort. Driving that same comparator sequence from a lookup
+table forfeits it, since each comparator then costs an indexed load and an unpredictable branch.
+
+Time Complexity: O(n log^2 n) in all cases.
+Space Complexity: O(log n) auxiliary stack space.
+
+*/
+
+template<typename It, typename Compare = std::less<>>
+void bitonic_sort(It lo, It hi, Compare comp = Compare{}) {
+  auto merge = [&](auto &&merge, It lo, int n, bool up) -> void {
+    if (n < 2) {
+      return;
+    }
+    int m = 1;
+    while (2 * m < n) {
+      m *= 2;
+    }
+    for (int i = 0; i < n - m; i++) {
+      if (comp(*(lo + i + m), *(lo + i)) == up) {
+        std::iter_swap(lo + i, lo + i + m);
+      }
+    }
+    merge(merge, lo, m, up);
+    merge(merge, lo + m, n - m, up);
+  };
+  auto rec = [&](auto &&rec, It lo, int n, bool up) -> void {
+    if (n < 2) {
+      return;
+    }
+    rec(rec, lo, n / 2, !up);
+    rec(rec, lo + n / 2, n - n / 2, up);
+    merge(merge, lo, n, up);
+  };
+  rec(rec, lo, static_cast<int>(hi - lo), true);
+}
+
 /*** Example Usage and Output:
 
 mergesort() with default comparisons: 1.32 1.41 1.62 1.73 2.58 2.72 3.14 4.67
 mergesort() with integer comparisons: 1.41 1.73 1.32 1.62 2.72 2.58 3.14 4.67
 ------
 Sorting five million integers...
-std::sort():  0.223s
-quicksort():  0.253s
-mergesort():  0.621s
-heapsort():   0.439s
-combsort():   0.365s
-radix_sort(): 0.016s
+std::sort():      0.285s
+quicksort():      0.325s
+mergesort():      0.517s
+heapsort():       0.509s
+combsort():       0.469s
+shellsort():      0.574s
+counting_sort():  0.044s
+radix_sort():     0.024s
+bitonic_sort():   1.040s
 
 ***/
 
 #include <cassert>
-#include <cstdlib>
 #include <ctime>
 #include <iomanip>
 #include <iostream>
 #include <random>
+#include <utility>
 #include <vector>
 using namespace std;
 
@@ -335,9 +473,25 @@ int main() {
     combsort(a.begin(), a.end());
     assert(is_sorted(a.begin(), a.end()));
   }
+  {  // Shell sort moves values far in one step, so it is not adaptive but is nearly in-place.
+    vector<int> a{32, 71, 12, 45, 26, 80, 53, 33};
+    shellsort(a.begin(), a.end());
+    assert(is_sorted(a.begin(), a.end()));
+  }
+  {  // Counting sort keys records by one field, and equal keys keep their input order.
+    vector<pair<int, char>> a{{2, 'a'}, {0, 'b'}, {2, 'c'}, {1, 'd'}, {0, 'e'}};
+    counting_sort(a.begin(), a.end(), 3, [](const pair<int, char> &x) { return x.first; });
+    vector<pair<int, char>> expected{{0, 'b'}, {0, 'e'}, {1, 'd'}, {2, 'a'}, {2, 'c'}};
+    assert(a == expected);
+  }
   {  // radix_sort() handles signed integers (including negatives), unlike a plain counting sort.
     vector<int> a{32, -71, 12, -45, 26, -80, 53, 33};
     radix_sort(a.begin(), a.end());
+    assert(is_sorted(a.begin(), a.end()));
+  }
+  {  // Bitonic sort is oblivious too, and takes any length rather than only a power of two.
+    vector<int> a{32, 71, 12, 45, 26, 80, 53, 33, 19};
+    bitonic_sort(a.begin(), a.end());
     assert(is_sorted(a.begin(), a.end()));
   }
   {  // Empty and singleton ranges are valid no-ops.
@@ -372,8 +526,9 @@ int main() {
 
   mt19937 rng(1234567);  // Fixed seed for reproducibility.
   vector<int> data(5000000);
+  const int maxval = 10000000;
   for (int &x : data) {
-    x = static_cast<int>(rng());
+    x = static_cast<int>(rng() % maxval);  // limit magnitude for counting sort
   }
   cout << "Sorting five million integers..." << endl;
   cout.precision(3);
@@ -382,7 +537,7 @@ int main() {
     clock_t start = clock();
     sort(v.begin(), v.end());
     double t = static_cast<double>(clock() - start) / CLOCKS_PER_SEC;
-    cout << setw(14) << left << name + "(): " << fixed << t << "s" << endl;
+    cout << setw(18) << left << name + "(): " << fixed << t << "s" << endl;
     assert(is_sorted(v.begin(), v.end()));
   };
   benchmark("std::sort", [](auto lo, auto hi) { sort(lo, hi); });
@@ -390,6 +545,11 @@ int main() {
   benchmark("mergesort", [](auto lo, auto hi) { mergesort(lo, hi); });
   benchmark("heapsort", [](auto lo, auto hi) { heapsort(lo, hi); });
   benchmark("combsort", [](auto lo, auto hi) { combsort(lo, hi); });
+  benchmark("shellsort", [](auto lo, auto hi) { shellsort(lo, hi); });
+  benchmark("counting_sort", [](auto lo, auto hi) {
+    counting_sort(lo, hi, maxval, [](int x) { return x; });
+  });
   benchmark("radix_sort", [](auto lo, auto hi) { radix_sort(lo, hi); });
+  benchmark("bitonic_sort", [](auto lo, auto hi) { bitonic_sort(lo, hi); });
   return 0;
 }

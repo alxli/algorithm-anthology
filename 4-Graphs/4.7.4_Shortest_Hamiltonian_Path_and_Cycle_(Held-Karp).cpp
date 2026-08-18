@@ -14,9 +14,9 @@ Reconstruction repeats the same minimization backward instead of storing a separ
 
 - `shortest_hamiltonian_path()` populates `path` and returns the minimum Hamiltonian path length for
   a global, pre-populated adjacency matrix `adj`.
-- `shortest_hamiltonian_cycle()` fixes the start at node 0, populates `path`, and returns the
+- `shortest_hamiltonian_cycle()` fixes the start at node $0$, populates `path`, and returns the
   minimum Hamiltonian cycle length for a global, pre-populated adjacency matrix `adj`. The path
-  lists every node once; the closing edge back to node 0 is implicit.
+  lists every node once; the closing edge back to node $0$ is implicit.
 
 Since this implementation uses bitmasks with signed 32-bit integers, the maximum number of nodes
 must be less than $31$.

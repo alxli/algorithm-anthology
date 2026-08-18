@@ -20,7 +20,7 @@ The splicing helpers use the same "after" convention as `std::forward_list::spli
 work naturally with a dummy head node, which makes insertions and removals at the beginning of a
 list match all other positions. For doubly linked list splicing, use the next section.
 
-For cycle detection, see the variants on iterated functions in 1.7.3, which can be directly adapted
+For cycle detection, see the variants on iterated functions in 1.8.4, which can be directly adapted
 for linked lists.
 
 Time Complexity:

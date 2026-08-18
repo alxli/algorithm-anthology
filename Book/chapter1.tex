@@ -10,9 +10,12 @@ The following functions are equivalent to \inlinecode{std::sort()}, taking rando
   \item \inlinecode{quicksort(lo, hi, comp = std::less\textless{}\textgreater{})} sorts the range using quicksort.
   \item \inlinecode{mergesort(lo, hi, comp = std::less\textless{}\textgreater{})} sorts the range using merge sort, which is stable.
   \item \inlinecode{heapsort(lo, hi, comp = std::less\textless{}\textgreater{})} sorts the range using heapsort.
-  \item \inlinecode{insertion\_sort(lo, hi, comp = std::less\textless{}\textgreater{})} sorts the range using insertion sort, which is stable.
   \item \inlinecode{combsort(lo, hi, comp = std::less\textless{}\textgreater{})} sorts the range using comb sort.
+  \item \inlinecode{insertion\_sort(lo, hi, comp = std::less\textless{}\textgreater{})} sorts the range using insertion sort, which is stable.
+  \item \inlinecode{shellsort(lo, hi, comp = std::less\textless{}\textgreater{})} sorts the range using shell sort.
+  \item \inlinecode{counting\_sort(lo, hi, keys, key)} sorts the range by the index that \inlinecode{key(element)} returns in $[0, {\inlinecodemath{keys}})$, which is stable; unlike the shared interface above, it takes no comparator.
   \item \inlinecode{radix\_sort(lo, hi)} sorts an integer range using least-significant-byte radix sort; unlike the shared interface above, it takes no comparator.
+  \item \inlinecode{bitonic\_sort(lo, hi, comp = std::less\textless{}\textgreater{})} sorts a range of any length using a compare-exchange sequence generated from that length.
 \end{compactitem}
 
 These functions are not meant to compete with standard library implementations in terms of speed. Instead, they demonstrate how common sorting algorithms can be concisely implemented in C++.
@@ -129,31 +132,6 @@ void heapsort(It lo, It hi, Compare comp = Compare{}) {
   }
 }
 \end{lstlisting}
-Insertion sort builds the sorted range one element at a time. It scans left to right, and for each element shifts the larger elements of the already-sorted prefix one position to the right to open a slot where the element belongs. Although its average and worst cases are quadratic, it is simple, stable, in-place, and online (it can sort a stream as elements arrive).
-
-Its strength is being adaptive: on an already-sorted or nearly-sorted range, each element travels only a short distance, giving $O(n)$ best-case time and $O(n + d)$ in general for $d$ total inversions. This is why it outperforms the asymptotically faster sorts on small or nearly-sorted ranges, and why hybrid sorts such as introsort and Timsort fall back to it once a subrange is small enough.
-
-The comparison \inlinecode{comp(key, *(j - 1))} is strict, so an element never moves past an earlier element it compares equal to, which keeps the sort stable.
-
-\textbf{Time Complexity}: $O(n + d)$, i.e. $O(n)$ best and $O(n^{2})$ average/worst.
-
-\textbf{Space Complexity}: $O(1)$ auxiliary.
-
-\begin{lstlisting}[language=C++]
-template<typename It, typename Compare = std::less<>>
-void insertion_sort(It lo, It hi, Compare comp = Compare{}) {
-  using T = typename std::iterator_traits<It>::value_type;
-  for (It i = lo; i != hi; ++i) {
-    T key = *i;
-    It j = i;
-    while (j != lo && comp(key, *(j - 1))) {
-      *j = *(j - 1);
-      --j;
-    }
-    *j = key;
-  }
-}
-\end{lstlisting}
 Comb sort is an improved bubble sort. While bubble sort compares only adjacent elements, comb sort compares elements separated by a fixed gap, decreasing that gap after every pass. Large gaps move small values near the end toward the front quickly, avoiding the slow movement of such values in bubble sort. These nonadjacent swaps make comb sort unstable. The shrink factor $1.3$ is a common empirical choice.
 
 \textbf{Time Complexity}: $O(n \log n)$ best and $O(n^{2})$ worst.
@@ -179,6 +157,91 @@ void combsort(It lo, It hi, Compare comp = Compare{}) {
   }
 }
 \end{lstlisting}
+Insertion sort builds the sorted range one element at a time. It scans left to right, and for each element shifts the larger elements of the already-sorted prefix one position to the right to open a slot where the element belongs. Although its average and worst cases are quadratic, it is simple, stable, in-place, and online (it can sort a stream as elements arrive).
+
+Its strength is being adaptive: on an already-sorted or nearly-sorted range, each element travels only a short distance, giving $O(n)$ best-case time and $O(n + d)$ in general for $d$ total inversions. This is why it outperforms the asymptotically faster sorts on small or nearly-sorted ranges, and why hybrid sorts such as introsort and Timsort fall back to it once a subrange is small enough.
+
+The comparison \inlinecode{comp(key, *(j - 1))} is strict, so an element never moves past an earlier element it compares equal to, which keeps the sort stable.
+
+\textbf{Time Complexity}: $O(n + d)$, i.e. $O(n)$ best and $O(n^{2})$ average/worst.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+template<typename It, typename Compare = std::less<>>
+void insertion_sort(It lo, It hi, Compare comp = Compare{}) {
+  using T = typename std::iterator_traits<It>::value_type;
+  for (It i = lo; i != hi; ++i) {
+    T key = *i;
+    It j = i;
+    while (j != lo && comp(key, *(j - 1))) {
+      *j = *(j - 1);
+      --j;
+    }
+    *j = key;
+  }
+}
+\end{lstlisting}
+Shell sort is insertion sort performed on subsequences of elements a fixed gap apart, repeating with smaller gaps until the final pass uses a gap of one and is an ordinary insertion sort. The earlier passes are what make that final pass cheap: each one leaves the range closer to sorted, and insertion sort runs in time proportional to the number of remaining inversions. Comparing elements a gap apart also moves a value many positions in one step, which is what insertion sort alone cannot do. Like comb sort above, the nonadjacent swaps make it unstable.
+
+The gap sequence determines the bound, and choosing it well is the whole difficulty. This implementation uses Ciura's empirical sequence, extended upward by a factor of $2.25$, which is the fastest known for small and medium ranges though it has no proven bound. The theoretical choices are Sedgewick's sequence at $O(n^{4/3})$ and Pratt's at $O(n \log^{2} n)$, the latter being slower in practice despite the better bound.
+
+\textbf{Time Complexity}: $O(n \log n)$ best, and $O(n^{4/3})$ or better in practice for the gaps used here.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+template<typename It, typename Compare = std::less<>>
+void shellsort(It lo, It hi, Compare comp = Compare{}) {
+  static const int GAPS[] = {1, 4, 10, 23, 57, 132, 301, 701, 1577, 3548, 7983, 17962};
+  int n = static_cast<int>(hi - lo), count = sizeof(GAPS) / sizeof(GAPS[0]);
+  for (int g = count - 1; g >= 0; g--) {
+    int gap = GAPS[g];
+    if (gap >= n) {
+      continue;
+    }
+    for (It it = lo + gap; it < hi; ++it) {
+      typename std::iterator_traits<It>::value_type key = *it;
+      It j = it;
+      while (j - lo >= gap && comp(key, *(j - gap))) {
+        *j = *(j - gap);
+        j -= gap;
+      }
+      *j = key;
+    }
+  }
+}
+\end{lstlisting}
+Counting sort sorts values from a small integer range by counting how many times each value occurs, converting those counts into starting offsets with a prefix sum, and then placing each element at the offset for its key. It never compares two elements, so the $O(n \log n)$ lower bound for comparison sorts does not apply, and it runs in linear time whenever the range of keys is proportional to the number of elements.
+
+Placing elements in a second pass over the input from right to left keeps the sort stable, which is what makes it usable as the inner pass of the radix sort below. The \inlinecode{key} function maps an element to an index in $[0, {\inlinecodemath{keys}})$, so records can be sorted by one field while carrying the rest.
+
+\textbf{Time Complexity}: $O(n + k)$ for $n$ elements with $k$ possible keys.
+
+\textbf{Space Complexity}: $O(n + k)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+template<typename It, typename KeyFn>
+void counting_sort(It lo, It hi, int keys, KeyFn key) {
+  if (hi - lo < 2) {
+    return;
+  }
+  std::vector<int> count(keys);
+  for (It it = lo; it != hi; ++it) {
+    count[key(*it)]++;
+  }
+  for (int i = 1; i < keys; ++i) {
+    count[i] += count[i - 1];
+  }
+  using T = typename std::iterator_traits<It>::value_type;
+  std::vector<T> res(hi - lo);
+  for (It it = hi; it != lo;) {
+    --it;
+    res[--count[key(*it)]] = *it;
+  }
+  std::copy(res.begin(), res.end(), lo);
+}
+\end{lstlisting}
 Radix sort is used to sort integer elements with a constant number of bits in linear time. This implementation works on ranges pointing to any signed or unsigned integer primitive. Signed values are handled by sorting on a key that flips the sign bit, which maps the two's-complement order onto the unsigned order so the most negative value sorts first.
 
 Digits are processed from least significant to most significant, and each counting-sort pass is stable. After one pass, the values are sorted by the processed digit; stability ensures that a later pass preserves the ordering already established by all less-significant digits. Inductively, after the final pass the values are sorted by the entire key.
@@ -199,8 +262,8 @@ void radix_sort(It lo, It hi) {
   const int radix_base = 1 << radix_bits;  // e.g. 2^8 = 256
   const int radix_mask = radix_base - 1;   // e.g. 2^8 - 1 = 0xFF
   using T = typename std::iterator_traits<It>::value_type;
-  static_assert(std::is_integral<T>::value && !std::is_same<T, bool>::value);
-  using U = typename std::make_unsigned<T>::type;
+  static_assert(std::is_integral_v<T> && !std::is_same_v<T, bool>);
+  using U = typename std::make_unsigned_t<T>;
   const int num_bits = sizeof(T) * CHAR_BIT;
   // Sort on an unsigned key. For signed types, flipping the sign bit sends the most negative value
   // to 0, mapping the signed order onto the unsigned order; logical shifts then extract each digit.
@@ -226,15 +289,53 @@ void radix_sort(It lo, It hi) {
   }
 }
 \end{lstlisting}
+Bitonic sort is a sorting network: a fixed sequence of compare-exchanges on fixed positions, each swapping its pair when out of order. The sequence depends only on how many elements there are, never on what they are, so no comparison branches on data. It sorts the first half ascending and the second half descending, leaving a bitonic sequence that rises and then falls, which a fixed pattern of halving compare-exchanges merges. Splitting each merge at the largest power of two below its length is what admits lengths that are not powers of two, which the textbook formulation requires.
+
+Its $O(n \log^{2} n)$ comparators exceed the $O(n \log n)$ comparisons of a comparison sort, so run one at a time it loses to every sort above, as the benchmark below shows. What it buys instead is that each group of comparators is independent and may run at once, which is why networks are the standard choice across SIMD lanes and on a GPU. The same independence pays off at a small size fixed at compile time: unrolled into branchless minimum and maximum, a network sorts eight integers about an order of magnitude faster than a general sort. Driving that same comparator sequence from a lookup table forfeits it, since each comparator then costs an indexed load and an unpredictable branch.
+
+\textbf{Time Complexity}: $O(n \log^{2} n)$ in all cases.
+
+\textbf{Space Complexity}: $O(\log n)$ auxiliary stack space.
+
+\begin{lstlisting}[language=C++]
+template<typename It, typename Compare = std::less<>>
+void bitonic_sort(It lo, It hi, Compare comp = Compare{}) {
+  auto merge = [&](auto &&merge, It lo, int n, bool up) -> void {
+    if (n < 2) {
+      return;
+    }
+    int m = 1;
+    while (2 * m < n) {
+      m *= 2;
+    }
+    for (int i = 0; i < n - m; i++) {
+      if (comp(*(lo + i + m), *(lo + i)) == up) {
+        std::iter_swap(lo + i, lo + i + m);
+      }
+    }
+    merge(merge, lo, m, up);
+    merge(merge, lo + m, n - m, up);
+  };
+  auto rec = [&](auto &&rec, It lo, int n, bool up) -> void {
+    if (n < 2) {
+      return;
+    }
+    rec(rec, lo, n / 2, !up);
+    rec(rec, lo + n / 2, n - n / 2, up);
+    merge(merge, lo, n, up);
+  };
+  rec(rec, lo, static_cast<int>(hi - lo), true);
+}
+\end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <cstdlib>
 #include <ctime>
 #include <iomanip>
 #include <iostream>
 #include <random>
+#include <utility>
 #include <vector>
 using namespace std;
 
@@ -272,9 +373,25 @@ int main() {
     combsort(a.begin(), a.end());
     assert(is_sorted(a.begin(), a.end()));
   }
+  {  // Shell sort moves values far in one step, so it is not adaptive but is nearly in-place.
+    vector<int> a{32, 71, 12, 45, 26, 80, 53, 33};
+    shellsort(a.begin(), a.end());
+    assert(is_sorted(a.begin(), a.end()));
+  }
+  {  // Counting sort keys records by one field, and equal keys keep their input order.
+    vector<pair<int, char>> a{{2, 'a'}, {0, 'b'}, {2, 'c'}, {1, 'd'}, {0, 'e'}};
+    counting_sort(a.begin(), a.end(), 3, [](const pair<int, char> &x) { return x.first; });
+    vector<pair<int, char>> expected{{0, 'b'}, {0, 'e'}, {1, 'd'}, {2, 'a'}, {2, 'c'}};
+    assert(a == expected);
+  }
   {  // radix_sort() handles signed integers (including negatives), unlike a plain counting sort.
     vector<int> a{32, -71, 12, -45, 26, -80, 53, 33};
     radix_sort(a.begin(), a.end());
+    assert(is_sorted(a.begin(), a.end()));
+  }
+  {  // Bitonic sort is oblivious too, and takes any length rather than only a power of two.
+    vector<int> a{32, 71, 12, 45, 26, 80, 53, 33, 19};
+    bitonic_sort(a.begin(), a.end());
     assert(is_sorted(a.begin(), a.end()));
   }
   {  // Empty and singleton ranges are valid no-ops.
@@ -309,8 +426,9 @@ int main() {
 
   mt19937 rng(1234567);  // Fixed seed for reproducibility.
   vector<int> data(5000000);
+  const int maxval = 10000000;
   for (int &x : data) {
-    x = static_cast<int>(rng());
+    x = static_cast<int>(rng() % maxval);  // limit magnitude for counting sort
   }
   cout << "Sorting five million integers..." << endl;
   cout.precision(3);
@@ -319,7 +437,7 @@ int main() {
     clock_t start = clock();
     sort(v.begin(), v.end());
     double t = static_cast<double>(clock() - start) / CLOCKS_PER_SEC;
-    cout << setw(14) << left << name + "(): " << fixed << t << "s" << endl;
+    cout << setw(18) << left << name + "(): " << fixed << t << "s" << endl;
     assert(is_sorted(v.begin(), v.end()));
   };
   benchmark("std::sort", [](auto lo, auto hi) { sort(lo, hi); });
@@ -327,7 +445,12 @@ int main() {
   benchmark("mergesort", [](auto lo, auto hi) { mergesort(lo, hi); });
   benchmark("heapsort", [](auto lo, auto hi) { heapsort(lo, hi); });
   benchmark("combsort", [](auto lo, auto hi) { combsort(lo, hi); });
+  benchmark("shellsort", [](auto lo, auto hi) { shellsort(lo, hi); });
+  benchmark("counting_sort", [](auto lo, auto hi) {
+    counting_sort(lo, hi, maxval, [](int x) { return x; });
+  });
   benchmark("radix_sort", [](auto lo, auto hi) { radix_sort(lo, hi); });
+  benchmark("bitonic_sort", [](auto lo, auto hi) { bitonic_sort(lo, hi); });
   return 0;
 }
 \end{lstlisting}
@@ -336,12 +459,15 @@ mergesort() with default comparisons: 1.32 1.41 1.62 1.73 2.58 2.72 3.14 4.67
 mergesort() with integer comparisons: 1.41 1.73 1.32 1.62 2.72 2.58 3.14 4.67
 ------
 Sorting five million integers...
-std::sort():  0.223s
-quicksort():  0.253s
-mergesort():  0.621s
-heapsort():   0.439s
-combsort():   0.365s
-radix_sort(): 0.016s
+std::sort():      0.285s
+quicksort():      0.325s
+mergesort():      0.517s
+heapsort():       0.509s
+combsort():       0.469s
+shellsort():      0.574s
+counting_sort():  0.044s
+radix_sort():     0.024s
+bitonic_sort():   1.040s
 \end{exampleoutput}
 \subsection{Partitioning and Selection}
 Partition a range around a pivot, or select the element with a given sorted rank without fully sorting the range. A comparator \inlinecode{comp} defines the ordering (defaults to \inlinecode{std::less\textless{}\textgreater{}}). Three-way partitioning rearranges the elements into consecutive groups that precede, are equivalent to, and follow the pivot. \inlinecode{std::partition()} can be used to place elements satisfying a unary predicate before those that do not, but forms only two groups and does not preserve relative order. Forming three groups can be done by first partitioning by \inlinecode{comp(x, pivot)}, then partitioning the remaining suffix by \inlinecode{!comp(pivot, x)}; using \inlinecode{std::stable\_partition()} for both calls preserves relative order within each group.
@@ -355,14 +481,26 @@ Quickselect repeatedly applies this partition and continues only into the group 
   \item \inlinecode{quickselect(lo, nth, hi, comp = std::less\textless{}\textgreater{}())} rearranges $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ in-place around the 0-based rank represented by iterator \inlinecode{nth} according to \inlinecode{comp}. This requires random-access iterators.
 \end{compactitem}
 
+Random pivots leave an adversary free to force $O(n^{2})$, which the median-of-medians rule removes. Split the range into groups of five, sort each, and pivot on the median of the group medians: at least three elements in half of the groups precede it, so every partition discards at least three tenths of the range. Finding that median is itself a selection, solved by recursing on the $n/5$ medians gathered to the front, and $T(n) = T(n/5) + T(7n/10) + O(n)$ is linear because the two fractions sum to less than one, which five is the smallest group size to achieve. Each group is sorted directly, since at five elements \inlinecode{std::sort} is an inlined insertion sort. This guarantee is not free, but on random input the cost over a random pivot is modest.
+
+\begin{compactitem}
+  \item \inlinecode{quickselect\_linear(lo, nth, hi, comp = std::less\textless{}\textgreater{}())} does the same in linear time even in the worst case, choosing each pivot by the median-of-medians rule instead of at random.
+\end{compactitem}
+
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{partition\_three\_way()}, where $n$ is the range length.
   \item $O(n)$ expected per call to \inlinecode{quickselect()}, and $O(n^{2})$ in the worst case.
+  \item $O(n)$ per call to \inlinecode{quickselect\_linear()} in all cases.
 \end{compactitem}
 
-\textbf{Space Complexity}: $O(1)$ auxiliary.
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ auxiliary for \inlinecode{partition\_three\_way()} and \inlinecode{quickselect()}.
+  \item $O(\log n)$ auxiliary stack space for \inlinecode{quickselect\_linear()}.
+\end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -404,6 +542,31 @@ void quickselect(It lo, It nth, It hi, Compare comp = Compare{}) {
     }
   }
 }
+
+template<typename It, typename Compare = std::less<>>
+void quickselect_linear(It lo, It nth, It hi, Compare comp = Compare{}) {
+  while (hi - lo > 5) {
+    int groups = 0;
+    for (It g = lo; g < hi; g += 5, groups++) {
+      It ge = hi - g < 5 ? hi : g + 5;
+      std::sort(g, ge, comp);  // At most 5 elements, so this is an O(1) step.
+      std::iter_swap(lo + groups, g + (ge - g) / 2);
+    }
+    It mid = lo + groups / 2;
+    quickselect_linear(lo, mid, lo + groups, comp);
+    using T = typename std::iterator_traits<It>::value_type;
+    T pivot = *mid;
+    std::pair<It, It> parts = partition_three_way(lo, hi, pivot, comp);
+    if (nth < parts.first) {
+      hi = parts.first;
+    } else if (nth < parts.second) {
+      return;
+    } else {
+      lo = parts.second;
+    }
+  }
+  std::sort(lo, hi, comp);
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -442,6 +605,11 @@ int main() {
   for (int i = n / 2 + 1; i < n; i++) {
     assert(a[i] >= a[n / 2]);
   }
+
+  // The median-of-medians variant gives the same answer with a worst case that is still linear.
+  vector<int> c{5, 6, 4, 3, 2, 6, 7, 9, 3};
+  quickselect_linear(c.begin(), c.begin() + n / 2, c.end());
+  assert(c[n / 2] == 5);
 
   vector<int> desc{1, 4, 2, 3};
   quickselect(desc.begin(), desc.begin() + 1, desc.end(), greater<int>());
@@ -832,7 +1000,7 @@ int main() {
 }
 \end{lstlisting}
 
-\section{\texorpdfstring{Arrays and Dynamic Programming}{1.2 Arrays and Dynamic Programming}}
+\section{\texorpdfstring{1D Scan and Window Techniques}{1.2 1D Scan and Window Techniques}}
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Prefix Sums}
@@ -937,8 +1105,8 @@ int main() {
   assert(count_subarrays_with_sum(vector<int>{0, 0, 0}, 0) == 6);
 
   vector<vector<int>> grid{
-    {1, 2, 3},
-    {4, 5, 6}
+      {1, 2, 3},
+      {4, 5, 6},
   };
   auto pre2 = prefix_sums_2d(grid);
   assert(rect_sum(pre2, 0, 1, 1, 2) == 16);  // Rows 0-1 and columns 1-2.
@@ -1062,9 +1230,9 @@ int main() {
   d2.add(1, 1, 2, 3, 2);  // Add 2 to rows 1-2 and columns 1-3.
   d2.add(2, 0, 2, 0, 5);  // Single cell update.
   vector<vector<int64_t>> expected2{
-    {1, 1, 1, 0},
-    {1, 3, 3, 2},
-    {5, 2, 2, 2}
+      {1, 1, 1, 0},
+      {1, 3, 3, 2},
+      {5, 2, 2, 2},
   };
   assert(d2.build() == expected2);
   return 0;
@@ -1230,10 +1398,10 @@ The queue stores candidate (\inlinecode{index}, \inlinecode{value}) pairs in mon
 
 \begin{compactitem}
   \item \inlinecode{MonotoneQueue\textless{}T\textgreater{}()} constructs an empty queue for minimum queries. Instantiate \inlinecode{MonotoneQueue\textless{}T, std::greater\textless{}T\textgreater{}\textgreater{}} for maximum queries.
+  \item \inlinecode{empty()} returns whether the queue has no active candidates.
   \item \inlinecode{push(index, value)} inserts candidate \inlinecode{value} with timestamp \inlinecode{index}, removing dominated candidates from the back.
   \item \inlinecode{expire(first\_valid)} removes candidates whose indices are less than \inlinecode{first\_valid}.
   \item \inlinecode{top()} returns the best active (\inlinecode{index}, \inlinecode{value}) pair. The queue must be nonempty.
-  \item \inlinecode{empty()} returns whether the queue has no active candidates.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1355,7 +1523,6 @@ Overflow warning: Histogram areas must fit in the height value type.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <cassert>
 #include <stack>
 #include <tuple>
@@ -1618,15 +1785,19 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+
+\section{\texorpdfstring{Dynamic Programming}{1.3 Dynamic Programming}}
+\setcounter{section}{3}
+\setcounter{subsection}{0}
 \subsection{Maximum Subarray Sum (Kadane)}
 Given an array of numbers, determine the maximum possible sum of any contiguous subarray. Kadane's algorithm scans the array while maintaining a nonnegative running sum. At each position, it adds the current value, records the largest sum seen, and resets the running sum to zero if it becomes negative. Discarding a negative sum is safe because it could only reduce every subarray extending it. This can be adapted to compute the maximal submatrix sum as well.
 
 Two related scans maintain slightly different states. For a circular array, the best wrapped subarray is the whole-array sum minus the minimum-sum subarray. For a maximum-product subarray, a negative value swaps the roles of the minimum and maximum products ending at the previous position, so both products must be tracked.
 
 \begin{compactitem}
-  \item \inlinecode{max\_subarray\_sum(lo, hi)} returns the sum and inclusive endpoints (\inlinecode{sum}, \inlinecode{begin}, \inlinecode{end}) for the maximal-sum subarray of $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to numeric types. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} on the iterators' value type. By convention, the empty subarray is allowed, so an input range containing only negative values returns sum $0$ and endpoints $[0, -1]$.
-  \item \inlinecode{max\_circular\_subarray\_sum(lo, hi)} returns a tuple (\inlinecode{sum}, \inlinecode{begin}, \inlinecode{end}) containing the maximal circular-subarray sum and its inclusive endpoints. If \inlinecode{begin} $\leq$ \inlinecode{end}, the result is an ordinary range; if \inlinecode{begin} \textgreater{} \inlinecode{end}, it wraps from \inlinecode{begin} through the end of the input and continues through \inlinecode{end}. The empty subarray is allowed under the same convention as \inlinecode{max\_subarray\_sum()}.
-  \item \inlinecode{max\_product\_subarray(lo, hi)} returns a tuple (\inlinecode{product}, \inlinecode{begin}, \inlinecode{end}) containing the product and inclusive endpoints of a nonempty maximal-product subarray, or product $0$ and endpoints $[0, -1]$ for an empty input range.
+  \item \inlinecode{max\_subarray\_sum(a)} returns the sum and inclusive endpoints (\inlinecode{sum}, \inlinecode{begin}, \inlinecode{end}) for the maximal-sum subarray of vector \inlinecode{a}. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} on the value type. By convention, the empty subarray is allowed, so an input containing only negative values returns sum $0$ and endpoints $[0, -1]$.
+  \item \inlinecode{max\_circular\_subarray\_sum(a)} returns a tuple (\inlinecode{sum}, \inlinecode{begin}, \inlinecode{end}) containing the maximal circular-subarray sum and its inclusive endpoints. If \inlinecode{begin} $\leq$ \inlinecode{end}, the result is an ordinary range; if \inlinecode{begin} \textgreater{} \inlinecode{end}, it wraps from \inlinecode{begin} through the end of \inlinecode{a} and continues through \inlinecode{end}. The empty subarray is allowed under the same convention as \inlinecode{max\_subarray\_sum()}.
+  \item \inlinecode{max\_product\_subarray(a)} returns a tuple (\inlinecode{product}, \inlinecode{begin}, \inlinecode{end}) containing the product and inclusive endpoints of a nonempty maximal-product subarray, or product $0$ and endpoints $[0, -1]$ for an empty input.
   \item \inlinecode{max\_submatrix\_sum(a)} returns the sum and inclusive boundaries (\inlinecode{sum}, \inlinecode{r1}, \inlinecode{c1}, \inlinecode{r2}, \inlinecode{c2}) for the largest rectangular submatrix of a matrix \inlinecode{a}. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} on the matrix value type. By convention, the empty submatrix is allowed, so a matrix containing only negative values returns sum $0$ with empty row and column intervals.
 \end{compactitem}
 
@@ -1635,7 +1806,7 @@ Overflow warning: All resulting sums and products must fit in the value type.
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to \inlinecode{max\_subarray\_sum()}, \inlinecode{max\_circular\_subarray\_sum()}, and \inlinecode{max\_product\_subarray()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+  \item $O(n)$ per call to \inlinecode{max\_subarray\_sum()}, \inlinecode{max\_circular\_subarray\_sum()}, and \inlinecode{max\_product\_subarray()}, where $n$ is the size of \inlinecode{a}.
   \item $O(R \cdot C^{2})$ per call to \inlinecode{max\_submatrix\_sum()}, where $R$ is the number of rows and $C$ is the number of columns in the matrix.
 \end{compactitem}
 
@@ -1647,88 +1818,85 @@ Overflow warning: All resulting sums and products must fit in the value type.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <iterator>
 #include <tuple>
 #include <utility>
 #include <vector>
 
-template<typename It>
-auto max_subarray_sum(It lo, It hi) {
-  using T = typename std::iterator_traits<It>::value_type;
-  if (lo == hi) {
-    return std::tuple{T{}, 0, -1};
+template<typename T>
+std::tuple<T, int, int> max_subarray_sum(const std::vector<T> &a) {
+  int n = static_cast<int>(a.size());
+  if (n == 0) {
+    return {T{}, 0, -1};
   }
   int curr_begin = 0, begin = 0, end = -1;
   T sum = 0, max_sum = 0;
-  for (It it = lo; it != hi; ++it) {
-    sum += *it;  // Overflow warning.
+  for (int i = 0; i < n; i++) {
+    sum += a[i];  // Overflow warning.
     if (sum < 0) {
       sum = 0;
-      curr_begin = (it - lo) + 1;
+      curr_begin = i + 1;
     } else if (max_sum < sum) {
       max_sum = sum;
       begin = curr_begin;
-      end = it - lo;
+      end = i;
     }
   }
-  return std::tuple{max_sum, begin, end};
+  return {max_sum, begin, end};
 }
 
-template<typename It>
-auto max_circular_subarray_sum(It lo, It hi) {
-  using T = typename std::iterator_traits<It>::value_type;
-  auto [max_sum, begin, end] = max_subarray_sum(lo, hi);
-  if (lo == hi) {
-    return std::tuple{max_sum, begin, end};
+template<typename T>
+std::tuple<T, int, int> max_circular_subarray_sum(const std::vector<T> &a) {
+  auto [max_sum, begin, end] = max_subarray_sum(a);
+  int n = static_cast<int>(a.size());
+  if (n == 0) {
+    return {max_sum, begin, end};
   }
   int curr_begin = 0, min_begin = 0, min_end = -1;
   T total = 0, min_sum = 0, curr_sum = 0;
-  for (It it = lo; it != hi; ++it) {
-    total += *it;     // Overflow warning.
-    curr_sum += *it;  // Overflow warning.
+  for (int i = 0; i < n; i++) {
+    total += a[i];     // Overflow warning.
+    curr_sum += a[i];  // Overflow warning.
     if (0 < curr_sum) {
       curr_sum = 0;
-      curr_begin = (it - lo) + 1;
+      curr_begin = i + 1;
     } else if (curr_sum < min_sum) {
       min_sum = curr_sum;
       min_begin = curr_begin;
-      min_end = it - lo;
+      min_end = i;
     }
   }
   T wrapped_sum = total - min_sum;
   if (max_sum < wrapped_sum) {
     max_sum = wrapped_sum;
-    int n = static_cast<int>(hi - lo);
     begin = (min_end + 1) % n;
     end = (min_begin + n - 1) % n;
   }
-  return std::tuple{max_sum, begin, end};
+  return {max_sum, begin, end};
 }
 
-template<typename It>
-auto max_product_subarray(It lo, It hi) {
-  using T = typename std::iterator_traits<It>::value_type;
-  if (lo == hi) {
-    return std::tuple{T{}, 0, -1};
+template<typename T>
+std::tuple<T, int, int> max_product_subarray(const std::vector<T> &a) {
+  int n = static_cast<int>(a.size());
+  if (n == 0) {
+    return {T{}, 0, -1};
   }
-  T max_end = *lo, min_end = *lo, best = *lo;
+  T max_end = a[0], min_end = a[0], best = a[0];
   int max_begin = 0, min_begin = 0, begin = 0, end = 0;
-  for (It it = lo + 1; it != hi; ++it) {
-    int i = it - lo;
-    if (*it < 0) {
+  for (int i = 1; i < n; i++) {
+    if (a[i] < 0) {
       std::swap(max_end, min_end);
       std::swap(max_begin, min_begin);
     }
-    T next_max = max_end * *it;  // Overflow warning.
-    T next_min = min_end * *it;  // Overflow warning.
-    if (next_max < *it) {
-      max_end = *it;
+    T next_max = max_end * a[i];  // Overflow warning.
+    T next_min = min_end * a[i];  // Overflow warning.
+    if (next_max < a[i]) {
+      max_end = a[i];
       max_begin = i;
     } else {
       max_end = next_max;
     }
-    if (*it < next_min) {
-      min_end = *it;
+    if (a[i] < next_min) {
+      min_end = a[i];
       min_begin = i;
     } else {
       min_end = next_min;
@@ -1739,7 +1907,7 @@ auto max_product_subarray(It lo, It hi) {
       end = i;
     }
   }
-  return std::tuple{best, begin, end};
+  return {best, begin, end};
 }
 
 template<typename T>
@@ -1756,7 +1924,7 @@ std::tuple<T, int, int, int, int> max_submatrix_sum(const std::vector<std::vecto
       for (int i = 0; i < rows; i++) {
         sums[i] += a[i][chi];  // Overflow warning.
       }
-      auto [sum, rlo, rhi] = max_subarray_sum(sums.begin(), sums.end());
+      auto [sum, rlo, rhi] = max_subarray_sum(sums);
       if (max_sum < sum) {
         max_sum = sum;
         r1 = rlo;
@@ -1778,10 +1946,13 @@ using namespace std;
 
 int main() {
   {
+    // All negative values, so the empty subarray is maximal.
+    auto [sum, begin, end] = max_subarray_sum(vector<int>{-2, -1, -3});
+    assert(sum == 0 && begin == 0 && end == -1);
+  }
+  {
     vector<int> a{-2, -1, -3, 4, -1, 2, 1, -5, 4};
-    auto [neg_sum, neg_begin, neg_end] = max_subarray_sum(a.begin(), a.begin() + 3);
-    assert(neg_sum == 0 && neg_begin == 0 && neg_end == -1);
-    auto [sum, begin, end] = max_subarray_sum(a.begin(), a.end());
+    auto [sum, begin, end] = max_subarray_sum(a);
     assert(sum == 6);
     cout << "Maximal sum subarray:" << endl;
     for (int i = begin; i <= end; i++) {
@@ -1791,19 +1962,21 @@ int main() {
   }
   {
     vector<int> a{5, -3, 5};
-    auto [sum, begin, end] = max_circular_subarray_sum(a.begin(), a.end());
+    auto [sum, begin, end] = max_circular_subarray_sum(a);
     assert(sum == 10 && begin == 2 && end == 0);
   }
   {
     vector<int> a{2, 3, -2, 4};
-    auto [product, begin, end] = max_product_subarray(a.begin(), a.end());
+    auto [product, begin, end] = max_product_subarray(a);
     assert(product == 6 && begin == 0 && end == 1);
   }
   {
-    vector<vector<int>> a{{0, -2, -7, 0, 5},
-                          {9, 2, -6, 2, -4},
-                          {-4, 1, -4, 1, 0},
-                          {-1, 8, 0, -2, 3}};
+    vector<vector<int>> a{
+        {0, -2, -7, 0, 5},
+        {9, 2, -6, 2, -4},
+        {-4, 1, -4, 1, 0},
+        {-1, 8, 0, -2, 3},
+    };
     auto [sum, r1, c1, r2, c2] = max_submatrix_sum(a);
     assert(sum == 15);
     cout << "\nMaximal sum submatrix:" << endl;
@@ -2225,9 +2398,79 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Egg Dropping}
+Given $e$ identical eggs and a building of $f$ floors, find the highest floor from which an egg survives a drop, using as few drops as possible in the worst case. An egg that survives can be reused; an egg that breaks is gone. With one egg, the only safe strategy is to climb one floor at a time, needing $f$ drops. With unlimited eggs, binary search needs $\lceil \log_2(f + 1) \rceil$ drops. The problem is what happens in between.
 
-\section{\texorpdfstring{Grid Algorithms}{1.3 Grid Algorithms}}
-\setcounter{section}{3}
+The natural recurrence minimizes over the drop floor and maximizes over the two outcomes, costing $O(e \cdot f^{2})$. Removing that minimization is a technique worth knowing beyond this puzzle: when the quantity being minimized is small and bounded, promote it to a state dimension and solve for the old one. So ask how many floors $d$ drops with $e$ eggs can cover, not how many drops $f$ floors need. A drop splits the searchable floors into those below it, the drop floor, and those above, giving $dp(d, e) = dp(d-1, e-1) + dp(d-1, e) + 1$ with nothing left to minimize. Each entry is then $O(1)$, and the answer is the smallest $d$ whose reach is at least $f$.
+
+That table is $dp(d, e) = \sum_{i=1}^{e} \binom{d}{i}$ in the binomial coefficients of section 6.2.1, which is what keeps $d$ small: enough eggs sum to $2^d - 1$, while one egg leaves only $\binom{d}{1} = d$. Two eggs reach $91$ floors in 13 drops and $105$ in 14, the classic answer. The same inversion fits any question of how many tests distinguish $n$ cases, such as finding one defective item with a limited number of destructive tests.
+
+\begin{compactitem}
+  \item \inlinecode{min\_drops(eggs, floors)} returns the number of drops needed in the worst case, where \inlinecode{eggs} is positive and \inlinecode{floors} is nonnegative.
+  \item \inlinecode{drop\_floor(eggs, floors)} returns the floor to drop from first under an optimal strategy, which is $dp(d-1, e-1) + 1$ floors above the bottom of the current range, or $0$ when no drop is needed.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(e \cdot d)$ per call, where $e$ is \inlinecode{eggs} and $d$ is the returned number of drops, which is at most $f$ and is $O(\log f)$ once $e \geq \log_2(f)$.
+
+\textbf{Space Complexity}: $O(e)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cstdint>
+#include <vector>
+
+int min_drops(int eggs, int floors) {
+  assert(eggs > 0 && floors >= 0);
+  // reach[e] is the number of floors distinguishable by the current number of drops with e eggs.
+  std::vector<int64_t> reach(eggs + 1);
+  int drops = 0;
+  while (reach[eggs] < floors) {
+    drops++;
+    for (int e = eggs; e > 0; e--) {  // Descending, so reach[e - 1] is still the previous row.
+      reach[e] += reach[e - 1] + 1;
+    }
+  }
+  return drops;
+}
+
+int drop_floor(int eggs, int floors) {
+  assert(eggs > 0 && floors >= 0);
+  int drops = min_drops(eggs, floors);
+  if (drops == 0) {
+    return 0;
+  }
+  std::vector<int64_t> reach(eggs + 1);
+  for (int i = 0; i < drops - 1; i++) {  // Rebuild the table one drop short of the answer.
+    for (int e = eggs; e > 0; e--) {
+      reach[e] += reach[e - 1] + 1;
+    }
+  }
+  return static_cast<int>(reach[eggs - 1]) + 1;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  assert(min_drops(1, 0) == 0);
+  assert(min_drops(1, 10) == 10);  // One egg forces a linear scan.
+  assert(min_drops(2, 10) == 4);
+  assert(min_drops(2, 100) == 14);  // The classic two-egg, hundred-floor puzzle.
+  assert(min_drops(3, 100) == 9);
+  assert(min_drops(50, 1000) == 10);  // Enough eggs to binary search.
+
+  // With two eggs and a hundred floors, the first drop is from floor 14.
+  assert(drop_floor(2, 100) == 14);
+  assert(drop_floor(1, 10) == 1);
+  assert(drop_floor(2, 0) == 0);
+  return 0;
+}
+\end{lstlisting}
+
+\section{\texorpdfstring{Grid Algorithms}{1.4 Grid Algorithms}}
+\setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Grid Transformations}
 Transforms a rectangular grid by transposing, rotating, or reflecting its cells. Transposition exchanges rows and columns. Rotation is clockwise by default, while a negative angle rotates counter-clockwise; the angle must be a multiple of $90$ degrees. Together, rotations and reflections generate all eight symmetries of a square grid.
@@ -2260,7 +2503,7 @@ using Grid = std::vector<std::vector<int>>;
 
 Grid transpose(const Grid &a) {
   int rows = static_cast<int>(a.size());
-  int cols = rows == 0 ? 0 : static_cast<int>(a[0].size());
+  int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
   Grid res(cols, std::vector<int>(rows));
   for (int r = 0; r < rows; r++) {
     for (int c = 0; c < cols; c++) {
@@ -2283,16 +2526,16 @@ Grid &transpose_in_place(Grid &a) {
 Grid rotate(const Grid &a, int degrees = 90) {
   assert(degrees % 90 == 0);
   int rows = static_cast<int>(a.size());
-  int cols = rows == 0 ? 0 : static_cast<int>(a[0].size());
-  int rotation = (degrees % 360 + 360) % 360;
-  Grid res(rotation % 180 == 0 ? rows : cols, std::vector<int>(rotation % 180 == 0 ? cols : rows));
+  int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
+  degrees = (degrees % 360 + 360) % 360;
+  Grid res(degrees % 180 == 0 ? rows : cols, std::vector<int>(degrees % 180 == 0 ? cols : rows));
   for (int r = 0; r < rows; r++) {
     for (int c = 0; c < cols; c++) {
-      if (rotation == 90) {
+      if (degrees == 90) {
         res[c][rows - r - 1] = a[r][c];
-      } else if (rotation == 180) {
+      } else if (degrees == 180) {
         res[rows - r - 1][cols - c - 1] = a[r][c];
-      } else if (rotation == 270) {
+      } else if (degrees == 270) {
         res[cols - c - 1][r] = a[r][c];
       } else {
         res[r][c] = a[r][c];
@@ -2304,19 +2547,19 @@ Grid rotate(const Grid &a, int degrees = 90) {
 
 Grid &rotate_in_place(Grid &a, int degrees = 90) {
   assert(degrees % 90 == 0);
-  int rotation = (degrees % 360 + 360) % 360;
-  assert(rotation % 180 == 0 || a.empty() || a.size() == a[0].size());
-  if (rotation == 90) {
+  degrees = (degrees % 360 + 360) % 360;
+  assert(degrees % 180 == 0 || a.empty() || a.size() == a[0].size());
+  if (degrees == 90) {
     transpose_in_place(a);
     for (auto &row : a) {
       std::reverse(row.begin(), row.end());
     }
-  } else if (rotation == 180) {
+  } else if (degrees == 180) {
     std::reverse(a.begin(), a.end());
     for (auto &row : a) {
       std::reverse(row.begin(), row.end());
     }
-  } else if (rotation == 270) {
+  } else if (degrees == 270) {
     transpose_in_place(a);
     std::reverse(a.begin(), a.end());
   }
@@ -2373,11 +2616,13 @@ Traverses a rectangular grid as an implicit unweighted graph: each unblocked cel
   \item \inlinecode{grid\_components(blocked)} uses repeated flood fills to return the connected components of cells marked zero, with each cell represented by a pair (\inlinecode{r}, \inlinecode{c}). Movement is allowed in the four orthogonal directions.
   \item \inlinecode{grid\_bfs(blocked, sources)} returns the pair (\inlinecode{dist}, \inlinecode{pred}) from every cell in \inlinecode{sources}. Each source must be an unblocked cell represented by a pair (\inlinecode{r}, \inlinecode{c}). Passing one source gives ordinary single-source BFS. Blocked and unreachable cells have distance $-1$.
   \item \inlinecode{get\_path(pred, tr, tc)} uses the predecessor grid returned by \inlinecode{grid\_bfs()} to return the path from a nearest source to (\inlinecode{tr}, \inlinecode{tc}), including both endpoints, or an empty vector if the target is blocked or unreachable.
+  \item \inlinecode{spiral\_order(a)} returns the cells of grid \inlinecode{a} in clockwise spiral order, starting at the top-left corner and walking inward.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
+  \item $O(R \cdot C)$ per call to \inlinecode{spiral\_order()}.
   \item $O(R \cdot C)$ per call to \inlinecode{component\_area\_perimeter()}, \inlinecode{grid\_components()}, or \inlinecode{grid\_bfs()}, where $R$ and $C$ are the grid dimensions.
   \item $O(p)$ per call to \inlinecode{get\_path()}, where $p$ is the number of cells in the returned path.
 \end{compactitem}
@@ -2393,6 +2638,7 @@ Traverses a rectangular grid as an implicit unweighted graph: each unblocked cel
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cstddef>
 #include <queue>
 #include <utility>
 #include <vector>
@@ -2425,7 +2671,7 @@ std::pair<int, int> component_area_perimeter(
     const std::vector<std::vector<char>> &blocked, int r, int c
 ) {
   int rows = static_cast<int>(blocked.size());
-  int cols = rows == 0 ? 0 : static_cast<int>(blocked[0].size());
+  int cols = blocked.empty() ? 0 : static_cast<int>(blocked[0].size());
   assert(inside(r, c, rows, cols));
   if (blocked[r][c]) {
     return {0, 0};
@@ -2445,7 +2691,7 @@ std::vector<std::vector<std::pair<int, int>>> grid_components(
     const std::vector<std::vector<char>> &blocked
 ) {
   int rows = static_cast<int>(blocked.size());
-  int cols = rows == 0 ? 0 : static_cast<int>(blocked[0].size());
+  int cols = blocked.empty() ? 0 : static_cast<int>(blocked[0].size());
   std::vector<std::vector<std::pair<int, int>>> components;
   std::vector<std::vector<char>> visit(rows, std::vector<char>(cols));
   for (int r = 0; r < rows; r++) {
@@ -2464,7 +2710,7 @@ auto grid_bfs(
     const std::vector<std::vector<char>> &blocked, const std::vector<std::pair<int, int>> &sources
 ) {
   int rows = static_cast<int>(blocked.size());
-  int cols = rows == 0 ? 0 : static_cast<int>(blocked[0].size());
+  int cols = blocked.empty() ? 0 : static_cast<int>(blocked[0].size());
   std::vector<std::vector<int>> dist(rows, std::vector<int>(cols, -1));
   std::vector<std::vector<std::pair<int, int>>> pred(
       rows, std::vector<std::pair<int, int>>(cols, {-1, -1})
@@ -2496,7 +2742,7 @@ std::vector<std::pair<int, int>> get_path(
     const std::vector<std::vector<std::pair<int, int>>> &pred, int tr, int tc
 ) {
   int rows = static_cast<int>(pred.size());
-  int cols = rows == 0 ? 0 : static_cast<int>(pred[0].size());
+  int cols = pred.empty() ? 0 : static_cast<int>(pred[0].size());
   assert(inside(tr, tc, rows, cols));
   if (pred[tr][tc].first == -1) {
     return {};
@@ -2510,6 +2756,35 @@ std::vector<std::pair<int, int>> get_path(
   path.push_back(cur);
   std::reverse(path.begin(), path.end());
   return path;
+}
+
+template<typename T>
+std::vector<T> spiral_order(const std::vector<std::vector<T>> &a) {
+  int rows = static_cast<int>(a.size());
+  int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
+  std::vector<T> res;
+  res.reserve(static_cast<size_t>(rows) * cols);
+  // Peel one ring at a time. Guard the last 2 passes so single remaining rows/cols don't repeat.
+  for (int top = 0, bottom = rows - 1, left = 0, right = cols - 1; top <= bottom && left <= right;
+       top++, bottom--, left++, right--) {
+    for (int c = left; c <= right; c++) {
+      res.push_back(a[top][c]);
+    }
+    for (int r = top + 1; r <= bottom; r++) {
+      res.push_back(a[r][right]);
+    }
+    if (top < bottom) {
+      for (int c = right - 1; c >= left; c--) {
+        res.push_back(a[bottom][c]);
+      }
+    }
+    if (left < right) {
+      for (int r = bottom - 1; r > top; r--) {
+        res.push_back(a[r][left]);
+      }
+    }
+  }
+  return res;
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -2535,6 +2810,15 @@ int main() {
   assert((get_path(pred, 2, 1) == vector<pair<int, int>>{{0, 0}, {0, 1}, {1, 1}, {2, 1}}));
   assert((get_path(pred, 0, 3) == vector<pair<int, int>>{{2, 3}, {1, 3}, {0, 3}}));
   assert(get_path(pred, 0, 2).empty());
+
+  vector<vector<int>> g{
+      {1, 2, 3, 4},
+      {5, 6, 7, 8},
+      {9, 10, 11, 12},
+  };
+  assert((spiral_order(g) == vector<int>{1, 2, 3, 4, 8, 12, 11, 10, 9, 5, 6, 7}));
+  assert((spiral_order(vector<vector<int>>{{1, 2, 3}}) == vector<int>{1, 2, 3}));
+  assert((spiral_order(vector<vector<int>>{{1}, {2}, {3}}) == vector<int>{1, 2, 3}));
   return 0;
 }
 \end{lstlisting}
@@ -2568,7 +2852,7 @@ Overflow warning: Path counts and path costs must fit in \inlinecode{int64\_t}.
 
 int64_t count_grid_paths(const std::vector<std::vector<char>> &blocked) {
   int rows = static_cast<int>(blocked.size());
-  int cols = rows == 0 ? 0 : static_cast<int>(blocked[0].size());
+  int cols = blocked.empty() ? 0 : static_cast<int>(blocked[0].size());
   if (rows == 0 || cols == 0 || blocked[0][0] || blocked[rows - 1][cols - 1]) {
     return 0;
   }
@@ -2590,12 +2874,12 @@ std::pair<int64_t, std::vector<std::pair<int, int>>> min_cost_grid_path(
     const std::vector<std::vector<int>> &cost
 ) {
   int rows = static_cast<int>(cost.size());
-  int cols = rows == 0 ? 0 : static_cast<int>(cost[0].size());
+  int cols = cost.empty() ? 0 : static_cast<int>(cost[0].size());
   if (rows == 0 || cols == 0) {
     return {0, {}};
   }
   std::vector<int64_t> dp(cols);
-  std::vector<std::vector<char>> parent(rows, std::vector<char>(cols));
+  std::vector<std::vector<char>> pred(rows, std::vector<char>(cols));
   dp[0] = cost[0][0];
   for (int r = 0; r < rows; r++) {
     for (int c = 0; c < cols; c++) {
@@ -2604,10 +2888,10 @@ std::pair<int64_t, std::vector<std::pair<int, int>>> min_cost_grid_path(
       }
       if (r > 0 && (c == 0 || dp[c] <= dp[c - 1])) {
         dp[c] += cost[r][c];  // Overflow warning.
-        parent[r][c] = 'U';
+        pred[r][c] = 'U';
       } else {
         dp[c] = dp[c - 1] + cost[r][c];
-        parent[r][c] = 'L';
+        pred[r][c] = 'L';
       }
     }
   }
@@ -2618,7 +2902,7 @@ std::pair<int64_t, std::vector<std::pair<int, int>>> min_cost_grid_path(
     if (r == 0 && c == 0) {
       break;
     }
-    if (parent[r][c] == 'U') {
+    if (pred[r][c] == 'U') {
       r--;
     } else {
       c--;
@@ -2629,7 +2913,8 @@ std::pair<int64_t, std::vector<std::pair<int, int>>> min_cost_grid_path(
 }
 
 std::tuple<int, int, int> largest_one_square(const std::vector<std::vector<char>> &a) {
-  int rows = static_cast<int>(a.size()), cols = rows == 0 ? 0 : static_cast<int>(a[0].size());
+  int rows = static_cast<int>(a.size());
+  int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
   std::vector<int> dp(cols);
   int best = 0, top = -1, left = -1;
   for (int r = 0; r < rows; r++) {
@@ -2682,8 +2967,8 @@ int main() {
 }
 \end{lstlisting}
 
-\section{\texorpdfstring{Greedy and Scheduling}{1.4 Greedy and Scheduling}}
-\setcounter{section}{4}
+\section{\texorpdfstring{Greedy and Scheduling}{1.5 Greedy and Scheduling}}
+\setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Fractional Knapsack}
 Solves the fractional knapsack problem: given items with positive integer weights and nonnegative integer values, choose any fraction of each item to maximize total value without exceeding a capacity limit.
@@ -2752,7 +3037,7 @@ int main() {
 \subsection{Interval Scheduling}
 Selects the maximum number of non-overlapping intervals using the classic earliest-finish-time greedy algorithm. This is the unweighted interval scheduling problem, also known as activity selection: every interval has the same value, so the objective is to choose as many compatible intervals as possible.
 
-The greedy choice is safe because among all intervals that could be chosen first, taking one with the earliest finish time leaves the most room for the remaining intervals. In any optimal solution, the first chosen interval can be exchanged for an earliest-finishing compatible interval without reducing the number of intervals selected. Repeating this argument after each choice proves the greedy algorithm optimal. The weighted version in 1.4.3 needs dynamic programming instead.
+The greedy choice is safe because among all intervals that could be chosen first, taking one with the earliest finish time leaves the most room for the remaining intervals. In any optimal solution, the first chosen interval can be exchanged for an earliest-finishing compatible interval without reducing the number of intervals selected. Repeating this argument after each choice proves the greedy algorithm optimal. The weighted version in 1.5.3 needs dynamic programming instead.
 
 Intervals are represented as half-open ranges $[{\inlinecodemath{start}}, {\inlinecodemath{finish}})$, so two intervals are compatible if the next interval's \inlinecode{start} is at least the previous interval's \inlinecode{finish}.
 
@@ -3243,9 +3528,78 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Weighted Completion Time}
+Given jobs that must run one at a time on a single machine, each with a processing time and a weight, order them to minimize the weighted sum of completion times $\sum w_j C_j$, where $C_j$ is the moment job $j$ finishes. Unlike the deadline problems of sections 1.5.6 and 1.5.7, nothing is rejected and no deadline is missed; every order is feasible, and only the total cost differs.
 
-\section{\texorpdfstring{Streaming and Randomized Algorithms}{1.5 Streaming and Randomized Algorithms}}
-\setcounter{section}{5}
+Smith's rule sorts by the ratio of processing time to weight, running the job with the smallest $p_j / w_j$ first. An exchange argument proves it optimal. Consider any schedule that runs job $b$ immediately before job $a$ with $p_a / w_a < p_b / w_b$, and swap the two. Every other job finishes at the same moment, since the pair occupies the same total time, so the change in cost is $p_a w_b - p_b w_a$, which the ratio inequality makes negative. Any schedule violating the ratio order therefore improves under a swap, so an optimal schedule must be sorted by it. With equal weights the rule reduces to shortest processing time first, the classic way to minimize the average completion time.
+
+\begin{compactitem}
+  \item \inlinecode{min\_weighted\_completion\_time(jobs)} returns the pair (\inlinecode{cost}, \inlinecode{order}), where \inlinecode{cost} is the minimum weighted sum of completion times and \inlinecode{order} lists the job indices in an optimal sequence. Each job is a pair (\inlinecode{time}, \inlinecode{weight}) with a positive weight and a nonnegative time.
+\end{compactitem}
+
+Ties break by index, and the comparison cross-multiplies rather than divides so that it stays exact on integers. Parallel machines are a different problem, NP-hard for general weights.
+
+Overflow warning: the products in the comparator and the running completion time are accumulated in \inlinecode{int64\_t}, so the total processing time multiplied by the total weight must fit in that type.
+
+\textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the number of jobs.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary and $O(n)$ for the returned order.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <numeric>
+#include <utility>
+#include <vector>
+
+std::pair<int64_t, std::vector<int>> min_weighted_completion_time(
+    const std::vector<std::pair<int, int>> &jobs
+) {
+  for (auto [time, weight] : jobs) {
+    assert(time >= 0 && weight > 0);
+  }
+  int n = static_cast<int>(jobs.size());
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
+  std::sort(order.begin(), order.end(), [&](int a, int b) {
+    // Sort by time / weight ascending, cross-multiplied to stay exact.
+    int64_t lhs = static_cast<int64_t>(jobs[a].first) * jobs[b].second;
+    int64_t rhs = static_cast<int64_t>(jobs[b].first) * jobs[a].second;
+    return lhs != rhs ? lhs < rhs : a < b;
+  });
+  int64_t clock = 0, cost = 0;
+  for (int id : order) {
+    clock += jobs[id].first;
+    cost += clock * jobs[id].second;  // Overflow warning.
+  }
+  return {cost, order};
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // (time, weight) pairs. Ratios are 3, 1, and 2, so job 1 runs first, then job 2, then job 0.
+  auto [cost, order] = min_weighted_completion_time({{3, 1}, {2, 2}, {4, 2}});
+  assert((order == vector<int>{1, 2, 0}));
+  assert(cost == 2 * 2 + 6 * 2 + 9 * 1);  // Completion times 2, 6, and 9.
+
+  // Equal weights reduce the rule to shortest processing time first.
+  auto [spt_cost, spt_order] = min_weighted_completion_time({{5, 1}, {1, 1}, {3, 1}});
+  assert((spt_order == vector<int>{1, 2, 0}));
+  assert(spt_cost == 1 + 4 + 9);
+
+  assert(min_weighted_completion_time({}).first == 0);
+  return 0;
+}
+\end{lstlisting}
+
+\section{\texorpdfstring{Streaming and Randomized Algorithms}{1.6 Streaming and Randomized Algorithms}}
+\setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Fisher-Yates Shuffle}
 Randomly permutes a range in-place using the Fisher-Yates shuffle. Each possible permutation is produced with equal probability, assuming the random number source is uniform.
@@ -3295,13 +3649,15 @@ int main() {
 \subsection{Reservoir Sampling}
 Selects uniformly random samples from a stream whose length may be unknown in advance. This is useful when values arrive online or when storing the full dataset is unnecessary.
 
-Reservoir sampling keeps only the chosen sample or samples in memory while processing each element once. The first arrivals fill the reservoir, and the $i$-th element then replaces a uniformly chosen occupant with probability $1/i$ (or $k/i$ when keeping $k$ samples), which by induction leaves every element seen so far equally likely to be in the sample.
+Reservoir sampling keeps only the chosen sample in memory while processing each element once. The first $k$ arrivals fill the reservoir, and the $i$-th element thereafter is accepted with probability $k/i$, evicting a uniformly chosen occupant. One draw performs both choices: an integer uniform on $[0, i)$ is below $k$ with probability $k/i$, and is then uniform on the $k$ occupants.
+
+The invariant is that after $n \geq k$ arrivals the reservoir is a uniformly random $k$-subset, so each of the $\binom{n}{k}$ possibilities is equally likely. This is certain at $n = k$. Assuming it after $n - 1$, fix a $k$-subset $A$ of the first $n$. If $n \notin A$, the reservoir must already hold $A$ and reject the arrival, with probability $\binom{n-1}{k}^{-1}(n-k)/n$. If $n \in A$, it must hold $A$ with $n$ replaced by one of the $n - k$ outsiders, each then evicted with probability $(k/n)(1/k) = 1/n$, giving $\binom{n-1}{k}^{-1}(n-k)/n$ again. Both equal $\binom{n}{k}^{-1}$, since $\binom{n}{k} = \binom{n-1}{k} \cdot n/(n-k)$. Taking marginals, every element seen is in the sample with probability $k/n$, and \inlinecode{ReservoirSampleOne} is the case $k = 1$.
 
 Each class maintains its reservoir incrementally; call \inlinecode{add(x)} once per stream element in any order, then call \inlinecode{sample()} to retrieve the result.
 
 \begin{compactitem}
   \item \inlinecode{ReservoirSampleOne\textless{}T\textgreater{}()} constructs a single-element sampler.
-  \item \inlinecode{ReservoirSampleK\textless{}T\textgreater{}(k)} constructs a \inlinecode{k}-element sampler.
+  \item \inlinecode{ReservoirSampleK\textless{}T\textgreater{}(k)} constructs a \inlinecode{k}-element sampler, allocating the reservoir up front so that no later \inlinecode{add()} reallocates.
   \item \inlinecode{add(x)} incorporates one more stream element.
   \item \inlinecode{sample()} returns the current sample. For \inlinecode{ReservoirSampleOne}, \inlinecode{sample()} requires at least one \inlinecode{add()} call; for \inlinecode{ReservoirSampleK}, it returns the full reservoir, which may contain fewer than \inlinecode{k} elements if the stream was shorter.
   \item \inlinecode{count()} returns the number of stream elements seen so far.
@@ -3310,7 +3666,8 @@ Each class maintains its reservoir incrementally; call \inlinecode{add(x)} once 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ per call to \inlinecode{ReservoirSampleOne::add()} and $O(1)$ amortized per call to \inlinecode{ReservoirSampleK::add()}.
+  \item $O(1)$ per call to \inlinecode{ReservoirSampleOne::add()} and \inlinecode{ReservoirSampleK::add()}.
+  \item $O(k)$ per call to the \inlinecode{ReservoirSampleK} constructor.
   \item $O(n)$ to process a range of $n$ elements.
 \end{compactitem}
 
@@ -3318,7 +3675,7 @@ Each class maintains its reservoir incrementally; call \inlinecode{add(x)} once 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ storage for \inlinecode{ReservoirSampleOne}.
-  \item $O(k)$ storage for \inlinecode{ReservoirSampleK}.
+  \item $O(k)$ storage for \inlinecode{ReservoirSampleK}, allocated on construction.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3360,7 +3717,10 @@ class ReservoirSampleK {
   std::vector<T> reservoir;
 
  public:
-  explicit ReservoirSampleK(int k) : k(k) { assert(k >= 0); }
+  explicit ReservoirSampleK(int k) : k(k) {
+    assert(k >= 0);
+    reservoir.reserve(k);
+  }
 
   void add(const T &x) {
     ++seen;
@@ -3524,7 +3884,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Online Statistics}
-Online stream summaries update useful statistics as values arrive without storing the full stream. This section uses Welford's algorithm for the mean and variance and two balanced heaps for the median.
+Online stream summaries update useful statistics as values arrive without storing the full stream. This section uses Welford's algorithm to maintain the mean and variance of a stream in constant space, then merges Welford summaries inside a queue to maintain the same statistics over a sliding window. For the median of a stream or of a trailing window, see section 1.6.5.
 
 The naive variance formula $\operatorname{Var}(X) = E[X^2] - E[X]^2$ can lose precision when the two terms are large and close together. Welford instead maintains the current mean $\bar{x}_n$ (stored as \inlinecode{avg}) and the unnormalized second central moment $M_{2,n} = \sum_{i=1}^{n}(x_i - \bar{x}_n)^2$ (stored as \inlinecode{m2}). Each new value shifts the running mean by its deviation divided by the new count, then adds the product of its deviations from the old and new means to \inlinecode{m2}.
 
@@ -3543,8 +3903,7 @@ The naive variance formula $\operatorname{Var}(X) = E[X^2] - E[X]^2$ can lose pr
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <functional>
-#include <queue>
+#include <utility>
 #include <vector>
 
 class OnlineStatistics {
@@ -3568,63 +3927,99 @@ class OnlineStatistics {
   double var_samp() const { return n <= 1 ? 0 : m2 / (n - 1); }
 };
 \end{lstlisting}
-Maintains the exact median of a stream using linear storage. A max-heap stores the lower half of the values and a min-heap stores the upper half. The heaps are balanced so that the lower heap has either the same number of values as the upper heap or one extra value. Their roots are therefore the middle value or values of the stream.
+To additionally support FIFO removals, Welford's update cannot simply be run backwards to drop the oldest value: reversing it turns \inlinecode{m2} into a difference, which loses the very property that made the forward pass stable, and the resulting error has no way to correct itself as the window advances.
+
+Summaries are mergeable instead. Two summaries of disjoint groups combine by shifting the mean toward the larger group and adding the spread between the two group means, so that $M_2 = M_{2,A} + M_{2,B} + \delta^2 n_A n_B / n$, where $\delta$ is the gap between the group means. That merge is associative, which makes summaries a monoid and puts them within reach of the sliding window aggregation (SWAG) technique of section 1.2.5: a queue of two stacks, each entry storing the fold of everything between it and its end of the queue, reports the fold of the entire queue in $O(1)$ amortized time. The class below is that structure specialized to this summary, so section 1.2.5 is the place to look for the general version over any associative operation, and for why flipping the back stack onto the front stack costs only $O(1)$ amortized per value.
+
+Every value still enters through a forward Welford update of a one-element summary, and the folds only ever add nonnegative terms, so the statistics of a window are as stable as those of a whole stream.
 
 \begin{compactitem}
-  \item \inlinecode{OnlineMedian\textless{}T\textgreater{}()} constructs an empty median tracker for an ordered numeric type \inlinecode{T}.
-  \item \inlinecode{add(x)} inserts \inlinecode{x} into the median tracker.
-  \item \inlinecode{count()} and \inlinecode{empty()} return the number of values and whether the tracker is empty.
-  \item \inlinecode{lower\_median()} returns the lower of the two middle values, or the middle value for an odd count. The tracker must be nonempty.
-  \item \inlinecode{median()} returns the middle value for an odd count or the arithmetic mean of the two middle values for an even count. The tracker must be nonempty.
+  \item \inlinecode{StatisticsQueue()} constructs an empty summary.
+  \item \inlinecode{add(x)} incorporates \inlinecode{x} as the newest value of the queue.
+  \item \inlinecode{remove()} drops the oldest value of the queue, which must be nonempty.
+  \item \inlinecode{count()} returns the number of values currently in the queue.
+  \item \inlinecode{mean()}, \inlinecode{var\_pop()}, and \inlinecode{var\_samp()} return the same statistics as above, over the values currently in the queue.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(\log n)$ per call to \inlinecode{add()} and $O(1)$ per query, where $n$ is the number of values.
+The window is left to the caller rather than fixed by the constructor. A trailing window of width $w$ is one call to \inlinecode{add()} followed by a call to \inlinecode{remove()} whenever \inlinecode{count()} exceeds $w$, while a variable-width window from the two-pointer patterns of section 1.2.3 instead removes values until its own condition holds again.
 
-\textbf{Space Complexity}: $O(n)$ storage.
+\textbf{Time Complexity}: $O(1)$ amortized per call to \inlinecode{add()} and \inlinecode{remove()}, and $O(1)$ per query.
+
+\textbf{Space Complexity}: $O(n)$ storage, where $n$ is the number of values currently in the queue.
 
 \begin{lstlisting}[language=C++]
-template<typename T>
-class OnlineMedian {
-  std::priority_queue<T> lower;
-  std::priority_queue<T, std::vector<T>, std::greater<T>> upper;
+class StatisticsQueue {
+  struct Summary {
+    int n;
+    double mean, m2;
+  };
+
+  // Chan's parallel merge of two disjoint groups, which never subtracts a value out of m2.
+  static Summary merge(const Summary &a, const Summary &b) {
+    int n = a.n + b.n;
+    double delta = b.mean - a.mean;
+    return {n, a.mean + delta * b.n / n, a.m2 + b.m2 + delta * delta * a.n * b.n / n};
+  }
+
+  // Each stack entry is (summary of one value, fold), where the fold merges that value with all
+  // entries between it and its end of the queue (the front for front_stack, back for back_stack).
+  std::vector<std::pair<Summary, Summary>> front_stack, back_stack;
+
+  Summary fold() const {
+    if (front_stack.empty()) {
+      return back_stack.empty() ? Summary{} : back_stack.back().second;
+    }
+    if (back_stack.empty()) {
+      return front_stack.back().second;
+    }
+    return merge(front_stack.back().second, back_stack.back().second);
+  }
 
  public:
-  bool empty() const { return lower.empty(); }
-  int count() const { return static_cast<int>(lower.size() + upper.size()); }
-
-  void add(const T &x) {
-    if (lower.empty() || x <= lower.top()) {
-      lower.push(x);
-    } else {
-      upper.push(x);
-    }
-    if (lower.size() < upper.size()) {
-      lower.push(upper.top());
-      upper.pop();
-    } else if (lower.size() > upper.size() + 1) {
-      upper.push(lower.top());
-      lower.pop();
-    }
+  void add(double x) {
+    Summary value{1, x, 0};
+    back_stack.emplace_back(
+        value, back_stack.empty() ? value : merge(back_stack.back().second, value)
+    );
   }
 
-  const T &lower_median() const {
-    assert(!empty());
-    return lower.top();
+  void remove() {
+    assert(count() > 0);
+    if (front_stack.empty()) {
+      // Flip the back stack onto the front stack, reversing order so the oldest value ends up on
+      // top, and recompute the front folds in queue order.
+      while (!back_stack.empty()) {
+        Summary oldest = back_stack.back().first;
+        back_stack.pop_back();
+        front_stack.emplace_back(
+            oldest, front_stack.empty() ? oldest : merge(oldest, front_stack.back().second)
+        );
+      }
+    }
+    front_stack.pop_back();
   }
 
-  double median() const {
-    assert(!empty());
-    if (lower.size() != upper.size()) {
-      return static_cast<double>(lower.top());
-    }
-    return static_cast<double>(lower.top()) / 2 + static_cast<double>(upper.top()) / 2;
+  int count() const { return static_cast<int>(front_stack.size() + back_stack.size()); }
+  double mean() const { return fold().mean; }
+
+  double var_pop() const {
+    Summary s = fold();
+    return s.n == 0 ? 0 : s.m2 / s.n;
+  }
+
+  double var_samp() const {
+    Summary s = fold();
+    return s.n <= 1 ? 0 : s.m2 / (s.n - 1);
   }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <cmath>
+#include <vector>
+using namespace std;
 
 bool EQ(double a, double b) {
   return fabs(a - b) < 1e-9;
@@ -3654,23 +4049,456 @@ int main() {
   assert(EQ(shifted.mean(), 1e12 + 2));
   assert(EQ(shifted.var_pop(), 2.0 / 3) && EQ(shifted.var_samp(), 1.0));
 
+  StatisticsQueue empty_queue;
+  assert(empty_queue.count() == 0 && EQ(empty_queue.mean(), 0.0));
+  assert(EQ(empty_queue.var_pop(), 0.0) && EQ(empty_queue.var_samp(), 0.0));
+
+  // A trailing window of width 3, maintained by the caller.
+  StatisticsQueue window;
+  for (int x = 1; x <= 5; x++) {
+    window.add(x);
+    if (window.count() > 3) {
+      window.remove();
+    }
+  }
+  assert(window.count() == 3);  // The window holds 3, 4, and 5.
+  assert(EQ(window.mean(), 4.0));
+  assert(EQ(window.var_pop(), 2.0 / 3) && EQ(window.var_samp(), 1.0));
+
+  // The same shifted values as above, now with an extra value removed from the front first.
+  StatisticsQueue shifted_window;
+  shifted_window.add(1e12);
+  shifted_window.add(1e12 + 1);
+  shifted_window.add(1e12 + 2);
+  shifted_window.add(1e12 + 3);
+  shifted_window.remove();
+  assert(EQ(shifted_window.mean(), 1e12 + 2));
+  assert(EQ(shifted_window.var_pop(), 2.0 / 3) && EQ(shifted_window.var_samp(), 1.0));
+
+  // A variable-width window, which a fixed size cannot express: extend while the population
+  // variance stays at most 1, shrinking from the front whenever it does not.
+  StatisticsQueue spread;
+  int longest = 0;
+  for (double x : {1.0, 1.0, 2.0, 8.0, 8.0, 9.0}) {
+    spread.add(x);
+    while (spread.var_pop() > 1) {
+      spread.remove();
+    }
+    if (spread.count() > longest) {
+      longest = spread.count();
+    }
+  }
+  assert(longest == 3);  // The values 1, 1, and 2 have population variance 2/9.
+
+  return 0;
+}
+\end{lstlisting}
+\subsection{Online Median}
+The median of a stream can be maintained as values arrive, without ever sorting the stream. This section keeps the median of a growing stream in two heaps, and the median of a changing collection in a multiset, the difference between them being whether values ever have to leave again. For the mean and variance of a stream, see section 1.6.4.
+
+Two heaps hold the values in halves, using linear storage. A max-heap stores the lower half and a min-heap stores the upper half, balanced so that the lower heap has either the same number of values as the upper heap or one extra value. Their roots are therefore the middle value or values of the stream.
+
+\begin{compactitem}
+  \item \inlinecode{OnlineMedian\textless{}T\textgreater{}()} constructs an empty median tracker for an ordered numeric type \inlinecode{T}.
+  \item \inlinecode{empty()} returns whether the tracker has no values.
+  \item \inlinecode{count()} returns the number of values in the tracker.
+  \item \inlinecode{add(x)} inserts \inlinecode{x} into the tracker.
+  \item \inlinecode{lower\_median()} and \inlinecode{upper\_median()} return the lower and the upper of the two middle values, or the middle value itself for an odd count. The tracker must be nonempty.
+  \item \inlinecode{median()} returns the middle value for an odd count or the arithmetic mean of the two middle values for an even count. The tracker must be nonempty.
+\end{compactitem}
+
+Since \inlinecode{median()} averages in \inlinecode{double}, an even count over a type whose values exceed the exactly representable range of \inlinecode{double} should be averaged by the caller from \inlinecode{lower\_median()} and \inlinecode{upper\_median()} instead.
+
+\textbf{Time Complexity}: $O(\log n)$ per call to \inlinecode{add()} and $O(1)$ per query, where $n$ is the number of values.
+
+\textbf{Space Complexity}: $O(n)$ storage.
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <functional>
+#include <iterator>
+#include <queue>
+#include <set>
+#include <vector>
+
+template<typename T>
+class OnlineMedian {
+  std::priority_queue<T> lower;
+  std::priority_queue<T, std::vector<T>, std::greater<T>> upper;
+
+ public:
+  bool empty() const { return lower.empty(); }
+  int count() const { return static_cast<int>(lower.size() + upper.size()); }
+
+  void add(const T &x) {
+    if (lower.empty() || x <= lower.top()) {
+      lower.push(x);
+    } else {
+      upper.push(x);
+    }
+    if (lower.size() < upper.size()) {
+      lower.push(upper.top());
+      upper.pop();
+    } else if (lower.size() > upper.size() + 1) {
+      upper.push(lower.top());
+      lower.pop();
+    }
+  }
+
+  const T &lower_median() const {
+    assert(!empty());
+    return lower.top();
+  }
+
+  const T &upper_median() const {
+    assert(!empty());
+    return lower.size() != upper.size() ? lower.top() : upper.top();
+  }
+
+  double median() const {
+    return static_cast<double>(lower_median()) / 2 + static_cast<double>(upper_median()) / 2;
+  }
+};
+\end{lstlisting}
+To additionally support arbitrary removals, a multiset (balanced binary search tree) holds the values in sorted order while an iterator tracks the lower median. Each insertion or erasure shifts the middle of the multiset by at most one position, so the iterator only ever steps one element in either direction: whether it moves depends on which side of the median the value lies and on the parity of the resulting size. Unlike the two heaps above, and unlike the statistics queue of section 1.6.4 that can only drop its oldest value, a multiset erases any value it holds, so removals may come in any order.
+
+\begin{compactitem}
+  \item \inlinecode{DeletableMedian\textless{}T\textgreater{}()} constructs an empty median tracker for an ordered numeric type \inlinecode{T}.
+  \item \inlinecode{add(x)} inserts \inlinecode{x} into the median tracker.
+  \item \inlinecode{remove(x)} erases one copy of \inlinecode{x}, which must currently be present.
+  \item \inlinecode{count()} and \inlinecode{empty()} return the number of values and whether the tracker is empty.
+  \item \inlinecode{lower\_median()}, \inlinecode{upper\_median()}, and \inlinecode{median()} answer as above, over the values currently held. The tracker must be nonempty.
+\end{compactitem}
+
+A trailing window of width $w$ over an array is one call to \inlinecode{add()} followed by a call to \inlinecode{remove()} on the value leaving the window, and a two-pointer scan from section 1.2.3 removes by its own condition instead. Because removals are unordered, the same structure also serves the add and remove operations of Mo's algorithm in section 2.5.4, which answers median queries over arbitrary ranges offline. Replacing the parked iterator with an order-statistic tree, such as the \inlinecode{\_\_gnu\_pbds} tree of section 8.6, generalizes further to any rank rather than just the middle.
+
+\textbf{Time Complexity}: $O(\log n)$ per call to \inlinecode{add()} and \inlinecode{remove()}, and $O(1)$ per query, where $n$ is the number of values currently held.
+
+\textbf{Space Complexity}: $O(n)$ storage.
+
+\begin{lstlisting}[language=C++]
+template<typename T>
+class DeletableMedian {
+  std::multiset<T> sorted;
+  typename std::multiset<T>::iterator mid;
+
+ public:
+  bool empty() const { return sorted.empty(); }
+  int count() const { return static_cast<int>(sorted.size()); }
+
+  void add(const T &x) {
+    if (sorted.empty()) {
+      mid = sorted.insert(x);
+      return;
+    }
+    bool below = x < *mid;
+    sorted.insert(x);
+    if (below) {
+      if (sorted.size() % 2 == 0) {
+        --mid;
+      }
+    } else if (sorted.size() % 2 == 1) {
+      ++mid;
+    }
+  }
+
+  void remove(const T &x) {
+    assert(!empty());
+    if (sorted.size() == 1) {
+      assert(x == *mid);
+      sorted.clear();  // The iterator is meaningless while empty, and add() resets it.
+      return;
+    }
+    // Erasing the median's own node requires stepping off it first. Any other node holding x
+    // lies strictly on one side of the median, so erasing it can never invalidate the iterator.
+    auto target = (x == *mid) ? mid : sorted.find(x);
+    assert(target != sorted.end());
+    if (x <= *mid && sorted.size() % 2 == 0) {
+      ++mid;
+    } else if (x >= *mid && sorted.size() % 2 == 1) {
+      --mid;
+    }
+    sorted.erase(target);
+  }
+
+  const T &lower_median() const {
+    assert(!empty());
+    return *mid;
+  }
+
+  const T &upper_median() const {
+    assert(!empty());
+    return sorted.size() % 2 == 1 ? *mid : *std::next(mid);
+  }
+
+  double median() const {
+    return static_cast<double>(lower_median()) / 2 + static_cast<double>(upper_median()) / 2;
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cmath>
+using namespace std;
+
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-9;
+}
+
+int main() {
   OnlineMedian<int> medians;
   assert(medians.empty() && medians.count() == 0);
   medians.add(5);
   assert(EQ(medians.median(), 5));
   medians.add(1);
+  assert(medians.lower_median() == 1 && medians.upper_median() == 5);
   assert(EQ(medians.median(), 3));
   medians.add(9);
-  assert(EQ(medians.median(), 5));
+  assert(medians.lower_median() == 5 && medians.upper_median() == 5);
   medians.add(3);
-  assert(medians.lower_median() == 3);
+  assert(medians.lower_median() == 3 && medians.upper_median() == 5);
   assert(EQ(medians.median(), 4));
+
+  // A trailing window of width 3 over an array, maintained by the caller.
+  vector<int> a{5, 1, 9, 3, 3};
+  DeletableMedian<int> window;
+  assert(window.empty() && window.count() == 0);
+  for (int hi = 0, lo = 0; hi < static_cast<int>(a.size()); hi++) {
+    window.add(a[hi]);
+    if (window.count() > 3) {
+      window.remove(a[lo++]);
+    }
+  }
+  assert(window.count() == 3);  // The window holds 9, 3, and 3.
+  assert(window.lower_median() == 3 && EQ(window.median(), 3));
+
+  // Removals need not follow arrival order, and may target the median's own value.
+  DeletableMedian<int> tracker;
+  for (int x : {1, 2, 3, 4, 5}) {
+    tracker.add(x);
+  }
+  assert(EQ(tracker.median(), 3));
+  tracker.remove(3);  // Erasing the median itself steps the iterator off its own node first.
+  assert(tracker.lower_median() == 2 && tracker.upper_median() == 4);
+  tracker.remove(5);
+  assert(EQ(tracker.median(), 2));
+
+  // Duplicates of the median are erased one copy at a time.
+  DeletableMedian<int> repeats;
+  for (int x : {7, 7, 7}) {
+    repeats.add(x);
+  }
+  repeats.remove(7);
+  assert(repeats.count() == 2 && EQ(repeats.median(), 7));
+  repeats.remove(7);
+  assert(repeats.count() == 1 && repeats.lower_median() == 7);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Probabilistic Sketches}
+A sketch answers questions about a stream using far less memory than the stream itself, in exchange for a bounded, one-sided error. This section implements a Bloom filter, which tests set membership, and a count-min sketch, which estimates how often each value occurred. Both spread every value over several independent positions of a fixed-size table, and both derive those positions from one pair of base hashes: the Kirsch-Mitzenmacher technique uses $h_i(x) = h_1(x) + i \cdot h_2(x)$ instead of computing an unrelated hash for every position, which matches the false-positive behavior of truly independent hashes while paying for only two. Both base hashes come from the SplitMix64 mixer of section 3.2.1, and the second is forced odd so that repeated steps never stand still.
+
+A Bloom filter represents a set as a bit array. Inserting a value sets the $k$ bits it hashes to, and a membership test reports that a value is present only if all $k$ of its bits are set. Bits are never cleared, so a value that was inserted always tests positive: the error is one-sided, and only a false positive is possible, produced when unrelated insertions happen to have set all $k$ bits. For $n$ values in $m$ bits, the false-positive probability is minimized by $k = (m/n) \ln 2$, which yields $m = -n \ln p / (\ln 2)^2$ bits for a target rate $p$.
+
+\begin{compactitem}
+  \item \inlinecode{BloomFilter\textless{}T\textgreater{}(capacity, false\_positive\_rate)} constructs an empty filter sized for \inlinecode{capacity} insertions at the given target rate, where \inlinecode{capacity} is positive and the rate lies in $(0, 1)$. \inlinecode{BloomFilter\textless{}T, Hash\textgreater{}(capacity, false\_positive\_rate, hash)} instead stores the supplied hasher.
+  \item \inlinecode{insert(x)} adds \inlinecode{x} to the filter.
+  \item \inlinecode{contains(x)} returns whether \inlinecode{x} may be in the filter. It never returns \inlinecode{false} for a value that was inserted, but may return \inlinecode{true} for one that was not.
+  \item \inlinecode{count()} returns the number of insertions performed, counting repeated values separately.
+  \item \inlinecode{bit\_count()} and \inlinecode{hash\_count()} return the derived table size $m$ and number of positions $k$.
+  \item \inlinecode{false\_positive\_rate()} returns the current estimated rate $(1 - e^{-kn/m})^k$, which rises as the filter fills past its planned capacity.
+\end{compactitem}
+
+Deletion is not supported, since clearing a bit could hide an unrelated value that also set it. Use a counting Bloom filter, which replaces each bit with a small counter, when values must leave.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to \inlinecode{count()}, \inlinecode{bit\_count()}, \inlinecode{hash\_count()}, and \inlinecode{false\_positive\_rate()}.
+  \item $O(k)$ per call to \inlinecode{insert()} and \inlinecode{contains()}, where $k$ is \inlinecode{hash\_count()}, plus the cost of one call to the hasher.
+  \item $O(m)$ per call to the constructor, where $m$ is \inlinecode{bit\_count()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(m)$ for storage of the filter, where $m$ is \inlinecode{bit\_count()}.
+  \item $O(1)$ auxiliary for all operations.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <cstdint>
+#include <functional>
+#include <utility>
+#include <vector>
+
+uint64_t splitmix64(uint64_t x) {
+  x += 0x9e3779b97f4a7c15ULL;
+  x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
+  x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
+  return x ^ (x >> 31);
+}
+
+template<typename T, typename Hash>
+std::pair<uint64_t, uint64_t> hash_pair(const Hash &hash, const T &x) {
+  uint64_t h1 = splitmix64(static_cast<uint64_t>(hash(x)));
+  return {h1, splitmix64(h1 + 1) | 1};
+}
+
+template<typename T, typename Hash = std::hash<T>>
+class BloomFilter {
+  std::vector<uint64_t> words;
+  uint64_t nbits;
+  int hashes, inserted;
+  Hash hash;
+
+ public:
+  BloomFilter(int capacity, double false_positive_rate, Hash hash = Hash{})
+      : nbits(0), hashes(0), inserted(0), hash(hash) {
+    assert(capacity > 0 && false_positive_rate > 0 && false_positive_rate < 1);
+    double ln2 = std::log(2.0);
+    nbits =
+        static_cast<uint64_t>(std::ceil(-capacity * std::log(false_positive_rate) / (ln2 * ln2)));
+    hashes = std::max(1, static_cast<int>(std::lround(nbits * ln2 / capacity)));
+    words.resize((nbits + 63) / 64);
+  }
+
+  void insert(const T &x) {
+    auto [h1, h2] = hash_pair(hash, x);
+    for (int i = 0; i < hashes; i++) {
+      uint64_t bit = (h1 + static_cast<uint64_t>(i) * h2) % nbits;
+      words[bit >> 6] |= 1ULL << (bit & 63);
+    }
+    inserted++;
+  }
+
+  bool contains(const T &x) const {
+    auto [h1, h2] = hash_pair(hash, x);
+    for (int i = 0; i < hashes; i++) {
+      uint64_t bit = (h1 + static_cast<uint64_t>(i) * h2) % nbits;
+      if (((words[bit >> 6] >> (bit & 63)) & 1) == 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  int count() const { return inserted; }
+  uint64_t bit_count() const { return nbits; }
+  int hash_count() const { return hashes; }
+
+  double false_positive_rate() const {
+    double filled = 1 - std::exp(-1.0 * hashes * inserted / nbits);
+    return std::pow(filled, hashes);
+  }
+};
+\end{lstlisting}
+A count-min sketch estimates the total weight added under each value. It stores an $R$ by $C$ table of counters and, for each row, adds the weight to the one counter that the value hashes to in that row. Every counter that a value touches therefore holds that value's true total plus the totals of whatever else collided there, so with nonnegative weights each row is an overestimate and the minimum over the rows is the sharpest one available. Choosing $C = \lceil e/\epsilon \rceil$ and $R = \lceil \ln(1/\delta) \rceil$ bounds the overestimate by $\epsilon N$ with probability at least $1 - \delta$, where $N$ is the total weight added.
+
+\begin{compactitem}
+  \item \inlinecode{CountMinSketch\textless{}T\textgreater{}(eps, delta)} constructs an empty sketch whose estimates exceed the true count by at most \inlinecode{eps} times the total weight, with probability at least $1 - {\inlinecodemath{delta}}$. Both parameters must lie in $(0, 1)$. \inlinecode{CountMinSketch\textless{}T, Hash\textgreater{}(eps, delta, hash)} instead stores the supplied hasher.
+  \item \inlinecode{add(x, c = 1)} adds weight \inlinecode{c} to the count of \inlinecode{x}.
+  \item \inlinecode{count(x)} returns the estimated total weight of \inlinecode{x}, which is never an underestimate.
+  \item \inlinecode{total()} returns the total weight added over all values.
+  \item \inlinecode{num\_rows()} and \inlinecode{num\_cols()} return the derived table dimensions.
+\end{compactitem}
+
+The error bound is relative to the total weight of the whole stream, so a sketch estimates heavy values well and light ones poorly. That makes it a natural companion to the deterministic heavy-hitter candidates of section 1.6.3: run both, then use the sketch to rank the candidates. Negative weights break the guarantee, since a row is then no longer an overestimate; deletions require the count-mean-min variant or a conservative sketch.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(R)$ per call to \inlinecode{add()} and \inlinecode{count()}, plus the cost of one call to the hasher.
+  \item $O(R \cdot C)$ per call to the constructor.
+  \item $O(1)$ per call to \inlinecode{total()}, \inlinecode{num\_rows()}, and \inlinecode{num\_cols()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(w \cdot d)$ for storage of the sketch.
+  \item $O(1)$ auxiliary for all operations.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+template<typename T, typename Hash = std::hash<T>>
+class CountMinSketch {
+  std::vector<std::vector<int64_t>> table;
+  int rows, cols;
+  int64_t weight;
+  Hash hash;
+
+ public:
+  CountMinSketch(double eps, double delta, Hash hash = Hash{}) : weight(0), hash(hash) {
+    assert(eps > 0 && eps < 1 && delta > 0 && delta < 1);
+    rows = std::max(1, static_cast<int>(std::ceil(std::log(1 / delta))));
+    cols = static_cast<int>(std::ceil(std::exp(1.0) / eps));
+    table.assign(rows, std::vector<int64_t>(cols));
+  }
+
+  void add(const T &x, int64_t c = 1) {
+    auto [h1, h2] = hash_pair(hash, x);
+    for (int r = 0; r < rows; r++) {
+      table[r][(h1 + static_cast<uint64_t>(r) * h2) % cols] += c;
+    }
+    weight += c;  // Overflow warning.
+  }
+
+  int64_t count(const T &x) const {
+    auto [h1, h2] = hash_pair(hash, x);
+    int64_t res = INT64_MAX;
+    for (int r = 0; r < rows; r++) {
+      res = std::min(res, table[r][(h1 + static_cast<uint64_t>(r) * h2) % cols]);
+    }
+    return res;
+  }
+
+  int64_t total() const { return weight; }
+  int num_rows() const { return rows; }
+  int num_cols() const { return cols; }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <string>
+using namespace std;
+
+int main() {
+  BloomFilter<string> filter(1000, 0.01);
+  assert(filter.bit_count() == 9586 && filter.hash_count() == 7);
+  for (int i = 0; i < 1000; i++) {
+    filter.insert("key" + to_string(i));
+  }
+  assert(filter.count() == 1000);
+  for (int i = 0; i < 1000; i++) {
+    assert(filter.contains("key" + to_string(i)));  // Inserted values never test negative.
+  }
+  int false_positives = 0;
+  for (int i = 1000; i < 2000; i++) {
+    false_positives += filter.contains("key" + to_string(i));
+  }
+  assert(false_positives < 40);  // Absent values may test positive, about 10 of these 1000.
+  assert(filter.false_positive_rate() < 0.02);
+
+  CountMinSketch<string> sketch(0.01, 0.01);
+  sketch.add("apple", 3);
+  sketch.add("banana");
+  assert(sketch.total() == 4);
+  assert(sketch.count("apple") == 3 && sketch.count("banana") == 1);
+  // A value that was never added reads 0 unless it collides in every row, and an estimate is never
+  // lower than the truth.
+  assert(sketch.count("cherry") <= sketch.total());
   return 0;
 }
 \end{lstlisting}
 
-\section{\texorpdfstring{Bit Manipulation}{1.6 Bit Manipulation}}
-\setcounter{section}{6}
+\section{\texorpdfstring{Bit Manipulation}{1.7 Bit Manipulation}}
+\setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Bit Operations and Masks}
 Integers are all fixed-size sets of bits, where the $i$-th bit (counting from the least significant bit where $i = 0$) is ``present'' when set to $1$. Treating an \inlinecode{int} as a bitmask makes set membership, insertion, deletion, and iteration into single machine instructions, which is why bitmasks are the backbone of subset dynamic programming and many low-level tricks. The helpers below operate on \inlinecode{Mask}, which is \inlinecode{uint32\_t} by default; change its alias to \inlinecode{uint64\_t} to use 64-bit masks. The loop implementations below exist for education only; production code should prefer the matching GCC built-ins when available, or on C++20 systems the generic \inlinecode{constexpr} equivalents from the \inlinecode{\textless{}bit\textgreater{}} header, which are additionally well-defined at $0$.
@@ -4327,8 +5155,8 @@ Values must lie in $[0, 2^b)$ for bit width $b$; the template parameters select 
   \item \inlinecode{BinaryTrie\textless{}U, BITS\textgreater{}()} constructs an empty multiset.
   \item \inlinecode{size()} returns the number of stored values, and \inlinecode{empty()} returns whether there are none.
   \item \inlinecode{insert(x)} adds one occurrence of \inlinecode{x}.
-  \item \inlinecode{erase(x)} removes one occurrence of \inlinecode{x}, returning whether one was present.
   \item \inlinecode{count(x)} returns the number of occurrences of \inlinecode{x}.
+  \item \inlinecode{erase(x)} removes one occurrence of \inlinecode{x}, returning whether one was present.
   \item \inlinecode{max\_xor(x)} and \inlinecode{min\_xor(x)} return the maximum and minimum of \inlinecode{x \textasciicircum{} y} over all stored \inlinecode{y}. The trie must be non-empty.
   \item \inlinecode{count\_xor\_less(x, k)} returns the number of stored \inlinecode{y} (with multiplicity) such that \inlinecode{x \textasciicircum{} y} is strictly less than \inlinecode{k}.
 \end{compactitem}
@@ -4698,9 +5526,6 @@ std::vector<T> subset_convolve(std::vector<T> a, std::vector<T> b) {
 using namespace std;
 
 int main() {
-  vector<int64_t> a{1, 2, 3, 4};
-  vector<int64_t> b{5, 6, 7, 8};
-
   {
     vector<int64_t> f{1, 2, 3, 4}, original(f);
     xor_transform(f, false);
@@ -4719,6 +5544,8 @@ int main() {
     and_transform(f, true);
     assert(f == original);
   }
+
+  vector<int64_t> a{1, 2, 3, 4}, b{5, 6, 7, 8};
 
   // XOR: c[m] sums a[x] * b[y] over pairs with x ^ y == m.
   assert((xor_convolve(a, b) == vector<int64_t>{70, 68, 62, 60}));
@@ -4746,8 +5573,8 @@ int main() {
 }
 \end{lstlisting}
 
-\section{\texorpdfstring{Miscellaneous Problems}{1.7 Miscellaneous Problems}}
-\setcounter{section}{7}
+\section{\texorpdfstring{Classic Problems}{1.8 Classic Problems}}
+\setcounter{section}{8}
 \setcounter{subsection}{0}
 \subsection{Minimum Excluded Value}
 Given a multiset of integers, find the minimum excluded nonnegative value (MEX), i.e. the smallest integer $x \geq 0$ not present in the multiset. MEX often appears in array problems, game theory with Grundy numbers, and dynamic programming states. Since the MEX of $n$ values never exceeds $n$, the one-shot version tracks seen values in $[0, n]$ before scanning to find the first missing.
@@ -4993,7 +5820,90 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Iterated Function Cycle Detection}
+\subsection{Tower of Hanoi}
+Move a stack of $n$ disks of distinct sizes from one peg to another using a third as scratch space, moving one disk at a time and never placing a larger disk on a smaller one. The recursive solution is forced by the largest disk: it can only move once the other $n - 1$ disks are stacked on the spare peg, so the puzzle is solved by moving $n - 1$ disks aside, moving the largest disk across, and moving the $n - 1$ disks back on top of it. That gives $T(n) = 2T(n - 1) + 1$ with $T(0) = 0$, so exactly $2^n - 1$ moves are needed, and no shorter solution exists because the largest disk cannot move any earlier.
+
+The sequence also has a closed form, for when one move is wanted rather than all of them: numbering moves from $1$, move $k$ transfers the disk given by the number of trailing zero bits of $k$, and that disk always steps in one rotational direction fixed by the parity of $n$. The smallest disk therefore moves every other turn, which is the rule an iterative solver follows.
+
+\begin{compactitem}
+  \item \inlinecode{hanoi\_moves(n, from = 0, to = 2)} returns the moves solving the puzzle for \inlinecode{n} disks, as pairs (\inlinecode{from\_peg}, \inlinecode{to\_peg}). Pegs are numbered $[0, 3)$ and the spare peg is whichever of the three is neither \inlinecode{from} nor \inlinecode{to}. The number of disks must be nonnegative.
+  \item \inlinecode{hanoi\_move\_count(n)} returns $2^n - 1$, the number of moves, without generating them. It requires $n \leq 63$, the largest count that fits in \inlinecode{int64\_t}.
+\end{compactitem}
+
+With four or more pegs the problem becomes Frame-Stewart: move a prefix aside using every peg, transfer the rest with one peg fewer, bring the prefix back, and minimize over the split. That this family of strategies is optimal was only proved in 2014.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(2^{n})$ per call to \inlinecode{hanoi\_moves()}, which is optimal since that is the size of the output.
+  \item $O(1)$ per call to \inlinecode{hanoi\_move\_count()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary stack space and $O(2^{n})$ for the returned moves from \inlinecode{hanoi\_moves()}.
+  \item $O(1)$ auxiliary for \inlinecode{hanoi\_move\_count()}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cstdint>
+#include <utility>
+#include <vector>
+
+std::vector<std::pair<int, int>> hanoi_moves(int n, int from = 0, int to = 2) {
+  assert(n >= 0 && from >= 0 && from < 3 && to >= 0 && to < 3 && from != to);
+  std::vector<std::pair<int, int>> moves;
+  auto rec = [&](auto &&rec, int disks, int src, int dest) -> void {
+    if (disks == 0) {
+      return;
+    }
+    int spare = 3 - src - dest;
+    rec(rec, disks - 1, src, spare);
+    moves.emplace_back(src, dest);
+    rec(rec, disks - 1, spare, dest);
+  };
+  rec(rec, n, from, to);
+  return moves;
+}
+
+int64_t hanoi_move_count(int n) {
+  assert(n >= 0 && n <= 63);
+  return static_cast<int64_t>((uint64_t{1} << n) - 1);  // Unsigned, so n = 63 does not overflow.
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  assert(hanoi_moves(0).empty());
+  assert((hanoi_moves(1) == vector<pair<int, int>>{{0, 2}}));
+  assert((hanoi_moves(2) == vector<pair<int, int>>{{0, 1}, {0, 2}, {1, 2}}));
+  assert(hanoi_move_count(10) == 1023);
+
+  // Replay the moves of a larger puzzle to confirm no disk ever lands on a smaller one.
+  const int n = 12;
+  vector<vector<int>> pegs(3);
+  for (int disk = n; disk >= 1; disk--) {
+    pegs[0].push_back(disk);
+  }
+  auto moves = hanoi_moves(n);
+  assert(static_cast<int64_t>(moves.size()) == hanoi_move_count(n));
+  for (auto [src, dest] : moves) {
+    assert(!pegs[src].empty());
+    assert(pegs[dest].empty() || pegs[dest].back() > pegs[src].back());
+    pegs[dest].push_back(pegs[src].back());
+    pegs[src].pop_back();
+  }
+  assert(pegs[0].empty() && pegs[1].empty() && static_cast<int>(pegs[2].size()) == n);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Cycle Detection (Floyd)}
 Given a function $f$ mapping a finite set to itself and a starting value $x_0$, return the entry value, position, and length of the cycle reached by repeatedly applying $f$. Formally, the sequence $x_0$, $x_1 = f(x_0)$, $x_2 = f(x_1)$, $\ldots$, $x_n = f(x_{n - 1})$, $\ldots$ must eventually repeat some value. If $x_i = x_j$ for $i < j$, then the sequence from $x_i$ to $x_{j - 1}$ repeats forever. This is useful for detecting cycles in functional graphs (see 4.2.9), pseudo-random generators, Pollard rho style algorithms, degenerate linked lists, and arrays where each index points to the next index. For example, if an array $a_0, \ldots, a_{n+1}$ contains only values in $[1, n]$, with exactly one value occurring more than once, then $f(i) = a_i$ forms a functional graph; the duplicate value is the entry point of the cycle reached from $0$.
 
 Floyd's cycle-finding algorithm, a.k.a. the ``tortoise and the hare algorithm'', is a space-efficient default choice: it moves two pointers through the sequence at different speeds, finds a meeting point inside the cycle, then locates the cycle start. Brent's algorithm is a compact variant that usually calls $f$ fewer times by only resetting the tortoise at powers of two; prefer it when evaluating $f$ is expensive and constant factors matter. In the detection phase, Brent advances one pointer with one call to $f$ per step, while Floyd advances the tortoise once and the hare twice, using three calls to $f$ per step.
@@ -5119,61 +6029,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{N-Queens}
-The N-queens problem asks for a placement of $n$ queens on an $n$-by-$n$ chessboard such that no two share a row, column, or diagonal. Backtracking places one queen in each successive row and tracks which columns and diagonals are occupied. A conflicting placement is rejected immediately; after a failed recursive branch, its column and diagonals are released before trying the next column.
-
-\begin{compactitem}
-  \item \inlinecode{n\_queens(n)} returns a placement as a vector \inlinecode{cols} of length \inlinecode{n}, where \inlinecode{cols[row]} is the queen's column in that row. It returns an empty vector if no placement exists.
-\end{compactitem}
-
-\textbf{Time Complexity}: $O(n!)$ per call.
-
-\textbf{Space Complexity}: $O(n)$ auxiliary and $O(n)$ for the returned placement.
-
-\begin{lstlisting}[language=C++]
-#include <cassert>
-#include <vector>
-
-std::vector<int> n_queens(int n) {
-  assert(n > 0);
-  std::vector<int> cols(n);
-  std::vector<char> used_col(n), used_diag1(2 * n - 1), used_diag2(2 * n - 1);
-  auto rec = [&](auto &&rec, int row) -> bool {
-    if (row == n) {
-      return true;
-    }
-    for (int col = 0; col < n; col++) {
-      int diag1 = row - col + n - 1, diag2 = row + col;
-      if (used_col[col] || used_diag1[diag1] || used_diag2[diag2]) {
-        continue;
-      }
-      cols[row] = col;
-      used_col[col] = used_diag1[diag1] = used_diag2[diag2] = true;
-      if (rec(rec, row + 1)) {
-        return true;
-      }
-      used_col[col] = used_diag1[diag1] = used_diag2[diag2] = false;
-      cols[row] = -1;
-    }
-    return false;
-  };
-  return rec(rec, 0) ? cols : std::vector<int>{};
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-#include <vector>
-using namespace std;
-
-int main() {
-  assert(n_queens(4) == vector<int>({1, 3, 0, 2}));
-  assert(n_queens(2).empty());
-  assert(n_queens(1) == vector<int>({0}));
-  return 0;
-}
-\end{lstlisting}
 \subsection{Subset Sum}
 Given a collection of integers and a target, the subset sum problem asks for the maximum sum of any subset that does not exceed the target. Two algorithms below solve this problem in complementary regimes, and which one wins depends on whether the bottleneck is the number of items or the size of the weights.
 
@@ -5205,7 +6060,6 @@ Overflow warning: All subset sums and intermediate differences in \inlinecode{ma
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <climits>
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -5321,6 +6175,366 @@ int main() {
   assert(max_subset_sum_bounded(c, 9) == 9);     // 4 + 5.
   assert(max_subset_sum_bounded(c, 10) == 10);   // 3 + 5 + 2.
   assert(max_subset_sum_bounded(c, 100) == 60);  // All items fit.
+  return 0;
+}
+\end{lstlisting}
+\subsection{N-Queens}
+The N-queens problem asks for a placement of $n$ queens on an $n$-by-$n$ chessboard such that no two share a row, column, or diagonal. Backtracking places one queen in each successive row and tracks which columns and diagonals are occupied. A conflicting placement is rejected immediately; after a failed recursive branch, its column and diagonals are released before trying the next column.
+
+\begin{compactitem}
+  \item \inlinecode{n\_queens(n)} returns a placement as a vector \inlinecode{cols} of length \inlinecode{n}, where \inlinecode{cols[row]} is the queen's column in that row. It returns an empty vector if no placement exists.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n!)$ per call.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary and $O(n)$ for the returned placement.
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <vector>
+
+std::vector<int> n_queens(int n) {
+  assert(n > 0);
+  std::vector<int> cols(n);
+  std::vector<char> used_col(n), used_diag1(2 * n - 1), used_diag2(2 * n - 1);
+  auto rec = [&](auto &&rec, int row) -> bool {
+    if (row == n) {
+      return true;
+    }
+    for (int col = 0; col < n; col++) {
+      int diag1 = row - col + n - 1, diag2 = row + col;
+      if (used_col[col] || used_diag1[diag1] || used_diag2[diag2]) {
+        continue;
+      }
+      cols[row] = col;
+      used_col[col] = used_diag1[diag1] = used_diag2[diag2] = true;
+      if (rec(rec, row + 1)) {
+        return true;
+      }
+      used_col[col] = used_diag1[diag1] = used_diag2[diag2] = false;
+      cols[row] = -1;
+    }
+    return false;
+  };
+  return rec(rec, 0) ? cols : std::vector<int>{};
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <vector>
+using namespace std;
+
+int main() {
+  assert(n_queens(4) == vector<int>({1, 3, 0, 2}));
+  assert(n_queens(2).empty());
+  assert(n_queens(1) == vector<int>({0}));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Knights Tour}
+A knight's tour visits every square of an $n$-by-$n$ board exactly once, moving as a chess knight. Plain backtracking over the eight moves is hopeless past a small board, since the search tree has branching factor up to eight and depth $n^2$.
+
+Warnsdorff's rule fixes the move order: from each square, try the onward squares in increasing order of how many unvisited moves they themselves have. The intuition is that squares with few remaining exits, such as corners, become unreachable if they are not used early, so the rule visits the most constrained squares first and leaves the flexible ones for later. This is the same minimum-remaining-values idea that drives the exact cover search of section 1.8.8.
+
+Warnsdorff's rule alone is a heuristic and does fail on some boards, so the search below keeps backtracking as a fallback and merely orders the moves by the rule. That ordering is strong enough that a tour is normally found along the first path tried, with backtracking almost never invoked.
+
+\begin{compactitem}
+  \item \inlinecode{knight\_tour(n, sr = 0, sc = 0)} returns an \inlinecode{n}-by-\inlinecode{n} grid whose entry is the step at which the knight visits that square, numbered $[0, {\inlinecodemath{n}}^2)$, starting from square (\inlinecode{sr}, \inlinecode{sc}). It returns an empty grid when no tour exists, which is the case for ${\inlinecodemath{n}} \in \{2, 3, 4\}$. The board size must be positive and the starting square must lie on the board.
+\end{compactitem}
+
+A tour is closed when the knight can leap from its final square back to its start, which is possible only for even $n$ at least $6$. Requiring one means rejecting a completed tour whose last square is not a knight's move from the first, so the same search finds it by adding that test at the end.
+
+\textbf{Time Complexity}: $O(n^{2})$ per call in practice, since the move ordering finds a tour without backtracking on the boards where one exists. The worst case remains exponential.
+
+\textbf{Space Complexity}: $O(n^{2})$ auxiliary stack space and $O(n^{2})$ for the returned grid.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <utility>
+#include <vector>
+
+const std::array<std::pair<int, int>, 8> KNIGHT_MOVES = {
+    {{-2, -1}, {-2, 1}, {-1, -2}, {-1, 2}, {1, -2}, {1, 2}, {2, -1}, {2, 1}}
+};
+
+std::vector<std::vector<int>> knight_tour(int n, int sr = 0, int sc = 0) {
+  assert(n > 0 && sr >= 0 && sr < n && sc >= 0 && sc < n);
+  std::vector<std::vector<int>> visit(n, std::vector<int>(n, -1));
+  auto onward_moves = [&](int r, int c) {
+    int count = 0;
+    for (auto [dr, dc] : KNIGHT_MOVES) {
+      int nr = r + dr, nc = c + dc;
+      if (nr >= 0 && nr < n && nc >= 0 && nc < n && visit[nr][nc] == -1) {
+        count++;
+      }
+    }
+    return count;
+  };
+  auto rec = [&](auto &&rec, int r, int c, int step) -> bool {
+    visit[r][c] = step;
+    if (step == n * n - 1) {
+      return true;
+    }
+    // Order the onward squares by how few exits they have left, which is Warnsdorff's rule.
+    std::vector<std::pair<int, std::pair<int, int>>> candidates;
+    for (auto [dr, dc] : KNIGHT_MOVES) {
+      int r2 = r + dr, c2 = c + dc;
+      if (r2 >= 0 && r2 < n && c2 >= 0 && c2 < n && visit[r2][c2] == -1) {
+        candidates.emplace_back(onward_moves(r2, c2), std::make_pair(r2, c2));
+      }
+    }
+    std::sort(candidates.begin(), candidates.end());
+    for (auto [degree, square] : candidates) {
+      if (rec(rec, square.first, square.second, step + 1)) {
+        return true;
+      }
+    }
+    visit[r][c] = -1;
+    return false;
+  };
+  return rec(rec, sr, sc, 0) ? visit : std::vector<std::vector<int>>{};
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  assert(knight_tour(1) == vector<vector<int>>{{0}});
+  assert(knight_tour(3).empty());  // No tour exists on boards of size 2, 3, or 4.
+  assert(knight_tour(4).empty());
+
+  for (int n : {5, 6, 8}) {
+    auto visit = knight_tour(n, n / 2, n / 2);
+    assert(!visit.empty());
+    vector<pair<int, int>> at(n * n);
+    for (int r = 0; r < n; r++) {
+      for (int c = 0; c < n; c++) {
+        assert(visit[r][c] >= 0 && visit[r][c] < n * n);
+        at[visit[r][c]] = {r, c};  // Every step number is used exactly once.
+      }
+    }
+    assert(at[0] == make_pair(n / 2, n / 2));
+    for (int step = 1; step < n * n; step++) {
+      int dr = abs(at[step].first - at[step - 1].first);
+      int dc = abs(at[step].second - at[step - 1].second);
+      assert(dr * dc == 2);  // Each consecutive pair differs by a knight's move.
+    }
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Exact Cover (Dancing Links)}
+Given a binary matrix, the exact cover problem asks for a set of rows in which every column contains exactly one $1$. Many search problems reduce to it: a sudoku grid becomes a matrix whose columns demand that each cell hold one digit and that each digit appear once per row, column, and box, while a tiling becomes a matrix whose columns demand that each cell be covered by exactly one piece placement.
+
+Knuth's Algorithm X solves it by repeatedly choosing an uncovered column, trying each row that covers it, and deleting from the matrix every column that row satisfies along with every other row conflicting with it. Dancing links is the representation that makes the deletions cheap. Each $1$ of the matrix is a node in two circular doubly linked lists, one along its row and one along its column, and every column has a header node holding the count of its remaining nodes. Removing a node \inlinecode{x} from a list is \inlinecode{left[right[x]] = left[x]} and \inlinecode{right[left[x]] = right[x]}, which leaves \inlinecode{x} itself still pointing at its old neighbors; restoring it on backtrack is therefore just \inlinecode{left[right[x]] = x} and \inlinecode{right[left[x]] = x}, with no allocation and no search. Undoing the covering operations in the exact reverse of the order that performed them restores the matrix exactly, which is what makes the whole search run in place on one static set of nodes.
+
+The column to branch on is the one with the fewest remaining rows. This is the minimum-remaining- values heuristic, and it fails as early as possible: a column with no remaining rows ends the branch immediately, and a column with one forces the choice.
+
+Secondary columns spare a problem with optional requirements from padding its matrix with one slack row per optional column. In the N-queens reduction below, every board row and column must hold exactly one queen and so is primary, while a diagonal may hold none and so is secondary. Asking for two solutions is the usual test of uniqueness, as a sudoku generator does when validating a puzzle.
+
+\begin{compactitem}
+  \item \inlinecode{ExactCover(primary, secondary = 0)} constructs an empty matrix with \inlinecode{primary + secondary} columns, both counts nonnegative. Columns in $[0, {\inlinecodemath{primary}})$ must be covered exactly once, while the optional columns in $[{\inlinecodemath{primary}}, {\inlinecodemath{primary}} + {\inlinecodemath{secondary}})$ may be covered at most once.
+  \item \inlinecode{add\_row(cols)} appends a row containing a $1$ in each column of \inlinecode{cols}, which must all be in $[0, {\inlinecodemath{primary}} + {\inlinecodemath{secondary}})$, and returns the row's ID. The IDs of the first $r$ rows added are $[0, r)$, in the order they were added.
+  \item \inlinecode{solve(limit = 1)} returns up to \inlinecode{limit} solutions, where \inlinecode{limit} is positive. Each solution is the sorted list of the IDs of its rows, and an empty result means no exact cover exists. The matrix is left unchanged, so it may be queried again.
+\end{compactitem}
+
+Solutions come in the order the search finds them, which follows the branching heuristic rather than row IDs.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(k)$ per call to \inlinecode{add\_row(cols)}, where $k$ is the size of \inlinecode{cols}.
+  \item Exponential per call to \inlinecode{solve()}. Exact cover is NP-complete, and dancing links prunes the search rather than avoiding it: the cost is proportional to the number of nodes the search unlinks and relinks, which the branching heuristic reduces but does not bound polynomially.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n + c)$ for storage, where $n$ is the number of $1$s in the matrix and $c$ is the number of columns.
+  \item $O(d)$ auxiliary stack space per call to \inlinecode{solve()}, where $d$ is the number of rows in the deepest partial solution reached, plus $O(s \cdot d)$ for the returned solutions, where $s$ is the number found.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <vector>
+
+class ExactCover {
+  int columns, rows;
+  std::vector<int> left, right, up, down, col_of, row_of, col_size;
+  std::vector<int> partial;
+
+  int add_node(int c, int r) {
+    left.push_back(0);
+    right.push_back(0);
+    up.push_back(0);
+    down.push_back(0);
+    col_of.push_back(c);
+    row_of.push_back(r);
+    return static_cast<int>(col_of.size()) - 1;
+  }
+
+  // Unlinks column c and every row meeting it, so both vanish from all remaining traversals.
+  void cover(int c) {
+    right[left[c]] = right[c];
+    left[right[c]] = left[c];
+    for (int i = down[c]; i != c; i = down[i]) {
+      for (int j = right[i]; j != i; j = right[j]) {
+        up[down[j]] = up[j];
+        down[up[j]] = down[j];
+        col_size[col_of[j]]--;
+      }
+    }
+  }
+
+  // Relinks in the mirror order of cover(), which is what restores the matrix exactly.
+  void uncover(int c) {
+    for (int i = up[c]; i != c; i = up[i]) {
+      for (int j = left[i]; j != i; j = left[j]) {
+        col_size[col_of[j]]++;
+        up[down[j]] = j;
+        down[up[j]] = j;
+      }
+    }
+    right[left[c]] = c;
+    left[right[c]] = c;
+  }
+
+  bool search(int limit, std::vector<std::vector<int>> &found) {
+    if (right[0] == 0) {  // Every primary column is covered.
+      found.push_back(partial);
+      std::sort(found.back().begin(), found.back().end());
+      return static_cast<int>(found.size()) >= limit;
+    }
+    int best = right[0];
+    for (int c = right[0]; c != 0; c = right[c]) {
+      if (col_size[c] < col_size[best]) {
+        best = c;
+      }
+    }
+    if (col_size[best] == 0) {
+      return false;  // No row can cover this column, so this branch is dead.
+    }
+    cover(best);
+    for (int r = down[best]; r != best; r = down[r]) {
+      partial.push_back(row_of[r]);
+      for (int j = right[r]; j != r; j = right[j]) {
+        cover(col_of[j]);
+      }
+      bool done = search(limit, found);
+      for (int j = left[r]; j != r; j = left[j]) {
+        uncover(col_of[j]);
+      }
+      partial.pop_back();
+      if (done) {
+        break;
+      }
+    }
+    uncover(best);
+    return static_cast<int>(found.size()) >= limit;
+  }
+
+ public:
+  explicit ExactCover(int primary, int secondary = 0) : columns(primary + secondary), rows(0) {
+    assert(primary >= 0 && secondary >= 0);
+    col_size.assign(columns + 1, 0);
+    for (int c = 0; c <= columns; c++) {  // Node 0 is the root, and node c + 1 heads column c.
+      int header = add_node(c, -1);
+      up[header] = down[header] = header;
+      left[header] = right[header] = header;
+    }
+    int prev = 0;  // Secondary headers stay outside the root ring, so they are never branched on.
+    for (int c = 1; c <= primary; c++) {
+      right[prev] = c;
+      left[c] = prev;
+      prev = c;
+    }
+    right[prev] = 0;
+    left[0] = prev;
+  }
+
+  int add_row(const std::vector<int> &cols) {
+    for (int c : cols) {
+      assert(c >= 0 && c < columns);
+    }
+    int row = rows++, first = -1;
+    for (int c : cols) {
+      int header = c + 1, node = add_node(header, row);
+      up[node] = up[header];
+      down[node] = header;
+      down[up[header]] = node;
+      up[header] = node;
+      col_size[header]++;
+      if (first == -1) {
+        first = node;
+        left[node] = right[node] = node;
+      } else {
+        left[node] = left[first];
+        right[node] = first;
+        right[left[first]] = node;
+        left[first] = node;
+      }
+    }
+    return row;
+  }
+
+  std::vector<std::vector<int>> solve(int limit = 1) {
+    assert(limit > 0);
+    std::vector<std::vector<int>> found;
+    partial.clear();
+    search(limit, found);
+    return found;
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // Knuth's example matrix over 7 columns, whose unique cover is rows 1, 3, and 5.
+  //     col: 0123456
+  //   row 0: 1001001
+  //   row 1: 1001000
+  //   row 2: 0001101
+  //   row 3: 0010110
+  //   row 4: 0110011
+  //   row 5: 0100001
+  ExactCover matrix(7);
+  matrix.add_row(vector<int>{0, 3, 6});
+  matrix.add_row(vector<int>{0, 3});
+  matrix.add_row(vector<int>{3, 4, 6});
+  matrix.add_row(vector<int>{2, 4, 5});
+  matrix.add_row(vector<int>{1, 2, 5, 6});
+  matrix.add_row(vector<int>{1, 6});
+  assert((matrix.solve() == vector<vector<int>>{{1, 3, 5}}));
+  assert(matrix.solve(2).size() == 1);  // Asking for a second solution proves uniqueness.
+
+  ExactCover impossible(2);
+  impossible.add_row(vector<int>{0});
+  assert(impossible.solve().empty());
+
+  // The 8-queens problem. Each board row and each board column must hold exactly one queen, while
+  // each diagonal may hold at most one, so the 2*n board lines are primary and the 2*(2*n - 1)
+  // diagonals are secondary. One matrix row per square places a queen there.
+  const int n = 8;
+  ExactCover queens(2 * n, 2 * (2 * n - 1));
+  for (int r = 0; r < n; r++) {
+    for (int c = 0; c < n; c++) {
+      queens.add_row(vector<int>{r, n + c, 2 * n + r + c, 2 * n + (2 * n - 1) + r - c + n - 1});
+    }
+  }
+  assert(queens.solve().size() == 1);
+  assert(queens.solve(1000).size() == 92);
   return 0;
 }
 \end{lstlisting}

@@ -54,7 +54,8 @@ class Enumerator {
   Count count;
 
  public:
-  Enumerator(int range, int length, Count count) : range(range), length(length), count(count) {
+  Enumerator(int range, int length, Count count)
+      : range(range), length(length), count(std::move(count)) {
     assert(range >= 0 && length >= 0);
   }
 

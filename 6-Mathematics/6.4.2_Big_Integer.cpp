@@ -3,10 +3,23 @@
 Perform operations on arbitrary precision big integers internally represented as a vector of
 base-`BASE` digits in little-endian order. `BASE` defaults to $10^9$ and must be a power of 10 no
 larger than $10^9$. Multiplication selects schoolbook, Karatsuba, or FFT from the operand size;
-`FFT_CUTOFF` is the padded transform length where FFT takes over and normally needs no adjustment.
-Typical arithmetic operations involving mixed numeric primitives and strings are supported through
-implicit construction and hidden friend operators, as long as at least one operand is a `BigInt` at
-any given level of evaluation.
+`MUL_CUTOFF` is the padded transform length where FFT takes over and normally needs no adjustment.
+Division likewise splits into a quadratic loop for small divisors and a recursive one past
+`DIV_CUTOFF` limbs, so it inherits whichever multiplication the size selects. Typical arithmetic
+operations involving mixed numeric primitives and strings are supported through implicit
+construction and hidden friend operators, as long as at least one operand is a `BigInt` at any given
+level of evaluation.
+
+Addition, subtraction, and comparisons are performed using the standard linear algorithms.
+Multiplication first converts limbs from base `BASE` to the narrower base `MUL_BASE` so coefficient
+products fit safely, then multiplies with schoolbook, Karatsuba, or (if beyond `MUL_CUTOFF`) complex
+FFT convolution according to the operand size, converting the result back. Division and modulo are
+computed together by normalized long division: scale the operands so the divisor's leading limb is
+large, estimate each quotient limb from the top one or two limbs of the running remainder, correct
+the estimate by adding the divisor back if necessary, then unscale the remainder. Beyond
+`DIV_CUTOFF` limbs, that loop becomes the base case of Burnikel-Ziegler recursion, which halves both
+operands and recovers each half of the quotient from a division of the same shape, paying one
+multiplication per level rather than one estimate per limb.
 
 - `BigInt()` constructs zero, and `BigInt(n)` constructs a big integer from an integer `n`.
 - `BigInt(s)` constructs a big integer from a C string or an `std::string` `s`.
@@ -14,49 +27,46 @@ any given level of evaluation.
   primitive.
 - `size()` returns the number of digits in the base-10 representation.
 - Operators `>>` and `<<` are defined to support stream-based input and output.
-- `v.to_string()`, `v.to_llong()`, `v.to_double()`, and `v.to_ldouble()` return the big integer `v`
-  converted to an `std::string`, `int64_t`, `double`, and `long double` respectively. For the latter
-  three data types, overflow behavior is based on that of inputting from `std::istream`. Equivalent
-  conversions are also available through explicit casts to `int`, `long long`, `double`, and
-  `long double`.
-- `v.abs()` returns the absolute value of big integer `v`.
-- `a.comp(v)` returns $-1$, $0$, or $1$ depending on whether the big integers `a` and `v` compare
-  less, equal, or greater, respectively.
+- `to_string()`, `to_llong()`, `to_double()`, and `to_ldouble()` return the big integer converted to
+  an `std::string`, `int64_t`, `double`, and `long double` respectively. For the latter three data
+  types, overflow behavior is based on that of inputting from `std::istream`. Equivalent conversions
+  are also available through explicit casts to `int`, `long long`, `double`, and `long double`.
+- `abs()` returns the absolute value.
+- `comp(v)` returns $-1$, $0$, or $1$ depending on whether the big integer compares less than, equal
+  to, or greater than `v`, respectively.
 - Operators `<`, `>`, `<=`, `>=`, `==`, `!=`, `+`, `-`, `*`, `/`, `%`, `++`, `--`, `+=`, `-=`, `*=`,
-  `/=`, and `%=` are defined analogous to those on integer primitives. Addition, subtraction, and
-  comparisons are performed using the standard linear algorithms. Multiplication first converts
-  limbs from base `BASE` to the narrower base `MULT_BASE` so coefficient products fit safely, then
-  multiplies with schoolbook, Karatsuba, or complex FFT convolution according to the operand size,
-  converting the result back. Division and modulo are computed together by normalized long division:
-  scale the operands so the divisor's leading limb is large, estimate each quotient limb from the
-  top one or two limbs of the running remainder, correct the estimate by adding the divisor back if
-  necessary, then unscale the remainder.
-- `a.div(v)` returns a pair consisting of the quotient and remainder when `a` is divided by `v`.
-- `v.pow(n)` returns `v` raised to the nonnegative power $n$ using binary exponentiation.
-- `v.sqrt()` returns the integral part of the square root of big integer `v` using a digit-by-digit
-  algorithm in the internal base.
-- `v.nth_root(n)` returns the integral part of the $n$-th root of big integer `v` using binary
-  search. Negative inputs require odd $n$.
-- `rand(n)` returns a random, positive big integer with $n$ digits.
+  `/=`, and `%=` are defined analogous to those on integer primitives.
+- `div(v)` returns a pair consisting of the quotient and remainder after dividing by `v`.
+- `pow(n)` returns the big integer raised to the nonnegative power `n` using binary exponentiation.
+- `mul_pow10(n)` returns the big integer multiplied by $10^{`n`}$ for nonnegative `n`, which costs a
+  limb shift rather than a multiplication.
+- `sqrt()` returns the integral part of the square root using a digit-by-digit algorithm in the
+  internal base.
+- `nth_root(n)` returns the integral part of the `n`-th root using Newton's method. Negative inputs
+  require odd `n`.
+- `rand(d)` returns a random, positive big integer with `d` digits.
 
 Time Complexity:
-- O(n) per call to the constructors, `size()`, `to_string()`, `to_llong()`, `to_double()`,
+- O(d) per call to the constructors, `size()`, `to_string()`, `to_llong()`, `to_double()`,
   `to_ldouble()`, `abs()`, `comp()`, `rand()`, and all comparison and arithmetic operators except
-  multiplication, division, and modulo, where $n$ is total number of digits in the arguments and
+  multiplication, division, and modulo, where $d$ is the total number of digits in the arguments and
   result for each operation.
-- O(n*log(n)*log(log(n))) per call to multiplication operations once operands reach `FFT_CUTOFF`,
-  and O(n^1.585) below it.
-- O(n*m) per call to division and modulo operations, where $n$ and $m$ are the number of digits in
-  the dividend and divisor, respectively.
-- O(M(d) log n) per call to `pow()`, where $d$ is the maximum digit length reached during
-  exponentiation and $M(d)$ denotes the cost of one multiplication of two $d$-digit big integers
-  using the selected multiplication method above.
-- O(d^2) per call to `sqrt()`, where $d$ is the number of digits.
-- O((d/k)*M(d)*log k) per call to `nth_root()`, from binary search over a $d/k$-digit answer.
+- O(d*log(d)*log(log(d))) per call to multiplication operations once operands reach `MUL_CUTOFF`,
+  and O(d^1.585) below it.
+- O(d*m) per call to division and modulo operations below `DIV_CUTOFF`, and O(M(m) log m) at or
+  above it, where $d$ and $m$ are the number of digits in the dividend and divisor respectively, and
+  $M(m)$ is the cost of one multiplication of two $m$-digit big integers.
+- O(M(d) log n) per call to `pow()`, where $n$ is the exponent and $d$ is the maximum digit length
+  reached during exponentiation.
+- O(d + n) per call to `mul_pow10()`, where $n$ is the power of ten.
+- O(d^2) per call to `sqrt()`.
+- O(M(d)*log(d)*log(d*n)) per call to `nth_root()`, where $n$ is the root. Newton's iteration starts
+  within a factor of ten of the answer and doubles the correct digits each step, so it converges in
+  O(log d) steps, each costing one exponentiation and one division.
 
 Space Complexity:
-- O(n) for storage of the big integer.
-- O(n) auxiliary for negation, addition, subtraction, multiplication, division, `abs()`, `sqrt()`,
+- O(d) for storage of the big integer.
+- O(d) auxiliary for negation, addition, subtraction, multiplication, division, `abs()`, `sqrt()`,
   `pow()`, and `nth_root()`.
 - O(1) auxiliary for all other operations.
 
@@ -84,15 +94,16 @@ class BigInt {
   static const int BASE = 1000000000, BASE_DIGITS = 9;  // BASE must equal 10^BASE_DIGITS.
   // Multiplication rebases to half as many decimal digits per limb, so that coefficient products
   // stay exact both in int64_t and within the FFT's double precision.
-  static const int MULT_BASE = 10000, MULT_BASE_DIGITS = 4;  // Keep consistent with BASE_DIGITS.
-  static const int FFT_CUTOFF = 256;  // Padded MULT_BASE length past which FFT beats Karatsuba.
+  static const int MUL_BASE = 10000, MUL_BASE_DIGITS = 4;  // Keep consistent with BASE_DIGITS.
+  static const int MUL_CUTOFF = 256;  // Padded MUL_BASE length past which FFT beats Karatsuba.
+  static const int DIV_CUTOFF = 64;   // Divisor limb count past which recursion wins.
   static_assert(
       BASE >= 100 && BASE <= 1000000000,
-      "BASE must be between 10^2 and 10^9; below that MULT_BASE_DIGITS would round down to zero"
+      "BASE must be between 10^2 and 10^9; below that MUL_BASE_DIGITS would round down to zero"
   );
   static_assert(
-      MULT_BASE_DIGITS == BASE_DIGITS / 2 && MULT_BASE <= 10000,
-      "MULT_BASE must hold half of BASE's digits and stay exact under the FFT"
+      MUL_BASE_DIGITS == BASE_DIGITS / 2 && MUL_BASE <= 10000,
+      "MUL_BASE must hold half of BASE's digits and stay exact under the FFT"
   );
 
   using vint = std::vector<int>;
@@ -292,6 +303,101 @@ class BigInt {
     return res;
   }
 
+  // Schoolbook long division of nonnegative values, quadratic in the limb counts.
+  std::pair<BigInt, BigInt> div_schoolbook(const BigInt &v) const {
+    int norm = BASE / (v.digits.back() + 1);
+    BigInt an = *this * norm, bn = v * norm, q, r;
+    q.digits.resize(an.digits.size());
+    for (int i = static_cast<int>(an.digits.size()) - 1; i >= 0; i--) {
+      r *= BASE;
+      r += an.digits[i];
+      int s1 = (r.digits.size() <= bn.digits.size()) ? 0 : r.digits[bn.digits.size()];
+      int s2 = (r.digits.size() <= bn.digits.size() - 1) ? 0 : r.digits[bn.digits.size() - 1];
+      int d = (static_cast<int64_t>(s1) * BASE + s2) / bn.digits.back();
+      for (r -= bn * d; r < 0; r += bn) {
+        d--;
+      }
+      q.digits[i] = d;
+    }
+    q.normalize();
+    r.normalize();
+    return {q, r / norm};
+  }
+
+  // Burnikel-Ziegler recursive division of nonnegative values. Balanced halves replace the
+  // quadratic inner loop, paying one multiplication per level instead of one estimate per limb, so
+  // division inherits whichever multiplication the operand size selects.
+  std::pair<BigInt, BigInt> div_recursive(const BigInt &v) const {
+    auto shifted = [](const BigInt &x, int k) {  // Multiplies by BASE^k.
+      BigInt res(x);
+      if (!res.digits.empty()) {
+        res.digits.insert(res.digits.begin(), k, 0);
+      }
+      return res;
+    };
+    auto slice = [](const BigInt &x, int lo, int hi) {  // Limbs [lo, hi), or 0 if empty range.
+      BigInt res;
+      lo = std::max(lo, 0);
+      hi = std::min(hi, static_cast<int>(x.digits.size()));
+      if (lo < hi) {
+        res.digits.assign(x.digits.begin() + lo, x.digits.begin() + hi);
+      }
+      res.normalize();
+      return res;
+    };
+    // Divides at most 2n limbs by exactly n limbs whose leading limb is at least BASE / 2, where
+    // the quotient is known to be below BASE^n. Each half of the quotient comes from one
+    // three-by-two block division, which itself divides two half-size blocks by one.
+    auto rec = [&](auto &&rec, const BigInt &a, const BigInt &b,
+                   int n) -> std::pair<BigInt, BigInt> {
+      if (n % 2 != 0 || n < DIV_CUTOFF) {
+        return a.div_schoolbook(b);
+      }
+      int k = n / 2;
+      BigInt hi = slice(b, k, 2 * k), lo = slice(b, 0, k);
+      auto block = [&](const BigInt &x) {  // At most 3k limbs by b, with quotient below BASE^k.
+        BigInt q, r;
+        if (slice(x, 2 * k, 3 * k).comp(hi) < 0) {
+          std::tie(q, r) = rec(rec, slice(x, k, 3 * k), hi, k);
+        } else {
+          // The estimate saturates: the leading limbs already reach the divisor, so take the
+          // largest quotient the block can hold and recover the matching remainder.
+          q = shifted(BigInt(1), k) - 1;
+          r = slice(x, k, 3 * k) - hi * q;
+        }
+        r = shifted(r, k) + slice(x, 0, k) - q * lo;
+        while (r < 0) {  // At most twice, since the divisor's leading limb is at least BASE / 2.
+          r += b;
+          q -= 1;
+        }
+        return std::make_pair(q, r);
+      };
+      auto top = block(slice(a, k, 4 * k));
+      auto bottom = block(shifted(top.second, k) + slice(a, 0, k));
+      return {shifted(top.first, k) + bottom.first, bottom.second};
+    };
+    // Scale so the divisor's leading limb exceeds BASE / 2, then pad it to a multiple of a power
+    // of two so that every recursive split stays even until the blocks fall under DIV_CUTOFF, and
+    // consume the dividend one block at a time.
+    int scale = BASE / (v.digits.back() + 1);
+    BigInt a = *this * scale, b = v * scale;
+    int limbs = static_cast<int>(b.digits.size()), block = 1;
+    while (block * DIV_CUTOFF < limbs) {
+      block *= 2;
+    }
+    int n = (limbs + block - 1) / block * block, sigma = n - limbs;
+    a = shifted(a, sigma);
+    b = shifted(b, sigma);
+    BigInt q, r;
+    for (int i = (static_cast<int>(a.digits.size()) + n - 1) / n - 1; i >= 0; i--) {
+      auto step = rec(rec, shifted(r, n) + slice(a, i * n, (i + 1) * n), b, n);
+      q = shifted(q, n) + step.first;
+      r = step.second;
+    }
+    // Both scalings scale the remainder and leave the quotient alone.
+    return {q, slice(r, sigma, static_cast<int>(r.digits.size())) / scale};
+  }
+
  public:
   BigInt() : sign(1) {}
   BigInt(int v) { *this = static_cast<int64_t>(v); }
@@ -310,12 +416,9 @@ class BigInt {
   }
 
   int size() const {
-    if (digits.empty()) {
-      return 1;
-    }
-    std::ostringstream oss;
-    oss << digits.back();
-    return oss.str().length() + BASE_DIGITS * (digits.size() - 1);
+    return digits.empty() ? 1
+                          : static_cast<int>(std::to_string(digits.back()).size()) +
+                                BASE_DIGITS * (static_cast<int>(digits.size()) - 1);
   }
 
   friend std::istream &operator>>(std::istream &in, BigInt &v) {
@@ -326,16 +429,7 @@ class BigInt {
   }
 
   friend std::ostream &operator<<(std::ostream &out, const BigInt &v) {
-    if (v.sign == -1) {
-      out << '-';
-    }
-    out << (v.digits.empty() ? 0 : v.digits.back());
-    char old_fill = out.fill('0');
-    for (int i = static_cast<int>(v.digits.size()) - 2; i >= 0; i--) {
-      out << std::setw(BASE_DIGITS) << v.digits[i];
-    }
-    out.fill(old_fill);
-    return out;
+    return out << v.to_string();
   }
 
   std::string to_string() const {
@@ -350,26 +444,17 @@ class BigInt {
     return oss.str();
   }
 
-  int64_t to_llong() const {
+  template<typename T>
+  T to_arithmetic() const {
     std::stringstream ss(to_string());
-    int64_t res;
+    T res;
     ss >> res;
     return res;
   }
 
-  double to_double() const {
-    std::stringstream ss(to_string());
-    double res;
-    ss >> res;
-    return res;
-  }
-
-  long double to_ldouble() const {
-    std::stringstream ss(to_string());
-    long double res;
-    ss >> res;
-    return res;
-  }
+  int64_t to_llong() const { return to_arithmetic<int64_t>(); }
+  double to_double() const { return to_arithmetic<double>(); }
+  long double to_ldouble() const { return to_arithmetic<long double>(); }
 
   explicit operator int() const { return static_cast<int>(to_llong()); }
   explicit operator long long() const { return static_cast<long long>(to_llong()); }
@@ -433,8 +518,8 @@ class BigInt {
   }
 
   friend BigInt operator*(const BigInt &u, const BigInt &v) {
-    vint a = convert_base(u.digits, BASE_DIGITS, MULT_BASE_DIGITS);
-    vint b = convert_base(v.digits, BASE_DIGITS, MULT_BASE_DIGITS);
+    vint a = convert_base(u.digits, BASE_DIGITS, MUL_BASE_DIGITS);
+    vint b = convert_base(v.digits, BASE_DIGITS, MUL_BASE_DIGITS);
     int n = 1;
     while (n < 2 * static_cast<int>(std::max(a.size(), b.size()))) {
       n <<= 1;
@@ -442,7 +527,7 @@ class BigInt {
     a.resize(n, 0);
     b.resize(n, 0);
     vint64 c;
-    if (n < FFT_CUTOFF) {
+    if (n < MUL_CUTOFF) {
       c = karatsuba(a.begin(), a.end(), b.begin(), b.end());
     } else {
       auto at = fft(a.begin(), a.end()), bt = fft(b.begin(), b.end());
@@ -459,10 +544,10 @@ class BigInt {
     res.sign = u.sign * v.sign;
     for (int i = 0, carry = 0; i < static_cast<int>(c.size()); i++) {
       int64_t d = c[i] + carry;
-      res.digits.push_back(d % MULT_BASE);
-      carry = d / MULT_BASE;
+      res.digits.push_back(d % MUL_BASE);
+      carry = d / MUL_BASE;
     }
-    res.digits = convert_base(res.digits, MULT_BASE_DIGITS, BASE_DIGITS);
+    res.digits = convert_base(res.digits, MUL_BASE_DIGITS, BASE_DIGITS);
     res.normalize();
     return res;
   }
@@ -508,25 +593,13 @@ class BigInt {
     if (comp(digits, v.digits, 1, 1) < 0) {
       return {BigInt(0), *this};
     }
-    int norm = BASE / (v.digits.back() + 1);
-    BigInt an = abs() * norm, bn = v.abs() * norm, q, r;
-    q.digits.resize(an.digits.size());
-    for (int i = static_cast<int>(an.digits.size()) - 1; i >= 0; i--) {
-      r *= BASE;
-      r += an.digits[i];
-      int s1 = (r.digits.size() <= bn.digits.size()) ? 0 : r.digits[bn.digits.size()];
-      int s2 = (r.digits.size() <= bn.digits.size() - 1) ? 0 : r.digits[bn.digits.size() - 1];
-      int d = (static_cast<int64_t>(s1) * BASE + s2) / bn.digits.back();
-      for (r -= bn * d; r < 0; r += bn) {
-        d--;
-      }
-      q.digits[i] = d;
-    }
-    q.sign = sign * v.sign;
-    r.sign = sign;
-    q.normalize();
-    r.normalize();
-    return {q, r / norm};
+    auto res = static_cast<int>(v.digits.size()) < DIV_CUTOFF ? abs().div_schoolbook(v.abs())
+                                                              : abs().div_recursive(v.abs());
+    res.first.sign = sign * v.sign;
+    res.second.sign = sign;
+    res.first.normalize();
+    res.second.normalize();
+    return res;
   }
 
   // clang-format off
@@ -558,6 +631,16 @@ class BigInt {
       }
       x *= x;
     }
+    return res;
+  }
+
+  // Multiplying by a power of ten is a limb shift, since BASE is a power of ten by construction.
+  BigInt mul_pow10(int n) const {
+    assert(n >= 0);
+    static const int POW10[] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000};
+    BigInt res(*this);
+    res.digits.insert(res.digits.begin(), n / BASE_DIGITS, 0);
+    res *= POW10[n % BASE_DIGITS];  // Also normalizes, which is what clears a shifted zero.
     return res;
   }
 
@@ -610,39 +693,23 @@ class BigInt {
     if (*this == 0) {
       return BigInt(0);
     }
+    // Newton's iteration, started just above the answer and decreasing to it.
     BigInt magnitude = abs();
-    if (n >= size()) {
-      int p = 1;
-      while (magnitude.comp(BigInt(p).pow(n)) > 0) {
-        p++;
-      }
-      BigInt root = magnitude.comp(BigInt(p).pow(n)) < 0 ? p - 1 : p;
-      return sign == -1 ? -root : root;
+    BigInt x = BigInt(10).pow(static_cast<int>(std::ceil(static_cast<double>(size()) / n))), y;
+    while (x.comp(y = (x * (n - 1) + magnitude / x.pow(n - 1)) / n) > 0) {
+      x = y;
     }
-    BigInt lo(BigInt(10).pow(static_cast<int>(std::ceil(static_cast<double>(size()) / n)) - 1));
-    BigInt hi(lo * 10), mid;
-    while (lo < hi) {
-      mid = (lo + hi) / 2;
-      int cmp = comp(digits, mid.pow(n).digits, 1, 1);
-      if (lo < mid && cmp > 0) {
-        lo = mid;
-      } else if (mid < hi && cmp < 0) {
-        hi = mid;
-      } else {
-        return (sign == -1) ? -mid : mid;
-      }
-    }
-    return (sign == -1) ? -(mid + 1) : (mid + 1);
+    return sign == -1 ? -x : x;
   }
 
-  static BigInt rand(int n) {
-    if (n == 0) {
+  static BigInt rand(int d) {
+    if (d == 0) {
       return BigInt(0);
     }
     static std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
     std::uniform_int_distribution<int> first_digit(1, 9), digit(0, 9);
     std::string s(1, static_cast<char>('0' + first_digit(rng)));
-    for (int i = 1; i < n; i++) {
+    for (int i = 1; i < d; i++) {
       s += static_cast<char>('0' + digit(rng));
     }
     return BigInt(s);
@@ -698,11 +765,11 @@ int main() {
   mt19937 rng(1234567);  // Fixed seed for reproducibility.
   uniform_int_distribution<int> length_dist(1, 100);
   for (int i = 0; i < 20; i++) {
-    int n = length_dist(rng);
-    BigInt value(BigInt::rand(n)), root(value.sqrt()), lower(root * root), upper(root + 1);
+    int d = length_dist(rng);
+    BigInt value(BigInt::rand(d)), root(value.sqrt()), lower(root * root), upper(root + 1);
     upper *= upper;
     assert(lower <= value && value < upper);
-    uniform_int_distribution<int> divisor_length_dist(1, n);
+    uniform_int_distribution<int> divisor_length_dist(1, d);
     BigInt divisor(BigInt::rand(divisor_length_dist(rng)) + 1), quotient(value / divisor);
     lower = quotient * divisor;
     upper = divisor * (quotient + 1);

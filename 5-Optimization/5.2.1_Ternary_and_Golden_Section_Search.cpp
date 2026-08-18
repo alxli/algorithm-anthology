@@ -18,6 +18,15 @@ iteration while shrinking the interval by a factor of $1/\varphi$ (about $0.618$
 given accuracy in roughly $2.4$ times fewer evaluations than ternary search. Prefer it when the
 function is expensive to evaluate.
 
+Brent's method keeps the golden-section guarantee while converging much faster on the smooth
+functions that occur in practice. It tracks the three best points seen so far, fits a parabola
+through them, and jumps to that parabola's vertex, which is superlinear once the interval is small
+enough for the function to look quadratic. A proposed vertex is accepted only when it lands inside
+the current interval and moves less than half the step before last; otherwise the method takes a
+golden-section step instead, so it never loses the guaranteed interval reduction. Unlike the two
+searches above, it stops early once the interval is smaller than the tolerance rather than always
+running a fixed number of iterations.
+
 The discrete version operates on an integer domain, narrowing by thirds until at most three
 candidates remain and then scanning them. It returns the index of the optimum rather than a real
 coordinate. As with ternary search on reals, the function must be strictly unimodal.
@@ -27,11 +36,16 @@ coordinate. As with ternary search on reals, the function must be strictly unimo
   the optional absolute error `eps`.
 - `golden_section_min(lo, hi, f, eps = 1e-12)` and `golden_section_max(lo, hi, f, eps = 1e-12)` do
   the same with one function evaluation per iteration.
+- `brent_min(lo, hi, f, eps = 1e-12)` and `brent_max(lo, hi, f, eps = 1e-12)` do the same, fitting a
+  parabola through the three best points when that fit is well behaved and falling back to a
+  golden-section step when it is not.
 - `discrete_ternary_min(lo, hi, f)` and `discrete_ternary_max(lo, hi, f)` return the integer index
   in range $[`lo`, `hi`]$ optimizing the unimodal function `f`, breaking ties toward the smaller
   index.
 
 Time Complexity:
+- O(log(n / `eps`)) calls to `f()` per call to `brent_min()` and `brent_max()` in the worst case,
+  and far fewer once the parabolic steps take over.
 - O(log(n / `eps`)) calls to `f()` per continuous-search call, where $n$ is the distance between
   `lo` and `hi`. Golden-section makes about half as many per iteration as ternary search.
 - O(log n) calls to `f()` per discrete-search call.
@@ -40,6 +54,8 @@ Space Complexity:
 - O(1) auxiliary for all operations.
 
 */
+
+#include <cmath>
 
 template<typename Fn>
 double ternary_search_min(double lo, double hi, Fn f, double eps = 1e-12) {
@@ -85,6 +101,80 @@ double golden_section_min(double lo, double hi, Fn f, double eps = 1e-12) {
 template<typename Fn>
 double golden_section_max(double lo, double hi, Fn f, double eps = 1e-12) {
   return golden_section_min(lo, hi, [&](double x) { return -f(x); }, eps);
+}
+
+template<typename Fn>
+double brent_min(double lo, double hi, Fn f, double eps = 1e-12) {
+  const double GOLD = 0.3819660112501051;  // (3 - sqrt(5)) / 2, the golden-section fraction.
+  double x = lo + GOLD * (hi - lo), w = x, v = x;
+  double fx = f(x), fw = fx, fv = fx;
+  double step = 0, prev_step = 0;
+  for (int i = 0; i < 200; i++) {
+    double mid = (lo + hi) / 2, tol = eps * std::fabs(x) + eps;
+    if (std::fabs(x - mid) <= 2 * tol - (hi - lo) / 2) {
+      break;
+    }
+    double p = 0, q = 0;
+    if (std::fabs(prev_step) > tol) {
+      // Fit a parabola through the three best points and solve for its vertex.
+      double r = (x - w) * (fx - fv), s = (x - v) * (fx - fw);
+      p = (x - v) * s - (x - w) * r;
+      q = 2 * (s - r);
+      if (q > 0) {
+        p = -p;
+      } else {
+        q = -q;
+      }
+    }
+    double old_step = prev_step;
+    prev_step = step;
+    // Accept the vertex only if it stays inside the interval and at least halves the last step.
+    if (std::fabs(p) < std::fabs(q * old_step / 2) && p > q * (lo - x) && p < q * (hi - x)) {
+      step = p / q;
+      if (x + step - lo < 2 * tol || hi - (x + step) < 2 * tol) {
+        step = x < mid ? tol : -tol;
+      }
+    } else {
+      prev_step = (x < mid ? hi : lo) - x;
+      step = GOLD * prev_step;
+    }
+    double u = x + (std::fabs(step) >= tol ? step : (step > 0 ? tol : -tol));
+    double fu = f(u);
+    if (fu <= fx) {
+      if (u < x) {
+        hi = x;
+      } else {
+        lo = x;
+      }
+      v = w;
+      fv = fw;
+      w = x;
+      fw = fx;
+      x = u;
+      fx = fu;
+    } else {
+      if (u < x) {
+        lo = u;
+      } else {
+        hi = u;
+      }
+      if (fu <= fw || w == x) {
+        v = w;
+        fv = fw;
+        w = u;
+        fw = fu;
+      } else if (fu <= fv || v == x || v == w) {
+        v = u;
+        fv = fu;
+      }
+    }
+  }
+  return x;
+}
+
+template<typename Fn>
+double brent_max(double lo, double hi, Fn f, double eps = 1e-12) {
+  return brent_min(lo, hi, [&f](double x) { return -f(x); }, eps);
 }
 
 template<typename Int, typename Fn>
@@ -135,6 +225,8 @@ int main() {
   assert(EQ(golden_section_min(-1000, 1000, up), -2));
   assert(EQ(ternary_search_max(-1000, 1000, down), 2.0 / 19));
   assert(EQ(golden_section_max(-1000, 1000, down), 2.0 / 19));
+  assert(EQ(brent_min(-1000, 1000, up), -2));
+  assert(EQ(brent_max(-1000, 1000, down), 2.0 / 19));
 
   // Discrete unimodal arrays: a valley and a peak.
   vector<int> valley{5, 3, 1, 2, 4, 6};

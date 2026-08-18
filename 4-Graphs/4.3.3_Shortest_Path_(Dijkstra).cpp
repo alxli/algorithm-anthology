@@ -15,6 +15,12 @@ nonnegative, a node's distance is final the first time it is removed from the qu
 - `get_path(dest)` returns the path from `start` to `dest`, or an empty vector if `dest` is
   unreachable, using the state left by the most recent call to `dijkstra()`.
 
+When only one destination matters, two searches beat one: run a second Dijkstra backwards from the
+destination over reversed edges, expanding whichever frontier holds the smaller key. The trap is the
+stopping rule. Track $\mu$, the smallest $d_f(v) + d_r(v)$ over nodes both searches have reached;
+with $t_f$ and $t_r$ the smallest keys in the two queues, stop once $t_f + t_r \geq \mu$. Halting at
+the first node settled by both is the usual bug, since it need not lie on a shortest path.
+
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 `start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the
 destination to `start`, then reverse that sequence to recover the path.

@@ -69,20 +69,6 @@ T cross(const Point<T> &a, const Point<T> &b, const Point<T> &o) {
 }
 
 template<typename T>
-T incircle(const Point<T> &a, const Point<T> &b, const Point<T> &c, const Point<T> &d) {
-  T adx = a.x - d.x, ady = a.y - d.y;
-  T bdx = b.x - d.x, bdy = b.y - d.y;
-  T cdx = c.x - d.x, cdy = c.y - d.y;
-  T abdet = adx * bdy - bdx * ady;  // Overflow warning.
-  T bcdet = bdx * cdy - cdx * bdy;
-  T cadet = cdx * ady - adx * cdy;
-  T alift = adx * adx + ady * ady;
-  T blift = bdx * bdx + bdy * bdy;
-  T clift = cdx * cdx + cdy * cdy;
-  return alift * bcdet + blift * cadet + clift * abdet;
-}
-
-template<typename T>
 struct Edge {
   Point<T> origin;
   Edge *rot, *onext;
@@ -162,7 +148,16 @@ bool right_of(const Point<T> &p, Edge<T> *e) {
 
 template<typename T>
 bool in_circle(const Point<T> &a, const Point<T> &b, const Point<T> &c, const Point<T> &d) {
-  return LT(0, incircle(a, b, c, d));
+  T adx = a.x - d.x, ady = a.y - d.y;
+  T bdx = b.x - d.x, bdy = b.y - d.y;
+  T cdx = c.x - d.x, cdy = c.y - d.y;
+  T abdet = adx * bdy - bdx * ady;  // Overflow warning.
+  T bcdet = bdx * cdy - cdx * bdy;
+  T cadet = cdx * ady - adx * cdy;
+  T alift = adx * adx + ady * ady;
+  T blift = bdx * bdx + bdy * bdy;
+  T clift = cdx * cdx + cdy * cdy;
+  return LT(0, alift * bcdet + blift * cadet + clift * abdet);
 }
 
 template<typename T>

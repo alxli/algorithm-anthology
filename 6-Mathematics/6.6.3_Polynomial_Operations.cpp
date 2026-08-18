@@ -70,13 +70,13 @@ const Coeff ROOT = 3;
 const int MAX_POWER_OF_TWO = 23;
 const int NAIVE_CUTOFF = 150;
 
-Coeff powmod(Coeff b, uint64_t e, Coeff m = MOD) {
-  Coeff res = 1;
-  for (b %= m; e > 0; e >>= 1) {
-    if (e & 1) {
-      res = res * b % m;
+Coeff powmod(Coeff x, uint64_t n, Coeff m = MOD) {
+  Coeff res = 1 % m;
+  for (x %= m; n > 0; n >>= 1) {
+    if (n & 1) {
+      res = res * x % m;
     }
-    b = b * b % m;
+    x = x * x % m;
   }
   return res;
 }

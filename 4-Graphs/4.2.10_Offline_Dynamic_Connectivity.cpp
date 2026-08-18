@@ -9,7 +9,7 @@ stored at each node on the way down and undoes them on the way back up, so at ea
 set forest reflects exactly the edges alive at that moment.
 
 This offline method supports arbitrary undirected graphs. When updates must be processed online and
-the graph remains a forest, see the Euler Tour Tree in 2.7.9.
+the graph remains a forest, see the Euler Tour Tree in 2.8.9.
 
 Undoing unions requires a disjoint set forest with rollback (see the disjoint sets section): it
 joins by size or rank without path compression, recording each change on a stack so it can be
@@ -53,10 +53,9 @@ class OfflineDynamicConnectivity {
 
   int n, num_sets;
   std::vector<Op> ops;
-  std::vector<int> root, rank;
+  std::vector<int> root, rank, answers;
   std::vector<std::pair<int, int>> history;  // (child root, whether its parent's rank increased)
   std::vector<std::vector<std::pair<int, int>>> seg;
-  std::vector<int> answers;
 
   int find(int u) const {
     while (root[u] != u) {

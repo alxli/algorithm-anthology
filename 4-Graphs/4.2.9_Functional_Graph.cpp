@@ -39,20 +39,9 @@ Space Complexity:
 #include <vector>
 
 class FunctionalGraph {
-  std::vector<std::vector<int>> up;  // up[k][i] = f applied 2^k times to i.
-  std::vector<char> on_cyc;          // on_cyc[i] = true if i is on a cycle.
-  std::vector<int> to_cyc;           // Steps from i to the first cycle node.
-  std::vector<int> comp;             // Identifier of the cycle that i reaches.
-  std::vector<int> clen;             // clen[c] = length of cycle c.
-
-  int jump(int i, int64_t steps) const {
-    for (int k = 0; steps > 0; k++, steps >>= 1) {
-      if (steps & 1) {
-        i = up[k][i];
-      }
-    }
-    return i;
-  }
+  std::vector<std::vector<int>> up;
+  std::vector<char> on_cyc;
+  std::vector<int> to_cyc, comp, clen;
 
  public:
   explicit FunctionalGraph(const std::vector<int> &f) {
@@ -129,13 +118,22 @@ class FunctionalGraph {
   int num_cycles() const { return static_cast<int>(clen.size()); }
 
   int successor(int i, int64_t steps) const {
-    if (steps <= to_cyc[i]) {
-      return jump(i, steps);
+    // Advances i by following f exactly dist times.
+    auto advance = [&](int64_t dist) {
+      for (int k = 0; dist > 0; k++, dist >>= 1) {
+        if (dist & 1) {
+          i = up[k][i];
+        }
+      }
+    };
+    int enter = to_cyc[i];
+    if (steps > enter) {
+      steps -= enter;
+      advance(enter);  // Advance to the cycle entry node.
+      steps %= clen[comp[i]];
     }
-    steps -= to_cyc[i];
-    i = jump(i, to_cyc[i]);  // Advance to the cycle entry node.
-    steps %= clen[comp[i]];
-    return jump(i, steps);
+    advance(steps);
+    return i;
   }
 };
 

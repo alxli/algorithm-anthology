@@ -10,13 +10,13 @@ The functions below use a circular sentinel node. When the list is empty, `senti
 at the front and back of the list.
 
 - `init_list(sentinel)` initializes an empty circular list around `sentinel`.
+- `empty(sentinel)` returns whether the list has no data nodes.
 - `insert_after(pos, node)` inserts detached `node` immediately after `pos`.
 - `insert_before(pos, node)` inserts detached `node` immediately before `pos`.
 - `erase(node)` removes `node` from its current list and leaves it detached.
 - `push_front(sentinel, node)` inserts detached `node` at the front of the list.
 - `push_back(sentinel, node)` inserts detached `node` at the back of the list.
 - `move_to_front(sentinel, node)` moves an already-linked `node` to the front of the list.
-- `empty(sentinel)` returns whether the list has no data nodes.
 - `splice(pos, node)` moves an already-linked `node` so it appears immediately before `pos`.
 - `splice_range(pos, first, last)` moves the half-open range $[`first`, `last`)$ so it appears
   immediately before `pos`.

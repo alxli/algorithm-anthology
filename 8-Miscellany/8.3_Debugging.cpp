@@ -194,7 +194,6 @@ void dbg_rows_out(const Rows &rows, int col_width = 0, int limit = -1) {
 
 #include <cassert>
 #include <map>
-#include <set>
 #include <vector>
 using namespace std;
 

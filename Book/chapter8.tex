@@ -10,19 +10,19 @@ A personal template may also collect shortened versions of utilities elsewhere i
   \item \inlinecode{Rep(i,N)}, \inlinecode{For(i,L,H)}, \inlinecode{Rev(i,N)}, \inlinecode{Dwn(i,H,L)}, and \inlinecode{Each(x,C)} are compact loop macros.
   \item \inlinecode{All(c)} and \inlinecode{Rall(c)} expand to the forward or reverse iterator pair of a container or array.
   \item \inlinecode{sz(c)} returns the signed size of a container.
-  \item \inlinecode{ckmin(a, b)} assigns \inlinecode{a = b} and returns true if \inlinecode{b} \textless{} \inlinecode{a} before the assignment.
-  \item \inlinecode{ckmax(a, b)} assigns \inlinecode{a = b} and returns true if \inlinecode{a} \textless{} \inlinecode{b} before the assignment.
+  \item \inlinecode{ckmin(a, b)} assigns \inlinecode{a = b} only when \inlinecode{b} \textless{} \inlinecode{a}, and returns whether the assignment happened.
+  \item \inlinecode{ckmax(a, b)} assigns \inlinecode{a = b} only when \inlinecode{a} \textless{} \inlinecode{b}, and returns whether the assignment happened.
   \item \inlinecode{floor\_div(a, b)} and \inlinecode{ceil\_div(a, b)} divide signed integers with mathematical rounding toward negative or positive infinity. Requires nonzero \inlinecode{b} and the resulting quotient to be representable by the result type; in particular, the minimum value cannot be divided by $-1$.
+  \item \inlinecode{make\_vec(n1, ..., nk, v)} returns a \inlinecode{k}-dimensional nested vector with the given sizes and every element initialized to \inlinecode{v}, whose type is deduced from \inlinecode{v}. The last argument is always the fill value, so \inlinecode{make\_vec(3, 5)} is a vector of three fives rather than a $3$ by $5$ grid.
+  \item \inlinecode{indices(n)} returns the vector $[0, 1, \ldots, {\inlinecodemath{n}} - 1]$.
   \item \inlinecode{lb(a, x, comp = std::less\textless{}\textgreater{})} and \inlinecode{ub(a, x, comp = std::less\textless{}\textgreater{})} return lower and upper bound indices in random-access sequence \inlinecode{a}, which must be sorted according to \inlinecode{comp}.
-  \item \inlinecode{sort\_unique(v)} sorts a vector and removes duplicates.
-  \item \inlinecode{indices(n)} returns the vector \inlinecode{\{0, 1, ..., n - 1\}}.
+  \item \inlinecode{sort\_unique(v, comp = std::less\textless{}\textgreater{})} sorts a vector and removes duplicates, which are the elements that \inlinecode{comp} deems equivalent.
   \item \inlinecode{argsort(a, comp = std::less\textless{}\textgreater{})} returns the indices of \inlinecode{a} ordered by their values according to \inlinecode{comp}; the order of indices whose values compare equal is unspecified.
-  \item \inlinecode{erase\_one(c, x)} erases one existing value from an associative container, asserting that it is present.
+  \item \inlinecode{find\_ptr(m, k)} returns a pointer to the value that key \inlinecode{k} maps to in the associative container \inlinecode{m}, or \inlinecode{nullptr} if the key is absent. The pointer is const only when \inlinecode{m} is, so \inlinecode{if (auto *p = find\_ptr(m, k))} both tests for the key and updates it in a single lookup.
+  \item \inlinecode{get\_or(m, k, def = \{\})} returns the value that key \inlinecode{k} maps to in the associative container \inlinecode{m}, or \inlinecode{def} if the key is absent. Unlike \inlinecode{operator[]}, it never inserts and works on a const \inlinecode{m}.
+  \item \inlinecode{erase\_one(c, x)} erases one copy of \inlinecode{x} from associative container \inlinecode{c}, asserting that it is present.
   \item \inlinecode{min\_heap\textless{}T\textgreater{}} is a min-heap alias.
-  \item \inlinecode{rng} is a global 64-bit Mersenne Twister seeded from the current \inlinecode{std::chrono::steady\_clock} reading; call \inlinecode{rng.seed(seed)} for reproducible results.
-  \item \inlinecode{rand\_int(lo, hi)} returns a random integer in range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
-  \item \inlinecode{rand\_real(lo = 0.0, hi = 1.0)} returns a random real number in the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
-  \item \inlinecode{y\_combinator(f)} wraps a recursive lambda so that the lambda can call itself as its first argument.
+  \item \inlinecode{y\_combinator(f)} wraps a recursive lambda so that it can call itself as its first argument.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -38,13 +38,13 @@ A personal template may also collect shortened versions of utilities elsewhere i
 #include <utility>
 #include <vector>
 
-#define Rep(i, N) for (int i = 0, _##i = (N); i < _##i; ++i)        //   0 to N-1
+#define Rep(i, N)    for (int i = 0, _##i = (N); i < _##i; ++i)     //   0 to N-1
 #define For(i, L, H) for (int i = (L), _##i = (H); i <= _##i; ++i)  //   L to H
-#define Rev(i, N) for (int i = (N); --i >= 0;)                      // N-1 to 0
+#define Rev(i, N)    for (int i = (N); --i >= 0;)                   // N-1 to 0
 #define Dwn(i, H, L) for (int i = (H), _##i = (L); i >= _##i; --i)  //   H to L
-#define Each(x, C) for (auto &x : (C))
-#define All(C) std::begin(C), std::end(C)
-#define Rall(C) std::rbegin(C), std::rend(C)
+#define Each(x, C)   for (auto &x : (C))
+#define All(C)       std::begin(C), std::end(C)
+#define Rall(C)      std::rbegin(C), std::rend(C)
 
 template<typename C> int sz(const C &c) { return static_cast<int>(c.size()); }
 template<typename T, typename U> bool ckmin(T &a, const U &b) { return b < a && (a = b, true); }
@@ -64,6 +64,23 @@ T ceil_div(T a, T b) {
   return q + (r != 0 && ((r < 0) == (b < 0)));
 }
 
+template<typename T>
+std::vector<T> make_vec(int n, const T &v) {
+  return std::vector<T>(n, v);
+}
+
+template<typename... Args>
+auto make_vec(int n, Args... args) {
+  auto inner = make_vec(args...);
+  return std::vector<decltype(inner)>(n, inner);
+}
+
+std::vector<int> indices(int n) {
+  std::vector<int> v(n);
+  std::iota(v.begin(), v.end(), 0);
+  return v;
+}
+
 template<typename Seq, typename T, typename Compare = std::less<>>
 int lb(const Seq &a, const T &x, Compare comp = Compare{}) {
   return static_cast<int>(std::lower_bound(a.begin(), a.end(), x, comp) - a.begin());
@@ -74,16 +91,11 @@ int ub(const Seq &a, const T &x, Compare comp = Compare{}) {
   return static_cast<int>(std::upper_bound(a.begin(), a.end(), x, comp) - a.begin());
 }
 
-template<typename T>
-void sort_unique(std::vector<T> &v) {
-  std::sort(v.begin(), v.end());
-  v.erase(std::unique(v.begin(), v.end()), v.end());
-}
-
-std::vector<int> indices(int n) {
-  std::vector<int> v(n);
-  std::iota(v.begin(), v.end(), 0);
-  return v;
+template<typename T, typename Compare = std::less<>>
+void sort_unique(std::vector<T> &v, Compare comp = Compare{}) {
+  std::sort(v.begin(), v.end(), comp);
+  auto same = [&](const T &a, const T &b) { return !comp(a, b) && !comp(b, a); };
+  v.erase(std::unique(v.begin(), v.end(), same), v.end());
 }
 
 template<typename Seq, typename Compare = std::less<>>
@@ -91,6 +103,20 @@ std::vector<int> argsort(const Seq &a, Compare comp = Compare{}) {
   std::vector<int> p = indices(static_cast<int>(a.size()));
   std::sort(p.begin(), p.end(), [&](int i, int j) { return comp(a[i], a[j]); });
   return p;
+}
+
+template<typename M>
+auto find_ptr(M &m, const typename M::key_type &k) {
+  auto it = m.find(k);
+  return it == m.end() ? nullptr : &it->second;
+}
+
+template<typename M>
+typename M::mapped_type get_or(
+    const M &m, const typename M::key_type &k, const typename M::mapped_type &def = {}
+) {
+  auto it = m.find(k);
+  return it == m.end() ? def : it->second;
 }
 
 template<typename C, typename T>
@@ -102,20 +128,6 @@ void erase_one(C &c, const T &x) {
 
 template<typename T>
 using min_heap = std::priority_queue<T, std::vector<T>, std::greater<T>>;
-
-std::mt19937_64 rng(std::chrono::steady_clock::now().time_since_epoch().count());
-
-template<typename Int>
-Int rand_int(Int lo, Int hi) {
-  static_assert(std::is_integral<Int>::value, "rand_int() requires an integral type");
-  assert(lo <= hi);
-  return std::uniform_int_distribution<Int>(lo, hi)(rng);
-}
-
-double rand_real(double lo = 0.0, double hi = 1.0) {
-  assert(lo < hi);
-  return std::uniform_real_distribution<double>(lo, hi)(rng);
-}
 
 template<typename Fn>
 class y_combinator_result {
@@ -139,6 +151,7 @@ decltype(auto) y_combinator(Fn &&f) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <map>
 #include <set>
 using namespace std;
 
@@ -166,27 +179,35 @@ int main() {
   assert(floor_div(-7, 3) == -3);
   assert(ceil_div(7, -3) == -2);
   assert(ceil_div(-7, 3) == -2);
+
+  auto grid = make_vec(2, 3, -1);
+  grid[0][0] = 7;
+  assert(sz(grid) == 2 && sz(grid[1]) == 3 && grid[1][0] == -1);
   v = {3, 1, 3, 2, 1};
   sort_unique(v);
   assert((v == vector<int>{1, 2, 3}));
+  v = {3, 1, 3, 2, 1};
+  sort_unique(v, greater<>{});
+  assert((v == vector<int>{3, 2, 1}));
   assert((indices(4) == vector<int>{0, 1, 2, 3}));
   assert((argsort(vector<int>{30, 10, 20}) == vector<int>{1, 2, 0}));
   assert((argsort(vector<int>{30, 10, 20}, greater<>{}) == vector<int>{0, 2, 1}));
-  multiset<int> ms{1, 2, 2, 3};
-  erase_one(ms, 2);
-  assert(ms.count(2) == 1);
+
+  map<int, int> cnt{{2, 5}};
+  if (int *p = find_ptr(cnt, 2)) {
+    *p += 10;  // A single lookup both tests for the key and updates it.
+  }
+  const map<int, int> &view = cnt;  // A const container yields a pointer to const.
+  assert(*find_ptr(view, 2) == 15 && find_ptr(view, 7) == nullptr);
+  assert(get_or(cnt, 2) == 15 && get_or(cnt, 7, -1) == -1 && sz(cnt) == 1);
   min_heap<int> pq;
   pq.push(3);
   pq.push(1);
   assert(pq.top() == 1);
 
-  rng.seed(1234567);  // Fixed seed for reproducibility.
-  int r = rand_int(1, 6);
-  assert(1 <= r && r <= 6);
-  double d = rand_real();
-  assert(0.0 <= d && d < 1.0);
-  shuffle(All(v), rng);
-  assert(sz(v) == 3);
+  multiset<int> ms{1, 2, 2, 3};
+  erase_one(ms, 2);
+  assert(ms.count(2) == 1);
 
   // Recursive lambda with y_combinator.
   auto fib =
@@ -227,7 +248,6 @@ File-redirection failures throw \inlinecode{std::runtime\_error}.
 #include <cctype>
 #include <cstddef>
 #include <cstdio>
-#include <cstdlib>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -671,7 +691,6 @@ void dbg_rows_out(const Rows &rows, int col_width = 0, int limit = -1) {
 \begin{lstlisting}[language=C++]
 #include <cassert>
 #include <map>
-#include <set>
 #include <vector>
 using namespace std;
 
@@ -1244,8 +1263,7 @@ The order-statistic operations use GNU PBDS conventions: \inlinecode{find\_by\_o
 #include <utility>
 
 struct SplitMix64Hasher {
-  // SplitMix64 mixer.
-  static uint64_t mix64(uint64_t x) {
+  static uint64_t splitmix64(uint64_t x) {
     x += 0x9e3779b97f4a7c15ULL;
     x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
     x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
@@ -1254,7 +1272,7 @@ struct SplitMix64Hasher {
 
   std::size_t operator()(uint64_t x) const {
     static const uint64_t RAND_SEED = std::chrono::steady_clock::now().time_since_epoch().count();
-    return mix64(x + RAND_SEED);
+    return splitmix64(x + RAND_SEED);
   }
 };
 

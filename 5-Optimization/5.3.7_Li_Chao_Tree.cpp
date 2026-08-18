@@ -2,7 +2,7 @@
 
 Maintains a dynamic set of lines $y = mx + b$ and answers minimum value queries at integer points.
 Lines and queries may arrive in arbitrary order, making this useful for dynamic programming
-recurrences of the form `dp[i] = min(m[j] * x[i] + b[j])` without monotone slopes or query
+recurrences of the form $dp(i) = \min_j (m_j x_i + b_j)$ without monotone slopes or query
 coordinates.
 
 A Li Chao tree fixes an inclusive coordinate domain $[`lo`, `hi`]$ and stores one line at each node
@@ -12,19 +12,29 @@ root-to-leaf path. Prefer this structure when the domain is known and manageable
 convex hull in the previous section needs no fixed domain and also supports maximum queries, while a
 Li Chao tree has a simpler invariant and is easier to extend to lines active only on subintervals.
 
+No line can be removed once inserted, since a node records only the winner at its midpoint and never
+what that line beat. Insertions can instead be undone in reverse order: `add_line()` replaces the
+line at O(log d) nodes and creates at most one, so remembering each previous line restores the tree
+exactly. Pairing that with a segment tree over the time axis gives arbitrary deletion offline, the
+construction that section 4.2.10 applies to a rollback disjoint set.
+
 - `LiChaoTree(lo, hi)` constructs an empty tree over integer domain $[`lo`, `hi`]$.
 - `add_line(m, b)` inserts line $y = mx + b$. Lines may be added in any order.
 - `query(x)` returns the minimum $y$-value among all inserted lines at coordinate `x`. At least one
   line must have been inserted, and query coordinates may be supplied in any order.
+- `snapshot()` returns a token representing the current history size.
+- `rollback(snapshot)` undoes all insertions made after `snapshot`.
 
 Overflow warning: each comparison and query evaluates `m * x + b`, which must fit in `int64_t`. The
 difference `hi - lo` must also fit in `int64_t`.
 
 Time Complexity:
 - O(log d) per call to `add_line()` and `query()`, where $d$ is the distance between `lo` and `hi`.
+- O(1) per call to `snapshot()`, and O(log d) per line undone by `rollback()`.
 
 Space Complexity:
 - O(n) node storage for $n$ lines inserted, since each insertion creates at most one node.
+- O(log d) history per inserted line that has not been rolled back.
 - O(log d) auxiliary stack space per operation.
 
 */
@@ -34,6 +44,7 @@ Space Complexity:
 #include <cstdint>
 #include <memory>
 #include <utility>
+#include <vector>
 
 const int64_t INF = INT64_MAX / 4;
 
@@ -50,18 +61,31 @@ class LiChaoTree {
     explicit Node(const Line &f) : f(f) {}
   };
 
+  // One insertion either replaces a node's line or creates the node, so recording the previous
+  // state of each node it touches is enough to restore the tree exactly.
+  struct Undo {
+    Node *node;                   // Node whose line was replaced, or null if a node was created.
+    Line prev;                    // The line that node held before.
+    std::unique_ptr<Node> *slot;  // Owner of the created node, when node is null.
+    Undo(Node *node, const Line &prev, std::unique_ptr<Node> *slot)
+        : node(node), prev(prev), slot(slot) {}
+  };
+
   std::unique_ptr<Node> root;
   int64_t lo, hi;
+  std::vector<Undo> trail;
 
-  static void add_line(std::unique_ptr<Node> &n, int64_t lo, int64_t hi, Line f) {
+  void add_line(std::unique_ptr<Node> &n, int64_t lo, int64_t hi, Line f) {
     if (n == nullptr) {
       n = std::make_unique<Node>(f);
+      trail.emplace_back(nullptr, Line(), &n);
       return;
     }
     int64_t mid = lo + (hi - lo) / 2;
     bool left_better = f.eval(lo) < n->f.eval(lo);
     bool mid_better = f.eval(mid) < n->f.eval(mid);
     if (mid_better) {
+      trail.emplace_back(n.get(), n->f, nullptr);
       std::swap(f, n->f);
     }
     if (lo == hi) {
@@ -101,6 +125,21 @@ class LiChaoTree {
     assert(lo <= x && x <= hi);
     return query(root.get(), lo, hi, x);
   }
+
+  int snapshot() const { return static_cast<int>(trail.size()); }
+
+  void rollback(int snapshot) {
+    assert(0 <= snapshot && snapshot <= static_cast<int>(trail.size()));
+    while (static_cast<int>(trail.size()) > snapshot) {
+      const Undo &u = trail.back();
+      if (u.slot != nullptr) {
+        u.slot->reset();
+      } else {
+        u.node->f = u.prev;
+      }
+      trail.pop_back();
+    }
+  }
 };
 
 /*** Example Usage ***/
@@ -117,6 +156,13 @@ int main() {
   assert(h.query(0) == 0);
   assert(h.query(2) == 4);
   assert(h.query(1) == 3);
+  assert(h.query(3) == 5);
+
+  // Insertions undo in reverse order, which is what makes offline deletion possible.
+  int token = h.snapshot();
+  h.add_line(-1, -9);
+  assert(h.query(3) == -12);
+  h.rollback(token);
   assert(h.query(3) == 5);
   return 0;
 }

@@ -213,7 +213,7 @@ Most algorithm sections begin with one leading `/* ... */` docstring using this 
 
 1. Problem statement and algorithm insight. Lead with what is computed and why the algorithm works,
    not with iterator mechanics or parameter trivia.
-2. One bullet per exposed function, constructor, class, or major operation.
+2. One bullet per function, constructor, class, or major operation of the section's public API.
 3. Section-level callouts after the API list: assumptions shared by multiple operations, type or
    callback requirements, algorithm explanation, comparative or adaptation guidance, labeled
    warnings, optional variants, and cross-references.
@@ -222,6 +222,22 @@ Most algorithm sections begin with one leading `/* ... */` docstring using this 
 Keep these zones in order. In particular, place labeled warnings after the API list, and put each
 complexity heading on its own line followed by `- O(...)` bullets. Compact one-line complexity
 labels are reserved for subordinate per-algorithm comments such as the individual sorting entries.
+
+Document the section's algorithm, not its plumbing. C++ gives every file-scope function external
+visibility, so "exposed" is not the same as "public API" here; the test is whether a contestant
+would call it after pasting the section. A file-scope helper that exists only to support the real
+API, such as a hash mixer, a comparator, a small numeric utility, or a shared internal
+recursion, gets no API bullet and no complexity bullet, even though C++ makes it visible at file
+scope. Explain in the surrounding prose whatever a reader needs to know about it, such as which
+established mixer it uses or which invariant it maintains. Reserve bullets for the operations a
+contestant calls after pasting the section. A helper that callers really are expected to reuse
+belongs in its own section or in a utilities section rather than in this list. The same applies to
+`private` members, which are described in prose or in-code comments when their invariant matters.
+
+Split a utility file into separate sections when each block carries its own algorithmic idea, and
+keep it merged when the blocks are conveniences. Rounding modes, base conversion by long division,
+and calendar arithmetic each earn a section; wrappers over `std::string` such as trimming,
+splitting, and case conversion do not, and a section made of them would have nothing to teach.
 
 Utility grab-bags may instead use mid-file `/* Section: ... */` blocks with local API bullets. Do
 not duplicate every bullet in the top docstring for those files; update the relevant local block.
@@ -405,6 +421,18 @@ Before finishing meaningful edits, run checks scaled to the touched files:
 - Check docstring wrapping and run the bounded stabilization audit, both when touching comments and
   before declaring the repo stable:
   `python3 scan_quality.py`
+
+Two properties of the tooling are worth knowing before touching it:
+
+- `scan_quality.py` holds per-path exemption lists for known-acceptable findings, such as a member
+  named `pow()` that is not `std::pow`. Renaming or renumbering a file silently un-exempts it, so
+  move its exemption paths in the same edit; the symptom is new findings on files whose contents did
+  not change.
+- `run_examples.py` only compiles and runs. It never edits a source file, so an `Example Usage and
+  Output:` block is maintained by hand: rerun the section with `-o`, paste the output, and trim
+  trailing whitespace, which `print_range()`-style helpers emit but `git diff --check` rejects.
+  Never restore such a block from an older commit to resolve a whitespace warning, since that
+  discards whatever the block legitimately gained.
 
 Warnings from the compiler should be investigated. If a warning is known and harmless, mention it
 in the final report rather than hiding it.

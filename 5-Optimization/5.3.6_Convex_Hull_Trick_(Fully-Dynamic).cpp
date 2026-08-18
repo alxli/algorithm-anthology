@@ -2,7 +2,7 @@
 
 Maintains a dynamic set of lines $y = mx + b$ and answers minimum value queries at integer points.
 Lines and queries may arrive in arbitrary order, making this useful for dynamic programming
-recurrences of the form `dp[i] = min(m[j] * x[i] + b[j])` without monotone slopes or query
+recurrences of the form $dp(i) = \min_j (m_j x_i + b_j)$ without monotone slopes or query
 coordinates. The same interface can answer maximum queries when constructed with `query_max = true`.
 
 This fully dynamic convex hull stores the envelope in a self-balancing binary search tree
@@ -17,6 +17,11 @@ queries are needed; a Li Chao tree is often simpler when a manageable domain is 
 - `add_line(m, b)` inserts line $y = mx + b$. Lines may be added in any order.
 - `query(x)` returns the best $y$-value among all inserted lines at coordinate `x`. At least one
   line must have been inserted, and query coordinates may be supplied in any order.
+
+Lines cannot be removed. Each insertion erases every line it dominates, and restoring them is the
+dynamic convex hull problem rather than a local repair, since one deletion can revive arbitrarily
+many. When deletions are needed and the operation order is known in advance, the Li Chao tree of the
+next section rolls insertions back instead.
 
 Overflow warning: minimization negates the coefficients, border updates subtract slopes/intercepts,
 and `query()` evaluates `m * x + b`, so those intermediate values must fit in `int64_t`.
@@ -50,9 +55,8 @@ class FullyDynamicCHT {
   std::multiset<Line> hull;
   bool query_max;
 
-  using HullIter = std::multiset<Line>::iterator;
-
-  bool update_border(HullIter x, HullIter y) {
+  template<class It>
+  bool update_border(It x, It y) {
     if (y == hull.end()) {
       x->xhi = INT64_MAX;
       return false;

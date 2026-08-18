@@ -1,7 +1,7 @@
 /*
 
 Basic matrix operations defined on a two-dimensional vector of numeric values. Matrix arithmetic
-also supports modular value types such as `Modular<MOD>` from 6.3.2. The element type must be
+also supports modular value types such as `Modular<MOD>` from 6.3.3. The element type must be
 constructible from $0$ and $1$ and support the arithmetic operators used by the requested operation.
 
 - `make_matrix<T>(m, n, v)` constructs and returns an $m$ by $n$ matrix with 0-based indices (row
@@ -17,6 +17,14 @@ constructible from $0$ and $1$ and support the arithmetic operators used by the 
   multiplication, and division involving a matrix and a numeric scalar value.
 - `a * v` returns the matrix-vector product as a vector.
 - Operators `*` and `*=` define matrix multiplication.
+
+Multiplication is the schoolbook triple loop, which is O(m*n*p) and is what contest constraints
+assume. Strassen's algorithm reaches O(n^{2.807}) by splitting each matrix into quarters and
+combining them with seven recursive products instead of eight, and Toom-Cook style refinements go
+lower still, but the additions that replace the saved multiplication carry large constants and
+worsen numerical stability. The crossover sits in the hundreds of rows even in tuned libraries, so
+the plain loop below is the right default; reach for a blocked or cache-oblivious ordering before
+reaching for a subcubic algorithm.
 
 Exponentiation uses iterative binary exponentiation: keep an accumulated result, square the base
 each round, and multiply it when the current exponent bit is set. The power sum uses the block

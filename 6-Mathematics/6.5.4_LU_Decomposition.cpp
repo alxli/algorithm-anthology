@@ -1,8 +1,8 @@
 /*
 
-The LU decomposition of a matrix $a$ with row-partial pivoting is a factorization of $a$ (after some
+The LU decomposition of a matrix $A$ with row-partial pivoting is a factorization of $A$ (after some
 rows are possibly permuted by a permutation matrix $p$) as a product of a lower triangular matrix
-$l$ and an upper triangular matrix $u$. This factorization can be used to tackle many common
+$L$ and an upper triangular matrix $U$. This factorization can be used to tackle many common
 problems in linear algebra such as solving systems of linear equations and computing determinants.
 An improvement on basic row reduction, LU decomposition by row-partial pivoting keeps the relative
 magnitude of matrix values small, thus reducing the relative error due to rounding in computed
@@ -18,7 +18,7 @@ integer determinant calculations.
   the only column containing $1$ in row `i`. Left-multiplying `a` by this permutation matrix gives
   the product of the separate lower and upper triangular matrices, not the merged storage matrix
   `lu` itself.
-- `solve_system(a, b, &x, eps = 1e-10)` solves the system of linear equations $ax = b$ given an $m$
+- `solve_system(a, b, &x, eps = 1e-10)` solves the system of linear equations $Ax = b$ given an $m$
   by $n$ floating-point matrix `a` and a length $m$ vector `b`, returning $0$ if there is one
   solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then
   the output vector `x` is populated with the solution of length $n$; otherwise, `x` is unchanged.
@@ -231,7 +231,6 @@ int main() {
   {  // Singular matrices have no inverse.
     vector<vector<double>> singular{{1, 2}, {2, 4}};
     assert(!inverse(singular));
-
     // Failed operations leave their output arguments unchanged.
     vector<vector<double>> inconsistent{{1}, {1}};
     vector<double> b{1, 2}, x{99, 100};

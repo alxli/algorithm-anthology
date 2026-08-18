@@ -988,7 +988,7 @@ Angle calculations in two dimensions. All operations are inherently floating-poi
 \begin{compactitem}
   \item \inlinecode{reduce\_deg(t)} takes an angle \inlinecode{t} degrees and returns an equivalent angle in the range $[0, 360)$ degrees (e.g. $-630$ becomes $90$).
   \item \inlinecode{reduce\_rad(t)} takes an angle \inlinecode{t} radians and returns an equivalent angle in the range $[0, 2\pi)$ radians (e.g. $720.5$ becomes $0.5$).
-  \item \inlinecode{polar\_point(r, t)} returns a two-dimensional Cartesian point given radius \inlinecode{r} and angle \inlinecode{t} radians in polar coordinates (see \inlinecode{std::polar()}).
+  \item \inlinecode{polar\_x(r, t)} and \inlinecode{polar\_y(r, t)} return the Cartesian coordinates of the point at radius \inlinecode{r} and angle \inlinecode{t} radians in polar coordinates (see \inlinecode{std::polar()}).
   \item \inlinecode{polar\_angle(p)} returns the angle in radians of the line segment from $(0, 0)$ to point \inlinecode{p}, relative counterclockwise to the positive $x$-axis.
   \item \inlinecode{angle(a, o, b)} returns the smallest angle in radians formed by the points \inlinecode{a}, \inlinecode{o}, \inlinecode{b} with vertex at point \inlinecode{o}. The points \inlinecode{a} and \inlinecode{b} must differ from \inlinecode{o}.
   \item \inlinecode{angle\_between(a, b)} returns the directed counter-clockwise angle in $[0, 2\pi)$ from vector \inlinecode{a} to vector \inlinecode{b}, treating both points as vectors from the origin. Both vectors must be nonzero.
@@ -1045,9 +1045,12 @@ double reduce_rad(double t) {
   return (t >= 2 * PI) ? std::fmod(t, 2 * PI) : t;
 }
 
-template<typename OutPt>
-OutPt polar_point(double r, double t) {
-  return OutPt(r * std::cos(t), r * std::sin(t));
+double polar_x(double r, double t) {
+  return r * std::cos(t);
+}
+
+double polar_y(double r, double t) {
+  return r * std::sin(t);
 }
 
 template<typename Pt>
@@ -1104,8 +1107,8 @@ struct Point {
 int main() {
   assert(EQ(123, reduce_deg(-8 * 360 + 123)));
   assert(EQ(1.2345, reduce_rad(2 * PI * 8 + 1.2345)));
-  assert(EQ(polar_point<Point>(4, PI), Point(-4, 0)));
-  assert(EQ(polar_point<Point>(4, -PI / 2), Point(0, -4)));
+  assert(EQ(-4, polar_x(4, PI)) && EQ(0, polar_y(4, PI)));
+  assert(EQ(0, polar_x(4, -PI / 2)) && EQ(-4, polar_y(4, -PI / 2)));
   assert(EQ(45, polar_angle(Point(5, 5)) * RAD));
   assert(EQ(135 * DEG, polar_angle(Point(-4, 4))));
   assert(EQ(90 * DEG, angle(Point(5, 0), Point(0, 5), Point(-5, 0))));
@@ -1315,8 +1318,8 @@ int main() {
 Intersection calculations in two dimensions for straight lines and line segments. The functions are templated on the point type \inlinecode{Pt}: pass any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields (for example \inlinecode{PointD}/\inlinecode{PointI} from 7.1.1, or the local example struct) for which \inlinecode{operator\textless{}} orders points lexicographically using exact coordinate comparisons. Point output types are deduced from the caller-supplied arguments, so they may differ from the input type, e.g. integer endpoints with a floating-point output point.
 
 \begin{compactitem}
-  \item \inlinecode{line\_intersection(a1, b1, c1, a2, b2, c2, \&p)} intersects lines $a_1 x + b_1 y + c_1 = 0$ and $a_2 x + b_2 y + c_2 = 0$, returning $-1$ (parallel), $0$ (one point, stored into \inlinecode{p}), or $1$ (identical). Both coefficient triples must represent valid lines.
-  \item \inlinecode{line\_intersection(p1, p2, p3, p4, \&p)} intersects the infinite lines determined by points \inlinecode{p1}, \inlinecode{p2}, \inlinecode{p3}, and \inlinecode{p4}, returning $-1$ (parallel), $0$ (one point, stored into \inlinecode{p}), or $1$ (identical). The points in each pair must differ.
+  \item \inlinecode{line\_intersection(a1, b1, c1, a2, b2, c2, \&p)} intersects lines $a_1 x + b_1 y + c_1 = 0$ and $a_2 x + b_2 y + c_2 = 0$, returning $-1$ (parallel), $0$ (one point, stored into \inlinecode{p} if it is not \inlinecode{nullptr}), or $1$ (identical). Both coefficient triples must represent valid lines.
+  \item \inlinecode{line\_intersection(p1, p2, p3, p4, \&p)} intersects the infinite lines determined by points \inlinecode{p1}, \inlinecode{p2}, \inlinecode{p3}, and \inlinecode{p4}, returning $-1$ (parallel), $0$ (one point, stored into \inlinecode{p} if it is not \inlinecode{nullptr}), or $1$ (identical). The points in each pair must differ.
   \item \inlinecode{seg\_intersection(a, b, c, d, \&p, \&q, include\_boundary = true)} intersects segments \inlinecode{a}-\inlinecode{b} and \inlinecode{c}-\inlinecode{d}, returning $-1$ (none), $0$ (one point), or $1$ (overlapping segment). The \inlinecode{include\_boundary} flag controls whether segments that meet only at an endpoint count as intersecting. If the intersection is a point (and \inlinecode{p} is not \inlinecode{nullptr}), it will be stored into \inlinecode{p}. If the intersection is an overlapping segment (and \inlinecode{p} and \inlinecode{q} are not \inlinecode{nullptr}) then their endpoints will be stored into pointers \inlinecode{p} and \inlinecode{q}, which must reference a floating-point point type.
   \item \inlinecode{seg\_intersection(a, b, c, d, include\_boundary = true)} is a simplified, detection-only version of the above. Both versions are exact for detection if the input point type is integral.
   \item \inlinecode{closest\_point(a, b, c, p)} returns the closest point on the valid line $ax + by + c = 0$ to point \inlinecode{p}.
@@ -1352,25 +1355,30 @@ bool LE(T a, U b) {
   return !LT(b, a);
 }
 
+// Guard to check outputs are real coordinates, since intersections are generally not integral.
+template<typename OutPt>
+constexpr bool is_float_pt =
+    std::is_floating_point_v<decltype(OutPt::x)> && std::is_floating_point_v<decltype(OutPt::y)>;
+
 template<typename OutPt>
 int line_intersection(double a1, double b1, double c1, double a2, double b2, double c2, OutPt *p) {
-  // Cramer's rule for a1*x + b1*y = -c1, a2*x + b2*y = -c2.
-  double det = a1 * b2 - a2 * b1;
-  if (EQ(det, 0)) {  // Parallel (lines need not be given in normalized form).
+  static_assert(is_float_pt<OutPt>, "output point coordinates must be floating-point");
+  double det = a1 * b2 - a2 * b1;  // Cramer's rule for a1*x + b1*y = -c1, a2*x + b2*y = -c2.
+  if (EQ(det, 0)) {                // Parallel (lines need not be given in normalized form).
     // Identical iff the other two 2x2 determinants also vanish.
     return (EQ(a1 * c2 - a2 * c1, 0) && EQ(b1 * c2 - b2 * c1, 0)) ? 1 : -1;
   }
-  p->x = (b1 * c2 - b2 * c1) / det;
-  if (!EQ(b1, 0)) {
-    p->y = -(a1 * p->x + c1) / b1;
-  } else {
-    p->y = -(a2 * p->x + c2) / b2;
+  if (p != nullptr) {
+    double x = (b1 * c2 - b2 * c1) / det;  // Local x to ensure y is derived from full-precision x.
+    p->x = x;
+    p->y = !EQ(b1, 0) ? -(a1 * x + c1) / b1 : -(a2 * x + c2) / b2;
   }
   return 0;
 }
 
 template<typename Pt, typename OutPt>
 int line_intersection(const Pt &p1, const Pt &p2, const Pt &p3, const Pt &p4, OutPt *p) {
+  static_assert(is_float_pt<OutPt>, "output point coordinates must be floating-point");
   auto a1 = p2.y - p1.y, b1 = p1.x - p2.x;
   auto c1 = -(p1.x * p2.y - p2.x * p1.y);
   auto a2 = p4.y - p3.y, b2 = p3.x - p4.x;
@@ -1380,8 +1388,10 @@ int line_intersection(const Pt &p1, const Pt &p2, const Pt &p3, const Pt &p4, Ou
   if (EQ(det, 0)) {
     return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
   }
-  p->x = static_cast<double>(x) / det;
-  p->y = static_cast<double>(y) / det;
+  if (p != nullptr) {
+    p->x = static_cast<double>(x) / det;
+    p->y = static_cast<double>(y) / det;
+  }
   return 0;
 }
 
@@ -1399,6 +1409,13 @@ int seg_intersection(
     const Pt &a, const Pt &b, const Pt &c, const Pt &d, OutPt *p = nullptr, OutPt *q = nullptr,
     const bool include_boundary = true
 ) {
+  static_assert(is_float_pt<OutPt>, "output point coordinates must be floating-point");
+  auto set_out = [](auto *out, auto x, auto y) {
+    if (out != nullptr) {
+      out->x = x;
+      out->y = y;
+    }
+  };
   auto ab_x = b.x - a.x, ab_y = b.y - a.y;
   auto ac_x = c.x - a.x, ac_y = c.y - a.y;
   auto cd_x = d.x - c.x, cd_y = d.y - c.y;
@@ -1406,20 +1423,14 @@ int seg_intersection(
   auto cd2 = cd_x * cd_x + cd_y * cd_y;
   if (EQ(ab2, 0)) {
     if (include_boundary && point_on_segment(a, c, d)) {
-      if (p != nullptr) {
-        p->x = static_cast<double>(a.x);
-        p->y = static_cast<double>(a.y);
-      }
+      set_out(p, a.x, a.y);
       return 0;  // Degenerate: first segment is a point intersecting the second segment.
     }
     return -1;  // Degenerate: first segment is a point not intersecting the second segment.
   }
   if (EQ(cd2, 0)) {
     if (include_boundary && point_on_segment(c, a, b)) {
-      if (p != nullptr) {
-        p->x = static_cast<double>(c.x);
-        p->y = static_cast<double>(c.y);
-      }
+      set_out(p, c.x, c.y);
       return 0;  // Degenerate: second segment is a point intersecting the first segment.
     }
     return -1;  // Degenerate: second segment is a point not intersecting the first segment.
@@ -1429,20 +1440,14 @@ int seg_intersection(
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
     Pt res1 = std::max(std::min(a, b), std::min(c, d));
     Pt res2 = std::min(std::max(a, b), std::max(c, d));
-    bool overlap = include_boundary ? !(res2 < res1) : (res1 < res2);
-    if (overlap) {
+    if (include_boundary ? !(res2 < res1) : (res1 < res2)) {
       if (res1 == res2) {
-        if (p != nullptr) {
-          p->x = static_cast<double>(res1.x);
-          p->y = static_cast<double>(res1.y);
-        }
+        set_out(p, res1.x, res1.y);
         return 0;  // Collinear and overlapping: touch at one endpoint.
       }
-      if (p != nullptr && q != nullptr) {
-        p->x = static_cast<double>(res1.x);
-        p->y = static_cast<double>(res1.y);
-        q->x = static_cast<double>(res2.x);
-        q->y = static_cast<double>(res2.y);
+      if (p != nullptr && q != nullptr) {  // Both ends are reported, or neither is.
+        set_out(p, res1.x, res1.y);
+        set_out(q, res2.x, res2.y);
       }
       return 1;  // Collinear and overlapping: overlap is a segment.
     }
@@ -1460,11 +1465,8 @@ int seg_intersection(
   bool u_ok = c1_pos ? (include_boundary ? (LE(0, c2) && LE(c2, c1)) : (LT(0, c2) && LT(c2, c1)))
                      : (include_boundary ? (LE(c1, c2) && LE(c2, 0)) : (LT(c1, c2) && LT(c2, 0)));
   if (t_ok && u_ok) {
-    if (p != nullptr) {
-      double t = static_cast<double>(t_num) / c1;
-      p->x = static_cast<double>(a.x + t * ab_x);
-      p->y = static_cast<double>(a.y + t * ab_y);
-    }
+    double t = static_cast<double>(t_num) / c1;
+    set_out(p, a.x + t * ab_x, a.y + t * ab_y);
     return 0;  // Non-parallel with one intersection.
   }
   return -1;  // Non-parallel with no intersection.
@@ -1492,8 +1494,7 @@ int seg_intersection(
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
     Pt res1 = std::max(std::min(a, b), std::min(c, d));
     Pt res2 = std::min(std::max(a, b), std::max(c, d));
-    bool overlap = include_boundary ? !(res2 < res1) : (res1 < res2);
-    if (overlap) {
+    if (include_boundary ? !(res2 < res1) : (res1 < res2)) {
       return (res1 == res2) ? 0 : 1;
     }
     return -1;
@@ -1553,7 +1554,6 @@ struct PointI {
 
 int main() {
   Point p, q;
-
   assert(line_intersection(-1.0, 1.0, 0.0, 1.0, 1.0, -3.0, &p) == 0);
   assert(EQ(p, Point(1.5, 1.5)));
   assert(line_intersection(Point(0, 0), Point(1, 1), Point(0, 4), Point(4, 0), &p) == 0);
@@ -1709,8 +1709,20 @@ int tangent(const Circle &c, const Pt &p, Line *l1 = nullptr, Line *l2 = nullptr
   return 1;
 }
 
+// Guard to check outputs are real coordinates, since intersections are generally not integral.
+template<typename OutPt>
+constexpr bool is_float_pt =
+    std::is_floating_point_v<decltype(OutPt::x)> && std::is_floating_point_v<decltype(OutPt::y)>;
+
 template<typename OutPt>
 int intersection(const Circle &c, const Line &l, OutPt *p = nullptr, OutPt *q = nullptr) {
+  static_assert(is_float_pt<OutPt>, "output point coordinates must be floating-point");
+  auto set_out = [](auto *out, auto x, auto y) {
+    if (out != nullptr) {
+      out->x = x;
+      out->y = y;
+    }
+  };
   double v = c.h * l.a + c.k * l.b + l.c;
   double aabb = l.a * l.a + l.b * l.b;
   double disc = v * v / aabb - c.r * c.r;
@@ -1719,26 +1731,24 @@ int intersection(const Circle &c, const Line &l, OutPt *p = nullptr, OutPt *q = 
   }
   double x0 = -l.a * v / aabb, y0 = -l.b * v / aabb;
   if (disc > -EPS) {
-    if (p != nullptr) {
-      p->x = x0 + c.h;
-      p->y = y0 + c.k;
-    }
+    set_out(p, x0 + c.h, y0 + c.k);
     return 0;
   }
   double k = std::sqrt(std::max(0.0, disc / -aabb));
-  if (p != nullptr) {
-    p->x = x0 + k * l.b + c.h;
-    p->y = y0 - k * l.a + c.k;
-  }
-  if (q != nullptr) {
-    q->x = x0 - k * l.b + c.h;
-    q->y = y0 + k * l.a + c.k;
-  }
+  set_out(p, x0 + k * l.b + c.h, y0 - k * l.a + c.k);
+  set_out(q, x0 - k * l.b + c.h, y0 + k * l.a + c.k);
   return 1;
 }
 
 template<typename OutPt>
 int intersection(const Circle &c1, const Circle &c2, OutPt *p = nullptr, OutPt *q = nullptr) {
+  static_assert(is_float_pt<OutPt>, "output point coordinates must be floating-point");
+  auto set_out = [](auto *out, auto x, auto y) {
+    if (out != nullptr) {
+      out->x = x;
+      out->y = y;
+    }
+  };
   if (EQ(c1.h, c2.h) && EQ(c1.k, c2.k)) {
     return EQ(c1.r, c2.r) ? 3 : (c1.r > c2.r ? -1 : -2);
   }
@@ -1755,20 +1765,11 @@ int intersection(const Circle &c1, const Circle &c2, OutPt *p = nullptr, OutPt *
   double s = std::sqrt(std::max(0.0, c1.r * c1.r - a * a));
   double rx = -d12y * s / d, ry = d12x * s / d;
   if (EQ(rx, 0) && EQ(ry, 0)) {
-    if (p != nullptr) {
-      p->x = x0;
-      p->y = y0;
-    }
+    set_out(p, x0, y0);
     return 1;
   }
-  if (p != nullptr) {
-    p->x = x0 - rx;
-    p->y = y0 - ry;
-  }
-  if (q != nullptr) {
-    q->x = x0 + rx;
-    q->y = y0 + ry;
-  }
+  set_out(p, x0 - rx, y0 - ry);
+  set_out(q, x0 + rx, y0 + ry);
   return 2;
 }
 
@@ -2719,7 +2720,7 @@ Overflow warning: squared distances grow like the square of the coordinate magni
 
 template<typename Pt>
 auto sqdist(const Pt &a, const Pt &b) {
-  auto dx = a.x - b.x, dy = a.y - b.y;
+  auto dx = b.x - a.x, dy = b.y - a.y;
   return dx * dx + dy * dy;  // Overflow warning.
 }
 
@@ -2901,6 +2902,343 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Rectangle Coverage}
+Given weighted axis-aligned rectangles, iterate over every elementary cell induced by their coordinate-compressed boundaries. Within each such cell, the accumulated weight is constant, so the callback can compute rectangle union area, exactly-$k$ coverage area, threshold area, maximum overlap, weighted integrals, coverage histograms, or other offline coverage statistics.
+
+Rectangles are half-open, $[x_1, x_2) \times [y_1, y_2)$, so adjacent rectangles sharing only an edge do not double-count any area. This also matches the difference-array update: add at the lower boundaries and subtract at the first coordinate after the rectangle.
+
+\begin{compactitem}
+  \item \inlinecode{for\_each\_rect\_cell(rects, visit)} calls \inlinecode{visit(x1, y1, x2, y2, weight)} once for each positive-area compressed cell inside the bounding box of the rectangles, where \inlinecode{weight} is the sum of weights covering that cell. Cells are visited in increasing \inlinecode{x1}, then increasing \inlinecode{y1}. Each rectangle must satisfy ${\inlinecodemath{x1}} < {\inlinecodemath{x2}}$ and ${\inlinecodemath{y1}} < {\inlinecodemath{y2}}$.
+\end{compactitem}
+
+Enumerating cells costs $O(n^{2})$ time and memory, which is the price of answering any statistic at all rather than one chosen in advance. When only the union area or perimeter is wanted, the sweep of section 7.3.9 computes it in $O(n \log n)$ time and $O(n)$ memory, which is the only option once the rectangle count reaches the thousands.
+
+Overflow warning: Coordinate differences, cell areas, and accumulated weights must fit in \inlinecode{int64\_t}.
+
+\textbf{Time Complexity}: $O(n^{2} + n \log n)$ per call, where $n$ is the number of rectangles.
+
+\textbf{Space Complexity}: $O(n^{2})$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <vector>
+
+struct Rect {
+  int64_t x1, y1, x2, y2, w = 1;
+};
+
+template<typename Fn>
+void for_each_rect_cell(const std::vector<Rect> &rects, Fn visit) {
+  std::vector<int64_t> xs, ys;
+  for (const Rect &r : rects) {
+    assert(r.x1 < r.x2 && r.y1 < r.y2);
+    xs.push_back(r.x1);
+    xs.push_back(r.x2);
+    ys.push_back(r.y1);
+    ys.push_back(r.y2);
+  }
+  std::sort(xs.begin(), xs.end());
+  std::sort(ys.begin(), ys.end());
+  xs.erase(std::unique(xs.begin(), xs.end()), xs.end());
+  ys.erase(std::unique(ys.begin(), ys.end()), ys.end());
+  int X = static_cast<int>(xs.size()), Y = static_cast<int>(ys.size());
+  std::vector<std::vector<int64_t>> diff(X + 1, std::vector<int64_t>(Y + 1));
+  auto index = [](const std::vector<int64_t> &v, int64_t x) {
+    return static_cast<int>(std::lower_bound(v.begin(), v.end(), x) - v.begin());
+  };
+  for (const Rect &r : rects) {
+    int x1 = index(xs, r.x1), x2 = index(xs, r.x2);
+    int y1 = index(ys, r.y1), y2 = index(ys, r.y2);
+    diff[x1][y1] += r.w;  // Overflow warning.
+    diff[x2][y1] -= r.w;
+    diff[x1][y2] -= r.w;
+    diff[x2][y2] += r.w;
+  }
+  for (int x = 0; x < X; x++) {
+    for (int y = 0; y < Y; y++) {
+      diff[x][y] += (x > 0) ? diff[x - 1][y] : 0;
+      diff[x][y] += (y > 0) ? diff[x][y - 1] : 0;
+      diff[x][y] -= (x > 0 && y > 0) ? diff[x - 1][y - 1] : 0;
+      if (x + 1 < X && y + 1 < Y) {
+        visit(xs[x], ys[y], xs[x + 1], ys[y + 1], diff[x][y]);
+      }
+    }
+  }
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  auto rect_area_if = [](const vector<Rect> &rects, auto pred) {
+    int64_t area = 0;
+    for_each_rect_cell(rects, [&](int64_t x1, int64_t y1, int64_t x2, int64_t y2, int64_t w) {
+      if (pred(w)) {
+        area += (x2 - x1) * (y2 - y1);  // Overflow warning.
+      }
+    });
+    return area;
+  };
+
+  // Rectangles A=[0,2)x[0,2), B=[1,3)x[1,3), and C=[2,4)x[0,1) all with default weight 1.
+  //
+  // y=3 +---+---+---+---+
+  //     |   | B | B |   |
+  // y=2 +---+---+---+---+
+  //     | A |A/B| B |   |
+  // y=1 +---+---+---+---+
+  //     | A | A | C | C |
+  // y=0 +---+---+---+---+
+  //   x=0   1   2   3   4
+  vector<Rect> rects{{0, 0, 2, 2}, {1, 1, 3, 3}, {2, 0, 4, 1}};
+  assert(rect_area_if(rects, [](int64_t w) { return w > 0; }) == 9);
+  assert(rect_area_if(rects, [](int64_t w) { return w == 2; }) == 1);
+
+  // Rectangles A=[0,4)x[0,3) of w=2, B=[2,6)x[1,4) of w=3, and C=[1,5)x[2,5) of w=1.
+  //
+  // y=5 +---+---+---+---+---+---+
+  //     |   | 1 | 1 | 1 | 1 |   |
+  // y=4 +---+---+---+---+---+---+
+  //     |   | 1 | 4 | 4 | 4 | 3 |
+  // y=3 +---+---+---+---+---+---+
+  //     | 2 | 3 | 6 | 6 | 4 | 3 |
+  // y=2 +---+---+---+---+---+---+
+  //     | 2 | 2 | 5 | 5 | 3 | 3 |
+  // y=1 +---+---+---+---+---+---+
+  //     | 2 | 2 | 2 | 2 |   |   |
+  // y=0 +---+---+---+---+---+---+
+  //   x=0   1   2   3   4   5   6
+  vector<Rect> weighted{{0, 0, 4, 3, 2}, {2, 1, 6, 4, 3}, {1, 2, 5, 5, 1}};
+  assert(rect_area_if(weighted, [](int64_t w) { return w >= 3; }) == 13);
+  assert(rect_area_if(weighted, [](int64_t w) { return w >= 5; }) == 4);
+
+  int64_t max_weight = 0, integral = 0;
+  for_each_rect_cell(weighted, [&](int64_t x1, int64_t y1, int64_t x2, int64_t y2, int64_t w) {
+    max_weight = max(max_weight, w);
+    integral += w * (x2 - x1) * (y2 - y1);  // Overflow warning.
+  });
+  assert(max_weight == 6);
+  assert(integral == 12 * 2 + 12 * 3 + 12);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Rectangle Union}
+Given axis-aligned rectangles that may overlap arbitrarily, measure their union. Klee's algorithm sweeps a vertical line left to right, maintaining how much of that line the rectangles currently cover. That covered length is constant between consecutive events, so each strip contributes the length times its width, and every other measure below is another aggregate of the same cross section.
+
+A segment tree over the compressed $y$ coordinates holds the state, storing at each node the number of intervals covering its whole span and the length of that span which is covered. It never pushes anything down: a node's count refers only to intervals covering it entirely, so a node with a positive count reports its full span while one with a zero count defers to its children. Every addition is matched by a later removal, so counts never go negative and no lazy tag is needed.
+
+Three further aggregates ride along on the same nodes. Doubly covered length shifts the recurrence by one, a node covered twice reporting its whole span and a node covered once reporting whatever its children cover at all. The weighted maximum is the largest root-to-leaf sum of weights, so each node reports its own weight plus the larger of its children's; left at the default weight of one per rectangle, that is simply the greatest number of rectangles covering a point. The perimeter needs the number of maximal covered runs, plus whether a node's first and last units are covered so that a run crossing a boundary is not counted twice: vertical edges are then the change in covered length at each event, and horizontal edges are twice the run count times the strip width.
+
+Rectangles are half-open, $[x_1, x_2) \times [y_1, y_2)$, so adjacent rectangles sharing only an edge neither double-count any area nor leave a seam.
+
+\begin{compactitem}
+  \item \inlinecode{rect\_union(rects)} returns a \inlinecode{UnionMeasure} holding the \inlinecode{area} covered at least once, the \inlinecode{overlap\_area} covered at least twice, the \inlinecode{perimeter} of the outline including any enclosed hole, and \inlinecode{max\_weight}, the greatest weighted sum at any point. Subtracting the second from the first leaves the area covered exactly once. Each rectangle must satisfy ${\inlinecodemath{x1}} < {\inlinecodemath{x2}}$ and ${\inlinecodemath{y1}} < {\inlinecodemath{y2}}$.
+\end{compactitem}
+
+Weights change only the maximum, since the three geometric measures count coverage rather than payload, and weighted area needs no sweep at all: it is $\sum w_i$ times area, one loop over the input. Area covered at least $k$ times instead needs a vector of $k$ lengths per node; for that or any aggregate that does not decompose this way, the compression of section 7.3.8 enumerates every elementary cell at $O(n^{2})$.
+
+\textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the number of rectangles.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <tuple>
+#include <utility>
+#include <vector>
+
+struct Rect {
+  int64_t x1, y1, x2, y2, w = 1;
+};
+
+struct UnionMeasure {
+  int64_t area = 0, overlap_area = 0, perimeter = 0, max_weight = 0;
+};
+
+// The cross section of the sweep: over the currently covered y intervals, the length covered at
+// least once and at least twice, the number of maximal covered runs, and the greatest weight at any
+// point. Each is its own recurrence, so each is pulled up separately.
+class CoverTree {
+  std::vector<int64_t> ys;  // Compressed coordinates; leaf i spans [ys[i], ys[i + 1]).
+  int len;
+  std::vector<int> count, runs;
+  std::vector<int64_t> covered, covered_twice, weight, heaviest;
+  std::vector<char> covers_lo, covers_hi;
+
+  // Length covered at least once and at least twice. The second reads the first one level down, so
+  // covering at least k times extends this chain by one array per level.
+  void pull_coverage(int i, int lo, int hi) {
+    int left = 2 * i + 1, right = left + 1;
+    if (count[i] > 0) {
+      covered[i] = ys[hi + 1] - ys[lo];
+      // One cover here turns anything already covered below into a double cover.
+      covered_twice[i] =
+          count[i] > 1 ? covered[i] : (lo == hi ? 0 : covered[left] + covered[right]);
+    } else if (lo == hi) {
+      covered[i] = covered_twice[i] = 0;
+    } else {
+      covered[i] = covered[left] + covered[right];
+      covered_twice[i] = covered_twice[left] + covered_twice[right];
+    }
+  }
+
+  // Number of maximal covered runs, with the flags that keep a run spanning a boundary from being
+  // counted in both children.
+  void pull_runs(int i, int lo, int hi) {
+    int left = 2 * i + 1, right = left + 1;
+    if (count[i] > 0) {
+      runs[i] = covers_lo[i] = covers_hi[i] = 1;
+    } else if (lo == hi) {
+      runs[i] = covers_lo[i] = covers_hi[i] = 0;
+    } else {
+      runs[i] = runs[left] + runs[right] - (covers_hi[left] && covers_lo[right] ? 1 : 0);
+      covers_lo[i] = covers_lo[left];
+      covers_hi[i] = covers_hi[right];
+    }
+  }
+
+  // The weight over an interval is the sum of the weights above it, so the heaviest point is the
+  // largest root-to-leaf sum. This one ignores the cover count entirely.
+  void pull_weight(int i, int lo, int hi) {
+    heaviest[i] = weight[i] + (lo == hi ? 0 : std::max(heaviest[2 * i + 1], heaviest[2 * i + 2]));
+  }
+
+ public:
+  explicit CoverTree(std::vector<int64_t> coords)
+      : ys(std::move(coords)),
+        len(static_cast<int>(ys.size()) - 1),
+        count(4 * len),
+        runs(4 * len),
+        covered(4 * len),
+        covered_twice(4 * len),
+        weight(4 * len),
+        heaviest(4 * len),
+        covers_lo(4 * len),
+        covers_hi(4 * len) {
+    assert(len > 0);
+  }
+
+  // Adds delta covers of weight w to every elementary interval in [lo, hi]; a removal negates both.
+  void update(int lo, int hi, int delta, int64_t w) {
+    auto rec = [&](auto &&rec, int i, int l, int h) -> void {
+      if (hi < l || h < lo) {
+        return;
+      }
+      if (lo <= l && h <= hi) {
+        count[i] += delta;
+        weight[i] += delta * w;
+      } else {
+        int mid = l + (h - l) / 2;
+        rec(rec, 2 * i + 1, l, mid);
+        rec(rec, 2 * i + 2, mid + 1, h);
+      }
+      pull_coverage(i, l, h);
+      pull_runs(i, l, h);
+      pull_weight(i, l, h);
+    };
+    rec(rec, 0, 0, len - 1);
+  }
+
+  int64_t covered_length() const { return covered[0]; }
+  int64_t twice_covered_length() const { return covered_twice[0]; }
+  int run_count() const { return runs[0]; }
+  int64_t heaviest_weight() const { return heaviest[0]; }
+};
+
+UnionMeasure rect_union(const std::vector<Rect> &rects) {
+  if (rects.empty()) {
+    return {};
+  }
+  std::vector<int64_t> ys;
+  for (const Rect &r : rects) {
+    assert(r.x1 < r.x2 && r.y1 < r.y2);
+    ys.push_back(r.y1);
+    ys.push_back(r.y2);
+  }
+  std::sort(ys.begin(), ys.end());
+  ys.erase(std::unique(ys.begin(), ys.end()), ys.end());
+  auto index = [&](int64_t y) {
+    return static_cast<int>(std::lower_bound(ys.begin(), ys.end(), y) - ys.begin());
+  };
+  std::vector<std::tuple<int64_t, int, int, int, int64_t>> events;  // (x, lo, hi, delta, weight)
+  for (const Rect &r : rects) {
+    events.emplace_back(r.x1, index(r.y1), index(r.y2) - 1, 1, r.w);
+    events.emplace_back(r.x2, index(r.y1), index(r.y2) - 1, -1, r.w);
+  }
+  std::sort(events.begin(), events.end());
+  CoverTree tree(std::move(ys));
+  UnionMeasure res;
+  int64_t width = 0, doubled = 0, strips = 0, prev_x = 0;
+  for (size_t i = 0; i < events.size();) {
+    int64_t x = std::get<0>(events[i]);
+    if (i > 0) {  // The strip since the previous event has a constant cross-section.
+      res.area += width * (x - prev_x);
+      res.overlap_area += doubled * (x - prev_x);
+      res.perimeter += 2 * strips * (x - prev_x);
+    }
+    while (i < events.size() && std::get<0>(events[i]) == x) {
+      auto [ex, tgt_lo, tgt_hi, delta, w] = events[i++];
+      tree.update(tgt_lo, tgt_hi, delta, w);
+    }
+    // Length that appeared or vanished at this x must be bounded by vertical edges.
+    res.perimeter += std::llabs(tree.covered_length() - width);
+    res.max_weight = std::max(res.max_weight, tree.heaviest_weight());
+    width = tree.covered_length();
+    doubled = tree.twice_covered_length();
+    strips = tree.run_count();
+    prev_x = x;
+  }
+  return res;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  assert(rect_union({}).area == 0 && rect_union({}).perimeter == 0);
+
+  UnionMeasure one = rect_union({{0, 0, 2, 3}});
+  assert(one.area == 6 && one.perimeter == 10);
+  assert(one.overlap_area == 0 && one.max_weight == 1);
+
+  // Disjoint rectangles simply add up, and nothing is covered twice.
+  UnionMeasure apart = rect_union({{0, 0, 1, 1}, {2, 0, 3, 1}});
+  assert(apart.area == 2 && apart.perimeter == 8);
+  assert(apart.overlap_area == 0 && apart.max_weight == 1);
+
+  // Two squares meeting in a unit square, whose union outlines an L-shaped hexagon.
+  UnionMeasure pair = rect_union({{0, 0, 2, 2}, {1, 1, 3, 3}});
+  assert(pair.area == 7 && pair.perimeter == 12);
+  assert(pair.overlap_area == 1 && pair.max_weight == 2);
+  assert(pair.area - pair.overlap_area == 6);  // Area belonging to exactly one square.
+
+  // A rectangle nested inside another adds no area, but doubles the cover where it sits.
+  UnionMeasure nested = rect_union({{0, 0, 10, 10}, {2, 2, 4, 4}});
+  assert(nested.area == 100 && nested.perimeter == 40);
+  assert(nested.overlap_area == 4 && nested.max_weight == 2);
+
+  // Four rectangles enclosing a hole, overlapping only at the four corners.
+  UnionMeasure ring = rect_union({{0, 0, 3, 1}, {0, 2, 3, 3}, {0, 0, 1, 3}, {2, 0, 3, 3}});
+  assert(ring.area == 8);
+  assert(ring.perimeter == 16);  // 12 around the outside and 4 around the unit hole.
+  assert(ring.overlap_area == 4 && ring.max_weight == 2);
+
+  // Three rectangles stacked over one cell.
+  UnionMeasure stack = rect_union({{0, 0, 2, 2}, {1, 0, 3, 2}, {1, 1, 3, 3}});
+  assert(stack.max_weight == 3 && stack.overlap_area == 3);
+  return 0;
+}
+\end{lstlisting}
 \subsection{Multiple Segment Intersection}
 Given a list of line segments in two dimensions, determine whether any pair of segments intersect using a sweep line algorithm. Endpoint events are processed from left to right while an ordered set maintains the segments currently crossing the sweep line, sorted by $y$; only segments that become adjacent in this set need to be tested, since any leftmost intersection must involve a pair that is adjacent just before it occurs. The input type \inlinecode{Segment\textless{}Pt\textgreater{}} is templated on the point type, so endpoints may be integer (\inlinecode{PointI}) or floating-point (\inlinecode{Point} or \inlinecode{PointD}), but must support \inlinecode{operator\textless{}} which orders points lexicographically. The cross-product sign tests in \inlinecode{seg\_intersection} are exact for integer endpoints, so intersection detection is exact.
 
@@ -3073,129 +3411,6 @@ int main() {
     };
     assert((find_intersecting_pair(shared) == pair{0, 1}));
   }
-  return 0;
-}
-\end{lstlisting}
-\subsection{Overlapping Rectangles}
-Given weighted axis-aligned rectangles, iterate over every elementary cell induced by their coordinate-compressed boundaries. Within each such cell, the accumulated weight is constant, so the callback can compute rectangle union area, exactly-$k$ coverage area, threshold area, maximum overlap, weighted integrals, coverage histograms, or other offline coverage statistics.
-
-Rectangles are half-open, $[x_1, x_2) \times [y_1, y_2)$, so adjacent rectangles sharing only an edge do not double-count any area. This also matches the difference-array update: add at the lower boundaries and subtract at the first coordinate after the rectangle.
-
-\begin{compactitem}
-  \item \inlinecode{for\_each\_rect\_cell(rects, visit)} calls \inlinecode{visit(x1, y1, x2, y2, weight)} once for each positive-area compressed cell inside the bounding box of the rectangles, where \inlinecode{weight} is the sum of weights covering that cell. Cells are visited in increasing \inlinecode{x1}, then increasing \inlinecode{y1}. Each rectangle must satisfy ${\inlinecodemath{x1}} < {\inlinecodemath{x2}}$ and ${\inlinecodemath{y1}} < {\inlinecodemath{y2}}$.
-\end{compactitem}
-
-Overflow warning: Coordinate differences, cell areas, and accumulated weights must fit in \inlinecode{int64\_t}.
-
-\textbf{Time Complexity}: $O(n^{2} + n \log n)$ per call, where $n$ is the number of rectangles.
-
-\textbf{Space Complexity}: $O(n^{2})$ auxiliary.
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <cassert>
-#include <cstdint>
-#include <vector>
-
-struct Rect {
-  int64_t x1, y1, x2, y2, w = 1;
-};
-
-template<typename Fn>
-void for_each_rect_cell(const std::vector<Rect> &rects, Fn visit) {
-  std::vector<int64_t> xs, ys;
-  for (const Rect &r : rects) {
-    assert(r.x1 < r.x2 && r.y1 < r.y2);
-    xs.push_back(r.x1);
-    xs.push_back(r.x2);
-    ys.push_back(r.y1);
-    ys.push_back(r.y2);
-  }
-  std::sort(xs.begin(), xs.end());
-  std::sort(ys.begin(), ys.end());
-  xs.erase(std::unique(xs.begin(), xs.end()), xs.end());
-  ys.erase(std::unique(ys.begin(), ys.end()), ys.end());
-  int X = static_cast<int>(xs.size()), Y = static_cast<int>(ys.size());
-  std::vector<std::vector<int64_t>> diff(X + 1, std::vector<int64_t>(Y + 1));
-  auto index = [](const std::vector<int64_t> &v, int64_t x) {
-    return static_cast<int>(std::lower_bound(v.begin(), v.end(), x) - v.begin());
-  };
-  for (const Rect &r : rects) {
-    int x1 = index(xs, r.x1), x2 = index(xs, r.x2);
-    int y1 = index(ys, r.y1), y2 = index(ys, r.y2);
-    diff[x1][y1] += r.w;  // Overflow warning.
-    diff[x2][y1] -= r.w;
-    diff[x1][y2] -= r.w;
-    diff[x2][y2] += r.w;
-  }
-  for (int x = 0; x < X; x++) {
-    for (int y = 0; y < Y; y++) {
-      diff[x][y] += (x > 0) ? diff[x - 1][y] : 0;
-      diff[x][y] += (y > 0) ? diff[x][y - 1] : 0;
-      diff[x][y] -= (x > 0 && y > 0) ? diff[x - 1][y - 1] : 0;
-      if (x + 1 < X && y + 1 < Y) {
-        visit(xs[x], ys[y], xs[x + 1], ys[y + 1], diff[x][y]);
-      }
-    }
-  }
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-using namespace std;
-
-int main() {
-  auto rect_area_if = [](const vector<Rect> &rects, auto pred) {
-    int64_t area = 0;
-    for_each_rect_cell(rects, [&](int64_t x1, int64_t y1, int64_t x2, int64_t y2, int64_t w) {
-      if (pred(w)) {
-        area += (x2 - x1) * (y2 - y1);  // Overflow warning.
-      }
-    });
-    return area;
-  };
-
-  // Rectangles A=[0,2)x[0,2), B=[1,3)x[1,3), and C=[2,4)x[0,1) all with default weight 1.
-  //
-  // y=3 +---+---+---+---+
-  //     |   | B | B |   |
-  // y=2 +---+---+---+---+
-  //     | A |A/B| B |   |
-  // y=1 +---+---+---+---+
-  //     | A | A | C | C |
-  // y=0 +---+---+---+---+
-  //   x=0   1   2   3   4
-  vector<Rect> rects{{0, 0, 2, 2}, {1, 1, 3, 3}, {2, 0, 4, 1}};
-  assert(rect_area_if(rects, [](int64_t w) { return w > 0; }) == 9);
-  assert(rect_area_if(rects, [](int64_t w) { return w == 2; }) == 1);
-
-  // Rectangles A=[0,4)x[0,3) of w=2, B=[2,6)x[1,4) of w=3, and C=[1,5)x[2,5) of w=1.
-  //
-  // y=5 +---+---+---+---+---+---+
-  //     |   | 1 | 1 | 1 | 1 |   |
-  // y=4 +---+---+---+---+---+---+
-  //     |   | 1 | 4 | 4 | 4 | 3 |
-  // y=3 +---+---+---+---+---+---+
-  //     | 2 | 3 | 6 | 6 | 4 | 3 |
-  // y=2 +---+---+---+---+---+---+
-  //     | 2 | 2 | 5 | 5 | 3 | 3 |
-  // y=1 +---+---+---+---+---+---+
-  //     | 2 | 2 | 2 | 2 |   |   |
-  // y=0 +---+---+---+---+---+---+
-  //   x=0   1   2   3   4   5   6
-  vector<Rect> weighted{{0, 0, 4, 3, 2}, {2, 1, 6, 4, 3}, {1, 2, 5, 5, 1}};
-  assert(rect_area_if(weighted, [](int64_t w) { return w >= 3; }) == 13);
-  assert(rect_area_if(weighted, [](int64_t w) { return w >= 5; }) == 4);
-
-  int64_t max_weight = 0, integral = 0;
-  for_each_rect_cell(weighted, [&](int64_t x1, int64_t y1, int64_t x2, int64_t y2, int64_t w) {
-    max_weight = max(max_weight, w);
-    integral += w * (x2 - x1) * (y2 - y1);  // Overflow warning.
-  });
-  assert(max_weight == 6);
-  assert(integral == 12 * 2 + 12 * 3 + 12);
   return 0;
 }
 \end{lstlisting}
@@ -4223,20 +4438,6 @@ T cross(const Point<T> &a, const Point<T> &b, const Point<T> &o) {
 }
 
 template<typename T>
-T incircle(const Point<T> &a, const Point<T> &b, const Point<T> &c, const Point<T> &d) {
-  T adx = a.x - d.x, ady = a.y - d.y;
-  T bdx = b.x - d.x, bdy = b.y - d.y;
-  T cdx = c.x - d.x, cdy = c.y - d.y;
-  T abdet = adx * bdy - bdx * ady;  // Overflow warning.
-  T bcdet = bdx * cdy - cdx * bdy;
-  T cadet = cdx * ady - adx * cdy;
-  T alift = adx * adx + ady * ady;
-  T blift = bdx * bdx + bdy * bdy;
-  T clift = cdx * cdx + cdy * cdy;
-  return alift * bcdet + blift * cadet + clift * abdet;
-}
-
-template<typename T>
 struct Edge {
   Point<T> origin;
   Edge *rot, *onext;
@@ -4316,7 +4517,16 @@ bool right_of(const Point<T> &p, Edge<T> *e) {
 
 template<typename T>
 bool in_circle(const Point<T> &a, const Point<T> &b, const Point<T> &c, const Point<T> &d) {
-  return LT(0, incircle(a, b, c, d));
+  T adx = a.x - d.x, ady = a.y - d.y;
+  T bdx = b.x - d.x, bdy = b.y - d.y;
+  T cdx = c.x - d.x, cdy = c.y - d.y;
+  T abdet = adx * bdy - bdx * ady;  // Overflow warning.
+  T bcdet = bdx * cdy - cdx * bdy;
+  T cadet = cdx * ady - adx * cdy;
+  T alift = adx * adx + ady * ady;
+  T blift = bdx * bdx + bdy * bdy;
+  T clift = cdx * cdx + cdy * cdy;
+  return LT(0, alift * bcdet + blift * cadet + clift * abdet);
 }
 
 template<typename T>

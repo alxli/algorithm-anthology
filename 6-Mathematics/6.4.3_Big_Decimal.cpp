@@ -17,7 +17,6 @@ from zero. The other modes are `TowardZero`, `AwayFromZero`, `Floor`, `Ceil`, an
 - `decimal_places()`, `precision()`, and `sign()` return the scale, the number of coefficient
   digits, and the sign as $-1$, $0$, or $1$, respectively.
 - `unscaled_value()` returns the underlying `BigInt` coefficient.
-- `to_string()` returns ordinary decimal notation with the stored number of decimal places.
 - `abs()` and `normalized()` return the absolute value and a value with trailing fractional zeros
   removed.
 - `move_point(places)` moves the decimal point right by `places` positions, or left if `places` is
@@ -30,6 +29,7 @@ from zero. The other modes are `TowardZero`, `AwayFromZero`, `Floor`, `Ceil`, an
 - `sqrt(result_scale, mode = Rounding::HalfAway)` returns the nonnegative square root rounded to
   exactly `result_scale` decimal places.
 - `pow(n)` returns the value raised to nonnegative integer power `n`.
+- `to_string()` returns ordinary decimal notation with the stored number of decimal places.
 - Stream operators and comparisons are defined, as are `+`, `-`, `*`, `%`, and their compound
   assignments.
 
@@ -38,8 +38,10 @@ Time Complexity:
   decimal-point movement, where $d$ is the number of relevant decimal digits.
 - O(M(d) log n) per call to `pow(n)`, where $M(d)$ is the multiplication cost for the largest
   intermediate coefficient.
-- O(d^2) per call to division, remainder, rescaling to fewer places, and square root, matching the
-  corresponding `BigInt` operations used here.
+- O(d^2) per call to square root, matching the `BigInt` operation used here.
+- Division, remainder, and rescaling to fewer places inherit the `BigInt` division cost of 6.4.2:
+  O(d*m) below its `DIV_CUTOFF` and O(M(m) log m) at or above it, where $m$ is the number of digits
+  in the divisor.
 
 Space Complexity:
 - O(d) for stored digits, returned values, and arithmetic results.
@@ -59,7 +61,7 @@ class BigDecimal {
   int scale;
 
   BigDecimal(BigInt coeff, int scale) : coeff(std::move(coeff)), scale(scale) {}
-  BigInt scaled(int new_scale) const { return coeff * pow10(new_scale - scale); }
+  BigInt scaled(int new_scale) const { return coeff.mul_pow10(new_scale - scale); }
   static BigInt pow10(int n) { return BigInt(10).pow(n); }
 
   static bool round_up(bool negative, int half_cmp, const BigInt &q, Round mode) {
@@ -68,7 +70,7 @@ class BigDecimal {
            (mode == Round::HalfEven && (half_cmp > 0 || (half_cmp == 0 && q % 2 != 0)));
   }
 
-  static BigInt rounded_quotient(BigInt num, const BigInt &den, Round mode) {
+  static BigInt rounded_quotient(const BigInt &num, const BigInt &den, Round mode) {
     assert(den > 0);
     bool negative = num < 0;
     auto [q, r] = num.abs().div(den);
@@ -103,7 +105,7 @@ class BigDecimal {
     coeff = negative ? -BigInt(digits) : BigInt(digits);
     scale -= exponent;
     if (scale < 0) {
-      coeff *= pow10(-scale);
+      coeff = coeff.mul_pow10(-scale);
       scale = 0;
     }
   }
@@ -113,17 +115,6 @@ class BigDecimal {
   int sign() const { return (coeff > 0) - (coeff < 0); }
   const BigInt &unscaled_value() const { return coeff; }
   BigDecimal abs() const { return BigDecimal(coeff.abs(), scale); }
-
-  std::string to_string() const {
-    std::string s = coeff.abs().to_string();
-    if (static_cast<int>(s.size()) <= scale) {
-      s.insert(0, scale + 1 - s.size(), '0');
-    }
-    if (scale > 0) {
-      s.insert(s.size() - scale, 1, '.');
-    }
-    return coeff < 0 ? "-" + s : s;
-  }
 
   BigDecimal normalized() const {
     BigInt c = coeff;
@@ -137,7 +128,8 @@ class BigDecimal {
 
   BigDecimal move_point(int places) const {
     int new_scale = scale - places;
-    return new_scale >= 0 ? BigDecimal(coeff, new_scale) : BigDecimal(coeff * pow10(-new_scale), 0);
+    return new_scale >= 0 ? BigDecimal(coeff, new_scale)
+                          : BigDecimal(coeff.mul_pow10(-new_scale), 0);
   }
 
   BigDecimal rescale(int new_scale, Round mode = Round::HalfAway) const {
@@ -147,11 +139,15 @@ class BigDecimal {
                : BigDecimal(rounded_quotient(coeff, pow10(scale - new_scale), mode), new_scale);
   }
 
+  BigInt trunc() const { return rescale(0, Round::TowardZero).coeff; }
+  BigInt floor() const { return rescale(0, Round::Floor).coeff; }
+  BigInt ceil() const { return rescale(0, Round::Ceil).coeff; }
+
   BigDecimal divide(const BigDecimal &v, int result_scale, Round mode = Round::HalfAway) const {
     assert(v.coeff != 0 && result_scale >= 0);
     BigInt num = coeff.abs(), den = v.coeff.abs();
     int shift = v.scale + result_scale - scale;
-    (shift >= 0 ? num : den) *= pow10(std::abs(shift));
+    (shift >= 0 ? num : den) = (shift >= 0 ? num : den).mul_pow10(std::abs(shift));
     if ((coeff < 0) != (v.coeff < 0)) {
       num = -num;
     }
@@ -162,16 +158,23 @@ class BigDecimal {
     assert(coeff >= 0 && result_scale >= 0);
     BigInt num = coeff, den = 1;
     int shift = 2 * result_scale - scale;
-    (shift >= 0 ? num : den) *= pow10(std::abs(shift));
+    (shift >= 0 ? num : den) = (shift >= 0 ? num : den).mul_pow10(std::abs(shift));
     BigInt q = (num / den).sqrt();
     bool exact = q * q * den == num;
     int half_cmp = (4 * num).comp(den * (4 * q * q + 4 * q + 1));
     return BigDecimal(q + (!exact && round_up(false, half_cmp, q, mode)), result_scale);
   }
 
-  BigInt trunc() const { return rescale(0, Round::TowardZero).coeff; }
-  BigInt floor() const { return rescale(0, Round::Floor).coeff; }
-  BigInt ceil() const { return rescale(0, Round::Ceil).coeff; }
+  std::string to_string() const {
+    std::string s = coeff.abs().to_string();
+    if (static_cast<int>(s.size()) <= scale) {
+      s.insert(0, scale + 1 - s.size(), '0');
+    }
+    if (scale > 0) {
+      s.insert(s.size() - scale, 1, '.');
+    }
+    return coeff < 0 ? "-" + s : s;
+  }
 
   friend std::istream &operator>>(std::istream &in, BigDecimal &v) {
     std::string s;
@@ -264,7 +267,7 @@ int main() {
   assert((x += b).to_string() == "4.60");
   assert((x -= b).to_string() == "1.20");
   assert((x *= b).to_string() == "4.080");
-  assert((x %= BigDecimal("1.00")).to_string() == "0.080");
+  assert((x %= 1.0).to_string() == "0.080");
 
   assert(a.move_point(2).to_string() == "120");
   assert(a.move_point(-1).to_string() == "0.120");

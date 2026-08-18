@@ -1,21 +1,22 @@
 /*
 
-Computes minimum costs for every half-open interval $[`l`, `r`)$ using the recurrence
-`dp[l][r] = min(dp[l][k] + dp[k][r]) + cost(l, r)`. Each state chooses a split `k` strictly inside
-the interval and pays `cost(l, r)` after solving the two resulting subintervals.
+Computes minimum costs for every half-open interval $[l, r)$ using the recurrence
+$dp(l, r) = \min_{l < k < r} (dp(l, k) + dp(k, r)) + C(l, r)$. Each state chooses a split $k$
+strictly inside the interval and pays $C(l, r)$ after solving the two resulting subintervals.
 
 A direct implementation checks every split and takes O(n^3). Knuth optimization applies when the
-smallest optimal splits satisfy `opt[l][r - 1]` $\leq$ `opt[l][r]` $\leq$ `opt[l + 1][r]`. The two
-neighboring states therefore bound the splits that must be checked for `dp[l][r]`, reducing the
+smallest optimal splits satisfy $opt(l, r - 1) \leq opt(l, r) \leq opt(l + 1, r)$. The two
+neighboring states therefore bound the splits that must be checked for $dp(l, r)$, reducing the
 total number of candidate checks to O(n^2). Common applications include optimal binary search trees
 and some range merging problems. The caller must verify the required monotonicity property for the
-chosen `cost(l, r)`; the quadrangle inequality and interval monotonicity of the cost are common
-sufficient conditions.
+chosen $C(l, r)$. The common sufficient conditions are interval monotonicity and the quadrangle
+inequality $C(a, c) + C(b, d) \leq C(a, d) + C(b, c)$ for $a \leq b \leq c \leq d$, which is the
+Monge condition of section 5.3.2 written for an interval cost.
 
-- `knuth_interval_dp(n, cost, &opt_out)` computes minimum costs for all half-open intervals
-  $[`l`, `r`)$ over `n` items. The template parameter `cost` must be callable such that `cost(l, r)`
-  returns the interval cost added after choosing the best split. If the optional pointer `opt_out`
-  is supplied, it is filled with the chosen split points.
+- `knuth_interval_dp(n, cost, &opt_out)` computes minimum costs for all half-open intervals $[l, r)$
+  over `n` items. The template parameter `cost` must be callable such that `cost(l, r)` returns
+  $C(l, r)$, the interval cost added after choosing the best split. If the optional pointer
+  `opt_out` is supplied, it is filled with the chosen split points.
 
 Time Complexity:
 - O(n^2) calls to `cost()` and O(n^2) candidate split checks per call.
