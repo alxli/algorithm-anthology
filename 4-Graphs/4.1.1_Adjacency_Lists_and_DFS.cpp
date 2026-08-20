@@ -1,13 +1,14 @@
 /*
 
-Stores a directed or undirected simple graph as adjacency lists. The list for node `u` contains its
+Stores a directed or undirected graph as adjacency lists. The list for node `u` contains its
 out-neighbors; an undirected edge is stored in both endpoints' lists. Nodes are nonnegative integer
 indices in $[0, `size()`)$, and `add_edge()` grows the graph when either endpoint is new. The class
 also provides depth-first search, cycle detection, and forest/DAG checks.
 
-A simple graph must not have self-loops or parallel edges, although the class does not enforce these
-restrictions. In particular, undirected `has_cycle()` cannot distinguish a second edge to the parent
-from the tree edge.
+Parallel edges and self-loops are stored as given, and the cycle checks read them as a multigraph
+would: a self-loop is a cycle, and a repeated undirected edge is a cycle of length two. The
+undirected search skips edges back to the parent by node index, so a duplicate is caught when the
+parent scans it rather than when the child looks back.
 
 - `Graph(directed = true)` constructs an empty graph, directed if `directed` is true and undirected
   otherwise.

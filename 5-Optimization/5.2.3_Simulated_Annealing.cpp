@@ -18,13 +18,13 @@ preserve acceptance probabilities.
 - `anneal_min(initial, energy, rand_neighbor, rng, ...)` returns (`best_energy`, `best_state`) given
   an initial state `initial`, a callable `energy(state)` that returns the state's energy, and a
   callable `rand_neighbor(state, temp, rng)` that returns a randomly chosen nearby state. Optional
-  parameters default to `temp_start = 1000`, `temp_end = 1e-6`, and `cooling_rate = 0.995`.
-  `temp_end` must be positive and less than `temp_start`, while `cooling_rate` must be strictly
-  between $0$ and $1$.
+  parameters default to `temp_start = 1000`, `temp_end = 1e-6`, `cooling_rate = 0.995`, and
+  `time_limit = 0`. `temp_end` must be positive and less than `temp_start`, while `cooling_rate`
+  must be strictly between $0$ and $1$. A positive `time_limit`, in seconds, stops the search once
+  that much wall-clock time has elapsed; the best state found so far is returned either way.
 
-For continuous states, temperature can also control the neighbor step size. Slower cooling,
-independent restarts, and a time-based stopping condition often improve results, but simulated
-annealing never proves optimality.
+For continuous states, temperature can also control the neighbor step size. Slower cooling and
+independent restarts often improve results, but simulated annealing never proves optimality.
 
 This generic interface copies each proposed state and recomputes its energy. For large permutation
 states, adapt the loop to mutate and revert moves in place and update the energy from the affected
@@ -32,7 +32,8 @@ terms instead.
 
 Time Complexity:
 - O(k(C_E + C_N)) per call, where $k$ is the number of temperature levels and $C_E$ and $C_N$ are
-  the costs of evaluating the energy and generating a neighboring state.
+  the costs of evaluating the energy and generating a neighboring state. A positive `time_limit`
+  caps $k$ at whatever the deadline allows.
 
 Space Complexity:
 - O(S) for the current, next, and best states, where $S$ is the size of one state.
@@ -40,6 +41,7 @@ Space Complexity:
 */
 
 #include <cassert>
+#include <chrono>
 #include <cmath>
 #include <random>
 #include <utility>
@@ -47,23 +49,27 @@ Space Complexity:
 template<typename State, typename Energy, typename Neighbor>
 std::pair<double, State> anneal_min(
     State initial, Energy energy, Neighbor rand_neighbor, std::mt19937 &rng,
-    double temp_start = 1000, double temp_end = 1e-6, double cooling_rate = 0.995
+    double temp_start = 1000, double temp_end = 1e-6, double cooling_rate = 0.995,
+    double time_limit = 0
 ) {
   assert(0 < temp_end && temp_end < temp_start);
   assert(0 < cooling_rate && cooling_rate < 1);
   std::uniform_real_distribution<double> unit(0.0, 1.0);
   State current = std::move(initial), best = current;
-  double current_energy = energy(current), best_energy = current_energy;
+  double curr_energy = energy(current), best_energy = curr_energy;
+  auto deadline = std::chrono::steady_clock::now() + std::chrono::duration<double>(time_limit);
   for (double temp = temp_start; temp > temp_end; temp *= cooling_rate) {
+    if (time_limit > 0 && std::chrono::steady_clock::now() >= deadline) {
+      break;  // The schedule is abandoned mid-cooling; the best state so far is still returned.
+    }
     State next = rand_neighbor(current, temp, rng);
     double next_energy = energy(next);
-    if (next_energy <= current_energy ||
-        unit(rng) < std::exp((current_energy - next_energy) / temp)) {
+    if (next_energy <= curr_energy || unit(rng) < std::exp((curr_energy - next_energy) / temp)) {
       current = std::move(next);
-      current_energy = next_energy;
-      if (current_energy < best_energy) {
+      curr_energy = next_energy;
+      if (curr_energy < best_energy) {
         best = current;
-        best_energy = current_energy;
+        best_energy = curr_energy;
       }
     }
   }

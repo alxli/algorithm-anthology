@@ -41,7 +41,7 @@ Space Complexity:
 std::vector<std::pair<int, int>> hanoi_moves(int n, int from = 0, int to = 2) {
   assert(n >= 0 && from >= 0 && from < 3 && to >= 0 && to < 3 && from != to);
   std::vector<std::pair<int, int>> moves;
-  auto rec = [&](auto &&rec, int disks, int src, int dest) -> void {
+  auto rec = [&](auto &&rec, int disks, int src, int dest) {
     if (disks == 0) {
       return;
     }

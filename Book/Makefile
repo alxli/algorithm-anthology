@@ -1,17 +1,22 @@
 VERSION = v1.0
-RELEASE_DATE = July 31, 2026
+RELEASE_DATE = August 20, 2026
 BOOK = A3C5
-BUILD_JOB = $(BOOK)-build
+BUILD_DIR = build
 VERSIONED_PDF = $(BOOK)-$(VERSION).pdf
 LATEX_INPUT = \def\BookVersion{$(VERSION)}\def\BookDate{$(RELEASE_DATE)}\input{$(BOOK).tex}
 RELEASE_URL = https://github.com/alxli/algorithm-anthology/raw/master/Book/$(VERSIONED_PDF)
-BUILD_AUX_FILES = $(BUILD_JOB).aux $(BUILD_JOB).fdb_latexmk $(BUILD_JOB).fls $(BUILD_JOB).idx
-BUILD_AUX_FILES += $(BUILD_JOB).ilg $(BUILD_JOB).ind $(BUILD_JOB).listing $(BUILD_JOB).log
-BUILD_AUX_FILES += $(BUILD_JOB).out $(BUILD_JOB).synctex.gz $(BUILD_JOB).toc
-LEGACY_AUX_FILES = $(BOOK).aux $(BOOK).fdb_latexmk $(BOOK).fls $(BOOK).idx $(BOOK).ilg $(BOOK).ind
-LEGACY_AUX_FILES += $(BOOK).listing $(BOOK).log $(BOOK).out $(BOOK).synctex.gz $(BOOK).toc
+# Every auxiliary file lands in $(BUILD_DIR), so only sources and the two published PDFs sit beside
+# them. The explicit -jobname is required because the input is a command line rather than a file
+# name, which would otherwise make TeX call everything "texput".
+PDFLATEX = pdflatex -output-directory=$(BUILD_DIR) -jobname=$(BOOK) -interaction=nonstopmode -halt-on-error
+BUILD_LOG = $(BUILD_DIR)/$(BOOK).log
+# Auxiliary files left beside the sources by an older in-place build, or by an editor that compiles
+# $(BOOK).tex on its own. Removed by `make clean` so the directory settles into the new layout.
+STRAY_FILES = $(BOOK).aux $(BOOK).fdb_latexmk $(BOOK).fls $(BOOK).idx $(BOOK).ilg $(BOOK).ind
+STRAY_FILES += $(BOOK).listing $(BOOK).log $(BOOK).out $(BOOK).synctex.gz $(BOOK).toc
+STRAY_FILES += "$(BOOK).synctex(busy)" $(BOOK)-build.*
 
-.PHONY: chapters pdf release update-readme clean
+.PHONY: all chapters pdf release update-readme clean
 
 all: pdf
 
@@ -19,12 +24,11 @@ chapters:
 	python3 gen_chapters.py
 
 pdf: chapters
-	rm -f $(BUILD_AUX_FILES) $(BUILD_JOB).pdf
-	pdflatex -draftmode -jobname=$(BUILD_JOB) -interaction=nonstopmode -halt-on-error "$(LATEX_INPUT)" >/dev/null || (tail -100 $(BUILD_JOB).log && false)
-	pdflatex -jobname=$(BUILD_JOB) -interaction=nonstopmode -halt-on-error "$(LATEX_INPUT)" >/dev/null || (tail -100 $(BUILD_JOB).log && false)
-	cp $(BUILD_JOB).pdf $(BOOK).pdf
-	cp $(BUILD_JOB).pdf $(VERSIONED_PDF)
-	rm -f $(BUILD_JOB).pdf
+	mkdir -p $(BUILD_DIR)
+	$(PDFLATEX) -draftmode "$(LATEX_INPUT)" >/dev/null || (tail -100 $(BUILD_LOG) && false)
+	$(PDFLATEX) "$(LATEX_INPUT)" >/dev/null || (tail -100 $(BUILD_LOG) && false)
+	cp $(BUILD_DIR)/$(BOOK).pdf $(BUILD_DIR)/publish.tmp && mv -f $(BUILD_DIR)/publish.tmp $(BOOK).pdf
+	cp $(BUILD_DIR)/$(BOOK).pdf $(BUILD_DIR)/publish.tmp && mv -f $(BUILD_DIR)/publish.tmp $(VERSIONED_PDF)
 	@echo "Generated Book/$(BOOK).pdf and Book/$(VERSIONED_PDF)"
 
 release: pdf
@@ -38,4 +42,5 @@ update-readme:
 	fi
 
 clean:
-	rm -f $(BUILD_AUX_FILES) $(LEGACY_AUX_FILES) $(BUILD_JOB).pdf
+	rm -rf $(BUILD_DIR)
+	rm -f $(STRAY_FILES)

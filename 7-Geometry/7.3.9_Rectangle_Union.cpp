@@ -123,7 +123,7 @@ class CoverTree {
 
   // Adds delta covers of weight w to every elementary interval in [lo, hi]; a removal negates both.
   void update(int lo, int hi, int delta, int64_t w) {
-    auto rec = [&](auto &&rec, int i, int l, int h) -> void {
+    auto rec = [&](auto &&rec, int i, int l, int h) {
       if (hi < l || h < lo) {
         return;
       }

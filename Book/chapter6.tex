@@ -4,6 +4,7 @@
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Floating-Point Comparison}
+\label{sec:6.1.1}
 Floating-point results carry rounding error, so two values that should be equal in exact arithmetic usually differ in their last bits. Comparing them with \inlinecode{==} is therefore a bug in almost every numeric setting, and the helpers below compare within a tolerance instead. This section also collects the mathematical constants and the sign inspections that the rest of the anthology uses.
 
 \begin{compactitem}
@@ -20,7 +21,7 @@ Floating-point results carry rounding error, so two values that should be equal 
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <climits>
 #include <cmath>
@@ -95,7 +96,7 @@ Dbl copy_sign(Dbl x, Dbl y) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -123,6 +124,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Rounding}
+\label{sec:6.1.2}
 Rounding is only ambiguous at a tie, when a value sits exactly halfway between two integers, and the rule chosen for that case is what distinguishes the functions below. The choice matters more than it appears: always rounding ties away from zero biases a sum of many rounded values upward, which is why financial and statistical work usually rounds ties to even instead, spreading them evenly between the two neighbors.
 
 \begin{compactitem}
@@ -145,7 +147,7 @@ Every function propagates \inlinecode{+0.0}, \inlinecode{-0.0}, \inlinecode{Inf}
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <chrono>
 #include <cmath>
 #include <random>
@@ -235,7 +237,7 @@ Dbl round_n_places(const Dbl &x, unsigned int n, RoundFn round) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <limits>
 using namespace std;
@@ -276,6 +278,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Base Conversion}
+\label{sec:6.1.3}
 A positional numeral is a sequence of digits weighted by powers of its base, so converting between bases is repeated division: divide by the target base, record the remainder as the next digit, and continue with the quotient. Doing that division on a digit vector rather than on a machine integer is what lets \inlinecode{convert\_base()} handle values far larger than any built-in type. Roman numerals are the counterexample that shows what positional notation buys, being additive with a subtractive special case and having no digit for zero.
 
 \begin{compactitem}
@@ -305,7 +308,7 @@ Overflow warning: Each intermediate \inlinecode{rem*a + digit} must fit in \inli
   \item $O(d + e)$ auxiliary for \inlinecode{convert\_base(d, a, b)}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <map>
@@ -374,7 +377,7 @@ std::vector<int> convert_base(const std::vector<int> &d, int a, int b) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -394,6 +397,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Date and Time}
+\label{sec:6.1.4}
 Date questions become ordinary arithmetic once dates are converted to a day count. These functions use the proleptic Gregorian calendar, which applies the modern leap rule to every year, including those before the calendar was adopted, and they count days from the Unix epoch of 1970-01-01.
 
 The conversion follows Howard Hinnant's closed-form algorithm, which shifts the year to start in March so that the leap day falls at the end of the year and never interrupts the month lengths. The remaining months then have lengths that repeat in a pattern whose running total is exactly $\lfloor (153m + 2)/5 \rfloor$ days, and whole $400$-year eras of $146097$ days handle the leap rule without a single division-by-$100$ special case. Both directions are branch-light formulas rather than loops over years, so a date thousands of years away costs the same as tomorrow.
@@ -433,7 +437,7 @@ Dates are ordinary \inlinecode{int} values with no range checking, and the era a
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <tuple>
@@ -533,7 +537,7 @@ std::pair<int, int> easter(int y) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -597,6 +601,7 @@ int main() {
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Combinatorial Calculations}
+\label{sec:6.2.1}
 The following functions implement common operations in combinatorics. All size and count inputs must be nonnegative, and all moduli must be positive. All return values and table entries are computed as 64-bit integers modulo an input argument $m$ or $p$.
 
 \begin{compactitem}
@@ -619,9 +624,9 @@ The following functions implement common operations in combinatorics. All size a
 
 Legendre's formula sums $\lfloor n/p^i \rfloor$ over every $i \geq 1$, counting how many of $1, \dots, n$ are divisible by each power of $p$, which totals the exponent of $p$ in $n!$. It answers questions such as how many trailing zeros $n!$ has in base $p$. Paired with Kummer's theorem, which equates the exponent of $p$ in $\binom{n}{k}$ with the number of carries when adding $k$ and $n - k$ in base $p$, it also decides when a binomial coefficient is divisible by $p$.
 
-Lucas' theorem reduces a binomial coefficient modulo a prime to a product over base-$p$ digits: $\binom{n}{k} \equiv \prod_i \binom{n_i}{k_i} \pmod p$, where $n_i$ and $k_i$ are the $i$-th digits of $n$ and $k$ in base $p$. The product is $0$ as soon as some $k_i$ exceeds $n_i$. For a composite modulus, factor it into prime powers, apply the generalized version of the theorem to each factor, and recombine the residues with the Chinese remainder theorem of section 6.3.2.
+Lucas' theorem reduces a binomial coefficient modulo a prime to a product over base-$p$ digits: $\binom{n}{k} \equiv \prod_i \binom{n_i}{k_i} \pmod p$, where $n_i$ and $k_i$ are the $i$-th digits of $n$ and $k$ in base $p$. The product is $0$ as soon as some $k_i$ exceeds $n_i$. For a composite modulus, factor it into prime powers, apply the generalized version of the theorem to each factor, and recombine the residues with the Chinese remainder theorem of section \secref{6.3.2}.
 
-Every routine here recomputes its answer from scratch, which is what suits a handful of values or a modulus that varies between calls. When a solution instead needs thousands of binomial coefficients against one fixed modulus, precompute factorials and inverse factorials: the combinatorics tables of section 6.3.3 amortize $O(n)$ of table growth and then answer each query in $O(1)$.
+Every routine here recomputes its answer from scratch, which is what suits a handful of values or a modulus that varies between calls. When a solution instead needs thousands of binomial coefficients against one fixed modulus, precompute factorials and inverse factorials: the combinatorics tables of section \secref{6.3.3} amortize $O(n)$ of table growth and then answer each query in $O(1)$.
 
 Overflow warning: Modular products use ordinary \inlinecode{int64\_t} multiplication, so the square of the chosen modulus must fit in \inlinecode{int64\_t}.
 
@@ -649,7 +654,7 @@ Overflow warning: Modular products use ordinary \inlinecode{int64\_t} multiplica
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <vector>
@@ -849,7 +854,7 @@ int64_t eulerian2(int n, int k, int64_t m = MOD) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 int main() {
@@ -889,6 +894,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Enumerating Arrangements}
+\label{sec:6.2.2}
 For the purposes of this section, we define a ``size $k$ arrangement of $n$'' to be a permutation of a size $k$ subset of the integers in $[0, n)$, for $0 \leq k \leq n$. There are $n \mathbin{\text{permute}} k$ possible arrangements, but $n^k$ possible arrangements if repeated values are allowed.
 
 For arrangements without repeats, each prefix fixes some used values and leaves a shrinking set of choices for the remaining positions. Ranking counts how many unused smaller choices could have been placed at the current position, multiplied by the number of possible suffix arrangements; unranking performs the inverse search by subtracting those block sizes. With repeats allowed, the sequence is just a base-$n$ counter.
@@ -914,7 +920,7 @@ For arrangements without repeats, each prefix fixes some used values and leaves 
   \item $O(1)$ auxiliary for \inlinecode{next\_arrangement\_with\_repeats()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cstdint>
 #include <numeric>
@@ -996,7 +1002,7 @@ bool next_arrangement_with_repeats(int n, std::vector<int> &a) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -1057,6 +1063,7 @@ int main() {
 {3,1} {3,2} {3,3}
 \end{exampleoutput}
 \subsection{Enumerating Permutations}
+\label{sec:6.2.3}
 These routines enumerate and analyze reorderings of a sequence of $n$ elements; the values need not be distinct.
 
 The lexicographic successor is found by locating the rightmost ascent, increasing that position by the smallest possible amount, then reversing the suffix into its minimum order. Ranking and unranking permutations use the factorial number system: each position contributes the number of unused smaller values before the chosen one, scaled by the number of possible suffix permutations. The cycle decomposition views a permutation as a function on indices and follows each unvisited orbit until it returns to its start.
@@ -1086,7 +1093,7 @@ The lexicographic successor is found by locating the rightmost ascent, increasin
   \item $O(n)$ auxiliary for \inlinecode{permutation\_by\_rank()}, \inlinecode{rank\_by\_permutation()}, and \inlinecode{permutation\_cycles()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cstdint>
 #include <functional>
@@ -1219,7 +1226,7 @@ Cycles permutation_cycles(const std::vector<int> &a) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <bitset>
 #include <cassert>
 #include <iostream>
@@ -1303,6 +1310,7 @@ Decomposition of {3,1,0,2} into cycles:
 {0,3,2} {1}
 \end{exampleoutput}
 \subsection{Enumerating Combinations}
+\label{sec:6.2.4}
 A combination is a subset of size $k$ chosen from a total of $n$ (not necessarily distinct) elements, where order does not matter.
 
 The lexicographic successor advances the rightmost chosen position that can still move right, then packs every later position as far left as possible. Ranking and unranking use the combinatorial number system: at each position, count how many combinations would be skipped by choosing a smaller next value, then either add that count to the rank or subtract it while searching for the requested rank. Bitmask successors use the same order as increasing integers with a fixed popcount.
@@ -1334,7 +1342,7 @@ Overflow warning: Exact counts and ranks used by the ranking operations must fit
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cstdint>
 #include <functional>
@@ -1479,7 +1487,7 @@ bool next_combination_with_repeats(int n, std::vector<int> &a) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -1575,6 +1583,7 @@ abc abd acd bcd abe ace bce ade bde cde
 {0,0} {0,1} {0,2} {1,1} {1,2} {2,2}
 \end{exampleoutput}
 \subsection{Enumerating Partitions}
+\label{sec:6.2.5}
 A partition of a natural number $n$ is a way to write $n$ as a sum of positive integers where the order of the addends does not matter.
 
 The lexicographic successor edits the suffix of a non-increasing partition: increase the rightmost part that can grow without breaking the order, then refill the remaining sum with ones. Ranking and unranking use a dynamic-programming table that counts partitions of a remaining sum by their next part. This lets the algorithms skip whole blocks of partitions sharing a common prefix.
@@ -1602,7 +1611,7 @@ The lexicographic successor edits the suffix of a non-increasing partition: incr
   \item $O(n)$ auxiliary stack space for \inlinecode{generate\_increasing\_partitions()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cstdint>
 #include <numeric>
 #include <vector>
@@ -1688,7 +1697,7 @@ void generate_increasing_partitions(int n, Fn f) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -1742,6 +1751,7 @@ Increasing partitions of 8:
 {1,2,5} {1,3,4} {1,7} {2,6} {3,5} {8}
 \end{exampleoutput}
 \subsection{Generic Combinatorial Enumeration}
+\label{sec:6.2.6}
 Ranks, unranks, and enumerates combinatorial sequences in lexicographic order using only a prefix counting oracle. This is useful when the objects are too numerous to precompute, but there is a simple dynamic-programming formula for the number of valid completions after a fixed prefix.
 
 \inlinecode{Enumerator(range, length, count)} considers values in $[0, {\inlinecodemath{range}})$ at each position of a length-\inlinecode{length} sequence. The callback \inlinecode{count(prefix)} returns the number of valid full sequences beginning with \inlinecode{prefix}; it may capture a precomputed dynamic-programming table or other state. The factory functions below supply this oracle for the principal combinatorial families, while the class remains available directly for custom families. The range and length must be nonnegative; the factory arguments must satisfy $0 \leq k \leq n$.
@@ -1775,7 +1785,7 @@ Overflow warning: All exact counts and ranks must fit in \inlinecode{int64\_t}.
   \item $O(A \cdot (\min\left(L, A - L\right) + 1))$ object storage for \inlinecode{combinations()} and $O(L^{2})$ for \inlinecode{partitions()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -1908,7 +1918,7 @@ auto partitions(int n) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <iostream>
 using namespace std;
 
@@ -2017,7 +2027,8 @@ Length-4 binary strings without consecutive ones:
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Mod Helpers and Binary Exponentiation}
-Modular arithmetic replaces every value by its remainder modulo \inlinecode{m}, which keeps intermediate results bounded and is what makes counting problems with astronomically large answers tractable. The operations are straightforward except for two hazards, both handled below: a sum or product can overflow the underlying integer type before the remainder is taken, and a negative operand leaves a negative remainder under C++ truncating division. Binary exponentiation squares the base while walking the bits of the exponent, so a power costs $O(\log n)$ multiplications rather than $n$; the same loop computes powers in any monoid, which is how the matrix exponentiation of section 6.5.1 and the linear recurrence of section 6.6.6 are evaluated.
+\label{sec:6.3.1}
+Modular arithmetic replaces every value by its remainder modulo \inlinecode{m}, which keeps intermediate results bounded and is what makes counting problems with astronomically large answers tractable. The operations are straightforward except for two hazards, both handled below: a sum or product can overflow the underlying integer type before the remainder is taken, and a negative operand leaves a negative remainder under C++ truncating division. Binary exponentiation squares the base while walking the bits of the exponent, so a power costs $O(\log n)$ multiplications rather than $n$; the same loop computes powers in any monoid, which is how the matrix exponentiation of section \secref{6.5.1} and the linear recurrence of section \secref{6.6.6} are evaluated.
 
 \begin{compactitem}
   \item \inlinecode{addmod(a, b, m)} and \inlinecode{submod(a, b, m)} respectively return addition and subtraction modulo \inlinecode{m}, each result in $[0, {\inlinecodemath{m}})$. Both operands may be negative or unreduced; they are normalized before arithmetic to avoid signed overflow. The modulus \inlinecode{m} must be positive.
@@ -2025,7 +2036,7 @@ Modular arithmetic replaces every value by its remainder modulo \inlinecode{m}, 
   \item \inlinecode{powmod(x, n, m)} returns \inlinecode{x} raised to the power \inlinecode{n}, modulo \inlinecode{m}.
 \end{compactitem}
 
-Paste these when a solution needs a handful of modular operations; when modular arithmetic pervades one instead, the \inlinecode{Modular} value type of section 6.3.3 overloads the operators so expressions read normally. Only \inlinecode{mulmod()} has no counterpart there, since a value type multiplying in \inlinecode{int64\_t} overflows once the modulus passes about three billion, which is why it underlies the Miller-Rabin test and Pollard's rho of section 6.3.9.
+Paste these when a solution needs a handful of modular operations; when modular arithmetic pervades one instead, the \inlinecode{Modular} value type of section \secref{6.3.3} overloads the operators so expressions read normally. Only \inlinecode{mulmod()} has no counterpart there, since a value type multiplying in \inlinecode{int64\_t} overflows once the modulus passes about three billion, which is why it underlies the Miller-Rabin test and Pollard's rho of section \secref{6.3.9}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -2037,7 +2048,7 @@ Paste these when a solution needs a handful of modular operations; when modular 
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 
@@ -2085,7 +2096,7 @@ uint64_t powmod(uint64_t x, uint64_t n, uint64_t m) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 int main() {
@@ -2103,6 +2114,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{GCD, LCM, Mod Inverse, Chinese Remainder}
+\label{sec:6.3.2}
 Core integer and modular-arithmetic operations built around the Euclidean algorithm. Extended GCD produces Bezout coefficients, which solve linear Diophantine equations and modular inverses, while the Chinese remainder routines combine compatible congruences into one residue class.
 
 \begin{compactitem}
@@ -2137,7 +2149,7 @@ Overflow warning: Every intermediate and result of the templated signed-integer 
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <type_traits>
@@ -2319,7 +2331,7 @@ int64_t garner_restore_mod(const std::vector<int> &a, const std::vector<int> &p,
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -2413,9 +2425,10 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Modular Integer and Combinatorics}
-Provides a modular integer value type together with lazy factorial-based combinatorics tables. Both are common contest helpers for dynamic programming, counting, polynomial operations, and any calculation whose answers are taken modulo some number such as $10^9 + 7$. Where the helpers of section 6.3.1 suit a few scattered operations, a value type is what makes an entire solution read in ordinary arithmetic notation while every operation reduces silently.
+\label{sec:6.3.3}
+Provides a modular integer value type together with lazy factorial-based combinatorics tables. Both are common contest helpers for dynamic programming, counting, polynomial operations, and any calculation whose answers are taken modulo some number such as $10^9 + 7$. Where the helpers of section \secref{6.3.1} suit a few scattered operations, a value type is what makes an entire solution read in ordinary arithmetic notation while every operation reduces silently.
 
-The modulus is a template parameter rather than a member, which is a deliberate speed choice: a compile-time constant lets the compiler replace each division by a multiplication and a shift, while a modulus only known at run time forces a hardware divide costing several times as much. Storing it in a \inlinecode{static} member instead makes the same class work with a runtime modulus at that price, and is worth doing when the modulus is read from the input. A modulus above roughly $3 \times 10^9$ needs the \inlinecode{mulmod()} of section 6.3.1 in place of the plain products used here.
+The modulus is a template parameter rather than a member, which is a deliberate speed choice: a compile-time constant lets the compiler replace each division by a multiplication and a shift, while a modulus only known at run time forces a hardware divide costing several times as much. Storing it in a \inlinecode{static} member instead makes the same class work with a runtime modulus at that price, and is worth doing when the modulus is read from the input. A modulus above roughly $3 \times 10^9$ needs the \inlinecode{mulmod()} of section \secref{6.3.1} in place of the plain products used here.
 
 The \inlinecode{Modular\textless{}MOD\textgreater{}} value type wraps arithmetic modulo the positive compile-time constant \inlinecode{MOD}. Its signed \inlinecode{auto} argument determines the storage type: \inlinecode{Modular\textless{}1000000007\textgreater{}} uses 32-bit storage, while \inlinecode{Modular\textless{}(1LL \textless{}\textless{} 61) - 1\textgreater{}} uses 64-bit storage. The implementation follows the conventional \inlinecode{Mint} wrapper: construction normalizes values, while hidden friend operators support mixed expressions such as \inlinecode{2 + Mint(3)} through implicit conversion.
 
@@ -2440,7 +2453,7 @@ Overflow warning: Construction, multiplication, and inverses widen through \inli
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for Modular arithmetic.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <iostream>
@@ -2576,13 +2589,13 @@ class Modular {
   \item \inlinecode{multichoose(n, k)} returns the number of size-\inlinecode{k} multisets drawn from \inlinecode{n} types.
 \end{compactitem}
 
-Tables pay off once a solution asks for many values against one fixed modulus, which is the usual counting or dynamic programming case. For a handful of values, or for a modulus that changes between calls, the table-free routines of section 6.2.1 compute the same quantities in $O(\min\left(k, n - k\right))$ per call and allocate nothing.
+Tables pay off once a solution asks for many values against one fixed modulus, which is the usual counting or dynamic programming case. For a handful of values, or for a modulus that changes between calls, the table-free routines of section \secref{6.2.1} compute the same quantities in $O(\min\left(k, n - k\right))$ per call and allocate nothing.
 
 \textbf{Time Complexity}: $O(n)$ total table growth to answer calls with arguments up to $n$, then $O(1)$ per call.
 
 \textbf{Space Complexity}: $O(n)$ for the factorial and inverse-factorial tables.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 template<typename Mint>
 class ModCombinatorics {
   std::vector<Mint> fact, inv_fact;
@@ -2634,7 +2647,7 @@ using Mint = Modular<1000000007>;
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <sstream>
 using namespace std;
@@ -2683,6 +2696,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Primitive Roots}
+\label{sec:6.3.4}
 A primitive root modulo $m$ is a number $g$ whose powers generate every invertible residue modulo $m$. Equivalently, the multiplicative order of $g$ modulo $m$ is exactly $\phi(m)$. Primitive roots are useful for constructing generators of finite multiplicative groups, choosing roots for number theoretic transforms, discrete logarithm setups, and randomized modular hashing or testing schemes that need a full-period multiplicative generator.
 
 Primitive roots do not exist for every $m$. They exist exactly for $m \in \{1, 2, 4, p^k, 2p^k\}$, where $p$ is an odd prime and $k \geq 1$. This implementation first checks that classification by factoring $m$, then factors $\phi(m)$. A candidate $g$ is primitive exactly when $g^{\phi(m)} \equiv 1 \pmod m$ and $g^{\phi(m)/q} \not\equiv 1 \pmod m$ for every prime factor $q$ of $\phi(m)$.
@@ -2699,7 +2713,7 @@ Modular multiplication uses \inlinecode{\_\_uint128\_t} when available for speed
 
 \textbf{Space Complexity}: $O(k)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <numeric>
@@ -2797,7 +2811,7 @@ int64_t primitive_root(int64_t m) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -2817,6 +2831,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Discrete Logarithm (Baby-Step Giant-Step)}
+\label{sec:6.3.5}
 Given integers $a$, $b$, and a modulus $m$, the discrete logarithm problem asks for the smallest nonnegative integer $x$ with $a^x$ congruent to $b$ modulo $m$. This is the modular analogue of a logarithm and underlies Diffie-Hellman key exchange, order computations in the multiplicative group, and many number-theory reductions.
 
 The baby-step giant-step method writes $x = np - q$ for a block size $n$ near the square root of the modulus. It tabulates the ``baby steps'' $b \cdot a^q$ for $q$ in $[0, n]$, then walks the ``giant steps'' $a^{np}$ for increasing $p$ until one lands in the table, yielding $x = np - q$. This trades the linear scan of all exponents for $O(\sqrt{m})$ work and memory. A short reduction loop first strips common factors between $a$ and $m$, so the routine works for any modulus, not only when $a$ and $m$ are coprime.
@@ -2829,7 +2844,7 @@ The baby-step giant-step method writes $x = np - q$ for a block size $n$ near th
 
 \textbf{Space Complexity}: $O(\sqrt{m})$ auxiliary for the table.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cmath>
 #include <cstdint>
@@ -2899,7 +2914,7 @@ int64_t discrete_log(int64_t a, int64_t b, int64_t m) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -2916,6 +2931,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Modular Square Root (Tonelli-Shanks)}
+\label{sec:6.3.6}
 Given an integer $a$ and an odd prime $p$, find a modular square root: an $x$ with $x^2$ congruent to $a$ modulo $p$. Exactly half of the nonzero residues modulo a prime are squares (quadratic residues), so a solution exists only for those; when it does, the two roots are $x$ and $p - x$.
 
 The Tonelli-Shanks algorithm handles the general case. Euler's criterion, $a^{(p-1)/2}$ modulo $p$, first tests whether $a$ is a residue at all. When $p$ is congruent to $3 \pmod{4}$, the root is simply $a^{(p+1)/4}$. Otherwise the algorithm factors $p - 1$ as $s \cdot 2^e$, picks any quadratic non-residue to generate the $2$-power part of the group, and repeatedly squares a running value to find the order of the current error term, correcting the candidate root until the error becomes $1$.
@@ -2928,7 +2944,7 @@ The Tonelli-Shanks algorithm handles the general case. Euler's criterion, $a^{(p
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 
@@ -3008,7 +3024,7 @@ int64_t mod_sqrt(int64_t a, int64_t p) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -3033,6 +3049,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Jacobi Symbol}
+\label{sec:6.3.7}
 The Jacobi symbol $(a / n)$, defined for an odd positive integer $n$, generalizes the Legendre symbol. For an odd prime $p$ the Legendre symbol $(a / p)$ is $0$ when $p$ divides $a$, $1$ when $a$ is a nonzero quadratic residue modulo $p$, and $-1$ when $a$ is a non-residue. The Jacobi symbol extends this to composite $n$ by multiplying the Legendre symbols of the prime factors of $n$, counted with multiplicity. It is computed without factoring $n$, using the law of quadratic reciprocity together with the supplementary rules for $-1$ and $2$, in the style of the binary GCD.
 
 The symbol is fully multiplicative in $a$ and in $n$. For prime $n$ it exactly decides quadratic residuosity, so it is the fast way to test whether a modular square root exists. For composite $n$, beware that $(a / n) = 1$ does not guarantee that $a$ is a quadratic residue; this asymmetry is what the Solovay-Strassen primality test exploits.
@@ -3045,7 +3062,7 @@ The symbol is fully multiplicative in $a$ and in $n$. For prime $n$ it exactly d
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <utility>
@@ -3077,7 +3094,7 @@ int jacobi(int64_t a, int64_t n) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 int64_t legendre_via_euler(int64_t a, int64_t p) {
@@ -3107,6 +3124,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Prime Generation}
+\label{sec:6.3.8}
 Generate prime numbers using the sieve of Eratosthenes, which repeatedly marks the multiples of each prime as composite. The linear sieve technique optimizes the classic sieve by finding the least prime factor of each integer. When processing \inlinecode{i}, it marks \inlinecode{i * p} for each known prime \inlinecode{p} no greater than \inlinecode{least[i]}. Every composite \inlinecode{x} is therefore generated exactly once: writing \inlinecode{x = i*p}, where \inlinecode{p} is its least prime factor, gives \inlinecode{p} $\leq$ \inlinecode{least[i]}, while any representation using a larger prime is skipped. This single visit per composite gives the $O(n)$ running time.
 
 The segmented sieve technique computes primes in a high but narrow window without sieving everything below it. Since every composite at most \inlinecode{hi} has a prime factor at most $\sqrt{{\inlinecodemath{hi}}}$, it first sieves the primes up to $\sqrt{{\inlinecodemath{hi}}}$, then uses only those primes to mark composites within $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ (each prime $p$ starting at the first of its multiples that is at least both $p^2$ and \inlinecode{lo}). This needs only $O(w + \sqrt{{\inlinecodemath{hi}}})$ space, where $w = {\inlinecodemath{hi}} - {\inlinecodemath{lo}} + 1$, instead of the $O({\inlinecodemath{hi}})$ space that sieving all of $[2, {\inlinecodemath{hi}}]$ would require.
@@ -3133,7 +3151,7 @@ The segmented sieve technique computes primes in a high but narrow window withou
   \item $O(w + \sqrt{{\inlinecodemath{hi}}})$ auxiliary for \inlinecode{segmented\_sieve(lo, hi)}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -3226,7 +3244,7 @@ std::vector<int> segmented_sieve(int lo, int hi) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <ctime>
 #include <iostream>
@@ -3265,6 +3283,7 @@ sieve(n=10000000): 0.042641s
 segmented_sieve([1000000000, 1005000000]): 0.01969s
 \end{exampleoutput}
 \subsection{Prime Tests and Factorization}
+\label{sec:6.3.9}
 Provides primality tests, prime factorization, and divisor generation. Alongside generic trial division, it includes deterministic Miller-Rabin and Pollard's rho for signed 64-bit integers. Prime factorizations are represented as sorted vectors of (\inlinecode{prime}, \inlinecode{exponent}) pairs. For $0$ and $1$, the prime factorization is empty.
 
 Trial division tests primality and computes prime factorizations by trying possible divisors through the square root.
@@ -3278,7 +3297,7 @@ Trial division tests primality and computes prime factorizations by trying possi
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for \inlinecode{is\_prime\_slow()} and $O(f)$ for the returned factorization, where $f$ is the number of compressed prime factors.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <chrono>
@@ -3340,7 +3359,7 @@ Modular multiplication uses \inlinecode{\_\_uint128\_t} when available, with a s
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 uint64_t mulmod(uint64_t a, uint64_t b, uint64_t m) {
   assert(m > 0);
 #if defined(__SIZEOF_INT128__)
@@ -3463,7 +3482,7 @@ Pollard's rho iterates a pseudorandom map modulo $n$; two iterates that collide 
   \item $O(d)$ output space and $O(\log d)$ auxiliary stack space for \inlinecode{divisors\_from\_factors()} and \inlinecode{divisors()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using Factors = std::vector<std::pair<int64_t, int>>;
 
 int64_t rho_factor(int64_t n) {
@@ -3500,7 +3519,7 @@ int64_t rho_factor(int64_t n) {
 
 Factors factorize_rho(int64_t n) {
   std::vector<int64_t> factors;
-  auto collect = [&](auto &&collect, int64_t value) -> void {
+  auto collect = [&](auto &&collect, int64_t value) {
     if (value <= 1) {
       return;
     }
@@ -3618,7 +3637,7 @@ std::vector<int64_t> divisors(int64_t n) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <ctime>
 #include <iomanip>
 #include <iostream>
@@ -3774,6 +3793,7 @@ num:                    factorize_slow():   factorize():
 2500052700017629            24.587ms           0.194ms
 \end{exampleoutput}
 \subsection{Euler's Totient Function}
+\label{sec:6.3.10}
 Euler's totient function $\phi(n)$ returns the number of positive integers less than or equal to $n$ that are relatively prime to $n$; that is, the number of integers $k$ in the range $[1, n]$ for which $\gcd(n, k) = 1$.
 
 The function is multiplicative, with $\phi(p^k) = p^k - p^{k-1}$ for a prime power, which yields the product formula $\phi(n) = n \prod_{p \mid n} (1 - 1/p)$ taken over the distinct primes $p$ dividing $n$. \inlinecode{phi(n)} applies this formula directly, factoring \inlinecode{n} by trial division. \inlinecode{phi\_table(n)} computes the whole range at once with a sieve of Eratosthenes: starting from \inlinecode{v[i] = i}, it sweeps each prime $p$ across its multiples \inlinecode{j} and folds in the factor $(1 - 1/p)$ by replacing \inlinecode{v[j]} with ${\inlinecodemath{v[j]}} - {\inlinecodemath{v[j]}} / p$. This is faster than the alternative that uses the divisor-sum identity $\sum_{d \mid n} \phi(d) = n$ to subtract each \inlinecode{v[i]} from its multiples, which costs $O(n \log n)$.
@@ -3802,7 +3822,7 @@ The overload \inlinecode{phi\_table(lo, hi)} computes the totients of a high but
   \item $O(w + \sqrt{{\inlinecodemath{hi}}})$ auxiliary for \inlinecode{phi\_table(lo, hi)}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -3885,7 +3905,7 @@ std::vector<int> phi_table(int lo, int hi) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -3913,6 +3933,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Divisor Functions}
+\label{sec:6.3.11}
 The divisor-counting function $d(n)$ counts the positive divisors of $n$, and the divisor-sum function $\sigma(n)$ adds them up. Both are multiplicative, so each is determined by the prime factorization $n = \prod p_i^{e_i}$: choosing an exponent in $[0, e_i]$ for every prime gives $d(n) = \prod (e_i + 1)$, and summing the resulting geometric series for each prime gives $\sigma(n) = \prod (1 + p_i + \dots + p_i^{e_i})$. A single value is therefore computed by trial division, factoring $n$ as the divisors are accumulated.
 
 \begin{compactitem}
@@ -3920,16 +3941,16 @@ The divisor-counting function $d(n)$ counts the positive divisors of $n$, and th
   \item \inlinecode{divisor\_sum(n)} returns $\sigma(n)$, the sum of the positive divisors of \inlinecode{n}, which must be positive.
 \end{compactitem}
 
-For every value in a range, factoring each number separately is wasteful. Instead, sweep over each candidate divisor $d$ and add its contribution to every multiple of $d$. The total work is the harmonic sum $n/1 + n/2 + \dots + n/n$, which is $O(n \log n)$. The same sweep computes any divisor-indexed accumulation, such as the divisor sums used by the Mobius inversion of section 6.3.12.
+For every value in a range, factoring each number separately is wasteful. Instead, sweep over each candidate divisor $d$ and add its contribution to every multiple of $d$. The total work is the harmonic sum $n/1 + n/2 + \dots + n/n$, which is $O(n \log n)$. The same sweep computes any divisor-indexed accumulation, such as the divisor sums used by the Mobius inversion of section \secref{6.3.12}.
 
 \begin{compactitem}
   \item \inlinecode{divisor\_count\_table(n)} returns a vector \inlinecode{v} of length \inlinecode{n + 1} such that \inlinecode{v[i]} is the number of divisors of \inlinecode{i} for every \inlinecode{i} in $[1, {\inlinecodemath{n}}]$, with \inlinecode{v[0]} left as $0$.
   \item \inlinecode{divisor\_sum\_table(n)} returns a vector \inlinecode{v} of length \inlinecode{n + 1} such that \inlinecode{v[i]} is the sum of the divisors of \inlinecode{i} for every \inlinecode{i} in $[1, {\inlinecodemath{n}}]$, with \inlinecode{v[0]} left as $0$.
 \end{compactitem}
 
-The aliquot sum $\sigma(n) - n$ adds the proper divisors, marking \inlinecode{n} perfect when it equals \inlinecode{n} and pairing amicable numbers when each is the other's. For an \inlinecode{n} too large for trial division, factor it with Pollard's rho in section 6.3.9 and apply the product formulas; to tabulate a high narrow window, sieve it with the primes up to $\sqrt{{\inlinecodemath{hi}}}$ as in section 6.3.8.
+The aliquot sum $\sigma(n) - n$ adds the proper divisors, marking \inlinecode{n} perfect when it equals \inlinecode{n} and pairing amicable numbers when each is the other's. For an \inlinecode{n} too large for trial division, factor it with Pollard's rho in section \secref{6.3.9} and apply the product formulas; to tabulate a high narrow window, sieve it with the primes up to $\sqrt{{\inlinecodemath{hi}}}$ as in section \secref{6.3.8}.
 
-Overflow warning: $\sigma(n)$ can be several times larger than \inlinecode{n}, so \inlinecode{divisor\_sum()} overflows \inlinecode{int64\_t} somewhat before \inlinecode{n} itself does. Trial division binds first in practice, since $\sqrt{n}$ divisions are already too slow well below that point; factor with section 6.3.9 instead.
+Overflow warning: $\sigma(n)$ can be several times larger than \inlinecode{n}, so \inlinecode{divisor\_sum()} overflows \inlinecode{int64\_t} somewhat before \inlinecode{n} itself does. Trial division binds first in practice, since $\sqrt{n}$ divisions are already too slow well below that point; factor with section \secref{6.3.9} instead.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -3945,7 +3966,7 @@ Overflow warning: $\sigma(n)$ can be several times larger than \inlinecode{n}, s
   \item $O(n)$ for the vectors returned by \inlinecode{divisor\_count\_table(n)} and \inlinecode{divisor\_sum\_table(n)}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <vector>
@@ -4009,7 +4030,7 @@ std::vector<int64_t> divisor_sum_table(int n) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -4036,6 +4057,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Mobius Function and Inclusion-Exclusion}
+\label{sec:6.3.12}
 The Mobius function $\mu(n)$ is the multiplicative function defined as $1$ if $n = 1$, $0$ if $n$ is divisible by the square of a prime, and $(-1)^k$ if $n$ is a product of $k$ distinct primes. It is the coefficient that appears in Mobius inversion: if $g(n) = \sum_{d \mid n} f(d)$ for all $n$, then $f(n) = \sum_{d \mid n} \mu(d) \, g(n / d)$. This formalizes the principle of inclusion-exclusion in the divisor lattice, letting one recover a summand function from its divisor sums.
 
 Inclusion-exclusion itself counts the size of a union by alternately adding and subtracting the sizes of intersections. A canonical number-theoretic instance is counting integers in $[1, n]$ that are coprime to a modulus $m$: subtract the multiples of each prime factor of $m$, add back those counted twice, and so on. The signed terms are precisely the values of $\mu$ over the squarefree divisors of $m$, so \inlinecode{count\_coprime(n, m)} equals $\sum_{d \mid m} \mu(d) \lfloor n / d \rfloor$.
@@ -4062,7 +4084,7 @@ Inclusion-exclusion itself counts the size of a union by alternately adding and 
   \item $O(1)$ auxiliary for \inlinecode{mobius()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <vector>
@@ -4147,7 +4169,7 @@ int64_t count_coprime(int64_t n, int64_t m) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -4170,6 +4192,7 @@ int main() {
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Big Integer (Simple)}
+\label{sec:6.4.1}
 Perform simple arithmetic operations on arbitrary precision big integers whose digits are internally represented as an \inlinecode{std::string} in little-endian order.
 
 This version is intentionally small and decimal-oriented. Addition and subtraction are the usual schoolbook digit scans with carry or borrow. Multiplication keeps a shifted copy of the left operand for each digit of the right operand, adds that row once per digit value, then shifts by one decimal place. Division is long division: it scans the dividend from most significant digit to least, maintains a running remainder, and repeatedly subtracts the divisor to discover each quotient digit.
@@ -4199,7 +4222,7 @@ This version is intentionally small and decimal-oriented. Addition and subtracti
   \item $O(n)$ auxiliary for \inlinecode{to\_string()}, \inlinecode{add()}, \inlinecode{sub()}, \inlinecode{mul()}, and \inlinecode{div()}, where $n$ is the total number of digits in the arguments and result for each operation.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cctype>
@@ -4372,7 +4395,7 @@ class BigInt {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 int main() {
   BigInt a("-9899819294989142124"), b("12398124981294214");
   assert(add(a, b).to_string() == "-9887421170007847910");
@@ -4385,6 +4408,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Big Integer}
+\label{sec:6.4.2}
 Perform operations on arbitrary precision big integers internally represented as a vector of base-\inlinecode{BASE} digits in little-endian order. \inlinecode{BASE} defaults to $10^9$ and must be a power of 10 no larger than $10^9$. Multiplication selects schoolbook, Karatsuba, or FFT from the operand size; \inlinecode{MUL\_CUTOFF} is the padded transform length where FFT takes over and normally needs no adjustment. Division likewise splits into a quadratic loop for small divisors and a recursive one past \inlinecode{DIV\_CUTOFF} limbs, so it inherits whichever multiplication the size selects. Typical arithmetic operations involving mixed numeric primitives and strings are supported through implicit construction and hidden friend operators, as long as at least one operand is a \inlinecode{BigInt} at any given level of evaluation.
 
 Addition, subtraction, and comparisons are performed using the standard linear algorithms. Multiplication first converts limbs from base \inlinecode{BASE} to the narrower base \inlinecode{MUL\_BASE} so coefficient products fit safely, then multiplies with schoolbook, Karatsuba, or (if beyond \inlinecode{MUL\_CUTOFF}) complex FFT convolution according to the operand size, converting the result back. Division and modulo are computed together by normalized long division: scale the operands so the divisor's leading limb is large, estimate each quotient limb from the top one or two limbs of the running remainder, correct the estimate by adding the divisor back if necessary, then unscale the remainder. Beyond \inlinecode{DIV\_CUTOFF} limbs, that loop becomes the base case of Burnikel-Ziegler recursion, which halves both operands and recovers each half of the quotient from a division of the same shape, paying one multiplication per level rather than one estimate per limb.
@@ -4410,9 +4434,10 @@ Addition, subtraction, and comparisons are performed using the standard linear a
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(d)$ per call to the constructors, \inlinecode{size()}, \inlinecode{to\_string()}, \inlinecode{to\_llong()}, \inlinecode{to\_double()}, \inlinecode{to\_ldouble()}, \inlinecode{abs()}, \inlinecode{comp()}, \inlinecode{rand()}, and all comparison and arithmetic operators except multiplication, division, and modulo, where $d$ is the total number of digits in the arguments and result for each operation.
+  \item $O(1)$ per call to \inlinecode{size()}.
+  \item $O(d)$ per call to the constructors, \inlinecode{to\_string()}, \inlinecode{to\_llong()}, \inlinecode{to\_double()}, \inlinecode{to\_ldouble()}, \inlinecode{abs()}, \inlinecode{comp()}, \inlinecode{rand()}, and all comparison and arithmetic operators except multiplication, division, and modulo, where $d$ is the total number of digits in the arguments and result for each operation.
   \item $O(d \cdot \log\left(d\right) \cdot \log\left(\log\left(d\right)\right))$ per call to multiplication operations once operands reach \inlinecode{MUL\_CUTOFF}, and $O(d^{1.585})$ below it.
-  \item $O(d \cdot m)$ per call to division and modulo operations below \inlinecode{DIV\_CUTOFF}, and $O(M(m) \log m)$ at or above it, where $d$ and $m$ are the number of digits in the dividend and divisor respectively, and $M(m)$ is the cost of one multiplication of two $m$-digit big integers.
+  \item $O((d/m) \cdot M(m) \cdot \log m)$ per call to division and modulo operations once the divisor reaches \inlinecode{DIV\_CUTOFF}, and $O(d \cdot m)$ below it, where $d$ and $m$ are the number of digits in the dividend and divisor respectively, and $M(m)$ is the cost of one multiplication of two $m$-digit big integers. Both forms consume the dividend in $d/m$ blocks of the divisor's size; only the per-block cost differs.
   \item $O(M(d) \log n)$ per call to \inlinecode{pow()}, where $n$ is the exponent and $d$ is the maximum digit length reached during exponentiation.
   \item $O(d + n)$ per call to \inlinecode{mul\_pow10()}, where $n$ is the power of ten.
   \item $O(d^{2})$ per call to \inlinecode{sqrt()}.
@@ -4427,7 +4452,7 @@ Addition, subtraction, and comparisons are performed using the standard linear a
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <chrono>
@@ -5078,7 +5103,7 @@ class BigInt {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 int main() {
@@ -5148,7 +5173,8 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Big Decimal}
-Performs exact decimal arithmetic using the full \inlinecode{BigInt} implementation from 6.4.2 as its coefficient type, together with a nonnegative scale. Unlike binary floating point, every parsed decimal is represented exactly: for example, \inlinecode{BigDecimal("1.20")} stores coefficient $120$ with scale $2$. Addition and subtraction preserve the larger operand scale, multiplication adds the scales, and formatting preserves trailing zeros unless \inlinecode{normalized()} is called. Only finite, well-formed decimal strings are supported; \inlinecode{NaN} and infinities are not represented.
+\label{sec:6.4.3}
+Performs exact decimal arithmetic using the full \inlinecode{BigInt} implementation from \secref{6.4.2} as its coefficient type, together with a nonnegative scale. Unlike binary floating point, every parsed decimal is represented exactly: for example, \inlinecode{BigDecimal("1.20")} stores coefficient $120$ with scale $2$. Addition and subtraction preserve the larger operand scale, multiplication adds the scales, and formatting preserves trailing zeros unless \inlinecode{normalized()} is called. Only finite, well-formed decimal strings are supported; \inlinecode{NaN} and infinities are not represented.
 
 Division and square root generally have nonterminating decimal expansions, so both operations require an explicit result scale. The rounding mode defaults to \inlinecode{HalfAway}, which rounds ties away from zero. The other modes are \inlinecode{TowardZero}, \inlinecode{AwayFromZero}, \inlinecode{Floor}, \inlinecode{Ceil}, and \inlinecode{HalfEven}.
 
@@ -5171,15 +5197,19 @@ Division and square root generally have nonterminating decimal expansions, so bo
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
+  \item $O(1)$ per call to \inlinecode{decimal\_places()}, \inlinecode{precision()}, \inlinecode{sign()}, and \inlinecode{unscaled\_value()}.
   \item $O(d)$ per call to parsing, formatting, normalization, addition, subtraction, comparisons, and decimal-point movement, where $d$ is the number of relevant decimal digits.
   \item $O(M(d) \log n)$ per call to \inlinecode{pow(n)}, where $M(d)$ is the multiplication cost for the largest intermediate coefficient.
   \item $O(d^{2})$ per call to square root, matching the \inlinecode{BigInt} operation used here.
-  \item Division, remainder, and rescaling to fewer places inherit the \inlinecode{BigInt} division cost of 6.4.2: $O(d \cdot m)$ below its \inlinecode{DIV\_CUTOFF} and $O(M(m) \log m)$ at or above it, where $m$ is the number of digits in the divisor.
+  \item Division, remainder, and rescaling to fewer places inherit the \inlinecode{BigInt} division cost of \secref{6.4.2}: $O((d/m) \cdot M(m) \cdot \log m)$ once the divisor reaches its \inlinecode{DIV\_CUTOFF} and $O(d \cdot m)$ below it, where $d$ and $m$ are the number of digits in the dividend and divisor.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(d)$ for stored digits, returned values, and arithmetic results.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
+#define main bigint_example
+#include "6.4.2_Big_Integer.cpp"
+#undef main
 
 class BigDecimal {
  public:
@@ -5240,7 +5270,7 @@ class BigDecimal {
   }
 
   int decimal_places() const { return scale; }
-  int precision() const { return coeff.abs().size(); }
+  int precision() const { return coeff.size(); }
   int sign() const { return (coeff > 0) - (coeff < 0); }
   const BigInt &unscaled_value() const { return coeff; }
   BigDecimal abs() const { return BigDecimal(coeff.abs(), scale); }
@@ -5364,7 +5394,7 @@ class BigDecimal {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 int main() {
@@ -5437,6 +5467,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Rational Numbers}
+\label{sec:6.4.4}
 Perform operations on rational numbers internally represented as two integers: a numerator and a denominator. The template integer type must support streamed input/output, comparisons, and arithmetic operations.
 
 \begin{compactitem}
@@ -5455,18 +5486,18 @@ Overflow warning: Internal operations do not check for overflow. Comparisons and
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(\log s)$ per call to constructor \inlinecode{Rational(n, d)}, where $s = |n| + |d|$.
-  \item $O(1)$ per call to all other operations, assuming that corresponding operations on the template integer type are $O(1)$ as well.
+  \item $O(\log s)$ operations on \inlinecode{Int} per call to the constructor \inlinecode{Rational(n, d)}, where $s = |n| + |d|$, spent reducing to lowest terms.
+  \item $O(1)$ operations on \inlinecode{Int} per call to everything else.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(1)$ for storage of the rational number.
-  \item $O(1)$ auxiliary for all operations.
+  \item Two \inlinecode{Int} values for storage of the rational number.
+  \item $O(1)$ auxiliary \inlinecode{Int} values for all operations.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <istream>
@@ -5482,8 +5513,7 @@ class Rational {
   Rational() : num(0), den(1) {}
   Rational(const Int &n) : num(n), den(1) {}
 
-  template<typename T1, typename T2>
-  Rational(const T1 &n, const T2 &d) : num(n), den(d) {
+  Rational(const Int &n, const Int &d) : num(n), den(d) {
     assert(den != 0);
     if (den < 0) {
       num = -num;
@@ -5591,7 +5621,7 @@ class Rational {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cmath>
 using namespace std;
 
@@ -5651,7 +5681,8 @@ int main() {
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Matrix Operations}
-Basic matrix operations defined on a two-dimensional vector of numeric values. Matrix arithmetic also supports modular value types such as \inlinecode{Modular\textless{}MOD\textgreater{}} from 6.3.3. The element type must be constructible from $0$ and $1$ and support the arithmetic operators used by the requested operation.
+\label{sec:6.5.1}
+Basic matrix operations defined on a two-dimensional vector of numeric values. Matrix arithmetic also supports modular value types such as \inlinecode{Modular\textless{}MOD\textgreater{}} from \secref{6.3.3}. The element type must be constructible from $0$ and $1$ and support the arithmetic operators used by the requested operation.
 
 \begin{compactitem}
   \item \inlinecode{make\_matrix\textless{}T\textgreater{}(m, n, v)} constructs and returns an $m$ by $n$ matrix with 0-based indices (row indices $[0, {\inlinecodemath{m}})$ and column indices $[0, {\inlinecodemath{n}})$), where every value is initialized to \inlinecode{v}.
@@ -5696,7 +5727,7 @@ Exponentiation uses iterative binary exponentiation: keep an accumulated result,
   \item $O(m \cdot n)$ auxiliary for all non-in-place operations returning an $m$ by $n$ matrix.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <iomanip>
@@ -5925,7 +5956,7 @@ Matrix<T> power_sum(const Matrix<T> &a, uint64_t p) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 int main() {
@@ -5947,6 +5978,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Row Reduction}
+\label{sec:6.5.2}
 Converts a matrix to reduced row echelon form using Gaussian elimination to solve a system of linear equations and compute rank. Each round finds a row with a nonzero entry in the current leading column, normalizes that row, and subtracts multiples of it from every other row to clear the column. Floating-point matrices use the largest-magnitude candidate for partial pivoting, though elimination can still be prone to rounding error; use LU decomposition for greater numerical stability. Exact field types such as \inlinecode{Modular\textless{}MOD\textgreater{}} instead use any nonzero pivot and perform exact arithmetic. Such types must support construction from $0$ and $1$, equality, addition, subtraction, multiplication, and division.
 
 \begin{compactitem}
@@ -5969,7 +6001,7 @@ Converts a matrix to reduced row echelon form using Gaussian elimination to solv
   \item $O(m \cdot n)$ auxiliary for \inlinecode{matrix\_rank()} and \inlinecode{solve\_system()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -6087,7 +6119,7 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 int main() {
@@ -6110,6 +6142,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Determinant and Inverse}
+\label{sec:6.5.3}
 Computes the determinant and inverse of a square matrix using Gaussian elimination. The inverse of a matrix $a$ is another matrix $b$ such that $ab$ equals the identity matrix. The inverse of $a$ exists if and only if the determinant of $a$ is nonzero. In this case, $a$ is called invertible or non-singular. The determinant falls out of elimination as the product of the pivots, negated once per row swap. The inverse is found by appending the identity matrix and row-reducing the combined matrix: the operations that turn $a$ into the identity turn the identity into the inverse.
 
 Floating-point matrices use the largest-magnitude pivot in each column, although Gaussian elimination can still suffer from rounding error; use LU decomposition for greater numerical stability. Exact field types such as \inlinecode{Modular\textless{}MOD\textgreater{}} use any nonzero pivot and perform exact arithmetic. These types must support construction from $0$ and $1$, equality, addition, subtraction, multiplication, and division. For an integer matrix whose determinant is wanted exactly, the Bareiss algorithm runs a fraction-free elimination: every intermediate value is itself a determinant of a submatrix, so the divisions are always exact and the arithmetic stays in integers.
@@ -6137,7 +6170,7 @@ Overflow warning: In \inlinecode{det\_bareiss()}, stored entries are minors of \
   \item $O(n^{2})$ auxiliary heap space for \inlinecode{det()}, \inlinecode{det\_bareiss()}, and \inlinecode{inverse()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cmath>
 #include <cstdint>
 #include <optional>
@@ -6297,7 +6330,7 @@ std::optional<SquareMatrix> inverse(SquareMatrix a, double eps = 1e-10) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -6333,7 +6366,8 @@ int main() {
 }
 \end{lstlisting}
 \subsection{LU Decomposition}
-The LU decomposition of a matrix $A$ with row-partial pivoting is a factorization of $A$ (after some rows are possibly permuted by a permutation matrix $p$) as a product of a lower triangular matrix $L$ and an upper triangular matrix $U$. This factorization can be used to tackle many common problems in linear algebra such as solving systems of linear equations and computing determinants. An improvement on basic row reduction, LU decomposition by row-partial pivoting keeps the relative magnitude of matrix values small, thus reducing the relative error due to rounding in computed solutions. These routines require floating-point matrix elements; use 6.5.3 for exact-field or integer determinant calculations.
+\label{sec:6.5.4}
+The LU decomposition of a matrix $A$ with row-partial pivoting is a factorization of $A$ (after some rows are possibly permuted by a permutation matrix $p$) as a product of a lower triangular matrix $L$ and an upper triangular matrix $U$. This factorization can be used to tackle many common problems in linear algebra such as solving systems of linear equations and computing determinants. An improvement on basic row reduction, LU decomposition by row-partial pivoting keeps the relative magnitude of matrix values small, thus reducing the relative error due to rounding in computed solutions. These routines require floating-point matrix elements; use \secref{6.5.3} for exact-field or integer determinant calculations.
 
 \begin{compactitem}
   \item \inlinecode{lu\_decompose(a, \&perm, eps = 1e-10)} assigns floating-point matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}; it returns $0$ for even row-swap parity, $1$ for odd parity, or $-1$ for a degenerate matrix (i.e. singular for square matrices). The merged matrix stores \inlinecode{l[i][j]} in \inlinecode{lu[i][j]} when \inlinecode{i \textgreater{} j}, and \inlinecode{u[i][j]} otherwise. The diagonal entries \inlinecode{l[i][i]} are always $1$, so they are not explicitly stored. Access general entries of the lower and upper triangular matrices via \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)}. Optional output vector \inlinecode{perm} represents $p$: \inlinecode{perm[i]} is the only column containing $1$ in row \inlinecode{i}. Left-multiplying \inlinecode{a} by this permutation matrix gives the product of the separate lower and upper triangular matrices, not the merged storage matrix \inlinecode{lu} itself.
@@ -6358,7 +6392,7 @@ The LU decomposition of a matrix $A$ with row-partial pivoting is a factorizatio
   \item $O(m \cdot n)$ auxiliary for \inlinecode{solve\_system()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cmath>
 #include <numeric>
@@ -6503,7 +6537,7 @@ std::optional<SquareMatrix> inverse(SquareMatrix a) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -6561,6 +6595,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{QR Decomposition and Least Squares}
+\label{sec:6.5.5}
 The QR decomposition factors an $m$ by $n$ matrix $A$ with $m \geq n$ into $A = QR$, where $Q$ has orthonormal columns and $R$ is upper triangular. Orthonormal columns are what make the factorization useful: $Q$ preserves lengths, so multiplying by $Q^T$ rewrites a problem in a new basis without distorting distances, and a triangular system is solved by back substitution.
 
 This implementation uses Householder reflections. A Householder reflection is the mirror across the hyperplane orthogonal to a chosen vector $v$, written $I - 2vv^T/(v^Tv)$, and $v$ is chosen so that the reflection maps the part of a column below the diagonal onto the axis, zeroing it in one step. Applying one reflection per column leaves $R$, and accumulating the reflections gives $Q$. Reflecting is stable because it never scales anything: the alternative of orthogonalizing column by column with Gram-Schmidt loses orthogonality as the columns approach linear dependence, whereas reflections keep it to within rounding error.
@@ -6572,7 +6607,7 @@ The overdetermined system $Ax = b$ usually has no solution, so least squares ask
   \item \inlinecode{least\_squares(a, b, eps = 1e-10)} returns the vector $x$ minimizing the Euclidean norm of ${\inlinecodemath{a}}x - {\inlinecodemath{b}}$, or \inlinecode{std::nullopt} if the columns of \inlinecode{a} are linearly dependent to within \inlinecode{eps}. The matrix \inlinecode{a} must have at least as many rows as columns, and \inlinecode{b} must have one entry per row.
 \end{compactitem}
 
-Fitting any linear model reduces to this: one row per data point, one column per basis function. Solving the normal equations $A^TAx = A^Tb$ by the row reduction of section 6.5.2 gives the same answer but squares the condition number, losing roughly twice as many digits.
+Fitting any linear model reduces to this: one row per data point, one column per basis function. Solving the normal equations $A^TAx = A^Tb$ by the row reduction of section \secref{6.5.2} gives the same answer but squares the condition number, losing roughly twice as many digits.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -6588,7 +6623,7 @@ Fitting any linear model reduces to this: one row per data point, one column per
   \item $O(m \cdot n)$ auxiliary and $O(n)$ for the vector returned by \inlinecode{least\_squares()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cmath>
 #include <optional>
@@ -6698,7 +6733,7 @@ std::optional<std::vector<double>> least_squares(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cmath>
 using namespace std;
 
@@ -6740,6 +6775,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Characteristic Polynomial}
+\label{sec:6.5.6}
 Computes the characteristic polynomial of a square matrix over a prime field: the coefficients of $\det(xI - A)$, a monic degree-$n$ polynomial whose roots are the eigenvalues of $A$. Its constant term recovers the determinant (up to sign), its second-highest coefficient is the negated trace, and evaluating it at a scalar gives $\det(xI - A)$ for that $x$. It is the standard tool behind eigenvalue counting, matrix-power recurrences via Cayley-Hamilton, and problems that reduce to a determinant in an unknown.
 
 A direct expansion would cost a determinant per coefficient. Instead the matrix is first reduced to upper Hessenberg form, where every entry more than one place below the diagonal is zero. This reduction uses similarity transforms (a row operation paired with the inverse column operation), which leave the characteristic polynomial unchanged. The characteristic polynomial of a Hessenberg matrix then follows from a short recurrence over its leading principal submatrices, adding one row and column at a time, for an overall cost of $O(n^{3})$. The arithmetic is exact modulo a prime, since the Hessenberg reduction divides by pivots and is not numerically stable over the reals.
@@ -6752,7 +6788,7 @@ A direct expansion would cost a determinant per coefficient. Instead the matrix 
 
 \textbf{Space Complexity}: $O(n^{2})$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -6835,7 +6871,7 @@ std::vector<int64_t> characteristic_polynomial(std::vector<std::vector<int64_t>>
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -6851,6 +6887,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Eigenvalues (Jacobi)}
+\label{sec:6.5.7}
 An eigenvector of a square matrix is a direction the matrix does not rotate, only rescales, and the scale factor is its eigenvalue. For a real symmetric matrix, the spectral theorem guarantees that a full set of real eigenvalues exists and that eigenvectors for distinct eigenvalues are orthogonal, so the matrix is diagonalized by an orthogonal change of basis.
 
 The Jacobi eigenvalue algorithm builds that basis one rotation at a time. It repeatedly picks the largest off-diagonal entry and applies a rotation in the plane of that entry's row and column, choosing the angle that sets the entry to zero. A rotation is a similarity transform, so it preserves the eigenvalues, and it also preserves the sum of squares of all entries; since zeroing an entry removes its square from the off-diagonal total and moves it onto the diagonal, every sweep strictly reduces the off-diagonal weight. Earlier zeros are partially refilled by later rotations, but the total decays geometrically, and the matrix converges to a diagonal one whose entries are the eigenvalues. Accumulating the rotations gives the eigenvectors.
@@ -6859,13 +6896,13 @@ The Jacobi eigenvalue algorithm builds that basis one rotation at a time. It rep
   \item \inlinecode{jacobi\_eigen(a, eps = 1e-12, iterations = 100)} returns the pair (\inlinecode{values}, \inlinecode{vectors}) for a real symmetric $n$ by $n$ matrix \inlinecode{a}. The eigenvalues in \inlinecode{values} are sorted in decreasing order, and \inlinecode{vectors[i]} is a unit eigenvector for \inlinecode{values[i]}, so the eigenvectors are rows rather than columns. Iteration stops once every off-diagonal entry is smaller than \inlinecode{eps}. The matrix must be symmetric, which is not checked; an unsymmetric one silently produces nonsense.
 \end{compactitem}
 
-A general matrix instead needs the roots of the characteristic polynomial of section 6.5.6, found including complex ones by the Ehrlich-Aberth iteration of section 5.4.5, though accuracy degrades with degree since polynomial roots are far more sensitive to coefficients than eigenvalues are to the matrix. When only the dominant eigenvalue is wanted, power iteration finds it with no decomposition at all, by repeatedly multiplying a random vector and renormalizing.
+A general matrix instead needs the roots of the characteristic polynomial of section \secref{6.5.6}, found including complex ones by the Ehrlich-Aberth iteration of section \secref{5.4.5}, though accuracy degrades with degree since polynomial roots are far more sensitive to coefficients than eigenvalues are to the matrix. When only the dominant eigenvalue is wanted, power iteration finds it with no decomposition at all, by repeatedly multiplying a random vector and renormalizing.
 
 \textbf{Time Complexity}: $O(n^{3})$ per sweep and $O(n^{3} \log\left(1 / {\inlinecodemath{eps}}\right))$ per call in practice, where $n$ is the dimension of the matrix. Each rotation costs $O(n)$ and the search for the largest off-diagonal entry costs $O(n^{2})$.
 
 \textbf{Space Complexity}: $O(n^{2})$ auxiliary, and $O(n^{2})$ for the returned eigenvectors.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -6931,7 +6968,7 @@ std::pair<std::vector<double>, Matrix> jacobi_eigen(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cmath>
 using namespace std;
 
@@ -6968,6 +7005,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Sparse Matrix}
+\label{sec:6.5.8}
 Provides a sparse matrix type together with arithmetic and elimination routines. A sparse matrix stores only nonzero entries, which is useful when the matrix is large but most values are zero.
 
 The matrix keeps both row maps and column maps in sync: \inlinecode{row(i)} can iterate all nonzeros in row \inlinecode{i}, while \inlinecode{col(j)} can iterate all nonzeros in column \inlinecode{j}. That bidirectional storage is especially useful for sparse elimination or graph-like matrix operations, where both row updates and column pivot lookups are common.
@@ -7015,7 +7053,7 @@ The class treats \inlinecode{T\{\}} as additive zero and requires \inlinecode{va
   \item $O(c)$ auxiliary for \inlinecode{operator*}, where $c$ is the largest number of nonzeros in one result row.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <map>
@@ -7188,7 +7226,7 @@ The elimination routines require field-like arithmetic because they divide by pi
 
 \textbf{Space Complexity}: $O(z + m)$ auxiliary for elimination, in addition to the copied matrix used by \inlinecode{det()} and \inlinecode{sparse\_rank()} or the augmented matrix used by \inlinecode{solve\_system()}.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 template<typename T>
 int row_reduce(SparseMatrix<T> &a, int limit) {
   assert(0 <= limit && limit <= a.num_cols());
@@ -7324,7 +7362,7 @@ int solve_system(const SparseMatrix<T> &a, const std::vector<T> &b, std::vector<
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -7427,6 +7465,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Matrix-Tree Theorem}
+\label{sec:6.5.9}
 Kirchhoff's matrix-tree theorem counts the spanning trees of an undirected graph. Form the Laplacian matrix $L = D - A$, where $D$ is the diagonal matrix of degrees and $A$ is the adjacency matrix (with multiplicities for parallel edges). Every cofactor of $L$ is equal, and that common value is the number of spanning trees. Equivalently, delete any one row and the matching column from $L$ and take the determinant of what remains.
 
 The determinant is evaluated modulo a prime by Gaussian elimination, so the count is returned modulo \inlinecode{MOD}. Spanning-tree counts grow astronomically, so a modular count is the usual contest form; run the routine under a few different primes and combine with the Chinese remainder theorem to recover a large exact value. The same construction handles weighted graphs (sum edge weights into the Laplacian to get the weighted tree count) and, with the directed Laplacian and a fixed deleted row, counts rooted spanning arborescences.
@@ -7439,7 +7478,7 @@ The determinant is evaluated modulo a prime by Gaussian elimination, so the coun
 
 \textbf{Space Complexity}: $O(n^{2})$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -7517,7 +7556,7 @@ int64_t count_spanning_trees(int n, const std::vector<std::pair<int, int>> &edge
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -7549,6 +7588,7 @@ int main() {
 \setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Number Theoretic Transform}
+\label{sec:6.6.1}
 The number theoretic transform (NTT) is the discrete Fourier transform carried out in modular arithmetic instead of over the complex numbers. It multiplies two polynomials (equivalently, computes the convolution of two sequences) modulo a prime in $O(n \log n)$ time, with no floating point error. The modulus must be of the form $c \cdot 2^k + 1$ so that the ring of integers modulo it contains a $2^k$-th root of unity, which limits transform sizes to powers of two up to $2^k$. The code below uses the common prime $998244353 = 119 \cdot 2^{23} + 1$ with primitive root $3$, supporting transforms of any power-of-two length up to $2^{23}$.
 
 The transform replaces a coefficient vector with its evaluations at the powers of a root of unity; pointwise multiplying two such evaluation vectors and transforming back gives their convolution. This is the same divide-and-conquer butterfly as the fast Fourier transform, with the root of unity and all arithmetic taken modulo the prime.
@@ -7572,7 +7612,7 @@ The transform replaces a coefficient vector with its evaluations at the powers o
   \item $O(n)$ auxiliary for \inlinecode{convolve()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -7664,7 +7704,7 @@ std::vector<int64_t> convolve(std::vector<int64_t> a, std::vector<int64_t> b) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -7681,6 +7721,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Fast Fourier Transform}
+\label{sec:6.6.2}
 The fast Fourier transform (FFT) multiplies two polynomials, or equivalently convolves two sequences, in $O(n \log n)$ time by evaluating them at the complex roots of unity. Like the number theoretic transform of the previous section, it replaces a coefficient vector with its evaluations at the powers of a root of unity, multiplies two such evaluation vectors pointwise, and transforms back. The difference is the arithmetic: the FFT works over the complex numbers with $e^{2\pi i / n}$ as the root of unity, so it convolves arbitrary real coefficients rather than residues modulo a prime.
 
 The trade-off is precision. Complex arithmetic in double precision accumulates rounding error, so the result is recovered by rounding each output to the nearest integer; this is reliable as long as the true coefficients stay well within the roughly 15 significant decimal digits a \inlinecode{double} can hold. When exact results modulo a prime are required, or coefficients are large, prefer the number theoretic transform; use the FFT for real-valued convolution or big-integer multiplication.
@@ -7706,7 +7747,7 @@ Overflow warning: The exact coefficients and the direct branch's intermediate pr
   \item $O(n)$ auxiliary for \inlinecode{convolve()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -7788,7 +7829,7 @@ std::vector<int64_t> convolve(const std::vector<int64_t> &a, const std::vector<i
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 int main() {
@@ -7804,6 +7845,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Polynomial Operations}
+\label{sec:6.6.3}
 Polynomial operations treat a vector \inlinecode{a} as coefficients of $a_0 + a_1 x + \dots + a_{n-1} x^{n-1}$ over a field. For formal power series operations, vectors represent coefficients modulo $x^n$; no notion of analytic convergence is involved. This section implements the core algebra needed for formal power series and polynomial division modulo the prime $998244353$. Multiplication uses the number theoretic transform, so inverse and division are fast enough for large polynomials while still keeping the API close to the underlying coefficient vectors.
 
 The code aliases one modular field element as \inlinecode{Coeff} and one coefficient vector as \inlinecode{Poly}. Input coefficients must lie in $[0, {\inlinecodemath{MOD}})$.
@@ -7817,7 +7859,7 @@ The code aliases one modular field element as \inlinecode{Coeff} and one coeffic
   \item \inlinecode{antiderivative(a)} returns the formal antiderivative of \inlinecode{a} with constant term zero.
 \end{compactitem}
 
-For formal power series, the inverse modulo $x^n$ is a series $b$ satisfying $a \cdot b \equiv 1 \pmod{x^n}$. Series division uses this inverse, and logarithm follows from $(\log a)' = a'/a$. Exponential and square root use Newton iteration, doubling the number of correct coefficients each round. Power factors $a = x^t c b$, where $b(0) = 1$, and applies $a^k = x^{tk} c^k \exp(k \log b)$. To extend the normalized square-root implementation, factor out the lowest power of $x$, normalize its constant term, then multiply back its modular square root (see 6.3.5); an odd lowest nonzero power has no square root.
+For formal power series, the inverse modulo $x^n$ is a series $b$ satisfying $a \cdot b \equiv 1 \pmod{x^n}$. Series division uses this inverse, and logarithm follows from $(\log a)' = a'/a$. Exponential and square root use Newton iteration, doubling the number of correct coefficients each round. Power factors $a = x^t c b$, where $b(0) = 1$, and applies $a^k = x^{tk} c^k \exp(k \log b)$. To extend the normalized square-root implementation, factor out the lowest power of $x$, normalize its constant term, then multiply back its modular square root (see \secref{6.3.5}); an odd lowest nonzero power has no square root.
 
 \begin{compactitem}
   \item \inlinecode{inverse(a, n)} returns the first \inlinecode{n} coefficients of \inlinecode{1 / a}, requiring \inlinecode{a[0]} to be nonzero.
@@ -7848,7 +7890,7 @@ Euclidean polynomial division uses the reversal trick: reverse both polynomials,
 
 \textbf{Space Complexity}: $O(1)$ auxiliary per call to \inlinecode{eval()} and $O(n)$ auxiliary for all other operations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -8156,7 +8198,7 @@ Poly mod(const Poly &a, const Poly &b) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -8220,6 +8262,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Polynomial Interpolation}
+\label{sec:6.6.4}
 Recovers the unique polynomial of degree less than $n$ that passes through $n$ given points, working modulo a prime. The $x$ coordinates must be distinct; the $y$ coordinates may be anything. Two operations are provided: reconstructing the full coefficient vector, and evaluating the interpolating polynomial at a single point without ever forming the coefficients.
 
 Coefficient recovery uses Newton's divided differences. It first replaces the sample values by their successive divided differences in place, then expands the Newton basis $1$, $(x - x_0)$, $(x - x_0)(x - x_1)$, $\ldots$ into ordinary coefficients by multiplying through one factor at a time. Point evaluation instead applies the Lagrange formula directly, summing each sample weighted by the product of $(t - x_j) / (x_k - x_j)$ over the other nodes. Coefficient recovery performs $O(n^{2})$ modular inverses, while point evaluation performs $n$.
@@ -8233,7 +8276,7 @@ Coefficient recovery uses Newton's divided differences. It first replaces the sa
 
 \textbf{Space Complexity}: $O(n)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <vector>
@@ -8305,7 +8348,7 @@ int64_t interpolate_at(const std::vector<int64_t> &x, const std::vector<int64_t>
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -8327,6 +8370,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Linear Recurrence (Berlekamp-Massey)}
+\label{sec:6.6.5}
 The Berlekamp-Massey algorithm finds the shortest linear recurrence that generates a given sequence over a field. Given the first terms of a sequence taken modulo a prime, it returns coefficients $\Lambda_0, \dots, \Lambda_{L-1}$ of the minimal recurrence $s_i = \Lambda_0 \, s_{i-1} + \Lambda_1 \, s_{i-2} + \dots + \Lambda_{L-1} \, s_{i-L} \pmod{p}$, holding for every $i \geq L$. It scans the sequence once, maintaining a current candidate recurrence and correcting it whenever a term fails to match the prediction, using the last position where a correction was needed. The order $L$ never decreases, and $2L$ terms suffice to determine a recurrence of order $L$. This is the standard tool for guessing a linear recurrence from sampled values, after which the sequence can be extended or its $n$-th term found by fast methods.
 
 An order-$L$ recurrence generally needs at least $2L$ terms to be determined, so the result is most trustworthy when \inlinecode{s} is comfortably longer than twice the returned length. If the returned $L$ is close to $n / 2$, the sequence is under-determined and the recurrence may be a spurious overfit.
@@ -8341,7 +8385,7 @@ The code operates modulo the prime $998244353$; change \inlinecode{MOD} to use a
 
 \textbf{Space Complexity}: $O(n)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cstdint>
 #include <vector>
 
@@ -8399,7 +8443,7 @@ std::vector<int64_t> berlekamp_massey(const std::vector<int64_t> &s) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -8421,11 +8465,12 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Linear Recurrence (Kitamasa)}
+\label{sec:6.6.6}
 Computes the $n$-th term of a linear recurrence modulo a prime in logarithmic time. Given a recurrence of order $L$, $s_i = c_0 s_{i-1} + c_1 s_{i-2} + \ldots + c_{L-1} s_{i-L}$, together with the first $L$ terms, the naive approach unrolls $n$ steps. Kitamasa's method instead jumps directly to index $n$ by working with the characteristic polynomial. The coefficient layout matches the output of Berlekamp-Massey, so the two compose directly: guess the recurrence from sampled values, then jump to any index.
 
 The key identity is that the $n$-th term is a fixed linear combination of the first $L$ terms, with weights given by $x^n$ reduced modulo the characteristic polynomial $f(x) = x^L - c_0 x^{L-1} - ... - c_{L-1}$. The reduction $x^L = c_0 x^{L-1} + ... + c_{L-1}$ lets any product of two degree-$<L$ polynomials be folded back to degree $<L$, so $x^n \mod f$ is obtained by binary exponentiation, and the $n$-th term is the dot product of its coefficients with the initial terms.
 
-Each doubling step is one polynomial multiplication followed by one remainder, both taken from section 6.6.3, where the multiplication is a number theoretic transform and the remainder is a Newton-iterated division. Squaring and reducing by hand instead costs $O(L^{2})$ per step, which is simpler to write but asymptotically worse; \inlinecode{MOD} is inherited from that section and must stay transform-friendly.
+Each doubling step is one polynomial multiplication followed by one remainder, both taken from section \secref{6.6.3}, where the multiplication is a number theoretic transform and the remainder is a Newton-iterated division. Squaring and reducing by hand instead costs $O(L^{2})$ per step, which is simpler to write but asymptotically worse; \inlinecode{MOD} is inherited from that section and must stay transform-friendly.
 
 \begin{compactitem}
   \item \inlinecode{kth\_term(rec, init, n)} returns $s_n$ modulo \inlinecode{MOD}, where \inlinecode{rec} holds the coefficients $c_0, ..., c_{L-1}$ and \inlinecode{init} holds at least $L$ initial terms $s_0, ..., s_{L-1}$. Indexing is 0-based and \inlinecode{n} $\geq 0$. Values are reduced modulo \inlinecode{MOD} internally.
@@ -8435,13 +8480,14 @@ Each doubling step is one polynomial multiplication followed by one remainder, b
 
 \textbf{Space Complexity}: $O(L)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <vector>
 
 #define main polynomial_example
 #include "6.6.3_Polynomial_Operations.cpp"
+#undef main
 
 int64_t kth_term(const std::vector<int64_t> &rec, const std::vector<int64_t> &init, int64_t n) {
   assert(n >= 0 && init.size() >= rec.size());
@@ -8474,7 +8520,7 @@ int64_t kth_term(const std::vector<int64_t> &rec, const std::vector<int64_t> &in
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 int main() {
@@ -8504,11 +8550,12 @@ int main() {
 \setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Probability Distributions}
+\label{sec:6.7.1}
 The following functions evaluate the standard probability distributions. For a discrete distribution, the probability mass function gives the probability of an exact outcome and the cumulative distribution function gives the probability of that outcome or any smaller one. For a continuous distribution, the density integrates to those probabilities rather than being one, so only the cumulative function is a probability. Counts must be nonnegative, and every probability argument must lie in $[0, 1]$.
 
 Every mass function here is evaluated in logarithms and exponentiated once at the end. Computing $\binom{n}{k} p^k (1 - p)^{n-k}$ directly overflows the binomial coefficient and underflows the powers long before the product itself becomes small, whereas the logarithms stay near the magnitude of the answer. \inlinecode{std::lgamma} supplies $\ln n!$ as $\ln \Gamma(n + 1)$ without forming $n!$, so the factorials never exist, and outcomes are ordered so that no cancellation occurs.
 
-Each cumulative function sums its mass function term by term, which keeps the code short and the error small but costs one term per outcome. For a single tail probability at a very large count the normal approximation with a continuity correction is the usual substitute, while \inlinecode{quantile()} inverts any of these by the bisection of section 5.1.1.
+Each cumulative function sums its mass function term by term, which keeps the code short and the error small but costs one term per outcome. For a single tail probability at a very large count the normal approximation with a continuity correction is the usual substitute, while \inlinecode{quantile()} inverts any of these by the bisection of section \secref{5.1.1}.
 
 \begin{compactitem}
   \item \inlinecode{log\_factorial(n)} returns $\ln(n!)$, and \inlinecode{log\_choose(n, k)} returns $\ln \binom{n}{k}$, which is $-\infty$ when \inlinecode{k} lies outside $[0, {\inlinecodemath{n}}]$.
@@ -8537,7 +8584,7 @@ Overflow warning: \inlinecode{log\_choose()} is exact only while \inlinecode{std
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -8667,7 +8714,7 @@ double quantile(Cdf cdf, double p, double lo, double hi, int iterations = 100) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -8708,6 +8755,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Expected Value DP}
+\label{sec:6.7.2}
 A random process that moves between states accumulates an expected cost that satisfies one linear equation per state. If leaving state $u$ costs $c_u$ and sends the process to state $v$ with probability $p_{uv}$, then linearity of expectation gives $E[u] = c_u + \sum_v p_{uv} E[v]$, where the expected cost of a state is the immediate cost plus the average of the expected costs of its successors. Counting steps is the special case $c_u = 1$ for every non-absorbing state, and an absorbing state is one with no outgoing transitions, so that $E = c$ there.
 
 When the transition graph is acyclic, the equations can be evaluated instead of solved: process the states in reverse topological order and every successor on the right-hand side is already known. This is ordinary backward induction, and it is the reason expected-value problems are usually solved from the goal backwards rather than from the start forwards.
@@ -8718,7 +8766,7 @@ A self-loop is the one cycle this method still handles. If the process stays in 
   \item \inlinecode{expected\_cost(trans, cost)} returns a vector \inlinecode{e} such that \inlinecode{e[u]} is the expected total cost accumulated from state \inlinecode{u} until the process reaches a state with no outgoing transitions. States are the indices of \inlinecode{trans}, each entry \inlinecode{trans[u]} lists the outgoing transitions of \inlinecode{u} as pairs of (\inlinecode{next\_state}, \inlinecode{probability}), and \inlinecode{cost[u]} is the cost charged on leaving \inlinecode{u}. Transition probabilities out of a state must sum to at most $1$, with any missing probability treated as ending the process.
 \end{compactitem}
 
-Aside from self-loops the transition graph must be acyclic, since a genuine cycle leaves the equations mutually dependent and they must then be solved as a linear system; two states that reach each other call for the absorbing Markov chains of section 6.7.3 instead.
+Aside from self-loops the transition graph must be acyclic, since a genuine cycle leaves the equations mutually dependent and they must then be solved as a linear system; two states that reach each other call for the absorbing Markov chains of section \secref{6.7.3} instead.
 
 \textbf{Time Complexity}: $O(n + m)$ per call, where $n$ is the number of states and $m$ is the total number of transitions.
 
@@ -8729,7 +8777,7 @@ Aside from self-loops the transition graph must be acyclic, since a genuine cycl
   \item $O(n)$ for the returned vector.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <utility>
 #include <vector>
@@ -8784,7 +8832,7 @@ std::vector<double> expected_cost(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cmath>
 using namespace std;
 
@@ -8831,6 +8879,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Absorbing Markov Chains}
+\label{sec:6.7.3}
 An absorbing Markov chain splits its states into absorbing states, which are never left once entered, and transient states, which are left forever with probability $1$. Ordering the transient states first splits the transition matrix into four blocks: $Q$ holds the probabilities between transient states, $R$ holds the probabilities from transient states into absorbing ones, and the two remaining blocks are a zero matrix and an identity matrix, since an absorbing state only ever moves to itself.
 
 The expected number of visits to transient state $j$ starting from transient state $i$ is the entry $(i, j)$ of $I + Q + Q^2 + \dots$, since the entry $(i, j)$ of $Q^k$ is the probability of being at $j$ after exactly $k$ steps. Because absorption is certain, the powers of $Q$ tend to zero and the series converges to the fundamental matrix $N = (I - Q)^{-1}$. Every other quantity follows from $N$: summing a row counts the expected visits to all transient states, which is the expected number of steps before absorption, and multiplying by $R$ takes one final step into an absorbing state.
@@ -8838,10 +8887,10 @@ The expected number of visits to transient state $j$ starting from transient sta
 \begin{compactitem}
   \item \inlinecode{fundamental\_matrix(q)} returns $N = (I - {\inlinecodemath{q}})^{-1}$ for the transient-to-transient matrix \inlinecode{q}, as a matrix whose entry in row $i$ and column $j$ is the expected number of visits to transient state $j$ when starting at transient state $i$, counting the starting visit itself.
   \item \inlinecode{absorption\_steps(q)} returns a vector $t$ where $t_i$ is the expected number of steps taken from transient state $i$ until absorption.
-  \item \inlinecode{absorption\_probabilities(q, r)} returns a matrix $B$ where $B_{i,k}$ is the probability that a chain starting at transient state $i$ is eventually absorbed at absorbing state $k$, given the transient-to-absorbing matrix $R$.
+  \item \inlinecode{absorption\_probabilities(q, r)} returns a matrix $B$ where $B_{i,k}$ is the probability that a chain starting at transient state $i$ is eventually absorbed at absorbing state $k$, given the transient-to-absorbing matrix \inlinecode{r}.
 \end{compactitem}
 
-Every transient state must reach an absorbing one, which is exactly what makes $I - Q$ invertible; a state that cannot is not transient but part of a closed group to be modeled as one absorbing state, so the zero pivot is asserted rather than reported. Unlike the backward induction of section 6.7.2, cycles are no obstacle here, since the system is solved rather than evaluated.
+Every transient state must reach an absorbing one, which is exactly what makes $I - Q$ invertible; a state that cannot is not transient but part of a closed group to be modeled as one absorbing state, so the zero pivot is asserted rather than reported. Unlike the backward induction of section \secref{6.7.2}, cycles are no obstacle here, since the system is solved rather than evaluated.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -8857,7 +8906,7 @@ Every transient state must reach an absorbing one, which is exactly what makes $
   \item $O(n^{2})$ for the returned matrix from \inlinecode{fundamental\_matrix()}, $O(n)$ for the returned vector from \inlinecode{absorption\_steps()}, and $O(n \cdot k)$ for the returned matrix from \inlinecode{absorption\_probabilities()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cmath>
 #include <vector>
@@ -8936,7 +8985,7 @@ std::vector<std::vector<double>> absorption_probabilities(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cmath>
 using namespace std;
 
@@ -8971,6 +9020,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Stationary Distribution}
+\label{sec:6.7.4}
 A Markov chain with no absorbing states never settles on a single state, but the fraction of time it spends in each state does settle. That limit is the stationary distribution: the row vector $\pi$ with $\pi P = \pi$ and $\sum_i \pi_i = 1$, which is the one distribution left unchanged by a step of the chain. It exists and is unique whenever the chain is irreducible, meaning every state can reach every other, and it is the limit of the state distribution from any starting point once the chain is also aperiodic.
 
 The defining equations are one short of determining $\pi$. Each column of $\pi P = \pi$ says that the probability flowing into a state equals the probability flowing out, and those $n$ equations sum to the trivial identity $1 = 1$, leaving the system rank $n - 1$ and any scalar multiple of a solution also a solution. Substituting the normalization $\sum_i \pi_i = 1$ for one of them pins down the scale and makes the system uniquely solvable by ordinary elimination.
@@ -8979,13 +9029,13 @@ The defining equations are one short of determining $\pi$. Each column of $\pi P
   \item \inlinecode{stationary\_distribution(p, eps = 1e-10)} returns the stationary distribution of the $n$ by $n$ row-stochastic transition matrix \inlinecode{p}, where \inlinecode{p[i][j]} is the probability of stepping from state \inlinecode{i} to state \inlinecode{j}. It returns \inlinecode{std::nullopt} when the system is singular to within \inlinecode{eps}, which happens exactly when the chain is reducible and therefore has no unique stationary distribution.
 \end{compactitem}
 
-Two quantities follow at once: the expected number of steps to return to state $i$ is $1/\pi_i$, and on an undirected graph walked by a uniformly random incident edge, $\pi_v$ is proportional to the degree of $v$, which is why such a walk is uniform in the limit on a regular graph. Where the absorbing chains of section 6.7.3 ask what happens before the process stops, this asks what happens when it never does.
+Two quantities follow at once: the expected number of steps to return to state $i$ is $1/\pi_i$, and on an undirected graph walked by a uniformly random incident edge, $\pi_v$ is proportional to the degree of $v$, which is why such a walk is uniform in the limit on a regular graph. Where the absorbing chains of section \secref{6.7.3} ask what happens before the process stops, this asks what happens when it never does.
 
 \textbf{Time Complexity}: $O(n^{3})$ per call, where $n$ is the number of states.
 
 \textbf{Space Complexity}: $O(n^{2})$ auxiliary and $O(n)$ for the returned distribution.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cmath>
 #include <optional>
@@ -9042,7 +9092,7 @@ std::optional<std::vector<double>> stationary_distribution(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cmath>
 using namespace std;
 
@@ -9077,11 +9127,12 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Statistical Learning}
+\label{sec:6.7.5}
 The following routines fit a model to observed data and use it to describe or predict unobserved data. Each takes its input as a \inlinecode{Points} matrix whose rows are samples and whose columns are features, so a row is one observation of the same measurements taken in the same order. Supervised routines additionally take a \inlinecode{labels} vector, parallel to the rows, holding each sample's class as an integer in $[0, {\inlinecodemath{classes}})$.
 
 Features measured on different scales distort every distance here, so call \inlinecode{standardize()} before \inlinecode{kmeans()}, \inlinecode{knn\_classify()}, or \inlinecode{logistic\_regression()} and apply the returned pair to later queries. Naive Bayes is exempt, since it fits a separate variance per feature. None of these choose \inlinecode{k} or \inlinecode{l2} for you: hold out part of the data and keep the value predicting it best.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -9112,7 +9163,7 @@ Standardizing subtracts each column's mean and divides by its standard deviation
 
 \textbf{Space Complexity}: $O(d)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 std::vector<double> column_mean(const Points &points) {
   int n = static_cast<int>(points.size()), d = static_cast<int>(points[0].size());
   std::vector<double> res(d);
@@ -9172,7 +9223,7 @@ Choosing those starting centroids is called seeding, and $k$-means++ is the stan
 
 \textbf{Space Complexity}: $O(n + k \cdot d)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 std::pair<Points, std::vector<int>> kmeans(
     const Points &points, int k, std::mt19937 &rng, int iterations = 100
 ) {
@@ -9232,7 +9283,7 @@ std::pair<Points, std::vector<int>> kmeans(
 \end{lstlisting}
 $k$-nearest neighbors classifies a query by letting the $k$ nearest training rows vote, which fits no model at all: the training data is the model, and all the work happens at query time. Small $k$ follows the data closely and is swayed by noise, while large $k$ smooths across genuine boundaries, so $k$ trades variance against bias. Averaging the neighbors' values rather than counting their votes turns the same routine into regression.
 
-Selecting the $k$ nearest with \inlinecode{std::nth\_element} costs linear time rather than the $O(n \log n)$ of a full sort, since the neighbors' relative order is irrelevant to the vote. Scanning every row makes each query linear in the data, which the k-d tree of section 2.6.5 improves to logarithmic on low-dimensional data; above roughly ten features the two converge and the scan below is preferable.
+Selecting the $k$ nearest with \inlinecode{std::nth\_element} costs linear time rather than the $O(n \log n)$ of a full sort, since the neighbors' relative order is irrelevant to the vote. Scanning every row makes each query linear in the data, which the k-d tree of section \secref{2.6.5} improves to logarithmic on low-dimensional data; above roughly ten features the two converge and the scan below is preferable.
 
 \begin{compactitem}
   \item \inlinecode{knn\_classify(points, labels, query, k)} returns the majority label among the \inlinecode{k} rows nearest to \inlinecode{query}, breaking a tie toward the smaller label. \inlinecode{k} must lie in $[1, n]$ for \inlinecode{n} rows.
@@ -9242,7 +9293,7 @@ Selecting the $k$ nearest with \inlinecode{std::nth\_element} costs linear time 
 
 \textbf{Space Complexity}: $O(n)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 int knn_classify(
     const Points &points, const std::vector<int> &labels, const std::vector<double> &query, int k
 ) {
@@ -9280,7 +9331,7 @@ The Gaussian variant below models each feature within each class by a normal dis
 
 \textbf{Space Complexity}: $O(c \cdot d)$ for storage.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 class NaiveBayes {
   std::vector<double> log_prior;
   Points mean, var;
@@ -9350,7 +9401,7 @@ class NaiveBayes {
 \end{lstlisting}
 Logistic regression models the probability of class $1$ as $\sigma(w \cdot x)$ for the logistic function $\sigma(z) = 1/(1 + e^{-z})$, which maps any real score into $(0, 1)$. Fitting minimizes the average negative log-likelihood, a convex function whose gradient is $X^{\top}(\sigma(Xw) - y)/n$: each row pushes the weights by its own features, scaled by how wrong the current prediction is on it. Convexity makes every local minimum global, so plain gradient descent suffices.
 
-Unlike the least squares of section 6.5.5 there is no closed form, and on perfectly separable data the weights diverge as every predicted probability is driven to $0$ or $1$. The \inlinecode{l2} penalty adds $\lambda\|w\|^2$ to keep them finite, excluding the intercept so that shifting all labels does not distort it. Section 5.2.4 supplies the adaptive steps worth substituting when convergence is slow.
+Unlike the least squares of section \secref{6.5.5} there is no closed form, and on perfectly separable data the weights diverge as every predicted probability is driven to $0$ or $1$. The \inlinecode{l2} penalty adds $\lambda\|w\|^2$ to keep them finite, excluding the intercept so that shifting all labels does not distort it. Section \secref{5.2.4} supplies the adaptive steps worth substituting when convergence is slow.
 
 \begin{compactitem}
   \item \inlinecode{logistic\_predict(w, x)} returns the probability that sample \inlinecode{x} belongs to class $1$ under a weight vector \inlinecode{w} whose index $0$ is the intercept.
@@ -9361,7 +9412,7 @@ Unlike the least squares of section 6.5.5 there is no closed form, and on perfec
 
 \textbf{Space Complexity}: $O(d)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 double sigmoid(double z) {
   return z >= 0 ? 1 / (1 + std::exp(-z)) : std::exp(z) / (1 + std::exp(z));
 }
@@ -9399,7 +9450,7 @@ std::vector<double> logistic_regression(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -9445,6 +9496,7 @@ int main() {
 \setcounter{section}{8}
 \setcounter{subsection}{0}
 \subsection{Nim}
+\label{sec:6.8.1}
 Solves normal-play nim and related impartial games where each position is the disjoint sum of independent piles. In normal play, the player who makes the last move wins. A nim position is losing exactly when the XOR of all pile sizes is $0$.
 
 This is the base case of the Sprague-Grundy theorem: every finite impartial game position is equivalent to a Nim pile of size equal to its Grundy number, and sums of games combine by XOR.
@@ -9459,7 +9511,7 @@ This is the base case of the Sprague-Grundy theorem: every finite impartial game
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <utility>
 #include <vector>
 
@@ -9490,7 +9542,7 @@ std::pair<int, int> winning_move(const std::vector<int> &piles) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -9511,6 +9563,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Nim Product}
+\label{sec:6.8.2}
 Nimbers are the values of impartial games, added by XOR. Under the additional operation of nim multiplication they form a field: the nonnegative integers below $2^{2^k}$ are closed under both operations, with XOR as addition and nim product as multiplication. Writing $\otimes$ for the nim product and $\oplus$ for XOR, nim multiplication is commutative, associative, and distributive over $\oplus$, and is defined recursively by $a \otimes b = \operatorname{mex}\{(a' \otimes b) \oplus (a \otimes b') \oplus (a' \otimes b') : 0 \le a' < a, \, 0 \le b' < b\}$. Its main use is multiplying the Grundy values of independent ``coin-turning'' games whose move sets combine as a product, such as two-dimensional turning games built from one-dimensional ones.
 
 Rather than evaluate the recursive definition directly, this implementation precomputes the nim product of every pair of single bits $2^i \otimes 2^j$ for $i, j < 64$. Each such product follows from the Fermat-like rule $2^{2^k} \otimes 2^{2^k} = 2^{2^k} \oplus 2^{2^k - 1}$ and the fact that distinct Fermat powers multiply like ordinary powers of two. A full product then XORs together the bit-pair products selected by the set bits of the operands. Because every 64-bit value lies in the field of size $2^{64}$, the operation is total on \inlinecode{uint64\_t} and the nonzero values have multiplicative inverses.
@@ -9530,7 +9583,7 @@ Rather than evaluate the recursive definition directly, this implementation prec
 
 \textbf{Space Complexity}: $O(1)$ for a fixed 64 by 64 table of 64-bit products.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 
@@ -9585,7 +9638,7 @@ uint64_t nim_inverse(uint64_t b) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -9614,6 +9667,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Sprague-Grundy Theorem}
+\label{sec:6.8.3}
 Computes Grundy numbers for finite impartial games. The Grundy number of a game position is the minimum excluded nonnegative integer (MEX) of the Grundy numbers reachable in one move. A position is losing exactly when its Grundy number is $0$.
 
 For a sum of independent impartial games, the combined Grundy number is the XOR of the component Grundy numbers. This is the Sprague-Grundy theorem.
@@ -9637,7 +9691,7 @@ For a sum of independent impartial games, the combined Grundy number is the XOR 
   \item $O(1)$ auxiliary for \inlinecode{sum\_grundy(grundies)}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <vector>
 
 int mex(const std::vector<int> &values) {
@@ -9679,7 +9733,7 @@ int sum_grundy(const std::vector<int> &grundies) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -9696,6 +9750,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Grundy Numbers on DAG}
+\label{sec:6.8.4}
 Computes Grundy numbers for impartial games whose positions form a directed acyclic graph. Each node is a game position, and each outgoing edge is a legal move. Terminal nodes have Grundy number $0$; all other nodes take the MEX of their successors' Grundy numbers.
 
 The implementation uses memoized DFS. It assumes the graph is acyclic; if cycles are present, the usual finite impartial-game Grundy recurrence is not directly valid without additional analysis.
@@ -9708,12 +9763,12 @@ The implementation uses memoized DFS. It assumes the graph is acyclic; if cycles
 
 \textbf{Space Complexity}: $O(d)$ auxiliary stack space and $O(n + m)$ auxiliary heap space, where $d$ is DFS depth.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <vector>
 
 std::vector<int> grundy_on_dag(const std::vector<std::vector<int>> &g) {
   std::vector<int> memo(g.size(), -1);
-  auto dfs = [&](auto &&dfs, int u) -> void {
+  auto dfs = [&](auto &&dfs, int u) {
     if (memo[u] != -1) {
       return;
     }
@@ -9739,7 +9794,7 @@ std::vector<int> grundy_on_dag(const std::vector<std::vector<int>> &g) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -9751,6 +9806,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Minimax and Alpha-Beta Pruning}
+\label{sec:6.8.5}
 Searches a finite two-player, zero-sum, perfect-information game tree using minimax and alpha-beta pruning. Minimax assumes both players play optimally: the maximizing player chooses the child with largest value, and the minimizing player chooses the child with smallest value.
 
 Alpha-beta pruning computes the same value as minimax, but avoids exploring branches that cannot affect the final answer. It is most effective when good moves are searched first.
@@ -9767,7 +9823,7 @@ The example game is ``take $1$ or $2$ stones'': starting with \inlinecode{stones
 
 \textbf{Space Complexity}: $O(d)$ auxiliary recursion stack space.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 
 int minimax(int stones, bool maximizing) {
@@ -9817,7 +9873,7 @@ int best_take(int stones) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 int main() {

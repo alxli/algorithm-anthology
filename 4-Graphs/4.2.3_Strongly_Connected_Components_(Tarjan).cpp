@@ -9,13 +9,13 @@ is popped off the stack in one piece.
 
 - `TarjanSCC(n = 0)` constructs a directed graph of `n` nodes numbered $[0, `n`)$.
 - `add_edge(u, v)` adds the directed edge from `u` to `v`.
-- `build_scc()` computes the strongly connected components.
-- `components()` returns the strongly connected components from the last `build_scc()` call.
-- `component_id(v)` returns the component ID containing node `v`. Component IDs are in reverse
+- `build_sccs()` computes the strongly connected components.
+- `sccs()` returns the strongly connected components from the last `build_sccs()` call.
+- `comp_id(v)` returns the component ID containing node `v`. Component IDs are in reverse
   topological order: for every edge from component $a$ to a different component $b$, $a > b$.
 
 Time Complexity:
-- O(max(n, m)) per call to `build_scc()`, where $n$ is the number of nodes and $m$ is the number of
+- O(max(n, m)) per call to `build_sccs()`, where $n$ is the number of nodes and $m$ is the number of
   edges.
 
 Space Complexity:
@@ -70,7 +70,7 @@ class TarjanSCC {
 
   void add_edge(int u, int v) { adj[u].push_back(v); }
 
-  void build_scc() {
+  void build_sccs() {
     int n = static_cast<int>(adj.size());
     scc.clear();
     component.assign(n, -1);
@@ -85,8 +85,8 @@ class TarjanSCC {
     }
   }
 
-  const std::vector<std::vector<int>> &components() const { return scc; }
-  int component_id(int v) const { return component[v]; }
+  const std::vector<std::vector<int>> &sccs() const { return scc; }
+  int comp_id(int v) const { return component[v]; }
 };
 
 /*** Example Usage ***/
@@ -116,19 +116,19 @@ int main() {
   g.add_edge(6, 5);
   g.add_edge(7, 3);
   g.add_edge(7, 6);
-  g.build_scc();
+  g.build_sccs();
   // SCC condensation DAG:
   // {0,1,4} -> {2,3,7} -> {5,6}
   //     \-------------------^
-  vector<vector<int>> components = g.components();
-  for (auto &component : components) {
-    sort(component.begin(), component.end());
+  vector<vector<int>> sccs = g.sccs();
+  for (auto &scc : sccs) {
+    sort(scc.begin(), scc.end());
   }
-  sort(components.begin(), components.end());
-  assert((components == vector<vector<int>>{{0, 1, 4}, {2, 3, 7}, {5, 6}}));
-  assert(g.component_id(0) == g.component_id(1) && g.component_id(1) == g.component_id(4));
-  assert(g.component_id(2) == g.component_id(3) && g.component_id(3) == g.component_id(7));
-  assert(g.component_id(5) == g.component_id(6));
-  assert(g.component_id(0) != g.component_id(2) && g.component_id(2) != g.component_id(5));
+  sort(sccs.begin(), sccs.end());
+  assert((sccs == vector<vector<int>>{{0, 1, 4}, {2, 3, 7}, {5, 6}}));
+  assert(g.comp_id(0) == g.comp_id(1) && g.comp_id(1) == g.comp_id(4));
+  assert(g.comp_id(2) == g.comp_id(3) && g.comp_id(3) == g.comp_id(7));
+  assert(g.comp_id(5) == g.comp_id(6));
+  assert(g.comp_id(0) != g.comp_id(2) && g.comp_id(2) != g.comp_id(5));
   return 0;
 }

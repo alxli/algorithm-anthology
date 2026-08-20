@@ -133,7 +133,7 @@ template<typename T>
 std::vector<std::vector<T>> root_to_leaf_paths(TreeNode<T> *root) {
   std::vector<std::vector<T>> res;
   std::vector<T> path;
-  auto rec = [&](auto &&rec, TreeNode<T> *node) -> void {
+  auto rec = [&](auto &&rec, TreeNode<T> *node) {
     if (node == nullptr) {
       return;
     }
@@ -214,7 +214,7 @@ template<typename T>
 int64_t count_paths_with_sum(TreeNode<T> *root, const T &target) {
   std::map<T, int> seen{{T{}, 1}};  // The empty prefix, so paths starting at the root are counted.
   int64_t res = 0;
-  auto rec = [&](auto &&rec, TreeNode<T> *node, T prefix) -> void {
+  auto rec = [&](auto &&rec, TreeNode<T> *node, T prefix) {
     if (node == nullptr) {
       return;
     }

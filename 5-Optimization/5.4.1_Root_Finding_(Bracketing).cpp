@@ -11,10 +11,10 @@ sufficient, since the search space will be reduced to $2^{-100}$ (roughly $10^{-
 original size.
 
 - `bisection_root(f, a, b, iterations = 100)` returns a root in an interval $[`a`, `b`]$ for a
-  continuous function $f$ where either endpoint is a root or the endpoint values have opposite
+  continuous function `f` where either endpoint is a root or the endpoint values have opposite
   signs, using the bisection method.
 - `falsi_illinois_root(f, a, b, iterations = 100)` returns a root in an interval $[`a`, `b`]$ for a
-  continuous function $f$ under the same endpoint conditions, using the Illinois algorithm variant
+  continuous function `f` under the same endpoint conditions, using the Illinois algorithm variant
   of the false position (a.k.a. regula falsi) method.
 - `brent_root(f, a, b, eps = 1e-15, iterations = 100)` returns a root under the same endpoint
   conditions using Brent's method, stopping early once the bracket is narrower than `eps`.

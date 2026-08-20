@@ -19,7 +19,7 @@ graphs, trees, and integer compositions for stress tests, randomized tests, and 
 - `rand_vec(n, lo, hi)` returns `n` independent uniformly random integers in $[`lo`, `hi`]$.
 - `rand_str(n, alphabet)` returns a length-`n` string whose characters are sampled independently and
   uniformly from the nonempty string `alphabet`.
-- `rand_perm(n, first = 0)` returns a random permutation of the $n$ consecutive integers beginning
+- `rand_perm(n, first = 0)` returns a random permutation of the `n` consecutive integers beginning
   at `first`.
 - `rand_distinct(k, lo, hi)` returns `k` distinct integers sampled uniformly from $[`lo`, `hi`]$.
 - `rand_tree(n)` returns a uniformly random labeled tree on nodes $[0, `n`)$ as an edge list using a

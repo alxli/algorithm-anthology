@@ -16,6 +16,11 @@ EXAMPLE_RE = re.compile(r'^\s*\*+\s*(Example Usage(?: and Output)?)\s*:?\s*',
 METADATA_RE = re.compile(
     r'^(Time Complexity(?: \([^)]+\))?|Space Complexity(?: \([^)]+\))?|'
     r'Stable\?):\s*(.*)$')
+# A cross-reference such as "see 2.5.7" or "the sweep of section 7.3.9" written in prose. Only
+# numbers that name a real section become links, so ordinary decimals stay plain text. Trailing
+# sentence periods are allowed, but a following digit is not, so "1.20" never matches "1.2".
+SECTION_REF_RE = re.compile(r'(?<![\w.])(\d+\.\d+(?:\.\d+)?)(?![\w])(?!\.\d)')
+SECTION_LABELS = set()
 # Reserve a few lines before a bold heading so it is not stranded at a page
 # bottom, away from the listing or list that follows. \Needspace* (capital,
 # starred) only forces a break when there genuinely is not enough room; unlike
@@ -192,8 +197,16 @@ def format_complexity(expression):
     return '$O({})$'.format(expression)
 
 
+def link_section_refs(text):
+    """Turn section numbers written in prose into links to that section."""
+    return SECTION_REF_RE.sub(
+        lambda match: (r'\secref{{{}}}'.format(match.group(1))
+                       if match.group(1) in SECTION_LABELS else match.group(0)),
+        text)
+
+
 def escape_prose(text, prev_char):
-    return escape_latex(curl_quotes(text, prev_char))
+    return link_section_refs(escape_latex(curl_quotes(text, prev_char)))
 
 
 def format_prose(text, prev_char=''):
@@ -426,20 +439,15 @@ def render_comment(comment):
     return ''.join(result)
 
 
-def render_listing(text, language='C++'):
+def render_listing(text, language='cpp'):
     text = text.strip('\n')
     if not text.strip():
         return ''
     text = '\n'.join(
         line.rstrip() for line in text.splitlines()
         if not re.match(r'\s*//\s*clang-format\s+(off|on)\s*$', line)
-        and line.strip() not in {
-            '#define main bigint_example',
-            '#include "6.4.2_Big_Integer.cpp"',
-            '#undef main',
-        }
     )
-    options = 'language={}'.format(language) if language else 'language={},numbers=none'
+    options = 'style={}'.format(language) if language else 'language={},numbers=none'
     return '\\begin{{lstlisting}}[{}]\n{}\n\\end{{lstlisting}}\n'.format(
         options, text)
 
@@ -492,20 +500,28 @@ def render_source(source):
     return ''.join(result).rstrip() + '\n'
 
 
-def gen_chapter(dirname, chapter, chapter_name):
+def collect_entries(dirname, chapter):
     entries = []
-
     for file in os.listdir(dirname):
         match = FILE_RE.match(file)
         if not match:
             continue
         assert chapter == int(match.group(1))
         section = int(match.group(2))
+        if section < 1:
+            continue
         subsection = int(match.group(3)) if match.group(3) else None
         name = match.group(4)
-        entry = (chapter, section, subsection, name, file)
-        entries.append(entry)
+        entries.append((chapter, section, subsection, name, file))
+    return sorted(entries)
 
+
+def section_number(chapter, section, subsection):
+    return ('{}.{}'.format(chapter, section) if subsection is None
+            else '{}.{}.{}'.format(chapter, section, subsection))
+
+
+def gen_chapter(dirname, chapter, chapter_name, entries):
     with open(join(BOOK_PATH, f'chapter{chapter}.tex'), 'w') as fout:
         # \texorpdfstring keeps the body/TOC heading unnumbered (LaTeX adds the number
         # automatically) while prefixing the number to the PDF bookmark only.
@@ -515,9 +531,7 @@ def gen_chapter(dirname, chapter, chapter_name):
         )
 
         prev_section = None
-        for (chapter, section, subsection, name, file) in sorted(entries):
-            if section < 1:
-                continue
+        for (chapter, section, subsection, name, file) in entries:
             if section != prev_section:
                 section_name = (
                     name.replace('_', ' ') if subsection is None
@@ -531,8 +545,13 @@ def gen_chapter(dirname, chapter, chapter_name):
                 fout.write(f'\\setcounter{{section}}{{{section}}}\n')
                 if subsection:
                     fout.write(f'\\setcounter{{subsection}}{{0}}\n')
+                else:
+                    fout.write('\\label{{sec:{}}}\n'.format(
+                        section_number(chapter, section, None)))
             if subsection:
                 fout.write('\\subsection{{{}}}\n'.format(name.replace('_', ' ')))
+                fout.write('\\label{{sec:{}}}\n'.format(
+                    section_number(chapter, section, subsection)))
 
             with open(join(dirname, file), 'r') as srcfile:
                 fout.write(render_source(srcfile.read()))
@@ -541,9 +560,13 @@ def gen_chapter(dirname, chapter, chapter_name):
 
 if __name__ == '__main__':
     os.chdir(PROJ_PATH)
-    for file in os.listdir('.'):
+    chapters = []
+    for file in sorted(os.listdir('.')):
         match = DIR_RE.match(file)
         if isdir(file) and match:
-            chapter = int(match.group(1))
-            chapter_name = match.group(2)
-            gen_chapter(file, chapter, chapter_name)
+            entries = collect_entries(file, int(match.group(1)))
+            chapters.append((file, int(match.group(1)), match.group(2), entries))
+            SECTION_LABELS.update(
+                section_number(*entry[:3]) for entry in entries)
+    for dirname, chapter, chapter_name, entries in chapters:
+        gen_chapter(dirname, chapter, chapter_name, entries)

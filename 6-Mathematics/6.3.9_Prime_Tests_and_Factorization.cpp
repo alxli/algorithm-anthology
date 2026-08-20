@@ -260,7 +260,7 @@ int64_t rho_factor(int64_t n) {
 
 Factors factorize_rho(int64_t n) {
   std::vector<int64_t> factors;
-  auto collect = [&](auto &&collect, int64_t value) -> void {
+  auto collect = [&](auto &&collect, int64_t value) {
     if (value <= 1) {
       return;
     }

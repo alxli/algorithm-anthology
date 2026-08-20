@@ -9,11 +9,9 @@ breadth-first search to layer the graph by distance, then a depth-first search t
 of node-disjoint shortest augmenting paths to flip at once, for O(m*sqrt(n_1 + n_2)) running time
 overall.
 
-- `bipartite_matching_hk(n2)` populates `match_left` and `match_right`, then returns maximum
-  matching size for a global, pre-populated adjacency list `adj`, whose indices represent left-side
-  nodes and whose entries contain right-side neighbors numbered $[0, `n2`)$.
-
-Time Complexity:
+- `match_bipartite_hk(n2)` populates `match_left` and `match_right`, then returns maximum matching
+  size for a global, pre-populated adjacency list `adj`, whose indices represent left-side nodes and
+  whose entries contain right-side neighbors numbered $[0, `n2`)$. Time Complexity:
 - O(m*sqrt(n_1 + n_2)) per call, where $m$ is the number of edges.
 
 Space Complexity:
@@ -67,7 +65,7 @@ bool dfs(int u) {
   return false;
 }
 
-int bipartite_matching_hk(int n2) {
+int match_bipartite_hk(int n2) {
   int n1 = static_cast<int>(adj.size());
   match_left.assign(n1, -1);
   match_right.assign(n2, -1);
@@ -108,7 +106,7 @@ int main() {
   adj[1].push_back(2);
   adj[2].push_back(2);
   adj[2].push_back(3);
-  assert(bipartite_matching_hk(n2) == 3);
+  assert(match_bipartite_hk(n2) == 3);
   assert((match_right == vector<int>{1, 0, 2, -1}));
   return 0;
 }

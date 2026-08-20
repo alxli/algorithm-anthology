@@ -14,21 +14,18 @@ state is computed.
   in order. The state $dp(r, c)$ stores the cheapest cost to cell $(r, c)$. Only the current row of
   costs is retained, while predecessor directions reconstruct one optimal path. If the grid is
   empty, `min_cost` is $0$ and `path` is empty.
-- `largest_one_square(a)` returns a tuple (`side`, `top`, `left`) describing a largest all-nonzero
-  square in `a`. The state $dp(c)$ is the largest square ending at the current cell in column $c$; a
-  nonzero cell extends the minimum of the states above, left, and diagonally above-left. If no such
-  square exists, the function returns $(0, -1, -1)$.
-
-Overflow warning: Path counts and path costs must fit in `int64_t`.
-
-Time Complexity:
+- `largest_nonzero_square(a)` returns a tuple (`side`, `top`, `left`) describing a largest
+  all-nonzero square in `a`. The state $dp(c)$ is the largest square ending at the current cell in
+  column $c$; a nonzero cell extends the minimum of the states above, left, and diagonally
+  above-left. If no such square exists, the function returns $(0, -1, -1)$. Overflow warning: Path
+  counts and path costs must fit in `int64_t`. Time Complexity:
 - O(R*C) per call, where $R$ and $C$ are the grid dimensions.
 
 Space Complexity:
 - O(C) auxiliary for `count_grid_paths(blocked)`.
 - O(R*C) auxiliary for predecessor directions, O(C) for path costs, and O(R + C) for the returned
   path from `min_cost_grid_path(cost)`.
-- O(C) auxiliary for `largest_one_square(a)`.
+- O(C) auxiliary for `largest_nonzero_square(a)`.
 
 */
 
@@ -100,7 +97,7 @@ std::pair<int64_t, std::vector<std::pair<int, int>>> min_cost_grid_path(
   return {dp.back(), path};
 }
 
-std::tuple<int, int, int> largest_one_square(const std::vector<std::vector<char>> &a) {
+std::tuple<int, int, int> largest_nonzero_square(const std::vector<std::vector<char>> &a) {
   int rows = static_cast<int>(a.size());
   int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
   std::vector<int> dp(cols);
@@ -148,7 +145,7 @@ int main() {
       {1, 1, 1, 1, 1},
       {1, 0, 1, 1, 1},
   };
-  assert((largest_one_square(binary) == tuple{3, 1, 2}));
-  assert((largest_one_square({{0, 0}}) == tuple{0, -1, -1}));
+  assert((largest_nonzero_square(binary) == tuple{3, 1, 2}));
+  assert((largest_nonzero_square({{0, 0}}) == tuple{0, -1, -1}));
   return 0;
 }

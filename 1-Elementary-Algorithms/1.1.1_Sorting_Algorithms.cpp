@@ -385,7 +385,7 @@ Space Complexity: O(log n) auxiliary stack space.
 
 template<typename It, typename Compare = std::less<>>
 void bitonic_sort(It lo, It hi, Compare comp = Compare{}) {
-  auto merge = [&](auto &&merge, It lo, int n, bool up) -> void {
+  auto merge = [&](auto &&merge, It lo, int n, bool up) {
     if (n < 2) {
       return;
     }
@@ -401,7 +401,7 @@ void bitonic_sort(It lo, It hi, Compare comp = Compare{}) {
     merge(merge, lo, m, up);
     merge(merge, lo + m, n - m, up);
   };
-  auto rec = [&](auto &&rec, It lo, int n, bool up) -> void {
+  auto rec = [&](auto &&rec, It lo, int n, bool up) {
     if (n < 2) {
       return;
     }

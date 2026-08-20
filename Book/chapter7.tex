@@ -4,6 +4,7 @@
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Point}
+\label{sec:7.1.1}
 A 2D point class templated on the coordinate type \inlinecode{T}. Algebraic operations preserve \inlinecode{T}, while metric operations use \inlinecode{fp\_t}, which is \inlinecode{T} for floating-point coordinates and \inlinecode{double} otherwise.
 
 Non-floating-point coordinate types such as \inlinecode{Modular} or \inlinecode{Rational} compose for exact operations (arithmetic, \inlinecode{dot}, \inlinecode{cross}, \inlinecode{sqnorm}, comparisons, and \inlinecode{EQ}) using the coordinate type's own operators. Their metric operations convert coordinates explicitly to \inlinecode{double}; for \inlinecode{Modular}, this uses the stored representative and is not finite-field geometry.
@@ -31,7 +32,7 @@ Overflow warning: the exact products \inlinecode{dot()}, \inlinecode{cross()}, a
   \item $O(1)$ auxiliary for all operations.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cmath>
 #include <ostream>
 #include <tuple>
@@ -225,7 +226,7 @@ using Point = PointD;  // Default point type is double.
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -276,6 +277,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Line}
+\label{sec:7.1.2}
 A straight line in two dimensions, represented by coefficients of $ax + by + c = 0$ and templated on their type \inlinecode{T}. Coefficients are canonicalized by default so proportional valid coefficient vectors have the same representation, up to floating-point rounding.
 
 The template flag \inlinecode{CANONICALIZE} controls whether construction normalizes the coefficients and defaults to \inlinecode{true}. When enabled, \inlinecode{EXACT = true} divides coefficients by their Euclidean GCD and fixes their sign, while \inlinecode{EXACT = false} scales a nonvertical line to $b = 1$ and a vertical line to $a = 1$. \inlinecode{EXACT} defaults to \inlinecode{true} for built-in integral types; set it explicitly for custom exact types such as \inlinecode{BigInt} and \inlinecode{Rational}. Exact canonicalization requires \inlinecode{\%}, comparisons, and basic arithmetic, and predicates remain exact for integral \inlinecode{T}. Floating-point and \inlinecode{Modular} coefficients use the scaling form.
@@ -307,7 +309,7 @@ Overflow warning: the exact predicates form products of coefficients, which grow
   \item $O(1)$ auxiliary for all operations.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -469,7 +471,7 @@ using Line = LineD;  // Default line type is double.
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 struct Point {
@@ -520,9 +522,10 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Circle}
+\label{sec:7.1.3}
 A circle in two dimensions with epsilon-aware operations. The circle centered at $(h, k)$ is represented by the relation $(x - h)^2 + (y - k)^2 = r^2$, where the radius $r$ is normalized to a nonnegative number.
 
-This implementation stores and computes circle parameters in \inlinecode{double}. Point-accepting constructors and predicates are templated on the point type \inlinecode{Pt} and only read \inlinecode{.x}/\inlinecode{.y}, so they accept \inlinecode{Point}, \inlinecode{PointD}, or \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields.
+This implementation stores and computes circle parameters in \inlinecode{double}. Point-accepting constructors and predicates are templated on the point type \inlinecode{Pt} and only read \inlinecode{.x}/\inlinecode{.y}, so they accept \inlinecode{Point}, \inlinecode{PointD}, or \inlinecode{PointI} from \secref{7.1.1} or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields.
 
 \begin{compactitem}
   \item \inlinecode{Circle()} constructs the zero-radius circle centered at the origin.
@@ -550,7 +553,7 @@ Overflow warning: the determinant in \inlinecode{in\_circumcircle()} grows like 
   \item $O(1)$ auxiliary for all operations.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cmath>
 #include <cstdint>
 #include <ostream>
@@ -694,7 +697,7 @@ int in_circumcircle(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 struct Point {
@@ -735,7 +738,8 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Triangle}
-Common triangle calculations in two dimensions. The functions are templated on the point type \inlinecode{Pt}, which should accept \inlinecode{Point}, \inlinecode{PointD}, or \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. \inlinecode{triangle\_area()} returns \inlinecode{double} regardless of input type (the area is fractional via the \inlinecode{/2}). \inlinecode{same\_side()} and \inlinecode{point\_in\_triangle()} do all arithmetic in the point's own coordinate type and are exact for integer points: they reduce each cross product to a sign before combining, so no precision is lost and cross products are never multiplied together.
+\label{sec:7.1.4}
+Common triangle calculations in two dimensions. The functions are templated on the point type \inlinecode{Pt}, which should accept \inlinecode{Point}, \inlinecode{PointD}, or \inlinecode{PointI} from \secref{7.1.1} or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. \inlinecode{triangle\_area()} returns \inlinecode{double} regardless of input type (the area is fractional via the \inlinecode{/2}). \inlinecode{same\_side()} and \inlinecode{point\_in\_triangle()} do all arithmetic in the point's own coordinate type and are exact for integer points: they reduce each cross product to a sign before combining, so no precision is lost and cross products are never multiplied together.
 
 \begin{compactitem}
   \item \inlinecode{triangle\_area(a, b, c)} returns the area of the triangle with vertices \inlinecode{a}, \inlinecode{b}, and \inlinecode{c}.
@@ -748,13 +752,13 @@ Common triangle calculations in two dimensions. The functions are templated on t
 
 Use an integral point type for integer coordinates, and a floating-point type for fractional coordinates.
 
-Overflow warning: each individual cross product is still on the order of the squared coordinate magnitude, so for integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) once coordinates reach a few tens of thousands.
+Overflow warning: each individual cross product is still on the order of the squared coordinate magnitude, so for integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from \secref{7.1.1}) once coordinates reach a few tens of thousands.
 
 \textbf{Time Complexity}: $O(1)$ per operation.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cmath>
 #include <type_traits>
 
@@ -818,7 +822,7 @@ bool point_in_triangle(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 struct Point {
@@ -853,7 +857,8 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Rectangle}
-Common axis-aligned rectangle calculations in two dimensions. The functions are templated on the point type \inlinecode{Pt}, which should accept \inlinecode{Point}, \inlinecode{PointD}, or \inlinecode{PointI} from 7.1.1, or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields.
+\label{sec:7.1.5}
+Common axis-aligned rectangle calculations in two dimensions. The functions are templated on the point type \inlinecode{Pt}, which should accept \inlinecode{Point}, \inlinecode{PointD}, or \inlinecode{PointI} from \secref{7.1.1}, or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields.
 
 \begin{compactitem}
   \item \inlinecode{point\_in\_rect(p, v, w, h, include\_boundary = true)} returns whether \inlinecode{p} is inside the axis-aligned rectangle whose opposite corners are \inlinecode{v} and (\inlinecode{v.x + w}, \inlinecode{v.y + h}). Negative widths and heights are supported. The \inlinecode{include\_boundary} flag controls whether boundary points count.
@@ -867,7 +872,7 @@ Overflow warning: For integer-coordinate inputs, comparisons are exact as long a
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cmath>
 #include <type_traits>
@@ -945,7 +950,7 @@ int rect_intersection(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 struct Point {
@@ -983,6 +988,7 @@ int main() {
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Angles}
+\label{sec:7.2.1}
 Angle calculations in two dimensions. All operations are inherently floating-point (\inlinecode{atan2}, \inlinecode{acos}, trigonometry), so these functions use the local double-coordinate \inlinecode{PointD} type. Convert integer points to \inlinecode{PointD} when asking for angles. The constants \inlinecode{DEG} and \inlinecode{RAD} may be used as multipliers to convert between degrees and radians. For example, if \inlinecode{t} is a value in degrees, then \inlinecode{t * DEG} is the equivalent angle in radians; if \inlinecode{t} is in radians, then \inlinecode{t * RAD} is the equivalent angle in degrees.
 
 \begin{compactitem}
@@ -1003,7 +1009,7 @@ Overflow warning: \inlinecode{cross()} and \inlinecode{turn()} preserve the poin
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cmath>
 #include <type_traits>
@@ -1094,7 +1100,7 @@ int turn(const Pt &a, const Pt &o, const Pt &b) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
@@ -1119,7 +1125,8 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Distances}
-Distance calculations in two dimensions for points, lines, and line segments. The functions are templated on the point type \inlinecode{Pt}: pass any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields (for example \inlinecode{PointD}/\inlinecode{PointI} from 7.1.1, or the local example struct). \inlinecode{sqdist} preserves the coordinate type and is exact for integer points. Functions that return an actual distance use \inlinecode{double} for the final division/square root. \inlinecode{closest\_point} returns a point of the same type as its inputs, so use a floating-point \inlinecode{Pt} there for a meaningful (non-truncated) result.
+\label{sec:7.2.2}
+Distance calculations in two dimensions for points, lines, and line segments. The functions are templated on the point type \inlinecode{Pt}: pass any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields (for example \inlinecode{PointD}/\inlinecode{PointI} from \secref{7.1.1}, or the local example struct). \inlinecode{sqdist} preserves the coordinate type and is exact for integer points. Functions that return an actual distance use \inlinecode{double} for the final division/square root. \inlinecode{closest\_point} returns a point of the same type as its inputs, so use a floating-point \inlinecode{Pt} there for a meaningful (non-truncated) result.
 
 \begin{compactitem}
   \item \inlinecode{dist(a, b)} and \inlinecode{sqdist(a, b)} respectively return the distance and squared distance between points \inlinecode{a} and \inlinecode{b}.
@@ -1137,7 +1144,7 @@ Overflow warning: squared distances, dot products, and cross products are formed
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cmath>
 #include <type_traits>
@@ -1281,7 +1288,7 @@ Pt closest_point(const Pt &a, const Pt &b, const Pt &p) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 struct Point {
@@ -1315,7 +1322,8 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Line Intersection}
-Intersection calculations in two dimensions for straight lines and line segments. The functions are templated on the point type \inlinecode{Pt}: pass any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields (for example \inlinecode{PointD}/\inlinecode{PointI} from 7.1.1, or the local example struct) for which \inlinecode{operator\textless{}} orders points lexicographically using exact coordinate comparisons. Point output types are deduced from the caller-supplied arguments, so they may differ from the input type, e.g. integer endpoints with a floating-point output point.
+\label{sec:7.2.3}
+Intersection calculations in two dimensions for straight lines and line segments. The functions are templated on the point type \inlinecode{Pt}: pass any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields (for example \inlinecode{PointD}/\inlinecode{PointI} from \secref{7.1.1}, or the local example struct) for which \inlinecode{operator\textless{}} orders points lexicographically using exact coordinate comparisons. Point output types are deduced from the caller-supplied arguments, so they may differ from the input type, e.g. integer endpoints with a floating-point output point.
 
 \begin{compactitem}
   \item \inlinecode{line\_intersection(a1, b1, c1, a2, b2, c2, \&p)} intersects lines $a_1 x + b_1 y + c_1 = 0$ and $a_2 x + b_2 y + c_2 = 0$, returning $-1$ (parallel), $0$ (one point, stored into \inlinecode{p} if it is not \inlinecode{nullptr}), or $1$ (identical). Both coefficient triples must represent valid lines.
@@ -1331,7 +1339,7 @@ Overflow warning: the exact integer paths multiply coordinate differences (cross
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cmath>
 #include <type_traits>
@@ -1530,7 +1538,7 @@ Pt closest_point(double a, double b, double c, const Pt &p) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 struct Point {
@@ -1589,6 +1597,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Circle Intersection}
+\label{sec:7.2.4}
 Circle tangent and intersection calculations in two dimensions. Such calculations are floating-point by nature, so this section mostly computes in \inlinecode{double}. The input point \inlinecode{p} to \inlinecode{tangent()} can be any type with numeric \inlinecode{.x} and \inlinecode{.y} fields, and intersection point outputs are written through a caller-supplied point type.
 
 Circle radii are normalized to be nonnegative.
@@ -1604,7 +1613,7 @@ Circle radii are normalized to be nonnegative.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cmath>
 #include <type_traits>
@@ -1790,7 +1799,7 @@ double intersection_area(const Circle &c1, const Circle &c2) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 struct Point {
@@ -1839,6 +1848,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Circle Tangents}
+\label{sec:7.2.5}
 Given two circles, compute their common tangent lines by returning the two points of tangency on each circle. External tangents touch both circles on the same side of the line joining their centers; internal tangents cross between the circles. A point can be treated as a zero-radius circle, so this also covers tangents from a point to a circle.
 
 \begin{compactitem}
@@ -1852,7 +1862,7 @@ If the two circles are identical, there are infinitely many tangents and the fun
 
 \textbf{Space Complexity}: $O(1)$ auxiliary, excluding the returned vector.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cmath>
 #include <type_traits>
@@ -1923,7 +1933,7 @@ std::vector<std::pair<Point, Point>> all_circle_tangents(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -1965,7 +1975,8 @@ int main() {
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Polygon Sorting and Area}
-Given a list of distinct points in two dimensions, order them into a valid polygon and determine the area. The sorting comparator orders two points by the sign of their cross product around a chosen center, that is, by angle. To form a simple polygon, choose a center inside the points' convex hull that differs from every input point; the arithmetic mean used in the example is usually convenient. The area functions use the shoelace formula, summing the cross products of consecutive vertex pairs. All functions accept \inlinecode{Point}, \inlinecode{PointI}, or \inlinecode{PointL} from 7.1.1, or any compatible point type with numeric \inlinecode{.x} and \inlinecode{.y} fields and the comparison operators used by the requested operation.
+\label{sec:7.3.1}
+Given a list of distinct points in two dimensions, order them into a valid polygon and determine the area. The sorting comparator orders two points by the sign of their cross product around a chosen center, that is, by angle. To form a simple polygon, choose a center inside the points' convex hull that differs from every input point; the arithmetic mean used in the example is usually convenient. The area functions use the shoelace formula, summing the cross products of consecutive vertex pairs. All functions accept \inlinecode{Point}, \inlinecode{PointI}, or \inlinecode{PointL} from \secref{7.1.1}, or any compatible point type with numeric \inlinecode{.x} and \inlinecode{.y} fields and the comparison operators used by the requested operation.
 
 \begin{compactitem}
   \item \inlinecode{cw\_comp(a, b, c)} returns whether point \inlinecode{a} compares clockwise before \inlinecode{b} about \inlinecode{c}.
@@ -1974,7 +1985,7 @@ Given a list of distinct points in two dimensions, order them into a valid polyg
   \item \inlinecode{polygon\_centroid(lo, hi)} returns the centroid (center of mass) of a non-degenerate simple polygon with vertices in boundary order as an \inlinecode{std::pair\textless{}double, double\textgreater{}}. It uses signed shoelace weights, so either clockwise or counter-clockwise inputs will work.
 \end{compactitem}
 
-Overflow warning: \inlinecode{cw\_comp} and \inlinecode{polygon\_area\_2x} form cross products that grow like the squared coordinate magnitude (and the shoelace sum accumulates over all vertices). For integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) for large or numerous coordinates.
+Overflow warning: \inlinecode{cw\_comp} and \inlinecode{polygon\_area\_2x} form cross products that grow like the squared coordinate magnitude (and the shoelace sum accumulates over all vertices). For integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from \secref{7.1.1}) for large or numerous coordinates.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -1985,7 +1996,7 @@ Overflow warning: \inlinecode{cw\_comp} and \inlinecode{polygon\_area\_2x} form 
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -2067,7 +2078,7 @@ std::pair<double, double> polygon_centroid(It lo, It hi) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <vector>
 using namespace std;
@@ -2127,19 +2138,20 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Point-in-Polygon}
-Given a point \inlinecode{p} and a polygon, determines whether \inlinecode{p} lies inside using ray casting. A ray cast from \inlinecode{p} must cross the polygon's boundary an odd number of times exactly when \inlinecode{p} is inside, so the function counts crossings between a horizontal ray and each polygon edge. The function is templated on the point type \inlinecode{Pt} and accepts \inlinecode{Point}, \inlinecode{PointI}, or \inlinecode{PointL} from 7.1.1, or any compatible type with numeric \inlinecode{.x} and \inlinecode{.y} fields. All comparisons are exact (no epsilon): the ray-crossing parity needs a consistent comparison to be correct, and the result is exact for integer-coordinate points.
+\label{sec:7.3.2}
+Given a point \inlinecode{p} and a polygon, determines whether \inlinecode{p} lies inside using ray casting. A ray cast from \inlinecode{p} must cross the polygon's boundary an odd number of times exactly when \inlinecode{p} is inside, so the function counts crossings between a horizontal ray and each polygon edge. The function is templated on the point type \inlinecode{Pt} and accepts \inlinecode{Point}, \inlinecode{PointI}, or \inlinecode{PointL} from \secref{7.1.1}, or any compatible type with numeric \inlinecode{.x} and \inlinecode{.y} fields. All comparisons are exact (no epsilon): the ray-crossing parity needs a consistent comparison to be correct, and the result is exact for integer-coordinate points.
 
 \begin{compactitem}
   \item \inlinecode{point\_in\_polygon(p, lo, hi, include\_boundary = true)} returns whether \inlinecode{p} lies within the polygon with vertices specified by the range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of points in either clockwise or counter-clockwise order. The \inlinecode{include\_boundary} flag controls whether points exactly on an edge or vertex count as inside.
 \end{compactitem}
 
-Overflow warning: the edge orientation test forms a cross product that grows like the squared coordinate magnitude. For integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) once coordinates exceed roughly a few tens of thousands.
+Overflow warning: the edge orientation test forms a cross product that grows like the squared coordinate magnitude. For integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from \secref{7.1.1}) once coordinates exceed roughly a few tens of thousands.
 
 \textbf{Time Complexity}: $O(n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 template<typename Pt>
 auto cross(const Pt &a, const Pt &b, const Pt &o) {
   // Overflow risk for integer Pt: these products are ~O(max_coord^2); use int64_t if necessary.
@@ -2172,7 +2184,7 @@ bool point_in_polygon(const Pt &p, It lo, It hi, bool include_boundary = true) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <vector>
 using namespace std;
@@ -2204,6 +2216,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Convex Hull and Diametral Pair}
+\label{sec:7.3.3}
 The convex hull of points in two dimensions is the smallest convex set containing them. A diametral pair is a pair of input points at maximum distance. Monotone chain computes the hull by sorting the points lexicographically and building the lower and upper boundaries in one pass each, popping any point that would fail to create a counter-clockwise turn. Rotating calipers then walks two antipodal pointers around the hull, advancing whichever increases the separation and visiting every candidate diametral pair in linear time. Both functions accept either floating-point or integral coordinates, and use exact comparisons for integral points.
 
 \begin{compactitem}
@@ -2217,7 +2230,7 @@ Overflow warning: \inlinecode{cross()} and the squared distance in \inlinecode{d
 
 \textbf{Space Complexity}: $O(n)$ auxiliary for storage of the convex hull.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cmath>
 #include <random>
@@ -2305,7 +2318,7 @@ std::pair<Pt, Pt> diametral_pair(const std::vector<Pt> &p) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <vector>
 using namespace std;
@@ -2349,6 +2362,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Convex Polygon Queries}
+\label{sec:7.3.4}
 Given a convex polygon in counter-clockwise order, answer containment and tangent/intersection queries. Point containment is logarithmic by splitting the polygon into triangles sharing \inlinecode{poly[0]}. The line and tangent helpers below are written as simple linear scans; this is shorter and less assumption-heavy than the classic logarithmic versions, while still documenting the exact query semantics in one place.
 
 \begin{compactitem}
@@ -2368,7 +2382,7 @@ Overflow warning: For integer-coordinate inputs, all orientation tests are exact
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -2503,7 +2517,7 @@ std::pair<int, int> convex_polygon_tangents(const std::vector<Pt> &poly, const P
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 using namespace std;
 
@@ -2536,6 +2550,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Minimum Enclosing Circle}
+\label{sec:7.3.5}
 Given a set of points in two dimensions, finds the unique circle of minimum radius (equivalently, minimum area) containing all points.
 
 This implementation uses Welzl's randomized incremental algorithm. The points are shuffled and processed one at a time while maintaining the current minimum enclosing circle. Whenever a point lies outside the current circle, the circle is rebuilt with that point constrained to lie on the boundary. The final circle is determined by at most three boundary points.
@@ -2548,7 +2563,7 @@ This implementation uses Welzl's randomized incremental algorithm. The points ar
 
 \textbf{Space Complexity}: $O(n)$ auxiliary for the shuffled copy of the points.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -2653,7 +2668,7 @@ Circle min_enclosing_circle(std::vector<Pt> p) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -2693,13 +2708,14 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Closest Pair}
+\label{sec:7.3.6}
 Given a list of points in two dimensions, finds the closest pair using a divide-and-conquer algorithm. The points are split in half by $x$-coordinate and each half is solved recursively; the combining step then only needs to examine points within the best distance so far of the dividing line, where each point in this strip is compared to a constant number of $y$-ordered neighbors.
 
 \begin{compactitem}
   \item \inlinecode{closest\_pair(p, \&res)} returns the minimum squared distance between any two points in \inlinecode{p}. If \inlinecode{res} is non-null, one closest pair is stored there in lexicographic order. With fewer than two points, the maximum value of the squared-distance type is returned and \inlinecode{res} is unchanged. The point type may be any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members and a lexicographic \inlinecode{operator\textless{}}. The distance preserves the coordinate arithmetic type, and the returned pair preserves the point type. For integer coordinates, the distance is exact provided intermediate products do not overflow.
 \end{compactitem}
 
-Overflow warning: squared distances grow like the square of the coordinate magnitude. For integer point types, use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) when coordinates may exceed a few tens of thousands.
+Overflow warning: squared distances grow like the square of the coordinate magnitude. For integer point types, use a 64-bit coordinate type (e.g. \inlinecode{PointL} from \secref{7.1.1}) when coordinates may exceed a few tens of thousands.
 
 \textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the number of points.
 
@@ -2710,7 +2726,7 @@ Overflow warning: squared distances grow like the square of the coordinate magni
   \item $O(\log n)$ auxiliary stack space.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cmath>
 #include <iterator>
@@ -2791,7 +2807,7 @@ auto closest_pair(std::vector<Pt> p, std::pair<Pt, Pt> *res = nullptr) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <vector>
 using namespace std;
@@ -2831,6 +2847,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Maximum Collinear Points}
+\label{sec:7.3.7}
 Given a set of points with integer coordinates, compute the maximum number of points that lie on one line. For every anchor point, normalize the direction vector to every other point by dividing by \inlinecode{gcd(abs(dx), abs(dy))} and choosing a canonical sign; equal normalized directions from the same anchor are collinear with it.
 
 \begin{compactitem}
@@ -2843,7 +2860,7 @@ Overflow warning: coordinate differences and their absolute values must fit in \
 
 \textbf{Space Complexity}: $O(n)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -2889,7 +2906,7 @@ int max_collinear_points(const std::vector<Point> &p) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 int main() {
@@ -2903,6 +2920,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Rectangle Coverage}
+\label{sec:7.3.8}
 Given weighted axis-aligned rectangles, iterate over every elementary cell induced by their coordinate-compressed boundaries. Within each such cell, the accumulated weight is constant, so the callback can compute rectangle union area, exactly-$k$ coverage area, threshold area, maximum overlap, weighted integrals, coverage histograms, or other offline coverage statistics.
 
 Rectangles are half-open, $[x_1, x_2) \times [y_1, y_2)$, so adjacent rectangles sharing only an edge do not double-count any area. This also matches the difference-array update: add at the lower boundaries and subtract at the first coordinate after the rectangle.
@@ -2911,7 +2929,7 @@ Rectangles are half-open, $[x_1, x_2) \times [y_1, y_2)$, so adjacent rectangles
   \item \inlinecode{for\_each\_rect\_cell(rects, visit)} calls \inlinecode{visit(x1, y1, x2, y2, weight)} once for each positive-area compressed cell inside the bounding box of the rectangles, where \inlinecode{weight} is the sum of weights covering that cell. Cells are visited in increasing \inlinecode{x1}, then increasing \inlinecode{y1}. Each rectangle must satisfy ${\inlinecodemath{x1}} < {\inlinecodemath{x2}}$ and ${\inlinecodemath{y1}} < {\inlinecodemath{y2}}$.
 \end{compactitem}
 
-Enumerating cells costs $O(n^{2})$ time and memory, which is the price of answering any statistic at all rather than one chosen in advance. When only the union area or perimeter is wanted, the sweep of section 7.3.9 computes it in $O(n \log n)$ time and $O(n)$ memory, which is the only option once the rectangle count reaches the thousands.
+Enumerating cells costs $O(n^{2})$ time and memory, which is the price of answering any statistic at all rather than one chosen in advance. When only the union area or perimeter is wanted, the sweep of section \secref{7.3.9} computes it in $O(n \log n)$ time and $O(n)$ memory, which is the only option once the rectangle count reaches the thousands.
 
 Overflow warning: Coordinate differences, cell areas, and accumulated weights must fit in \inlinecode{int64\_t}.
 
@@ -2919,7 +2937,7 @@ Overflow warning: Coordinate differences, cell areas, and accumulated weights mu
 
 \textbf{Space Complexity}: $O(n^{2})$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -2970,7 +2988,7 @@ void for_each_rect_cell(const std::vector<Rect> &rects, Fn visit) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -3028,6 +3046,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Rectangle Union}
+\label{sec:7.3.9}
 Given axis-aligned rectangles that may overlap arbitrarily, measure their union. Klee's algorithm sweeps a vertical line left to right, maintaining how much of that line the rectangles currently cover. That covered length is constant between consecutive events, so each strip contributes the length times its width, and every other measure below is another aggregate of the same cross section.
 
 A segment tree over the compressed $y$ coordinates holds the state, storing at each node the number of intervals covering its whole span and the length of that span which is covered. It never pushes anything down: a node's count refers only to intervals covering it entirely, so a node with a positive count reports its full span while one with a zero count defers to its children. Every addition is matched by a later removal, so counts never go negative and no lazy tag is needed.
@@ -3040,13 +3059,13 @@ Rectangles are half-open, $[x_1, x_2) \times [y_1, y_2)$, so adjacent rectangles
   \item \inlinecode{rect\_union(rects)} returns a \inlinecode{UnionMeasure} holding the \inlinecode{area} covered at least once, the \inlinecode{overlap\_area} covered at least twice, the \inlinecode{perimeter} of the outline including any enclosed hole, and \inlinecode{max\_weight}, the greatest weighted sum at any point. Subtracting the second from the first leaves the area covered exactly once. Each rectangle must satisfy ${\inlinecodemath{x1}} < {\inlinecodemath{x2}}$ and ${\inlinecodemath{y1}} < {\inlinecodemath{y2}}$.
 \end{compactitem}
 
-Weights change only the maximum, since the three geometric measures count coverage rather than payload, and weighted area needs no sweep at all: it is $\sum w_i$ times area, one loop over the input. Area covered at least $k$ times instead needs a vector of $k$ lengths per node; for that or any aggregate that does not decompose this way, the compression of section 7.3.8 enumerates every elementary cell at $O(n^{2})$.
+Weights change only the maximum, since the three geometric measures count coverage rather than payload, and weighted area needs no sweep at all: it is $\sum w_i$ times area, one loop over the input. Area covered at least $k$ times instead needs a vector of $k$ lengths per node; for that or any aggregate that does not decompose this way, the compression of section \secref{7.3.8} enumerates every elementary cell at $O(n^{2})$.
 
 \textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the number of rectangles.
 
 \textbf{Space Complexity}: $O(n)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -3127,7 +3146,7 @@ class CoverTree {
 
   // Adds delta covers of weight w to every elementary interval in [lo, hi]; a removal negates both.
   void update(int lo, int hi, int delta, int64_t w) {
-    auto rec = [&](auto &&rec, int i, int l, int h) -> void {
+    auto rec = [&](auto &&rec, int i, int l, int h) {
       if (hi < l || h < lo) {
         return;
       }
@@ -3200,7 +3219,7 @@ UnionMeasure rect_union(const std::vector<Rect> &rects) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -3240,9 +3259,10 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Multiple Segment Intersection}
+\label{sec:7.3.10}
 Given a list of line segments in two dimensions, determine whether any pair of segments intersect using a sweep line algorithm. Endpoint events are processed from left to right while an ordered set maintains the segments currently crossing the sweep line, sorted by $y$; only segments that become adjacent in this set need to be tested, since any leftmost intersection must involve a pair that is adjacent just before it occurs. The input type \inlinecode{Segment\textless{}Pt\textgreater{}} is templated on the point type, so endpoints may be integer (\inlinecode{PointI}) or floating-point (\inlinecode{Point} or \inlinecode{PointD}), but must support \inlinecode{operator\textless{}} which orders points lexicographically. The cross-product sign tests in \inlinecode{seg\_intersection} are exact for integer endpoints, so intersection detection is exact.
 
-This implementation counts endpoint contacts as intersections. See 7.2.3 for pairwise intersection predicates when that distinction matters.
+This implementation counts endpoint contacts as intersections. See \secref{7.2.3} for pairwise intersection predicates when that distinction matters.
 
 \begin{compactitem}
   \item \inlinecode{find\_intersecting\_pair(segs)} returns the indices of one pair of intersecting segments, or \inlinecode{std::nullopt} if none exist. Constructing a \inlinecode{Segment} places its lexicographically smaller endpoint first, as required by the sweep.
@@ -3254,7 +3274,7 @@ Overflow warning: \inlinecode{seg\_intersection} forms the usual quadratic cross
 
 \textbf{Space Complexity}: $O(n)$ auxiliary, where $n$ is the number of segments.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <optional>
@@ -3365,7 +3385,7 @@ std::optional<std::pair<int, int>> find_intersecting_pair(const std::vector<Segm
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <vector>
 using namespace std;
 
@@ -3415,10 +3435,11 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Manhattan MST}
+\label{sec:7.3.11}
 Given points in the plane, produce a small set of candidate edges guaranteed to contain a minimum spanning tree under Manhattan distance $|x_1 - x_2| + |y_1 - y_2|$. The plane is swept in four rotations/reflections; in each sweep, dominance by $x + y$ identifies the only nearby candidates that can matter. Run Kruskal on the returned edges to obtain the MST.
 
 \begin{compactitem}
-  \item \inlinecode{manhattan\_mst\_edges(p)} returns $O(n)$ candidate edges as tuples (\inlinecode{weight}, \inlinecode{u}, \inlinecode{v}), where $n = {\inlinecodemath{p.size()}}$ and \inlinecode{u} and \inlinecode{v} are indices into \inlinecode{p}.
+  \item \inlinecode{manhattan\_mst\_candidates(p)} returns $O(n)$ candidate edges as tuples (\inlinecode{weight}, \inlinecode{u}, \inlinecode{v}), where $n = {\inlinecodemath{p.size()}}$ and \inlinecode{u} and \inlinecode{v} are indices into \inlinecode{p}.
   \item \inlinecode{manhattan\_mst\_weight(p)} returns the MST weight by running Kruskal's algorithm on those candidate edges.
 \end{compactitem}
 
@@ -3428,7 +3449,7 @@ Overflow warning: the sweeps form coordinate sums, negations, and differences su
 
 \textbf{Space Complexity}: $O(n)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -3444,7 +3465,7 @@ struct Point {
   Point(int64_t x = 0, int64_t y = 0) : x(x), y(y) {}
 };
 
-std::vector<std::tuple<int64_t, int, int>> manhattan_mst_edges(std::vector<Point> p) {
+std::vector<std::tuple<int64_t, int, int>> manhattan_mst_candidates(std::vector<Point> p) {
   int n = static_cast<int>(p.size());
   std::vector<int> id(n);
   std::iota(id.begin(), id.end(), 0);
@@ -3501,7 +3522,7 @@ struct DSU {
 };
 
 int64_t manhattan_mst_weight(const std::vector<Point> &p) {
-  auto edges = manhattan_mst_edges(p);
+  auto edges = manhattan_mst_candidates(p);
   std::sort(edges.begin(), edges.end());
   DSU dsu(static_cast<int>(p.size()));
   int64_t res = 0;
@@ -3515,7 +3536,7 @@ int64_t manhattan_mst_weight(const std::vector<Point> &p) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 int main() {
@@ -3524,7 +3545,7 @@ int main() {
 
   vector<Point> p{{0, 0}, {2, 1}, {3, 4}, {-1, 2}, {5, 0}};
   assert(manhattan_mst_weight(p) == 14);
-  auto edges = manhattan_mst_edges(p);
+  auto edges = manhattan_mst_candidates(p);
   assert(edges.size() <= 4 * p.size());
   for (auto [w, u, v] : edges) {
     assert(0 <= u && u < static_cast<int>(p.size()));
@@ -3539,6 +3560,7 @@ int main() {
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Convex Polygon Cut}
+\label{sec:7.4.1}
 Given a convex polygon and a directed line from \inlinecode{p} to \inlinecode{q}, clips the polygon to the closed left half-plane of that line. The polygon is walked edge by edge: vertices on the left side of the line are kept, and whenever an edge crosses the line, the intersection point is appended to the output.
 
 \begin{compactitem}
@@ -3551,7 +3573,7 @@ Overflow warning: For integer-coordinate inputs, classification is exact only if
 
 \textbf{Space Complexity}: $O(n)$ for the returned polygon and $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cmath>
 #include <type_traits>
@@ -3633,7 +3655,7 @@ std::vector<Point> convex_cut(It lo, It hi, const Pt &p, const Pt &q) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 struct PointI {
@@ -3669,6 +3691,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Half-Plane Intersection}
+\label{sec:7.4.2}
 Given a list of directed lines, compute the convex polygon contained in every left half-plane. Half-plane intersection sorts the lines by direction, keeps only the tightest representative among parallel lines, and maintains a deque of lines whose pairwise intersections form the current boundary. Directions are ordered by half-plane and cross-product signs, without epsilon comparisons, to satisfy \inlinecode{std::sort}'s strict ordering requirement. \inlinecode{EPS} is then used outside the comparator to group parallel directions and retain only the tightest half-plane in each group.
 
 \begin{compactitem}
@@ -3679,7 +3702,7 @@ Given a list of directed lines, compute the convex polygon contained in every le
 
 \textbf{Space Complexity}: $O(n)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cmath>
 #include <deque>
@@ -3782,7 +3805,7 @@ std::vector<Point> half_plane_intersection(std::vector<HalfPlane> planes) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -3822,6 +3845,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Minkowski Sum}
+\label{sec:7.4.3}
 Given two convex polygons, compute their Minkowski sum: the set of all points $a + b$ where $a$ comes from the first polygon and $b$ comes from the second. After rotating both polygons to start at their lowest-leftmost vertex, the boundary edges of the sum are obtained by merging the two cyclic edge-angle lists. Minkowski sums are useful for collision/translation problems, convex polygon distance checks, and diameter computations via $P + (-P)$.
 
 \begin{compactitem}
@@ -3832,7 +3856,7 @@ Given two convex polygons, compute their Minkowski sum: the set of all points $a
 
 \textbf{Space Complexity}: $O(n + m)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cmath>
 #include <type_traits>
@@ -3948,7 +3972,7 @@ std::vector<Point> minkowski_sum(std::vector<Point> a, std::vector<Point> b) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -3968,6 +3992,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Polygon Intersection and Union}
+\label{sec:7.4.4}
 Given two simple (non-self-intersecting) polygons, determine the areas of their intersection and union using a sweep line algorithm and the inclusion-exclusion principle. Every vertex and every pairwise edge intersection contributes its $x$-coordinate as a sweep boundary, so within each vertical slab between consecutive boundaries the two borders cannot cross, and the slab's overlap is accumulated exactly from trapezoid areas. The union then follows by inclusion-exclusion as the sum of the individual areas minus the intersection.
 
 \begin{compactitem}
@@ -3975,13 +4000,13 @@ Given two simple (non-self-intersecting) polygons, determine the areas of their 
   \item \inlinecode{union\_area(a, b)} returns the union area of polygons \inlinecode{a} and \inlinecode{b}.
 \end{compactitem}
 
-Overflow warning: the segment-intersection tests form cross products in the input point's coordinate type, which grow like the squared coordinate magnitude. For integral point types, use 64-bit coordinates (e.g. \inlinecode{PointL} from 7.1.1) if necessary.
+Overflow warning: the segment-intersection tests form cross products in the input point's coordinate type, which grow like the squared coordinate magnitude. For integral point types, use 64-bit coordinates (e.g. \inlinecode{PointL} from \secref{7.1.1}) if necessary.
 
 \textbf{Time Complexity}: $O(n \cdot m \cdot (n + m) \cdot \log\left(n + m\right))$ per call to \inlinecode{intersection\_area()} and \inlinecode{union\_area()}, where $n$ is the number of vertices in the first polygon and $m$ is the number of vertices in the second polygon (or $O(N^{3} \log N)$ for $N = n + m$).
 
 \textbf{Space Complexity}: $O(n \cdot m)$ auxiliary for \inlinecode{intersection\_area()} and \inlinecode{union\_area()}, where $n$ and $m$ are the respective polygon sizes.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cmath>
 #include <type_traits>
@@ -4190,7 +4215,7 @@ double union_area(const std::vector<Pt> &a, const std::vector<Pt> &b) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -4235,6 +4260,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Delaunay Triangulation (Simple)}
+\label{sec:7.4.5}
 Given a set $P$ of distinct two-dimensional points, a Delaunay triangulation of $P$ is a triangulation of the convex hull of $P$ such that no point of $P$ lies strictly inside the circumcircle of any triangle in the triangulation. The Delaunay triangulation is not necessarily unique when four or more points are cocircular.
 
 This implementation produces one valid triangulation using a simple brute-force algorithm. Each candidate triangle is tested against the empty-circumcircle condition, and candidates whose edges would properly cross already accepted triangles are rejected.
@@ -4251,7 +4277,7 @@ Overflow warning: the lifted-paraboloid test grows like the fourth power of the 
 
 \textbf{Space Complexity}: $O(n)$ auxiliary, excluding the returned triangulation.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cmath>
 #include <tuple>
 #include <type_traits>
@@ -4338,7 +4364,7 @@ std::vector<std::tuple<Pt, Pt, Pt>> delaunay_triangulation(const std::vector<Pt>
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -4379,6 +4405,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Delaunay Triangulation (Guibas-Stolfi)}
+\label{sec:7.4.6}
 Given a set $P$ of distinct two-dimensional points, a Delaunay triangulation of $P$ is a triangulation of the convex hull of $P$ such that no point of $P$ lies strictly inside the circumcircle of any triangle in the triangulation. The Delaunay triangulation is not necessarily unique when four or more points are cocircular.
 
 This implementation produces one valid triangulation using the Guibas-Stolfi divide-and-conquer algorithm with a quad-edge data structure. The point set is split in half, each half is triangulated recursively, and the halves are stitched together from the bottom up by a sequence of cross edges, with circumcircle tests deciding each connecting edge and deleting invalidated ones.
@@ -4400,7 +4427,7 @@ Overflow warning: the in-circle test grows like the fourth power of the coordina
   \item $O(n)$ for the returned triangulation.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -4648,7 +4675,7 @@ auto delaunay_triangulation(std::vector<Point<T>> p) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -4682,6 +4709,7 @@ int main() {
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{3D Point}
+\label{sec:7.5.1}
 A 3D point class templated on the coordinate type \inlinecode{T}. Algebraic operations preserve \inlinecode{T}, while metric operations use \inlinecode{fp\_t}, which is \inlinecode{T} for floating-point coordinates and \inlinecode{double} otherwise.
 
 \begin{compactitem}
@@ -4700,7 +4728,7 @@ Overflow warning: the exact products \inlinecode{dot()}, \inlinecode{cross()}, a
 
 \textbf{Space Complexity}: $O(1)$ for storage and auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cmath>
 #include <cstdint>
@@ -4761,7 +4789,7 @@ using Point3LD = TPoint3<long double>;
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 int main() {
@@ -4776,7 +4804,8 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Polyhedron Volume}
-Given an oriented triangular mesh of a closed polyhedron, compute its signed volume. Each triangle contributes the signed volume of the tetrahedron formed by the triangle $abc$ and the origin $((a \times b) \cdot c) / 6$. If faces are oriented outward, the result is positive for the orientation used by \inlinecode{convex\_hull\_3d()} in 7.5.3; take \inlinecode{abs()} if only the magnitude is needed.
+\label{sec:7.5.2}
+Given an oriented triangular mesh of a closed polyhedron, compute its signed volume. Each triangle contributes the signed volume of the tetrahedron formed by the triangle $abc$ and the origin $((a \times b) \cdot c) / 6$. If faces are oriented outward, the result is positive for the orientation used by \inlinecode{convex\_hull\_3d()} in \secref{7.5.3}; take \inlinecode{abs()} if only the magnitude is needed.
 
 \begin{compactitem}
   \item \inlinecode{signed\_polyhedron\_volume(p, faces)} returns the signed volume. Each face triplet (\inlinecode{a}, \inlinecode{b}, \inlinecode{c}) represents the triangle with vertices \inlinecode{p[a]}, \inlinecode{p[b]}, and \inlinecode{p[c]}.
@@ -4788,7 +4817,7 @@ Overflow warning: for integral point types, each scalar triple product must fit 
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cmath>
 #include <tuple>
 #include <vector>
@@ -4815,7 +4844,7 @@ double signed_polyhedron_volume(const std::vector<Pt> &p, const std::vector<F> &
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -4837,6 +4866,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{3D Convex Hull}
+\label{sec:7.5.3}
 The convex hull of points in 3D is the smallest convex polyhedron containing them. This incremental algorithm computes its triangular faces: start with a tetrahedron, delete every visible face for each new point, and stitch the horizon edges to that point. Returned faces are oriented outward.
 
 \begin{compactitem}
@@ -4847,7 +4877,7 @@ The convex hull of points in 3D is the smallest convex polyhedron containing the
 
 \textbf{Space Complexity}: $O(n^{2})$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <array>
 #include <cassert>
 #include <utility>
@@ -4949,7 +4979,7 @@ std::vector<Face> convex_hull_3d(const std::vector<Point3D> &p) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 void assert_outward(const vector<Point3D> &p, const vector<Face> &faces) {

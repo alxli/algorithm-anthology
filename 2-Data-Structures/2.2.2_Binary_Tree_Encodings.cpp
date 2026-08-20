@@ -117,7 +117,7 @@ TreeNode<T> *build_from_postorder_inorder(const std::vector<T> &post, const std:
 template<typename T>
 std::string serialize(TreeNode<T> *root) {
   std::ostringstream out;
-  auto rec = [&](auto &&rec, TreeNode<T> *node) -> void {
+  auto rec = [&](auto &&rec, TreeNode<T> *node) {
     if (node == nullptr) {
       out << "# ";
       return;
@@ -134,13 +134,12 @@ template<typename T>
 TreeNode<T> *deserialize(const std::string &s) {
   std::istringstream in(s);
   auto rec = [&](auto &&rec) -> TreeNode<T> * {
-    std::string token;
-    if (!(in >> token) || token == "#") {
+    if (!(in >> std::ws) || in.peek() == '#') {
+      in.get();  // Consume the sentinel, or nothing at all once the stream is spent.
       return nullptr;
     }
-    std::istringstream parse(token);
     T value;
-    parse >> value;
+    in >> value;
     TreeNode<T> *node = new TreeNode<T>(value);
     node->left = rec(rec);
     node->right = rec(rec);
@@ -183,6 +182,18 @@ int main() {
 
   TreeNode<int> *same = build_from_postorder_inorder(post, in);
   assert(serialize(same) == serialize(root));
+
+  // Preorder with a sentinel for every absent child, so the shape is written down rather than
+  // inferred: 4 descends left to 2, whose children 1 and 3 are leaves, then right to 6, whose
+  // missing left child is the third "#" after it.
+  assert(serialize(root) == "4 2 1 # # 3 # # 6 # 7 # # ");
+  assert(serialize(root->left) == "2 1 # # 3 # # ");
+  assert(serialize(root->left->left) == "1 # # ");
+
+  // Two sentinels in a row close off a leaf, so a left chain ends with one per level.
+  TreeNode<int> *chain = deserialize<int>("1 2 3 # # # # ");
+  assert(chain->left->left->value == 3 && chain->right == nullptr);
+  assert(serialize(chain) == "1 2 3 # # # # ");
 
   // The serialized form round-trips, and matching strings mean identical subtrees.
   assert(inorder(deserialize<int>(serialize(root))) == in);

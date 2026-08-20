@@ -16,22 +16,22 @@ forest describes edge connectivity after compressing 2-edge-connected components
 
 - `BiconnectedComponents(n = 0)` constructs an undirected graph of `n` nodes numbered $[0, `n`)$.
 - `add_edge(u, v)` adds the undirected edge `u`-`v`. Parallel edges are supported.
-- `build_bcc()` computes the articulation points and vertex-biconnected components.
-- `articulation_points()` and `components()` return those results.
+- `build_bccs()` computes the articulation points and vertex-biconnected components.
+- `articulation_points()` and `bccs()` return those results.
 - `build_block_cut_forest()` computes the block-cut forest using the results of the previous
-  `build_bcc()` call.
+  `build_bccs()` call.
 - `block_cut_forest()` returns that forest. Its component nodes are numbered in the range
-  $[0, `components().size()`)$.
+  $[0, `bccs().size()`)$.
 - `block_cut_id(v)` returns the block-cut forest node representing articulation point `v`, or $-1$
   if `v` is not an articulation point.
 
 Time Complexity:
-- O(max(n, m)) per call to `build_bcc()` and `build_block_cut_forest()`, where $n$ is the number of
+- O(max(n, m)) per call to `build_bccs()` and `build_block_cut_forest()`, where $n$ is the number of
   nodes and $m$ is the number of edges.
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph, edge stack, BCCs, and block-cut forest.
-- O(n) auxiliary stack space for `build_bcc()`.
+- O(n) auxiliary stack space for `build_bccs()`.
 
 */
 
@@ -40,7 +40,7 @@ Space Complexity:
 #include <vector>
 
 class BiconnectedComponents {
-  std::vector<std::vector<int>> adj, bccs, forest;
+  std::vector<std::vector<int>> adj, bcc, forest;
   std::vector<int> lowlink, tin, forest_id, articulation;
   std::vector<char> visit, is_articulation;
   std::vector<std::pair<int, int>> edges;
@@ -50,19 +50,19 @@ class BiconnectedComponents {
   int other(int id, int u) const { return edges[id].first ^ edges[id].second ^ u; }
 
   void add_component_until(int stop_id) {
-    std::vector<int> component;
+    std::vector<int> comp;
     while (true) {
       int id = edge_stack.back();
       edge_stack.pop_back();
-      component.push_back(edges[id].first);
-      component.push_back(edges[id].second);
+      comp.push_back(edges[id].first);
+      comp.push_back(edges[id].second);
       if (id == stop_id) {
         break;
       }
     }
-    std::sort(component.begin(), component.end());
-    component.erase(std::unique(component.begin(), component.end()), component.end());
-    bccs.push_back(component);
+    std::sort(comp.begin(), comp.end());
+    comp.erase(std::unique(comp.begin(), comp.end()), comp.end());
+    bcc.push_back(comp);
   }
 
   void dfs(int u, int p) {
@@ -93,7 +93,7 @@ class BiconnectedComponents {
       }
     }
     if (p == -1 && children == 0) {
-      bccs.push_back({u});
+      bcc.push_back({u});
     }
   }
 
@@ -107,10 +107,10 @@ class BiconnectedComponents {
     edges.emplace_back(u, v);
   }
 
-  void build_bcc() {
+  void build_bccs() {
     int n = static_cast<int>(adj.size());
     articulation.clear();
-    bccs.clear();
+    bcc.clear();
     edge_stack.clear();
     lowlink.assign(n, 0);
     tin.assign(n, 0);
@@ -131,7 +131,7 @@ class BiconnectedComponents {
 
   void build_block_cut_forest() {
     int n = static_cast<int>(adj.size());
-    int blocks = static_cast<int>(bccs.size());
+    int blocks = static_cast<int>(bcc.size());
     forest_id.assign(n, -1);
     int total = blocks;
     for (int v : articulation) {
@@ -139,7 +139,7 @@ class BiconnectedComponents {
     }
     forest.assign(total, {});
     for (int b = 0; b < blocks; b++) {
-      for (int v : bccs[b]) {
+      for (int v : bcc[b]) {
         if (forest_id[v] != -1) {
           forest[b].push_back(forest_id[v]);
           forest[forest_id[v]].push_back(b);
@@ -149,7 +149,7 @@ class BiconnectedComponents {
   }
 
   const std::vector<int> &articulation_points() const { return articulation; }
-  const std::vector<std::vector<int>> &components() const { return bccs; }
+  const std::vector<std::vector<int>> &bccs() const { return bcc; }
   const std::vector<std::vector<int>> &block_cut_forest() const { return forest; }
   int block_cut_id(int v) const { return forest_id[v]; }
 };
@@ -170,9 +170,9 @@ int main() {
   g.add_edge(1, 5);
   g.add_edge(3, 7);
   g.add_edge(4, 5);
-  g.build_bcc();
+  g.build_bccs();
   assert((g.articulation_points() == vector<int>{1, 5}));
-  assert((g.components() == vector<vector<int>>{{1, 2}, {4, 5}, {0, 1, 5}, {3, 7}, {6}}));
+  assert((g.bccs() == vector<vector<int>>{{1, 2}, {4, 5}, {0, 1, 5}, {3, 7}, {6}}));
   g.build_block_cut_forest();
   assert((g.block_cut_forest() == vector<vector<int>>{{5}, {6}, {5, 6}, {}, {}, {0, 2}, {1, 2}}));
   return 0;

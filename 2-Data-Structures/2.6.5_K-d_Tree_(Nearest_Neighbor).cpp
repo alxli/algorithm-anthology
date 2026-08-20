@@ -85,7 +85,7 @@ class NearestKDTree {
   std::pair<T, T> nearest(const T &x, const T &y, bool can_equal = true) const {
     Dist best_dist = std::numeric_limits<Dist>::max();
     int best = -1;
-    auto rec = [&](auto &&rec, int lo, int hi) -> void {
+    auto rec = [&](auto &&rec, int lo, int hi) {
       if (lo >= hi) {
         return;
       }

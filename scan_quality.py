@@ -32,7 +32,7 @@ BRACED_PUSH_ALLOWLIST = {
     Path("2-Data-Structures/2.6.3_2D_Range_Tree.cpp"): {"points"},
     Path("3-Strings/3.7.2_Shunting_Yard_and_Postfix_Evaluation.cpp"): {"op_stack"},
     Path("4-Graphs/4.2.5_Articulation_Points,_Biconnected_Components,_Block-Cut_Forest.cpp"):
-        {"bccs"},
+        {"bcc"},
     Path("4-Graphs/4.2.10_Offline_Dynamic_Connectivity.cpp"): {"ops"},
 }
 
@@ -2518,8 +2518,8 @@ def scan_section_cross_references(paths):
     # stale references survived an earlier renumbering. The parenthesized form requires all three
     # parts, since a bare decimal in parentheses is far more often a number than a section.
     reference_re = re.compile(
-        r"(?:see|See|sections?|in|from|of)\s+(\d\.\d+(?:\.\d+)?)(?![\d.])"
-        r"|\((\d\.\d+\.\d+)\)"
+        r"\b(?:see|See|sections?|in|from|of)\s+([1-8]\.\d+(?:\.\d+)?)(?![\d.])"
+        r"|\(([1-8]\.\d+\.\d+)\)"
     )
     for path in paths:
         own = re.match(r"^(\d+\.\d+(?:\.\d+)?)_", path.name)

@@ -5,7 +5,7 @@ Maintain a numerical array while supporting point increments and range-sum queri
 the sum of a block of indices whose length is the lowest set bit of `i`. A point update touches
 O(log n) covering blocks, and a prefix-sum query combines O(log n) disjoint blocks.
 
-When prefix sums are nondecreasing, `max_prefix(c)` answers prefix-boundary queries by binary
+When prefix sums are nondecreasing, `max_right(c)` answers prefix-boundary queries by binary
 lifting: it walks the implicit power-of-two block structure to find the longest prefix with sum at
 most `c`. This lets the same structure double as a dynamic multiset over a bounded integer domain,
 useful for coordinate-compressed $k$-th element lookups and online rank queries.
@@ -18,7 +18,7 @@ useful for coordinate-compressed $k$-th element lookups and online rank queries.
 - `at(i)` returns the value at index `i`.
 - `sum(hi)` returns the sum of all values at indices $[0, `hi`]$.
 - `sum(lo, hi)` returns the sum of all values at indices $[`lo`, `hi`]$.
-- `max_prefix(c)` returns the largest boundary `hi` such that `sum(0, hi - 1)` $\leq$ `c`, assuming
+- `max_right(c)` returns the largest boundary `hi` such that `sum(0, hi - 1)` $\leq$ `c`, assuming
   prefix sums are nondecreasing and `c` is nonnegative. It may return any boundary in $[0, `n`]$.
 
 The value type `T` must represent $0$ and support addition and subtraction.
@@ -26,7 +26,7 @@ The value type `T` must represent $0$ and support addition and subtraction.
 Time Complexity:
 - O(n) per call to the constructor, where $n$ is the size of the array.
 - O(1) per call to `size()`.
-- O(log n) per call to `add()`, both `sum()` functions, `set()`, `at()`, and `max_prefix()`.
+- O(log n) per call to `add()`, both `sum()` functions, `set()`, `at()`, and `max_right()`.
 
 Space Complexity:
 - O(n) for storage of the Fenwick tree.
@@ -71,7 +71,7 @@ class Fenwick {
     return sum(hi) - sum(lo - 1);
   }
 
-  int max_prefix(T c) const {
+  int max_right(T c) const {
     int pos = 0, pw = 1;
     while (pw * 2 <= len) {
       pw *= 2;
@@ -103,11 +103,11 @@ int main() {
 
   // With nonnegative values, the tree doubles as a frequency table for order-statistic queries.
   Fenwick<int> freq(8);
-  freq.add(1, 1);                   // One element of value 1.
-  freq.add(3, 3);                   // Three elements of value 3.
-  freq.add(6, 1);                   // One element of value 6.
-  assert(freq.max_prefix(0) == 1);  // The longest prefix with count at most 0 is [0, 1).
-  assert(freq.max_prefix(3) == 3);  // Prefix [0, 3) has count 1; [0, 4) has count 4.
-  assert(freq.max_prefix(4) == 6);  // Prefix [0, 6) has count 4; [0, 7) has count 5.
+  freq.add(1, 1);                  // One element of value 1.
+  freq.add(3, 3);                  // Three elements of value 3.
+  freq.add(6, 1);                  // One element of value 6.
+  assert(freq.max_right(0) == 1);  // The longest prefix with count at most 0 is [0, 1).
+  assert(freq.max_right(3) == 3);  // Prefix [0, 3) has count 1; [0, 4) has count 4.
+  assert(freq.max_right(4) == 6);  // Prefix [0, 6) has count 4; [0, 7) has count 5.
   return 0;
 }

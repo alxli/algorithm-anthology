@@ -4,10 +4,18 @@
 *.log
 *.toc
 *.out
-*.synctex.gz
+*.synctex*
+*.idx
+*.ilg
+*.ind
 *.fls
 *.fdb_latexmk
 *.listing
-/.vscode
+# Editor settings that keep the LaTeX build from racing `make` are shared; the rest of .vscode
+# (tasks, compiler paths) is machine-specific.
+/.vscode/*
+!/.vscode/settings.json
 /.claude
 *.pyc
+/Book/build/
+/Book/build-editor/

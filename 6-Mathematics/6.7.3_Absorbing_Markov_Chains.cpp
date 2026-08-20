@@ -21,7 +21,7 @@ of steps before absorption, and multiplying by $R$ takes one final step into an 
   transient state $i$ until absorption.
 - `absorption_probabilities(q, r)` returns a matrix $B$ where $B_{i,k}$ is the probability that a
   chain starting at transient state $i$ is eventually absorbed at absorbing state $k$, given the
-  transient-to-absorbing matrix $R$.
+  transient-to-absorbing matrix `r`.
 
 Every transient state must reach an absorbing one, which is exactly what makes $I - Q$ invertible; a
 state that cannot is not transient but part of a closed group to be modeled as one absorbing state,

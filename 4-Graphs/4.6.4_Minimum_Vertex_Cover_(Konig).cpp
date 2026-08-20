@@ -51,7 +51,7 @@ bool dfs(int u) {
   return false;
 }
 
-int bipartite_matching(int n2) {
+int match_bipartite(int n2) {
   int n1 = static_cast<int>(adj.size());
   match_left.assign(n1, -1);
   match_right.assign(n2, -1);
@@ -69,7 +69,7 @@ int bipartite_matching(int n2) {
 
 std::vector<int> min_vertex_cover(int n2) {
   int n1 = static_cast<int>(adj.size());
-  bipartite_matching(n2);
+  match_bipartite(n2);
   std::vector<char> reachable_left(n1), reachable_right(n2);
   std::vector<int> st;
   for (int u = 0; u < n1; u++) {

@@ -4,6 +4,7 @@
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Sorting Algorithms}
+\label{sec:1.1.1}
 The following functions are equivalent to \inlinecode{std::sort()}, taking random-access iterators as a half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ to be sorted. The range is sorted into ascending order after the function call. Optionally, a comparison function object specifying a strict weak ordering may be specified to replace the default \inlinecode{operator\textless{}}.
 
 \begin{compactitem}
@@ -20,7 +21,7 @@ The following functions are equivalent to \inlinecode{std::sort()}, taking rando
 
 These functions are not meant to compete with standard library implementations in terms of speed. Instead, they demonstrate how common sorting algorithms can be concisely implemented in C++.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <climits>
 #include <functional>
@@ -36,7 +37,7 @@ The pivot chosen in this implementation is always a middle element of the range 
 
 \textbf{Space Complexity}: $O(\log n)$ auxiliary stack space.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 template<typename It, typename Compare = std::less<>>
 void quicksort(It lo, It hi, Compare comp = Compare{}) {
   using T = typename std::iterator_traits<It>::value_type;
@@ -70,7 +71,7 @@ An analogous function in the C++ standard library is \inlinecode{std::stable\_so
 
 \textbf{Space Complexity}: $O(\log n)$ auxiliary stack space and $O(n)$ auxiliary heap space.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 template<typename It, typename Compare = std::less<>>
 void mergesort(It lo, It hi, Compare comp = Compare{}) {
   if (hi - lo < 2) {
@@ -100,7 +101,7 @@ The C++ standard library equivalent is calling \inlinecode{std::make\_heap(lo, h
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 template<typename It, typename Compare = std::less<>>
 void heapsort(It lo, It hi, Compare comp = Compare{}) {
   if (hi - lo < 2) {
@@ -138,7 +139,7 @@ Comb sort is an improved bubble sort. While bubble sort compares only adjacent e
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 template<typename It, typename Compare = std::less<>>
 void combsort(It lo, It hi, Compare comp = Compare{}) {
   int gap = static_cast<int>(hi - lo);
@@ -167,7 +168,7 @@ The comparison \inlinecode{comp(key, *(j - 1))} is strict, so an element never m
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 template<typename It, typename Compare = std::less<>>
 void insertion_sort(It lo, It hi, Compare comp = Compare{}) {
   using T = typename std::iterator_traits<It>::value_type;
@@ -190,7 +191,7 @@ The gap sequence determines the bound, and choosing it well is the whole difficu
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 template<typename It, typename Compare = std::less<>>
 void shellsort(It lo, It hi, Compare comp = Compare{}) {
   static const int GAPS[] = {1, 4, 10, 23, 57, 132, 301, 701, 1577, 3548, 7983, 17962};
@@ -220,7 +221,7 @@ Placing elements in a second pass over the input from right to left keeps the so
 
 \textbf{Space Complexity}: $O(n + k)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 template<typename It, typename KeyFn>
 void counting_sort(It lo, It hi, int keys, KeyFn key) {
   if (hi - lo < 2) {
@@ -252,7 +253,7 @@ This implementation uses one byte per digit, so digits can be extracted with shi
 
 \textbf{Space Complexity}: $O(n + 2^{b})$ auxiliary for a radix of $b$ bits, i.e. $O(n)$ for constant $b$.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 template<typename It>
 void radix_sort(It lo, It hi) {
   if (hi - lo < 2) {
@@ -297,10 +298,10 @@ Its $O(n \log^{2} n)$ comparators exceed the $O(n \log n)$ comparisons of a comp
 
 \textbf{Space Complexity}: $O(\log n)$ auxiliary stack space.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 template<typename It, typename Compare = std::less<>>
 void bitonic_sort(It lo, It hi, Compare comp = Compare{}) {
-  auto merge = [&](auto &&merge, It lo, int n, bool up) -> void {
+  auto merge = [&](auto &&merge, It lo, int n, bool up) {
     if (n < 2) {
       return;
     }
@@ -316,7 +317,7 @@ void bitonic_sort(It lo, It hi, Compare comp = Compare{}) {
     merge(merge, lo, m, up);
     merge(merge, lo + m, n - m, up);
   };
-  auto rec = [&](auto &&rec, It lo, int n, bool up) -> void {
+  auto rec = [&](auto &&rec, It lo, int n, bool up) {
     if (n < 2) {
       return;
     }
@@ -329,7 +330,7 @@ void bitonic_sort(It lo, It hi, Compare comp = Compare{}) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <ctime>
 #include <iomanip>
@@ -470,6 +471,7 @@ radix_sort():     0.024s
 bitonic_sort():   1.040s
 \end{exampleoutput}
 \subsection{Partitioning and Selection}
+\label{sec:1.1.2}
 Partition a range around a pivot, or select the element with a given sorted rank without fully sorting the range. A comparator \inlinecode{comp} defines the ordering (defaults to \inlinecode{std::less\textless{}\textgreater{}}). Three-way partitioning rearranges the elements into consecutive groups that precede, are equivalent to, and follow the pivot. \inlinecode{std::partition()} can be used to place elements satisfying a unary predicate before those that do not, but forms only two groups and does not preserve relative order. Forming three groups can be done by first partitioning by \inlinecode{comp(x, pivot)}, then partitioning the remaining suffix by \inlinecode{!comp(pivot, x)}; using \inlinecode{std::stable\_partition()} for both calls preserves relative order within each group.
 
 \inlinecode{partition\_three\_way()} implements the Dutch National Flag algorithm, forming the three groups in one pass with $O(1)$ auxiliary space. At every iteration, $[{\inlinecodemath{lo}}, {\inlinecodemath{lt}})$ contains elements preceding the pivot, $[{\inlinecodemath{lt}}, {\inlinecodemath{cur}})$ contains equivalent elements, $[{\inlinecodemath{cur}}, {\inlinecodemath{gt}})$ remains unclassified, and $[{\inlinecodemath{gt}}, {\inlinecodemath{hi}})$ contains elements following the pivot. The current element \inlinecode{*cur} is compared with the pivot. If it precedes the pivot, it is swapped with \inlinecode{*lt} and both \inlinecode{lt} and \inlinecode{cur} advance. If it is equivalent, only \inlinecode{cur} advances. Otherwise, it is swapped with \inlinecode{*--gt} without advancing \inlinecode{cur}, since the incoming element remains unclassified.
@@ -502,7 +504,7 @@ Random pivots leave an adversary free to force $O(n^{2})$, which the median-of-m
   \item $O(\log n)$ auxiliary stack space for \inlinecode{quickselect\_linear()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <chrono>
 #include <functional>
@@ -570,7 +572,7 @@ void quickselect_linear(It lo, It nth, It hi, Compare comp = Compare{}) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <vector>
 using namespace std;
@@ -618,6 +620,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Array Rotation}
+\label{sec:1.1.3}
 Rotates the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ left around the split point \inlinecode{mid}, where ${\inlinecodemath{lo}} \leq {\inlinecodemath{mid}} \leq {\inlinecodemath{hi}}$. Writing the adjacent subranges $[{\inlinecodemath{lo}}, {\inlinecodemath{mid}})$ and $[{\inlinecodemath{mid}}, {\inlinecodemath{hi}})$ as \inlinecode{A} and \inlinecode{B}, respectively, the operation transforms \inlinecode{A B} into \inlinecode{B A} while preserving the relative order within each subrange. The standard library function \inlinecode{std::rotate(lo, mid, hi)} performs the same rearrangement.
 
 All three versions below operate in place, using different algorithms and iterator capabilities.
@@ -632,7 +635,7 @@ All three versions below operate in place, using different algorithms and iterat
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all versions.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <numeric>
 
@@ -685,7 +688,7 @@ void rotate3(It lo, It mid, It hi) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <vector>
@@ -729,6 +732,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Coordinate Compression}
+\label{sec:1.1.4}
 Given a range of $n$ numerical elements, reassign each element to an integer in the domain $[0, k)$, where $k$ is the number of distinct elements in the original range, while preserving the initial relative ordering of elements. That is, if $a$ is the array of original values and $b$ is the array of compressed values, then every pair of indices $i, j$ in $[0, n)$ shall satisfy $a[i] < a[j]$ if and only if $b[i] < b[j]$.
 
 The two functions below take a ForwardIterator range, rewrite it in place, and discard the mapping. The comparator \inlinecode{comp} defines the value ordering: \inlinecode{comp(a, b)} is true when \inlinecode{a} precedes \inlinecode{b}.
@@ -742,7 +746,7 @@ The two functions below take a ForwardIterator range, rewrite it in place, and d
 
 \textbf{Space Complexity}: $O(n)$ auxiliary for \inlinecode{compress1()} and \inlinecode{compress2()}.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <functional>
@@ -804,7 +808,7 @@ void compress2(It lo, It hi, Compare comp = Compare{}) {
 
 \textbf{Space Complexity}: $O(k)$ storage, where $k$ is the number of distinct registered values.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 template<typename T, typename Compare = std::less<T>>
 class Compressor {
   Compare comp;
@@ -842,7 +846,7 @@ class Compressor {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -893,6 +897,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Counting Inversions}
+\label{sec:1.1.5}
 The number of inversions for a sequence $a$ is the number of ordered pairs $(i, j)$ such that $i < j$ and $a[i] > a[j]$. This is roughly how ``close'' an array is to being sorted, but is \textit{not} the minimum number of swaps required to sort the array. If the array is sorted, then the inversion count is $0$. If the array is sorted in decreasing order, then the inversion count is maximal. The following two functions are each techniques to efficiently count inversions. In the merge sort approach, whenever the merge step emits an element from the right half, that element jumps ahead of every unmerged left-half element, and exactly that many inversions are added to the count.
 
 \begin{compactitem}
@@ -914,7 +919,7 @@ The number of inversions for a sequence $a$ is the number of ordered pairs $(i, 
   \item $O(n)$ auxiliary heap space for \inlinecode{inversions(a)}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cstdint>
 #include <functional>
@@ -977,7 +982,7 @@ int64_t inversions(const std::vector<int> &a) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -1004,6 +1009,7 @@ int main() {
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Prefix Sums}
+\label{sec:1.2.1}
 Precomputes prefix sums so range-sum queries can be answered in constant time. This is one of the most common array preprocessing tools, and also appears as a building block for subarray sums, difference arrays, and two-dimensional grids. Each table entry stores the sum of all elements before it, so any range sum is the difference of two entries; in two dimensions, rectangle sums combine four entries by inclusion-exclusion.
 
 Prefix sums can also be combined with a frequency table to count subarrays having a target sum. When the current prefix sum is $s$, every earlier prefix sum equal to $s - t$ identifies a subarray with sum $t$. Recording frequencies rather than only whether a prefix exists counts duplicate sums correctly.
@@ -1036,7 +1042,7 @@ Overflow warning: All prefix sums, target differences, inclusion-exclusion resul
   \item $O(n)$ auxiliary for \inlinecode{count\_subarrays\_with\_sum(a, target)}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <unordered_map>
@@ -1092,7 +1098,7 @@ int64_t count_subarrays_with_sum(const std::vector<int> &a, int64_t target) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 int main() {
@@ -1116,6 +1122,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Difference Array}
+\label{sec:1.2.2}
 Applies many range-add updates to an array in linear total time using a difference array. Instead of immediately adding \inlinecode{delta} to every element of range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$, we can add \inlinecode{delta} at \inlinecode{diff[lo]} and subtract it at \inlinecode{diff[hi + 1]}; a final prefix sum reconstructs the updated values. This idea extends to two dimensions: a rectangle update touches just the four corner cells of a difference grid by inclusion-exclusion, and a final two-dimensional prefix sum reconstructs the grid.
 
 \begin{compactitem}
@@ -1144,7 +1151,7 @@ Overflow warning: All stored differences and reconstructed values must fit in \i
   \item $O(R \cdot C)$ for storage and $O(R \cdot C)$ for the grid returned by \inlinecode{DifferenceArray2D::build()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <vector>
@@ -1213,7 +1220,7 @@ class DifferenceArray2D {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -1239,13 +1246,14 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Two Pointers and Sliding Window}
+\label{sec:1.2.3}
 Uses two moving indices to avoid trying all pairs of positions. This technique has two common forms: opposite-end pointers over sorted arrays, and a sliding window over contiguous subarrays. For sorted 2-sum, if the current sum is too small, pairing the left value with any smaller right value also fails, so the left pointer can safely advance; if the sum is too large, the symmetric argument lets the right pointer retreat. Each step therefore discards an entire row or column of candidate pairs.
 
 A sliding window applies the same idea when extending and shrinking a range changes its state monotonically. With nonnegative values, extending a window cannot decrease its sum and removing its leftmost value cannot increase it, so no shorter feasible window is skipped. For a bound such as at most $k$ distinct values, the left pointer advances only until the window becomes valid again. Since neither endpoint moves backward, each element enters and leaves the window at most once.
 
 For fixed-length windows, a monotonic deque of indices can report every minimum or maximum in linear total time. It stores only candidates that could still become the answer, ordered from the current extreme at the front to the least useful value at the back. A new element removes every older value that it dominates, while expired indices are removed from the front. Each index is again pushed and popped at most once.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -1285,7 +1293,7 @@ The examples below cover sorted 2-sum/3-sum variants, finding the shortest subar
   \item $O(k)$ auxiliary and $O(n)$ for the result of \inlinecode{sliding\_window\_extrema()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 std::pair<int, int> two_sum_sorted(const std::vector<int> &a, int64_t target) {
   for (int lo = 0, hi = static_cast<int>(a.size()) - 1; lo < hi;) {
     int64_t sum = static_cast<int64_t>(a[lo]) + a[hi];
@@ -1414,7 +1422,7 @@ The queue stores candidate (\inlinecode{index}, \inlinecode{value}) pairs in mon
 
 \textbf{Space Complexity}: $O(w)$ for storage of a sliding window of width $w$.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 template<typename T, typename Compare = std::less<T>>
 class MonotoneQueue {
   std::deque<std::pair<int, T>> q;
@@ -1444,7 +1452,7 @@ class MonotoneQueue {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 int main() {
@@ -1490,6 +1498,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Monotonic Stack}
+\label{sec:1.2.4}
 A monotonic stack maintains its elements in sorted order as values are pushed, popping away any entries that would violate the ordering. Scanning an array once while keeping such a stack of indices answers, for every position, where the nearest smaller or larger neighbor lies. These ``nearest smaller/greater'' relationships underlie many array problems, the most famous being the largest rectangle in a histogram. Each index is pushed and popped at most once, so a full scan runs in linear time. A largest all-zero submatrix can then be found by sweeping rows, turning each row into a histogram of consecutive zeros ending at that row.
 
 For any histogram bar, the nearest strictly lower bars to its left and right are the first positions that prevent a rectangle at the current bar's height from extending farther. The widest such rectangle therefore spans the positions strictly between those boundaries. For a binary matrix, the height at each column counts consecutive zeros ending in the current row; every all-zero rectangle has some bottom row, so solving one histogram per row considers every possible rectangle.
@@ -1522,7 +1531,7 @@ Overflow warning: Histogram areas must fit in the height value type.
   \item $O(C)$ auxiliary for \inlinecode{largest\_zero\_submatrix()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <stack>
 #include <tuple>
@@ -1632,7 +1641,7 @@ std::tuple<int, int, int, int, int> largest_zero_submatrix(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 int main() {
@@ -1661,9 +1670,10 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Aggregate Queue}
+\label{sec:1.2.5}
 Maintain a first-in, first-out queue that additionally answers, in $O(1)$ amortized time, the fold of an associative operation over all elements currently in the queue. This is the ``sliding window aggregation'' (SWAG) technique: by pushing new elements and popping old ones as a window advances, it reports an aggregate of every window in linear total time.
 
-Unlike the monotonic deque used for sliding-window extrema (see 1.2.3), the operation need only be associative, not order-based, so the same structure handles min, max, sum, gcd, matrix products, and other monoids. It is sometimes called a ``monotonic queue,'' but that term usually denotes the monotonic deque of 1.2.3 (which handles only min/max); the two are different structures. The queue is built from two stacks: a back stack receives pushes while a front stack serves pops, and each stack stores running folds so the two halves combine in $O(1)$. Whenever the front stack empties, the back stack is flipped onto it; this costs $O(1)$ amortized per element, since each element is moved between stacks at most once.
+Unlike the monotonic deque used for sliding-window extrema (see \secref{1.2.3}), the operation need only be associative, not order-based, so the same structure handles min, max, sum, gcd, matrix products, and other monoids. It is sometimes called a ``monotonic queue,'' but that term usually denotes the monotonic deque of \secref{1.2.3} (which handles only min/max); the two are different structures. The queue is built from two stacks: a back stack receives pushes while a front stack serves pops, and each stack stores running folds so the two halves combine in $O(1)$. Whenever the front stack empties, the back stack is flipped onto it; this costs $O(1)$ amortized per element, since each element is moved between stacks at most once.
 
 The fold is defined by an associative \inlinecode{combine(a, b)} function. The default code below returns the ``min'' of the elements; for ``sum'', \inlinecode{combine(a, b)} should return \inlinecode{a + b}. The fold is taken in queue order (front to back), so non-commutative operations such as matrix products are also supported.
 
@@ -1691,7 +1701,7 @@ The fold is defined by an associative \inlinecode{combine(a, b)} function. The d
   \item $O(1)$ auxiliary per operation, amortized (a \inlinecode{pop()} may flip the back stack onto the front stack).
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <utility>
@@ -1748,7 +1758,7 @@ class AggregateQueue {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 int main() {
@@ -1790,6 +1800,7 @@ int main() {
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Maximum Subarray Sum (Kadane)}
+\label{sec:1.3.1}
 Given an array of numbers, determine the maximum possible sum of any contiguous subarray. Kadane's algorithm scans the array while maintaining a nonnegative running sum. At each position, it adds the current value, records the largest sum seen, and resets the running sum to zero if it becomes negative. Discarding a negative sum is safe because it could only reduce every subarray extending it. This can be adapted to compute the maximal submatrix sum as well.
 
 Two related scans maintain slightly different states. For a circular array, the best wrapped subarray is the whole-array sum minus the minimum-sum subarray. For a maximum-product subarray, a negative value swaps the roles of the minimum and maximum products ending at the previous position, so both products must be tracked.
@@ -1817,7 +1828,7 @@ Overflow warning: All resulting sums and products must fit in the value type.
   \item $O(R)$ auxiliary for \inlinecode{max\_submatrix\_sum()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -1939,7 +1950,7 @@ std::tuple<T, int, int, int, int> max_submatrix_sum(const std::vector<std::vecto
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -2000,6 +2011,7 @@ Maximal sum submatrix:
 -1 8
 \end{exampleoutput}
 \subsection{Longest Increasing Subsequence}
+\label{sec:1.3.2}
 Given an array of elements, determine a longest subsequence where all elements are in strictly increasing order. The subsequence is not necessarily contiguous or unique, so only one such answer will be found. The answer is computed by scanning left to right while maintaining, for each length, the smallest possible tail value of an increasing subsequence of that length. Each element extends or improves one of these tails, located in $O(\log n)$ by binary search; predecessor links then reconstruct the subsequence. The comparator \inlinecode{comp} defines the ordering and defaults to \inlinecode{std::less\textless{}\textgreater{}}.
 
 \begin{compactitem}
@@ -2010,7 +2022,7 @@ Given an array of elements, determine a longest subsequence where all elements a
 
 \textbf{Space Complexity}: $O(n)$ auxiliary and $O(n)$ for the returned indices.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <functional>
 #include <vector>
@@ -2050,7 +2062,7 @@ std::vector<int> longest_increasing_subsequence(const std::vector<T> &a, Compare
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -2064,6 +2076,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{0-1 Knapsack}
+\label{sec:1.3.3}
 Solves the 0-1 knapsack problem: given items with nonnegative integer weights and values, choose each item at most once to maximize total value without exceeding a capacity limit.
 
 The one-dimensional dynamic programming array \inlinecode{dp[w]} stores the best value that can be achieved with total weight at most \inlinecode{w} after processing some prefix of the items. Iterating weights in decreasing order is what enforces the 0-1 constraint; it prevents the same item from being reused during the current item update.
@@ -2076,7 +2089,7 @@ The one-dimensional dynamic programming array \inlinecode{dp[w]} stores the best
 
 \textbf{Space Complexity}: $O(n \cdot W)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -2116,7 +2129,7 @@ std::pair<int64_t, std::vector<int>> knapsack_01(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -2129,6 +2142,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Unbounded Knapsack and Coin Change}
+\label{sec:1.3.4}
 Solves unbounded knapsack and two related coin change problems, where each item or coin may be used any number of times. In the maximum-value version, each item has a weight and value, and the goal is to maximize total value subject to a capacity limit. In coin change variants, the goal is either to count unordered ways to form a target sum or to minimize the number of coins used.
 
 For unbounded maximum-value knapsack, capacities are processed in increasing order. Thus, when computing \inlinecode{dp[w]}, every smaller-capacity state \inlinecode{dp[w - weight[i]]} is already final and may itself contain item \inlinecode{i}, allowing unlimited reuse. For unordered coin change, coins are the outer loop so each multiset of coins is counted once, independent of ordering. For minimum coins, each target sum chooses the best previous sum \inlinecode{sum - coin}, and the predecessor coin reconstructs one optimal multiset.
@@ -2156,7 +2170,7 @@ For unbounded maximum-value knapsack, capacities are processed in increasing ord
   \item $O(t)$ auxiliary and $O(c)$ for the returned \inlinecode{used} from \inlinecode{min\_coin\_change()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <utility>
@@ -2233,7 +2247,7 @@ std::pair<int, std::vector<int>> min_coin_change(const std::vector<int> &coins, 
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -2255,6 +2269,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Matrix Chain Parenthesization}
+\label{sec:1.3.5}
 Given a fixed-order chain of compatible matrices, finds a parenthesization that minimizes the number of scalar multiplications needed to compute their product. The algorithm examines only the matrix dimensions; it does not multiply matrix entries. Matrix multiplication is associative, but multiplying an $a$-by-$b$ matrix with a $b$-by-$c$ matrix costs $abc$ scalar multiplications, so different parenthesizations can have very different costs. This is a canonical example of interval dynamic programming.
 
 Write $d_i$ for \inlinecode{dimensions[i]}, so matrix $i$ has $d_i$ rows and $d_{i+1}$ columns. For a chain of matrices, $dp(l, r)$ is the minimum cost of multiplying matrices $l$ through $r$. Trying every final split $k$ gives the recurrence $dp(l, r) = \min_{l \le k < r}(dp(l, k) + dp(k + 1, r) + d_l d_{k+1} d_{r+1})$. The final product multiplies a $d_l$-by-$d_{k+1}$ matrix with a $d_{k+1}$-by-$d_{r+1}$ matrix. Processing intervals in increasing order of length ensures that both subintervals have already been solved. The same pattern applies whenever a contiguous interval is formed by combining two smaller intervals.
@@ -2269,7 +2284,7 @@ Overflow warning: The minimum cost and all intermediate products must fit in \in
 
 \textbf{Space Complexity}: $O(n^{2})$ auxiliary for the dynamic programming and split tables.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <string>
@@ -2311,7 +2326,7 @@ std::pair<int64_t, std::string> matrix_chain_order(const std::vector<int> &dimen
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 int main() {
@@ -2325,6 +2340,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Digit DP}
+\label{sec:1.3.6}
 Digit dynamic programming counts integers in a large bounded range whose decimal representations satisfy a digit-based property. The concrete routine below counts integers with a specified digit sum and provides the standard template to adapt for other finite-state properties.
 
 To count valid integers in $[0, x]$, process the digits of $x$ from left to right. The state records the current position, accumulated digit sum, and whether the chosen prefix still equals the prefix of $x$. Once that ``tight'' condition is false, the remaining choices depend only on the position and sum, so those states can be memoized. Subtracting the prefix counts for \inlinecode{hi} and \inlinecode{lo - 1} gives the answer for the requested range.
@@ -2339,7 +2355,7 @@ Leading zeros do not affect a digit sum, so every integer can be treated as a ze
 
 \textbf{Space Complexity}: $O(d \cdot s)$ auxiliary heap space and $O(d)$ call stack space.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <string>
@@ -2385,7 +2401,7 @@ int64_t count_digit_sum(int64_t lo, int64_t hi, int target) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -2399,11 +2415,12 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Egg Dropping}
+\label{sec:1.3.7}
 Given $e$ identical eggs and a building of $f$ floors, find the highest floor from which an egg survives a drop, using as few drops as possible in the worst case. An egg that survives can be reused; an egg that breaks is gone. With one egg, the only safe strategy is to climb one floor at a time, needing $f$ drops. With unlimited eggs, binary search needs $\lceil \log_2(f + 1) \rceil$ drops. The problem is what happens in between.
 
 The natural recurrence minimizes over the drop floor and maximizes over the two outcomes, costing $O(e \cdot f^{2})$. Removing that minimization is a technique worth knowing beyond this puzzle: when the quantity being minimized is small and bounded, promote it to a state dimension and solve for the old one. So ask how many floors $d$ drops with $e$ eggs can cover, not how many drops $f$ floors need. A drop splits the searchable floors into those below it, the drop floor, and those above, giving $dp(d, e) = dp(d-1, e-1) + dp(d-1, e) + 1$ with nothing left to minimize. Each entry is then $O(1)$, and the answer is the smallest $d$ whose reach is at least $f$.
 
-That table is $dp(d, e) = \sum_{i=1}^{e} \binom{d}{i}$ in the binomial coefficients of section 6.2.1, which is what keeps $d$ small: enough eggs sum to $2^d - 1$, while one egg leaves only $\binom{d}{1} = d$. Two eggs reach $91$ floors in 13 drops and $105$ in 14, the classic answer. The same inversion fits any question of how many tests distinguish $n$ cases, such as finding one defective item with a limited number of destructive tests.
+That table is $dp(d, e) = \sum_{i=1}^{e} \binom{d}{i}$ in the binomial coefficients of section \secref{6.2.1}, which is what keeps $d$ small: enough eggs sum to $2^d - 1$, while one egg leaves only $\binom{d}{1} = d$. Two eggs reach $91$ floors in 13 drops and $105$ in 14, the classic answer. The same inversion fits any question of how many tests distinguish $n$ cases, such as finding one defective item with a limited number of destructive tests.
 
 \begin{compactitem}
   \item \inlinecode{min\_drops(eggs, floors)} returns the number of drops needed in the worst case, where \inlinecode{eggs} is positive and \inlinecode{floors} is nonnegative.
@@ -2414,7 +2431,7 @@ That table is $dp(d, e) = \sum_{i=1}^{e} \binom{d}{i}$ in the binomial coefficie
 
 \textbf{Space Complexity}: $O(e)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <vector>
@@ -2450,7 +2467,7 @@ int drop_floor(int eggs, int floors) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 int main() {
@@ -2473,6 +2490,7 @@ int main() {
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Grid Transformations}
+\label{sec:1.4.1}
 Transforms a rectangular grid by transposing, rotating, or reflecting its cells. Transposition exchanges rows and columns. Rotation is clockwise by default, while a negative angle rotates counter-clockwise; the angle must be a multiple of $90$ degrees. Together, rotations and reflections generate all eight symmetries of a square grid.
 
 \begin{compactitem}
@@ -2493,7 +2511,7 @@ Transforms a rectangular grid by transposing, rotating, or reflecting its cells.
   \item $O(1)$ auxiliary for the in-place operations.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <utility>
@@ -2580,7 +2598,7 @@ Grid reflect_vertical(Grid a) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -2607,6 +2625,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Grid Traversal}
+\label{sec:1.4.2}
 Traverses a rectangular grid as an implicit unweighted graph: each unblocked cell is a node joined to its unblocked (four-way by default) orthogonal neighbors. Depth-first flood fill finds connected regions, while breadth-first search finds shortest distances because every move has unit length. Seeding the BFS with several cells computes the distance to the nearest source in one pass.
 
 \begin{compactitem}
@@ -2634,7 +2653,7 @@ Traverses a rectangular grid as an implicit unweighted graph: each unblocked cel
   \item $O(R \cdot C)$ for the returned \inlinecode{dist} and \inlinecode{pred}, and $O(p)$ for the path returned by \inlinecode{get\_path()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -2789,7 +2808,7 @@ std::vector<T> spiral_order(const std::vector<std::vector<T>> &a) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -2823,27 +2842,25 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Grid DP}
+\label{sec:1.4.3}
 Solves basic dynamic programming problems on a rectangular grid. In grid DP, each cell represents a state and transitions usually come from already-computed neighboring cells. Processing rows from top to bottom and columns from left to right makes predecessors above and to the left available when a state is computed.
 
 \begin{compactitem}
   \item \inlinecode{count\_grid\_paths(blocked)} returns the number of paths from the upper-left cell to the lower-right cell, moving only down or right and avoiding blocked cells marked nonzero. The state $dp(r, c)$ counts paths to cell $(r, c)$ from the counts above and left. Only the current row is retained.
   \item \inlinecode{min\_cost\_grid\_path(cost)} returns a pair (\inlinecode{min\_cost}, \inlinecode{path}) containing the minimum cost of a down/right path from the upper-left cell to the lower-right cell and the cells of one optimal path in order. The state $dp(r, c)$ stores the cheapest cost to cell $(r, c)$. Only the current row of costs is retained, while predecessor directions reconstruct one optimal path. If the grid is empty, \inlinecode{min\_cost} is $0$ and \inlinecode{path} is empty.
-  \item \inlinecode{largest\_one\_square(a)} returns a tuple (\inlinecode{side}, \inlinecode{top}, \inlinecode{left}) describing a largest all-nonzero square in \inlinecode{a}. The state $dp(c)$ is the largest square ending at the current cell in column $c$; a nonzero cell extends the minimum of the states above, left, and diagonally above-left. If no such square exists, the function returns $(0, -1, -1)$.
+  \item \inlinecode{largest\_nonzero\_square(a)} returns a tuple (\inlinecode{side}, \inlinecode{top}, \inlinecode{left}) describing a largest all-nonzero square in \inlinecode{a}. The state $dp(c)$ is the largest square ending at the current cell in column $c$; a nonzero cell extends the minimum of the states above, left, and diagonally above-left. If no such square exists, the function returns $(0, -1, -1)$. Overflow warning: Path counts and path costs must fit in \inlinecode{int64\_t}. Time Complexity:
+  \item $O(R \cdot C)$ per call, where $R$ and $C$ are the grid dimensions.
 \end{compactitem}
-
-Overflow warning: Path counts and path costs must fit in \inlinecode{int64\_t}.
-
-\textbf{Time Complexity}: $O(R \cdot C)$ per call, where $R$ and $C$ are the grid dimensions.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(C)$ auxiliary for \inlinecode{count\_grid\_paths(blocked)}.
   \item $O(R \cdot C)$ auxiliary for predecessor directions, $O(C)$ for path costs, and $O(R + C)$ for the returned path from \inlinecode{min\_cost\_grid\_path(cost)}.
-  \item $O(C)$ auxiliary for \inlinecode{largest\_one\_square(a)}.
+  \item $O(C)$ auxiliary for \inlinecode{largest\_nonzero\_square(a)}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cstdint>
 #include <tuple>
@@ -2912,7 +2929,7 @@ std::pair<int64_t, std::vector<std::pair<int, int>>> min_cost_grid_path(
   return {dp.back(), path};
 }
 
-std::tuple<int, int, int> largest_one_square(const std::vector<std::vector<char>> &a) {
+std::tuple<int, int, int> largest_nonzero_square(const std::vector<std::vector<char>> &a) {
   int rows = static_cast<int>(a.size());
   int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
   std::vector<int> dp(cols);
@@ -2935,7 +2952,7 @@ std::tuple<int, int, int> largest_one_square(const std::vector<std::vector<char>
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -2961,8 +2978,8 @@ int main() {
       {1, 1, 1, 1, 1},
       {1, 0, 1, 1, 1},
   };
-  assert((largest_one_square(binary) == tuple{3, 1, 2}));
-  assert((largest_one_square({{0, 0}}) == tuple{0, -1, -1}));
+  assert((largest_nonzero_square(binary) == tuple{3, 1, 2}));
+  assert((largest_nonzero_square({{0, 0}}) == tuple{0, -1, -1}));
   return 0;
 }
 \end{lstlisting}
@@ -2971,6 +2988,7 @@ int main() {
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Fractional Knapsack}
+\label{sec:1.5.1}
 Solves the fractional knapsack problem: given items with positive integer weights and nonnegative integer values, choose any fraction of each item to maximize total value without exceeding a capacity limit.
 
 The greedy algorithm processes items in decreasing order of value per unit weight, taking each item in full until only part of the next item fits. This is optimal because replacing any weight taken from a lower-density item with the same weight from a higher-density item cannot decrease the total value. Unlike 0-1 knapsack, allowing fractions makes each such exchange feasible.
@@ -2983,7 +3001,7 @@ The greedy algorithm processes items in decreasing order of value per unit weigh
 
 \textbf{Space Complexity}: $O(n)$ auxiliary and $O(n)$ for the returned fractions.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -3022,7 +3040,7 @@ std::pair<double, std::vector<double>> fractional_knapsack(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cmath>
 using namespace std;
 
@@ -3035,9 +3053,10 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Interval Scheduling}
+\label{sec:1.5.2}
 Selects the maximum number of non-overlapping intervals using the classic earliest-finish-time greedy algorithm. This is the unweighted interval scheduling problem, also known as activity selection: every interval has the same value, so the objective is to choose as many compatible intervals as possible.
 
-The greedy choice is safe because among all intervals that could be chosen first, taking one with the earliest finish time leaves the most room for the remaining intervals. In any optimal solution, the first chosen interval can be exchanged for an earliest-finishing compatible interval without reducing the number of intervals selected. Repeating this argument after each choice proves the greedy algorithm optimal. The weighted version in 1.5.3 needs dynamic programming instead.
+The greedy choice is safe because among all intervals that could be chosen first, taking one with the earliest finish time leaves the most room for the remaining intervals. In any optimal solution, the first chosen interval can be exchanged for an earliest-finishing compatible interval without reducing the number of intervals selected. Repeating this argument after each choice proves the greedy algorithm optimal. The weighted version in \secref{1.5.3} needs dynamic programming instead.
 
 Intervals are represented as half-open ranges $[{\inlinecodemath{start}}, {\inlinecodemath{finish}})$, so two intervals are compatible if the next interval's \inlinecode{start} is at least the previous interval's \inlinecode{finish}.
 
@@ -3049,7 +3068,7 @@ Intervals are represented as half-open ranges $[{\inlinecodemath{start}}, {\inli
 
 \textbf{Space Complexity}: $O(n)$ auxiliary and $O(n)$ for the returned indices.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <climits>
@@ -3084,7 +3103,7 @@ std::vector<int> select_intervals(const std::vector<Interval> &intervals) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -3099,6 +3118,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Weighted Interval Scheduling}
+\label{sec:1.5.3}
 Selects a maximum-weight subset of non-overlapping intervals using dynamic programming and binary search. Unlike unweighted interval scheduling, the earliest finish-time greedy choice is not sufficient when intervals have weights. With intervals sorted by finish time, the best total for the first $i$ intervals either skips interval $i$ or adds its weight to the best total over intervals finishing no later than its start, with that predecessor located by binary search.
 
 Intervals are represented as half-open ranges $[{\inlinecodemath{start}}, {\inlinecodemath{finish}})$, so two intervals are compatible if the next interval's \inlinecode{start} is at least the previous interval's \inlinecode{finish}.
@@ -3113,7 +3133,7 @@ Overflow warning: Accumulated weights must fit in \inlinecode{int64\_t}.
 
 \textbf{Space Complexity}: $O(n)$ auxiliary and $O(n)$ for the returned indices.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -3173,7 +3193,7 @@ std::pair<int64_t, std::vector<int>> select_weighted_intervals(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -3190,6 +3210,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Interval Merging and Covering}
+\label{sec:1.5.4}
 Two fundamental interval problems ask either for the union of a collection of intervals or for a minimum-size subcollection that covers a target interval. For the union, sorting by start time makes all intervals that overlap the current merged interval consecutive, so one scan can extend its finish or begin the next disjoint interval.
 
 For minimum covering, maintain the rightmost point covered so far. Among every interval starting at or before that frontier, greedily select one with the farthest finish. Any feasible cover must next use one of those intervals, and replacing that choice with the farthest-reaching one cannot make the remaining target harder to cover. This is different from interval scheduling, which selects the compatible interval with the earliest finish.
@@ -3205,7 +3226,7 @@ Intervals are represented as half-open ranges $[{\inlinecodemath{start}}, {\inli
 
 \textbf{Space Complexity}: $O(n)$ auxiliary and $O(n)$ for the returned intervals or indices.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <numeric>
@@ -3274,7 +3295,7 @@ std::optional<std::vector<int>> cover_interval(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <vector>
 using namespace std;
@@ -3295,6 +3316,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Interval Partitioning}
+\label{sec:1.5.5}
 Assigns intervals to the minimum number of groups so that no two intervals in the same group overlap. This is the classic interval partitioning problem, also known as finding the minimum number of rooms needed for meetings.
 
 The greedy algorithm sorts intervals by start time and reuses the group whose current finish time is earliest whenever possible. Otherwise, it creates a new group. This is optimal because the number of groups must be at least the maximum number of intervals overlapping at any time. When the earliest-finishing active group still overlaps the next interval, every active group overlaps it, so creating a new group is unavoidable. If that group is free, reusing it preserves as many later options as possible.
@@ -3309,7 +3331,7 @@ Intervals are treated as half-open ranges $[{\inlinecodemath{start}}, {\inlineco
 
 \textbf{Space Complexity}: $O(n)$ auxiliary and $O(n)$ for the returned assignment.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <functional>
@@ -3351,7 +3373,7 @@ std::pair<int, std::vector<int>> partition_intervals(const std::vector<Interval>
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 using namespace std;
@@ -3371,6 +3393,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Deadline Scheduling}
+\label{sec:1.5.6}
 Schedules unit-time jobs with deadlines and profits to maximize total profit. Each job takes one time slot and must be scheduled at or before its deadline. The greedy algorithm processes jobs in decreasing profit order and places each chosen job in the latest available slot before its deadline.
 
 The latest-slot choice is safe because it uses the current high-profit job while leaving earlier slots available for jobs with tighter deadlines. A disjoint-set forest over time slots makes this efficient: \inlinecode{find(t)} returns the latest still-free slot at or before \inlinecode{t}, and occupying slot \inlinecode{t} links it to the next candidate slot \inlinecode{t - 1}.
@@ -3385,7 +3408,7 @@ Overflow warning: The total profit must fit in \inlinecode{int64\_t}.
 
 \textbf{Space Complexity}: $O(n)$ auxiliary and $O(n)$ for the returned slot assignment.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -3443,7 +3466,7 @@ std::pair<int64_t, std::vector<int>> select_deadline_jobs(const std::vector<Job>
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -3456,6 +3479,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Minimum Late Jobs (Moore-Hodgson)}
+\label{sec:1.5.7}
 Selects a maximum-size subset of jobs that can all be completed by their deadlines. Each job has a processing time and deadline, and all jobs are available at time $0$. The Moore-Hodgson algorithm sorts by deadline and keeps the accepted jobs in a max-heap by processing time; whenever the schedule becomes late, it removes the longest accepted job.
 
 After considering jobs up to some deadline, if the accepted set no longer fits, at least one accepted job must be removed. Removing the longest one leaves the most remaining time while keeping the same number of removed jobs, so it is never worse than removing a shorter accepted job. Repeating this repair after each deadline leaves a largest feasible accepted set.
@@ -3470,7 +3494,7 @@ Overflow warning: The total duration must fit in \inlinecode{int64\_t}.
 
 \textbf{Space Complexity}: $O(n)$ auxiliary and $O(n)$ for the returned indices.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -3518,7 +3542,7 @@ std::vector<int> max_on_time_jobs(const std::vector<TimedJob> &jobs) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -3529,7 +3553,8 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Weighted Completion Time}
-Given jobs that must run one at a time on a single machine, each with a processing time and a weight, order them to minimize the weighted sum of completion times $\sum w_j C_j$, where $C_j$ is the moment job $j$ finishes. Unlike the deadline problems of sections 1.5.6 and 1.5.7, nothing is rejected and no deadline is missed; every order is feasible, and only the total cost differs.
+\label{sec:1.5.8}
+Given jobs that must run one at a time on a single machine, each with a processing time and a weight, order them to minimize the weighted sum of completion times $\sum w_j C_j$, where $C_j$ is the moment job $j$ finishes. Unlike the deadline problems of sections \secref{1.5.6} and \secref{1.5.7}, nothing is rejected and no deadline is missed; every order is feasible, and only the total cost differs.
 
 Smith's rule sorts by the ratio of processing time to weight, running the job with the smallest $p_j / w_j$ first. An exchange argument proves it optimal. Consider any schedule that runs job $b$ immediately before job $a$ with $p_a / w_a < p_b / w_b$, and swap the two. Every other job finishes at the same moment, since the pair occupies the same total time, so the change in cost is $p_a w_b - p_b w_a$, which the ratio inequality makes negative. Any schedule violating the ratio order therefore improves under a swap, so an optimal schedule must be sorted by it. With equal weights the rule reduces to shortest processing time first, the classic way to minimize the average completion time.
 
@@ -3545,7 +3570,7 @@ Overflow warning: the products in the comparator and the running completion time
 
 \textbf{Space Complexity}: $O(n)$ auxiliary and $O(n)$ for the returned order.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -3578,7 +3603,7 @@ std::pair<int64_t, std::vector<int>> min_weighted_completion_time(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -3602,6 +3627,7 @@ int main() {
 \setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Fisher-Yates Shuffle}
+\label{sec:1.6.1}
 Randomly permutes a range in-place using the Fisher-Yates shuffle. Each possible permutation is produced with equal probability, assuming the random number source is uniform.
 
 The algorithm scans from right to left. At each position $i$, it chooses a random position $j$ from $[0, i]$ and swaps the two elements. This fixes one uniformly random remaining element at a time.
@@ -3614,7 +3640,7 @@ The algorithm scans from right to left. At each position $i$, it chooses a rando
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <chrono>
 #include <random>
@@ -3632,7 +3658,7 @@ void fisher_yates_shuffle(It lo, It hi) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <vector>
@@ -3647,6 +3673,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Reservoir Sampling}
+\label{sec:1.6.2}
 Selects uniformly random samples from a stream whose length may be unknown in advance. This is useful when values arrive online or when storing the full dataset is unnecessary.
 
 Reservoir sampling keeps only the chosen sample in memory while processing each element once. The first $k$ arrivals fill the reservoir, and the $i$-th element thereafter is accepted with probability $k/i$, evicting a uniformly chosen occupant. One draw performs both choices: an integer uniform on $[0, i)$ is below $k$ with probability $k/i$, and is then uniform on the $k$ occupants.
@@ -3678,7 +3705,7 @@ Each class maintains its reservoir incrementally; call \inlinecode{add(x)} once 
   \item $O(k)$ storage for \inlinecode{ReservoirSampleK}, allocated on construction.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <chrono>
 #include <optional>
@@ -3743,7 +3770,7 @@ class ReservoirSampleK {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -3776,6 +3803,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Frequent Elements}
+\label{sec:1.6.3}
 Finds frequent elements in a range using cancellation algorithms that retain only a small set of candidates. Boyer-Moore finds a possible majority element, while Misra-Gries generalizes the same idea to frequencies above any threshold $n/k$.
 
 The Boyer-Moore voting algorithm maintains one candidate and counter, incrementing on a match and decrementing on a mismatch. Each decrement cancels two different values. Removing such pairs cannot eliminate an element occurring more than $\lfloor n/2 \rfloor$ times, so a true majority survives as the final candidate. A second pass verifies that candidate.
@@ -3802,7 +3830,7 @@ Misra-Gries keeps at most $k - 1$ candidates. A tracked value increments its cou
   \item $O(k)$ for the candidates returned by \inlinecode{frequent\_candidates()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <iterator>
 #include <unordered_map>
@@ -3865,7 +3893,7 @@ auto frequent_candidates(It lo, It hi, int k) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <vector>
 using namespace std;
 
@@ -3884,7 +3912,8 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Online Statistics}
-Online stream summaries update useful statistics as values arrive without storing the full stream. This section uses Welford's algorithm to maintain the mean and variance of a stream in constant space, then merges Welford summaries inside a queue to maintain the same statistics over a sliding window. For the median of a stream or of a trailing window, see section 1.6.5.
+\label{sec:1.6.4}
+Online stream summaries update useful statistics as values arrive without storing the full stream. This section uses Welford's algorithm to maintain the mean and variance of a stream in constant space, then merges Welford summaries inside a queue to maintain the same statistics over a sliding window. For the median of a stream or of a trailing window, see section \secref{1.6.5}.
 
 The naive variance formula $\operatorname{Var}(X) = E[X^2] - E[X]^2$ can lose precision when the two terms are large and close together. Welford instead maintains the current mean $\bar{x}_n$ (stored as \inlinecode{avg}) and the unnormalized second central moment $M_{2,n} = \sum_{i=1}^{n}(x_i - \bar{x}_n)^2$ (stored as \inlinecode{m2}). Each new value shifts the running mean by its deviation divided by the new count, then adds the product of its deviations from the old and new means to \inlinecode{m2}.
 
@@ -3901,7 +3930,7 @@ The naive variance formula $\operatorname{Var}(X) = E[X^2] - E[X]^2$ can lose pr
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <utility>
 #include <vector>
@@ -3929,7 +3958,7 @@ class OnlineStatistics {
 \end{lstlisting}
 To additionally support FIFO removals, Welford's update cannot simply be run backwards to drop the oldest value: reversing it turns \inlinecode{m2} into a difference, which loses the very property that made the forward pass stable, and the resulting error has no way to correct itself as the window advances.
 
-Summaries are mergeable instead. Two summaries of disjoint groups combine by shifting the mean toward the larger group and adding the spread between the two group means, so that $M_2 = M_{2,A} + M_{2,B} + \delta^2 n_A n_B / n$, where $\delta$ is the gap between the group means. That merge is associative, which makes summaries a monoid and puts them within reach of the sliding window aggregation (SWAG) technique of section 1.2.5: a queue of two stacks, each entry storing the fold of everything between it and its end of the queue, reports the fold of the entire queue in $O(1)$ amortized time. The class below is that structure specialized to this summary, so section 1.2.5 is the place to look for the general version over any associative operation, and for why flipping the back stack onto the front stack costs only $O(1)$ amortized per value.
+Summaries are mergeable instead. Two summaries of disjoint groups combine by shifting the mean toward the larger group and adding the spread between the two group means, so that $M_2 = M_{2,A} + M_{2,B} + \delta^2 n_A n_B / n$, where $\delta$ is the gap between the group means. That merge is associative, which makes summaries a monoid and puts them within reach of the sliding window aggregation (SWAG) technique of section \secref{1.2.5}: a queue of two stacks, each entry storing the fold of everything between it and its end of the queue, reports the fold of the entire queue in $O(1)$ amortized time. The class below is that structure specialized to this summary, so section \secref{1.2.5} is the place to look for the general version over any associative operation, and for why flipping the back stack onto the front stack costs only $O(1)$ amortized per value.
 
 Every value still enters through a forward Welford update of a one-element summary, and the folds only ever add nonnegative terms, so the statistics of a window are as stable as those of a whole stream.
 
@@ -3941,13 +3970,13 @@ Every value still enters through a forward Welford update of a one-element summa
   \item \inlinecode{mean()}, \inlinecode{var\_pop()}, and \inlinecode{var\_samp()} return the same statistics as above, over the values currently in the queue.
 \end{compactitem}
 
-The window is left to the caller rather than fixed by the constructor. A trailing window of width $w$ is one call to \inlinecode{add()} followed by a call to \inlinecode{remove()} whenever \inlinecode{count()} exceeds $w$, while a variable-width window from the two-pointer patterns of section 1.2.3 instead removes values until its own condition holds again.
+The window is left to the caller rather than fixed by the constructor. A trailing window of width $w$ is one call to \inlinecode{add()} followed by a call to \inlinecode{remove()} whenever \inlinecode{count()} exceeds $w$, while a variable-width window from the two-pointer patterns of section \secref{1.2.3} instead removes values until its own condition holds again.
 
 \textbf{Time Complexity}: $O(1)$ amortized per call to \inlinecode{add()} and \inlinecode{remove()}, and $O(1)$ per query.
 
 \textbf{Space Complexity}: $O(n)$ storage, where $n$ is the number of values currently in the queue.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 class StatisticsQueue {
   struct Summary {
     int n;
@@ -4015,7 +4044,7 @@ class StatisticsQueue {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cmath>
 #include <vector>
@@ -4094,7 +4123,8 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Online Median}
-The median of a stream can be maintained as values arrive, without ever sorting the stream. This section keeps the median of a growing stream in two heaps, and the median of a changing collection in a multiset, the difference between them being whether values ever have to leave again. For the mean and variance of a stream, see section 1.6.4.
+\label{sec:1.6.5}
+The median of a stream can be maintained as values arrive, without ever sorting the stream. This section keeps the median of a growing stream in two heaps, and the median of a changing collection in a multiset, the difference between them being whether values ever have to leave again. For the mean and variance of a stream, see section \secref{1.6.4}.
 
 Two heaps hold the values in halves, using linear storage. A max-heap stores the lower half and a min-heap stores the upper half, balanced so that the lower heap has either the same number of values as the upper heap or one extra value. Their roots are therefore the middle value or values of the stream.
 
@@ -4113,7 +4143,7 @@ Since \inlinecode{median()} averages in \inlinecode{double}, an even count over 
 
 \textbf{Space Complexity}: $O(n)$ storage.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <functional>
 #include <iterator>
@@ -4160,7 +4190,7 @@ class OnlineMedian {
   }
 };
 \end{lstlisting}
-To additionally support arbitrary removals, a multiset (balanced binary search tree) holds the values in sorted order while an iterator tracks the lower median. Each insertion or erasure shifts the middle of the multiset by at most one position, so the iterator only ever steps one element in either direction: whether it moves depends on which side of the median the value lies and on the parity of the resulting size. Unlike the two heaps above, and unlike the statistics queue of section 1.6.4 that can only drop its oldest value, a multiset erases any value it holds, so removals may come in any order.
+To additionally support arbitrary removals, a multiset (balanced binary search tree) holds the values in sorted order while an iterator tracks the lower median. Each insertion or erasure shifts the middle of the multiset by at most one position, so the iterator only ever steps one element in either direction: whether it moves depends on which side of the median the value lies and on the parity of the resulting size. Unlike the two heaps above, and unlike the statistics queue of section \secref{1.6.4} that can only drop its oldest value, a multiset erases any value it holds, so removals may come in any order.
 
 \begin{compactitem}
   \item \inlinecode{DeletableMedian\textless{}T\textgreater{}()} constructs an empty median tracker for an ordered numeric type \inlinecode{T}.
@@ -4170,13 +4200,13 @@ To additionally support arbitrary removals, a multiset (balanced binary search t
   \item \inlinecode{lower\_median()}, \inlinecode{upper\_median()}, and \inlinecode{median()} answer as above, over the values currently held. The tracker must be nonempty.
 \end{compactitem}
 
-A trailing window of width $w$ over an array is one call to \inlinecode{add()} followed by a call to \inlinecode{remove()} on the value leaving the window, and a two-pointer scan from section 1.2.3 removes by its own condition instead. Because removals are unordered, the same structure also serves the add and remove operations of Mo's algorithm in section 2.5.4, which answers median queries over arbitrary ranges offline. Replacing the parked iterator with an order-statistic tree, such as the \inlinecode{\_\_gnu\_pbds} tree of section 8.6, generalizes further to any rank rather than just the middle.
+A trailing window of width $w$ over an array is one call to \inlinecode{add()} followed by a call to \inlinecode{remove()} on the value leaving the window, and a two-pointer scan from section \secref{1.2.3} removes by its own condition instead. Because removals are unordered, the same structure also serves the add and remove operations of Mo's algorithm in section \secref{2.5.4}, which answers median queries over arbitrary ranges offline. Replacing the parked iterator with an order-statistic tree, such as the \inlinecode{\_\_gnu\_pbds} tree of section \secref{8.6}, generalizes further to any rank rather than just the middle.
 
 \textbf{Time Complexity}: $O(\log n)$ per call to \inlinecode{add()} and \inlinecode{remove()}, and $O(1)$ per query, where $n$ is the number of values currently held.
 
 \textbf{Space Complexity}: $O(n)$ storage.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 template<typename T>
 class DeletableMedian {
   std::multiset<T> sorted;
@@ -4238,7 +4268,7 @@ class DeletableMedian {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cmath>
 using namespace std;
 
@@ -4297,7 +4327,8 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Probabilistic Sketches}
-A sketch answers questions about a stream using far less memory than the stream itself, in exchange for a bounded, one-sided error. This section implements a Bloom filter, which tests set membership, and a count-min sketch, which estimates how often each value occurred. Both spread every value over several independent positions of a fixed-size table, and both derive those positions from one pair of base hashes: the Kirsch-Mitzenmacher technique uses $h_i(x) = h_1(x) + i \cdot h_2(x)$ instead of computing an unrelated hash for every position, which matches the false-positive behavior of truly independent hashes while paying for only two. Both base hashes come from the SplitMix64 mixer of section 3.2.1, and the second is forced odd so that repeated steps never stand still.
+\label{sec:1.6.6}
+A sketch answers questions about a stream using far less memory than the stream itself, in exchange for a bounded, one-sided error. This section implements a Bloom filter, which tests set membership, and a count-min sketch, which estimates how often each value occurred. Both spread every value over several independent positions of a fixed-size table, and both derive those positions from one pair of base hashes: the Kirsch-Mitzenmacher technique uses $h_i(x) = h_1(x) + i \cdot h_2(x)$ instead of computing an unrelated hash for every position, which matches the false-positive behavior of truly independent hashes while paying for only two. Both base hashes come from the SplitMix64 mixer of section \secref{3.2.1}, and the second is forced odd so that repeated steps never stand still.
 
 A Bloom filter represents a set as a bit array. Inserting a value sets the $k$ bits it hashes to, and a membership test reports that a value is present only if all $k$ of its bits are set. Bits are never cleared, so a value that was inserted always tests positive: the error is one-sided, and only a false positive is possible, produced when unrelated insertions happen to have set all $k$ bits. For $n$ values in $m$ bits, the false-positive probability is minimized by $k = (m/n) \ln 2$, which yields $m = -n \ln p / (\ln 2)^2$ bits for a target rate $p$.
 
@@ -4327,7 +4358,7 @@ Deletion is not supported, since clearing a bit could hide an unrelated value th
   \item $O(1)$ auxiliary for all operations.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -4407,7 +4438,7 @@ A count-min sketch estimates the total weight added under each value. It stores 
   \item \inlinecode{num\_rows()} and \inlinecode{num\_cols()} return the derived table dimensions.
 \end{compactitem}
 
-The error bound is relative to the total weight of the whole stream, so a sketch estimates heavy values well and light ones poorly. That makes it a natural companion to the deterministic heavy-hitter candidates of section 1.6.3: run both, then use the sketch to rank the candidates. Negative weights break the guarantee, since a row is then no longer an overestimate; deletions require the count-mean-min variant or a conservative sketch.
+The error bound is relative to the total weight of the whole stream, so a sketch estimates heavy values well and light ones poorly. That makes it a natural companion to the deterministic heavy-hitter candidates of section \secref{1.6.3}: run both, then use the sketch to rank the candidates. Negative weights break the guarantee, since a row is then no longer an overestimate; deletions require the count-mean-min variant or a conservative sketch.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -4424,7 +4455,7 @@ The error bound is relative to the total weight of the whole stream, so a sketch
   \item $O(1)$ auxiliary for all operations.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 template<typename T, typename Hash = std::hash<T>>
 class CountMinSketch {
   std::vector<std::vector<int64_t>> table;
@@ -4464,7 +4495,7 @@ class CountMinSketch {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <string>
 using namespace std;
 
@@ -4501,6 +4532,7 @@ int main() {
 \setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Bit Operations and Masks}
+\label{sec:1.7.1}
 Integers are all fixed-size sets of bits, where the $i$-th bit (counting from the least significant bit where $i = 0$) is ``present'' when set to $1$. Treating an \inlinecode{int} as a bitmask makes set membership, insertion, deletion, and iteration into single machine instructions, which is why bitmasks are the backbone of subset dynamic programming and many low-level tricks. The helpers below operate on \inlinecode{Mask}, which is \inlinecode{uint32\_t} by default; change its alias to \inlinecode{uint64\_t} to use 64-bit masks. The loop implementations below exist for education only; production code should prefer the matching GCC built-ins when available, or on C++20 systems the generic \inlinecode{constexpr} equivalents from the \inlinecode{\textless{}bit\textgreater{}} header, which are additionally well-defined at $0$.
 
 \begin{compactitem}
@@ -4527,7 +4559,7 @@ Integers are all fixed-size sets of bits, where the $i$-th bit (counting from th
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <climits>
 #include <cstdint>
@@ -4602,7 +4634,7 @@ void for_each_set_bit(Mask x, Fn f) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <vector>
 using namespace std;
@@ -4643,6 +4675,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Subset and Submask Iteration}
+\label{sec:1.7.2}
 Many bitmask algorithms must visit related masks in a structured order: every submask of a fixed mask, every mask with a fixed number of set bits, or every mask while accumulating contributions from its submasks. Each pattern has a short, well-known idiom.
 
 The classic submask loop \inlinecode{for (int s = m; s \textgreater{} 0; s = (s - 1) \& m)} walks every nonzero submask of \inlinecode{m} in decreasing order; subtracting 1 borrows through the zero bits of \inlinecode{m}, and the \inlinecode{\& m} masks them back off. Summed over all masks \inlinecode{m} of \inlinecode{n} bits, the total work is $\sum_k \binom{n}{k} 2^k = 3^n$, since each of the \inlinecode{n} bit positions is independently absent, present in \inlinecode{m} only, or present in both \inlinecode{m} and \inlinecode{s}.
@@ -4674,7 +4707,7 @@ Overflow warning: All intermediate sums must be representable in the value type.
   \item $O(1)$ auxiliary and $O(s)$ for the returned masks from \inlinecode{submasks(m)} and \inlinecode{masks\_with\_popcount(n, k)}, where $s$ is the result size.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <climits>
 #include <cstdint>
@@ -4732,7 +4765,7 @@ void subset_sum_transform(std::vector<T> &f) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 int main() {
@@ -4753,9 +4786,10 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Bitmask DP}
+\label{sec:1.7.3}
 Bitmask dynamic programming uses a bitmask to represent a small set or frontier, then treats that mask as the DP state. This is useful when one dimension is small enough for $2^n$ states.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -4774,7 +4808,7 @@ Overflow warning: The accumulated cost must fit in \inlinecode{int64\_t}.
 
 \textbf{Space Complexity}: $O(2^{n})$ auxiliary and $O(n)$ for the returned assignment from \inlinecode{min\_cost\_assignment()}.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 std::pair<int64_t, std::vector<int>> min_cost_assignment(
     const std::vector<std::vector<int64_t>> &cost
 ) {
@@ -4818,7 +4852,7 @@ The minimum set cover problem asks for the fewest input sets whose union contain
 
 \textbf{Space Complexity}: $O(2^{u})$ auxiliary and $O(s)$ for the returned indices.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 std::pair<int, std::vector<int>> set_cover(const std::vector<int> &sets, int universe_size) {
   assert(0 <= universe_size && universe_size < 31);
   int states = 1 << universe_size;
@@ -4868,7 +4902,7 @@ Overflow warning: The accumulated cost must fit in \inlinecode{int64\_t}.
 
 \textbf{Space Complexity}: $O(2^{n})$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 int64_t min_cost_partition(const std::vector<int64_t> &group_cost) {
   int states = static_cast<int>(group_cost.size());
   assert(states > 0 && (states & (states - 1)) == 0);
@@ -4895,7 +4929,7 @@ Overflow warning: The tiling count must fit in \inlinecode{int64\_t}.
 
 \textbf{Space Complexity}: $O(2^{C})$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 int64_t count_domino_tilings(int rows, int cols) {
   assert(rows >= 0 && cols >= 0);
   if (rows == 0 || cols == 0) {
@@ -4934,7 +4968,7 @@ int64_t count_domino_tilings(int rows, int cols) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -4965,6 +4999,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Gray Code}
+\label{sec:1.7.4}
 The binary reflected Gray code is an ordering of all $2^n$ bitmasks in which consecutive masks differ in exactly one bit. It is useful whenever the cost of moving between adjacent states depends on a single bit flip: enumerating subsets while incrementally maintaining a value, hardware where only one bit may toggle at a time, and constructions like Hamiltonian paths on the hypercube.
 
 The Gray code at 0-based rank \inlinecode{k} is obtained from the ordinary binary value \inlinecode{k} by \inlinecode{k \textasciicircum{} (k \textgreater{}\textgreater{} 1)}. Incrementing \inlinecode{k} flips one binary bit and every lower bit, but XORing each bit with its higher neighbor cancels all but the highest of those changes, so consecutive Gray codes differ in exactly one bit. The map is a bijection: each binary bit is the prefix XOR of the Gray bits at and above it. The inverse loop computes those prefix XORs in doubling steps to recover the original rank.
@@ -4990,7 +5025,7 @@ The Gray code at 0-based rank \inlinecode{k} is obtained from the ordinary binar
   \item $O(1)$ auxiliary and $O(2^{n})$ for the returned sequence from \inlinecode{gray\_sequence(n)}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <climits>
 #include <cstdint>
@@ -5021,7 +5056,7 @@ std::vector<Mask> gray_sequence(int n) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -5046,6 +5081,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{XOR Basis}
+\label{sec:1.7.5}
 An XOR basis (also called a linear basis over the field GF(2)) is the analog of a vector space basis for integers under the bitwise XOR operation. Each integer is treated as a vector of bits, where XOR plays the role of vector addition. Inserting a set of integers one at a time and keeping only those that are linearly independent yields a basis whose XOR-combinations (subset XORs) span exactly the same set of values as the original integers. From a basis of size $r$, exactly $2^r$ distinct values are reachable, and queries such as the maximum attainable XOR become a simple greedy scan.
 
 The basis is kept in row-echelon form: the $i$-th basis element is either $0$ or a value whose highest set bit is bit $i$, and no two basis elements share the same highest bit. Reducing a value means XORing it against the basis elements from the highest bit down, eliminating each set bit that a basis element covers.
@@ -5072,7 +5108,7 @@ The basis is kept in row-echelon form: the $i$-th basis element is either $0$ or
   \item $O(1)$ auxiliary for all operations.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <array>
 #include <climits>
 #include <cstdint>
@@ -5123,7 +5159,7 @@ class XorBasis {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 int main() {
@@ -5143,6 +5179,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Binary Trie}
+\label{sec:1.7.6}
 Maintain a multiset of nonnegative $b$-bit integers as a binary trie, storing each value as a root-to-leaf path of its bits from the most significant (bit $b - 1$) down to the least significant. Every node keeps a count of the stored values passing through it, which supports deletion and counting queries, and lets the trie answer XOR-extremal queries by a greedy walk down the bits.
 
 The classic application is the maximum-XOR query: to maximize \inlinecode{x \textasciicircum{} y} over all stored \inlinecode{y}, walk from the most significant bit. At each step, descend toward the child whose bit differs from that of \inlinecode{x} whenever such a branch exists, since setting a higher bit of the result always dominates any combination of lower bits. The minimum-XOR query is the mirror image, preferring the matching bit.
@@ -5175,7 +5212,7 @@ Values must lie in $[0, 2^b)$ for bit width $b$; the template parameters select 
   \item $O(1)$ auxiliary per operation.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <array>
 #include <cassert>
 #include <climits>
@@ -5308,7 +5345,7 @@ class BinaryTrie {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -5338,6 +5375,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Bitwise Convolution (FWHT)}
+\label{sec:1.7.7}
 Bitwise convolution combines two arrays indexed by masks, grouping pairs of masks by a bitwise operation instead of by ordinary addition. For arrays \inlinecode{a} and \inlinecode{b} over an $n$-bit universe, the XOR convolution \inlinecode{c[m]} is the sum of \inlinecode{a[x]*b[y]} over all \inlinecode{x \textasciicircum{} y = m}. OR and AND convolution replace \inlinecode{x \textasciicircum{} y} with \inlinecode{x | y} or \inlinecode{x \& y}. These appear in subset DP, counting pairs by bitwise result, and algebra over the Boolean hypercube.
 
 The fast Walsh-Hadamard transform (FWHT) diagonalizes XOR convolution in the same way that the FFT diagonalizes polynomial convolution: transform both arrays, multiply pointwise, and transform back. The OR and AND versions are Zeta/Mobius transforms over the subset lattice, but they have the same butterfly-shaped implementation and the same $O(n \log n)$ runtime for arrays of length $n = 2^k$.
@@ -5376,7 +5414,7 @@ Overflow warning: All intermediate sums, differences, and products must be repre
   \item $O(n \log n)$ auxiliary for \inlinecode{subset\_convolve()}, from the rank layers.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -5521,7 +5559,7 @@ std::vector<T> subset_convolve(std::vector<T> a, std::vector<T> b) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -5577,6 +5615,7 @@ int main() {
 \setcounter{section}{8}
 \setcounter{subsection}{0}
 \subsection{Minimum Excluded Value}
+\label{sec:1.8.1}
 Given a multiset of integers, find the minimum excluded nonnegative value (MEX), i.e. the smallest integer $x \geq 0$ not present in the multiset. MEX often appears in array problems, game theory with Grundy numbers, and dynamic programming states. Since the MEX of $n$ values never exceeds $n$, the one-shot version tracks seen values in $[0, n]$ before scanning to find the first missing.
 
 \begin{compactitem}
@@ -5607,7 +5646,7 @@ The MEX of a dynamic multiset can be computed using counts of present values and
   \item $O(n)$ storage for \inlinecode{DynamicMex}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <iterator>
 #include <set>
 #include <unordered_map>
@@ -5672,7 +5711,7 @@ class DynamicMex {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -5700,6 +5739,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Josephus Problem}
+\label{sec:1.8.2}
 The Josephus problem arranges $n$ people, numbered $[0, n)$, in a circle and repeatedly removes every $k$-th remaining person until one survives. Counting starts at person $0$, which counts as the first person. After the first removal, relabeling the smaller circle from the next person gives the same problem on $n - 1$ people. Mapping its survivor back to the original labels yields the recurrence $J(1, k) = 0$ and $J(n, k) = (J(n - 1, k) + k) \bmod n$.
 
 When $k$ is small, several removals can be processed at once. One complete pass removes $\lfloor n/k \rfloor$ people; recursively solving the compressed circle and undoing the resulting index shift reduces the running time to $O(k \log n)$. To recover the full elimination order, a Fenwick tree stores which labels remain and selects each next victim by rank.
@@ -5726,7 +5766,7 @@ When $k$ is small, several removals can be processed at once. One complete pass 
   \item $O(n)$ auxiliary and $O(n)$ for the returned elimination order from \inlinecode{josephus\_order()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <vector>
@@ -5801,7 +5841,7 @@ std::vector<int> josephus_order(int n, int k) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <vector>
 using namespace std;
@@ -5821,6 +5861,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Tower of Hanoi}
+\label{sec:1.8.3}
 Move a stack of $n$ disks of distinct sizes from one peg to another using a third as scratch space, moving one disk at a time and never placing a larger disk on a smaller one. The recursive solution is forced by the largest disk: it can only move once the other $n - 1$ disks are stacked on the spare peg, so the puzzle is solved by moving $n - 1$ disks aside, moving the largest disk across, and moving the $n - 1$ disks back on top of it. That gives $T(n) = 2T(n - 1) + 1$ with $T(0) = 0$, so exactly $2^n - 1$ moves are needed, and no shorter solution exists because the largest disk cannot move any earlier.
 
 The sequence also has a closed form, for when one move is wanted rather than all of them: numbering moves from $1$, move $k$ transfers the disk given by the number of trailing zero bits of $k$, and that disk always steps in one rotational direction fixed by the parity of $n$. The smallest disk therefore moves every other turn, which is the rule an iterative solver follows.
@@ -5846,7 +5887,7 @@ With four or more pegs the problem becomes Frame-Stewart: move a prefix aside us
   \item $O(1)$ auxiliary for \inlinecode{hanoi\_move\_count()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <utility>
@@ -5855,7 +5896,7 @@ With four or more pegs the problem becomes Frame-Stewart: move a prefix aside us
 std::vector<std::pair<int, int>> hanoi_moves(int n, int from = 0, int to = 2) {
   assert(n >= 0 && from >= 0 && from < 3 && to >= 0 && to < 3 && from != to);
   std::vector<std::pair<int, int>> moves;
-  auto rec = [&](auto &&rec, int disks, int src, int dest) -> void {
+  auto rec = [&](auto &&rec, int disks, int src, int dest) {
     if (disks == 0) {
       return;
     }
@@ -5875,7 +5916,7 @@ int64_t hanoi_move_count(int n) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -5904,7 +5945,8 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Cycle Detection (Floyd)}
-Given a function $f$ mapping a finite set to itself and a starting value $x_0$, return the entry value, position, and length of the cycle reached by repeatedly applying $f$. Formally, the sequence $x_0$, $x_1 = f(x_0)$, $x_2 = f(x_1)$, $\ldots$, $x_n = f(x_{n - 1})$, $\ldots$ must eventually repeat some value. If $x_i = x_j$ for $i < j$, then the sequence from $x_i$ to $x_{j - 1}$ repeats forever. This is useful for detecting cycles in functional graphs (see 4.2.9), pseudo-random generators, Pollard rho style algorithms, degenerate linked lists, and arrays where each index points to the next index. For example, if an array $a_0, \ldots, a_{n+1}$ contains only values in $[1, n]$, with exactly one value occurring more than once, then $f(i) = a_i$ forms a functional graph; the duplicate value is the entry point of the cycle reached from $0$.
+\label{sec:1.8.4}
+Given a function $f$ mapping a finite set to itself and a starting value $x_0$, return the entry value, position, and length of the cycle reached by repeatedly applying $f$. Formally, the sequence $x_0$, $x_1 = f(x_0)$, $x_2 = f(x_1)$, $\ldots$, $x_n = f(x_{n - 1})$, $\ldots$ must eventually repeat some value. If $x_i = x_j$ for $i < j$, then the sequence from $x_i$ to $x_{j - 1}$ repeats forever. This is useful for detecting cycles in functional graphs (see \secref{4.2.9}), pseudo-random generators, Pollard rho style algorithms, degenerate linked lists, and arrays where each index points to the next index. For example, if an array $a_0, \ldots, a_{n+1}$ contains only values in $[1, n]$, with exactly one value occurring more than once, then $f(i) = a_i$ forms a functional graph; the duplicate value is the entry point of the cycle reached from $0$.
 
 Floyd's cycle-finding algorithm, a.k.a. the ``tortoise and the hare algorithm'', is a space-efficient default choice: it moves two pointers through the sequence at different speeds, finds a meeting point inside the cycle, then locates the cycle start. Brent's algorithm is a compact variant that usually calls $f$ fewer times by only resetting the tortoise at powers of two; prefer it when evaluating $f$ is expensive and constant factors matter. In the detection phase, Brent advances one pointer with one call to $f$ per step, while Floyd advances the tortoise once and the hare twice, using three calls to $f$ per step.
 
@@ -5919,7 +5961,7 @@ For Floyd's algorithm, suppose the tail has length $m$ and the cycle has length 
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <tuple>
 
 template<typename Fn, typename T>
@@ -5980,7 +6022,7 @@ std::tuple<T, int, int> find_cycle_brent(Fn f, T x0) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <set>
 #include <vector>
@@ -6030,6 +6072,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Subset Sum}
+\label{sec:1.8.5}
 Given a collection of integers and a target, the subset sum problem asks for the maximum sum of any subset that does not exceed the target. Two algorithms below solve this problem in complementary regimes, and which one wins depends on whether the bottleneck is the number of items or the size of the weights.
 
 The meet-in-the-middle method splits the collection in half, enumerates every subset sum for each half, sorts one side, and binary searches for the best compatible partner. It makes no assumption about the sign or size of the values, so it handles negative inputs, and it is the method of choice when the number of items $n$ is small (up to roughly $40$).
@@ -6057,7 +6100,7 @@ Overflow warning: All subset sums and intermediate differences in \inlinecode{ma
   \item $O(W)$ auxiliary for \inlinecode{max\_subset\_sum\_bounded()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -6154,7 +6197,7 @@ int max_subset_sum_bounded(const std::vector<int> &weights, int target) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -6179,6 +6222,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{N-Queens}
+\label{sec:1.8.6}
 The N-queens problem asks for a placement of $n$ queens on an $n$-by-$n$ chessboard such that no two share a row, column, or diagonal. Backtracking places one queen in each successive row and tracks which columns and diagonals are occupied. A conflicting placement is rejected immediately; after a failed recursive branch, its column and diagonals are released before trying the next column.
 
 \begin{compactitem}
@@ -6189,7 +6233,7 @@ The N-queens problem asks for a placement of $n$ queens on an $n$-by-$n$ chessbo
 
 \textbf{Space Complexity}: $O(n)$ auxiliary and $O(n)$ for the returned placement.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <vector>
 
@@ -6221,7 +6265,7 @@ std::vector<int> n_queens(int n) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <vector>
 using namespace std;
@@ -6234,9 +6278,10 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Knights Tour}
+\label{sec:1.8.7}
 A knight's tour visits every square of an $n$-by-$n$ board exactly once, moving as a chess knight. Plain backtracking over the eight moves is hopeless past a small board, since the search tree has branching factor up to eight and depth $n^2$.
 
-Warnsdorff's rule fixes the move order: from each square, try the onward squares in increasing order of how many unvisited moves they themselves have. The intuition is that squares with few remaining exits, such as corners, become unreachable if they are not used early, so the rule visits the most constrained squares first and leaves the flexible ones for later. This is the same minimum-remaining-values idea that drives the exact cover search of section 1.8.8.
+Warnsdorff's rule fixes the move order: from each square, try the onward squares in increasing order of how many unvisited moves they themselves have. The intuition is that squares with few remaining exits, such as corners, become unreachable if they are not used early, so the rule visits the most constrained squares first and leaves the flexible ones for later. This is the same minimum-remaining-values idea that drives the exact cover search of section \secref{1.8.8}.
 
 Warnsdorff's rule alone is a heuristic and does fail on some boards, so the search below keeps backtracking as a fallback and merely orders the moves by the rule. That ordering is strong enough that a tour is normally found along the first path tried, with backtracking almost never invoked.
 
@@ -6250,7 +6295,7 @@ A tour is closed when the knight can leap from its final square back to its star
 
 \textbf{Space Complexity}: $O(n^{2})$ auxiliary stack space and $O(n^{2})$ for the returned grid.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -6301,7 +6346,7 @@ std::vector<std::vector<int>> knight_tour(int n, int sr = 0, int sc = 0) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -6331,6 +6376,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Exact Cover (Dancing Links)}
+\label{sec:1.8.8}
 Given a binary matrix, the exact cover problem asks for a set of rows in which every column contains exactly one $1$. Many search problems reduce to it: a sudoku grid becomes a matrix whose columns demand that each cell hold one digit and that each digit appear once per row, column, and box, while a tiling becomes a matrix whose columns demand that each cell be covered by exactly one piece placement.
 
 Knuth's Algorithm X solves it by repeatedly choosing an uncovered column, trying each row that covers it, and deleting from the matrix every column that row satisfies along with every other row conflicting with it. Dancing links is the representation that makes the deletions cheap. Each $1$ of the matrix is a node in two circular doubly linked lists, one along its row and one along its column, and every column has a header node holding the count of its remaining nodes. Removing a node \inlinecode{x} from a list is \inlinecode{left[right[x]] = left[x]} and \inlinecode{right[left[x]] = right[x]}, which leaves \inlinecode{x} itself still pointing at its old neighbors; restoring it on backtrack is therefore just \inlinecode{left[right[x]] = x} and \inlinecode{right[left[x]] = x}, with no allocation and no search. Undoing the covering operations in the exact reverse of the order that performed them restores the matrix exactly, which is what makes the whole search run in place on one static set of nodes.
@@ -6361,7 +6407,7 @@ Solutions come in the order the search finds them, which follows the branching h
   \item $O(d)$ auxiliary stack space per call to \inlinecode{solve()}, where $d$ is the number of rows in the deepest partial solution reached, plus $O(s \cdot d)$ for the returned solutions, where $s$ is the number found.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <vector>
@@ -6496,7 +6542,7 @@ class ExactCover {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 

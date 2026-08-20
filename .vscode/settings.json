@@ -1,0 +1,7 @@
+{
+    // LaTeX Workshop otherwise rebuilds A3C5.tex on every file change. `make` rewrites all eight
+    // chapter*.tex on every run, so an auto-build would race it and both would write A3C5.pdf.
+    "latex-workshop.latex.autoBuild.run": "never",
+    // Keep editor builds out of Book/ entirely, so `make` is the only writer of the tracked PDFs.
+    "latex-workshop.latex.outDir": "%DIR%/build-editor"
+}

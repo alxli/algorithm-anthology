@@ -2,6 +2,10 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{color}
+% Latin Modern replaces the unhinted cm-super T1 fonts, which render thin and washed out on
+% screen. It is metric-compatible with Computer Modern, so pagination is unchanged, and it also
+% supplies the bold typewriter face that cmtt lacks.
+\usepackage{lmodern}
 \usepackage[T1]{fontenc}
 \usepackage{geometry}
 \usepackage{graphicx}
@@ -30,16 +34,25 @@
 % Lowercase section headers
 \let\MakeUppercase\relax
 
+% A cross-reference to a section, written as its number in a source docstring. Restyle here to
+% change every such reference at once.
+\newcommand{\secref}[1]{\hyperref[sec:#1]{#1}}
+
 % No colored border on hyperlinks
 \hypersetup{colorlinks=false,pdfborder={0 0 0}}
 
 % For the horizontal rule under sections
 \sectionfont{\sectionrule{0pt}{0pt}{-10pt}{0.8pt}}
 
-% For displaying code
-\definecolor{dkgreen}{rgb}{0,0.6,0}
-\definecolor{gray}{rgb}{0.5,0.5,0.5}
-\definecolor{mauve}{rgb}{0.58,0,0.82}
+% For displaying code. Hue carries the signal in syntax highlighting, not darkness, so these stay
+% saturated rather than dark. The first three are the palette the book has always used; the other
+% two extend it in the same key.
+\lstloadaspects{directives}  % so directivestyle is a known key at preamble time
+\definecolor{codekw}{HTML}{0000FF}       % language keywords
+\definecolor{codecomment}{HTML}{009900}  % comments
+\definecolor{codestring}{HTML}{9400D1}   % string and character literals
+\definecolor{codetype}{HTML}{008B8B}     % types, std, and standard library headers
+\definecolor{codelit}{HTML}{CC6600}      % true/false/nullptr and preprocessor directives
 \lstset{
   aboveskip=5mm,
   basicstyle={\footnotesize\ttfamily},
@@ -48,16 +61,35 @@
   breakatwhitespace=true,
   frame=none,
   columns=flexible,
-  commentstyle=\color{dkgreen},
   keepspaces=true,
-  keywordstyle=\color{blue},
-  language=C++,
-  % literate={\ \ }{{\ \ \ \ }}1,  % Convert 2 spaces to 4
   rulecolor=\color{black},
   showstringspaces=false,
-  stringstyle=\color{mauve},
   tabsize=2,
   upquote=true
+}
+\lstdefinestyle{cpp}{
+  language=C++,
+  commentstyle=\color{codecomment},
+  directivestyle=\color{codelit},
+  identifierstyle=\color{black},
+  stringstyle=\color{codestring},
+  deletekeywords={auto,bool,char,double,float,int,long,short,signed,unsigned,void,wchar_t,
+    true,false,register,export,bad_cast,bad_typeid,type_info},
+  keywordstyle=\color{codekw},
+  morekeywords={alignas,alignof,constexpr,decltype,final,noexcept,override,static_assert,
+    thread_local},
+  morekeywords=[2]{std,auto,bool,char,char16_t,char32_t,double,float,int,long,short,signed,
+    unsigned,void,wchar_t,size_t,ptrdiff_t,int8_t,int16_t,int32_t,int64_t,intmax_t,uint8_t,
+    uint16_t,uint32_t,uint64_t,uintmax_t,string,vector,pair,tuple,array,deque,list,map,set,
+    multimap,multiset,unordered_map,unordered_set,queue,stack,priority_queue,bitset,optional,
+    complex,function,mt19937,mt19937_64,stringstream,istringstream,ostringstream,unique_ptr,
+    uniform_int_distribution,uniform_real_distribution,
+    algorithm,cassert,cctype,chrono,climits,cmath,cstddef,cstdint,cstdio,cstdlib,cstring,ctime,
+    functional,initializer_list,iomanip,iostream,istream,iterator,limits,memory,numeric,ostream,
+    random,regex,sstream,stdexcept,thread,type_traits,utility},
+  keywordstyle=[2]\color{codetype},
+  morekeywords=[3]{true,false,nullptr,NULL},
+  keywordstyle=[3]\color{codelit}
 }
 
 \newtcblisting{exampleoutput}{
@@ -126,7 +158,7 @@
 \begin{document} 
 
 \providecommand{\BookVersion}{v1.0}
-\providecommand{\BookDate}{July 31, 2026}
+\providecommand{\BookDate}{August 19, 2026}
  
 \frontmatter
 \pagenumbering{gobble}

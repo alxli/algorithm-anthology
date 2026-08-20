@@ -34,14 +34,15 @@ from zero. The other modes are `TowardZero`, `AwayFromZero`, `Floor`, `Ceil`, an
   assignments.
 
 Time Complexity:
+- O(1) per call to `decimal_places()`, `precision()`, `sign()`, and `unscaled_value()`.
 - O(d) per call to parsing, formatting, normalization, addition, subtraction, comparisons, and
   decimal-point movement, where $d$ is the number of relevant decimal digits.
 - O(M(d) log n) per call to `pow(n)`, where $M(d)$ is the multiplication cost for the largest
   intermediate coefficient.
 - O(d^2) per call to square root, matching the `BigInt` operation used here.
 - Division, remainder, and rescaling to fewer places inherit the `BigInt` division cost of 6.4.2:
-  O(d*m) below its `DIV_CUTOFF` and O(M(m) log m) at or above it, where $m$ is the number of digits
-  in the divisor.
+  O((d/m)*M(m)*log m) once the divisor reaches its `DIV_CUTOFF` and O(d*m) below it, where $d$ and
+  $m$ are the number of digits in the dividend and divisor.
 
 Space Complexity:
 - O(d) for stored digits, returned values, and arithmetic results.
@@ -111,7 +112,7 @@ class BigDecimal {
   }
 
   int decimal_places() const { return scale; }
-  int precision() const { return coeff.abs().size(); }
+  int precision() const { return coeff.size(); }
   int sign() const { return (coeff > 0) - (coeff < 0); }
   const BigInt &unscaled_value() const { return coeff; }
   BigDecimal abs() const { return BigDecimal(coeff.abs(), scale); }

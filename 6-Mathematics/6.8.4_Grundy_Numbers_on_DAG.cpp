@@ -22,7 +22,7 @@ Space Complexity:
 
 std::vector<int> grundy_on_dag(const std::vector<std::vector<int>> &g) {
   std::vector<int> memo(g.size(), -1);
-  auto dfs = [&](auto &&dfs, int u) -> void {
+  auto dfs = [&](auto &&dfs, int u) {
     if (memo[u] != -1) {
       return;
     }

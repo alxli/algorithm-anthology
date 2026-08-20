@@ -13,7 +13,7 @@ vectors.
 - `at(i)` returns the value at index `i`.
 - `sum(hi)` returns the sum of all values at indices $[0, `hi`]$.
 - `sum(lo, hi)` returns the sum of all values at indices $[`lo`, `hi`]$.
-- `max_prefix(c)` returns the largest boundary `hi` such that `sum(0, hi - 1)` $\leq$ `c`, assuming
+- `max_right(c)` returns the largest boundary `hi` such that `sum(0, hi - 1)` $\leq$ `c`, assuming
   prefix sums are nondecreasing and `c` is nonnegative. It may return any boundary in $[0, `N`]$.
 
 The value type `T` must represent $0$ and support addition, subtraction, and multiplication by an
@@ -86,7 +86,7 @@ class SparseFenwick {
     return sum(hi) - sum(lo - 1);
   }
 
-  int max_prefix(T c) const {
+  int max_right(T c) const {
     T mul = 0, add = 0;
     int pos = 0, pw = 1;
     while (pw * 2 <= N) {
@@ -134,8 +134,8 @@ int main() {
   freq.add(1, 1, 1);
   freq.add(3, 3, 3);
   freq.add(6, 6, 1);
-  assert(freq.max_prefix(0) == 1);
-  assert(freq.max_prefix(3) == 3);
-  assert(freq.max_prefix(4) == 6);
+  assert(freq.max_right(0) == 1);
+  assert(freq.max_right(3) == 3);
+  assert(freq.max_right(4) == 6);
   return 0;
 }

@@ -2,6 +2,7 @@
 
 \section{\texorpdfstring{Contest Utilities}{8.1 Contest Utilities}}
 \setcounter{section}{1}
+\label{sec:8.1}
 Small contest convenience helpers that are useful across many algorithms. These snippets avoid algorithm-specific policy and are meant to be pasted near the top of a solution file.
 
 A personal template may also collect shortened versions of utilities elsewhere in the anthology, such as fast I/O and debugging, custom hashing, coordinate compression, bit operations, modular arithmetic, binary search, and GNU policy-based data structures. They remain in their dedicated sections here to avoid duplication and let each template be assembled to taste.
@@ -25,15 +26,13 @@ A personal template may also collect shortened versions of utilities elsewhere i
   \item \inlinecode{y\_combinator(f)} wraps a recursive lambda so that it can call itself as its first argument.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
-#include <chrono>
 #include <functional>
 #include <iterator>
 #include <numeric>
 #include <queue>
-#include <random>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -150,7 +149,7 @@ decltype(auto) y_combinator(Fn &&f) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <map>
 #include <set>
 using namespace std;
@@ -235,15 +234,16 @@ int main() {
 
 \section{\texorpdfstring{Fast IO}{8.2 Fast IO}}
 \setcounter{section}{2}
+\label{sec:8.2}
 Fast input and output helpers. For most cases, it is enough to speed up standard I/O simply with \inlinecode{ios::sync\_with\_stdio(false); cin.tie(nullptr);}. The following classes only come into play when input is genuinely huge or \inlinecode{iostream} overhead is measurable.
 
 \begin{compactitem}
-  \item \inlinecode{set\_in(name)}, \inlinecode{set\_out(name)}, and \inlinecode{set\_io(iname, oname)} redirect standard input/output to files. For example, \inlinecode{set\_io("task.in", "task.out")} is convenient for USACO-style problems.
+  \item \inlinecode{set\_in(name)}, \inlinecode{set\_out(name)}, and \inlinecode{set\_io(iname, oname)} redirect standard input/output to files. For example, \inlinecode{set\_io("task.in", "task.out")} is convenient for USACO-style problems. An empty name leaves that stream untouched, so \inlinecode{set\_io("", "")} is a no-op that can stay in place when the same solution is submitted to a judge that pipes its input.
 \end{compactitem}
 
 File-redirection failures throw \inlinecode{std::runtime\_error}.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cctype>
 #include <cstddef>
@@ -254,13 +254,13 @@ File-redirection failures throw \inlinecode{std::runtime\_error}.
 #include <type_traits>
 
 void set_in(const std::string &name) {
-  if (!freopen(name.c_str(), "r", stdin)) {
+  if (!name.empty() && !freopen(name.c_str(), "r", stdin)) {
     throw std::runtime_error("Failed to open input file: " + name);
   }
 }
 
 void set_out(const std::string &name) {
-  if (!freopen(name.c_str(), "w", stdout)) {
+  if (!name.empty() && !freopen(name.c_str(), "w", stdout)) {
     throw std::runtime_error("Failed to open output file: " + name);
   }
 }
@@ -268,6 +268,33 @@ void set_out(const std::string &name) {
 void set_io(const std::string &iname, const std::string &oname) {
   set_in(iname);
   set_out(oname);
+}
+\end{lstlisting}
+When only integers are read, one loop over a character reader is the whole technique and is short enough to copy or retype: skip anything that starts no number, then fold digits in with \inlinecode{x * 10 + d}. Which character reader it uses decides everything, since the per-character mutex that the locked \inlinecode{getchar()} takes costs more than the parsing does. The example below times the alternatives against each other on the same input.
+
+\begin{compactitem}
+  \item \inlinecode{read\_int(x)} reads one integer from \inlinecode{stdin} into \inlinecode{x}, skipping any leading character that cannot start a number. A leading \inlinecode{-} is honored, so \inlinecode{Int} must be signed for negative input. Behavior is undefined at end of file.
+\end{compactitem}
+
+\begin{lstlisting}[style=cpp]
+// The unlocked reader is where nearly all of the speed comes from. It is POSIX, not standard C++.
+inline int read_char() {
+#if defined(_WIN32)
+  return _getchar_nolock();
+#elif defined(__unix__) || defined(__APPLE__)
+  return getchar_unlocked();
+#else
+  return getchar();
+#endif
+}
+
+template<typename Int>
+void read_int(Int &x) {
+  int c, s = 1;
+  while ((c = read_char()) != '-' && (c < '0' || c > '9'));
+  if (c == '-') s = -1, c = read_char();
+  for (x = 0; '0' <= c && c <= '9'; c = read_char()) x = x * 10 + c - '0';
+  x *= s;
 }
 \end{lstlisting}
 \inlinecode{FastInput} reads large byte blocks with \inlinecode{fread()} and parses tokens from an internal buffer.
@@ -279,7 +306,7 @@ void set_io(const std::string &iname, const std::string &oname) {
 
 Detected read failures throw \inlinecode{std::runtime\_error}. End-of-file is not an error, and the parser otherwise assumes valid input. Floating-point input is provided for convenience, not as the main performance path.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 class FastInput {
   static constexpr int BUF_SIZE = 1 << 20;
   FILE *file;
@@ -389,7 +416,7 @@ class FastInput {
 
 Detected write failures throw \inlinecode{std::runtime\_error}. Destruction flushes on a best-effort basis; call \inlinecode{flush()} explicitly to detect a final write failure. Floating-point output is provided for convenience, not as the main performance path.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 class FastOutput {
   static constexpr int BUF_SIZE = 1 << 20;
   FILE *file;
@@ -482,7 +509,11 @@ class FastOutput {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
+#include <ctime>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 using namespace std;
 
 int main() {
@@ -516,12 +547,46 @@ int main() {
   assert(fgets(buf, sizeof(buf), output));
   assert(string(buf) == "42 hello 3.5 -2147483648 1 Z 1234567890123\n");
   fclose(output);
+
+  // Benchmark various ways of reading the same million integers from a scratch file.
+  const int n = 1000000;
+  string text;
+  for (int i = 0; i < n; i++) {
+    text += to_string(i) + ' ';
+  }
+  string path = (filesystem::temp_directory_path() / "fast_io.tmp").string();
+  ofstream(path) << text;
+  auto time_reads = [&](const char *name, auto read_one) {
+    set_in(path);
+    clock_t start = clock();
+    for (int i = 0, v = 0; i < n; i++) {
+      read_one(v);
+    }
+    printf("%-22s %6.3f s\n", name, double(clock() - start) / CLOCKS_PER_SEC);
+  };
+  printf("Reading %d integers:\n", n);
+  time_reads("cin", [](int &v) { cin >> v; });
+  time_reads("scanf", [](int &v) { scanf("%d", &v); });
+  time_reads("read_int (unlocked)", [](int &v) { read_int(v); });
+  time_reads("FastInput", [](int &v) {
+    static FastInput in;
+    in >> v;
+  });
+  remove(path.c_str());
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Reading 1000000 integers:
+cin                     1.039 s
+scanf                   0.051 s
+read_int (unlocked)     0.011 s
+FastInput               0.026 s
+\end{exampleoutput}
 
 \section{\texorpdfstring{Debugging}{8.3 Debugging}}
 \setcounter{section}{3}
+\label{sec:8.3}
 Local-only debug printing for contest code. \inlinecode{dbg}, \inlinecode{pr}, \inlinecode{dbg\_rows}, and \inlinecode{pr\_rows} expand to no-ops unless \inlinecode{LOCAL} is defined (e.g. via the compiler flag \inlinecode{-DLOCAL}), so they can remain in submitted code without producing output.
 
 \begin{compactitem}
@@ -534,7 +599,7 @@ Local-only debug printing for contest code. \inlinecode{dbg}, \inlinecode{pr}, \
 
 Avoid naming these helpers \inlinecode{to\_string()} unless you want them mixed into overload resolution with \inlinecode{std::to\_string()} and other user-defined \inlinecode{to\_string()} functions. A separate name keeps debug formatting local to this snippet.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cstddef>
 #include <iomanip>
 #include <iostream>
@@ -688,7 +753,7 @@ void dbg_rows_out(const Rows &rows, int col_width = 0, int limit = -1) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <map>
 #include <vector>
@@ -773,6 +838,7 @@ int main() {
 
 \section{\texorpdfstring{Stress-Testing}{8.4 Stress-Testing}}
 \setcounter{section}{4}
+\label{sec:8.4}
 Provides random input generators and a harness that compares an optimized solution against a trusted brute force implementation. Small tests keep brute force practical and produce manageable counterexamples. The generators create common contest inputs such as distinct samples, permutations, graphs, trees, and integer compositions for stress tests, randomized tests, and benchmarks.
 
 \begin{compactitem}
@@ -784,7 +850,7 @@ Provides random input generators and a harness that compares an optimized soluti
   \item \inlinecode{rand\_weighted(weights)} returns a sampled 0-based index with probability proportional to its nonnegative weight.
   \item \inlinecode{rand\_vec(n, lo, hi)} returns \inlinecode{n} independent uniformly random integers in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{rand\_str(n, alphabet)} returns a length-\inlinecode{n} string whose characters are sampled independently and uniformly from the nonempty string \inlinecode{alphabet}.
-  \item \inlinecode{rand\_perm(n, first = 0)} returns a random permutation of the $n$ consecutive integers beginning at \inlinecode{first}.
+  \item \inlinecode{rand\_perm(n, first = 0)} returns a random permutation of the \inlinecode{n} consecutive integers beginning at \inlinecode{first}.
   \item \inlinecode{rand\_distinct(k, lo, hi)} returns \inlinecode{k} distinct integers sampled uniformly from $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{rand\_tree(n)} returns a uniformly random labeled tree on nodes $[0, {\inlinecodemath{n}})$ as an edge list using a Prüfer code.
   \item \inlinecode{rand\_graph(n, m, directed = false, connected = false)} returns a random simple graph with \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$ and exactly \inlinecode{m} edges. Without connectivity it is uniform; with connectivity it starts from \inlinecode{rand\_tree(n)} and is not uniform over connected graphs. A connected directed graph is weakly connected.
@@ -813,7 +879,7 @@ Provides random input generators and a harness that compares an optimized soluti
   \item $O(m)$ auxiliary and output space for \inlinecode{rand\_graph()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <climits>
@@ -1052,7 +1118,7 @@ A stress test compares an optimized implementation against a trusted brute force
 
 \textbf{Space Complexity}: $O(x + a + e)$ for the test copies and results, where $x$, $a$, and $e$ are their respective sizes, in addition to the working space used by the callbacks.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 template<typename Test, typename Actual, typename Expected>
 struct StressFailure {
   int trial;
@@ -1084,7 +1150,7 @@ auto stress(int trials, Generate gen, Solve solve, Brute brute, Equal equal = {}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 bool EQ(double a, double b) {
@@ -1163,6 +1229,7 @@ int main() {
 
 \section{\texorpdfstring{Benchmarking}{8.5 Benchmarking}}
 \setcounter{section}{5}
+\label{sec:8.5}
 Small timing helpers for local profiling and codebook examples. Use \inlinecode{std::chrono::steady\_clock} instead of wall-clock time so elapsed durations are monotonic.
 
 \begin{compactitem}
@@ -1174,7 +1241,7 @@ Small timing helpers for local profiling and codebook examples. Use \inlinecode{
 
 Benchmarks should be treated as local measurements, not proofs of asymptotic performance. Warm-up, CPU frequency scaling, compiler optimization, and input choice can dominate tiny timings.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <chrono>
 
@@ -1204,7 +1271,7 @@ double benchmark(int iterations, Fn f) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <numeric>
 #include <vector>
@@ -1226,6 +1293,7 @@ int main() {
 
 \section{\texorpdfstring{GNU Policy-Based Data Structures}{8.6 GNU Policy-Based Data Structures}}
 \setcounter{section}{6}
+\label{sec:8.6}
 GNU policy-based data structures (PBDS) provide non-standard associative containers and priority queues, including order-statistic trees and fast hash tables. They are not part of the C++ standard library, but they are available on many GNU C++ contest judges.
 
 \begin{compactitem}
@@ -1251,7 +1319,7 @@ The order-statistic operations use GNU PBDS conventions: \inlinecode{find\_by\_o
 
 \textbf{Space Complexity}: $O(n)$ for all containers.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <chrono>
 #include <cstddef>
@@ -1356,7 +1424,7 @@ using RcBinomialHeap = __gnu_pbds::priority_queue<T, Compare, __gnu_pbds::rc_bin
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 int main() {
   OrderedSet<int> s;
   s.insert(10);
@@ -1422,6 +1490,7 @@ int main() {
 
 \section{\texorpdfstring{Multithreading}{8.7 Multithreading}}
 \setcounter{section}{7}
+\label{sec:8.7}
 Basic multithreading can speed up independent local work such as stress tests, batch experiments, or offline preprocessing. It is rarely useful in standard contest submissions, and many judges restrict threads, so use it only when the environment allows it.
 
 \begin{compactitem}
@@ -1431,7 +1500,7 @@ Basic multithreading can speed up independent local work such as stress tests, b
 
 Each call to \inlinecode{f(i)} must be safe to run concurrently with the others. If it writes shared state, use separate output slots or synchronization.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <numeric>
@@ -1470,7 +1539,7 @@ std::vector<std::string> parallel_cases(const std::vector<Case> &cases, int thre
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 int main() {
@@ -1489,6 +1558,7 @@ int main() {
 
 \section{\texorpdfstring{Bump Allocation}{8.8 Bump Allocation}}
 \setcounter{section}{8}
+\label{sec:8.8}
 A bump allocator serves allocations consecutively from one fixed buffer and never reclaims individual objects. This is useful in local contest code that creates many small objects whose lifetimes all extend to the end of the program. Replacing global \inlinecode{operator new} preserves ordinary allocation call sites while avoiding the time and per-allocation metadata of a general-purpose allocator.
 
 \begin{compactitem}
@@ -1504,7 +1574,7 @@ When only one object type is allocated, a typed pool such as \inlinecode{Node no
 
 \textbf{Space Complexity}: $O({\inlinecodemath{BUFFER\_SIZE}})$ static memory.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstddef>
 #include <vector>
@@ -1548,7 +1618,7 @@ struct BumpAllocator {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 struct Node {

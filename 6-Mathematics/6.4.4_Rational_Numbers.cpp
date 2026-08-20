@@ -26,13 +26,13 @@ cross-multiply numerators and denominators, so instantiate with a wider integer 
 `__int128`, or even `BigInt`) if the values may grow large.
 
 Time Complexity:
-- O(log s) per call to constructor `Rational(n, d)`, where $s = |n| + |d|$.
-- O(1) per call to all other operations, assuming that corresponding operations on the template
-  integer type are O(1) as well.
+- O(log s) operations on `Int` per call to the constructor `Rational(n, d)`, where $s = |n| + |d|$,
+  spent reducing to lowest terms.
+- O(1) operations on `Int` per call to everything else.
 
 Space Complexity:
-- O(1) for storage of the rational number.
-- O(1) auxiliary for all operations.
+- Two `Int` values for storage of the rational number.
+- O(1) auxiliary `Int` values for all operations.
 
 */
 
@@ -51,8 +51,7 @@ class Rational {
   Rational() : num(0), den(1) {}
   Rational(const Int &n) : num(n), den(1) {}
 
-  template<typename T1, typename T2>
-  Rational(const T1 &n, const T2 &d) : num(n), den(d) {
+  Rational(const Int &n, const Int &d) : num(n), den(d) {
     assert(den != 0);
     if (den < 0) {
       num = -num;

@@ -169,7 +169,7 @@ class CycleFinder {
     std::vector<int> state(n, -1), edge_stack;
     std::vector<std::vector<int>> cycles;
     int total_size = 0;
-    auto dfs = [&](auto &&dfs, int u, int parent_edge) -> void {
+    auto dfs = [&](auto &&dfs, int u, int parent_edge) {
       if (static_cast<int>(cycles.size()) >= max_cycles || total_size >= max_total_size) {
         return;
       }

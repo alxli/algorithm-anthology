@@ -47,15 +47,18 @@ multiplication per level rather than one estimate per limb.
 - `rand(d)` returns a random, positive big integer with `d` digits.
 
 Time Complexity:
-- O(d) per call to the constructors, `size()`, `to_string()`, `to_llong()`, `to_double()`,
-  `to_ldouble()`, `abs()`, `comp()`, `rand()`, and all comparison and arithmetic operators except
-  multiplication, division, and modulo, where $d$ is the total number of digits in the arguments and
-  result for each operation.
+- O(1) per call to `size()`.
+- O(d) per call to the constructors, `to_string()`, `to_llong()`, `to_double()`, `to_ldouble()`,
+  `abs()`, `comp()`, `rand()`, and all comparison and arithmetic operators except multiplication,
+  division, and modulo, where $d$ is the total number of digits in the arguments and result for each
+  operation.
 - O(d*log(d)*log(log(d))) per call to multiplication operations once operands reach `MUL_CUTOFF`,
   and O(d^1.585) below it.
-- O(d*m) per call to division and modulo operations below `DIV_CUTOFF`, and O(M(m) log m) at or
-  above it, where $d$ and $m$ are the number of digits in the dividend and divisor respectively, and
-  $M(m)$ is the cost of one multiplication of two $m$-digit big integers.
+- O((d/m)*M(m)*log m) per call to division and modulo operations once the divisor reaches
+  `DIV_CUTOFF`, and O(d*m) below it, where $d$ and $m$ are the number of digits in the dividend and
+  divisor respectively, and $M(m)$ is the cost of one multiplication of two $m$-digit big integers.
+  Both forms consume the dividend in $d/m$ blocks of the divisor's size; only the per-block cost
+  differs.
 - O(M(d) log n) per call to `pow()`, where $n$ is the exponent and $d$ is the maximum digit length
   reached during exponentiation.
 - O(d + n) per call to `mul_pow10()`, where $n$ is the power of ten.

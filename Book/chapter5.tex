@@ -4,6 +4,7 @@
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Binary Search}
+\label{sec:5.1.1}
 Binary search locates a target in sorted data, or more generally the transition point of a monotonic Boolean predicate that changes from false to true or true to false at most once. Each step evaluates the midpoint of the current interval and keeps the half that still contains the transition, halving the search space until it closes on the answer. The same technique applies to non-increasing or non-decreasing numeric functions. Unlike searching through an array, discrete binary search is not restricted by available memory, making it useful for implicit domains that are too large to materialize, including broad integer or real intervals.
 
 \begin{compactitem}
@@ -23,7 +24,7 @@ Overflow warning: For both integer searches, \inlinecode{hi - lo} must be repres
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 template<typename Int, typename Pred>
 Int first_true(Int lo, Int hi, Pred pred) {  // 000[1]11
   while (lo < hi) {
@@ -66,7 +67,7 @@ double first_true_real(double lo, double hi, Pred pred) {  // 000[1]11
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cmath>
 #include <vector>
@@ -94,6 +95,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Exponential Search}
+\label{sec:5.1.2}
 Finds the first value where a monotone Boolean predicate becomes true when an upper bound is not known in advance. Exponential search first grows the search range by powers of two until it brackets the transition point, then finishes with ordinary binary search. This is useful for answer-search problems over unbounded or very large integer domains.
 
 \begin{compactitem}
@@ -106,7 +108,7 @@ Overflow warning: The predicate must become true before the exponentially growin
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cstdint>
 
 template<typename Int, typename Pred>
@@ -133,7 +135,7 @@ Int exponential_first_true(Int lo, Pred pred) {  // 000[1]11
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 int main() {
@@ -147,6 +149,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Interpolation Search}
+\label{sec:5.1.3}
 Given a sorted range of numeric values, find a target by guessing where it should be rather than always probing the middle. Binary search halves the range because it only asks whether the target is smaller or larger than the probe; interpolation search additionally uses how much smaller or larger. Assuming the values rise roughly linearly across the range, the target's position is estimated by linear interpolation between the two endpoints, the same way a reader opens a dictionary near the back to look up a word starting with ``s''.
 
 Each probe reduces the expected distance to the target from $n$ to $\sqrt{n}$ when the values are drawn from a uniform distribution, which gives $O(\log \log n)$ probes: for a billion sorted integers that is about five probes rather than thirty. The bound depends entirely on the distribution. Clustered values push the estimate to one end repeatedly and degrade the search to $O(n)$ probes, so this is the rare algorithm whose worst case is worse than the method it replaces. Use it when the data is known to be near-uniform, such as generated IDs, timestamps at a fixed rate, or hash values, and use binary search otherwise.
@@ -159,7 +162,7 @@ Each probe reduces the expected distance to the target from $n$ to $\sqrt{n}$ wh
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <iterator>
 
 template<typename It, typename T>
@@ -188,7 +191,7 @@ It interpolation_search(It lo, It hi, const T &key) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <vector>
 using namespace std;
@@ -212,13 +215,14 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Sorted Matrix Search}
+\label{sec:5.1.4}
 Given a matrix whose every row is sorted left to right and every column sorted top to bottom, find a target value. Such a matrix is not sorted overall, since a cell says nothing about the cells diagonally adjacent to it, so a single binary search over the flattened grid does not apply.
 
 Starting at the top-right corner makes each comparison decisive. That cell is the largest in its row and the smallest in its column, so if it exceeds the target then no cell in its column can match and the whole column is discarded, while if it is smaller then no cell in its row can match and the row is discarded. Either way one row or one column disappears per comparison, so the walk visits at most $R + C$ cells while descending a staircase-shaped boundary. The bottom-left corner works the same way with the directions swapped; the other two corners are useless, since they are extreme in both directions at once and a comparison there rules out nothing.
 
 \begin{compactitem}
   \item \inlinecode{search\_sorted\_matrix(a, key)} returns the position (\inlinecode{row}, \inlinecode{col}) of an occurrence of \inlinecode{key} in the row-wise and column-wise sorted matrix \inlinecode{a}, or $(-1, -1)$ if \inlinecode{key} does not occur.
-  \item \inlinecode{count\_at\_most(a, key)} returns how many entries of \inlinecode{a} are less than or equal to \inlinecode{key}, by measuring the same staircase boundary rather than stopping at a match. Combined with the binary search of section 5.1.1 over the value range, it yields the 1-based $k$-th smallest entry in $O((R + C) \log\left(\max - \min\right))$ time without materializing the sorted order.
+  \item \inlinecode{count\_at\_most(a, key)} returns how many entries of \inlinecode{a} are less than or equal to \inlinecode{key}, by measuring the same staircase boundary rather than stopping at a match. Combined with the binary search of section \secref{5.1.1} over the value range, it yields the 1-based $k$-th smallest entry in $O((R + C) \log\left(\max - \min\right))$ time without materializing the sorted order.
 \end{compactitem}
 
 A matrix sorted in reading order, every row beginning after the previous ends, is the easier problem of binary searching one sorted sequence of length $R \cdot C$.
@@ -227,7 +231,7 @@ A matrix sorted in reading order, every row beginning after the previous ends, i
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -266,16 +270,17 @@ int64_t count_at_most(const std::vector<std::vector<T>> &a, const T &key) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
 int main() {
-  //   1   4   7  11
-  //   2   5   8  12
-  //   3   6   9  16
-  //  10  13  14  17
-  vector<vector<int>> a{{1, 4, 7, 11}, {2, 5, 8, 12}, {3, 6, 9, 16}, {10, 13, 14, 17}};
+  vector<vector<int>> a{
+      {1, 4, 7, 11},
+      {2, 5, 8, 12},
+      {3, 6, 9, 16},
+      {10, 13, 14, 17},
+  };
   assert(search_sorted_matrix(a, 5) == make_pair(1, 1));
   assert(search_sorted_matrix(a, 1) == make_pair(0, 0));   // Top-left corner.
   assert(search_sorted_matrix(a, 17) == make_pair(3, 3));  // Bottom-right corner.
@@ -293,6 +298,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Local Minimum}
+\label{sec:5.1.5}
 Finds a non-strict local minimum in an array, that is, an index $i$ whose value is no greater than the values at its existing neighbors. Unlike ternary search, this does not require the array to be unimodal, but the result is only a local minimum and need not be the global minimum.
 
 Compare the middle element with its right neighbor. If the sequence slopes downward, the right half contains a local minimum; otherwise, the middle element or the left half contains one. Each comparison therefore discards half of the remaining indices.
@@ -313,7 +319,7 @@ The same argument works in two dimensions, where a local minimum is a cell no gr
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for both operations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <utility>
 #include <vector>
@@ -360,7 +366,7 @@ std::pair<int, int> local_min_cell(const std::vector<std::vector<T>> &a) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 int main() {
@@ -394,6 +400,7 @@ int main() {
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Ternary and Golden Section Search}
+\label{sec:5.2.1}
 Given a unimodal function $f$, find the position of its global minimum or maximum: a value $x$ such that the function strictly decreases up to $x$ and strictly increases after it (for a minimum), or the reverse (for a maximum). All three searches below exploit the same idea: evaluate two interior points, and the comparison reveals one side of the interval that cannot contain the optimum, so it can be discarded. They differ only in how the probes are placed and whether the domain is continuous or discrete. Each maximum routine is the minimum routine applied to the negated function, since the location of a maximum of $f$ is the location of a minimum of $-f$.
 
 Ternary search splits the interval into thirds. It is the simplest to reason about, but it recomputes both probe points each step, spending two function evaluations per iteration while the interval shrinks to two-thirds.
@@ -421,7 +428,7 @@ The discrete version operates on an integer domain, narrowing by thirds until at
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cmath>
 
 template<typename Fn>
@@ -573,7 +580,7 @@ Int discrete_ternary_max(Int lo, Int hi, Fn f) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cmath>
 #include <vector>
@@ -607,6 +614,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{2D Hill Climbing}
+\label{sec:5.2.2}
 Given a continuous geometric objective $f(x, y)$ and a (possibly arbitrary) starting guess $(x_0, y_0)$, approximately minimize the function using two-dimensional hill climbing.
 
 The heuristic starts at the guess and evaluates one step in each of eight evenly spaced directions. It moves to the best improving neighbor, checks all eight directions again, and reduces the step size when no neighbor improves the answer. This repeats until the step size falls below the chosen threshold. Success depends heavily on the behavior of $f$ and the initial guess, so the result is not guaranteed to be the global minimum.
@@ -619,7 +627,7 @@ The heuristic starts at the guess and evaluates one step in each of eight evenly
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 template<typename Fn>
 double hill_climb_min(
     Fn f, double x0, double y0, double *best_x = nullptr, double *best_y = nullptr,
@@ -661,7 +669,7 @@ double hill_climb_min(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cmath>
 
@@ -681,6 +689,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Simulated Annealing}
+\label{sec:5.2.3}
 Approximately minimizes an energy function $E(s)$ over an arbitrary state space using simulated annealing. This randomized heuristic is useful when the states may be discrete, the energy has many local minima, and gradients or stronger structural properties are unavailable.
 
 Starting from an initial state $s$, each iteration generates a random neighboring state $s'$. An improving move is always accepted, while a worsening move is accepted with probability $\exp(-(E(s') - E(s))/T)$ at temperature $T$. High temperatures encourage exploration across energy barriers; as the temperature decreases, the search increasingly favors improvements. The best state is tracked separately because the current state may later move to a worse one.
@@ -688,19 +697,20 @@ Starting from an initial state $s$, each iteration generates a random neighborin
 The geometric schedule multiplies the temperature by \inlinecode{cooling\_rate} each round, performing $k = \lceil \log(T_{end}/T_{start}) / \log(r) \rceil$ iterations. Temperature has the same scale as energy, so scaling every energy requires scaling both temperature bounds by the same factor to preserve acceptance probabilities.
 
 \begin{compactitem}
-  \item \inlinecode{anneal\_min(initial, energy, rand\_neighbor, rng, ...)} returns (\inlinecode{best\_energy}, \inlinecode{best\_state}) given an initial state \inlinecode{initial}, a callable \inlinecode{energy(state)} that returns the state's energy, and a callable \inlinecode{rand\_neighbor(state, temp, rng)} that returns a randomly chosen nearby state. Optional parameters default to \inlinecode{temp\_start = 1000}, \inlinecode{temp\_end = 1e-6}, and \inlinecode{cooling\_rate = 0.995}. \inlinecode{temp\_end} must be positive and less than \inlinecode{temp\_start}, while \inlinecode{cooling\_rate} must be strictly between $0$ and $1$.
+  \item \inlinecode{anneal\_min(initial, energy, rand\_neighbor, rng, ...)} returns (\inlinecode{best\_energy}, \inlinecode{best\_state}) given an initial state \inlinecode{initial}, a callable \inlinecode{energy(state)} that returns the state's energy, and a callable \inlinecode{rand\_neighbor(state, temp, rng)} that returns a randomly chosen nearby state. Optional parameters default to \inlinecode{temp\_start = 1000}, \inlinecode{temp\_end = 1e-6}, \inlinecode{cooling\_rate = 0.995}, and \inlinecode{time\_limit = 0}. \inlinecode{temp\_end} must be positive and less than \inlinecode{temp\_start}, while \inlinecode{cooling\_rate} must be strictly between $0$ and $1$. A positive \inlinecode{time\_limit}, in seconds, stops the search once that much wall-clock time has elapsed; the best state found so far is returned either way.
 \end{compactitem}
 
-For continuous states, temperature can also control the neighbor step size. Slower cooling, independent restarts, and a time-based stopping condition often improve results, but simulated annealing never proves optimality.
+For continuous states, temperature can also control the neighbor step size. Slower cooling and independent restarts often improve results, but simulated annealing never proves optimality.
 
 This generic interface copies each proposed state and recomputes its energy. For large permutation states, adapt the loop to mutate and revert moves in place and update the energy from the affected terms instead.
 
-\textbf{Time Complexity}: $O(k(C_E + C_N))$ per call, where $k$ is the number of temperature levels and $C_E$ and $C_N$ are the costs of evaluating the energy and generating a neighboring state.
+\textbf{Time Complexity}: $O(k(C_E + C_N))$ per call, where $k$ is the number of temperature levels and $C_E$ and $C_N$ are the costs of evaluating the energy and generating a neighboring state. A positive \inlinecode{time\_limit} caps $k$ at whatever the deadline allows.
 
 \textbf{Space Complexity}: $O(S)$ for the current, next, and best states, where $S$ is the size of one state.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
+#include <chrono>
 #include <cmath>
 #include <random>
 #include <utility>
@@ -708,23 +718,27 @@ This generic interface copies each proposed state and recomputes its energy. For
 template<typename State, typename Energy, typename Neighbor>
 std::pair<double, State> anneal_min(
     State initial, Energy energy, Neighbor rand_neighbor, std::mt19937 &rng,
-    double temp_start = 1000, double temp_end = 1e-6, double cooling_rate = 0.995
+    double temp_start = 1000, double temp_end = 1e-6, double cooling_rate = 0.995,
+    double time_limit = 0
 ) {
   assert(0 < temp_end && temp_end < temp_start);
   assert(0 < cooling_rate && cooling_rate < 1);
   std::uniform_real_distribution<double> unit(0.0, 1.0);
   State current = std::move(initial), best = current;
-  double current_energy = energy(current), best_energy = current_energy;
+  double curr_energy = energy(current), best_energy = curr_energy;
+  auto deadline = std::chrono::steady_clock::now() + std::chrono::duration<double>(time_limit);
   for (double temp = temp_start; temp > temp_end; temp *= cooling_rate) {
+    if (time_limit > 0 && std::chrono::steady_clock::now() >= deadline) {
+      break;  // The schedule is abandoned mid-cooling; the best state so far is still returned.
+    }
     State next = rand_neighbor(current, temp, rng);
     double next_energy = energy(next);
-    if (next_energy <= current_energy ||
-        unit(rng) < std::exp((current_energy - next_energy) / temp)) {
+    if (next_energy <= curr_energy || unit(rng) < std::exp((curr_energy - next_energy) / temp)) {
       current = std::move(next);
-      current_energy = next_energy;
-      if (current_energy < best_energy) {
+      curr_energy = next_energy;
+      if (curr_energy < best_energy) {
         best = current;
-        best_energy = current_energy;
+        best_energy = curr_energy;
       }
     }
   }
@@ -733,7 +747,7 @@ std::pair<double, State> anneal_min(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <vector>
 using namespace std;
@@ -780,6 +794,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Gradient Descent}
+\label{sec:5.2.4}
 Given a differentiable objective $f$ over $\mathbb{R}^n$ and a starting guess, approximately minimize the function by repeatedly stepping against the gradient. The gradient points in the direction of steepest increase, so moving the opposite way lowers $f$ for a small enough step; the whole difficulty is choosing how far to move, since too large a step overshoots and diverges while too small a step never arrives.
 
 Backtracking answers this by trying a full step and halving it until the Armijo condition $f(x - t\nabla f) \leq f(x) - c\,t\,\|\nabla f\|^2$ holds, which accepts a step only when it delivers a fixed fraction of the decrease that the gradient predicts. It needs no tuning and is the default to reach for. Adam instead keeps exponentially decaying averages of the gradient and of its squared entries, then divides one by the square root of the other, so each coordinate gets a step scaled to its own recent gradient magnitude. That makes it far less sensitive to badly scaled variables and to noisy gradients, at the cost of a learning rate to choose.
@@ -790,7 +805,7 @@ Backtracking answers this by trying a full step and halving it until the Armijo 
   \item \inlinecode{adam\_min(f, grad, x0, ...)} returns (\inlinecode{value}, \inlinecode{point}) for an approximate minimum of \inlinecode{f} reached from \inlinecode{x0} using Adam. Optional parameters default to \inlinecode{rate = 0.01}, \inlinecode{iterations = 10000}, \inlinecode{eps = 1e-9}, \inlinecode{beta1 = 0.9}, and \inlinecode{beta2 = 0.999}, where \inlinecode{rate} is the learning rate and the two decay factors, both required to lie in $[0, 1)$, control the two running averages.
 \end{compactitem}
 
-Both routines find a local minimum, and only a convex $f$ makes that the global one, as with the logistic regression of section 6.7.5. Prefer the golden-section search of section 5.2.1 in one dimension, or the hill climbing of section 5.2.2 and annealing of section 5.2.3 when no gradient is available, since a numeric gradient costs $2n$ evaluations per step and half the usable precision.
+Both routines find a local minimum, and only a convex $f$ makes that the global one, as with the logistic regression of section \secref{6.7.5}. Prefer the golden-section search of section \secref{5.2.1} in one dimension, or the hill climbing of section \secref{5.2.2} and annealing of section \secref{5.2.3} when no gradient is available, since a numeric gradient costs $2n$ evaluations per step and half the usable precision.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -802,7 +817,7 @@ Both routines find a local minimum, and only a convex $f$ makes that the global 
 
 \textbf{Space Complexity}: $O(n)$ auxiliary for all operations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cmath>
 #include <cstddef>
@@ -890,7 +905,7 @@ std::pair<double, std::vector<double>> adam_min(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 bool EQ(double a, double b) {
@@ -928,6 +943,7 @@ int main() {
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Divide-and-Conquer DP Optimization}
+\label{sec:5.3.1}
 Computes one layer $t$ of a dynamic program of the form $dp_t(i) = \min_{0 \leq k \leq i} (dp_{t-1}(k) + C(k, i))$, where $C(k, i)$ is the cost of moving from state $k$ of the previous layer to state $i$ of the current one. Let $opt(i)$ be the smallest $k$ attaining this minimum. Divide-and-conquer optimization applies when $opt(i) \leq opt(i + 1)$, so the best transition index moves only to the right as $i$ increases.
 
 To compute $dp_t$ over a range of states, evaluate its midpoint and record the best transition index $k^*$ found there. Monotonicity restricts every optimum in the left half to indices at most $k^*$, and every optimum in the right half to indices at least $k^*$. Recursively applying these bounds avoids checking every transition for every state. The caller must verify the required monotonicity property.
@@ -940,7 +956,7 @@ To compute $dp_t$ over a range of states, evaluate its midpoint and record the b
 
 \textbf{Space Complexity}: $O(\log n)$ auxiliary stack space.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cstdint>
 #include <vector>
@@ -973,7 +989,7 @@ void compute_dp_layer(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -1014,6 +1030,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{SMAWK Row Minima}
+\label{sec:5.3.2}
 Finds the position of the minimum in every row of a totally monotone matrix in time linear in its dimensions, without ever materializing the matrix. A matrix is totally monotone (for row minima) when the column index of each row's leftmost minimum never decreases as the row index increases, and this holds not just for the whole matrix but for every submatrix. Monge matrices, where $M_{i,j} + M_{i+1,j+1} \leq M_{i,j+1} + M_{i+1,j}$, are the most common source of such matrices and arise throughout dynamic programming on intervals and partitions.
 
 The SMAWK algorithm interleaves two steps. REDUCE discards columns that cannot hold the minimum of any remaining row, leaving at most as many candidate columns as active rows. INTERPOLATE recurses on the odd-indexed active rows, then recovers each even-indexed active row's minimum by scanning only the candidate-column range bounded by its already-solved neighbors; total monotonicity guarantees those scans advance monotonically and cost $O(R + C)$ overall, where $R$ is the number of rows and $C$ is the number of columns in the original matrix. This removes the logarithmic factor of divide-and-conquer DP optimization, but unlike that technique it is purely offline: every matrix entry must be available on demand from the oracle, so it cannot be used when an entry depends on a row minimum computed earlier in the same pass.
@@ -1026,7 +1043,7 @@ The SMAWK algorithm interleaves two steps. REDUCE discards columns that cannot h
 
 \textbf{Space Complexity}: $O(R + C)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <numeric>
 #include <vector>
@@ -1108,7 +1125,7 @@ std::vector<int> smawk_row_minima(int rows, int cols, const Get &get) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <vector>
 using namespace std;
@@ -1128,9 +1145,10 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Knuth DP Optimization}
+\label{sec:5.3.3}
 Computes minimum costs for every half-open interval $[l, r)$ using the recurrence $dp(l, r) = \min_{l < k < r} (dp(l, k) + dp(k, r)) + C(l, r)$. Each state chooses a split $k$ strictly inside the interval and pays $C(l, r)$ after solving the two resulting subintervals.
 
-A direct implementation checks every split and takes $O(n^{3})$. Knuth optimization applies when the smallest optimal splits satisfy $opt(l, r - 1) \leq opt(l, r) \leq opt(l + 1, r)$. The two neighboring states therefore bound the splits that must be checked for $dp(l, r)$, reducing the total number of candidate checks to $O(n^{2})$. Common applications include optimal binary search trees and some range merging problems. The caller must verify the required monotonicity property for the chosen $C(l, r)$. The common sufficient conditions are interval monotonicity and the quadrangle inequality $C(a, c) + C(b, d) \leq C(a, d) + C(b, c)$ for $a \leq b \leq c \leq d$, which is the Monge condition of section 5.3.2 written for an interval cost.
+A direct implementation checks every split and takes $O(n^{3})$. Knuth optimization applies when the smallest optimal splits satisfy $opt(l, r - 1) \leq opt(l, r) \leq opt(l + 1, r)$. The two neighboring states therefore bound the splits that must be checked for $dp(l, r)$, reducing the total number of candidate checks to $O(n^{2})$. Common applications include optimal binary search trees and some range merging problems. The caller must verify the required monotonicity property for the chosen $C(l, r)$. The common sufficient conditions are interval monotonicity and the quadrangle inequality $C(a, c) + C(b, d) \leq C(a, d) + C(b, c)$ for $a \leq b \leq c \leq d$, which is the Monge condition of section \secref{5.3.2} written for an interval cost.
 
 \begin{compactitem}
   \item \inlinecode{knuth\_interval\_dp(n, cost, \&opt\_out)} computes minimum costs for all half-open intervals $[l, r)$ over \inlinecode{n} items. The template parameter \inlinecode{cost} must be callable such that \inlinecode{cost(l, r)} returns $C(l, r)$, the interval cost added after choosing the best split. If the optional pointer \inlinecode{opt\_out} is supplied, it is filled with the chosen split points.
@@ -1140,7 +1158,7 @@ A direct implementation checks every split and takes $O(n^{3})$. Knuth optimizat
 
 \textbf{Space Complexity}: $O(n^{2})$ for the \inlinecode{dp} and \inlinecode{opt} tables.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cstdint>
 #include <vector>
@@ -1184,7 +1202,7 @@ std::vector<std::vector<int64_t>> knuth_interval_dp(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -1213,6 +1231,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Lagrangian Relaxation (Aliens Trick)}
+\label{sec:5.3.4}
 Given an optimization problem with a constraint on the number of chosen objects, Lagrangian relaxation moves that count into the objective by charging a penalty per object. If the relaxed problem can be solved quickly and the number chosen is monotone as the penalty changes, binary search recovers the best value for the desired count. This technique is often called the Aliens trick. Widen the penalty range when in doubt.
 
 For maximization, solve the relaxed problem as \inlinecode{score - penalty*count}, breaking ties toward larger \inlinecode{count}. As \inlinecode{penalty} increases, the optimal count never increases. The largest penalty whose relaxed optimum still chooses at least \inlinecode{target\_count} objects gives the exact constrained score after adding back \inlinecode{penalty*target\_count}.
@@ -1227,7 +1246,7 @@ Overflow warning: The difference \inlinecode{hi - lo} must fit in \inlinecode{in
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <utility>
@@ -1252,7 +1271,7 @@ int64_t lagrangian_maximize(int target_count, int64_t lo, int64_t hi, Solve solv
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 int main() {
@@ -1276,6 +1295,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Convex Hull Trick (Semi-Dynamic)}
+\label{sec:5.3.5}
 Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, answer queries at specified $x$-coordinates, each asking for the minimum $y$-value over all given lines. This is useful for dynamic programming recurrences of the form $dp(i) = \min_j (m_j x_i + b_j)$. Only the lower envelope of the lines can ever answer a query, so each added line pops previously stored lines that it renders useless, and ascending queries advance a pointer along the envelope so every line is visited at most twice.
 
 The following implementation is a concise, semi-dynamic version of the convex hull optimization technique. It supports an interlaced sequence of \inlinecode{add\_line()} and \inlinecode{query()} calls, as long as the preconditions of descending \inlinecode{m} and ascending \inlinecode{x} are satisfied. As a result, it may be necessary to sort the lines and queries before calling the functions. In that case, the overall time complexity will be dominated by the sorting step.
@@ -1297,7 +1317,7 @@ Overflow warning: \inlinecode{add\_line()} compares intersections by cross-multi
   \item $O(1)$ auxiliary for \inlinecode{add\_line()} and \inlinecode{query()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <vector>
@@ -1345,7 +1365,7 @@ class SemiDynamicCHT {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 int main() {
@@ -1366,6 +1386,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Convex Hull Trick (Fully-Dynamic)}
+\label{sec:5.3.6}
 Maintains a dynamic set of lines $y = mx + b$ and answers minimum value queries at integer points. Lines and queries may arrive in arbitrary order, making this useful for dynamic programming recurrences of the form $dp(i) = \min_j (m_j x_i + b_j)$ without monotone slopes or query coordinates. The same interface can answer maximum queries when constructed with \inlinecode{query\_max = true}.
 
 This fully dynamic convex hull stores the envelope in a self-balancing binary search tree (\inlinecode{std::set}). Inserting a line removes any neighbors it dominates, and each remaining line records the last coordinate where it is optimal, so a query is one tree lookup. Unlike a Li Chao tree, this structure requires no fixed coordinate domain and its complexity depends on the number of lines rather than the domain width. Prefer it when the domain is unknown or very large, or when maximum queries are needed; a Li Chao tree is often simpler when a manageable domain is known.
@@ -1389,7 +1410,7 @@ Overflow warning: minimization negates the coefficients, border updates subtract
   \item $O(1)$ auxiliary for \inlinecode{add\_line()} and \inlinecode{query()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <set>
@@ -1457,7 +1478,7 @@ class FullyDynamicCHT {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 int main() {
@@ -1483,11 +1504,12 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Li Chao Tree}
+\label{sec:5.3.7}
 Maintains a dynamic set of lines $y = mx + b$ and answers minimum value queries at integer points. Lines and queries may arrive in arbitrary order, making this useful for dynamic programming recurrences of the form $dp(i) = \min_j (m_j x_i + b_j)$ without monotone slopes or query coordinates.
 
 A Li Chao tree fixes an inclusive coordinate domain $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ and stores one line at each node of a dynamic segment tree. Inserting a line keeps the line that wins at the midpoint and recurses only into the half where the other line may still win; a query takes the best value along one root-to-leaf path. Prefer this structure when the domain is known and manageable. The fully dynamic convex hull in the previous section needs no fixed domain and also supports maximum queries, while a Li Chao tree has a simpler invariant and is easier to extend to lines active only on subintervals.
 
-No line can be removed once inserted, since a node records only the winner at its midpoint and never what that line beat. Insertions can instead be undone in reverse order: \inlinecode{add\_line()} replaces the line at $O(\log d)$ nodes and creates at most one, so remembering each previous line restores the tree exactly. Pairing that with a segment tree over the time axis gives arbitrary deletion offline, the construction that section 4.2.10 applies to a rollback disjoint set.
+No line can be removed once inserted, since a node records only the winner at its midpoint and never what that line beat. Insertions can instead be undone in reverse order: \inlinecode{add\_line()} replaces the line at $O(\log d)$ nodes and creates at most one, so remembering each previous line restores the tree exactly. Pairing that with a segment tree over the time axis gives arbitrary deletion offline, the construction that section \secref{4.2.10} applies to a rollback disjoint set.
 
 \begin{compactitem}
   \item \inlinecode{LiChaoTree(lo, hi)} constructs an empty tree over integer domain $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
@@ -1514,7 +1536,7 @@ Overflow warning: each comparison and query evaluates \inlinecode{m * x + b}, wh
   \item $O(\log d)$ auxiliary stack space per operation.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -1620,7 +1642,7 @@ class LiChaoTree {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 int main() {
@@ -1649,11 +1671,12 @@ int main() {
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Root Finding (Bracketing)}
+\label{sec:5.4.1}
 Finds an $x$ in an interval $[a, b]$ for a continuous function $f$ such that $f(x) = 0$. By the intermediate value theorem, a root must exist in $[a, b]$ if either endpoint is a root or the signs of $f(a)$ and $f(b)$ differ. Each bisection step evaluates the midpoint of the interval and keeps the half whose endpoints still differ in sign, so a root always remains bracketed. After $n$ iterations, the interval width is $(b - a) / 2^n$. Although it is possible to control the error by looping while $b - a$ is greater than an arbitrary epsilon, it is simpler to let the loop run for a desired number of iterations until floating point arithmetic breaks down. 100 iterations is usually sufficient, since the search space will be reduced to $2^{-100}$ (roughly $10^{-30}$) times its original size.
 
 \begin{compactitem}
-  \item \inlinecode{bisection\_root(f, a, b, iterations = 100)} returns a root in an interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a continuous function $f$ where either endpoint is a root or the endpoint values have opposite signs, using the bisection method.
-  \item \inlinecode{falsi\_illinois\_root(f, a, b, iterations = 100)} returns a root in an interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a continuous function $f$ under the same endpoint conditions, using the Illinois algorithm variant of the false position (a.k.a. regula falsi) method.
+  \item \inlinecode{bisection\_root(f, a, b, iterations = 100)} returns a root in an interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a continuous function \inlinecode{f} where either endpoint is a root or the endpoint values have opposite signs, using the bisection method.
+  \item \inlinecode{falsi\_illinois\_root(f, a, b, iterations = 100)} returns a root in an interval $[{\inlinecodemath{a}}, {\inlinecodemath{b}}]$ for a continuous function \inlinecode{f} under the same endpoint conditions, using the Illinois algorithm variant of the false position (a.k.a. regula falsi) method.
   \item \inlinecode{brent\_root(f, a, b, eps = 1e-15, iterations = 100)} returns a root under the same endpoint conditions using Brent's method, stopping early once the bracket is narrower than \inlinecode{eps}.
 \end{compactitem}
 
@@ -1663,7 +1686,7 @@ Brent's method is the one to reach for when the number of evaluations matters. I
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cmath>
 
@@ -1789,7 +1812,7 @@ double brent_root(Fn f, double a, double b, double eps = 1e-15, int iterations =
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cmath>
 
 double f(double x) {
@@ -1811,6 +1834,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Root Finding (Iteration)}
+\label{sec:5.4.2}
 Finds an $x$ for a continuous function $f$ such that $f(x) = 0$ using iterative approximation by an initial guess that is close to the answer. Each step follows the tangent line at the current guess down to its $x$-intercept, that is, $x \leftarrow x - f(x)/f'(x)$. Newton's method requires an explicit definition of the function's derivative while the secant method starts with two initial guesses and approximates the derivative using the secant slope from the previous iteration. With smooth functions and good initial guesses, Newton's method has quadratic convergence, while the secant method has convergence order approximately $1.618$.
 
 \begin{compactitem}
@@ -1822,7 +1846,7 @@ Finds an $x$ for a continuous function $f$ such that $f(x) = 0$ using iterative 
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for both operations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cmath>
 #include <stdexcept>
 
@@ -1866,7 +1890,7 @@ double secant_root(Fn f, double x0, double x1, double eps = 1e-15, int iteration
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 double f(double x) {
@@ -1887,6 +1911,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Polynomial Root Finding (Differentiation)}
+\label{sec:5.4.3}
 Finds every real root $x$ of a polynomial $p$ satisfying $p(x) = 0$ by recursively finding the roots of its derivative. Each adjacent pair of local extrema is searched using the bisection method.
 
 The key observation is that derivative roots split the real line into intervals where the polynomial is monotone. A monotone interval contains at most one root, and if an endpoint is a root or the endpoint values have opposite signs, bisection isolates that root. Recursively solving the derivative therefore provides all interval boundaries needed to find every real root in the requested range, including roots of even multiplicity. Each recursive call first scales the coefficients by their largest magnitude so that root detection is unaffected by a common factor.
@@ -1914,7 +1939,7 @@ The coefficient vector must be nonempty and contain at least one nonzero coeffic
   \item $O(n)$ auxiliary stack space and $O(n^{2})$ auxiliary heap space for \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -1992,7 +2017,7 @@ std::vector<dbl> find_all_roots(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -2029,6 +2054,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Polynomial Root Finding (Laguerre)}
+\label{sec:5.4.4}
 Finds every complex root $x$ for a polynomial $p$ with complex coefficients such that $p(x) = 0$. Laguerre's method is a root-finding iteration with reliable, near-cubic convergence from almost any starting point. Once a root is found it is removed by polynomial deflation, and the iteration repeats on the lower-degree quotient until every root has been extracted.
 
 \begin{compactitem}
@@ -2052,7 +2078,7 @@ Finds every complex root $x$ for a polynomial $p$ with complex coefficients such
   \item $O(n)$ auxiliary for \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -2132,7 +2158,7 @@ std::vector<cdbl> find_all_roots(const cpoly &p, dbl eps = 1e-15L, int iteration
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -2179,6 +2205,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Polynomial Root Finding (Ehrlich-Aberth)}
+\label{sec:5.4.5}
 Finds every complex root $x$ for a polynomial $p$ such that $p(x) = 0$. The Ehrlich-Aberth method is a simultaneous iteration: every root estimate is updated using both the Newton correction and a repulsion term from the other estimates.
 
 This routine is intended for well-scaled polynomials when all complex roots are wanted. If only real roots are needed, a real-root isolator such as derivative recursion with bisection is usually more reliable. Multiple or tightly clustered roots may converge slowly, and very large or very small root scales may require rescaling the input or using multiprecision arithmetic.
@@ -2202,7 +2229,7 @@ This routine is intended for well-scaled polynomials when all complex roots are 
   \item $O(n)$ auxiliary for \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cmath>
 #include <complex>
@@ -2355,7 +2382,7 @@ std::vector<cdbl> find_all_roots(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -2411,6 +2438,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Integration (Simpson)}
+\label{sec:5.4.6}
 Computes the definite integral from $a$ to $b$ for a continuous function $f$ using the composite Simpson's rule: the interval is split into $n$ equal subintervals and each consecutive pair is approximated by a parabola, giving the approximation $\int_{a}^{b} f(x) \,dx \approx$ $h/3 \cdot [f(x_0) + 4f(x_1) + 2f(x_2) + \ldots + 4f(x_{n-1}) + f(x_n)]$ with step $h = (b - a)/n$.
 
 Unlike adaptive quadrature, the step size here is uniform, so a feature narrower than $h$ may be under-resolved. The benefit is a simple, non-recursive routine with predictable cost that is not fooled by the premature-termination heuristic that adaptive Simpson's rule can suffer on functions whose coarse sample points happen to fit a parabola.
@@ -2423,7 +2451,7 @@ Unlike adaptive quadrature, the step size here is uniform, so a feature narrower
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 template<typename Fn>
@@ -2438,7 +2466,7 @@ double integrate(Fn f, double a, double b, int n = 1000000) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cmath>
 using namespace std;
 
@@ -2455,6 +2483,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Ordinary Differential Equations}
+\label{sec:5.4.7}
 Given an initial value $y(t_0) = y_0$ and a derivative $y'(t) = f(t, y)$, an initial value problem asks for $y$ at some later time. Since only the slope is known, the solution is traced by stepping forward: estimate the slope over a short interval \inlinecode{h}, move along it, and repeat. The methods below differ only in how many slope samples each step averages, which is what determines how quickly the error vanishes as \inlinecode{h} shrinks.
 
 The forward Euler method takes the slope at the current point and follows it for the whole step. Each step therefore misses the curvature of the solution, leaving an error per step proportional to $h^2$ that accumulates to $O(h)$ over a fixed interval. The midpoint method spends one extra evaluation to sample the slope halfway across the step and uses that instead, which cancels the leading error term and leaves $O(h^{2})$. Classical Runge-Kutta combines four samples, one at the start, two at the middle, and one at the end, weighted so that every error term through $h^4$ cancels, leaving $O(h^{4})$. Halving $h$ therefore buys $16$ times the accuracy for twice the work, which is why this method is the usual default.
@@ -2472,7 +2501,7 @@ A \inlinecode{t1} below \inlinecode{t0} integrates backwards, since the step is 
 
 \textbf{Space Complexity}: $O(n)$ auxiliary and $O(n)$ for the returned state, where $n$ is the number of equations.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstddef>
 #include <vector>
@@ -2541,7 +2570,7 @@ State runge_kutta(Fn f, double t0, const State &y0, double t1, int steps) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cmath>
 using namespace std;
 
@@ -2572,6 +2601,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Linear Programming (Simplex)}
+\label{sec:5.4.8}
 Solves a linear programming problem using Dantzig's simplex algorithm. The canonical form of a linear programming problem is to maximize (or minimize) the dot product $cx$, subject to $Ax \leq b$ and $x \geq 0$, where $x$ is a vector of unknowns to be solved, $c$ is a vector of coefficients, $A$ is a matrix of constraint coefficients, and $b$ is a vector of bounds.
 
 The simplex algorithm walks between vertices of the feasible polytope, at each step pivoting to an adjacent vertex that improves the objective, until no improving move remains (an optimum is reached) or an unbounded improving direction is found.
@@ -2586,7 +2616,7 @@ The implementation uses a two-phase simplex tableau. Phase 1 introduces an artif
 
 \textbf{Space Complexity}: $O(m \cdot n)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cmath>
 #include <numeric>
@@ -2710,7 +2740,7 @@ int simplex_solve(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <iostream>
 using namespace std;
 

@@ -17,8 +17,8 @@ describes vertex connectivity using articulation points and vertex-biconnected c
 - `build_bridges()` computes the bridges, returned by `bridges()`.
 - `build_bridge_forest()` computes the 2-edge-connected components and bridge forest using the
   results of the previous `build_bridges()` call.
-- `components()` and `bridge_forest()` return those results.
-- `component_id(u)` returns the 2-edge-connected component ID containing node `u`.
+- `two_edge_comps()` and `bridge_forest()` return those results.
+- `comp_id(u)` returns the 2-edge-connected component ID containing node `u`.
 
 Time Complexity:
 - O(max(n, m)) per call to `build_bridges()` followed by `build_bridge_forest()`, where $n$ is the
@@ -35,8 +35,8 @@ Space Complexity:
 #include <vector>
 
 class BridgeDecomposition {
-  std::vector<std::vector<int>> adj, two_edge_components, forest;
-  std::vector<int> lowlink, tin, component;
+  std::vector<std::vector<int>> adj, two_edge_comp, forest;
+  std::vector<int> lowlink, tin, comp;
   std::vector<char> visit, is_bridge_edge;
   std::vector<std::pair<int, int>> edges, bridge_edges;
   int timer;
@@ -65,11 +65,11 @@ class BridgeDecomposition {
   }
 
   void dfs_component(int u, int id) {
-    component[u] = id;
-    two_edge_components[id].push_back(u);
+    comp[u] = id;
+    two_edge_comp[id].push_back(u);
     for (int edge_id : adj[u]) {
       int v = other(edge_id, u);
-      if (component[v] == -1 && !is_bridge_edge[edge_id]) {
+      if (comp[v] == -1 && !is_bridge_edge[edge_id]) {
         dfs_component(v, id);
       }
     }
@@ -102,26 +102,26 @@ class BridgeDecomposition {
 
   void build_bridge_forest() {
     int n = static_cast<int>(adj.size());
-    component.assign(n, -1);
-    two_edge_components.clear();
+    comp.assign(n, -1);
+    two_edge_comp.clear();
     for (int i = 0; i < n; i++) {
-      if (component[i] == -1) {
-        two_edge_components.emplace_back();
-        dfs_component(i, static_cast<int>(two_edge_components.size()) - 1);
+      if (comp[i] == -1) {
+        two_edge_comp.emplace_back();
+        dfs_component(i, static_cast<int>(two_edge_comp.size()) - 1);
       }
     }
-    forest.assign(two_edge_components.size(), {});
+    forest.assign(two_edge_comp.size(), {});
     for (auto &[u, v] : bridge_edges) {
-      int cu = component[u], cv = component[v];
+      int cu = comp[u], cv = comp[v];
       forest[cu].push_back(cv);
       forest[cv].push_back(cu);
     }
   }
 
   const std::vector<std::pair<int, int>> &bridges() const { return bridge_edges; }
-  const std::vector<std::vector<int>> &components() const { return two_edge_components; }
+  const std::vector<std::vector<int>> &two_edge_comps() const { return two_edge_comp; }
   const std::vector<std::vector<int>> &bridge_forest() const { return forest; }
-  int component_id(int u) const { return component[u]; }
+  int comp_id(int u) const { return comp[u]; }
 };
 
 /*** Example Usage ***/
@@ -143,12 +143,7 @@ int main() {
   g.build_bridges();
   assert((g.bridges() == vector<pair<int, int>>{{1, 2}, {5, 4}, {3, 7}}));
   g.build_bridge_forest();
-  vector<vector<int>> components = g.components();
-  for (auto &component : components) {
-    sort(component.begin(), component.end());
-  }
-  sort(components.begin(), components.end());
-  assert((components == vector<vector<int>>{{0, 1, 5}, {2}, {3}, {4}, {6}, {7}}));
+  assert((g.two_edge_comps() == vector<vector<int>>{{0, 1, 5}, {2}, {3}, {4}, {6}, {7}}));
   assert((g.bridge_forest() == vector<vector<int>>{{1, 3}, {0}, {5}, {0}, {}, {2}}));
   return 0;
 }

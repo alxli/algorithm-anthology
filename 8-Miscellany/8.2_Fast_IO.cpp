@@ -5,7 +5,9 @@ Fast input and output helpers. For most cases, it is enough to speed up standard
 input is genuinely huge or `iostream` overhead is measurable.
 
 - `set_in(name)`, `set_out(name)`, and `set_io(iname, oname)` redirect standard input/output to
-  files. For example, `set_io("task.in", "task.out")` is convenient for USACO-style problems.
+  files. For example, `set_io("task.in", "task.out")` is convenient for USACO-style problems. An
+  empty name leaves that stream untouched, so `set_io("", "")` is a no-op that can stay in place
+  when the same solution is submitted to a judge that pipes its input.
 
 File-redirection failures throw `std::runtime_error`.
 
@@ -21,13 +23,13 @@ File-redirection failures throw `std::runtime_error`.
 #include <type_traits>
 
 void set_in(const std::string &name) {
-  if (!freopen(name.c_str(), "r", stdin)) {
+  if (!name.empty() && !freopen(name.c_str(), "r", stdin)) {
     throw std::runtime_error("Failed to open input file: " + name);
   }
 }
 
 void set_out(const std::string &name) {
-  if (!freopen(name.c_str(), "w", stdout)) {
+  if (!name.empty() && !freopen(name.c_str(), "w", stdout)) {
     throw std::runtime_error("Failed to open output file: " + name);
   }
 }
@@ -35,6 +37,40 @@ void set_out(const std::string &name) {
 void set_io(const std::string &iname, const std::string &oname) {
   set_in(iname);
   set_out(oname);
+}
+
+/*
+
+When only integers are read, one loop over a character reader is the whole technique and is short
+enough to copy or retype: skip anything that starts no number, then fold digits in with
+`x * 10 + d`. Which character reader it uses decides everything, since the per-character mutex that
+the locked `getchar()` takes costs more than the parsing does. The example below times the
+alternatives against each other on the same input.
+
+- `read_int(x)` reads one integer from `stdin` into `x`, skipping any leading character that cannot
+  start a number. A leading `-` is honored, so `Int` must be signed for negative input. Behavior is
+  undefined at end of file.
+
+*/
+
+// The unlocked reader is where nearly all of the speed comes from. It is POSIX, not standard C++.
+inline int read_char() {
+#if defined(_WIN32)
+  return _getchar_nolock();
+#elif defined(__unix__) || defined(__APPLE__)
+  return getchar_unlocked();
+#else
+  return getchar();
+#endif
+}
+
+template<typename Int>
+void read_int(Int &x) {
+  int c, s = 1;
+  while ((c = read_char()) != '-' && (c < '0' || c > '9'));
+  if (c == '-') s = -1, c = read_char();
+  for (x = 0; '0' <= c && c <= '9'; c = read_char()) x = x * 10 + c - '0';
+  x *= s;
 }
 
 /*
@@ -254,8 +290,20 @@ class FastOutput {
   }
 };
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
 
+Reading 1000000 integers:
+cin                     1.039 s
+scanf                   0.051 s
+read_int (unlocked)     0.011 s
+FastInput               0.026 s
+
+***/
+
+#include <ctime>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 using namespace std;
 
 int main() {
@@ -289,5 +337,31 @@ int main() {
   assert(fgets(buf, sizeof(buf), output));
   assert(string(buf) == "42 hello 3.5 -2147483648 1 Z 1234567890123\n");
   fclose(output);
+
+  // Benchmark various ways of reading the same million integers from a scratch file.
+  const int n = 1000000;
+  string text;
+  for (int i = 0; i < n; i++) {
+    text += to_string(i) + ' ';
+  }
+  string path = (filesystem::temp_directory_path() / "fast_io.tmp").string();
+  ofstream(path) << text;
+  auto time_reads = [&](const char *name, auto read_one) {
+    set_in(path);
+    clock_t start = clock();
+    for (int i = 0, v = 0; i < n; i++) {
+      read_one(v);
+    }
+    printf("%-22s %6.3f s\n", name, double(clock() - start) / CLOCKS_PER_SEC);
+  };
+  printf("Reading %d integers:\n", n);
+  time_reads("cin", [](int &v) { cin >> v; });
+  time_reads("scanf", [](int &v) { scanf("%d", &v); });
+  time_reads("read_int (unlocked)", [](int &v) { read_int(v); });
+  time_reads("FastInput", [](int &v) {
+    static FastInput in;
+    in >> v;
+  });
+  remove(path.c_str());
   return 0;
 }

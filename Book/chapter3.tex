@@ -2,6 +2,7 @@
 
 \section{\texorpdfstring{String Utilities}{3.1 String Utilities}}
 \setcounter{section}{1}
+\label{sec:3.1}
 Common string functions, many of which have standard library counterparts. The implementations below are educational rather than heavily optimized, and often depend on \inlinecode{std::string} operations with unspecified complexity.
 
 \textbf{Time Complexity}: $O(n)$ per call to most operations, where $n$ is the length of the input string or total length of all input strings. Exceptions are noted with the individual functions below.
@@ -13,7 +14,7 @@ Common string functions, many of which have standard library counterparts. The i
   \item $O(1)$ auxiliary for in-place operations.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cctype>
 #include <cstddef>
 #include <regex>
@@ -33,7 +34,7 @@ Integer Conversion:
   \item \inlinecode{is\_number(s)} returns whether \inlinecode{s} is a decimal number literal with optional sign, decimal point, and exponent.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 template<typename Int>
 string to_str(Int i) {
   std::ostringstream oss;
@@ -129,7 +130,7 @@ Case Conversion:
   \item \inlinecode{to\_title(s)} returns the title case representation of string \inlinecode{s}, where the first letter of every word (consecutive alphabetical characters) is capitalized.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 string to_upper(const string &s) {
   string res;
   res.reserve(s.size());
@@ -167,7 +168,7 @@ Stripping:
   \item \inlinecode{ltrimmed(s, delim = WHITESPACE)}, \inlinecode{rtrimmed(s, delim = WHITESPACE)}, and \inlinecode{trimmed(s, delim = WHITESPACE)} do not modify \inlinecode{s} and return stripped copies.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 const string WHITESPACE = " \n\t\v\f\r";
 
 string &lstrip(string &s, const string &delim = WHITESPACE) {
@@ -220,7 +221,7 @@ Find and Replace:
   \item \inlinecode{regex\_replace\_all(s, pattern, replacement)} returns a copy of \inlinecode{s} with every regex match replaced by \inlinecode{replacement}, which may refer to capture groups as \inlinecode{\$1}, \inlinecode{\$2}, and so on.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 bool starts_with(const string &s, const string &prefix) {
   return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
 }
@@ -308,7 +309,7 @@ Joining and Splitting:
   \item \inlinecode{explode(s, char delim)} is the single-character delimiter version that also preserves empty tokens.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 string join(const std::vector<string> &v, const string &delim = " ") {
   if (v.empty()) {
     return "";
@@ -412,7 +413,7 @@ std::vector<string> explode(const string &s, char delim) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -480,6 +481,7 @@ int main() {
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Hash Functions}
+\label{sec:3.2.1}
 Provides a small library of non-cryptographic hash functions and hash functors for common contest keys. These functions are useful for fingerprinting values, combining keys, seeding randomized algorithms, and defining \inlinecode{std::unordered\_map} keys for pairs, tuples, and vectors. They are not suitable for passwords, signatures, or adversarial security.
 
 The standalone functions below are deterministic.
@@ -505,7 +507,7 @@ FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Start
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -617,7 +619,7 @@ Hash functors adapt common composite keys for unordered containers. \inlinecode{
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 template<typename Int>
 struct IntHasher {
   std::size_t operator()(Int x) const {
@@ -705,7 +707,7 @@ struct GenericHasher<std::vector<T>> : VectorHasher<T> {};
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -758,6 +760,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Rolling Hash}
+\label{sec:3.2.2}
 Computes polynomial rolling hashes for sequences of an arbitrary hashable type \inlinecode{T}, supporting $O(1)$ contiguous subsequence hash queries after preprocessing. This is useful for probabilistic string matching, substring equality checks, repeated subarray detection, and binary-searching over candidate lengths.
 
 Given a sequence $a_0, a_1, \ldots, a_{n-1}$ and a value hash $h(a_i)$ for each element, the hash is the polynomial $H(a) = \sum_{i=0}^{n-1} h(a_i) B^{n-1-i} \pmod M$, where $B$ is \inlinecode{HASH\_BASE} and $M$ is \inlinecode{HASH\_MOD}. Let $p(i)$ be the hash of the first $i$ values. It is built left-to-right by the prefix hash recurrence $p(0) = 0$ and $p(i + 1) = p(i) B + h(a_i) \pmod M$. The hash of a half-open subsequence $[l, r)$ is then computed as $p(r) - p(l) B^{r-l} \pmod M$.
@@ -790,7 +793,7 @@ By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For
   \item $O(1)$ auxiliary per query.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <string>
@@ -908,7 +911,7 @@ std::vector<uint64_t> RollingHash<T, Hash>::pow_base(1, 1);
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 using PointI = pair<int, int>;
@@ -954,6 +957,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Rolling Hash Deque}
+\label{sec:3.2.3}
 Maintains a polynomial rolling hash for a sequence of an arbitrary hashable type \inlinecode{T}, supporting insertion and deletion at either end in $O(1)$ time per operation. Each element is first reduced to a nonnegative integer ``digit'' by a user-supplied hasher, so characters, integers, whole words, and tuples can all be hashed. This is the deque generalization of the classic Rabin-Karp sliding window: pushing at the back and popping from the front is exactly a moving window, and this structure additionally supports pushing at the front and popping from the back.
 
 The sequence of digits is hashed with the front element as the most significant digit, so a sequence of length $n$ has hash $\sum_{i=0}^{n-1} a_i B^{n-1-i}$ (the front element $a_0$ carries the highest power). This makes the four end operations pure $O(1)$ updates of a running accumulator:
@@ -991,7 +995,7 @@ The element type defaults to \inlinecode{int}, and integer-like values use \inli
   \item $O(1)$ auxiliary per operation.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <deque>
@@ -1082,7 +1086,7 @@ class HashDeque {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <functional>
 #include <string>
 using namespace std;
@@ -1142,6 +1146,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Dynamic Rolling Hash}
+\label{sec:3.2.4}
 Maintains a polynomial rolling hash for a sequence of nonnegative integers, supporting point updates and $O(\log n)$ contiguous subsequence hash queries. Unlike the static rolling hash, which fixes its prefix hashes at construction, this structure allows any element to change between queries, which is useful for problems that compare substrings while characters are edited.
 
 The key idea is to weight each element by a power of the base tied to its absolute position: storing $a_i B^i$ at index \inlinecode{i} turns the hash of any prefix into an ordinary prefix sum, which a Fenwick tree maintains under point updates. The raw sum over a half-open range $[l, h)$ is $\sum_i a_i B^i$, and multiplying by $B^{-l}$ shifts it to the position-independent value $\sum_i a_i B^{i - l}$, so two ranges with equal contents receive equal hashes (the leftmost element carries the lowest power). A segment tree could replace the Fenwick tree if lazy range updates are needed.
@@ -1173,7 +1178,7 @@ Element values must be nonnegative. As with any polynomial hash, comparing subse
   \item $O(1)$ auxiliary per query.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
 #include <utility>
@@ -1265,7 +1270,7 @@ class DynamicRollingHash {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <string>
 using namespace std;
 
@@ -1288,6 +1293,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Zobrist Hashing}
+\label{sec:3.2.5}
 Computes randomized XOR fingerprints for keys and sets of keys using Zobrist hashing. Each distinct key is assigned a pseudorandom 64-bit token, and a set is represented by the XOR of its members' tokens. This makes insertion and deletion the same operation: XOR the key's token once.
 
 This technique is useful for probabilistic equality checks on sets, distinct-prefix queries, board-game states, and other unordered collections. It is not cryptographic, and collisions are possible with probability roughly $q^2 / 2^{64}$ over $q$ compared fingerprints. For multisets, plain XOR only records element parity; use a summed hash or pair it with counts if multiplicity matters.
@@ -1313,7 +1319,7 @@ This technique is useful for probabilistic equality checks on sets, distinct-pre
   \item $O(n)$ auxiliary for \inlinecode{distinct\_prefix\_hashes()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cstdint>
 #include <unordered_map>
 #include <unordered_set>
@@ -1362,7 +1368,7 @@ class ZobristHash {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -1389,6 +1395,7 @@ int main() {
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{String Searching (KMP)}
+\label{sec:3.3.1}
 Given a single string (needle) and subsequent queries of texts (haystacks) to be searched, determine the first positions in which the needle occurs within the given haystacks in linear time using the Knuth-Morris-Pratt algorithm. Unlike \inlinecode{std::string::find}, KMP guarantees a linear worst-case bound. KMP precomputes, for every prefix of the needle, the length of its longest proper border (a prefix that is also a suffix). On a mismatch, the needle falls back to that border instead of restarting, so the position in the haystack never moves backward.
 
 \begin{compactitem}
@@ -1410,7 +1417,7 @@ Given a single string (needle) and subsequent queries of texts (haystacks) to be
   \item $O(1)$ auxiliary for \inlinecode{find\_in()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cstddef>
 #include <string>
 #include <vector>
@@ -1455,7 +1462,7 @@ class KMP {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 int main() {
@@ -1468,6 +1475,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{String Searching (Z Algorithm)}
+\label{sec:3.3.2}
 Given a single string (needle) and a single text (haystack) to be searched, determine the first position in which the needle occurs within the haystack in linear time using the Z algorithm. In comparison, \inlinecode{std::string::find} does not guarantee a linear worst-case bound.
 
 The Z array stores, for each position of a string, the length of the longest substring starting there that matches a prefix of the whole string. It is computed in linear time by maintaining the rightmost matched window and seeding each position from its mirror earlier in that window.
@@ -1493,7 +1501,7 @@ The \inlinecode{find\_substring\_z()} function below calls the Z algorithm on th
   \item $O(n + m)$ auxiliary for \inlinecode{find\_substring\_z(haystack, needle)}, where $n$ is the length of \inlinecode{haystack} and $m$ is the length of \inlinecode{needle}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cstddef>
 #include <string>
@@ -1543,7 +1551,7 @@ std::size_t find_substring_z(const string &haystack, const string &needle) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -1557,6 +1565,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{String Searching (Boyer-Moore)}
+\label{sec:3.3.3}
 Given a single string (needle) and subsequent queries of texts (haystacks) to be searched, determine the positions in which the needle occurs within the given haystacks using the Boyer-Moore algorithm. Unlike KMP and the Z algorithm, which compare left to right and inspect every character of the haystack, Boyer-Moore aligns the needle and compares right to left, which lets a single mismatch prove that many alignments are impossible. Most alignments are then skipped entirely, so a long needle over a large alphabet is typically matched in sublinear time.
 
 Two precomputed rules propose a shift, and the algorithm takes the larger of the two.
@@ -1573,7 +1582,7 @@ Dropping the good suffix rule and keying the bad character shift on the window's
   \item \inlinecode{find\_all\_in(haystack)} returns the positions of every occurrence of \inlinecode{needle} in \inlinecode{haystack}, in increasing order. Overlapping occurrences are all reported, since after a match the needle only advances by its period.
 \end{compactitem}
 
-Speed here is average-case, not worst-case: reporting every occurrence of a periodic needle such as \inlinecode{"aaaa"} in a run of one character rescans the matched part each time, giving $O(n \cdot m)$ until the Galil rule, which remembers how much of the needle a shift by the period already matched, restores $O(n + m)$. Prefer KMP in section 3.3.1 when the guarantee matters more than the average.
+Speed here is average-case, not worst-case: reporting every occurrence of a periodic needle such as \inlinecode{"aaaa"} in a run of one character rescans the matched part each time, giving $O(n \cdot m)$ until the Galil rule, which remembers how much of the needle a shift by the period already matched, restores $O(n + m)$. Prefer KMP in section \secref{3.3.1} when the guarantee matters more than the average.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -1590,7 +1599,7 @@ Speed here is average-case, not worst-case: reporting every occurrence of a peri
   \item $O(1)$ auxiliary for \inlinecode{find\_in()}, and $O(z)$ for the vector returned by \inlinecode{find\_all\_in()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <climits>
@@ -1669,7 +1678,7 @@ class BoyerMoore {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 using namespace std;
 
 int main() {
@@ -1691,6 +1700,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{String Searching (Aho-Corasick)}
+\label{sec:3.3.4}
 Given a set of strings (needles) and subsequent queries of texts (haystacks) to be searched, determine all positions in which needles occur within the given haystacks in linear time using the Aho-Corasick algorithm. The needles are arranged in a trie whose nodes carry failure links to the longest proper suffix that is also a trie node. Scanning the haystack once while following transitions and failure links then reports every match through each node's output list.
 
 This implementation stores transitions in hash tables, which keeps lookups expected constant time without assuming a fixed alphabet size. Output lists store both needles ending at each trie node and needles inherited through its failure link.
@@ -1714,7 +1724,7 @@ This implementation stores transitions in hash tables, which keeps lookups expec
   \item $O(1)$ auxiliary and $O(z)$ for the vector returned by \inlinecode{find\_all\_in()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <queue>
 #include <string>
 #include <unordered_map>
@@ -1804,7 +1814,7 @@ class AhoCorasick {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -1829,6 +1839,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Palindrome Searching (Manacher)}
+\label{sec:3.3.5}
 Computes all odd- and even-length palindromic radii of a string in linear time using Manacher's algorithm. These radii can be used to test whether any substring is a palindrome in $O(1)$, find the longest palindromic substring, or count all palindromic substrings. The algorithm tracks the rightmost known palindrome and seeds each new center with the radius of its mirror inside that window, so characters are only ever compared when a palindrome is extended past the window.
 
 For odd palindromes, \inlinecode{odd[i]} is the radius centered at character \inlinecode{s[i]}, including the center character. Thus the palindrome spans $[{\inlinecodemath{i}} - {\inlinecodemath{odd[i]}} + 1, {\inlinecodemath{i}} + {\inlinecodemath{odd[i]}})$. For even palindromes, \inlinecode{even[i]} is the radius centered between \inlinecode{s[i - 1]} and \inlinecode{s[i]}. Thus the palindrome spans $[{\inlinecodemath{i}} - {\inlinecodemath{even[i]}}, {\inlinecodemath{i}} + {\inlinecodemath{even[i]}})$.
@@ -1855,7 +1866,7 @@ For odd palindromes, \inlinecode{odd[i]} is the radius centered at character \in
   \item $O(1)$ auxiliary per query.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -1933,7 +1944,7 @@ class Manacher {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 int main() {
   Manacher m("abacaba");
   assert(m.is_palindrome(0, 7));
@@ -1949,6 +1960,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Lyndon Factorization (Duval)}
+\label{sec:3.3.6}
 A Lyndon word is a nonempty string that is strictly smaller than all of its proper suffixes, or equivalently, strictly smaller than all of its nontrivial cyclic rotations. By the Chen-Fox-Lyndon theorem, every string has a unique factorization into a sequence of Lyndon words whose values are non-increasing: $s = w_1 w_2 \cdots w_k$ with $w_1 \geq w_2 \geq \cdots \geq w_k$. Duval's algorithm computes this factorization in linear time and constant auxiliary space by scanning the string while tracking the current candidate Lyndon prefix and the position it last matched.
 
 The same scan, applied to the string viewed as a cycle, yields the starting position of its lexicographically least rotation. This is the standard way to canonicalize a necklace, for example to test whether two strings are cyclic rotations of one another.
@@ -1969,7 +1981,7 @@ Both functions below operate on any random-access sequence whose elements suppor
   \item $O(1)$ auxiliary for \inlinecode{min\_rotation()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <vector>
 
 template<typename Seq>
@@ -2014,7 +2026,7 @@ int min_rotation(const Seq &s) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <string>
 using namespace std;
@@ -2032,6 +2044,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{De Bruijn Sequence}
+\label{sec:3.3.7}
 A de Bruijn sequence $B(k, n)$ is a cyclic string over the alphabet $[0, k)$ of length $k^n$ in which every one of the $k^n$ possible length-$n$ strings appears exactly once as a (cyclic) substring. Reading a window of $n$ symbols and advancing one position at a time therefore cycles through all length-$n$ strings without repetition, which makes the sequence a compact way to probe every short pattern: cracking a rotating lock, addressing a shift register, or building the perfect-hash table that maps an isolated set bit to its index.
 
 The construction here is the Fredricksen-Kessler-Maiorana (FKM) algorithm. It concatenates, in lexicographic order, the Lyndon words (see the Lyndon factorization section) whose length divides $n$. The result is the lexicographically smallest de Bruijn sequence. The recursion enumerates these necklace representatives directly, appending the first $p$ symbols of each candidate whenever its period $p$ divides $n$.
@@ -2044,14 +2057,14 @@ The construction here is the Fredricksen-Kessler-Maiorana (FKM) algorithm. It co
 
 \textbf{Space Complexity}: $O(k^{n})$ for the returned sequence, plus $O(n)$ auxiliary stack space for the recursion.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <vector>
 
 std::vector<int> de_bruijn(int k, int n) {
   assert(k >= 1 && n >= 1);
   std::vector<int> word(n + 1), seq;
-  auto dfs = [&](auto &&dfs, int t, int p) -> void {
+  auto dfs = [&](auto &&dfs, int t, int p) {
     if (t > n) {
       if (n % p == 0) {
         for (int i = 1; i <= p; i++) {
@@ -2073,7 +2086,7 @@ std::vector<int> de_bruijn(int k, int n) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <set>
 #include <vector>
 using namespace std;
@@ -2111,6 +2124,7 @@ int main() {
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Suffix Array and LCP (Manber-Myers)}
+\label{sec:3.4.1}
 Given a string $s$, a suffix array stores the starting positions of the suffixes of $s$ in sorted order. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of $s$. For example, $s$ = \inlinecode{"cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. In sorted order they are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so their starting indices form the suffix array $[1, 2, 0]$.
 
 For a string $s$ of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in $s$. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
@@ -2141,7 +2155,7 @@ The original Manber-Myers doubling algorithm comparison-sorts the suffixes by th
   \item $O(1)$ auxiliary for \inlinecode{suffix\_array()} and \inlinecode{find()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cstddef>
 #include <numeric>
@@ -2222,7 +2236,7 @@ class SuffixArrayManberMyers {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -2236,6 +2250,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Suffix Array and LCP (Counting Sort)}
+\label{sec:3.4.2}
 Given a string $s$, a suffix array stores the starting positions of the suffixes of $s$ in sorted order. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of $s$. For example, $s$ = \inlinecode{"cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. In sorted order they are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so their starting indices form the suffix array $[1, 2, 0]$.
 
 For a string $s$ of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in $s$. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
@@ -2266,7 +2281,7 @@ The original Manber-Myers doubling algorithm comparison-sorts the suffixes by th
   \item $O(1)$ auxiliary for \inlinecode{suffix\_array()} and \inlinecode{find()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cstddef>
 #include <numeric>
@@ -2355,7 +2370,7 @@ class SuffixArrayCountingSort {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -2372,6 +2387,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Suffix Array and LCP (DC3)}
+\label{sec:3.4.3}
 Given a string $s$, a suffix array stores the starting positions of the suffixes of $s$ in sorted order. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of $s$. For example, $s$ = \inlinecode{"cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. In sorted order they are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so their starting indices form the suffix array $[1, 2, 0]$.
 
 For a string $s$ of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in $s$. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
@@ -2402,7 +2418,7 @@ The DC3/skew algorithm recursively constructs the suffix array of the suffixes s
   \item $O(1)$ auxiliary for \inlinecode{suffix\_array()} and \inlinecode{find()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cstddef>
 #include <string>
@@ -2555,7 +2571,7 @@ class SuffixArrayDC3 {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -2573,6 +2589,7 @@ int main() {
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Trie}
+\label{sec:3.5.1}
 Maintain a map of strings to values using a tree data structure. Each node corresponds to a character, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node. Children are stored in hash tables, and \inlinecode{entries()} sorts child labels as needed to preserve lexicographic traversal.
 
 \begin{compactitem}
@@ -2606,7 +2623,7 @@ For a small, fixed alphabet, the \inlinecode{std::unordered\_map} children can b
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <string>
 #include <unordered_map>
@@ -2746,7 +2763,7 @@ class Trie {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -2799,6 +2816,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Radix Tree}
+\label{sec:3.5.2}
 Maintain a map of strings to values using a compressed tree data structure. Each node corresponds to a substring of an inserted string, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node. Contrary to a regular trie, a radix tree is more space efficient as it combines chains of nodes with only a single child. Children are stored in hash tables, and \inlinecode{entries()} sorts child labels as needed to preserve lexicographic traversal.
 
 \begin{compactitem}
@@ -2830,7 +2848,7 @@ Maintain a map of strings to values using a compressed tree data structure. Each
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <optional>
 #include <string>
@@ -3063,7 +3081,7 @@ class RadixTree {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -3116,6 +3134,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Suffix Tree (Ukkonen)}
+\label{sec:3.5.3}
 A suffix tree is the compressed trie of every suffix of a string: a rooted tree in which each edge is labeled with a substring, no two edges leaving a node start with the same character, and the concatenation of labels from the root to each leaf spells one suffix. Paths from the root therefore spell exactly the distinct substrings of the string, which makes the tree a powerful index for substring queries, repeated-substring problems, and many other tasks. It is the explicit-pointer counterpart of the suffix automaton; the two store the same information and either can be converted into the other.
 
 This implementation is Ukkonen's algorithm, which builds the tree online in linear time by feeding one character at a time. It maintains an ``active point'' (a node, an edge, and a length along that edge) describing where the next suffix must be inserted, together with suffix links that let it hop between successive insertion points in amortized constant time. Edges to leaves are stored with an open-ended length that grows automatically as the string lengthens, so each phase touches only the suffixes that genuinely change. A unique terminal sentinel smaller than every real character is appended internally so that no suffix is a prefix of another and every suffix ends at its own leaf. The input must therefore not contain the character \inlinecode{\textquotesingle{}\textbackslash{}1\textquotesingle{}}.
@@ -3142,7 +3161,7 @@ This implementation is Ukkonen's algorithm, which builds the tree online in line
   \item $O(n)$ auxiliary stack space for the traversals.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cstdint>
 #include <map>
 #include <string>
@@ -3300,7 +3319,7 @@ class SuffixTree {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <set>
 using namespace std;
@@ -3338,6 +3357,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Suffix Automaton}
+\label{sec:3.5.4}
 Maintains a compact deterministic automaton representing all substrings of a string. A suffix automaton is useful for substring membership queries, counting distinct substrings, finding longest common substrings, and many other string dynamic programming tasks.
 
 Each state represents an equivalence class of substrings with the same set of ending positions. The value \inlinecode{st[v].len} is the maximum length represented by state \inlinecode{v}, while \inlinecode{st[v].link} points to the state representing the longest proper suffix of that class.
@@ -3370,7 +3390,7 @@ More precisely, state \inlinecode{v} contributes one distinct substring for each
   \item $O(1)$ auxiliary per character processed.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cstdint>
 #include <string>
 #include <unordered_map>
@@ -3487,7 +3507,7 @@ class SuffixAutomaton {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 int main() {
@@ -3512,6 +3532,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Eertree}
+\label{sec:3.5.5}
 Maintains all distinct palindromic substrings of a string online using an Eertree, also known as a palindromic tree. Each non-root node represents one distinct palindrome, and suffix links connect each palindrome to its longest proper palindromic suffix.
 
 The structure has two roots: one of length $-1$, which simplifies boundary cases, and one of length $0$, representing the empty palindrome. After each appended character, \inlinecode{last} points to the node for the longest palindromic suffix of the current string.
@@ -3542,7 +3563,7 @@ To append a character, \inlinecode{append()} follows suffix links from \inlineco
   \item $O(1)$ auxiliary per appended character.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -3621,7 +3642,7 @@ class Eertree {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -3656,6 +3677,7 @@ int main() {
 \setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Longest Common Substring}
+\label{sec:3.6.1}
 Given two strings, determine their longest common substring: a contiguous run of characters that appears in both. A dynamic program computes, for each pair of prefixes, the length of their longest common suffix; the largest value over all pairs locates a longest common substring. Only the previous row of the table is retained, so the auxiliary space is linear in the shorter string.
 
 \begin{compactitem}
@@ -3666,7 +3688,7 @@ Given two strings, determine their longest common substring: a contiguous run of
 
 \textbf{Space Complexity}: $O(\min\left(n, m\right))$ auxiliary, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <string>
 #include <vector>
 using std::string;
@@ -3700,7 +3722,7 @@ string longest_common_substring(const string &s1, const string &s2) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 int main() {
@@ -3712,6 +3734,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Longest Common Subsequence}
+\label{sec:3.6.2}
 Given two strings, determine their longest common subsequence. A subsequence is a string that can be derived from the original string by deleting some elements without changing the order of the remaining elements (e.g. \inlinecode{"ACE"} is a subsequence of \inlinecode{"ABCDE"}, but \inlinecode{"BAE"} is not).
 
 The dynamic program compares prefixes: if the last characters match, they can extend an optimal subsequence of the smaller prefixes; otherwise, one of the two last characters must be skipped. Following the filled table backward reconstructs one optimal subsequence. Hirschberg's algorithm keeps only one DP row at a time, using forward and backward length rows to choose where an optimal answer crosses the midpoint of the longer string.
@@ -3730,7 +3753,7 @@ The dynamic program compares prefixes: if the last characters match, they can ex
   \item $O(\log\left(\max\left(n, m\right)\right))$ auxiliary stack space and $O(\min\left(n, m\right))$ auxiliary heap space for \inlinecode{hirschberg\_lcs(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <iterator>
 #include <string>
@@ -3817,7 +3840,7 @@ string hirschberg_lcs(const string &s1, const string &s2) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 int main() {
@@ -3831,6 +3854,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Edit Distance and Sequence Alignment}
+\label{sec:3.6.3}
 Given two strings, determine their edit distance or a minimum-cost alignment. The Levenshtein edit distance is the minimum number of insertions, deletions, and substitutions needed to transform one string into the other. More generally, an alignment inserts gap characters \inlinecode{\textquotesingle{}\_\textquotesingle{}} into both strings so that the final lengths match; its cost is \inlinecode{gap\_cost} times the number of inserted gaps plus \inlinecode{sub\_cost} times the number of indices where the aligned characters differ.
 
 Dynamic programming compares prefixes and chooses the cheapest last operation: align the final characters together, leave a gap in the first string, or leave a gap in the second string. Following the filled table backward reconstructs one minimum-cost alignment. This is the Needleman-Wunsch sequence-alignment recurrence. Hirschberg's algorithm uses the same recurrence with only one DP row at a time, splitting the problem where an optimal alignment crosses the longer string's midpoint. Both \inlinecode{gap\_cost} and \inlinecode{sub\_cost} must be nonnegative.
@@ -3851,7 +3875,7 @@ Dynamic programming compares prefixes and chooses the cheapest last operation: a
   \item $O(\log\left(\max\left(n, m\right)\right))$ auxiliary stack space and $O(\min\left(n, m\right))$ auxiliary heap space for \inlinecode{hirschberg\_align(s1, s2)}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <iterator>
 #include <string>
@@ -4000,7 +4024,7 @@ std::pair<string, string> hirschberg_align(
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -4031,6 +4055,7 @@ AGGGCT
 A_GGCA
 \end{exampleoutput}
 \subsection{Wildcard Matching}
+\label{sec:3.6.4}
 Decide whether a pattern of literal characters, single-character wildcards, and multi-character wildcards matches an entire text. The wildcard \inlinecode{?} matches exactly one character, and \inlinecode{*} matches any run of characters including the empty one. This is glob matching rather than regular expression matching, so there is no alternation and no repetition of a group.
 
 Let $m(i, j)$ mean that the first $i$ characters of the text are matched by the first $j$ characters of the pattern. A literal or \inlinecode{?} consumes one character from each side, so it depends only on $m(i - 1, j - 1)$. A \inlinecode{*} either matches nothing, leaving $m(i, j - 1)$, or absorbs one more text character, leaving $m(i - 1, j)$; every longer run is covered by repeating that second case, which is what keeps the table two-dimensional instead of requiring a loop over run lengths. Only the previous row is ever read, so one row of storage suffices.
@@ -4045,7 +4070,7 @@ A greedy walk needs only $O(1)$ space: remember the most recent \inlinecode{*} a
 
 \textbf{Space Complexity}: $O(m)$ auxiliary.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <string>
 #include <vector>
 
@@ -4074,7 +4099,7 @@ bool wildcard_match(const std::string &text, const std::string &pattern) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 int main() {
@@ -4101,6 +4126,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Palindrome DP}
+\label{sec:3.6.5}
 Solves basic palindrome dynamic programming problems on a string. The core interval state considers substring $[l, r]$: if the two endpoints match, they can wrap an optimal answer for the inside substring; otherwise, at least one endpoint must be skipped or inserted around the other side. Since each state depends on shorter substrings, intervals are processed by increasing length.
 
 The longest palindromic subsequence (LPS) is a maximum-length subsequence that reads the same forward and backward. The minimum number of insertions needed to make a string a palindrome is the number of characters outside an LPS, so it equals $n$ minus the LPS length.
@@ -4119,7 +4145,7 @@ The longest palindromic subsequence (LPS) is a maximum-length subsequence that r
   \item $O(n)$ auxiliary for \inlinecode{min\_insertions\_palindrome()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
 #include <string>
@@ -4183,7 +4209,7 @@ int min_insertions_palindrome(const string &s) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 int main() {
@@ -4200,6 +4226,7 @@ int main() {
 \setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Recursive Descent Parsing}
+\label{sec:3.7.1}
 Evaluate integer arithmetic expressions containing parentheses, unary plus and minus, multiplication and division, and addition and subtraction. The parser represents these as three precedence levels. At the tightest level, it consumes a chain of unary signs followed by either a decimal literal or a parenthesized expression.
 
 At each binary-operator level, the parser first evaluates one operand at the next tighter level, then repeatedly consumes operators of the current level and their right operands. These loops make binary operators left-associative, while recursively restarting at the loosest level inside parentheses enforces grouping.
@@ -4216,7 +4243,7 @@ Overflow warning: All intermediate results must fit in \inlinecode{int}.
 
 \textbf{Space Complexity}: $O(n)$ auxiliary stack space, where $n$ is the length of \inlinecode{s}.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <string>
 
 int eval(const std::string &s) {
@@ -4265,7 +4292,7 @@ int eval(const std::string &s) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 int main() {
@@ -4277,6 +4304,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Shunting Yard and Postfix Evaluation}
+\label{sec:3.7.2}
 Convert an infix expression to postfix notation, also called reverse Polish notation (RPN), and evaluate the result. In postfix notation each operator follows its operands, so evaluation needs no parentheses or precedence rules: operands are pushed onto a value stack, and each operator replaces its operands with their result.
 
 The shunting yard algorithm produces postfix notation by sending operands directly to the output and holding operators on a stack. An operator is emitted before a lower-precedence operator, or before a left-associative operator of equal precedence. Parentheses delimit independent portions of the operator stack. Whether \inlinecode{+} or \inlinecode{-} is unary follows from context: a prefix operator is expected at the beginning, after another operator, or after an opening parenthesis.
@@ -4304,7 +4332,7 @@ Customize the operand type and syntax by changing \inlinecode{Operand} and \inli
   \item $O(n)$ auxiliary space for \inlinecode{to\_postfix()} and \inlinecode{eval\_postfix()}.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cctype>
 #include <functional>
@@ -4466,7 +4494,7 @@ Operand eval_expression(const string &s) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cmath>
 using namespace std;
@@ -4500,6 +4528,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Pratt Parsing}
+\label{sec:3.7.3}
 Evaluate an expression with configurable prefix unary and infix binary operators using Pratt parsing, also called top-down operator-precedence parsing. Unlike recursive descent with one function per precedence level, a Pratt parser uses numeric binding powers to decide whether the next operator belongs to the current expression or to its caller.
 
 Parsing begins with an operand, parenthesized expression, or prefix operator. It then repeatedly consumes binary operators whose precedence is high enough for the current call. A left-associative operator raises the minimum precedence for its right operand, preventing another equal-precedence operator from joining that operand; a right-associative operator leaves the threshold unchanged.
@@ -4514,7 +4543,7 @@ Customize the operand type and syntax by changing \inlinecode{Operand} and \inli
 
 \textbf{Space Complexity}: $O(n + m \cdot k)$ auxiliary space, including the recursive stack.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cctype>
 #include <functional>
@@ -4625,7 +4654,7 @@ Operand eval_pratt(const string &s) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cmath>
 using namespace std;
@@ -4658,6 +4687,7 @@ int main() {
 \setcounter{section}{8}
 \setcounter{subsection}{0}
 \subsection{Entropy and Frequency Tables}
+\label{sec:3.8.1}
 Computes byte frequency tables and empirical information-theoretic quantities for strings. These primitives are useful when analyzing compression, building coding schemes such as Huffman coding, or comparing symbol distributions.
 
 Shannon entropy measures the average uncertainty of a random symbol, in bits. It is called empirical* here because the probabilities are estimated from the string itself rather than supplied by a known source. The \textit{order} of the estimate is how much preceding context it conditions on: an order-0 model treats symbols as independent and looks only at how often each byte occurs, while an order-$k$ model conditions each symbol on the $k$ bytes before it.
@@ -4688,7 +4718,7 @@ For symbol probabilities $p_i$, the order-0 empirical entropy is $H = -\sum_i p_
   \item $O(1)$ auxiliary for the other operations.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cmath>
 #include <cstdint>
@@ -4765,7 +4795,7 @@ double expected_code_length(const std::vector<int> &freq, const std::vector<int>
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cmath>
 using namespace std;
 
@@ -4803,6 +4833,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Run-Length Encoding}
+\label{sec:3.8.2}
 Encodes consecutive equal characters as (\inlinecode{character}, \inlinecode{count}) runs. Run-length encoding is a simple lossless compression technique that works well when strings contain long repeated blocks and poorly when repetitions are rare.
 
 The representation below stores runs in a vector of pairs rather than formatting them as a string. This avoids ambiguity when the original text contains digits or separator characters.
@@ -4821,7 +4852,7 @@ The representation below stores runs in a vector of pairs rather than formatting
   \item $O(n)$ for decoded output.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <string>
 #include <utility>
 #include <vector>
@@ -4849,7 +4880,7 @@ string run_length_decode(const std::vector<std::pair<char, int>> &runs) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 using namespace std;
 
@@ -4865,6 +4896,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Base64 Encoding}
+\label{sec:3.8.3}
 Encodes binary data as printable ASCII using Base64, and decodes Base64 text back to bytes. Base64 is an encoding, not encryption or compression: it preserves all input data exactly, but usually increases size by about one third. Each group of three input bytes is split into four 6-bit values, each selecting one character of a 64-symbol alphabet, with \inlinecode{=} padding marking a final group of only one or two bytes.
 
 This implementation uses the standard alphabet with \inlinecode{+}, \inlinecode{/}, and \inlinecode{=} padding. Whitespace is not skipped by the decoder; clean the input first if line breaks or spaces may appear.
@@ -4878,7 +4910,7 @@ This implementation uses the standard alphabet with \inlinecode{+}, \inlinecode{
 
 \textbf{Space Complexity}: $O(n)$ for the output string.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -4935,7 +4967,7 @@ string base64_decode(const string &text) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 int main() {
@@ -4950,6 +4982,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Huffman Coding}
+\label{sec:3.8.4}
 Builds a Huffman code for a string and uses it to encode and decode that string. Huffman coding is a lossless prefix-code compression algorithm: more frequent characters receive shorter bit strings, and no code is a prefix of another code. The code tree is built greedily with a priority queue by repeatedly merging the two lowest-frequency subtrees until one tree remains; each character's bit string is then read off its root-to-leaf path.
 
 The implementation below stores encoded bits as a string of \inlinecode{\textquotesingle{}0\textquotesingle{}} and \inlinecode{\textquotesingle{}1\textquotesingle{}} characters for clarity. For real compression, pack those bits into bytes. The tree is also needed to decode the bit string, so compressed data normally stores enough metadata to reconstruct the same tree.
@@ -4975,7 +5008,7 @@ The implementation below stores encoded bits as a string of \inlinecode{\textquo
   \item $O(n)$ for the encoded or decoded output.
 \end{compactitem}
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <functional>
 #include <queue>
 #include <string>
@@ -5068,7 +5101,7 @@ class HuffmanTree {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 
 int main() {
@@ -5089,6 +5122,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Burrows-Wheeler Transform}
+\label{sec:3.8.5}
 The Burrows-Wheeler transform (BWT) permutes a string into one that tends to be far more compressible while remaining perfectly invertible. It writes down every cyclic rotation of the string, sorts them lexicographically, and reads off the last character of each sorted rotation. Characters that occur in similar contexts are brought together, producing long runs that run-length and move-to-front coders exploit; it is the heart of the bzip2 compressor and a building block of compressed-text indexes.
 
 To make the permutation invertible, a unique sentinel character smaller than every real character is appended before transforming, so the rotations are all distinct and one of them is distinguished as the original. Sorting the rotations of the sentineled string is the same as sorting its suffixes, so the forward transform is computed with a prefix-doubling rotation sort. The inverse rebuilds the string with the last-to-first (LF) mapping: stably ordering the transformed characters yields, for each position of the sorted first column, the row that supplies the next character, and following that mapping from the sentinel row walks the original string out one character at a time.
@@ -5109,7 +5143,7 @@ The input must not contain the sentinel character \inlinecode{\textquotesingle{}
 
 \textbf{Space Complexity}: $O(n)$ auxiliary for both functions.
 
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <numeric>
 #include <string>
@@ -5167,7 +5201,7 @@ std::string inverse_bwt(const std::string &code) {
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <iostream>
 using namespace std;

@@ -72,11 +72,12 @@ int64_t count_at_most(const std::vector<std::vector<T>> &a, const T &key) {
 using namespace std;
 
 int main() {
-  //   1   4   7  11
-  //   2   5   8  12
-  //   3   6   9  16
-  //  10  13  14  17
-  vector<vector<int>> a{{1, 4, 7, 11}, {2, 5, 8, 12}, {3, 6, 9, 16}, {10, 13, 14, 17}};
+  vector<vector<int>> a{
+      {1, 4, 7, 11},
+      {2, 5, 8, 12},
+      {3, 6, 9, 16},
+      {10, 13, 14, 17},
+  };
   assert(search_sorted_matrix(a, 5) == make_pair(1, 1));
   assert(search_sorted_matrix(a, 1) == make_pair(0, 0));   // Top-left corner.
   assert(search_sorted_matrix(a, 17) == make_pair(3, 3));  // Bottom-right corner.

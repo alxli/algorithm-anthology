@@ -8,14 +8,11 @@ Kuhn's algorithm builds the matching one left node at a time. For each, a depth-
 for an augmenting path: an alternating sequence of unmatched and matched edges that reaches a free
 right node. Flipping the edges along such a path enlarges the matching by one.
 
-- `bipartite_matching(n2)` populates `match_left` and `match_right`, then returns maximum matching
-  size for a global, pre-populated adjacency list `adj`, whose indices represent left-side nodes and
-  whose entries contain right-side neighbors numbered $[0, `n2`)$.
-
-The two sides are given as separate node numberings. Use the bipartite check of section 4.6.1 to
-produce them for a graph that does not already arrive presented as two sets.
-
-Time Complexity:
+- `match_bipartite(n2)` populates `match_left` and `match_right`, then returns maximum matching size
+  for a global, pre-populated adjacency list `adj`, whose indices represent left-side nodes and
+  whose entries contain right-side neighbors numbered $[0, `n2`)$. The two sides are given as
+  separate node numberings. Use the bipartite check of section 4.6.1 to produce them for a graph
+  that does not already arrive presented as two sets. Time Complexity:
 - O(n_1*m) per call, where $m$ is the number of edges.
 
 Space Complexity:
@@ -50,7 +47,7 @@ bool dfs(int u) {
   return false;
 }
 
-int bipartite_matching(int n2) {
+int match_bipartite(int n2) {
   int n1 = static_cast<int>(adj.size());
   match_left.assign(n1, -1);
   match_right.assign(n2, -1);
@@ -84,7 +81,7 @@ int main() {
   adj[1].push_back(2);
   adj[2].push_back(2);
   adj[2].push_back(3);
-  assert(bipartite_matching(n2) == 3);
+  assert(match_bipartite(n2) == 3);
   assert((match_right == vector<int>{1, 0, 2, -1}));
   return 0;
 }
