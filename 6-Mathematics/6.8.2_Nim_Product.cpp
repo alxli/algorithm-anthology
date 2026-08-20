@@ -86,7 +86,6 @@ uint64_t nim_inverse(uint64_t b) {
 /*** Example Usage ***/
 
 #include <cassert>
-using namespace std;
 
 int main() {
   // Smallest nontrivial products: {0,1,2,3} form the field GF(4) under XOR and nim product.

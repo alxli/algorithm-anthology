@@ -110,7 +110,6 @@ Grid reflect_vertical(Grid a) {
 /*** Example Usage ***/
 
 #include <cassert>
-using namespace std;
 
 int main() {
   Grid a{{1, 2, 3}, {4, 5, 6}};

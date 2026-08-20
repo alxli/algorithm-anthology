@@ -109,8 +109,6 @@ Overflow warning: The predicate must become true before the exponentially growin
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[style=cpp]
-#include <cstdint>
-
 template<typename Int, typename Pred>
 Int exponential_first_true(Int lo, Pred pred) {  // 000[1]11
   if (pred(lo)) {
@@ -137,6 +135,7 @@ Int exponential_first_true(Int lo, Pred pred) {  // 000[1]11
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
 #include <cassert>
+#include <cstdint>
 
 int main() {
   auto at_least_1000 = [](int x) { return x >= 1000; };
@@ -155,7 +154,7 @@ Given a sorted range of numeric values, find a target by guessing where it shoul
 Each probe reduces the expected distance to the target from $n$ to $\sqrt{n}$ when the values are drawn from a uniform distribution, which gives $O(\log \log n)$ probes: for a billion sorted integers that is about five probes rather than thirty. The bound depends entirely on the distribution. Clustered values push the estimate to one end repeatedly and degrade the search to $O(n)$ probes, so this is the rare algorithm whose worst case is worse than the method it replaces. Use it when the data is known to be near-uniform, such as generated IDs, timestamps at a fixed rate, or hash values, and use binary search otherwise.
 
 \begin{compactitem}
-  \item \inlinecode{interpolation\_search(lo, hi, key)} returns an iterator to an occurrence of \inlinecode{key} in the sorted random-access range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, or \inlinecode{hi} if \inlinecode{key} does not occur. The value type must support subtraction and conversion to \inlinecode{double}.
+  \item \inlinecode{interpolation\_search(lo, hi, key)} returns an iterator to an occurrence of \inlinecode{key} in the sorted random-access range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$, or \inlinecode{hi} if \inlinecode{key} does not occur. The value type must support comparison and conversion to \inlinecode{long double}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(\log \log n)$ per call on uniformly distributed values and $O(n)$ in the worst case, where $n$ is the range length.
@@ -163,8 +162,6 @@ Each probe reduces the expected distance to the target from $n$ to $\sqrt{n}$ wh
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[style=cpp]
-#include <iterator>
-
 template<typename It, typename T>
 It interpolation_search(It lo, It hi, const T &key) {
   It last = hi;
@@ -173,10 +170,13 @@ It interpolation_search(It lo, It hi, const T &key) {
       return *lo == key ? lo : last;
     }
     // Estimate the offset by where the key falls between the endpoint values.
-    double fraction = static_cast<double>(key - *lo) / static_cast<double>(*(hi - 1) - *lo);
-    auto span = std::distance(lo, hi) - 1;
-    It probe =
-        lo + static_cast<typename std::iterator_traits<It>::difference_type>(fraction * span);
+    auto len = hi - lo - 1;
+    auto loval = static_cast<long double>(*lo), den = static_cast<long double>(*(hi - 1)) - loval;
+    // A narrow long double implementation may round distinct large endpoints together.
+    It probe = lo + len / 2;
+    if (den != 0) {
+      probe = lo + static_cast<decltype(len)>((static_cast<long double>(key) - loval) / den * len);
+    }
     if (*probe == key) {
       return probe;
     }
@@ -193,6 +193,8 @@ It interpolation_search(It lo, It hi, const T &key) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
 #include <cassert>
+#include <climits>
+#include <cstdint>
 #include <vector>
 using namespace std;
 
@@ -211,6 +213,12 @@ int main() {
   assert(*interpolation_search(skewed.begin(), skewed.end(), 1000000) == 1000000);
   assert(*interpolation_search(skewed.begin(), skewed.end(), 1) == 1);
   assert(interpolation_search(skewed.begin(), skewed.end(), 7) == skewed.end());
+
+  vector<int> wide{INT_MIN, 0, INT_MAX};
+  assert(*interpolation_search(wide.begin(), wide.end(), 0) == 0);
+
+  vector<int64_t> adjacent{INT64_MAX - 2, INT64_MAX - 1, INT64_MAX};
+  assert(*interpolation_search(adjacent.begin(), adjacent.end(), INT64_MAX - 1) == INT64_MAX - 1);
   return 0;
 }
 \end{lstlisting}
@@ -1249,8 +1257,6 @@ Overflow warning: The difference \inlinecode{hi - lo} must fit in \inlinecode{in
 \begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
-#include <utility>
-#include <vector>
 
 template<typename Solve>
 int64_t lagrangian_maximize(int target_count, int64_t lo, int64_t hi, Solve solve) {
@@ -1272,6 +1278,8 @@ int64_t lagrangian_maximize(int target_count, int64_t lo, int64_t hi, Solve solv
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
+#include <utility>
+#include <vector>
 using namespace std;
 
 int main() {
@@ -1689,6 +1697,7 @@ Brent's method is the one to reach for when the number of evaluations matters. I
 \begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cmath>
+#include <utility>
 
 template<typename Fn>
 double bisection_root(Fn f, double a, double b, int iterations = 100) {
@@ -2619,7 +2628,6 @@ The implementation uses a two-phase simplex tableau. Phase 1 introduces an artif
 \begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cmath>
-#include <numeric>
 #include <utility>
 #include <vector>
 
@@ -2742,6 +2750,7 @@ int simplex_solve(
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
 #include <iostream>
+#include <numeric>
 using namespace std;
 
 int main() {

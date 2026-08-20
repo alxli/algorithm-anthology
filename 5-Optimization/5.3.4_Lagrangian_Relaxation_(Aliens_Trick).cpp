@@ -29,8 +29,6 @@ Space Complexity:
 
 #include <cassert>
 #include <cstdint>
-#include <utility>
-#include <vector>
 
 template<typename Solve>
 int64_t lagrangian_maximize(int target_count, int64_t lo, int64_t hi, Solve solve) {
@@ -51,6 +49,8 @@ int64_t lagrangian_maximize(int target_count, int64_t lo, int64_t hi, Solve solv
 
 /*** Example Usage ***/
 
+#include <utility>
+#include <vector>
 using namespace std;
 
 int main() {

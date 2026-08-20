@@ -29,6 +29,7 @@ EXAMPLE_STD_QUALIFICATION_ALLOWLIST = {
 
 BRACED_PUSH_ALLOWLIST = {
     Path("1-Elementary-Algorithms/1.7.6_Binary_Trie.cpp"): {"child"},
+    Path("1-Elementary-Algorithms/1.8.8_Exact_Cover_(Dancing_Links).cpp"): {"placements"},
     Path("2-Data-Structures/2.6.3_2D_Range_Tree.cpp"): {"points"},
     Path("3-Strings/3.7.2_Shunting_Yard_and_Postfix_Evaluation.cpp"): {"op_stack"},
     Path("4-Graphs/4.2.5_Articulation_Points,_Biconnected_Components,_Block-Cut_Forest.cpp"):
@@ -146,6 +147,92 @@ FIXED_XORSHIFT_STATE_RE = re.compile(
     r"\bstatic\s+(?:std::)?uint32_t\s+[A-Za-z_][A-Za-z0-9_]*"
     r"\s*=\s*[0-9]+[uUlL]*\s*;"
 )
+# Approximates the names a section defines at file scope: functions, types, aliases, and macros.
+LOCAL_DEFINITION_RE = re.compile(
+    r"^(?:[A-Za-z_][A-Za-z0-9_:<>,&*\s]*?\b([A-Za-z_][A-Za-z0-9_]*)\s*\("
+    r"|(?:struct|class)\s+([A-Za-z_][A-Za-z0-9_]*)"
+    r"|using\s+([A-Za-z_][A-Za-z0-9_]*)\s*="
+    r"|typedef\s+.*?\b([A-Za-z_][A-Za-z0-9_]*)\s*;"
+    r"|#\s*define\s+([A-Za-z_][A-Za-z0-9_]*))",
+    re.MULTILINE,
+)
+
+# What each standard header is included for, limited to the names this repo actually uses. The
+# include-placement scan needs to attribute a name to a header, which no general rule can do.
+HEADER_NAMES = {
+    "algorithm": "sort stable_sort partial_sort min max minmax min_element max_element"
+                 " minmax_element reverse unique lower_bound upper_bound binary_search equal_range"
+                 " fill fill_n copy copy_n copy_if count count_if find find_if find_if_not"
+                 " nth_element next_permutation prev_permutation rotate iter_swap shuffle remove"
+                 " remove_if for_each generate merge inplace_merge partition stable_partition"
+                 " set_intersection set_union set_difference transform clamp all_of any_of none_of"
+                 " equal is_sorted is_permutation make_heap push_heap pop_heap sort_heap"
+                 " lexicographical_compare replace search swap_ranges",
+    "array": "array",
+    "bitset": "bitset",
+    "cassert": "assert",
+    "cctype": "isalpha isdigit isalnum isspace tolower toupper isupper islower ispunct isxdigit",
+    "chrono": "chrono",
+    "climits": "INT_MAX INT_MIN LLONG_MAX LLONG_MIN UINT_MAX ULLONG_MAX CHAR_BIT LONG_MAX LONG_MIN"
+               " SHRT_MAX SCHAR_MAX UCHAR_MAX",
+    "cmath": "sqrt fabs pow sin cos tan atan2 atan asin acos exp log log2 log10 floor ceil round"
+             " hypot cbrt fmod isnan isinf isfinite trunc copysign nextafter expm1 log1p sinh cosh"
+             " tanh lround llround M_PI NAN INFINITY HUGE_VAL",
+    "complex": "complex polar conj arg",
+    "cstddef": "size_t ptrdiff_t nullptr_t offsetof NULL",
+    "cstdint": "int8_t int16_t int32_t int64_t uint8_t uint16_t uint32_t uint64_t intmax_t"
+               " uintmax_t uintptr_t intptr_t INT64_MAX INT64_MIN UINT64_MAX INT32_MAX INT32_MIN"
+               " UINT32_MAX",
+    "cstdio": "printf scanf fprintf sprintf snprintf fopen fclose FILE fread fwrite fgets fputs"
+              " getchar putchar puts freopen rewind tmpfile fflush stdin stdout stderr EOF sscanf"
+              " fscanf getchar_unlocked fileno ftell fseek perror",
+    "cstdlib": "rand srand malloc free exit atoi atof qsort llabs labs RAND_MAX",
+    "cstring": "memcpy memset strlen strcmp memcmp strcpy strchr strstr memmove",
+    "ctime": "clock clock_t CLOCKS_PER_SEC time_t localtime strftime difftime mktime",
+    "deque": "deque",
+    "filesystem": "filesystem",
+    "fstream": "ifstream ofstream fstream",
+    "functional": "less greater function plus minus multiplies bind ref cref hash equal_to negate"
+                  " divides modulus bit_xor bit_and bit_or not_fn",
+    "initializer_list": "initializer_list",
+    "iomanip": "setprecision setw setfill scientific showpoint boolalpha",
+    "iostream": "cout cin cerr clog",
+    "istream": "istream",
+    "iterator": "iterator_traits distance advance next prev back_inserter front_inserter inserter"
+                " ostream_iterator istream_iterator reverse_iterator random_access_iterator_tag",
+    "limits": "numeric_limits",
+    "list": "list",
+    "map": "map multimap",
+    "memory": "unique_ptr shared_ptr make_unique make_shared weak_ptr allocator addressof",
+    "numeric": "accumulate iota gcd lcm partial_sum inner_product adjacent_difference reduce"
+               " midpoint",
+    "optional": "optional nullopt make_optional",
+    "ostream": "ostream endl flush",
+    "queue": "queue priority_queue",
+    "random": "mt19937 mt19937_64 uniform_int_distribution uniform_real_distribution random_device"
+              " normal_distribution default_random_engine seed_seq bernoulli_distribution"
+              " discrete_distribution minstd_rand",
+    "regex": "regex regex_match regex_search regex_replace smatch sregex_iterator",
+    "set": "set multiset",
+    "sstream": "stringstream istringstream ostringstream",
+    "stack": "stack",
+    "stdexcept": "runtime_error invalid_argument out_of_range logic_error domain_error"
+                 " overflow_error length_error range_error",
+    "string": "string to_string stoi stoll stod getline",
+    "thread": "thread this_thread",
+    "tuple": "tuple make_tuple tie ignore tuple_size tuple_element tuple_cat",
+    "type_traits": "is_same is_integral is_floating_point enable_if enable_if_t decay decay_t"
+                   " conditional conditional_t remove_reference remove_reference_t is_signed"
+                   " is_unsigned make_unsigned make_signed common_type is_arithmetic void_t"
+                   " true_type false_type is_convertible underlying_type invoke_result"
+                   " integral_constant remove_const is_base_of",
+    "unordered_map": "unordered_map unordered_multimap",
+    "unordered_set": "unordered_set unordered_multiset",
+    "utility": "pair make_pair swap move forward exchange",
+    "vector": "vector",
+}
+HEADER_NAMES = {header: set(names.split()) for header, names in HEADER_NAMES.items()}
+
 CONTROL_BLOCK_RE = re.compile(r"^(?:if|for|while|switch|catch)\b")
 UNWRAPPED_INTERVAL_RE = re.compile(
     r"(?:\b(?:range|window)\s+|\bvalues?\s+in\s+|^\s*in\s+)"
@@ -326,6 +413,18 @@ def cpp_files():
     for path in sorted(ROOT.rglob("*.cpp")):
         if "Book" not in path.relative_to(ROOT).parts:
             yield path
+
+
+def included_section_files():
+    """Sections that another section pulls in with the `#define main` include idiom.
+
+    Their example zone is compiled as part of the includer, so a using directive there would leak
+    into the including section's global namespace. They qualify std:: explicitly instead.
+    """
+    names = set()
+    for path in cpp_files():
+        names.update(re.findall(r'#include\s+"([^"]+)"', path.read_text()))
+    return {path for path in cpp_files() if path.name in names}
 
 
 def docstring_ranges(lines):
@@ -1099,6 +1198,7 @@ def scan_inlineable_example_variables(paths):
 
 def scan_code_consistency(paths):
     issues = []
+    included = included_section_files()
     for path in paths:
         rel = path.relative_to(ROOT)
         text = path.read_text()
@@ -1301,12 +1401,15 @@ def scan_code_consistency(paths):
         example = text[marker:]
         example_start_line = text[:marker].count("\n") + 1
         imports_std = "using namespace std;" in example
+        # An included section keeps its example fully qualified on purpose; see
+        # included_section_files().
+        check_qualification = imports_std or path not in included
         allowed = EXAMPLE_STD_QUALIFICATION_ALLOWLIST.get(path.relative_to(ROOT), set())
         in_block_comment = False
         for offset, line in enumerate(example.splitlines(), start=0):
             code, in_block_comment = strip_cpp_comments_and_strings(line, in_block_comment)
             for name in re.findall(r"\bstd::([A-Za-z_][A-Za-z0-9_]*)", code):
-                if name not in allowed:
+                if name not in allowed and check_qualification:
                     message = (
                         "Drop redundant std:: qualification in an example that imports std."
                         if imports_std
@@ -2501,6 +2604,191 @@ def run_git_diff_check():
     return proc.returncode == 0, output
 
 
+def scan_unused_std_imports(paths):
+    """Flags an example that imports std but never names anything from it unqualified.
+
+    The vocabulary of std names is learned from every `std::` use in the repo rather than
+    hardcoded, so it tracks whatever the sections actually reach for. It is gathered from every
+    file rather than from the scanned subset, since it is a repo-wide fact. Preprocessor lines are
+    skipped, since an `#include <vector>` names a header rather than using the name.
+    """
+    issues = []
+    included = included_section_files()
+    std_names = set()
+    for path in cpp_files():
+        std_names.update(re.findall(r"\bstd::([A-Za-z_][A-Za-z0-9_]*)", path.read_text()))
+    for path in paths:
+        text = path.read_text()
+        marker = text.find("/*** Example Usage")
+        if marker == -1:
+            continue
+        example = text[marker:]
+        if "using namespace std;" not in example:
+            continue
+        if path in included:
+            issues.append(
+                Issue(
+                    path,
+                    text[: text.index("using namespace std;", marker)].count("\n") + 1,
+                    "unused-std-import",
+                    "Another section includes this one, so the directive leaks into it; "
+                    "qualify std:: in the example instead.",
+                    "using namespace std;",
+                )
+            )
+            continue
+        # A name the section defines itself shadows the std one, so using it unqualified is no
+        # evidence that the directive is needed. Several math sections define their own exp(),
+        # log(), and sqrt() over a section type.
+        local_names = {
+            name
+            for groups in LOCAL_DEFINITION_RE.findall(text[:marker])
+            for name in groups
+            if name
+        }
+        example_start_line = text[:marker].count("\n") + 1
+        directive_line = example_start_line
+        in_block_comment = False
+        uses_std = False
+        for offset, line in enumerate(example.splitlines()):
+            code, in_block_comment = strip_cpp_comments_and_strings(line, in_block_comment)
+            if code.lstrip().startswith("#"):
+                continue
+            if "using namespace std;" in code:
+                directive_line = example_start_line + offset
+                code = code.replace("using namespace std;", " ")
+            code = re.sub(r"\bstd::[A-Za-z_][A-Za-z0-9_]*", " ", code)
+            tokens = re.findall(r"[A-Za-z_][A-Za-z0-9_]*", code)
+            if any(name in std_names and name not in local_names for name in tokens):
+                uses_std = True
+                break
+        if not uses_std:
+            issues.append(
+                Issue(
+                    path,
+                    directive_line,
+                    "unused-std-import",
+                    "Example imports std but uses no unqualified std name; drop the directive.",
+                    "using namespace std;",
+                )
+            )
+    return issues
+
+
+def scan_include_placement(paths):
+    """Flags a header included above the example marker but used only below it.
+
+    A section's includes should serve the section. A header that only the example needs belongs in
+    the example's own include block, where a reader copying the implementation will not carry it
+    along. Only names in HEADER_NAMES can be attributed, so a header outside that table is skipped
+    rather than guessed at.
+    """
+    issues = []
+    for path in paths:
+        text = path.read_text()
+        marker = text.find("/*** Example Usage")
+        if marker == -1:
+            continue
+
+        def names_used(zone):
+            used = set()
+            for line in strip_block_comments_and_strings(zone).splitlines():
+                if line.lstrip().startswith("#"):  # An include names a header, it does not use it.
+                    continue
+                used.update(re.findall(r"[A-Za-z_][A-Za-z0-9_]*", line))
+            return used
+
+        above, below = names_used(text[:marker]), names_used(text[marker:])
+        for offset, line in enumerate(text[:marker].splitlines(), start=1):
+            match = re.match(r"#include <([a-z_]+)>", line)
+            if not match:
+                continue
+            provided = HEADER_NAMES.get(match.group(1))
+            if provided is None or provided & above or not provided & below:
+                continue
+            only = ", ".join(sorted(provided & below))
+            issues.append(
+                Issue(
+                    path,
+                    offset,
+                    "include-placement",
+                    f"Only the example uses this header, for {only}; move the include below the "
+                    f"example marker.",
+                    line,
+                )
+            )
+    return issues
+
+
+# A member declaration sits at exactly two spaces of indentation; deeper is a body line.
+PUBLIC_METHOD_RE = re.compile(r"^  (?![\s/])(?:[\w:<>,&*\s\[\]]+?[\s&*])?([A-Za-z_]\w*)\s*\(")
+ACCESS_LABEL_RE = re.compile(r"\s*(public|private|protected):")
+CLASS_HEAD_RE = re.compile(r"(class|struct)\s+([A-Za-z_]\w*)")
+NOT_A_METHOD = {"if", "for", "while", "switch", "catch", "return", "sizeof", "assert", "explicit"}
+
+
+def scan_undocumented_api(paths):
+    """Flags a public member function with no API bullet, for classes the docstring presents as API.
+
+    `scan_documented_api_names` checks the opposite direction, that a documented name exists, so a
+    bullet deleted along with a rename slips past it. Only a class named by a bullet is held to
+    this: sections also carry supporting types, a bundled `Point` or `DSU` among them, whose members
+    are deliberately undocumented. Destructors and operators are skipped for the same reason.
+    """
+    issues = []
+    for path in paths:
+        text = path.read_text()
+        marker = text.find("/*** Example Usage")
+        if marker == -1:
+            continue
+        implementation = text[:marker]
+        documented = set()
+        for block in re.findall(r"/\*(.*?)\*/", implementation, re.DOTALL):
+            # A bullet may name the receiver, as `timer.elapsed()` does.
+            for span in re.findall(r"`([^`]*)`", block):
+                documented.update(re.findall(r"([A-Za-z_]\w*)(?:<[^>]*>)?\s*\(", span))
+        # Blank the comments but keep their newlines, so reported lines match the file.
+        code = re.sub(
+            r"/\*.*?\*/", lambda m: "\n" * m.group(0).count("\n"), implementation,
+            flags=re.DOTALL,
+        )
+        name, access, depth = None, None, 0
+        for offset, line in enumerate(code.splitlines(), start=1):
+            head = CLASS_HEAD_RE.match(line)
+            if head and depth == 0:
+                name = head.group(2)
+                access = "private" if head.group(1) == "class" else "public"
+            if name is None:
+                continue
+            label = ACCESS_LABEL_RE.match(line)
+            if label:
+                access = label.group(1)
+            method = PUBLIC_METHOD_RE.match(line)
+            if (
+                access == "public"
+                and method
+                and "operator" not in line
+                and not line.startswith("  //")
+                and method.group(1) not in NOT_A_METHOD
+                and name in documented
+                and method.group(1) not in documented
+            ):
+                issues.append(
+                    Issue(
+                        path,
+                        offset,
+                        "api-undocumented",
+                        f"`{name}` is documented but its public `{method.group(1)}()` is not; "
+                        f"add an API bullet or make it private.",
+                        line,
+                    )
+                )
+            depth += line.count("{") - line.count("}")
+            if depth <= 0:
+                name = None
+    return issues
+
+
 def scan_section_cross_references(paths):
     """Flags prose that points at a section number which does not exist, or at its own section.
 
@@ -2581,6 +2869,9 @@ def main():
     issues.extend(scan_documented_api_names(paths))
     issues.extend(scan_repeated_literal_defaults(paths))
     issues.extend(scan_contextual_math_style(paths))
+    issues.extend(scan_unused_std_imports(paths))
+    issues.extend(scan_include_placement(paths))
+    issues.extend(scan_undocumented_api(paths))
     issues.extend(scan_section_cross_references(paths))
 
     ok, diff_output = run_git_diff_check()

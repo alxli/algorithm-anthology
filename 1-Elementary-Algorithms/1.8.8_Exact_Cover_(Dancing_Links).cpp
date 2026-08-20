@@ -29,8 +29,8 @@ two solutions is the usual test of uniqueness, as a sudoku generator does when v
 - `ExactCover(primary, secondary = 0)` constructs an empty matrix with `primary + secondary`
   columns, both counts nonnegative. Columns in $[0, `primary`)$ must be covered exactly once, while
   the optional columns in $[`primary`, `primary` + `secondary`)$ may be covered at most once.
-- `add_row(cols)` appends a row containing a $1$ in each column of `cols`, which must all be in
-  $[0, `primary` + `secondary`)$, and returns the row's ID. The IDs of the first $r$ rows added are
+- `add_row(row)` appends a row containing a $1$ in each column of `row`, which must all be in
+  $[0, `primary` + `secondary`)$ and must be distinct. The IDs of the first $r$ rows added are
   $[0, r)$, in the order they were added.
 - `solve(limit = 1)` returns up to `limit` solutions, where `limit` is positive. Each solution is
   the sorted list of the IDs of its rows, and an empty result means no exact cover exists. The
@@ -40,7 +40,8 @@ Solutions come in the order the search finds them, which follows the branching h
 row IDs.
 
 Time Complexity:
-- O(k) per call to `add_row(cols)`, where $k$ is the size of `cols`.
+- O(c) per call to the constructor, where $c$ is the number of columns.
+- O(k) expected per call to `add_row(row)`, where $k$ is the size of `row`.
 - Exponential per call to `solve()`. Exact cover is NP-complete, and dancing links prunes the search
   rather than avoiding it: the cost is proportional to the number of nodes the search unlinks and
   relinks, which the branching heuristic reduces but does not bound polynomially.
@@ -55,10 +56,12 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
+#include <climits>
+#include <unordered_set>
 #include <vector>
 
 class ExactCover {
-  int columns, rows;
+  int cols, rows;
   std::vector<int> left, right, up, down, col_of, row_of, col_size;
   std::vector<int> partial;
 
@@ -133,10 +136,12 @@ class ExactCover {
   }
 
  public:
-  explicit ExactCover(int primary, int secondary = 0) : columns(primary + secondary), rows(0) {
-    assert(primary >= 0 && secondary >= 0);
-    col_size.assign(columns + 1, 0);
-    for (int c = 0; c <= columns; c++) {  // Node 0 is the root, and node c + 1 heads column c.
+  explicit ExactCover(int primary, int secondary = 0) : cols(primary), rows(0) {
+    assert(primary >= 0 && secondary >= 0 && secondary < INT_MAX);
+    assert(primary <= INT_MAX - 1 - secondary);
+    cols += secondary;
+    col_size.assign(cols + 1, 0);
+    for (int c = 0; c <= cols; c++) {  // Node 0 is the root, and node c + 1 heads column c.
       int header = add_node(c, -1);
       up[header] = down[header] = header;
       left[header] = right[header] = header;
@@ -151,13 +156,18 @@ class ExactCover {
     left[0] = prev;
   }
 
-  int add_row(const std::vector<int> &cols) {
-    for (int c : cols) {
-      assert(c >= 0 && c < columns);
+  void add_row(const std::vector<int> &row) {
+    assert(std::all_of(row.begin(), row.end(), [&](int c) { return c >= 0 && c < cols; }));
+    std::unordered_set<int> seen;
+    seen.reserve(row.size());
+    for (int c : row) {
+      bool fresh = seen.insert(c).second;
+      assert(fresh);
+      (void)fresh;
     }
-    int row = rows++, first = -1;
-    for (int c : cols) {
-      int header = c + 1, node = add_node(header, row);
+    int r = rows++, first = -1;
+    for (int c : row) {
+      int header = c + 1, node = add_node(header, r);
       up[node] = up[header];
       down[node] = header;
       down[up[header]] = node;
@@ -173,7 +183,6 @@ class ExactCover {
         left[first] = node;
       }
     }
-    return row;
   }
 
   std::vector<std::vector<int>> solve(int limit = 1) {
@@ -212,6 +221,10 @@ int main() {
   ExactCover impossible(2);
   impossible.add_row(vector<int>{0});
   assert(impossible.solve().empty());
+
+  ExactCover optional_only(0, 1);
+  optional_only.add_row(vector<int>{0});
+  assert((optional_only.solve() == vector<vector<int>>{{}}));
 
   // The 8-queens problem. Each board row and each board column must hold exactly one queen, while
   // each diagonal may hold at most one, so the 2*n board lines are primary and the 2*(2*n - 1)

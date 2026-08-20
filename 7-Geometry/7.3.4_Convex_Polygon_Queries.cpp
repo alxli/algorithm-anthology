@@ -33,7 +33,6 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
-#include <cstdint>
 #include <utility>
 #include <vector>
 
@@ -166,6 +165,7 @@ std::pair<int, int> convex_polygon_tangents(const std::vector<Pt> &poly, const P
 /*** Example Usage ***/
 
 #include <algorithm>
+#include <cstdint>
 using namespace std;
 
 struct PointI {

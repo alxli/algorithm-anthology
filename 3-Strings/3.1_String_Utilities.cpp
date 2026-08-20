@@ -16,6 +16,7 @@ Space Complexity:
 
 #include <cctype>
 #include <cstddef>
+#include <istream>
 #include <regex>
 #include <sstream>
 #include <stdexcept>

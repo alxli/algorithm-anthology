@@ -13,6 +13,10 @@ group parallel directions and retain only the tightest half-plane in each group.
   intersections that form a bounded polygon with positive area; empty, unbounded, or degenerate
   inputs may return an empty vector. Add explicit bounding-box half-planes when a bounded polygon is
   required. The two points defining each half-plane must differ.
+- `out(q)` returns whether point `q` lies strictly outside this half-plane, that is, to the right of
+  its directed line.
+- `intersect(h)` returns the point where the boundary lines of this half-plane and `h` meet, which
+  must not be parallel.
 
 Time Complexity:
 - O(n log n) per call, where $n$ is the number of half-planes.

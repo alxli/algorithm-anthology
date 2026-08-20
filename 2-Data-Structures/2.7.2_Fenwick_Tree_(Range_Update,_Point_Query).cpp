@@ -64,7 +64,6 @@ class FenwickRUPQ {
 /*** Example Usage ***/
 
 #include <cassert>
-using namespace std;
 
 int main() {
   FenwickRUPQ<int> t(5);

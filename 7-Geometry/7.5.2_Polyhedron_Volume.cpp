@@ -19,8 +19,6 @@ Space Complexity:
 
 */
 
-#include <cmath>
-#include <tuple>
 #include <vector>
 
 struct Point3D {
@@ -46,6 +44,8 @@ double signed_polyhedron_volume(const std::vector<Pt> &p, const std::vector<F> &
 /*** Example Usage ***/
 
 #include <cassert>
+#include <cmath>
+#include <tuple>
 using namespace std;
 
 bool EQ(double a, double b) {

@@ -31,7 +31,6 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <type_traits>
 #include <utility>
@@ -147,6 +146,7 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
 
 /*** Example Usage ***/
 
+#include <cassert>
 using namespace std;
 
 int main() {

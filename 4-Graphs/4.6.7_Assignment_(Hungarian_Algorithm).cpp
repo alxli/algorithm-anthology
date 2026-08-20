@@ -32,7 +32,6 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
-#include <cstdint>
 #include <limits>
 #include <utility>
 #include <vector>
@@ -116,6 +115,7 @@ std::pair<T, std::vector<int>> max_assignment(std::vector<std::vector<T>> value)
 /*** Example Usage ***/
 
 #include <cassert>
+#include <cstdint>
 using namespace std;
 
 int main() {

@@ -62,7 +62,6 @@ Space Complexity:
 
 #include <cassert>
 #include <cstddef>
-#include <cstdint>
 #include <functional>
 #include <optional>
 #include <utility>
@@ -243,6 +242,7 @@ class ProbingHashMap {
 #include <algorithm>
 #include <cassert>
 #include <chrono>
+#include <cstdint>
 #include <string>
 using namespace std;
 

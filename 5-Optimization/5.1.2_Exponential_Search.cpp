@@ -19,8 +19,6 @@ Space Complexity:
 
 */
 
-#include <cstdint>
-
 template<typename Int, typename Pred>
 Int exponential_first_true(Int lo, Pred pred) {  // 000[1]11
   if (pred(lo)) {
@@ -46,6 +44,7 @@ Int exponential_first_true(Int lo, Pred pred) {  // 000[1]11
 /*** Example Usage ***/
 
 #include <cassert>
+#include <cstdint>
 
 int main() {
   auto at_least_1000 = [](int x) { return x >= 1000; };

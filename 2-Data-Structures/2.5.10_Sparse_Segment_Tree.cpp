@@ -57,7 +57,6 @@ Space Complexity:
 #include <cassert>
 #include <cstdint>
 #include <optional>
-#include <vector>
 
 template<typename T, int N = 1000000001>
 class SparseSegTree {
@@ -245,6 +244,7 @@ class SparseSegTree {
 
 /*** Example Usage ***/
 
+#include <vector>
 using namespace std;
 
 int main() {

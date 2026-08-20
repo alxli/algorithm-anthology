@@ -14,6 +14,7 @@ queries. Naive Bayes is exempt, since it fits a separate variance per feature. N
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <limits>
@@ -25,6 +26,7 @@ queries. Naive Bayes is exempt, since it fits a separate variance per feature. N
 using Points = std::vector<std::vector<double>>;
 
 double sqdist(const std::vector<double> &a, const std::vector<double> &b) {
+  assert(a.size() == b.size());
   double res = 0;
   for (size_t i = 0; i < a.size(); i++) {
     res += (a[i] - b[i]) * (a[i] - b[i]);
@@ -56,6 +58,7 @@ Space Complexity:
 */
 
 std::vector<double> column_mean(const Points &points) {
+  assert(!points.empty());
   int n = static_cast<int>(points.size()), d = static_cast<int>(points[0].size());
   std::vector<double> res(d);
   for (int i = 0; i < n; i++) {
@@ -70,6 +73,7 @@ std::vector<double> column_mean(const Points &points) {
 }
 
 std::vector<double> column_stddev(const Points &points, const std::vector<double> &mean) {
+  assert(!points.empty() && mean.size() == points[0].size());
   int n = static_cast<int>(points.size()), d = static_cast<int>(points[0].size());
   std::vector<double> res(d);
   for (int i = 0; i < n; i++) {
@@ -89,6 +93,8 @@ std::vector<double> column_stddev(const Points &points, const std::vector<double
 void standardize(
     std::vector<double> &x, const std::vector<double> &mean, const std::vector<double> &stddev
 ) {
+  assert(x.size() == mean.size() && x.size() == stddev.size());
+  assert(std::all_of(stddev.begin(), stddev.end(), [](double value) { return value > 0; }));
   for (size_t j = 0; j < x.size(); j++) {
     x[j] = (x[j] - mean[j]) / stddev[j];
   }
@@ -119,7 +125,8 @@ its rows keeps its previous centroid.
 
 - `kmeans(points, k, rng, iterations = 100)` returns (`centroids`, `assignment`), partitioning the
   rows into `k` clusters, where `assignment[i]` is the cluster of row `i` and `centroids[c]` is the
-  mean of cluster `c`. The number of rows must be at least `k`, which must be positive.
+  mean of cluster `c`. The number of rows must be at least `k`; both `k` and `iterations` must be
+  positive.
 
 Time Complexity:
 - O(i*n*k*d) per call for `iterations` $i$, $n$ rows, and $d$ columns.
@@ -133,6 +140,7 @@ std::pair<Points, std::vector<int>> kmeans(
     const Points &points, int k, std::mt19937 &rng, int iterations = 100
 ) {
   int n = static_cast<int>(points.size());
+  assert(k > 0 && k <= n && iterations > 0);
   Points centroids;
   centroids.push_back(points[std::uniform_int_distribution<int>(0, n - 1)(rng)]);
   std::vector<double> best(n);
@@ -214,6 +222,9 @@ int knn_classify(
     const Points &points, const std::vector<int> &labels, const std::vector<double> &query, int k
 ) {
   int n = static_cast<int>(points.size());
+  assert(n > 0 && static_cast<int>(labels.size()) == n && query.size() == points[0].size());
+  assert(k >= 1 && k <= n);
+  assert(std::all_of(labels.begin(), labels.end(), [](int label) { return label >= 0; }));
   std::vector<int> order(n);
   std::iota(order.begin(), order.end(), 0);
   std::vector<double> dist(n);
@@ -251,7 +262,8 @@ variance and an infinite score, so variances are floored at a small fraction of 
 
 Time Complexity:
 - O(n*d) per construction.
-- O(c*d) per call to `predict()` and `log_likelihood()` for $n$ rows of $d$ columns and $c$ classes.
+- O(c*d) per call to `predict()` and O(d) per call to `log_likelihood()`, for $n$ rows of $d$
+  columns and $c$ classes.
 
 Space Complexity:
 - O(c*d) for storage.
@@ -264,6 +276,10 @@ class NaiveBayes {
 
  public:
   NaiveBayes(const Points &points, const std::vector<int> &labels, int classes) {
+    assert(!points.empty() && labels.size() == points.size() && classes > 0);
+    assert(std::all_of(labels.begin(), labels.end(), [&](int label) {
+      return 0 <= label && label < classes;
+    }));
     int n = static_cast<int>(points.size()), d = static_cast<int>(points[0].size());
     std::vector<int> counts(classes);
     mean.assign(classes, std::vector<double>(d));
@@ -302,6 +318,7 @@ class NaiveBayes {
   }
 
   double log_likelihood(const std::vector<double> &x, int c) const {
+    assert(c >= 0 && c < static_cast<int>(log_prior.size()) && x.size() == mean[c].size());
     static const double LOG_2PI = 1.8378770664093453;
     double res = log_prior[c];
     for (size_t j = 0; j < x.size(); j++) {
@@ -358,6 +375,7 @@ double sigmoid(double z) {
 }
 
 double logistic_predict(const std::vector<double> &w, const std::vector<double> &x) {
+  assert(w.size() == x.size() + 1);
   double z = w[0];
   for (size_t j = 0; j < x.size(); j++) {
     z += w[j + 1] * x[j];
@@ -369,6 +387,11 @@ std::vector<double> logistic_regression(
     const Points &points, const std::vector<int> &labels, double rate = 0.1, int iterations = 1000,
     double l2 = 0
 ) {
+  assert(!points.empty() && labels.size() == points.size());
+  assert(rate > 0 && iterations > 0 && l2 >= 0);
+  assert(std::all_of(labels.begin(), labels.end(), [](int label) {
+    return label == 0 || label == 1;
+  }));
   int n = static_cast<int>(points.size()), d = static_cast<int>(points[0].size());
   std::vector<double> w(d + 1), grad(d + 1);
   for (int it = 0; it < iterations; it++) {

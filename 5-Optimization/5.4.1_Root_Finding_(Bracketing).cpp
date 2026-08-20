@@ -39,6 +39,7 @@ Space Complexity:
 
 #include <cassert>
 #include <cmath>
+#include <utility>
 
 template<typename Fn>
 double bisection_root(Fn f, double a, double b, int iterations = 100) {

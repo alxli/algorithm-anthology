@@ -310,8 +310,6 @@ class LinkCut {
 
 /*** Example Usage ***/
 
-using namespace std;
-
 int main() {
   // v=10      v=40      v=20      v=10
   //  0---------1---------2---------3

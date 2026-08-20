@@ -34,7 +34,6 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
-#include <cstdint>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -280,6 +279,7 @@ auto delaunay_triangulation(std::vector<Point<T>> p) {
 /*** Example Usage ***/
 
 #include <cassert>
+#include <cstdint>
 using namespace std;
 
 using PointL = Point<int64_t>;

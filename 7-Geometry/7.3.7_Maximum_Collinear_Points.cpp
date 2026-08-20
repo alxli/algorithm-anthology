@@ -19,7 +19,6 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <map>
@@ -63,6 +62,7 @@ int max_collinear_points(const std::vector<Point> &p) {
 
 /*** Example Usage ***/
 
+#include <cassert>
 using namespace std;
 
 int main() {

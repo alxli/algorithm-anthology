@@ -16,8 +16,6 @@ separate output slots or synchronization.
 */
 
 #include <algorithm>
-#include <cassert>
-#include <numeric>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -53,6 +51,8 @@ std::vector<std::string> parallel_cases(const std::vector<Case> &cases, int thre
 
 /*** Example Usage ***/
 
+#include <cassert>
+#include <numeric>
 using namespace std;
 
 int main() {

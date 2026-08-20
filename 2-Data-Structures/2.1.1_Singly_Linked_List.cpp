@@ -86,13 +86,13 @@ ListNode *merge_sorted_lists(ListNode *a, ListNode *b) {
 }
 
 void splice_after(ListNode *pos, ListNode *before) {
-  ListNode *node = before->next;
-  if (node == nullptr || pos == before || pos == node) {
+  ListNode *n = before->next;
+  if (n == nullptr || pos == before || pos == n) {
     return;
   }
-  before->next = node->next;
-  node->next = pos->next;
-  pos->next = node;
+  before->next = n->next;
+  n->next = pos->next;
+  pos->next = n;
 }
 
 void splice_range_after(ListNode *pos, ListNode *before_first, ListNode *last) {

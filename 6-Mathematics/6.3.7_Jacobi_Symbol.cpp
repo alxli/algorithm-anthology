@@ -55,8 +55,6 @@ int jacobi(int64_t a, int64_t n) {
 
 /*** Example Usage ***/
 
-using namespace std;
-
 int64_t legendre_via_euler(int64_t a, int64_t p) {
   int64_t r = 1 % p;
   for (int64_t b = ((a % p) + p) % p, e = (p - 1) / 2; e > 0; e >>= 1) {

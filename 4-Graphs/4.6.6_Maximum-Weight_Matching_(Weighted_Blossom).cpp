@@ -389,7 +389,6 @@ class MaxWeightMatching {
 /*** Example Usage ***/
 
 #include <cassert>
-using namespace std;
 
 int main() {
   //   w=5   w=6   w=5   w=6

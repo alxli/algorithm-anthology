@@ -566,8 +566,6 @@ class TopTree {
 
 /*** Example Usage ***/
 
-using namespace std;
-
 int main() {
   TopTree<int> t(5);
   for (int i = 0; i < 5; i++) {

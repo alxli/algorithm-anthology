@@ -8,77 +8,15 @@ sum does. The third does both at once and is the shape most often gotten wrong, 
 node returns is not the answer recorded there: in `diameter()` a node returns the longest downward
 path through it but records the sum of its two longest, which is a path no parent can extend.
 
-- `height(root)` returns the number of nodes on the longest root-to-leaf path, so an empty tree has
-  height $0$ and a leaf has height $1$.
-- `size(root)` returns the number of nodes.
-- `is_balanced(root)` returns whether every node's two subtrees differ in height by at most $1$.
-
-Balance is a condition on every node, not only the root. Checking it by calling `height()` at each
-node costs O(n^2) on a skewed tree, so the recursion below returns a height instead and reserves
-$-1$ for "already unbalanced", answering in one pass.
-
-Validating a search tree is where carrying information downward is not optional: comparing a node
-only against its own children accepts trees that are not search trees at all, since a value deep in
-a left subtree can exceed the root while every local comparison passes. The recursion carries the
-open interval a subtree may occupy, using a null pointer for an absent bound so that no sentinel
-value of `T` is needed. Walking the tree in order and checking that values increase, using the
-traversal of section 2.2.1, is the alternative.
-
-- `has_path_sum(root, target)` returns whether some root-to-leaf path has values summing to
-  `target`. An empty tree has no such path, whatever the target.
-- `root_to_leaf_paths(root)` returns every root-to-leaf path, each as the values along it.
-- `depth(root, target)` returns the number of edges from `root` down to the node `target`, or $-1$
-  if that node is not in the tree.
-- `is_bst(root)` returns whether the tree satisfies the binary search tree property, using strict
-  ordering so that equal values are rejected.
-
-Counting downward paths by trying every start node is O(n^2). Instead, keep the running sum from the
-root and note that a path ending here with sum `target` belongs to an ancestor whose own running sum
-was smaller by exactly `target`: the prefix-sum trick of section 1.2.1, lifted from an array to a
-root-to-node path. A map counts the ancestors' running sums, each node undoing its own entry on the
-way back out so that only genuine ancestors match. It is ordered here for genericity, costing a
-logarithmic factor that an `unordered_map` removes for hashable `T`. Storing another key instead
-counts paths whose sum is divisible by `k`, or whose values exclusive-or to a target.
-
-- `diameter(root)` returns the number of edges on the longest path between any two nodes, which is
-  $0$ for a single node and for an empty tree.
-- `max_path_sum(root)` returns the largest sum along any downward-then-upward path between two
-  nodes, for a nonempty tree whose values may be negative. A child subtree contributes only when its
-  best downward sum is positive, so an all-negative tree returns its largest single value.
-- `count_paths_with_sum(root, target)` returns the number of downward paths, not necessarily
-  starting at the root, whose values sum to `target`.
-
-Comparing against the two targets while unwinding is all `lca()` needs, with no parent pointers and
-no preprocessing: a node whose subtrees each report a find is the meeting point, and a node
-reporting one find passes it upward. That is O(n) per query rather than the O(1) after preprocessing
-of sections 2.8.4 and 2.8.5, so prefer it for a handful of queries. A tree is symmetric exactly when
-`same_tree()` holds between one half and the mirror of the other, so no separate routine is needed.
-
-- `invert(root)` mirrors the tree in place by swapping every node's children.
-- `same_tree(a, b)` returns whether two trees have the same shape and the same values.
-- `lca(root, a, b)` returns the lowest node having both `a` and `b` in its subtree, counting a node
-  as its own ancestor. Both nodes must belong to the tree; if only one does, that one is returned.
-- `distance(root, a, b)` returns the number of edges on the path between the two nodes, which is the
-  depth of each below their lowest common ancestor.
-
 For a tree held as an adjacency list, or one of arbitrary degree, these computations become the tree
 dynamic programming of sections 4.1.4 through 4.1.7.
-
-Time Complexity:
-- O(n) per call to every operation except `count_paths_with_sum()`, where $n$ is the number of
-  nodes.
-- O(n log n) per call to `count_paths_with_sum()` from the ordered map, or O(n) expected with an
-  unordered one.
-
-Space Complexity:
-- O(h) auxiliary stack space, where $h$ is the height of the tree, which is O(n) in the worst case.
-- O(h) auxiliary for the running sums of `count_paths_with_sum()`, one per ancestor.
-- O(n*h) for the paths returned by `root_to_leaf_paths()`.
 
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
+#include <cstdlib>
 #include <map>
 #include <utility>
 #include <vector>
@@ -90,6 +28,25 @@ struct TreeNode {
 
   explicit TreeNode(const T &value) : value(value), left(nullptr), right(nullptr) {}
 };
+
+/*
+
+Balance is a condition on every node, not only the root. Checking it by calling `height()` at each
+node costs O(n^2) on a skewed tree, so the recursion below returns a height instead and reserves
+$-1$ for "already unbalanced", answering in one pass.
+
+- `height(root)` returns the number of nodes on the longest root-to-leaf path, so an empty tree has
+  height $0$ and a leaf has height $1$.
+- `size(root)` returns the number of nodes.
+- `is_balanced(root)` returns whether every node's two subtrees differ in height by at most $1$.
+
+Time Complexity:
+- O(n) per call, where $n$ is the number of nodes.
+
+Space Complexity:
+- O(h) auxiliary stack space, where $h$ is the height of the tree, which is O(n) in the worst case.
+
+*/
 
 template<typename T>
 int height(TreeNode<T> *root) {
@@ -116,6 +73,32 @@ bool is_balanced(TreeNode<T> *root) {
   };
   return rec(rec, root) >= 0;
 }
+
+/*
+
+Validating a search tree is where carrying information downward is not optional: comparing a node
+only against its own children accepts trees that are not search trees at all, since a value deep in
+a left subtree can exceed the root while every local comparison passes. The recursion carries the
+open interval a subtree may occupy, using a null pointer for an absent bound so that no sentinel
+value of `T` is needed. Walking the tree in order and checking that values increase, using the
+traversal of section 2.2.1, is the alternative.
+
+- `has_path_sum(root, target)` returns whether some root-to-leaf path has values summing to
+  `target`. An empty tree has no such path, whatever the target.
+- `root_to_leaf_paths(root)` returns every root-to-leaf path, each as the values along it.
+- `depth(root, target)` returns the number of edges from `root` down to the node `target`, or $-1$
+  if that node is not in the tree.
+- `is_bst(root)` returns whether the tree satisfies the binary search tree property, using strict
+  ordering so that equal values are rejected.
+
+Time Complexity:
+- O(n) per call, where $n$ is the number of nodes.
+
+Space Complexity:
+- O(h) auxiliary stack space, where $h$ is the height of the tree, which is O(n) in the worst case.
+- O(n*h) for the paths returned by `root_to_leaf_paths()`.
+
+*/
 
 template<typename T>
 bool has_path_sum(TreeNode<T> *root, const T &target) {
@@ -178,6 +161,35 @@ bool is_bst(TreeNode<T> *root) {
   return rec(rec, root, nullptr, nullptr);
 }
 
+/*
+
+Counting downward paths by trying every start node is O(n^2). Instead, keep the running sum from the
+root and note that a path ending here with sum `target` belongs to an ancestor whose own running sum
+was smaller by exactly `target`: the prefix-sum trick of section 1.2.1, lifted from an array to a
+root-to-node path. A map counts the ancestors' running sums, each node undoing its own entry on the
+way back out so that only genuine ancestors match. It is ordered here for genericity, costing a
+logarithmic factor that an `unordered_map` removes for hashable `T`. Storing another key instead
+counts paths whose sum is divisible by `k`, or whose values exclusive-or to a target.
+
+- `diameter(root)` returns the number of edges on the longest path between any two nodes, which is
+  $0$ for a single node and for an empty tree.
+- `max_path_sum(root)` returns the largest sum along any downward-then-upward path between two
+  nodes, for a nonempty tree whose values may be negative. A child subtree contributes only when its
+  best downward sum is positive, so an all-negative tree returns its largest single value.
+- `count_paths_with_sum(root, target)` returns the number of downward paths, not necessarily
+  starting at the root, whose values sum to `target`.
+
+Time Complexity:
+- O(n) per call to `diameter()` and `max_path_sum()`, where $n$ is the number of nodes.
+- O(n log n) per call to `count_paths_with_sum()` from the ordered map, or O(n) expected with an
+  unordered one.
+
+Space Complexity:
+- O(h) auxiliary stack space, where $h$ is the height of the tree, which is O(n) in the worst case.
+- O(h) auxiliary for the running sums of `count_paths_with_sum()`, one per ancestor.
+
+*/
+
 template<typename T>
 int diameter(TreeNode<T> *root) {
   int best = 0;
@@ -234,6 +246,30 @@ int64_t count_paths_with_sum(TreeNode<T> *root, const T &target) {
   return res;
 }
 
+/*
+
+Comparing against the two targets while unwinding is all `lca()` needs, with no parent pointers and
+no preprocessing: a node whose subtrees each report a find is the meeting point, and a node
+reporting one find passes it upward. That is O(n) per query rather than the O(1) after preprocessing
+of sections 2.8.4 and 2.8.5, so prefer it for a handful of queries. A tree is symmetric exactly when
+`same_tree()` holds between one half and the mirror of the other, so no separate routine is needed.
+
+- `invert(root)` mirrors the tree in place by swapping every node's children.
+- `same_tree(a, b)` returns whether two trees have the same shape and the same values.
+- `lca(root, a, b)` returns the lowest node having both `a` and `b` in its subtree, counting a node
+  as its own ancestor. If only one target belongs to the tree, that target is returned; if neither
+  does, `nullptr` is returned.
+- `distance(root, a, b)` returns the number of edges on the path between the two nodes, which is the
+  depth of each below their lowest common ancestor. Both nodes must belong to the tree.
+
+Time Complexity:
+- O(n) per call, where $n$ is the number of nodes.
+
+Space Complexity:
+- O(h) auxiliary stack space, where $h$ is the height of the tree, which is O(n) in the worst case.
+
+*/
+
 template<typename T>
 void invert(TreeNode<T> *root) {
   if (root != nullptr) {
@@ -266,12 +302,13 @@ TreeNode<T> *lca(TreeNode<T> *root, TreeNode<T> *a, TreeNode<T> *b) {
 template<typename T>
 int distance(TreeNode<T> *root, TreeNode<T> *a, TreeNode<T> *b) {
   TreeNode<T> *meet = lca(root, a, b);
-  return depth(meet, a) + depth(meet, b);
+  int da = depth(meet, a), db = depth(meet, b);
+  assert(da >= 0 && db >= 0);
+  return da + db;
 }
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int main() {

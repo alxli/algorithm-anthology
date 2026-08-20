@@ -25,6 +25,7 @@ instantiate `RollingHash<T, Hash>` and pass a custom value hasher as the final c
 - `RollingHash<T>(lo, hi)` constructs prefix hashes from the values in the half-open iterator range
   $[`lo`, `hi`)$.
 - `RollingHash<T>(v)` constructs prefix hashes for vector `v`.
+- `h.size()` returns the length of the hashed sequence.
 - `h.hash(lo, hi)` returns the hash of the half-open subsequence $[`lo`, `hi`)$.
 - `RollingHash<T>::hash(lo, hi)` returns the hash of the half-open iterator range $[`lo`, `hi`)$.
 - `RollingHash<T>::hash(v)` returns the hash of vector `v`.
@@ -44,8 +45,6 @@ Space Complexity:
 
 #include <cassert>
 #include <cstdint>
-#include <string>
-#include <utility>
 #include <vector>
 
 const uint64_t HASH_MOD = (1ULL << 61) - 1;
@@ -159,6 +158,8 @@ std::vector<uint64_t> RollingHash<T, Hash>::pow_base(1, 1);
 
 /*** Example Usage ***/
 
+#include <string>
+#include <utility>
 using namespace std;
 
 using PointI = pair<int, int>;

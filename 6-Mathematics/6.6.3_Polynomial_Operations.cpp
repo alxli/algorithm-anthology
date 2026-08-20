@@ -364,7 +364,6 @@ Poly mod(const Poly &a, const Poly &b) {
 /*** Example Usage ***/
 
 #include <cassert>
-using namespace std;
 
 int main() {
   // 5 + 7x + 11x^2 evaluates to 63 at x = 2 and 9 at x = -1.

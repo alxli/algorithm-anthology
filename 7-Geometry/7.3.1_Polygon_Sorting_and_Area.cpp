@@ -32,10 +32,8 @@ Space Complexity:
 
 */
 
-#include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <random>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -113,7 +111,9 @@ std::pair<double, double> polygon_centroid(It lo, It hi) {
 
 /*** Example Usage ***/
 
+#include <algorithm>
 #include <cassert>
+#include <random>
 #include <vector>
 using namespace std;
 

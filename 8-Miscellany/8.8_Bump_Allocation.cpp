@@ -1,91 +1,81 @@
 /*
 
-A bump allocator serves allocations consecutively from one fixed buffer and never reclaims
-individual objects. This is useful in local contest code that creates many small objects whose
-lifetimes all extend to the end of the program. Replacing global `operator new` preserves ordinary
-allocation call sites while avoiding the time and per-allocation metadata of a general-purpose
-allocator.
+A typed bump pool replaces many small heap allocations with consecutive slots in one fixed vector.
+This simple form is useful for pointer-based trees, tries, and linked structures whose nodes all
+live until the algorithm finishes. Allocation advances one index, and individual nodes are never
+freed.
 
-- `bump_alloc(size, align)` allocates `size` bytes with the requested alignment.
-- `operator new(size)` allocates an aligned block of `size` bytes from the static buffer.
-- `operator delete(ptr)` is a no-op; memory is reclaimed only when the program exits.
-- `BumpAllocator<T>` provides the same monotonic allocation strategy to STL containers.
+- `make_node(value, next = nullptr)` returns a pointer to a new node initialized with `value` and
+  `next`.
+- `BumpArena<N>` owns an inline $N$-byte monotonic buffer. Pass `arena.resource()` to a `std::pmr`
+  container such as `std::pmr::vector<T>` or `std::pmr::map<K, V>`.
 
-When only one object type is allocated, a typed pool such as `Node nodes[MAX_NODES]` with an index
-into the next unused node is simpler and less invasive. The global override is useful when existing
-code allocates multiple types, while `BumpAllocator<T>` can be attached to selected containers. The
-two interfaces below share one buffer; a solution may keep only the interface it uses. This
-contest-oriented snippet does not replace other allocation forms such as `new[]`, nothrow `new`, or
-over-aligned allocation.
+The vector is created at its final size and never resized, so returned pointers remain valid. Adjust
+`MAX_NODES` and the fields of `Node` for the problem at hand.
+
+For standard containers, the C++17 polymorphic allocator interface avoids both a global
+`operator new` override and the full allocator protocol. An arena must outlive every container using
+it; declare a large arena statically if it would exceed the stack limit. The wrapper uses
+`std::pmr::null_memory_resource()` as its upstream resource, so exhausting the buffer throws
+`std::bad_alloc` instead of silently allocating from the heap.
 
 Time Complexity:
-- O(1) per allocation.
+- O(`MAX_NODES`) for construction of the pool.
+- O(1) per call to `make_node()`.
 
 Space Complexity:
-- O(`BUFFER_SIZE`) static memory.
+- O(`MAX_NODES`) for storage of the pool.
+- O(N) for storage of each `BumpArena<N>`.
 
 */
 
 #include <cassert>
 #include <cstddef>
+#include <memory_resource>
 #include <vector>
-
-static constexpr std::size_t BUFFER_SIZE = 64 << 20;  // 64 MiB; adjust to the memory limit.
-alignas(std::max_align_t) static unsigned char buffer[BUFFER_SIZE];
-static std::size_t buffer_pos = BUFFER_SIZE;
-
-void *bump_alloc(std::size_t size, std::size_t align) {
-  if (size == 0) {
-    size = 1;
-  }
-  assert(size <= buffer_pos);
-  buffer_pos = (buffer_pos - size) & ~(align - 1);
-  return buffer + buffer_pos;
-}
-
-// clang-format off
-void *operator new(std::size_t size) { return bump_alloc(size, alignof(std::max_align_t)); }
-void operator delete(void *) noexcept {}
-void operator delete(void *, std::size_t) noexcept {}
-// clang-format on
-
-template<typename T>
-struct BumpAllocator {
-  using value_type = T;
-
-  BumpAllocator() = default;
-
-  template<typename U>
-  BumpAllocator(const BumpAllocator<U> &) {}
-
-  T *allocate(std::size_t n) {
-    static_assert(alignof(T) <= alignof(std::max_align_t), "over-aligned types are not supported");
-    assert(n <= BUFFER_SIZE / sizeof(T));
-    return reinterpret_cast<T *>(bump_alloc(n * sizeof(T), alignof(T)));
-  }
-
-  // clang-format off
-  void deallocate(T *, std::size_t) {}
-  template<typename U> bool operator==(const BumpAllocator<U> &) const { return true; }
-  template<typename U> bool operator!=(const BumpAllocator<U> &) const { return false; }
-  // clang-format on
-};
-
-/*** Example Usage ***/
-
-using namespace std;
 
 struct Node {
   int value;
   Node *next;
 };
 
+static constexpr int MAX_NODES = 100000;
+static std::vector<Node> node_pool(MAX_NODES);
+static int node_count = 0;
+
+Node *make_node(int value, Node *next = nullptr) {
+  assert(node_count < MAX_NODES);
+  node_pool[node_count] = {value, next};
+  return &node_pool[node_count++];
+}
+
+template<std::size_t N>
+class BumpArena {
+  alignas(std::max_align_t) std::byte buffer[N];
+  std::pmr::monotonic_buffer_resource arena{buffer, N, std::pmr::null_memory_resource()};
+
+ public:
+  std::pmr::memory_resource *resource() { return &arena; }
+};
+
+/*** Example Usage ***/
+
+#include <map>
+using namespace std;
+
 int main() {
-  Node *tail = new Node{2, nullptr};
-  Node *head = new Node{1, tail};
+  Node *tail = make_node(2);
+  Node *head = make_node(1, tail);
   assert(head->value == 1 && head->next->value == 2);
 
-  vector<int, BumpAllocator<int>> values{1, 2, 3, 4};
-  assert((values == vector<int, BumpAllocator<int>>{1, 2, 3, 4}));
+  BumpArena<1024> arena;
+  pmr::vector<int> values(arena.resource());
+  values.reserve(4);
+  values.insert(values.end(), {1, 2, 3, 4});
+  assert(values.size() == 4 && values.back() == 4);
+
+  pmr::map<int, int> counts(arena.resource());
+  counts.emplace(7, 2);
+  assert(counts[7] == 2);
   return 0;
 }

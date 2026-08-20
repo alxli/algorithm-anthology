@@ -29,7 +29,7 @@ Space Complexity:
 */
 
 #include <cassert>
-#include <unordered_map>
+#include <utility>
 #include <vector>
 
 template<typename Init, typename Merge, typename Answer>
@@ -60,6 +60,7 @@ void subtree_small_to_large_merge(
 
 /*** Example Usage ***/
 
+#include <unordered_map>
 using namespace std;
 
 int main() {

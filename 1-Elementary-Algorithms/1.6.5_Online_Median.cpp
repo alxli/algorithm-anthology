@@ -116,6 +116,10 @@ class DeletableMedian {
   typename std::multiset<T>::iterator mid;
 
  public:
+  DeletableMedian() = default;
+  DeletableMedian(const DeletableMedian &) = delete;
+  DeletableMedian &operator=(const DeletableMedian &) = delete;
+
   bool empty() const { return sorted.empty(); }
   int count() const { return static_cast<int>(sorted.size()); }
 

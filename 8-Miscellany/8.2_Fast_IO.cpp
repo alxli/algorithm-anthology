@@ -13,10 +13,10 @@ File-redirection failures throw `std::runtime_error`.
 
 */
 
-#include <cassert>
 #include <cctype>
 #include <cstddef>
 #include <cstdio>
+#include <cstdlib>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -293,13 +293,19 @@ class FastOutput {
 /*** Example Usage and Output:
 
 Reading 1000000 integers:
-cin                     1.039 s
-scanf                   0.051 s
-read_int (unlocked)     0.011 s
-FastInput               0.026 s
+cin                     0.959 s
+scanf                   0.061 s
+read_int (unlocked)     0.010 s
+FastInput               0.021 s
+
+Writing 1000000 integers:
+ofstream                0.037 s
+fprintf                 0.071 s
+FastOutput              0.009 s
 
 ***/
 
+#include <cassert>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
@@ -349,9 +355,7 @@ int main() {
   auto time_reads = [&](const char *name, auto read_one) {
     set_in(path);
     clock_t start = clock();
-    for (int i = 0, v = 0; i < n; i++) {
-      read_one(v);
-    }
+    for (int i = 0, v = 0; i < n; i++) read_one(v);
     printf("%-22s %6.3f s\n", name, double(clock() - start) / CLOCKS_PER_SEC);
   };
   printf("Reading %d integers:\n", n);
@@ -361,6 +365,30 @@ int main() {
   time_reads("FastInput", [](int &v) {
     static FastInput in;
     in >> v;
+  });
+
+  auto time_writes = [&](const char *name, auto write_all) {
+    clock_t start = clock();
+    write_all(n);
+    printf("%-22s %6.3f s\n", name, double(clock() - start) / CLOCKS_PER_SEC);
+  };
+  printf("\nWriting %d integers:\n", n);
+  time_writes("ofstream", [&](int k) {
+    ofstream out(path);
+    for (int i = 0; i < k; i++) out << i << ' ';
+  });
+  time_writes("fprintf", [&](int k) {
+    FILE *f = fopen(path.c_str(), "w");
+    for (int i = 0; i < k; i++) fprintf(f, "%d ", i);
+    fclose(f);
+  });
+  time_writes("FastOutput", [&](int k) {
+    FILE *f = fopen(path.c_str(), "w");
+    {
+      FastOutput out(f);
+      for (int i = 0; i < k; i++) out << i << ' ';
+    }
+    fclose(f);
   });
   remove(path.c_str());
   return 0;

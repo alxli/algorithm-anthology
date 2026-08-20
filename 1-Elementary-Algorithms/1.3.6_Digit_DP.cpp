@@ -72,7 +72,6 @@ int64_t count_digit_sum(int64_t lo, int64_t hi, int target) {
 /*** Example Usage ***/
 
 #include <cassert>
-using namespace std;
 
 int main() {
   assert(count_digit_sum(0, 20, 2) == 3);   // 2, 11, and 20.

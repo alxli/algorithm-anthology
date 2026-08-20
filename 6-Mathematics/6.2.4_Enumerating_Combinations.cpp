@@ -50,6 +50,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <functional>
 #include <iterator>
@@ -132,6 +133,7 @@ uint64_t next_combination_mask(uint64_t x) {
 }
 
 int64_t n_choose_k(int64_t n, int64_t k) {
+  assert(n >= 0 && 0 <= k && k <= n);
   if (k > n - k) {
     k = n - k;
   }
@@ -148,6 +150,7 @@ int64_t n_choose_k(int64_t n, int64_t k) {
 }
 
 std::vector<int> combination_by_rank(int n, int k, int64_t r) {
+  assert(0 <= r && r < n_choose_k(n, k));
   std::vector<int> res(k);
   int count = n;
   for (int i = 0; i < k; i++) {
@@ -167,6 +170,9 @@ std::vector<int> combination_by_rank(int n, int k, int64_t r) {
 
 int64_t rank_by_combination(int n, const std::vector<int> &a) {
   int k = static_cast<int>(a.size());
+  assert(n >= 0 && k <= n);
+  assert(std::all_of(a.begin(), a.end(), [n](int x) { return 0 <= x && x < n; }));
+  assert(std::adjacent_find(a.begin(), a.end(), std::greater_equal<int>()) == a.end());
   int64_t res = 0;
   int prev = -1;
   for (int i = 0; i < k; i++) {

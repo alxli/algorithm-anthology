@@ -46,7 +46,6 @@ Space Complexity:
 #include <string>
 #include <tuple>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -248,6 +247,7 @@ struct GenericHasher<std::vector<T>> : VectorHasher<T> {};
 /*** Example Usage ***/
 
 #include <cassert>
+#include <unordered_map>
 using namespace std;
 
 int main() {

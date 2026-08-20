@@ -35,6 +35,8 @@ input. Area covered at least $k$ times instead needs a vector of $k$ lengths per
 any aggregate that does not decompose this way, the compression of section 7.3.8 enumerates every
 elementary cell at O(n^2).
 
+Overflow warning: Coordinate differences, areas, perimeters, and weight sums must fit in `int64_t`.
+
 Time Complexity:
 - O(n log n) per call, where $n$ is the number of rectangles.
 
@@ -46,6 +48,7 @@ Space Complexity:
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <cstdlib>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -172,19 +175,31 @@ UnionMeasure rect_union(const std::vector<Rect> &rects) {
   CoverTree tree(std::move(ys));
   UnionMeasure res;
   int64_t width = 0, doubled = 0, strips = 0, prev_x = 0;
-  for (size_t i = 0; i < events.size();) {
+  for (int i = 0, nevents = static_cast<int>(events.size()); i < nevents;) {
     int64_t x = std::get<0>(events[i]);
     if (i > 0) {  // The strip since the previous event has a constant cross-section.
       res.area += width * (x - prev_x);
       res.overlap_area += doubled * (x - prev_x);
       res.perimeter += 2 * strips * (x - prev_x);
     }
-    while (i < events.size() && std::get<0>(events[i]) == x) {
-      auto [ex, tgt_lo, tgt_hi, delta, w] = events[i++];
-      tree.update(tgt_lo, tgt_hi, delta, w);
+    int end = i;
+    while (end < nevents && std::get<0>(events[end]) == x) {
+      end++;
     }
-    // Length that appeared or vanished at this x must be bounded by vertical edges.
-    res.perimeter += std::llabs(tree.covered_length() - width);
+    // Add before removing at the same x. The sum of the resulting length changes is the symmetric
+    // difference of the old and new cross-sections: shared edges vanish, while disjoint entering
+    // and leaving intervals are both counted.
+    for (int wanted_delta : {1, -1}) {
+      int64_t before = tree.covered_length();
+      for (int j = i; j < end; j++) {
+        auto [_, tgt_lo, tgt_hi, delta, w] = events[j];
+        if (delta == wanted_delta) {
+          tree.update(tgt_lo, tgt_hi, delta, w);
+        }
+      }
+      res.perimeter += std::llabs(tree.covered_length() - before);
+    }
+    i = end;
     res.max_weight = std::max(res.max_weight, tree.heaviest_weight());
     width = tree.covered_length();
     doubled = tree.twice_covered_length();
@@ -210,6 +225,10 @@ int main() {
   UnionMeasure apart = rect_union({{0, 0, 1, 1}, {2, 0, 3, 1}});
   assert(apart.area == 2 && apart.perimeter == 8);
   assert(apart.overlap_area == 0 && apart.max_weight == 1);
+
+  // Disjoint intervals can leave and enter at the same x; both vertical edges still count.
+  UnionMeasure crossing = rect_union({{0, 0, 1, 1}, {1, 2, 2, 3}});
+  assert(crossing.area == 2 && crossing.perimeter == 8);
 
   // Two squares meeting in a unit square, whose union outlines an L-shaped hexagon.
   UnionMeasure pair = rect_union({{0, 0, 2, 2}, {1, 1, 3, 3}});

@@ -1,16 +1,130 @@
 /*
 
-The three depth-first orders of a binary tree differ only in when a node is reported relative to its
-subtrees: preorder before both, inorder between them, postorder after both. Recursion expresses this
-directly but costs stack space proportional to the height, which overflows on a degenerate tree of a
-hundred thousand nodes, so the versions below replace the call stack with an explicit one. Postorder
-is the one that resists a direct translation, since a node must be reported only after returning
-from its right child; visiting root, right, then left is a mirrored preorder, and reversing that
-sequence yields postorder.
+A binary tree is held here as `TreeNode` objects, each storing a value along with pointers to a left
+and a right child that are null when absent. Every walk below is iterative: recursion expresses
+these orders directly but costs stack space proportional to the height, which overflows on a
+degenerate tree of a hundred thousand nodes.
+
+Computing over a tree rather than listing it is dynamic programming on a tree; see sections 4.1.4
+through 4.1.7 for general rooted trees.
+
+*/
+
+#include <algorithm>
+#include <queue>
+#include <vector>
+
+template<typename T>
+struct TreeNode {
+  T value;
+  TreeNode *left, *right;
+
+  explicit TreeNode(const T &value) : value(value), left(nullptr), right(nullptr) {}
+};
+
+/*
+
+The three depth-first orders differ only in when a node is reported relative to its subtrees:
+preorder before both, inorder between them, postorder after both. Replacing the call stack with an
+explicit one is direct for the first two. Postorder is the one that resists a direct translation,
+since a node must be reported only after returning from its right child; visiting root, right, then
+left is a mirrored preorder, and reversing that sequence yields postorder.
 
 - `preorder(root)`, `inorder(root)`, and `postorder(root)` return the values of the tree in each
   depth-first order, using an explicit stack.
 - `level_order(root)` returns the values one depth at a time, left to right, using a queue.
+
+Time Complexity:
+- O(n) per call, where $n$ is the number of nodes.
+
+Space Complexity:
+- O(n) for each returned vector.
+- O(h) auxiliary for the stack or the queue, where $h$ is the height of the tree, which is O(n) in
+  the worst case.
+
+*/
+
+template<typename T>
+std::vector<T> preorder(TreeNode<T> *root) {
+  std::vector<T> res;
+  std::vector<TreeNode<T> *> st;
+  if (root != nullptr) {
+    st.push_back(root);
+  }
+  while (!st.empty()) {
+    TreeNode<T> *n = st.back();
+    st.pop_back();
+    res.push_back(n->value);
+    if (n->right != nullptr) {  // Pushed first so that the left child is popped first.
+      st.push_back(n->right);
+    }
+    if (n->left != nullptr) {
+      st.push_back(n->left);
+    }
+  }
+  return res;
+}
+
+template<typename T>
+std::vector<T> inorder(TreeNode<T> *root) {
+  std::vector<T> res;
+  std::vector<TreeNode<T> *> st;
+  for (TreeNode<T> *n = root; n != nullptr || !st.empty();) {
+    for (; n != nullptr; n = n->left) {
+      st.push_back(n);
+    }
+    n = st.back();
+    st.pop_back();
+    res.push_back(n->value);
+    n = n->right;
+  }
+  return res;
+}
+
+template<typename T>
+std::vector<T> postorder(TreeNode<T> *root) {
+  std::vector<T> res;
+  std::vector<TreeNode<T> *> st;
+  if (root != nullptr) {
+    st.push_back(root);
+  }
+  while (!st.empty()) {  // Root, right, left, which is postorder reversed.
+    TreeNode<T> *n = st.back();
+    st.pop_back();
+    res.push_back(n->value);
+    if (n->left != nullptr) {
+      st.push_back(n->left);
+    }
+    if (n->right != nullptr) {
+      st.push_back(n->right);
+    }
+  }
+  std::reverse(res.begin(), res.end());
+  return res;
+}
+
+template<typename T>
+std::vector<T> level_order(TreeNode<T> *root) {
+  std::vector<T> res;
+  std::queue<TreeNode<T> *> q;
+  if (root != nullptr) {
+    q.push(root);
+  }
+  while (!q.empty()) {
+    TreeNode<T> *n = q.front();
+    q.pop();
+    res.push_back(n->value);
+    if (n->left != nullptr) {
+      q.push(n->left);
+    }
+    if (n->right != nullptr) {
+      q.push(n->right);
+    }
+  }
+  return res;
+}
+
+/*
 
 Morris traversal removes the stack entirely by threading. Before descending into a left subtree, it
 finds that subtree's rightmost node, which is the inorder predecessor of the current node, and
@@ -27,132 +141,37 @@ right-leaning chain in preorder.
   preorder, leaving every left pointer null and destroying the original shape.
 
 Since `morris_inorder()` mutates the tree as it runs, it is unsafe on a tree shared between threads
-and leaves threads behind if an exception escapes. Computing over a tree rather than listing it is
-dynamic programming on a tree; see sections 4.1.4 through 4.1.7 for general rooted trees.
+and leaves threads behind if an exception escapes.
 
 Time Complexity:
-- O(n) per call to every traversal and to `flatten()`, where $n$ is the number of nodes.
+- O(n) per call, where $n$ is the number of nodes.
 
 Space Complexity:
-- O(n) for each returned vector.
-- O(h) auxiliary for the stack-based and queue-based traversals, where $h$ is the height of the
-  tree, which is O(n) in the worst case.
-- O(1) auxiliary for `morris_inorder()` and `flatten()`.
+- O(n) for the vector returned by `morris_inorder()`.
+- O(1) auxiliary for both.
 
 */
-
-#include <algorithm>
-#include <queue>
-#include <vector>
-
-template<typename T>
-struct TreeNode {
-  T value;
-  TreeNode *left, *right;
-
-  explicit TreeNode(const T &value) : value(value), left(nullptr), right(nullptr) {}
-};
-
-template<typename T>
-std::vector<T> preorder(TreeNode<T> *root) {
-  std::vector<T> res;
-  std::vector<TreeNode<T> *> st;
-  if (root != nullptr) {
-    st.push_back(root);
-  }
-  while (!st.empty()) {
-    TreeNode<T> *node = st.back();
-    st.pop_back();
-    res.push_back(node->value);
-    if (node->right != nullptr) {  // Pushed first so that the left child is popped first.
-      st.push_back(node->right);
-    }
-    if (node->left != nullptr) {
-      st.push_back(node->left);
-    }
-  }
-  return res;
-}
-
-template<typename T>
-std::vector<T> inorder(TreeNode<T> *root) {
-  std::vector<T> res;
-  std::vector<TreeNode<T> *> st;
-  for (TreeNode<T> *node = root; node != nullptr || !st.empty();) {
-    for (; node != nullptr; node = node->left) {
-      st.push_back(node);
-    }
-    node = st.back();
-    st.pop_back();
-    res.push_back(node->value);
-    node = node->right;
-  }
-  return res;
-}
-
-template<typename T>
-std::vector<T> postorder(TreeNode<T> *root) {
-  std::vector<T> res;
-  std::vector<TreeNode<T> *> st;
-  if (root != nullptr) {
-    st.push_back(root);
-  }
-  while (!st.empty()) {  // Root, right, left, which is postorder reversed.
-    TreeNode<T> *node = st.back();
-    st.pop_back();
-    res.push_back(node->value);
-    if (node->left != nullptr) {
-      st.push_back(node->left);
-    }
-    if (node->right != nullptr) {
-      st.push_back(node->right);
-    }
-  }
-  std::reverse(res.begin(), res.end());
-  return res;
-}
-
-template<typename T>
-std::vector<T> level_order(TreeNode<T> *root) {
-  std::vector<T> res;
-  std::queue<TreeNode<T> *> q;
-  if (root != nullptr) {
-    q.push(root);
-  }
-  while (!q.empty()) {
-    TreeNode<T> *node = q.front();
-    q.pop();
-    res.push_back(node->value);
-    if (node->left != nullptr) {
-      q.push(node->left);
-    }
-    if (node->right != nullptr) {
-      q.push(node->right);
-    }
-  }
-  return res;
-}
 
 template<typename T>
 std::vector<T> morris_inorder(TreeNode<T> *root) {
   std::vector<T> res;
-  for (TreeNode<T> *node = root; node != nullptr;) {
-    if (node->left == nullptr) {
-      res.push_back(node->value);
-      node = node->right;
+  for (TreeNode<T> *n = root; n != nullptr;) {
+    if (n->left == nullptr) {
+      res.push_back(n->value);
+      n = n->right;
       continue;
     }
-    TreeNode<T> *pred = node->left;
-    while (pred->right != nullptr && pred->right != node) {
+    TreeNode<T> *pred = n->left;
+    while (pred->right != nullptr && pred->right != n) {
       pred = pred->right;
     }
     if (pred->right == nullptr) {  // First visit: thread the predecessor back to this node.
-      pred->right = node;
-      node = node->left;
+      pred->right = n;
+      n = n->left;
     } else {  // Second visit: the left subtree is done, so restore and report.
       pred->right = nullptr;
-      res.push_back(node->value);
-      node = node->right;
+      res.push_back(n->value);
+      n = n->right;
     }
   }
   return res;
@@ -160,15 +179,15 @@ std::vector<T> morris_inorder(TreeNode<T> *root) {
 
 template<typename T>
 void flatten(TreeNode<T> *root) {
-  for (TreeNode<T> *node = root; node != nullptr; node = node->right) {
-    if (node->left != nullptr) {
-      TreeNode<T> *pred = node->left;
+  for (TreeNode<T> *n = root; n != nullptr; n = n->right) {
+    if (n->left != nullptr) {
+      TreeNode<T> *pred = n->left;
       while (pred->right != nullptr) {
         pred = pred->right;
       }
-      pred->right = node->right;  // Splice the right subtree below the left subtree's last node.
-      node->right = node->left;
-      node->left = nullptr;
+      pred->right = n->right;  // Splice the right subtree below the left subtree's last node.
+      n->right = n->left;
+      n->left = nullptr;
     }
   }
 }
@@ -213,8 +232,8 @@ int main() {
   vector<int> before = preorder(&n4);
   flatten(&n4);
   assert(n4.left == nullptr && preorder(&n4) == before);
-  for (TreeNode<int> *node = &n4; node != nullptr; node = node->right) {
-    assert(node->left == nullptr);
+  for (TreeNode<int> *n = &n4; n != nullptr; n = n->right) {
+    assert(n->left == nullptr);
   }
   return 0;
 }

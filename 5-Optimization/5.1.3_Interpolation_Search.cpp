@@ -17,7 +17,7 @@ and use binary search otherwise.
 
 - `interpolation_search(lo, hi, key)` returns an iterator to an occurrence of `key` in the sorted
   random-access range $[`lo`, `hi`)$, or `hi` if `key` does not occur. The value type must support
-  subtraction and conversion to `double`.
+  comparison and conversion to `long double`.
 
 Time Complexity:
 - O(log log n) per call on uniformly distributed values and O(n) in the worst case, where $n$ is the
@@ -28,8 +28,6 @@ Space Complexity:
 
 */
 
-#include <iterator>
-
 template<typename It, typename T>
 It interpolation_search(It lo, It hi, const T &key) {
   It last = hi;
@@ -38,10 +36,13 @@ It interpolation_search(It lo, It hi, const T &key) {
       return *lo == key ? lo : last;
     }
     // Estimate the offset by where the key falls between the endpoint values.
-    double fraction = static_cast<double>(key - *lo) / static_cast<double>(*(hi - 1) - *lo);
-    auto span = std::distance(lo, hi) - 1;
-    It probe =
-        lo + static_cast<typename std::iterator_traits<It>::difference_type>(fraction * span);
+    auto len = hi - lo - 1;
+    auto loval = static_cast<long double>(*lo), den = static_cast<long double>(*(hi - 1)) - loval;
+    // A narrow long double implementation may round distinct large endpoints together.
+    It probe = lo + len / 2;
+    if (den != 0) {
+      probe = lo + static_cast<decltype(len)>((static_cast<long double>(key) - loval) / den * len);
+    }
     if (*probe == key) {
       return probe;
     }
@@ -57,6 +58,8 @@ It interpolation_search(It lo, It hi, const T &key) {
 /*** Example Usage ***/
 
 #include <cassert>
+#include <climits>
+#include <cstdint>
 #include <vector>
 using namespace std;
 
@@ -75,5 +78,11 @@ int main() {
   assert(*interpolation_search(skewed.begin(), skewed.end(), 1000000) == 1000000);
   assert(*interpolation_search(skewed.begin(), skewed.end(), 1) == 1);
   assert(interpolation_search(skewed.begin(), skewed.end(), 7) == skewed.end());
+
+  vector<int> wide{INT_MIN, 0, INT_MAX};
+  assert(*interpolation_search(wide.begin(), wide.end(), 0) == 0);
+
+  vector<int64_t> adjacent{INT64_MAX - 2, INT64_MAX - 1, INT64_MAX};
+  assert(*interpolation_search(adjacent.begin(), adjacent.end(), INT64_MAX - 1) == INT64_MAX - 1);
   return 0;
 }

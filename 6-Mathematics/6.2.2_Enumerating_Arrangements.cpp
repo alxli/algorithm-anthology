@@ -26,6 +26,8 @@ just a base-$n$ counter.
   integers in the range $[0, `n`)$. If `a` were interpreted as a $k$ digit integer in base $n$, this
   function could be thought of as incrementing the integer.
 
+Overflow warning: Exact counts and ranks used by the ranking operations must fit in `int64_t`.
+
 Time Complexity:
 - O(n*k) per call to `next_arrangement()`, `arrangement_by_rank()`, and `rank_by_arrangement(n, a)`,
   where $k$ is the size of `a`.
@@ -38,14 +40,17 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <numeric>
 #include <vector>
 
 bool next_arrangement(int n, std::vector<int> &a) {
   int k = static_cast<int>(a.size());
+  assert(n >= 0 && k <= n);
   std::vector<char> used(n);
   for (int i = 0; i < k; i++) {
+    assert(0 <= a[i] && a[i] < n && !used[a[i]]);
     used[a[i]] = true;
   }
   for (int i = k - 1; i >= 0; i--) {
@@ -67,6 +72,7 @@ bool next_arrangement(int n, std::vector<int> &a) {
 }
 
 int64_t n_permute_k(int n, int k) {
+  assert(n >= 0 && 0 <= k && k <= n);
   int64_t res = 1;
   for (int i = 0; i < k; i++) {
     res *= n - i;
@@ -75,6 +81,7 @@ int64_t n_permute_k(int n, int k) {
 }
 
 std::vector<int> arrangement_by_rank(int n, int k, int64_t r) {
+  assert(0 <= r && r < n_permute_k(n, k));
   std::vector<int> values(n), res(k);
   std::iota(values.begin(), values.end(), 0);
   for (int i = 0; i < k; i++) {
@@ -89,9 +96,12 @@ std::vector<int> arrangement_by_rank(int n, int k, int64_t r) {
 
 int64_t rank_by_arrangement(int n, const std::vector<int> &a) {
   int k = static_cast<int>(a.size());
+  assert(n >= 0 && k <= n);
+  assert(std::all_of(a.begin(), a.end(), [n](int x) { return 0 <= x && x < n; }));
   int64_t res = 0;
   std::vector<char> used(n);
   for (int i = 0; i < k; i++) {
+    assert(!used[a[i]]);
     int count = 0;
     for (int j = 0; j < a[i]; j++) {
       if (!used[j]) {
@@ -106,6 +116,7 @@ int64_t rank_by_arrangement(int n, const std::vector<int> &a) {
 
 bool next_arrangement_with_repeats(int n, std::vector<int> &a) {
   int k = static_cast<int>(a.size());
+  assert(n >= 0 && std::all_of(a.begin(), a.end(), [n](int x) { return 0 <= x && x < n; }));
   for (int i = k - 1; i >= 0; i--) {
     if (a[i] < n - 1) {
       a[i]++;

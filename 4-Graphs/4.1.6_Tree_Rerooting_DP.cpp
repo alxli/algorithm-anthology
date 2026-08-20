@@ -41,7 +41,6 @@ Space Complexity:
 
 */
 
-#include <cstdint>
 #include <vector>
 
 std::vector<std::vector<int>> adj;
@@ -103,6 +102,7 @@ std::vector<Summary> rerooting_dp(
 /*** Example Usage ***/
 
 #include <cassert>
+#include <cstdint>
 #include <string>
 using namespace std;
 

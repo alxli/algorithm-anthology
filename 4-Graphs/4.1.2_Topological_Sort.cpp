@@ -27,7 +27,6 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <cassert>
 #include <queue>
 #include <vector>
 
@@ -95,6 +94,7 @@ std::vector<int> toposort_kahn() {
 
 /*** Example Usage ***/
 
+#include <cassert>
 using namespace std;
 
 int main() {

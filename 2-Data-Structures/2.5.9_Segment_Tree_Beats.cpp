@@ -45,7 +45,6 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
-#include <cstdint>
 #include <limits>
 #include <vector>
 
@@ -182,6 +181,7 @@ class SegTreeBeats {
 
 /*** Example Usage ***/
 
+#include <cstdint>
 using namespace std;
 
 int main() {

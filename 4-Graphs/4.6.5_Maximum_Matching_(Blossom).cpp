@@ -25,7 +25,6 @@ Space Complexity:
 
 */
 
-#include <algorithm>
 #include <numeric>
 #include <queue>
 #include <utility>
@@ -126,6 +125,7 @@ std::vector<int> max_matching(const std::vector<std::vector<int>> &adj) {
 
 /*** Example Usage ***/
 
+#include <algorithm>
 #include <cassert>
 using namespace std;
 

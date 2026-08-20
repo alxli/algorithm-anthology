@@ -27,7 +27,6 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <cmath>
 #include <iterator>
 #include <limits>
 #include <utility>
@@ -107,6 +106,7 @@ auto closest_pair(std::vector<Pt> p, std::pair<Pt, Pt> *res = nullptr) {
 /*** Example Usage ***/
 
 #include <cassert>
+#include <cmath>
 #include <vector>
 using namespace std;
 

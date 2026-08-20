@@ -128,7 +128,6 @@ int64_t primitive_root(int64_t m) {
 /*** Example Usage ***/
 
 #include <cassert>
-using namespace std;
 
 int main() {
   assert(primitive_root(1) == 0);

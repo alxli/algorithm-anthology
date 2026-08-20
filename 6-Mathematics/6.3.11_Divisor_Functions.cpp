@@ -83,6 +83,7 @@ int64_t divisor_sum(int64_t n) {
 }
 
 std::vector<int> divisor_count_table(int n) {
+  assert(n >= 0);
   std::vector<int> res(n + 1);
   for (int d = 1; d <= n; d++) {
     for (int i = d; i <= n; i += d) {
@@ -93,6 +94,7 @@ std::vector<int> divisor_count_table(int n) {
 }
 
 std::vector<int64_t> divisor_sum_table(int n) {
+  assert(n >= 0);
   std::vector<int64_t> res(n + 1);
   for (int d = 1; d <= n; d++) {
     for (int i = d; i <= n; i += d) {
@@ -105,7 +107,6 @@ std::vector<int64_t> divisor_sum_table(int n) {
 /*** Example Usage ***/
 
 #include <cassert>
-using namespace std;
 
 int main() {
   assert(divisor_count(1) == 1);

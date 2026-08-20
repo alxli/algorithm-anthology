@@ -37,7 +37,8 @@ inverts any of these by the bisection of section 5.1.1.
 - `exponential_pdf(x, lambda)` and `exponential_cdf(x, lambda)` evaluate the waiting time until the
   next event when events arrive at positive mean rate `lambda`.
 - `quantile(cdf, p, lo, hi, iterations = 100)` returns the smallest $x$ in [`lo`, `hi`] whose
-  cumulative probability `cdf(x)` reaches `p`, for any nondecreasing `cdf`.
+  cumulative probability `cdf(x)` reaches `p`, for any nondecreasing `cdf`. The bounds must satisfy
+  `lo` $\leq$ `hi`, `cdf(hi)` must reach `p`, and `iterations` must be positive.
 
 Sampling is left to `<random>`, whose `std::binomial_distribution`, `std::poisson_distribution`,
 `std::normal_distribution`, and their siblings draw from exactly these families. What the standard
@@ -48,8 +49,9 @@ which holds well past the range where a `double` probability retains any precisi
 
 Time Complexity:
 - O(1) per call to every mass and density function, and to `log_factorial()` and `log_choose()`.
-- O(k) per call to `binomial_cdf()`, `poisson_cdf()`, `negative_binomial_cdf()`, and
-  `hypergeometric_cdf()`, where $k$ is the outcome whose tail is summed.
+- O(k) per call to `binomial_cdf()`, `poisson_cdf()`, and `negative_binomial_cdf()`, where $k$ is
+  the outcome whose tail is summed, and O(h) per call to `hypergeometric_cdf()`, where $h$ is its
+  `hits` argument.
 - O(1) per call to `geometric_cdf()`, `normal_cdf()`, and `exponential_cdf()`, which have closed
   forms.
 - O(n) calls to `cdf()` per call to `quantile()`, where $n$ is the number of iterations.
@@ -60,14 +62,17 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <limits>
 
 double log_factorial(int n) {
+  assert(n >= 0);
   return std::lgamma(n + 1.0);
 }
 
 double log_choose(int n, int k) {
+  assert(n >= 0);
   if (k < 0 || k > n) {
     return -std::numeric_limits<double>::infinity();
   }
@@ -75,6 +80,7 @@ double log_choose(int n, int k) {
 }
 
 double binomial_pmf(int n, int k, double p) {
+  assert(n >= 0 && 0 <= p && p <= 1);
   if (k < 0 || k > n) {
     return 0;
   }
@@ -88,23 +94,31 @@ double binomial_pmf(int n, int k, double p) {
 }
 
 double binomial_cdf(int n, int k, double p) {
+  assert(n >= 0 && 0 <= p && p <= 1);
   double res = 0;
-  for (int i = 0; i <= std::min(k, n); i++) {
+  int last = std::min(k, n);
+  for (int i = 0; i <= last; i++) {
     res += binomial_pmf(n, i, p);
+    if (i == last) {
+      break;
+    }
   }
   return std::min(res, 1.0);
 }
 
 double geometric_pmf(int k, double p) {
+  assert(0 < p && p <= 1);
   return k < 1 ? 0 : p * std::pow(1 - p, k - 1);
 }
 
 double geometric_cdf(int k, double p) {
+  assert(0 < p && p <= 1);
   return k < 1 ? 0 : -std::expm1(k * std::log1p(-p));
 }
 
 double negative_binomial_pmf(int k, int r, double p) {
-  if (k < r || r < 1) {
+  assert(r >= 1 && 0 < p && p <= 1);
+  if (k < r) {
     return 0;
   }
   if (p >= 1) {
@@ -114,14 +128,22 @@ double negative_binomial_pmf(int k, int r, double p) {
 }
 
 double negative_binomial_cdf(int k, int r, double p) {
+  assert(r >= 1 && 0 < p && p <= 1);
+  if (k < r) {
+    return 0;
+  }
   double res = 0;
-  for (int i = r; i <= k; i++) {
+  for (int i = r;; i++) {
     res += negative_binomial_pmf(i, r, p);
+    if (i == k) {
+      break;
+    }
   }
   return std::min(res, 1.0);
 }
 
 double poisson_pmf(int k, double lambda) {
+  assert(lambda >= 0);
   if (k < 0) {
     return 0;
   }
@@ -132,49 +154,74 @@ double poisson_pmf(int k, double lambda) {
 }
 
 double poisson_cdf(int k, double lambda) {
+  assert(lambda >= 0);
+  if (k < 0) {
+    return 0;
+  }
   double res = 0;
-  for (int i = 0; i <= k; i++) {
+  for (int i = 0;; i++) {
     res += poisson_pmf(i, lambda);
+    if (i == k) {
+      break;
+    }
   }
   return std::min(res, 1.0);
 }
 
 double hypergeometric_pmf(int n, int k, int draws, int hits) {
-  if (hits < 0 || hits > k || draws - hits < 0 || draws - hits > n - k) {
+  assert(n >= 0 && 0 <= k && k <= n && 0 <= draws && draws <= n);
+  if (hits < 0 || hits > draws || hits > k || draws - hits > n - k) {
     return 0;
   }
   return std::exp(log_choose(k, hits) + log_choose(n - k, draws - hits) - log_choose(n, draws));
 }
 
 double hypergeometric_cdf(int n, int k, int draws, int hits) {
+  assert(n >= 0 && 0 <= k && k <= n && 0 <= draws && draws <= n);
+  if (hits < 0) {
+    return 0;
+  }
   double res = 0;
-  for (int i = 0; i <= hits; i++) {
+  int last = std::min({hits, k, draws});
+  for (int i = 0; i <= last; i++) {
     res += hypergeometric_pmf(n, k, draws, i);
+    if (i == last) {
+      break;
+    }
   }
   return std::min(res, 1.0);
 }
 
 double normal_pdf(double x, double mu = 0, double sigma = 1) {
+  assert(sigma > 0);
   static const double INV_SQRT_2PI = 0.3989422804014327;
   double z = (x - mu) / sigma;
   return INV_SQRT_2PI / sigma * std::exp(-0.5 * z * z);
 }
 
 double normal_cdf(double x, double mu = 0, double sigma = 1) {
+  assert(sigma > 0);
   static const double INV_SQRT_2 = 0.7071067811865476;
   return 0.5 * std::erfc(-(x - mu) * INV_SQRT_2 / sigma);
 }
 
 double exponential_pdf(double x, double lambda) {
+  assert(lambda > 0);
   return x < 0 ? 0 : lambda * std::exp(-lambda * x);
 }
 
 double exponential_cdf(double x, double lambda) {
+  assert(lambda > 0);
   return x < 0 ? 0 : -std::expm1(-lambda * x);
 }
 
 template<typename Cdf>
 double quantile(Cdf cdf, double p, double lo, double hi, int iterations = 100) {
+  assert(0 <= p && p <= 1 && lo <= hi && iterations > 0);
+  if (cdf(lo) >= p) {
+    return lo;
+  }
+  assert(cdf(hi) >= p);
   for (int i = 0; i < iterations; i++) {
     double mid = lo + (hi - lo) / 2;
     if (cdf(mid) >= p) {

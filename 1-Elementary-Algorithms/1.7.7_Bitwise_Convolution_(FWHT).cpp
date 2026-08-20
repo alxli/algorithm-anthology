@@ -51,7 +51,6 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
-#include <cstdint>
 #include <utility>
 #include <vector>
 
@@ -194,6 +193,7 @@ std::vector<T> subset_convolve(std::vector<T> a, std::vector<T> b) {
 /*** Example Usage ***/
 
 #include <cassert>
+#include <cstdint>
 using namespace std;
 
 int main() {

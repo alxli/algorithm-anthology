@@ -38,7 +38,6 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
-#include <climits>
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -119,6 +118,7 @@ class WaveletTree {
 /*** Example Usage ***/
 
 #include <cassert>
+#include <climits>
 using namespace std;
 
 int main() {

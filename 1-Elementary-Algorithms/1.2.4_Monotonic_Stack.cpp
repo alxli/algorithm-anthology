@@ -44,7 +44,6 @@ Space Complexity:
 
 */
 
-#include <cassert>
 #include <stack>
 #include <tuple>
 #include <vector>
@@ -153,6 +152,7 @@ std::tuple<int, int, int, int, int> largest_zero_submatrix(
 
 /*** Example Usage ***/
 
+#include <cassert>
 using namespace std;
 
 int main() {

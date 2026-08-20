@@ -14,7 +14,7 @@ special case and having no digit for zero.
   Subtractive pairs such as `"IX"` are handled, but the numeral is not otherwise validated, so a
   malformed one such as `"IC"` simply returns the value its symbols imply.
 - `convert_base(d, a, b)` converts an integer in base `a` as a vector `d` of digits (where `d[0]` is
-  the least significant digit) to base `b` as a vector of digits (again with index 0 holding the
+  the least significant digit) to base `b` as a vector of digits (again with index $0$ holding the
   least significant digit). This uses repeated long division, so the value itself does not need to
   fit in a machine integer.
 
@@ -35,10 +35,12 @@ Space Complexity:
 
 */
 
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 std::vector<int> to_base(unsigned int x, int b = 10) {
@@ -76,6 +78,7 @@ unsigned int from_roman(const std::string &s) {
 
 std::vector<int> convert_base(const std::vector<int> &d, int a, int b) {
   assert(a >= 2 && b >= 2);
+  assert(std::all_of(d.begin(), d.end(), [a](int x) { return 0 <= x && x < a; }));
   std::vector<int> cur = d, res;
   auto trim = [](std::vector<int> &v) {
     while (v.size() > 1 && v.back() == 0) {

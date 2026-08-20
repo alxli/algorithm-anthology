@@ -38,7 +38,6 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <cassert>
 #include <cstdint>
 #include <functional>
 #include <queue>

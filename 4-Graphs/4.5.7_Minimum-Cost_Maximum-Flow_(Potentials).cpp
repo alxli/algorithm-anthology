@@ -181,7 +181,6 @@ class MinCostMaxFlow {
 /*** Example Usage ***/
 
 #include <cassert>
-using namespace std;
 
 int main() {
   // Example graph after max flow, with each edge labeled flow/capacity:

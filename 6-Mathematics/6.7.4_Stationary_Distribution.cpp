@@ -16,7 +16,9 @@ down the scale and makes the system uniquely solvable by ordinary elimination.
 - `stationary_distribution(p, eps = 1e-10)` returns the stationary distribution of the $n$ by $n$
   row-stochastic transition matrix `p`, where `p[i][j]` is the probability of stepping from state
   `i` to state `j`. It returns `std::nullopt` when the system is singular to within `eps`, which
-  happens exactly when the chain is reducible and therefore has no unique stationary distribution.
+  happens when the chain has more than one closed recurrent class and therefore no unique stationary
+  distribution. A reducible chain may still have a unique distribution when all states eventually
+  enter the same closed class.
 
 Two quantities follow at once: the expected number of steps to return to state $i$ is $1/\pi_i$, and
 on an undirected graph walked by a uniformly random incident edge, $\pi_v$ is proportional to the
@@ -32,9 +34,9 @@ Space Complexity:
 
 */
 
-#include <cassert>
 #include <cmath>
 #include <optional>
+#include <utility>
 #include <vector>
 
 std::optional<std::vector<double>> stationary_distribution(
@@ -63,7 +65,7 @@ std::optional<std::vector<double>> stationary_distribution(
       }
     }
     if (fabs(a[pivot][col]) < eps) {
-      return std::nullopt;  // Reducible, so the stationary distribution is not unique.
+      return std::nullopt;  // Multiple closed classes make the stationary distribution nonunique.
     }
     std::swap(a[col], a[pivot]);
     double scale = a[col][col];  // Saved, since the loop below overwrites it on its first step.
@@ -88,6 +90,7 @@ std::optional<std::vector<double>> stationary_distribution(
 
 /*** Example Usage ***/
 
+#include <cassert>
 #include <cmath>
 using namespace std;
 
@@ -118,5 +121,9 @@ int main() {
 
   // Two states that never reach each other admit no unique distribution.
   assert(!stationary_distribution({{1, 0}, {0, 1}}).has_value());
+
+  // Reducibility alone is not an obstruction: state 0 is transient and state 1 is the sole class.
+  auto reducible = stationary_distribution({{0, 1}, {0, 1}});
+  assert(reducible.has_value() && EQ((*reducible)[0], 0) && EQ((*reducible)[1], 1));
   return 0;
 }

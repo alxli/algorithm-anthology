@@ -23,8 +23,8 @@ draw that repeats a coupon already held.
   accumulated from state `u` until the process reaches a state with no outgoing transitions. States
   are the indices of `trans`, each entry `trans[u]` lists the outgoing transitions of `u` as pairs
   of (`next_state`, `probability`), and `cost[u]` is the cost charged on leaving `u`. Transition
-  probabilities out of a state must sum to at most $1$, with any missing probability treated as
-  ending the process.
+  destinations must be valid state indices, and their nonnegative probabilities must sum to at most
+  $1$, with any missing probability treated as ending the process.
 
 Aside from self-loops the transition graph must be acyclic, since a genuine cycle leaves the
 equations mutually dependent and they must then be solved as a linear system; two states that reach
@@ -50,11 +50,16 @@ std::vector<double> expected_cost(
   assert(static_cast<int>(cost.size()) == n);
   std::vector<int> indeg(n);
   for (int u = 0; u < n; u++) {
+    double prob = 0;
     for (auto [v, p] : trans[u]) {
+      assert(v >= 0 && v < n && p >= 0);
+      prob += p;
       if (v != u) {  // Self-loops are resolved algebraically, so they do not order the states.
         indeg[v]++;
       }
     }
+    assert(prob <= 1 + 1e-12);
+    (void)prob;
   }
   std::vector<int> order, ready;
   order.reserve(n);

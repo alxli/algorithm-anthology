@@ -20,6 +20,7 @@ largest-rectangle application is implemented directly with a monotone stack in 1
 - `CartesianTree(a, comp = std::less<>())` constructs the tree for array `a`.
 - `root` is the root index, or $-1$ if the array is empty. The arrays `parent`, `left`, and `right`
   store the neighboring node indices, using $-1$ when a neighbor is absent.
+- `size()` returns the number of nodes in the tree.
 - `range_min_index(lo, hi)` returns the index of the first value in comparator order within
   $[`lo`, `hi`]$.
 

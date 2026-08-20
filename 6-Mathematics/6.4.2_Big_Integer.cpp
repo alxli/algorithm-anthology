@@ -31,6 +31,8 @@ multiplication per level rather than one estimate per limb.
   an `std::string`, `int64_t`, `double`, and `long double` respectively. For the latter three data
   types, overflow behavior is based on that of inputting from `std::istream`. Equivalent conversions
   are also available through explicit casts to `int`, `long long`, `double`, and `long double`.
+- `to_arithmetic<T>()` returns the value converted to arithmetic type `T` by streaming the base-10
+  representation into it, and is what the three conversions above are defined in terms of.
 - `abs()` returns the absolute value.
 - `comp(v)` returns $-1$, $0$, or $1$ depending on whether the big integer compares less than, equal
   to, or greater than `v`, respectively.
@@ -49,9 +51,9 @@ multiplication per level rather than one estimate per limb.
 Time Complexity:
 - O(1) per call to `size()`.
 - O(d) per call to the constructors, `to_string()`, `to_llong()`, `to_double()`, `to_ldouble()`,
-  `abs()`, `comp()`, `rand()`, and all comparison and arithmetic operators except multiplication,
-  division, and modulo, where $d$ is the total number of digits in the arguments and result for each
-  operation.
+  `to_arithmetic()`, `abs()`, `comp()`, `rand()`, and all comparison and arithmetic operators except
+  multiplication, division, and modulo, where $d$ is the total number of digits in the arguments and
+  result for each operation.
 - O(d*log(d)*log(log(d))) per call to multiplication operations once operands reach `MUL_CUTOFF`,
   and O(d^1.585) below it.
 - O((d/m)*M(m)*log m) per call to division and modulo operations once the divisor reaches
@@ -78,7 +80,6 @@ Space Complexity:
 #include <algorithm>
 #include <cassert>
 #include <chrono>
-#include <climits>
 #include <cmath>
 #include <complex>
 #include <cstdint>
@@ -90,6 +91,7 @@ Space Complexity:
 #include <random>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -727,7 +729,7 @@ class BigInt {
 
 /*** Example Usage ***/
 
-using namespace std;
+#include <climits>
 
 int main() {
   BigInt a("-9899819294989142124"), b("12398124981294214");
@@ -765,18 +767,18 @@ int main() {
       }
     }
   }
-  mt19937 rng(1234567);  // Fixed seed for reproducibility.
-  uniform_int_distribution<int> length_dist(1, 100);
+  std::mt19937 rng(1234567);  // Fixed seed for reproducibility.
+  std::uniform_int_distribution<int> len_dist(1, 100);
   for (int i = 0; i < 20; i++) {
-    int d = length_dist(rng);
-    BigInt value(BigInt::rand(d)), root(value.sqrt()), lower(root * root), upper(root + 1);
+    int d = len_dist(rng);
+    BigInt val(BigInt::rand(d)), root(val.sqrt()), lower(root * root), upper(root + 1);
     upper *= upper;
-    assert(lower <= value && value < upper);
-    uniform_int_distribution<int> divisor_length_dist(1, d);
-    BigInt divisor(BigInt::rand(divisor_length_dist(rng)) + 1), quotient(value / divisor);
+    assert(lower <= val && val < upper);
+    std::uniform_int_distribution<int> divisor_len_dist(1, d);
+    BigInt divisor(BigInt::rand(divisor_len_dist(rng)) + 1), quotient(val / divisor);
     lower = quotient * divisor;
     upper = divisor * (quotient + 1);
-    assert(value >= lower && value < upper);
+    assert(val >= lower && val < upper);
   }
   BigInt x(-6);
   assert(x.to_string() == "-6");

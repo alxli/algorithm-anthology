@@ -48,6 +48,12 @@ class VirtualTree {
   std::vector<int> tin, tout, depth;
   int len;
 
+  bool is_ancestor(int parent, int child) const {
+    assert(0 <= parent && parent < static_cast<int>(tin.size()));
+    assert(0 <= child && child < static_cast<int>(tin.size()));
+    return tin[parent] <= tin[child] && tout[child] <= tout[parent];
+  }
+
  public:
   struct Tree {
     int root = -1;
@@ -80,12 +86,6 @@ class VirtualTree {
       tout[u] = timer++;
     };
     dfs(dfs, root, root, 0);
-  }
-
-  bool is_ancestor(int parent, int child) const {
-    assert(0 <= parent && parent < static_cast<int>(tin.size()));
-    assert(0 <= child && child < static_cast<int>(tin.size()));
-    return tin[parent] <= tin[child] && tout[child] <= tout[parent];
   }
 
   int lca(int u, int v) const {

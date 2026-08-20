@@ -103,7 +103,6 @@ int64_t mod_sqrt(int64_t a, int64_t p) {
 /*** Example Usage ***/
 
 #include <cassert>
-using namespace std;
 
 int main() {
   int64_t r = mod_sqrt(2, 113);

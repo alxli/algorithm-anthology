@@ -38,7 +38,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-const std::array<std::pair<int, int>, 8> KNIGHT_MOVES = {
+const std::array<std::pair<int, int>, 8> KNIGHT_MOVES{
     {{-2, -1}, {-2, 1}, {-1, -2}, {-1, 2}, {1, -2}, {1, 2}, {2, -1}, {2, 1}}
 };
 
@@ -48,8 +48,8 @@ std::vector<std::vector<int>> knight_tour(int n, int sr = 0, int sc = 0) {
   auto onward_moves = [&](int r, int c) {
     int count = 0;
     for (auto [dr, dc] : KNIGHT_MOVES) {
-      int nr = r + dr, nc = c + dc;
-      if (nr >= 0 && nr < n && nc >= 0 && nc < n && visit[nr][nc] == -1) {
+      int r2 = r + dr, c2 = c + dc;
+      if (r2 >= 0 && r2 < n && c2 >= 0 && c2 < n && visit[r2][c2] == -1) {
         count++;
       }
     }

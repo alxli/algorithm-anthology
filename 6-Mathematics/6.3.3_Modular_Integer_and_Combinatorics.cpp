@@ -20,6 +20,7 @@ wrapper: construction normalizes values, while hidden friend operators support m
 such as `2 + Mint(3)` through implicit conversion.
 
 - `Modular<MOD>(x = 0)` constructs the residue class of integer `x` modulo `MOD`.
+- `Modular<MOD>::mod()` returns the modulus `MOD`.
 - `value()` and `operator()()` return the stored representative in $[0, `MOD`)$.
 - Explicit casts to `int`, `long long`, `double`, and `long double` convert that stored
   representative to the corresponding primitive.

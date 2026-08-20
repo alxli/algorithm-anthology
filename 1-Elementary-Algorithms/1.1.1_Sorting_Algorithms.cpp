@@ -241,7 +241,7 @@ fastest known for small and medium ranges though it has no proven bound. The the
 Sedgewick's sequence at O(n^{4/3}) and Pratt's at O(n log^2 n), the latter being slower in practice
 despite the better bound.
 
-Time Complexity: O(n log n) best, and O(n^{4/3}) or better in practice for the gaps used here.
+Time Complexity: O(n) best and O(n^2) worst (though the chosen gaps are much faster on average).
 Space Complexity: O(1) auxiliary.
 
 */
@@ -502,6 +502,7 @@ int main() {
     insertion_sort(empty.begin(), empty.end());
     combsort(empty.begin(), empty.end());
     radix_sort(empty.begin(), empty.end());
+    bitonic_sort(empty.begin(), empty.end());
     mergesort(single.begin(), single.end());
     assert(empty.empty() && single[0] == 42);
   }

@@ -24,7 +24,6 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <cassert>
 #include <string>
 #include <vector>
 using std::string;

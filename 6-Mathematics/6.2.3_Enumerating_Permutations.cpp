@@ -1,14 +1,16 @@
 /*
 
 These routines enumerate and analyze reorderings of a sequence of $n$ elements; the values need not
-be distinct.
+be distinct except where noted.
 
 The lexicographic successor is found by locating the rightmost ascent, increasing that position by
 the smallest possible amount, then reversing the suffix into its minimum order. Ranking and
 unranking permutations use the factorial number system: each position contributes the number of
 unused smaller values before the chosen one, scaled by the number of possible suffix permutations.
 The cycle decomposition views a permutation as a function on indices and follows each unvisited
-orbit until it returns to its start.
+orbit until it returns to its start. Sorting by swaps is that same decomposition read differently:
+a cycle of length $k$ is resolved by $k - 1$ swaps and no fewer, so the whole array needs $n$ minus
+its number of cycles.
 
 - `next_permutation2(lo, hi, comp = std::less<>())` is analogous to `std::next_permutation()`,
   taking two BidirectionalIterators as a range $[`lo`, `hi`)$ for which the function tries to
@@ -27,20 +29,28 @@ orbit until it returns to its start.
 - `permutation_cycles(a)` returns the orbits of the index mapping `i` $\mapsto$ `a[i]`. For example,
   $\{3, 1, 0, 2\}$ decomposes into cycles $\{0, 3, 2\}$ and $\{1\}$ because following the mapping
   from index $0$ gives $0 \to 3 \to 2 \to 0$, while index $1$ maps to itself.
+- `min_swaps_to_sort(a)` returns the fewest swaps of any two elements that sort `a`, whose values
+  must be distinct. This is unrelated to the inversion count of section 1.1.5, which measures the
+  number of swaps when only adjacent elements may be exchanged.
+
+The two ranking operations require $n \leq 20$, so every possible rank fits in `int64_t`.
 
 Time Complexity:
 - O(n) per call to `next_permutation2()` and `next_permutation()`, where $n$ is the input size.
 - O(n^2) per call to `permutation_by_rank()` and `rank_by_permutation()`.
 - O(1) per call to `next_permutation_mask()`.
 - O(n) per call to `permutation_cycles()`.
+- O(n log n) per call to `min_swaps_to_sort()`, from ranking the values.
 
 Space Complexity:
 - O(1) auxiliary for `next_permutation2()` and `next_permutation()`.
-- O(n) auxiliary for `permutation_by_rank()`, `rank_by_permutation()`, and `permutation_cycles()`.
+- O(n) auxiliary for `permutation_by_rank()`, `rank_by_permutation()`, `permutation_cycles()`, and
+  `min_swaps_to_sort()`.
 
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <functional>
 #include <numeric>
@@ -107,15 +117,13 @@ uint64_t next_permutation_mask(uint64_t x) {
 }
 
 std::vector<int> permutation_by_rank(int n, int64_t r) {
-  if (n == 0) {
-    return {};
-  }
-  std::vector<int64_t> factorial(n);
+  assert(0 <= n && n <= 20 && r >= 0);
+  std::vector<int64_t> factorial(n + 1, 1);
   std::vector<int> values(n), res(n);
-  factorial[0] = 1;
-  for (int i = 1; i < n; i++) {
+  for (int i = 1; i <= n; i++) {
     factorial[i] = i * factorial[i - 1];
   }
+  assert(r < factorial[n]);
   std::iota(values.begin(), values.end(), 0);
   for (int i = 0; i < n; i++) {
     int pos = r / factorial[n - 1 - i];
@@ -128,6 +136,12 @@ std::vector<int> permutation_by_rank(int n, int64_t r) {
 
 int64_t rank_by_permutation(const std::vector<int> &a) {
   int n = static_cast<int>(a.size());
+  assert(n <= 20);
+  std::vector<char> seen(n);
+  for (int x : a) {
+    assert(0 <= x && x < n && !seen[x]);
+    seen[x] = true;
+  }
   if (n == 0) {
     return 0;
   }
@@ -154,6 +168,11 @@ using Cycles = std::vector<std::vector<int>>;
 Cycles permutation_cycles(const std::vector<int> &a) {
   int n = static_cast<int>(a.size());
   std::vector<char> visit(n);
+  for (int x : a) {
+    assert(0 <= x && x < n && !visit[x]);
+    visit[x] = true;
+  }
+  std::fill(visit.begin(), visit.end(), false);
   Cycles res;
   for (int i = 0; i < n; i++) {
     if (!visit[i]) {
@@ -168,6 +187,17 @@ Cycles permutation_cycles(const std::vector<int> &a) {
     }
   }
   return res;
+}
+
+int min_swaps_to_sort(const std::vector<int> &a) {
+  int n = static_cast<int>(a.size());
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
+  std::sort(order.begin(), order.end(), [&](int i, int j) { return a[i] < a[j]; });
+  assert(std::adjacent_find(order.begin(), order.end(), [&](int i, int j) {
+           return a[i] == a[j];
+         }) == order.end());
+  return n - static_cast<int>(permutation_cycles(order).size());
 }
 
 /*** Example Usage and Output:
@@ -251,6 +281,11 @@ int main() {
       print_range(cycle.begin(), cycle.end());
     }
     cout << endl;
+    // Two cycles over four elements, so two swaps sort it.
+    assert(min_swaps_to_sort(a) == 2);
+    assert(min_swaps_to_sort({50, 20, 40, 10}) == 1);  // Values need not be a permutation.
+    assert(min_swaps_to_sort({1, 2, 3}) == 0);
+    assert(min_swaps_to_sort({}) == 0);
   }
   return 0;
 }

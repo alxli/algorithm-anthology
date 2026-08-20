@@ -22,7 +22,6 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <cassert>
 #include <cstdint>
 #include <cstdlib>
 #include <map>
@@ -107,6 +106,7 @@ int64_t manhattan_mst_weight(const std::vector<Point> &p) {
 
 /*** Example Usage ***/
 
+#include <cassert>
 using namespace std;
 
 int main() {

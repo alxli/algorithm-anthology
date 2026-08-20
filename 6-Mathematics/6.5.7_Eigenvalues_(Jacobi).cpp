@@ -9,7 +9,7 @@ The Jacobi eigenvalue algorithm builds that basis one rotation at a time. It rep
 largest off-diagonal entry and applies a rotation in the plane of that entry's row and column,
 choosing the angle that sets the entry to zero. A rotation is a similarity transform, so it
 preserves the eigenvalues, and it also preserves the sum of squares of all entries; since zeroing an
-entry removes its square from the off-diagonal total and moves it onto the diagonal, every sweep
+entry removes its square from the off-diagonal total and moves it onto the diagonal, every rotation
 strictly reduces the off-diagonal weight. Earlier zeros are partially refilled by later rotations,
 but the total decays geometrically, and the matrix converges to a diagonal one whose entries are the
 eigenvalues. Accumulating the rotations gives the eigenvectors.
@@ -17,8 +17,10 @@ eigenvalues. Accumulating the rotations gives the eigenvectors.
 - `jacobi_eigen(a, eps = 1e-12, iterations = 100)` returns the pair (`values`, `vectors`) for a real
   symmetric $n$ by $n$ matrix `a`. The eigenvalues in `values` are sorted in decreasing order, and
   `vectors[i]` is a unit eigenvector for `values[i]`, so the eigenvectors are rows rather than
-  columns. Iteration stops once every off-diagonal entry is smaller than `eps`. The matrix must be
-  symmetric, which is not checked; an unsymmetric one silently produces nonsense.
+  columns. Each iteration rotates away the currently largest off-diagonal entry, stopping early once
+  every such entry is smaller than `eps`; if the `iterations` limit is reached first, the current
+  approximation is returned. The matrix must be symmetric, which is not checked; an unsymmetric one
+  silently produces nonsense.
 
 A general matrix instead needs the roots of the characteristic polynomial of section 6.5.6, found
 including complex ones by the Ehrlich-Aberth iteration of section 5.4.5, though accuracy degrades
@@ -27,8 +29,8 @@ the matrix. When only the dominant eigenvalue is wanted, power iteration finds i
 decomposition at all, by repeatedly multiplying a random vector and renormalizing.
 
 Time Complexity:
-- O(n^3) per sweep and O(n^3 log(1 / `eps`)) per call in practice, where $n$ is the dimension of the
-  matrix. Each rotation costs O(n) and the search for the largest off-diagonal entry costs O(n^2).
+- O(I*n^2) per call for at most $I$ iterations, where $n$ is the matrix dimension. Each iteration
+  searches O(n^2) entries for the largest off-diagonal one and applies one O(n) rotation.
 
 Space Complexity:
 - O(n^2) auxiliary, and O(n^2) for the returned eigenvectors.
@@ -36,7 +38,6 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <numeric>
 #include <utility>
@@ -52,7 +53,7 @@ std::pair<std::vector<double>, Matrix> jacobi_eigen(
   for (int i = 0; i < n; i++) {
     vectors[i][i] = 1;
   }
-  for (int sweep = 0; sweep < iterations; sweep++) {
+  while (iterations--) {
     int p = 0, q = 1;
     double largest = 0;
     for (int i = 0; i < n; i++) {
@@ -100,6 +101,7 @@ std::pair<std::vector<double>, Matrix> jacobi_eigen(
 
 /*** Example Usage ***/
 
+#include <cassert>
 #include <cmath>
 using namespace std;
 

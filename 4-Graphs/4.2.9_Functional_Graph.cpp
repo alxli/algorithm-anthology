@@ -140,7 +140,6 @@ class FunctionalGraph {
 /*** Example Usage ***/
 
 #include <cassert>
-using namespace std;
 
 int main() {
   // 0 --> 1 <-- 3 <-- 4 <-- 5

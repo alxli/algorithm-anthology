@@ -17,6 +17,7 @@ Common string functions, many of which have standard library counterparts. The i
 \begin{lstlisting}[style=cpp]
 #include <cctype>
 #include <cstddef>
+#include <istream>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
@@ -516,7 +517,6 @@ FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Start
 #include <string>
 #include <tuple>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -709,6 +709,7 @@ struct GenericHasher<std::vector<T>> : VectorHasher<T> {};
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
 #include <cassert>
+#include <unordered_map>
 using namespace std;
 
 int main() {
@@ -773,6 +774,7 @@ By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For
   \item \inlinecode{RollingHash\textless{}T\textgreater{}()} constructs an empty hash sequence.
   \item \inlinecode{RollingHash\textless{}T\textgreater{}(lo, hi)} constructs prefix hashes from the values in the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{RollingHash\textless{}T\textgreater{}(v)} constructs prefix hashes for vector \inlinecode{v}.
+  \item \inlinecode{h.size()} returns the length of the hashed sequence.
   \item \inlinecode{h.hash(lo, hi)} returns the hash of the half-open subsequence $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{RollingHash\textless{}T\textgreater{}::hash(lo, hi)} returns the hash of the half-open iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{RollingHash\textless{}T\textgreater{}::hash(v)} returns the hash of vector \inlinecode{v}.
@@ -796,8 +798,6 @@ By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For
 \begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstdint>
-#include <string>
-#include <utility>
 #include <vector>
 
 const uint64_t HASH_MOD = (1ULL << 61) - 1;
@@ -912,6 +912,8 @@ std::vector<uint64_t> RollingHash<T, Hash>::pow_base(1, 1);
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
+#include <string>
+#include <utility>
 using namespace std;
 
 using PointI = pair<int, int>;
@@ -4147,7 +4149,6 @@ The longest palindromic subsequence (LPS) is a maximum-length subsequence that r
 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
-#include <cassert>
 #include <string>
 #include <vector>
 using std::string;

@@ -29,7 +29,6 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <cassert>
 #include <optional>
 #include <set>
 #include <tuple>
@@ -138,6 +137,7 @@ std::optional<std::pair<int, int>> find_intersecting_pair(const std::vector<Segm
 
 /*** Example Usage ***/
 
+#include <cassert>
 #include <vector>
 using namespace std;
 

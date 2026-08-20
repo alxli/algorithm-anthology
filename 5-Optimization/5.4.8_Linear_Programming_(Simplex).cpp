@@ -33,7 +33,6 @@ Space Complexity:
 
 #include <cassert>
 #include <cmath>
-#include <numeric>
 #include <utility>
 #include <vector>
 
@@ -159,6 +158,7 @@ Solution = 33.3043 at (5.30435, 4.34783).
 ***/
 
 #include <iostream>
+#include <numeric>
 using namespace std;
 
 int main() {

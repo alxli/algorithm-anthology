@@ -244,10 +244,10 @@ Fast input and output helpers. For most cases, it is enough to speed up standard
 File-redirection failures throw \inlinecode{std::runtime\_error}.
 
 \begin{lstlisting}[style=cpp]
-#include <cassert>
 #include <cctype>
 #include <cstddef>
 #include <cstdio>
+#include <cstdlib>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -510,6 +510,7 @@ class FastOutput {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
+#include <cassert>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
@@ -559,9 +560,7 @@ int main() {
   auto time_reads = [&](const char *name, auto read_one) {
     set_in(path);
     clock_t start = clock();
-    for (int i = 0, v = 0; i < n; i++) {
-      read_one(v);
-    }
+    for (int i = 0, v = 0; i < n; i++) read_one(v);
     printf("%-22s %6.3f s\n", name, double(clock() - start) / CLOCKS_PER_SEC);
   };
   printf("Reading %d integers:\n", n);
@@ -572,16 +571,45 @@ int main() {
     static FastInput in;
     in >> v;
   });
+
+  auto time_writes = [&](const char *name, auto write_all) {
+    clock_t start = clock();
+    write_all(n);
+    printf("%-22s %6.3f s\n", name, double(clock() - start) / CLOCKS_PER_SEC);
+  };
+  printf("\nWriting %d integers:\n", n);
+  time_writes("ofstream", [&](int k) {
+    ofstream out(path);
+    for (int i = 0; i < k; i++) out << i << ' ';
+  });
+  time_writes("fprintf", [&](int k) {
+    FILE *f = fopen(path.c_str(), "w");
+    for (int i = 0; i < k; i++) fprintf(f, "%d ", i);
+    fclose(f);
+  });
+  time_writes("FastOutput", [&](int k) {
+    FILE *f = fopen(path.c_str(), "w");
+    {
+      FastOutput out(f);
+      for (int i = 0; i < k; i++) out << i << ' ';
+    }
+    fclose(f);
+  });
   remove(path.c_str());
   return 0;
 }
 \end{lstlisting}
 \begin{exampleoutput}
 Reading 1000000 integers:
-cin                     1.039 s
-scanf                   0.051 s
-read_int (unlocked)     0.011 s
-FastInput               0.026 s
+cin                     0.959 s
+scanf                   0.061 s
+read_int (unlocked)     0.010 s
+FastInput               0.021 s
+
+Writing 1000000 integers:
+ofstream                0.037 s
+fprintf                 0.071 s
+FastOutput              0.009 s
 \end{exampleoutput}
 
 \section{\texorpdfstring{Debugging}{8.3 Debugging}}
@@ -1502,8 +1530,6 @@ Each call to \inlinecode{f(i)} must be safe to run concurrently with the others.
 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
-#include <cassert>
-#include <numeric>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -1540,6 +1566,8 @@ std::vector<std::string> parallel_cases(const std::vector<Case> &cases, int thre
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
+#include <cassert>
+#include <numeric>
 using namespace std;
 
 int main() {
@@ -1559,80 +1587,81 @@ int main() {
 \section{\texorpdfstring{Bump Allocation}{8.8 Bump Allocation}}
 \setcounter{section}{8}
 \label{sec:8.8}
-A bump allocator serves allocations consecutively from one fixed buffer and never reclaims individual objects. This is useful in local contest code that creates many small objects whose lifetimes all extend to the end of the program. Replacing global \inlinecode{operator new} preserves ordinary allocation call sites while avoiding the time and per-allocation metadata of a general-purpose allocator.
+A typed bump pool replaces many small heap allocations with consecutive slots in one fixed vector. This simple form is useful for pointer-based trees, tries, and linked structures whose nodes all live until the algorithm finishes. Allocation advances one index, and individual nodes are never freed.
 
 \begin{compactitem}
-  \item \inlinecode{bump\_alloc(size, align)} allocates \inlinecode{size} bytes with the requested alignment.
-  \item \inlinecode{operator new(size)} allocates an aligned block of \inlinecode{size} bytes from the static buffer.
-  \item \inlinecode{operator delete(ptr)} is a no-op; memory is reclaimed only when the program exits.
-  \item \inlinecode{BumpAllocator\textless{}T\textgreater{}} provides the same monotonic allocation strategy to STL containers.
+  \item \inlinecode{make\_node(value, next = nullptr)} returns a pointer to a new node initialized with \inlinecode{value} and \inlinecode{next}.
+  \item \inlinecode{BumpArena\textless{}N\textgreater{}} owns an inline $N$-byte monotonic buffer. Pass \inlinecode{arena.resource()} to a \inlinecode{std::pmr} container such as \inlinecode{std::pmr::vector\textless{}T\textgreater{}} or \inlinecode{std::pmr::map\textless{}K, V\textgreater{}}.
 \end{compactitem}
 
-When only one object type is allocated, a typed pool such as \inlinecode{Node nodes[MAX\_NODES]} with an index into the next unused node is simpler and less invasive. The global override is useful when existing code allocates multiple types, while \inlinecode{BumpAllocator\textless{}T\textgreater{}} can be attached to selected containers. The two interfaces below share one buffer; a solution may keep only the interface it uses. This contest-oriented snippet does not replace other allocation forms such as \inlinecode{new[]}, nothrow \inlinecode{new}, or over-aligned allocation.
+The vector is created at its final size and never resized, so returned pointers remain valid. Adjust \inlinecode{MAX\_NODES} and the fields of \inlinecode{Node} for the problem at hand.
 
-\textbf{Time Complexity}: $O(1)$ per allocation.
+For standard containers, the C++17 polymorphic allocator interface avoids both a global \inlinecode{operator new} override and the full allocator protocol. An arena must outlive every container using it; declare a large arena statically if it would exceed the stack limit. The wrapper uses \inlinecode{std::pmr::null\_memory\_resource()} as its upstream resource, so exhausting the buffer throws \inlinecode{std::bad\_alloc} instead of silently allocating from the heap.
 
-\textbf{Space Complexity}: $O({\inlinecodemath{BUFFER\_SIZE}})$ static memory.
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O({\inlinecodemath{MAX\_NODES}})$ for construction of the pool.
+  \item $O(1)$ per call to \inlinecode{make\_node()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O({\inlinecodemath{MAX\_NODES}})$ for storage of the pool.
+  \item $O(N)$ for storage of each \inlinecode{BumpArena\textless{}N\textgreater{}}.
+\end{compactitem}
 
 \begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstddef>
+#include <memory_resource>
 #include <vector>
-
-static constexpr std::size_t BUFFER_SIZE = 64 << 20;  // 64 MiB; adjust to the memory limit.
-alignas(std::max_align_t) static unsigned char buffer[BUFFER_SIZE];
-static std::size_t buffer_pos = BUFFER_SIZE;
-
-void *bump_alloc(std::size_t size, std::size_t align) {
-  if (size == 0) {
-    size = 1;
-  }
-  assert(size <= buffer_pos);
-  buffer_pos = (buffer_pos - size) & ~(align - 1);
-  return buffer + buffer_pos;
-}
-
-void *operator new(std::size_t size) { return bump_alloc(size, alignof(std::max_align_t)); }
-void operator delete(void *) noexcept {}
-void operator delete(void *, std::size_t) noexcept {}
-
-template<typename T>
-struct BumpAllocator {
-  using value_type = T;
-
-  BumpAllocator() = default;
-
-  template<typename U>
-  BumpAllocator(const BumpAllocator<U> &) {}
-
-  T *allocate(std::size_t n) {
-    static_assert(alignof(T) <= alignof(std::max_align_t), "over-aligned types are not supported");
-    assert(n <= BUFFER_SIZE / sizeof(T));
-    return reinterpret_cast<T *>(bump_alloc(n * sizeof(T), alignof(T)));
-  }
-
-  void deallocate(T *, std::size_t) {}
-  template<typename U> bool operator==(const BumpAllocator<U> &) const { return true; }
-  template<typename U> bool operator!=(const BumpAllocator<U> &) const { return false; }
-};
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[style=cpp]
-using namespace std;
 
 struct Node {
   int value;
   Node *next;
 };
 
+static constexpr int MAX_NODES = 100000;
+static std::vector<Node> node_pool(MAX_NODES);
+static int node_count = 0;
+
+Node *make_node(int value, Node *next = nullptr) {
+  assert(node_count < MAX_NODES);
+  node_pool[node_count] = {value, next};
+  return &node_pool[node_count++];
+}
+
+template<std::size_t N>
+class BumpArena {
+  alignas(std::max_align_t) std::byte buffer[N];
+  std::pmr::monotonic_buffer_resource arena{buffer, N, std::pmr::null_memory_resource()};
+
+ public:
+  std::pmr::memory_resource *resource() { return &arena; }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[style=cpp]
+#include <map>
+using namespace std;
+
 int main() {
-  Node *tail = new Node{2, nullptr};
-  Node *head = new Node{1, tail};
+  Node *tail = make_node(2);
+  Node *head = make_node(1, tail);
   assert(head->value == 1 && head->next->value == 2);
 
-  vector<int, BumpAllocator<int>> values{1, 2, 3, 4};
-  assert((values == vector<int, BumpAllocator<int>>{1, 2, 3, 4}));
+  BumpArena<1024> arena;
+  pmr::vector<int> values(arena.resource());
+  values.reserve(4);
+  values.insert(values.end(), {1, 2, 3, 4});
+  assert(values.size() == 4 && values.back() == 4);
+
+  pmr::map<int, int> counts(arena.resource());
+  counts.emplace(7, 2);
+  assert(counts[7] == 2);
   return 0;
 }
 \end{lstlisting}

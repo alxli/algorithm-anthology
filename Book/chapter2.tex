@@ -84,13 +84,13 @@ ListNode *merge_sorted_lists(ListNode *a, ListNode *b) {
 }
 
 void splice_after(ListNode *pos, ListNode *before) {
-  ListNode *node = before->next;
-  if (node == nullptr || pos == before || pos == node) {
+  ListNode *n = before->next;
+  if (n == nullptr || pos == before || pos == n) {
     return;
   }
-  before->next = node->next;
-  node->next = pos->next;
-  pos->next = node;
+  before->next = n->next;
+  n->next = pos->next;
+  pos->next = n;
 }
 
 void splice_range_after(ListNode *pos, ListNode *before_first, ListNode *last) {
@@ -417,7 +417,7 @@ The tracked minimum needs no search either. An insertion always creates a key of
   \item \inlinecode{put(key, value)} inserts or updates \inlinecode{key}, counts an access, and evicts the least frequently used key if the insertion would exceed capacity.
 \end{compactitem}
 
-Frequencies grow without bound, so a long-lived cache can be held hostage by keys popular only once; real implementations periodically halve every count, ageing the statistics without reordering them.
+Frequencies grow continually, so a long-lived cache can be held hostage by keys popular only once; real implementations periodically halve every count, ageing the statistics without reordering them. This implementation uses \inlinecode{int64\_t} counts and asserts before their theoretical overflow.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -430,6 +430,7 @@ Frequencies grow without bound, so a long-lived cache can be held hostage by key
 
 \begin{lstlisting}[style=cpp]
 #include <cassert>
+#include <cstdint>
 #include <list>
 #include <unordered_map>
 
@@ -437,17 +438,19 @@ template<typename K, typename V>
 class LFUCache {
   struct Entry {
     V value;
-    int freq;
+    int64_t freq;
     typename std::list<K>::iterator pos;
   };
 
-  int cap, min_freq;
+  int cap;
+  int64_t min_freq;
   std::unordered_map<K, Entry> entries;
-  std::unordered_map<int, std::list<K>> buckets;  // Keys of each frequency, newest at the front.
+  std::unordered_map<int64_t, std::list<K>> buckets;  // Each frequency, newest at the front.
 
   // Moves an existing key from its bucket to the next one up, counting one access.
   void touch(const K &key) {
     Entry &entry = entries[key];
+    assert(entry.freq < INT64_MAX);
     std::list<K> &bucket = buckets[entry.freq];
     bucket.erase(entry.pos);
     if (bucket.empty()) {
@@ -464,9 +467,11 @@ class LFUCache {
  public:
   explicit LFUCache(int capacity) : cap(capacity), min_freq(0) { assert(cap > 0); }
 
+  LFUCache(const LFUCache &) = delete;
+  LFUCache &operator=(const LFUCache &) = delete;
   int size() const { return static_cast<int>(entries.size()); }
 
-  int freq(const K &key) const {
+  int64_t freq(const K &key) const {
     auto it = entries.find(key);
     return it == entries.end() ? 0 : it->second.freq;
   }
@@ -542,31 +547,9 @@ int main() {
 \setcounter{subsection}{0}
 \subsection{Binary Tree Traversal}
 \label{sec:2.2.1}
-The three depth-first orders of a binary tree differ only in when a node is reported relative to its subtrees: preorder before both, inorder between them, postorder after both. Recursion expresses this directly but costs stack space proportional to the height, which overflows on a degenerate tree of a hundred thousand nodes, so the versions below replace the call stack with an explicit one. Postorder is the one that resists a direct translation, since a node must be reported only after returning from its right child; visiting root, right, then left is a mirrored preorder, and reversing that sequence yields postorder.
+A binary tree is held here as \inlinecode{TreeNode} objects, each storing a value along with pointers to a left and a right child that are null when absent. Every walk below is iterative: recursion expresses these orders directly but costs stack space proportional to the height, which overflows on a degenerate tree of a hundred thousand nodes.
 
-\begin{compactitem}
-  \item \inlinecode{preorder(root)}, \inlinecode{inorder(root)}, and \inlinecode{postorder(root)} return the values of the tree in each depth-first order, using an explicit stack.
-  \item \inlinecode{level\_order(root)} returns the values one depth at a time, left to right, using a queue.
-\end{compactitem}
-
-Morris traversal removes the stack entirely by threading. Before descending into a left subtree, it finds that subtree's rightmost node, which is the inorder predecessor of the current node, and points that node's empty right pointer back at the current node. On reaching the end of the subtree the walk follows the thread back up, and seeing it a second time signals that the left subtree is finished, so the node is reported and the borrowed pointer restored. Each edge is traversed at most three times, keeping the walk linear. Flattening uses the same predecessor search but keeps the rewiring: splicing the right subtree onto that node and moving the left subtree across leaves a right-leaning chain in preorder.
-
-\begin{compactitem}
-  \item \inlinecode{morris\_inorder(root)} returns the values in inorder using $O(1)$ auxiliary space, temporarily rewriting the tree's null pointers and restoring them before returning.
-  \item \inlinecode{flatten(root)} rewrites the tree in place into a right-leaning chain whose order is the tree's preorder, leaving every left pointer null and destroying the original shape.
-\end{compactitem}
-
-Since \inlinecode{morris\_inorder()} mutates the tree as it runs, it is unsafe on a tree shared between threads and leaves threads behind if an exception escapes. Computing over a tree rather than listing it is dynamic programming on a tree; see sections \secref{4.1.4} through \secref{4.1.7} for general rooted trees.
-
-\textbf{Time Complexity}: $O(n)$ per call to every traversal and to \inlinecode{flatten()}, where $n$ is the number of nodes.
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n)$ for each returned vector.
-  \item $O(h)$ auxiliary for the stack-based and queue-based traversals, where $h$ is the height of the tree, which is $O(n)$ in the worst case.
-  \item $O(1)$ auxiliary for \inlinecode{morris\_inorder()} and \inlinecode{flatten()}.
-\end{compactitem}
+Computing over a tree rather than listing it is dynamic programming on a tree; see sections \secref{4.1.4} through \secref{4.1.7} for general rooted trees.
 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
@@ -580,7 +563,24 @@ struct TreeNode {
 
   explicit TreeNode(const T &value) : value(value), left(nullptr), right(nullptr) {}
 };
+\end{lstlisting}
+The three depth-first orders differ only in when a node is reported relative to its subtrees: preorder before both, inorder between them, postorder after both. Replacing the call stack with an explicit one is direct for the first two. Postorder is the one that resists a direct translation, since a node must be reported only after returning from its right child; visiting root, right, then left is a mirrored preorder, and reversing that sequence yields postorder.
 
+\begin{compactitem}
+  \item \inlinecode{preorder(root)}, \inlinecode{inorder(root)}, and \inlinecode{postorder(root)} return the values of the tree in each depth-first order, using an explicit stack.
+  \item \inlinecode{level\_order(root)} returns the values one depth at a time, left to right, using a queue.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n)$ per call, where $n$ is the number of nodes.
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for each returned vector.
+  \item $O(h)$ auxiliary for the stack or the queue, where $h$ is the height of the tree, which is $O(n)$ in the worst case.
+\end{compactitem}
+
+\begin{lstlisting}[style=cpp]
 template<typename T>
 std::vector<T> preorder(TreeNode<T> *root) {
   std::vector<T> res;
@@ -589,14 +589,14 @@ std::vector<T> preorder(TreeNode<T> *root) {
     st.push_back(root);
   }
   while (!st.empty()) {
-    TreeNode<T> *node = st.back();
+    TreeNode<T> *n = st.back();
     st.pop_back();
-    res.push_back(node->value);
-    if (node->right != nullptr) {  // Pushed first so that the left child is popped first.
-      st.push_back(node->right);
+    res.push_back(n->value);
+    if (n->right != nullptr) {  // Pushed first so that the left child is popped first.
+      st.push_back(n->right);
     }
-    if (node->left != nullptr) {
-      st.push_back(node->left);
+    if (n->left != nullptr) {
+      st.push_back(n->left);
     }
   }
   return res;
@@ -606,14 +606,14 @@ template<typename T>
 std::vector<T> inorder(TreeNode<T> *root) {
   std::vector<T> res;
   std::vector<TreeNode<T> *> st;
-  for (TreeNode<T> *node = root; node != nullptr || !st.empty();) {
-    for (; node != nullptr; node = node->left) {
-      st.push_back(node);
+  for (TreeNode<T> *n = root; n != nullptr || !st.empty();) {
+    for (; n != nullptr; n = n->left) {
+      st.push_back(n);
     }
-    node = st.back();
+    n = st.back();
     st.pop_back();
-    res.push_back(node->value);
-    node = node->right;
+    res.push_back(n->value);
+    n = n->right;
   }
   return res;
 }
@@ -626,14 +626,14 @@ std::vector<T> postorder(TreeNode<T> *root) {
     st.push_back(root);
   }
   while (!st.empty()) {  // Root, right, left, which is postorder reversed.
-    TreeNode<T> *node = st.back();
+    TreeNode<T> *n = st.back();
     st.pop_back();
-    res.push_back(node->value);
-    if (node->left != nullptr) {
-      st.push_back(node->left);
+    res.push_back(n->value);
+    if (n->left != nullptr) {
+      st.push_back(n->left);
     }
-    if (node->right != nullptr) {
-      st.push_back(node->right);
+    if (n->right != nullptr) {
+      st.push_back(n->right);
     }
   }
   std::reverse(res.begin(), res.end());
@@ -648,39 +648,58 @@ std::vector<T> level_order(TreeNode<T> *root) {
     q.push(root);
   }
   while (!q.empty()) {
-    TreeNode<T> *node = q.front();
+    TreeNode<T> *n = q.front();
     q.pop();
-    res.push_back(node->value);
-    if (node->left != nullptr) {
-      q.push(node->left);
+    res.push_back(n->value);
+    if (n->left != nullptr) {
+      q.push(n->left);
     }
-    if (node->right != nullptr) {
-      q.push(node->right);
+    if (n->right != nullptr) {
+      q.push(n->right);
     }
   }
   return res;
 }
+\end{lstlisting}
+Morris traversal removes the stack entirely by threading. Before descending into a left subtree, it finds that subtree's rightmost node, which is the inorder predecessor of the current node, and points that node's empty right pointer back at the current node. On reaching the end of the subtree the walk follows the thread back up, and seeing it a second time signals that the left subtree is finished, so the node is reported and the borrowed pointer restored. Each edge is traversed at most three times, keeping the walk linear. Flattening uses the same predecessor search but keeps the rewiring: splicing the right subtree onto that node and moving the left subtree across leaves a right-leaning chain in preorder.
 
+\begin{compactitem}
+  \item \inlinecode{morris\_inorder(root)} returns the values in inorder using $O(1)$ auxiliary space, temporarily rewriting the tree's null pointers and restoring them before returning.
+  \item \inlinecode{flatten(root)} rewrites the tree in place into a right-leaning chain whose order is the tree's preorder, leaving every left pointer null and destroying the original shape.
+\end{compactitem}
+
+Since \inlinecode{morris\_inorder()} mutates the tree as it runs, it is unsafe on a tree shared between threads and leaves threads behind if an exception escapes.
+
+\textbf{Time Complexity}: $O(n)$ per call, where $n$ is the number of nodes.
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for the vector returned by \inlinecode{morris\_inorder()}.
+  \item $O(1)$ auxiliary for both.
+\end{compactitem}
+
+\begin{lstlisting}[style=cpp]
 template<typename T>
 std::vector<T> morris_inorder(TreeNode<T> *root) {
   std::vector<T> res;
-  for (TreeNode<T> *node = root; node != nullptr;) {
-    if (node->left == nullptr) {
-      res.push_back(node->value);
-      node = node->right;
+  for (TreeNode<T> *n = root; n != nullptr;) {
+    if (n->left == nullptr) {
+      res.push_back(n->value);
+      n = n->right;
       continue;
     }
-    TreeNode<T> *pred = node->left;
-    while (pred->right != nullptr && pred->right != node) {
+    TreeNode<T> *pred = n->left;
+    while (pred->right != nullptr && pred->right != n) {
       pred = pred->right;
     }
     if (pred->right == nullptr) {  // First visit: thread the predecessor back to this node.
-      pred->right = node;
-      node = node->left;
+      pred->right = n;
+      n = n->left;
     } else {  // Second visit: the left subtree is done, so restore and report.
       pred->right = nullptr;
-      res.push_back(node->value);
-      node = node->right;
+      res.push_back(n->value);
+      n = n->right;
     }
   }
   return res;
@@ -688,15 +707,15 @@ std::vector<T> morris_inorder(TreeNode<T> *root) {
 
 template<typename T>
 void flatten(TreeNode<T> *root) {
-  for (TreeNode<T> *node = root; node != nullptr; node = node->right) {
-    if (node->left != nullptr) {
-      TreeNode<T> *pred = node->left;
+  for (TreeNode<T> *n = root; n != nullptr; n = n->right) {
+    if (n->left != nullptr) {
+      TreeNode<T> *pred = n->left;
       while (pred->right != nullptr) {
         pred = pred->right;
       }
-      pred->right = node->right;  // Splice the right subtree below the left subtree's last node.
-      node->right = node->left;
-      node->left = nullptr;
+      pred->right = n->right;  // Splice the right subtree below the left subtree's last node.
+      n->right = n->left;
+      n->left = nullptr;
     }
   }
 }
@@ -742,51 +761,22 @@ int main() {
   vector<int> before = preorder(&n4);
   flatten(&n4);
   assert(n4.left == nullptr && preorder(&n4) == before);
-  for (TreeNode<int> *node = &n4; node != nullptr; node = node->right) {
-    assert(node->left == nullptr);
+  for (TreeNode<int> *n = &n4; n != nullptr; n = n->right) {
+    assert(n->left == nullptr);
   }
   return 0;
 }
 \end{lstlisting}
 \subsection{Binary Tree Encodings}
 \label{sec:2.2.2}
-An encoding of a binary tree is a sequence the tree can be rebuilt from, and a single traversal is not one, since many shapes share the same preorder. A pair of traversals usually is: an inorder together with either a preorder or a postorder pins the shape down, because the inorder splits the values into a left group and a right group once the root is known, and the other traversal is what identifies that root. Preorder puts the root first, postorder puts it last, and each recursion then knows exactly how many values belong to each side.
+An encoding of a binary tree is a sequence the tree can be rebuilt from, and a single traversal is not one, since many shapes share the same preorder. Two encodings below rebuild a tree: a pair of traversals, and a single preorder that records the null children.
 
-Written naively, locating the root inside the inorder range costs a linear scan and the construction degenerates to $O(n^{2})$ on a skewed tree. Hashing each value to its inorder position first makes every lookup $O(1)$ expected, so the whole build is linear expected time. This is why the values must be distinct: with duplicates, the position of a root in the inorder sequence is ambiguous and no traversal pair determines a unique tree.
-
-\begin{compactitem}
-  \item \inlinecode{build\_from\_preorder\_inorder(pre, in)} returns the root of the tree with the given preorder and inorder traversals, or \inlinecode{nullptr} when they are empty. Both sequences must be the same length and contain the same distinct values.
-  \item \inlinecode{build\_from\_postorder\_inorder(post, in)} does the same from a postorder and an inorder traversal.
-\end{compactitem}
-
-The construction routines allocate each node with \inlinecode{new} and return raw pointers. Thus the caller owns the resulting tree and should eventually delete its nodes in long-running programs. Contest programs commonly omit this cleanup when the tree is needed until program termination, since the operating system reclaims the process's memory on exit.
-
-A third encoding needs only one traversal, because recording the null children removes the ambiguity that made a pair necessary. A preorder in which every absent child becomes a sentinel token reconstructs the tree by reading the tokens back in order, and unlike a traversal pair it tolerates duplicate values, the shape now being explicit rather than inferred.
-
-\begin{compactitem}
-  \item \inlinecode{serialize(root)} returns the tree as a whitespace-separated preorder string, writing \inlinecode{\#} for each null child. The value type must support stream output.
-  \item \inlinecode{deserialize(s)} rebuilds the tree that \inlinecode{serialize()} produced. The value type must support stream input. Its returned nodes are allocated with \inlinecode{new} and have the same ownership convention as the construction routines above.
-\end{compactitem}
-
-Serialization is what lets a subtree be used as a key: two subtrees are identical exactly when their serializations match, which turns finding duplicate subtrees, or memoizing over tree shapes, into hashing strings. Prefer hashing a canonical encoding this way over comparing trees pairwise. Note that this encoding is specific to binary trees; section \secref{4.1.8} encodes labeled general trees instead.
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(n)$ expected per call to both construction routines, where n is the number of nodes, from the hash lookups of inorder positions.
-  \item $O(n)$ per call to \inlinecode{serialize()} and \inlinecode{deserialize()}.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n)$ for the allocated tree nodes.
-  \item $O(n)$ auxiliary for the position map, and $O(h)$ auxiliary stack space, where h is the height of the tree.
-  \item $O(n)$ for the string returned by \inlinecode{serialize()}.
-\end{compactitem}
+Every routine here that rebuilds a tree allocates each node with \inlinecode{new} and returns raw pointers. Thus the caller owns the resulting tree and should eventually delete its nodes in long-running programs. Contest programs commonly omit this cleanup when the tree is needed until program termination, since the operating system reclaims the process's memory on exit.
 
 \begin{lstlisting}[style=cpp]
 #include <cassert>
+#include <cctype>
+#include <istream>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -799,7 +789,26 @@ struct TreeNode {
 
   explicit TreeNode(const T &value) : value(value), left(nullptr), right(nullptr) {}
 };
+\end{lstlisting}
+A pair of traversals usually is an encoding: an inorder together with either a preorder or a postorder pins the shape down, because the inorder splits the values into a left group and a right group once the root is known, and the other traversal is what identifies that root. Preorder puts the root first, postorder puts it last, and each recursion then knows exactly how many values belong to each side.
 
+Written naively, locating the root inside the inorder range costs a linear scan and the construction degenerates to $O(n^{2})$ on a skewed tree. Hashing each value to its inorder position first makes every lookup $O(1)$ expected, so the whole build is linear expected time. This is why the values must be distinct: with duplicates, the position of a root in the inorder sequence is ambiguous and no traversal pair determines a unique tree.
+
+\begin{compactitem}
+  \item \inlinecode{build\_from\_preorder\_inorder(pre, in)} returns the root of the tree with the given preorder and inorder traversals, or \inlinecode{nullptr} when they are empty. Both sequences must be the same length and contain the same distinct values.
+  \item \inlinecode{build\_from\_postorder\_inorder(post, in)} does the same from a postorder and an inorder traversal.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n)$ expected per call, where $n$ is the number of nodes, from the hash lookups of inorder positions.
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for the allocated tree nodes.
+  \item $O(n)$ auxiliary for the position map, and $O(h)$ auxiliary stack space, where $h$ is the height of the tree.
+\end{compactitem}
+
+\begin{lstlisting}[style=cpp]
 template<typename T>
 TreeNode<T> *build_from_preorder_inorder(const std::vector<T> &pre, const std::vector<T> &in) {
   assert(pre.size() == in.size());
@@ -809,17 +818,25 @@ TreeNode<T> *build_from_preorder_inorder(const std::vector<T> &pre, const std::v
     pos[in[i]] = i;
   }
   assert(static_cast<int>(pos.size()) == n);
+  auto remaining = pos;
+  for (const T &value : pre) {
+    auto erased = remaining.erase(value);
+    assert(erased == 1);
+    (void)erased;
+  }
+  assert(remaining.empty());
   int next = 0;
   auto rec = [&](auto &&rec, int lo, int hi) -> TreeNode<T> * {
     if (lo > hi) {
       return nullptr;
     }
     const T &value = pre[next++];
-    int mid = pos[value];
-    TreeNode<T> *node = new TreeNode<T>(value);
-    node->left = rec(rec, lo, mid - 1);
-    node->right = rec(rec, mid + 1, hi);
-    return node;
+    int mid = pos.at(value);
+    assert(lo <= mid && mid <= hi);
+    TreeNode<T> *n = new TreeNode<T>(value);
+    n->left = rec(rec, lo, mid - 1);
+    n->right = rec(rec, mid + 1, hi);
+    return n;
   };
   return rec(rec, 0, n - 1);
 }
@@ -833,51 +850,85 @@ TreeNode<T> *build_from_postorder_inorder(const std::vector<T> &post, const std:
     pos[in[i]] = i;
   }
   assert(static_cast<int>(pos.size()) == n);
+  auto remaining = pos;
+  for (const T &value : post) {
+    auto erased = remaining.erase(value);
+    assert(erased == 1);
+    (void)erased;
+  }
+  assert(remaining.empty());
   int next = n - 1;
   auto rec = [&](auto &&rec, int lo, int hi) -> TreeNode<T> * {
     if (lo > hi) {
       return nullptr;
     }
     const T &value = post[next--];
-    TreeNode<T> *node = new TreeNode<T>(value);
-    int mid = pos[value];
-    node->right = rec(rec, mid + 1, hi);  // Postorder ends with the root, so the right side first.
-    node->left = rec(rec, lo, mid - 1);
-    return node;
+    TreeNode<T> *n = new TreeNode<T>(value);
+    int mid = pos.at(value);
+    assert(lo <= mid && mid <= hi);
+    n->right = rec(rec, mid + 1, hi);  // Postorder ends with the root, so the right side first.
+    n->left = rec(rec, lo, mid - 1);
+    return n;
   };
   return rec(rec, 0, n - 1);
 }
+\end{lstlisting}
+A third encoding needs only one traversal, because recording the null children removes the ambiguity that made a pair necessary. A preorder in which every absent child becomes a sentinel token reconstructs the tree by reading the tokens back in order, and unlike a traversal pair it tolerates duplicate values, the shape now being explicit rather than inferred.
 
+Serialization is what lets a subtree be used as a key: two subtrees are identical exactly when their serializations match, which turns finding duplicate subtrees, or memoizing over tree shapes, into hashing strings. Prefer hashing a canonical encoding this way over comparing trees pairwise. Note that this encoding is specific to binary trees; section \secref{4.1.8} encodes labeled general trees instead.
+
+\begin{compactitem}
+  \item \inlinecode{serialize(root, delim = \textquotesingle{}\#\textquotesingle{})} returns the tree as a whitespace-separated preorder string, writing \inlinecode{delim} for each null child. The delimiter must not be whitespace, and streamed values must be non-empty and free of \inlinecode{delim} or whitespace.
+  \item \inlinecode{deserialize(s, delim = \textquotesingle{}\#\textquotesingle{})} rebuilds the tree that \inlinecode{serialize()} produced using \inlinecode{delim}. The value type must support stream input from the token written by its stream output operation.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n)$ per call to \inlinecode{serialize()} and \inlinecode{deserialize()}, where $n$ is the number of nodes.
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for the allocated tree nodes, and $O(h)$ auxiliary stack space, where $h$ is the height of the tree.
+  \item $O(n)$ for the string returned by \inlinecode{serialize()}.
+\end{compactitem}
+
+\begin{lstlisting}[style=cpp]
 template<typename T>
-std::string serialize(TreeNode<T> *root) {
+std::string serialize(TreeNode<T> *root, char delim = '#') {
+  assert(!std::isspace(static_cast<unsigned char>(delim)));
   std::ostringstream out;
-  auto rec = [&](auto &&rec, TreeNode<T> *node) {
-    if (node == nullptr) {
-      out << "# ";
+  auto rec = [&](auto &&rec, TreeNode<T> *n) {
+    if (n == nullptr) {
+      out << delim << " ";
       return;
     }
-    out << node->value << " ";
-    rec(rec, node->left);
-    rec(rec, node->right);
+    std::ostringstream token;
+    token << n->value;
+    std::string s = token.str();
+    assert(!s.empty() && s.find_first_of(std::string(" \t\n\r\f\v") + delim) == std::string::npos);
+    out << s << " ";
+    rec(rec, n->left);
+    rec(rec, n->right);
   };
   rec(rec, root);
   return out.str();
 }
 
 template<typename T>
-TreeNode<T> *deserialize(const std::string &s) {
+TreeNode<T> *deserialize(const std::string &s, char delim = '#') {
+  assert(!std::isspace(static_cast<unsigned char>(delim)));
   std::istringstream in(s);
   auto rec = [&](auto &&rec) -> TreeNode<T> * {
-    if (!(in >> std::ws) || in.peek() == '#') {
+    if (!(in >> std::ws) || in.peek() == delim) {
       in.get();  // Consume the sentinel, or nothing at all once the stream is spent.
       return nullptr;
     }
     T value;
     in >> value;
-    TreeNode<T> *node = new TreeNode<T>(value);
-    node->left = rec(rec);
-    node->right = rec(rec);
-    return node;
+    assert(in);
+    TreeNode<T> *n = new TreeNode<T>(value);
+    n->left = rec(rec);
+    n->right = rec(rec);
+    return n;
   };
   return rec(rec);
 }
@@ -891,11 +942,11 @@ using namespace std;
 template<typename T>
 vector<T> inorder(TreeNode<T> *root) {
   vector<T> res;
-  auto rec = [&](auto &&rec, TreeNode<T> *node) -> void {
-    if (node != nullptr) {
-      rec(rec, node->left);
-      res.push_back(node->value);
-      rec(rec, node->right);
+  auto rec = [&](auto &&rec, TreeNode<T> *n) -> void {
+    if (n != nullptr) {
+      rec(rec, n->left);
+      res.push_back(n->value);
+      rec(rec, n->right);
     }
   };
   rec(rec, root);
@@ -932,6 +983,7 @@ int main() {
 
   // The serialized form round-trips, and matching strings mean identical subtrees.
   assert(inorder(deserialize<int>(serialize(root))) == in);
+  assert(inorder(deserialize<int>(serialize(root, '|'), '|')) == in);
   assert(serialize(root->left) != serialize(root->right));
 
   assert(build_from_preorder_inorder(vector<int>{}, vector<int>{}) == nullptr);
@@ -944,60 +996,13 @@ int main() {
 \label{sec:2.2.3}
 Nearly every question about a binary tree is answered by one recursion over it, and the questions differ only in what that recursion carries. Three shapes cover almost all of them. The first passes information upward, each node combining what its children return, as \inlinecode{height()} and \inlinecode{size()} do. The second passes information downward, each node extending what its parent handed it, as a running path sum does. The third does both at once and is the shape most often gotten wrong, because the value a node returns is not the answer recorded there: in \inlinecode{diameter()} a node returns the longest downward path through it but records the sum of its two longest, which is a path no parent can extend.
 
-\begin{compactitem}
-  \item \inlinecode{height(root)} returns the number of nodes on the longest root-to-leaf path, so an empty tree has height $0$ and a leaf has height $1$.
-  \item \inlinecode{size(root)} returns the number of nodes.
-  \item \inlinecode{is\_balanced(root)} returns whether every node's two subtrees differ in height by at most $1$.
-\end{compactitem}
-
-Balance is a condition on every node, not only the root. Checking it by calling \inlinecode{height()} at each node costs $O(n^{2})$ on a skewed tree, so the recursion below returns a height instead and reserves $-1$ for ``already unbalanced'', answering in one pass.
-
-Validating a search tree is where carrying information downward is not optional: comparing a node only against its own children accepts trees that are not search trees at all, since a value deep in a left subtree can exceed the root while every local comparison passes. The recursion carries the open interval a subtree may occupy, using a null pointer for an absent bound so that no sentinel value of \inlinecode{T} is needed. Walking the tree in order and checking that values increase, using the traversal of section \secref{2.2.1}, is the alternative.
-
-\begin{compactitem}
-  \item \inlinecode{has\_path\_sum(root, target)} returns whether some root-to-leaf path has values summing to \inlinecode{target}. An empty tree has no such path, whatever the target.
-  \item \inlinecode{root\_to\_leaf\_paths(root)} returns every root-to-leaf path, each as the values along it.
-  \item \inlinecode{depth(root, target)} returns the number of edges from \inlinecode{root} down to the node \inlinecode{target}, or $-1$ if that node is not in the tree.
-  \item \inlinecode{is\_bst(root)} returns whether the tree satisfies the binary search tree property, using strict ordering so that equal values are rejected.
-\end{compactitem}
-
-Counting downward paths by trying every start node is $O(n^{2})$. Instead, keep the running sum from the root and note that a path ending here with sum \inlinecode{target} belongs to an ancestor whose own running sum was smaller by exactly \inlinecode{target}: the prefix-sum trick of section \secref{1.2.1}, lifted from an array to a root-to-node path. A map counts the ancestors' running sums, each node undoing its own entry on the way back out so that only genuine ancestors match. It is ordered here for genericity, costing a logarithmic factor that an \inlinecode{unordered\_map} removes for hashable \inlinecode{T}. Storing another key instead counts paths whose sum is divisible by \inlinecode{k}, or whose values exclusive-or to a target.
-
-\begin{compactitem}
-  \item \inlinecode{diameter(root)} returns the number of edges on the longest path between any two nodes, which is $0$ for a single node and for an empty tree.
-  \item \inlinecode{max\_path\_sum(root)} returns the largest sum along any downward-then-upward path between two nodes, for a nonempty tree whose values may be negative. A child subtree contributes only when its best downward sum is positive, so an all-negative tree returns its largest single value.
-  \item \inlinecode{count\_paths\_with\_sum(root, target)} returns the number of downward paths, not necessarily starting at the root, whose values sum to \inlinecode{target}.
-\end{compactitem}
-
-Comparing against the two targets while unwinding is all \inlinecode{lca()} needs, with no parent pointers and no preprocessing: a node whose subtrees each report a find is the meeting point, and a node reporting one find passes it upward. That is $O(n)$ per query rather than the $O(1)$ after preprocessing of sections \secref{2.8.4} and \secref{2.8.5}, so prefer it for a handful of queries. A tree is symmetric exactly when \inlinecode{same\_tree()} holds between one half and the mirror of the other, so no separate routine is needed.
-
-\begin{compactitem}
-  \item \inlinecode{invert(root)} mirrors the tree in place by swapping every node's children.
-  \item \inlinecode{same\_tree(a, b)} returns whether two trees have the same shape and the same values.
-  \item \inlinecode{lca(root, a, b)} returns the lowest node having both \inlinecode{a} and \inlinecode{b} in its subtree, counting a node as its own ancestor. Both nodes must belong to the tree; if only one does, that one is returned.
-  \item \inlinecode{distance(root, a, b)} returns the number of edges on the path between the two nodes, which is the depth of each below their lowest common ancestor.
-\end{compactitem}
-
 For a tree held as an adjacency list, or one of arbitrary degree, these computations become the tree dynamic programming of sections \secref{4.1.4} through \secref{4.1.7}.
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(n)$ per call to every operation except \inlinecode{count\_paths\_with\_sum()}, where $n$ is the number of nodes.
-  \item $O(n \log n)$ per call to \inlinecode{count\_paths\_with\_sum()} from the ordered map, or $O(n)$ expected with an unordered one.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(h)$ auxiliary stack space, where $h$ is the height of the tree, which is $O(n)$ in the worst case.
-  \item $O(h)$ auxiliary for the running sums of \inlinecode{count\_paths\_with\_sum()}, one per ancestor.
-  \item $O(n \cdot h)$ for the paths returned by \inlinecode{root\_to\_leaf\_paths()}.
-\end{compactitem}
 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
+#include <cstdlib>
 #include <map>
 #include <utility>
 #include <vector>
@@ -1009,7 +1014,20 @@ struct TreeNode {
 
   explicit TreeNode(const T &value) : value(value), left(nullptr), right(nullptr) {}
 };
+\end{lstlisting}
+Balance is a condition on every node, not only the root. Checking it by calling \inlinecode{height()} at each node costs $O(n^{2})$ on a skewed tree, so the recursion below returns a height instead and reserves $-1$ for ``already unbalanced'', answering in one pass.
 
+\begin{compactitem}
+  \item \inlinecode{height(root)} returns the number of nodes on the longest root-to-leaf path, so an empty tree has height $0$ and a leaf has height $1$.
+  \item \inlinecode{size(root)} returns the number of nodes.
+  \item \inlinecode{is\_balanced(root)} returns whether every node's two subtrees differ in height by at most $1$.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n)$ per call, where $n$ is the number of nodes.
+
+\textbf{Space Complexity}: $O(h)$ auxiliary stack space, where $h$ is the height of the tree, which is $O(n)$ in the worst case.
+
+\begin{lstlisting}[style=cpp]
 template<typename T>
 int height(TreeNode<T> *root) {
   return root == nullptr ? 0 : 1 + std::max(height(root->left), height(root->right));
@@ -1035,7 +1053,26 @@ bool is_balanced(TreeNode<T> *root) {
   };
   return rec(rec, root) >= 0;
 }
+\end{lstlisting}
+Validating a search tree is where carrying information downward is not optional: comparing a node only against its own children accepts trees that are not search trees at all, since a value deep in a left subtree can exceed the root while every local comparison passes. The recursion carries the open interval a subtree may occupy, using a null pointer for an absent bound so that no sentinel value of \inlinecode{T} is needed. Walking the tree in order and checking that values increase, using the traversal of section \secref{2.2.1}, is the alternative.
 
+\begin{compactitem}
+  \item \inlinecode{has\_path\_sum(root, target)} returns whether some root-to-leaf path has values summing to \inlinecode{target}. An empty tree has no such path, whatever the target.
+  \item \inlinecode{root\_to\_leaf\_paths(root)} returns every root-to-leaf path, each as the values along it.
+  \item \inlinecode{depth(root, target)} returns the number of edges from \inlinecode{root} down to the node \inlinecode{target}, or $-1$ if that node is not in the tree.
+  \item \inlinecode{is\_bst(root)} returns whether the tree satisfies the binary search tree property, using strict ordering so that equal values are rejected.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n)$ per call, where $n$ is the number of nodes.
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(h)$ auxiliary stack space, where $h$ is the height of the tree, which is $O(n)$ in the worst case.
+  \item $O(n \cdot h)$ for the paths returned by \inlinecode{root\_to\_leaf\_paths()}.
+\end{compactitem}
+
+\begin{lstlisting}[style=cpp]
 template<typename T>
 bool has_path_sum(TreeNode<T> *root, const T &target) {
   if (root == nullptr) {
@@ -1096,7 +1133,30 @@ bool is_bst(TreeNode<T> *root) {
   };
   return rec(rec, root, nullptr, nullptr);
 }
+\end{lstlisting}
+Counting downward paths by trying every start node is $O(n^{2})$. Instead, keep the running sum from the root and note that a path ending here with sum \inlinecode{target} belongs to an ancestor whose own running sum was smaller by exactly \inlinecode{target}: the prefix-sum trick of section \secref{1.2.1}, lifted from an array to a root-to-node path. A map counts the ancestors' running sums, each node undoing its own entry on the way back out so that only genuine ancestors match. It is ordered here for genericity, costing a logarithmic factor that an \inlinecode{unordered\_map} removes for hashable \inlinecode{T}. Storing another key instead counts paths whose sum is divisible by \inlinecode{k}, or whose values exclusive-or to a target.
 
+\begin{compactitem}
+  \item \inlinecode{diameter(root)} returns the number of edges on the longest path between any two nodes, which is $0$ for a single node and for an empty tree.
+  \item \inlinecode{max\_path\_sum(root)} returns the largest sum along any downward-then-upward path between two nodes, for a nonempty tree whose values may be negative. A child subtree contributes only when its best downward sum is positive, so an all-negative tree returns its largest single value.
+  \item \inlinecode{count\_paths\_with\_sum(root, target)} returns the number of downward paths, not necessarily starting at the root, whose values sum to \inlinecode{target}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to \inlinecode{diameter()} and \inlinecode{max\_path\_sum()}, where $n$ is the number of nodes.
+  \item $O(n \log n)$ per call to \inlinecode{count\_paths\_with\_sum()} from the ordered map, or $O(n)$ expected with an unordered one.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(h)$ auxiliary stack space, where $h$ is the height of the tree, which is $O(n)$ in the worst case.
+  \item $O(h)$ auxiliary for the running sums of \inlinecode{count\_paths\_with\_sum()}, one per ancestor.
+\end{compactitem}
+
+\begin{lstlisting}[style=cpp]
 template<typename T>
 int diameter(TreeNode<T> *root) {
   int best = 0;
@@ -1152,7 +1212,21 @@ int64_t count_paths_with_sum(TreeNode<T> *root, const T &target) {
   rec(rec, root, T{});
   return res;
 }
+\end{lstlisting}
+Comparing against the two targets while unwinding is all \inlinecode{lca()} needs, with no parent pointers and no preprocessing: a node whose subtrees each report a find is the meeting point, and a node reporting one find passes it upward. That is $O(n)$ per query rather than the $O(1)$ after preprocessing of sections \secref{2.8.4} and \secref{2.8.5}, so prefer it for a handful of queries. A tree is symmetric exactly when \inlinecode{same\_tree()} holds between one half and the mirror of the other, so no separate routine is needed.
 
+\begin{compactitem}
+  \item \inlinecode{invert(root)} mirrors the tree in place by swapping every node's children.
+  \item \inlinecode{same\_tree(a, b)} returns whether two trees have the same shape and the same values.
+  \item \inlinecode{lca(root, a, b)} returns the lowest node having both \inlinecode{a} and \inlinecode{b} in its subtree, counting a node as its own ancestor. If only one target belongs to the tree, that target is returned; if neither does, \inlinecode{nullptr} is returned.
+  \item \inlinecode{distance(root, a, b)} returns the number of edges on the path between the two nodes, which is the depth of each below their lowest common ancestor. Both nodes must belong to the tree.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n)$ per call, where $n$ is the number of nodes.
+
+\textbf{Space Complexity}: $O(h)$ auxiliary stack space, where $h$ is the height of the tree, which is $O(n)$ in the worst case.
+
+\begin{lstlisting}[style=cpp]
 template<typename T>
 void invert(TreeNode<T> *root) {
   if (root != nullptr) {
@@ -1185,13 +1259,14 @@ TreeNode<T> *lca(TreeNode<T> *root, TreeNode<T> *a, TreeNode<T> *b) {
 template<typename T>
 int distance(TreeNode<T> *root, TreeNode<T> *a, TreeNode<T> *b) {
   TreeNode<T> *meet = lca(root, a, b);
-  return depth(meet, a) + depth(meet, b);
+  int da = depth(meet, a), db = depth(meet, b);
+  assert(da >= 0 && db >= 0);
+  return da + db;
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
-#include <cassert>
 using namespace std;
 
 int main() {
@@ -3636,7 +3711,6 @@ For an in-memory ordered dictionary the treap of section \secref{2.4.1} or the s
 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
-#include <cassert>
 #include <utility>
 #include <vector>
 
@@ -4179,7 +4253,6 @@ This is an educational implementation; in practice prefer one of the standard op
 \begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstddef>
-#include <cstdint>
 #include <functional>
 #include <list>
 #include <utility>
@@ -4295,6 +4368,7 @@ class ChainingHashMap {
 #include <algorithm>
 #include <cassert>
 #include <chrono>
+#include <cstdint>
 #include <string>
 using namespace std;
 
@@ -4435,7 +4509,6 @@ This is an educational implementation; in practice prefer one of the standard op
 \begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cstddef>
-#include <cstdint>
 #include <functional>
 #include <optional>
 #include <utility>
@@ -4617,6 +4690,7 @@ class ProbingHashMap {
 #include <algorithm>
 #include <cassert>
 #include <chrono>
+#include <cstdint>
 #include <string>
 using namespace std;
 
@@ -6036,7 +6110,6 @@ The break condition is what makes this efficient: a potential-function argument 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
-#include <cstdint>
 #include <limits>
 #include <vector>
 
@@ -6174,6 +6247,7 @@ class SegTreeBeats {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
+#include <cstdint>
 using namespace std;
 
 int main() {
@@ -6257,7 +6331,6 @@ For the boundary-search functions, \inlinecode{pred()} takes aggregate \inlineco
 #include <cassert>
 #include <cstdint>
 #include <optional>
-#include <vector>
 
 template<typename T, int N = 1000000001>
 class SparseSegTree {
@@ -6446,6 +6519,7 @@ class SparseSegTree {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
+#include <vector>
 using namespace std;
 
 int main() {
@@ -6795,7 +6869,6 @@ All position ranges use 0-based indices and closed intervals $[{\inlinecodemath{
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
-#include <climits>
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -6877,6 +6950,7 @@ class WaveletTree {
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
 #include <cassert>
+#include <climits>
 using namespace std;
 
 int main() {
@@ -6907,6 +6981,7 @@ With the default comparator, this gives a direct connection to range minimum que
 \begin{compactitem}
   \item \inlinecode{CartesianTree(a, comp = std::less\textless{}\textgreater{}())} constructs the tree for array \inlinecode{a}.
   \item \inlinecode{root} is the root index, or $-1$ if the array is empty. The arrays \inlinecode{parent}, \inlinecode{left}, and \inlinecode{right} store the neighboring node indices, using $-1$ when a neighbor is absent.
+  \item \inlinecode{size()} returns the number of nodes in the tree.
   \item \inlinecode{range\_min\_index(lo, hi)} returns the index of the first value in comparator order within $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
 \end{compactitem}
 
@@ -8334,7 +8409,6 @@ class FenwickRUPQ {
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
 #include <cassert>
-using namespace std;
 
 int main() {
   FenwickRUPQ<int> t(5);
@@ -9676,6 +9750,12 @@ class VirtualTree {
   std::vector<int> tin, tout, depth;
   int len;
 
+  bool is_ancestor(int parent, int child) const {
+    assert(0 <= parent && parent < static_cast<int>(tin.size()));
+    assert(0 <= child && child < static_cast<int>(tin.size()));
+    return tin[parent] <= tin[child] && tout[child] <= tout[parent];
+  }
+
  public:
   struct Tree {
     int root = -1;
@@ -9708,12 +9788,6 @@ class VirtualTree {
       tout[u] = timer++;
     };
     dfs(dfs, root, root, 0);
-  }
-
-  bool is_ancestor(int parent, int child) const {
-    assert(0 <= parent && parent < static_cast<int>(tin.size()));
-    assert(0 <= child && child < static_cast<int>(tin.size()));
-    return tin[parent] <= tin[child] && tout[child] <= tout[parent];
   }
 
   int lca(int u, int v) const {
@@ -10889,8 +10963,6 @@ class LinkCut {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
-using namespace std;
-
 int main() {
   // v=10      v=40      v=20      v=10
   //  0---------1---------2---------3
@@ -11504,8 +11576,6 @@ class TopTree {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
-using namespace std;
-
 int main() {
   TopTree<int> t(5);
   for (int i = 0; i < 5; i++) {

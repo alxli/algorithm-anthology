@@ -173,7 +173,6 @@ class BinaryTrie {
 /*** Example Usage ***/
 
 #include <cassert>
-using namespace std;
 
 int main() {
   BinaryTrie<> trie;

@@ -24,7 +24,6 @@ Space Complexity:
 
 */
 
-#include <algorithm>
 #include <climits>
 #include <vector>
 
@@ -91,6 +90,7 @@ class TarjanSCC {
 
 /*** Example Usage ***/
 
+#include <algorithm>
 #include <cassert>
 using namespace std;
 

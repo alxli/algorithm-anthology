@@ -23,7 +23,8 @@ minimum edge weight in a geometric graph, or the number of misplaced tiles in a 
 - `astar(start, dest, h)` returns the minimum distance from `start` to `dest`, or `INF` if `dest` is
   unreachable, for a global, pre-populated adjacency list `adj` whose indices represent the nodes.
   Each edge is stored as (`neighbor`, `weight`), where `weight` is nonnegative. The heuristic `h(v)`
-  must return an admissible estimate of the remaining distance from node `v` to `dest`.
+  must return an admissible numeric estimate of the remaining distance from node `v` to `dest`;
+  integral and floating-point estimates are both supported.
 - `get_path(dest)` returns the path from `start` to `dest`, or an empty vector if `dest` is
   unreachable, using the state left by the most recent call to `astar()`.
 
@@ -33,8 +34,8 @@ when every distance is needed.
 
 Time Complexity:
 - O(n + m log n) per call in the worst case, where $n$ is the number of nodes and $m$ is the number
-  of edges, plus one call to `h()` per queue insertion and removal. A more informed heuristic lowers
-  the constant by expanding fewer nodes, but does not improve the worst case.
+  of edges, plus one call to `h()` per queue insertion. A more informed heuristic lowers the
+  constant by expanding fewer nodes, but does not improve the worst case.
 - O(p) per call to `get_path()`, where $p$ is the number of nodes in the returned path.
 
 Space Complexity:
@@ -49,6 +50,8 @@ Space Complexity:
 #include <cstdint>
 #include <functional>
 #include <queue>
+#include <tuple>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -63,13 +66,15 @@ int64_t astar(int start, int dest, Fn h) {
   dist.assign(n, INF);
   pred.assign(n, -1);
   dist[start] = 0;
-  using qnode = std::pair<int64_t, int>;  // (estimated total distance, node)
+  using Cost = decltype(int64_t{} + h(0));
+  using qnode = std::tuple<Cost, int64_t, int>;  // (estimated total, distance when queued, node)
   std::priority_queue<qnode, std::vector<qnode>, std::greater<>> pq;
-  pq.emplace(h(start), start);
+  pq.emplace(Cost(h(start)), 0, start);
   while (!pq.empty()) {
-    auto [f, u] = pq.top();
+    int64_t queued_dist = std::get<1>(pq.top());
+    int u = std::get<2>(pq.top());
     pq.pop();
-    if (f != dist[u] + h(u)) {
+    if (queued_dist != dist[u]) {
       continue;  // Stale entry, left behind by a later improvement to dist[u].
     }
     if (u == dest) {
@@ -79,7 +84,7 @@ int64_t astar(int start, int dest, Fn h) {
       if (dist[u] + w < dist[v]) {
         dist[v] = dist[u] + w;
         pred[v] = u;
-        pq.emplace(dist[v] + h(v), v);
+        pq.emplace(Cost(dist[v]) + Cost(h(v)), dist[v], v);
       }
     }
   }
@@ -142,6 +147,10 @@ int main() {
   auto zero = [](int) { return 0; };
   assert(astar(start, dest, zero) == 4);
   assert((get_path(dest) == vector<int>{0, 1, 2, 5, 8}));
+
+  // Fractional admissible heuristics retain their priority instead of being truncated to int64_t.
+  auto half_manhattan = [=](int u) { return manhattan(u) / 2.0; };
+  assert(astar(start, dest, half_manhattan) == 4);
 
   assert(astar(start, R * C, zero) == INF);
   assert(get_path(R * C).empty());

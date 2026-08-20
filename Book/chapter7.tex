@@ -312,6 +312,7 @@ Overflow warning: the exact predicates form products of coefficients, which grow
 \begin{lstlisting}[style=cpp]
 #include <cmath>
 #include <cstdint>
+#include <ios>
 #include <limits>
 #include <ostream>
 #include <type_traits>
@@ -556,6 +557,7 @@ Overflow warning: the determinant in \inlinecode{in\_circumcircle()} grows like 
 \begin{lstlisting}[style=cpp]
 #include <cmath>
 #include <cstdint>
+#include <ios>
 #include <ostream>
 #include <stdexcept>
 #include <type_traits>
@@ -1997,10 +1999,8 @@ Overflow warning: \inlinecode{cw\_comp} and \inlinecode{polygon\_area\_2x} form 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
 \begin{lstlisting}[style=cpp]
-#include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <random>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -2079,7 +2079,9 @@ std::pair<double, double> polygon_centroid(It lo, It hi) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
+#include <algorithm>
 #include <cassert>
+#include <random>
 #include <vector>
 using namespace std;
 
@@ -2233,7 +2235,6 @@ Overflow warning: \inlinecode{cross()} and the squared distance in \inlinecode{d
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cmath>
-#include <random>
 #include <utility>
 #include <vector>
 
@@ -2320,6 +2321,7 @@ std::pair<Pt, Pt> diametral_pair(const std::vector<Pt> &p) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
 #include <cassert>
+#include <random>
 #include <vector>
 using namespace std;
 
@@ -2385,7 +2387,6 @@ Overflow warning: For integer-coordinate inputs, all orientation tests are exact
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cassert>
-#include <cstdint>
 #include <utility>
 #include <vector>
 
@@ -2519,6 +2520,7 @@ std::pair<int, int> convex_polygon_tangents(const std::vector<Pt> &poly, const P
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
+#include <cstdint>
 using namespace std;
 
 struct PointI {
@@ -2728,7 +2730,6 @@ Overflow warning: squared distances grow like the square of the coordinate magni
 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
-#include <cmath>
 #include <iterator>
 #include <limits>
 #include <utility>
@@ -2809,6 +2810,7 @@ auto closest_pair(std::vector<Pt> p, std::pair<Pt, Pt> *res = nullptr) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
 #include <cassert>
+#include <cmath>
 #include <vector>
 using namespace std;
 
@@ -2862,7 +2864,6 @@ Overflow warning: coordinate differences and their absolute values must fit in \
 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <map>
@@ -2907,6 +2908,7 @@ int max_collinear_points(const std::vector<Point> &p) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
+#include <cassert>
 using namespace std;
 
 int main() {
@@ -3061,6 +3063,8 @@ Rectangles are half-open, $[x_1, x_2) \times [y_1, y_2)$, so adjacent rectangles
 
 Weights change only the maximum, since the three geometric measures count coverage rather than payload, and weighted area needs no sweep at all: it is $\sum w_i$ times area, one loop over the input. Area covered at least $k$ times instead needs a vector of $k$ lengths per node; for that or any aggregate that does not decompose this way, the compression of section \secref{7.3.8} enumerates every elementary cell at $O(n^{2})$.
 
+Overflow warning: Coordinate differences, areas, perimeters, and weight sums must fit in \inlinecode{int64\_t}.
+
 \textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the number of rectangles.
 
 \textbf{Space Complexity}: $O(n)$ auxiliary.
@@ -3069,6 +3073,7 @@ Weights change only the maximum, since the three geometric measures count covera
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <cstdlib>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -3195,19 +3200,31 @@ UnionMeasure rect_union(const std::vector<Rect> &rects) {
   CoverTree tree(std::move(ys));
   UnionMeasure res;
   int64_t width = 0, doubled = 0, strips = 0, prev_x = 0;
-  for (size_t i = 0; i < events.size();) {
+  for (int i = 0, nevents = static_cast<int>(events.size()); i < nevents;) {
     int64_t x = std::get<0>(events[i]);
     if (i > 0) {  // The strip since the previous event has a constant cross-section.
       res.area += width * (x - prev_x);
       res.overlap_area += doubled * (x - prev_x);
       res.perimeter += 2 * strips * (x - prev_x);
     }
-    while (i < events.size() && std::get<0>(events[i]) == x) {
-      auto [ex, tgt_lo, tgt_hi, delta, w] = events[i++];
-      tree.update(tgt_lo, tgt_hi, delta, w);
+    int end = i;
+    while (end < nevents && std::get<0>(events[end]) == x) {
+      end++;
     }
-    // Length that appeared or vanished at this x must be bounded by vertical edges.
-    res.perimeter += std::llabs(tree.covered_length() - width);
+    // Add before removing at the same x. The sum of the resulting length changes is the symmetric
+    // difference of the old and new cross-sections: shared edges vanish, while disjoint entering
+    // and leaving intervals are both counted.
+    for (int wanted_delta : {1, -1}) {
+      int64_t before = tree.covered_length();
+      for (int j = i; j < end; j++) {
+        auto [_, tgt_lo, tgt_hi, delta, w] = events[j];
+        if (delta == wanted_delta) {
+          tree.update(tgt_lo, tgt_hi, delta, w);
+        }
+      }
+      res.perimeter += std::llabs(tree.covered_length() - before);
+    }
+    i = end;
     res.max_weight = std::max(res.max_weight, tree.heaviest_weight());
     width = tree.covered_length();
     doubled = tree.twice_covered_length();
@@ -3234,6 +3251,10 @@ int main() {
   UnionMeasure apart = rect_union({{0, 0, 1, 1}, {2, 0, 3, 1}});
   assert(apart.area == 2 && apart.perimeter == 8);
   assert(apart.overlap_area == 0 && apart.max_weight == 1);
+
+  // Disjoint intervals can leave and enter at the same x; both vertical edges still count.
+  UnionMeasure crossing = rect_union({{0, 0, 1, 1}, {1, 2, 2, 3}});
+  assert(crossing.area == 2 && crossing.perimeter == 8);
 
   // Two squares meeting in a unit square, whose union outlines an L-shaped hexagon.
   UnionMeasure pair = rect_union({{0, 0, 2, 2}, {1, 1, 3, 3}});
@@ -3276,7 +3297,6 @@ Overflow warning: \inlinecode{seg\_intersection} forms the usual quadratic cross
 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
-#include <cassert>
 #include <optional>
 #include <set>
 #include <tuple>
@@ -3386,6 +3406,7 @@ std::optional<std::pair<int, int>> find_intersecting_pair(const std::vector<Segm
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
+#include <cassert>
 #include <vector>
 using namespace std;
 
@@ -3451,7 +3472,6 @@ Overflow warning: the sweeps form coordinate sums, negations, and differences su
 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
-#include <cassert>
 #include <cstdint>
 #include <cstdlib>
 #include <map>
@@ -3537,6 +3557,7 @@ int64_t manhattan_mst_weight(const std::vector<Point> &p) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
+#include <cassert>
 using namespace std;
 
 int main() {
@@ -3696,6 +3717,8 @@ Given a list of directed lines, compute the convex polygon contained in every le
 
 \begin{compactitem}
   \item \inlinecode{half\_plane\_intersection(planes)} returns the polygon cut out by the half-planes in counter-clockwise order. Each half-plane is represented by \inlinecode{HalfPlane(p, q)}, meaning the closed region to the left of the directed line \inlinecode{p} $\to$ \inlinecode{q}. This implementation is intended for intersections that form a bounded polygon with positive area; empty, unbounded, or degenerate inputs may return an empty vector. Add explicit bounding-box half-planes when a bounded polygon is required. The two points defining each half-plane must differ.
+  \item \inlinecode{out(q)} returns whether point \inlinecode{q} lies strictly outside this half-plane, that is, to the right of its directed line.
+  \item \inlinecode{intersect(h)} returns the point where the boundary lines of this half-plane and \inlinecode{h} meet, which must not be parallel.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call, where $n$ is the number of half-planes.
@@ -4010,6 +4033,7 @@ Overflow warning: the segment-intersection tests form cross products in the inpu
 #include <algorithm>
 #include <cmath>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 const double EPS = 1e-9;
@@ -4430,7 +4454,6 @@ Overflow warning: the in-circle test grows like the fourth power of the coordina
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
 #include <cmath>
-#include <cstdint>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -4677,6 +4700,7 @@ auto delaunay_triangulation(std::vector<Point<T>> p) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
 #include <cassert>
+#include <cstdint>
 using namespace std;
 
 using PointL = Point<int64_t>;
@@ -4729,7 +4753,6 @@ Overflow warning: the exact products \inlinecode{dot()}, \inlinecode{cross()}, a
 \textbf{Space Complexity}: $O(1)$ for storage and auxiliary.
 
 \begin{lstlisting}[style=cpp]
-#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <tuple>
@@ -4790,6 +4813,7 @@ using Point3LD = TPoint3<long double>;
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
+#include <cassert>
 using namespace std;
 
 int main() {
@@ -4818,8 +4842,6 @@ Overflow warning: for integral point types, each scalar triple product must fit 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[style=cpp]
-#include <cmath>
-#include <tuple>
 #include <vector>
 
 struct Point3D {
@@ -4846,6 +4868,8 @@ double signed_polyhedron_volume(const std::vector<Pt> &p, const std::vector<F> &
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
 #include <cassert>
+#include <cmath>
+#include <tuple>
 using namespace std;
 
 bool EQ(double a, double b) {

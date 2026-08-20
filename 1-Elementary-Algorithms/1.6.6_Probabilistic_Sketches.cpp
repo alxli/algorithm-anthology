@@ -3,11 +3,12 @@
 A sketch answers questions about a stream using far less memory than the stream itself, in exchange
 for a bounded, one-sided error. This section implements a Bloom filter, which tests set membership,
 and a count-min sketch, which estimates how often each value occurred. Both spread every value over
-several independent positions of a fixed-size table, and both derive those positions from one pair
-of base hashes: the Kirsch-Mitzenmacher technique uses $h_i(x) = h_1(x) + i \cdot h_2(x)$ instead of
-computing an unrelated hash for every position, which matches the false-positive behavior of truly
-independent hashes while paying for only two. Both base hashes come from the SplitMix64 mixer of
-section 3.2.1, and the second is forced odd so that repeated steps never stand still.
+several derived positions of a fixed-size table, and both obtain those positions from one pair of
+base hashes: the Kirsch-Mitzenmacher technique uses $h_i(x) = h_1(x) + i \cdot h_2(x)$ instead of
+computing an unrelated hash for every position. For Bloom filters this has the same asymptotic
+false-positive behavior as independent hashes while paying for only two. Both base hashes come from
+the SplitMix64 mixer of section 3.2.1, and the second is forced odd so that repeated steps never
+stand still.
 
 A Bloom filter represents a set as a bit array. Inserting a value sets the $k$ bits it hashes to,
 and a membership test reports that a value is present only if all $k$ of its bits are set. Bits are
@@ -27,8 +28,13 @@ yields $m = -n \ln p / (\ln 2)^2$ bits for a target rate $p$.
 - `false_positive_rate()` returns the current estimated rate $(1 - e^{-kn/m})^k$, which rises as the
   filter fills past its planned capacity.
 
+The probability calculation assumes that the supplied hasher, after mixing, behaves uniformly on the
+inserted and queried values. An adversarial or constant hasher voids the estimate.
+
 Deletion is not supported, since clearing a bit could hide an unrelated value that also set it. Use
 a counting Bloom filter, which replaces each bit with a small counter, when values must leave.
+
+Overflow warning: The insertion count must fit in `int64_t`.
 
 Time Complexity:
 - O(1) per call to `count()`, `bit_count()`, `hash_count()`, and `false_positive_rate()`.
@@ -44,6 +50,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
+#include <climits>
 #include <cmath>
 #include <cstdint>
 #include <functional>
@@ -67,7 +74,8 @@ template<typename T, typename Hash = std::hash<T>>
 class BloomFilter {
   std::vector<uint64_t> words;
   uint64_t nbits;
-  int hashes, inserted;
+  int hashes;
+  int64_t inserted;
   Hash hash;
 
  public:
@@ -101,7 +109,7 @@ class BloomFilter {
     return true;
   }
 
-  int count() const { return inserted; }
+  int64_t count() const { return inserted; }
   uint64_t bit_count() const { return nbits; }
   int hash_count() const { return hashes; }
 
@@ -123,9 +131,9 @@ $1 - \delta$, where $N$ is the total weight added.
 
 - `CountMinSketch<T>(eps, delta)` constructs an empty sketch whose estimates exceed the true count
   by at most `eps` times the total weight, with probability at least $1 - `delta`$. Both parameters
-  must lie in $(0, 1)$. `CountMinSketch<T, Hash>(eps, delta, hash)` instead stores the supplied
-  hasher.
-- `add(x, c = 1)` adds weight `c` to the count of `x`.
+  must lie in $(0, 1)$, and the derived table dimensions must fit in `int`.
+  `CountMinSketch<T, Hash>(eps, delta, hash)` instead stores the supplied hasher.
+- `add(x, c = 1)` adds the nonnegative weight `c` to the count of `x`.
 - `count(x)` returns the estimated total weight of `x`, which is never an underestimate.
 - `total()` returns the total weight added over all values.
 - `num_rows()` and `num_cols()` return the derived table dimensions.
@@ -136,13 +144,19 @@ heavy-hitter candidates of section 1.6.3: run both, then use the sketch to rank 
 Negative weights break the guarantee, since a row is then no longer an overestimate; deletions
 require the count-mean-min variant or a conservative sketch.
 
+As with the Bloom filter, the probability bound assumes suitably uniform, independent-looking row
+positions for the workload. Double hashing is practical but is not a pairwise-independent hash
+family, so use independently seeded universal hashes when a proof against chosen inputs is required.
+
+Overflow warning: The total weight and every counter it reaches must fit in `int64_t`.
+
 Time Complexity:
 - O(R) per call to `add()` and `count()`, plus the cost of one call to the hasher.
 - O(R*C) per call to the constructor.
 - O(1) per call to `total()`, `num_rows()`, and `num_cols()`.
 
 Space Complexity:
-- O(w*d) for storage of the sketch.
+- O(R*C) for storage of the sketch.
 - O(1) auxiliary for all operations.
 
 */
@@ -157,12 +171,15 @@ class CountMinSketch {
  public:
   CountMinSketch(double eps, double delta, Hash hash = Hash{}) : weight(0), hash(hash) {
     assert(eps > 0 && eps < 1 && delta > 0 && delta < 1);
-    rows = std::max(1, static_cast<int>(std::ceil(std::log(1 / delta))));
-    cols = static_cast<int>(std::ceil(std::exp(1.0) / eps));
+    double row_count = std::ceil(-std::log(delta)), col_count = std::ceil(std::exp(1.0) / eps);
+    assert(std::max(row_count, col_count) <= INT_MAX);
+    rows = std::max(1, static_cast<int>(row_count));
+    cols = static_cast<int>(col_count);
     table.assign(rows, std::vector<int64_t>(cols));
   }
 
   void add(const T &x, int64_t c = 1) {
+    assert(c >= 0);
     auto [h1, h2] = hash_pair(hash, x);
     for (int r = 0; r < rows; r++) {
       table[r][(h1 + static_cast<uint64_t>(r) * h2) % cols] += c;

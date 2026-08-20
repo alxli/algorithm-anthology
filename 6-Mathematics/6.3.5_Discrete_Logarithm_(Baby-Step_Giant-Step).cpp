@@ -95,7 +95,6 @@ int64_t discrete_log(int64_t a, int64_t b, int64_t m) {
 /*** Example Usage ***/
 
 #include <cassert>
-using namespace std;
 
 int main() {
   // 2^x = 9 (mod 11): 2^6 = 64 = 9, and 6 is the smallest such exponent.

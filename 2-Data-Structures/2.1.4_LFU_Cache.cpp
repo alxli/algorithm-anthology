@@ -24,8 +24,9 @@ what makes the whole structure constant time.
 - `put(key, value)` inserts or updates `key`, counts an access, and evicts the least frequently used
   key if the insertion would exceed capacity.
 
-Frequencies grow without bound, so a long-lived cache can be held hostage by keys popular only once;
+Frequencies grow continually, so a long-lived cache can be held hostage by keys popular only once;
 real implementations periodically halve every count, ageing the statistics without reordering them.
+This implementation uses `int64_t` counts and asserts before their theoretical overflow.
 
 Time Complexity:
 - O(1) expected amortized per call to `get()`, `put()`, and `freq()`, and O(n) in the
@@ -38,6 +39,7 @@ Space Complexity:
 */
 
 #include <cassert>
+#include <cstdint>
 #include <list>
 #include <unordered_map>
 
@@ -45,17 +47,19 @@ template<typename K, typename V>
 class LFUCache {
   struct Entry {
     V value;
-    int freq;
+    int64_t freq;
     typename std::list<K>::iterator pos;
   };
 
-  int cap, min_freq;
+  int cap;
+  int64_t min_freq;
   std::unordered_map<K, Entry> entries;
-  std::unordered_map<int, std::list<K>> buckets;  // Keys of each frequency, newest at the front.
+  std::unordered_map<int64_t, std::list<K>> buckets;  // Each frequency, newest at the front.
 
   // Moves an existing key from its bucket to the next one up, counting one access.
   void touch(const K &key) {
     Entry &entry = entries[key];
+    assert(entry.freq < INT64_MAX);
     std::list<K> &bucket = buckets[entry.freq];
     bucket.erase(entry.pos);
     if (bucket.empty()) {
@@ -72,9 +76,11 @@ class LFUCache {
  public:
   explicit LFUCache(int capacity) : cap(capacity), min_freq(0) { assert(cap > 0); }
 
+  LFUCache(const LFUCache &) = delete;
+  LFUCache &operator=(const LFUCache &) = delete;
   int size() const { return static_cast<int>(entries.size()); }
 
-  int freq(const K &key) const {
+  int64_t freq(const K &key) const {
     auto it = entries.find(key);
     return it == entries.end() ? 0 : it->second.freq;
   }

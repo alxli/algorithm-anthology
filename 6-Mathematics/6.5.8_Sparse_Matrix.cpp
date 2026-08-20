@@ -53,7 +53,6 @@ Space Complexity:
 */
 
 #include <cassert>
-#include <cstdint>
 #include <map>
 #include <unordered_set>
 #include <utility>
@@ -368,6 +367,7 @@ int solve_system(const SparseMatrix<T> &a, const std::vector<T> &b, std::vector<
 /*** Example Usage ***/
 
 #include <cassert>
+#include <cstdint>
 using namespace std;
 
 int main() {

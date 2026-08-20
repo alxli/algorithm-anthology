@@ -22,6 +22,8 @@ part. This lets the algorithms skip whole blocks of partitions sharing a common 
   random-access iterators to a range $[`lo`, `hi`)$ of integers. Note that non-strictly increasing
   partitions like $\{1, 1, 1, 1\}$ are skipped.
 
+Overflow warning: Exact partition counts and ranks must fit in `int64_t`.
+
 Time Complexity:
 - O(n) per call to `next_partition()`.
 - O(n^2) per call to `partition_by_rank()` and `rank_by_partition()`.
@@ -36,7 +38,10 @@ Space Complexity:
 
 */
 
+#include <algorithm>
+#include <cassert>
 #include <cstdint>
+#include <functional>
 #include <numeric>
 #include <vector>
 
@@ -58,6 +63,7 @@ bool next_partition(std::vector<int> &p) {
 }
 
 int64_t partition_function(int a, int b) {
+  assert(a >= 0 && 0 <= b && b <= a);
   static std::vector<std::vector<int64_t>> p(1, std::vector<int64_t>(1, 1));
   if (a >= static_cast<int>(p.size())) {
     int old = static_cast<int>(p.size());
@@ -76,6 +82,7 @@ int64_t partition_function(int a, int b) {
 }
 
 std::vector<int> partition_by_rank(int n, int64_t r) {
+  assert(n >= 0 && r >= 0);
   std::vector<int> res;
   for (int i = n, j; i > 0; i -= j) {
     for (j = 1;; j++) {
@@ -91,6 +98,8 @@ std::vector<int> partition_by_rank(int n, int64_t r) {
 }
 
 int64_t rank_by_partition(const std::vector<int> &p) {
+  assert(std::all_of(p.begin(), p.end(), [](int x) { return x > 0; }));
+  assert(std::is_sorted(p.begin(), p.end(), std::greater<int>()));
   int64_t res = 0;
   int sum = std::accumulate(p.begin(), p.end(), 0);
   for (int x : p) {

@@ -285,7 +285,7 @@ A positional numeral is a sequence of digits weighted by powers of its base, so 
   \item \inlinecode{to\_base(x, b = 10)} returns the digits of the unsigned integer \inlinecode{x} in base \inlinecode{b}, where index $0$ of the result stores the least significant digit.
   \item \inlinecode{to\_roman(x)} returns the Roman numeral representation of the unsigned integer \inlinecode{x} as a string.
   \item \inlinecode{from\_roman(s)} returns the value of the Roman numeral \inlinecode{s}, which must consist of Roman digits. Subtractive pairs such as \inlinecode{"IX"} are handled, but the numeral is not otherwise validated, so a malformed one such as \inlinecode{"IC"} simply returns the value its symbols imply.
-  \item \inlinecode{convert\_base(d, a, b)} converts an integer in base \inlinecode{a} as a vector \inlinecode{d} of digits (where \inlinecode{d[0]} is the least significant digit) to base \inlinecode{b} as a vector of digits (again with index 0 holding the least significant digit). This uses repeated long division, so the value itself does not need to fit in a machine integer.
+  \item \inlinecode{convert\_base(d, a, b)} converts an integer in base \inlinecode{a} as a vector \inlinecode{d} of digits (where \inlinecode{d[0]} is the least significant digit) to base \inlinecode{b} as a vector of digits (again with index $0$ holding the least significant digit). This uses repeated long division, so the value itself does not need to fit in a machine integer.
 \end{compactitem}
 
 Overflow warning: Each intermediate \inlinecode{rem*a + digit} must fit in \inlinecode{uint64\_t}.
@@ -309,10 +309,12 @@ Overflow warning: Each intermediate \inlinecode{rem*a + digit} must fit in \inli
 \end{compactitem}
 
 \begin{lstlisting}[style=cpp]
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 std::vector<int> to_base(unsigned int x, int b = 10) {
@@ -350,6 +352,7 @@ unsigned int from_roman(const std::string &s) {
 
 std::vector<int> convert_base(const std::vector<int> &d, int a, int b) {
   assert(a >= 2 && b >= 2);
+  assert(std::all_of(d.begin(), d.end(), [a](int x) { return 0 <= x && x < a; }));
   std::vector<int> cur = d, res;
   auto trim = [](std::vector<int> &v) {
     while (v.size() > 1 && v.back() == 0) {
@@ -906,6 +909,8 @@ For arrangements without repeats, each prefix fixes some used values and leaves 
   \item \inlinecode{next\_arrangement\_with\_repeats(n, a)} tries to rearrange \inlinecode{a} to the next lexicographically greater arrangement with repeats, returning true if such an arrangement exists or false if the array is already in descending order (in which case \inlinecode{a} is unchanged). The input \inlinecode{a} must consist of integers in the range $[0, {\inlinecodemath{n}})$. If \inlinecode{a} were interpreted as a $k$ digit integer in base $n$, this function could be thought of as incrementing the integer.
 \end{compactitem}
 
+Overflow warning: Exact counts and ranks used by the ranking operations must fit in \inlinecode{int64\_t}.
+
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
@@ -922,14 +927,17 @@ For arrangements without repeats, each prefix fixes some used values and leaves 
 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <numeric>
 #include <vector>
 
 bool next_arrangement(int n, std::vector<int> &a) {
   int k = static_cast<int>(a.size());
+  assert(n >= 0 && k <= n);
   std::vector<char> used(n);
   for (int i = 0; i < k; i++) {
+    assert(0 <= a[i] && a[i] < n && !used[a[i]]);
     used[a[i]] = true;
   }
   for (int i = k - 1; i >= 0; i--) {
@@ -951,6 +959,7 @@ bool next_arrangement(int n, std::vector<int> &a) {
 }
 
 int64_t n_permute_k(int n, int k) {
+  assert(n >= 0 && 0 <= k && k <= n);
   int64_t res = 1;
   for (int i = 0; i < k; i++) {
     res *= n - i;
@@ -959,6 +968,7 @@ int64_t n_permute_k(int n, int k) {
 }
 
 std::vector<int> arrangement_by_rank(int n, int k, int64_t r) {
+  assert(0 <= r && r < n_permute_k(n, k));
   std::vector<int> values(n), res(k);
   std::iota(values.begin(), values.end(), 0);
   for (int i = 0; i < k; i++) {
@@ -973,9 +983,12 @@ std::vector<int> arrangement_by_rank(int n, int k, int64_t r) {
 
 int64_t rank_by_arrangement(int n, const std::vector<int> &a) {
   int k = static_cast<int>(a.size());
+  assert(n >= 0 && k <= n);
+  assert(std::all_of(a.begin(), a.end(), [n](int x) { return 0 <= x && x < n; }));
   int64_t res = 0;
   std::vector<char> used(n);
   for (int i = 0; i < k; i++) {
+    assert(!used[a[i]]);
     int count = 0;
     for (int j = 0; j < a[i]; j++) {
       if (!used[j]) {
@@ -990,6 +1003,7 @@ int64_t rank_by_arrangement(int n, const std::vector<int> &a) {
 
 bool next_arrangement_with_repeats(int n, std::vector<int> &a) {
   int k = static_cast<int>(a.size());
+  assert(n >= 0 && std::all_of(a.begin(), a.end(), [n](int x) { return 0 <= x && x < n; }));
   for (int i = k - 1; i >= 0; i--) {
     if (a[i] < n - 1) {
       a[i]++;
@@ -1064,9 +1078,9 @@ int main() {
 \end{exampleoutput}
 \subsection{Enumerating Permutations}
 \label{sec:6.2.3}
-These routines enumerate and analyze reorderings of a sequence of $n$ elements; the values need not be distinct.
+These routines enumerate and analyze reorderings of a sequence of $n$ elements; the values need not be distinct except where noted.
 
-The lexicographic successor is found by locating the rightmost ascent, increasing that position by the smallest possible amount, then reversing the suffix into its minimum order. Ranking and unranking permutations use the factorial number system: each position contributes the number of unused smaller values before the chosen one, scaled by the number of possible suffix permutations. The cycle decomposition views a permutation as a function on indices and follows each unvisited orbit until it returns to its start.
+The lexicographic successor is found by locating the rightmost ascent, increasing that position by the smallest possible amount, then reversing the suffix into its minimum order. Ranking and unranking permutations use the factorial number system: each position contributes the number of unused smaller values before the chosen one, scaled by the number of possible suffix permutations. The cycle decomposition views a permutation as a function on indices and follows each unvisited orbit until it returns to its start. Sorting by swaps is that same decomposition read differently: a cycle of length $k$ is resolved by $k - 1$ swaps and no fewer, so the whole array needs $n$ minus its number of cycles.
 
 \begin{compactitem}
   \item \inlinecode{next\_permutation2(lo, hi, comp = std::less\textless{}\textgreater{}())} is analogous to \inlinecode{std::next\_permutation()}, taking two BidirectionalIterators as a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ for which the function tries to rearrange to the next lexicographically greater permutation according to \inlinecode{comp}. The function returns true if such a permutation exists, or false if the range is already in reverse comparator order, in which case it is rearranged into comparator order.
@@ -1075,7 +1089,10 @@ The lexicographic successor is found by locating the rightmost ascent, increasin
   \item \inlinecode{permutation\_by\_rank(n, r)} returns the permutation of the integers in the range $[0, {\inlinecodemath{n}})$ which is lexicographically ranked $r$, where $r$ is a 0-based rank in the range $[0, n!)$.
   \item \inlinecode{rank\_by\_permutation(a)} returns an integer representing the 0-based rank of permutation \inlinecode{a}, which must be a permutation of the integers $[0, n)$.
   \item \inlinecode{permutation\_cycles(a)} returns the orbits of the index mapping \inlinecode{i} $\mapsto$ \inlinecode{a[i]}. For example, $\{3, 1, 0, 2\}$ decomposes into cycles $\{0, 3, 2\}$ and $\{1\}$ because following the mapping from index $0$ gives $0 \to 3 \to 2 \to 0$, while index $1$ maps to itself.
+  \item \inlinecode{min\_swaps\_to\_sort(a)} returns the fewest swaps of any two elements that sort \inlinecode{a}, whose values must be distinct. This is unrelated to the inversion count of section \secref{1.1.5}, which measures the number of swaps when only adjacent elements may be exchanged.
 \end{compactitem}
+
+The two ranking operations require $n \leq 20$, so every possible rank fits in \inlinecode{int64\_t}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -1084,17 +1101,19 @@ The lexicographic successor is found by locating the rightmost ascent, increasin
   \item $O(n^{2})$ per call to \inlinecode{permutation\_by\_rank()} and \inlinecode{rank\_by\_permutation()}.
   \item $O(1)$ per call to \inlinecode{next\_permutation\_mask()}.
   \item $O(n)$ per call to \inlinecode{permutation\_cycles()}.
+  \item $O(n \log n)$ per call to \inlinecode{min\_swaps\_to\_sort()}, from ranking the values.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for \inlinecode{next\_permutation2()} and \inlinecode{next\_permutation()}.
-  \item $O(n)$ auxiliary for \inlinecode{permutation\_by\_rank()}, \inlinecode{rank\_by\_permutation()}, and \inlinecode{permutation\_cycles()}.
+  \item $O(n)$ auxiliary for \inlinecode{permutation\_by\_rank()}, \inlinecode{rank\_by\_permutation()}, \inlinecode{permutation\_cycles()}, and \inlinecode{min\_swaps\_to\_sort()}.
 \end{compactitem}
 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <functional>
 #include <numeric>
@@ -1161,15 +1180,13 @@ uint64_t next_permutation_mask(uint64_t x) {
 }
 
 std::vector<int> permutation_by_rank(int n, int64_t r) {
-  if (n == 0) {
-    return {};
-  }
-  std::vector<int64_t> factorial(n);
+  assert(0 <= n && n <= 20 && r >= 0);
+  std::vector<int64_t> factorial(n + 1, 1);
   std::vector<int> values(n), res(n);
-  factorial[0] = 1;
-  for (int i = 1; i < n; i++) {
+  for (int i = 1; i <= n; i++) {
     factorial[i] = i * factorial[i - 1];
   }
+  assert(r < factorial[n]);
   std::iota(values.begin(), values.end(), 0);
   for (int i = 0; i < n; i++) {
     int pos = r / factorial[n - 1 - i];
@@ -1182,6 +1199,12 @@ std::vector<int> permutation_by_rank(int n, int64_t r) {
 
 int64_t rank_by_permutation(const std::vector<int> &a) {
   int n = static_cast<int>(a.size());
+  assert(n <= 20);
+  std::vector<char> seen(n);
+  for (int x : a) {
+    assert(0 <= x && x < n && !seen[x]);
+    seen[x] = true;
+  }
   if (n == 0) {
     return 0;
   }
@@ -1208,6 +1231,11 @@ using Cycles = std::vector<std::vector<int>>;
 Cycles permutation_cycles(const std::vector<int> &a) {
   int n = static_cast<int>(a.size());
   std::vector<char> visit(n);
+  for (int x : a) {
+    assert(0 <= x && x < n && !visit[x]);
+    visit[x] = true;
+  }
+  std::fill(visit.begin(), visit.end(), false);
   Cycles res;
   for (int i = 0; i < n; i++) {
     if (!visit[i]) {
@@ -1222,6 +1250,17 @@ Cycles permutation_cycles(const std::vector<int> &a) {
     }
   }
   return res;
+}
+
+int min_swaps_to_sort(const std::vector<int> &a) {
+  int n = static_cast<int>(a.size());
+  std::vector<int> order(n);
+  std::iota(order.begin(), order.end(), 0);
+  std::sort(order.begin(), order.end(), [&](int i, int j) { return a[i] < a[j]; });
+  assert(std::adjacent_find(order.begin(), order.end(), [&](int i, int j) {
+           return a[i] == a[j];
+         }) == order.end());
+  return n - static_cast<int>(permutation_cycles(order).size());
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -1293,6 +1332,11 @@ int main() {
       print_range(cycle.begin(), cycle.end());
     }
     cout << endl;
+    // Two cycles over four elements, so two swaps sort it.
+    assert(min_swaps_to_sort(a) == 2);
+    assert(min_swaps_to_sort({50, 20, 40, 10}) == 1);  // Values need not be a permutation.
+    assert(min_swaps_to_sort({1, 2, 3}) == 0);
+    assert(min_swaps_to_sort({}) == 0);
   }
   return 0;
 }
@@ -1344,6 +1388,7 @@ Overflow warning: Exact counts and ranks used by the ranking operations must fit
 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <functional>
 #include <iterator>
@@ -1426,6 +1471,7 @@ uint64_t next_combination_mask(uint64_t x) {
 }
 
 int64_t n_choose_k(int64_t n, int64_t k) {
+  assert(n >= 0 && 0 <= k && k <= n);
   if (k > n - k) {
     k = n - k;
   }
@@ -1442,6 +1488,7 @@ int64_t n_choose_k(int64_t n, int64_t k) {
 }
 
 std::vector<int> combination_by_rank(int n, int k, int64_t r) {
+  assert(0 <= r && r < n_choose_k(n, k));
   std::vector<int> res(k);
   int count = n;
   for (int i = 0; i < k; i++) {
@@ -1461,6 +1508,9 @@ std::vector<int> combination_by_rank(int n, int k, int64_t r) {
 
 int64_t rank_by_combination(int n, const std::vector<int> &a) {
   int k = static_cast<int>(a.size());
+  assert(n >= 0 && k <= n);
+  assert(std::all_of(a.begin(), a.end(), [n](int x) { return 0 <= x && x < n; }));
+  assert(std::adjacent_find(a.begin(), a.end(), std::greater_equal<int>()) == a.end());
   int64_t res = 0;
   int prev = -1;
   for (int i = 0; i < k; i++) {
@@ -1595,6 +1645,8 @@ The lexicographic successor edits the suffix of a non-increasing partition: incr
   \item \inlinecode{generate\_increasing\_partitions(n, f)} calls the function \inlinecode{f(lo, hi)} on strictly increasing partitions of $n$ in lexicographically increasing order of partition, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to a range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ of integers. Note that non-strictly increasing partitions like $\{1, 1, 1, 1\}$ are skipped.
 \end{compactitem}
 
+Overflow warning: Exact partition counts and ranks must fit in \inlinecode{int64\_t}.
+
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
@@ -1612,7 +1664,10 @@ The lexicographic successor edits the suffix of a non-increasing partition: incr
 \end{compactitem}
 
 \begin{lstlisting}[style=cpp]
+#include <algorithm>
+#include <cassert>
 #include <cstdint>
+#include <functional>
 #include <numeric>
 #include <vector>
 
@@ -1634,6 +1689,7 @@ bool next_partition(std::vector<int> &p) {
 }
 
 int64_t partition_function(int a, int b) {
+  assert(a >= 0 && 0 <= b && b <= a);
   static std::vector<std::vector<int64_t>> p(1, std::vector<int64_t>(1, 1));
   if (a >= static_cast<int>(p.size())) {
     int old = static_cast<int>(p.size());
@@ -1652,6 +1708,7 @@ int64_t partition_function(int a, int b) {
 }
 
 std::vector<int> partition_by_rank(int n, int64_t r) {
+  assert(n >= 0 && r >= 0);
   std::vector<int> res;
   for (int i = n, j; i > 0; i -= j) {
     for (j = 1;; j++) {
@@ -1667,6 +1724,8 @@ std::vector<int> partition_by_rank(int n, int64_t r) {
 }
 
 int64_t rank_by_partition(const std::vector<int> &p) {
+  assert(std::all_of(p.begin(), p.end(), [](int x) { return x > 0; }));
+  assert(std::is_sorted(p.begin(), p.end(), std::greater<int>()));
   int64_t res = 0;
   int sum = std::accumulate(p.begin(), p.end(), 0);
   for (int x : p) {
@@ -2434,6 +2493,7 @@ The \inlinecode{Modular\textless{}MOD\textgreater{}} value type wraps arithmetic
 
 \begin{compactitem}
   \item \inlinecode{Modular\textless{}MOD\textgreater{}(x = 0)} constructs the residue class of integer \inlinecode{x} modulo \inlinecode{MOD}.
+  \item \inlinecode{Modular\textless{}MOD\textgreater{}::mod()} returns the modulus \inlinecode{MOD}.
   \item \inlinecode{value()} and \inlinecode{operator()()} return the stored representative in $[0, {\inlinecodemath{MOD}})$.
   \item Explicit casts to \inlinecode{int}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double} convert that stored representative to the corresponding primitive.
   \item \inlinecode{pow(n)} returns this value raised to nonnegative integer exponent \inlinecode{n}.
@@ -2813,7 +2873,6 @@ int64_t primitive_root(int64_t m) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
 #include <cassert>
-using namespace std;
 
 int main() {
   assert(primitive_root(1) == 0);
@@ -2916,7 +2975,6 @@ int64_t discrete_log(int64_t a, int64_t b, int64_t m) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
 #include <cassert>
-using namespace std;
 
 int main() {
   // 2^x = 9 (mod 11): 2^6 = 64 = 9, and 6 is the smallest such exponent.
@@ -3026,7 +3084,6 @@ int64_t mod_sqrt(int64_t a, int64_t p) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
 #include <cassert>
-using namespace std;
 
 int main() {
   int64_t r = mod_sqrt(2, 113);
@@ -3095,8 +3152,6 @@ int jacobi(int64_t a, int64_t n) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
-using namespace std;
-
 int64_t legendre_via_euler(int64_t a, int64_t p) {
   int64_t r = 1 % p;
   for (int64_t b = ((a % p) + p) % p, e = (p - 1) / 2; e > 0; e >>= 1) {
@@ -4009,6 +4064,7 @@ int64_t divisor_sum(int64_t n) {
 }
 
 std::vector<int> divisor_count_table(int n) {
+  assert(n >= 0);
   std::vector<int> res(n + 1);
   for (int d = 1; d <= n; d++) {
     for (int i = d; i <= n; i += d) {
@@ -4019,6 +4075,7 @@ std::vector<int> divisor_count_table(int n) {
 }
 
 std::vector<int64_t> divisor_sum_table(int n) {
+  assert(n >= 0);
   std::vector<int64_t> res(n + 1);
   for (int d = 1; d <= n; d++) {
     for (int i = d; i <= n; i += d) {
@@ -4032,7 +4089,6 @@ std::vector<int64_t> divisor_sum_table(int n) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
 #include <cassert>
-using namespace std;
 
 int main() {
   assert(divisor_count(1) == 1);
@@ -4420,6 +4476,7 @@ Addition, subtraction, and comparisons are performed using the standard linear a
   \item \inlinecode{size()} returns the number of digits in the base-10 representation.
   \item Operators \inlinecode{\textgreater{}\textgreater{}} and \inlinecode{\textless{}\textless{}} are defined to support stream-based input and output.
   \item \inlinecode{to\_string()}, \inlinecode{to\_llong()}, \inlinecode{to\_double()}, and \inlinecode{to\_ldouble()} return the big integer converted to an \inlinecode{std::string}, \inlinecode{int64\_t}, \inlinecode{double}, and \inlinecode{long double} respectively. For the latter three data types, overflow behavior is based on that of inputting from \inlinecode{std::istream}. Equivalent conversions are also available through explicit casts to \inlinecode{int}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double}.
+  \item \inlinecode{to\_arithmetic\textless{}T\textgreater{}()} returns the value converted to arithmetic type \inlinecode{T} by streaming the base-10 representation into it, and is what the three conversions above are defined in terms of.
   \item \inlinecode{abs()} returns the absolute value.
   \item \inlinecode{comp(v)} returns $-1$, $0$, or $1$ depending on whether the big integer compares less than, equal to, or greater than \inlinecode{v}, respectively.
   \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on integer primitives.
@@ -4435,7 +4492,7 @@ Addition, subtraction, and comparisons are performed using the standard linear a
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to \inlinecode{size()}.
-  \item $O(d)$ per call to the constructors, \inlinecode{to\_string()}, \inlinecode{to\_llong()}, \inlinecode{to\_double()}, \inlinecode{to\_ldouble()}, \inlinecode{abs()}, \inlinecode{comp()}, \inlinecode{rand()}, and all comparison and arithmetic operators except multiplication, division, and modulo, where $d$ is the total number of digits in the arguments and result for each operation.
+  \item $O(d)$ per call to the constructors, \inlinecode{to\_string()}, \inlinecode{to\_llong()}, \inlinecode{to\_double()}, \inlinecode{to\_ldouble()}, \inlinecode{to\_arithmetic()}, \inlinecode{abs()}, \inlinecode{comp()}, \inlinecode{rand()}, and all comparison and arithmetic operators except multiplication, division, and modulo, where $d$ is the total number of digits in the arguments and result for each operation.
   \item $O(d \cdot \log\left(d\right) \cdot \log\left(\log\left(d\right)\right))$ per call to multiplication operations once operands reach \inlinecode{MUL\_CUTOFF}, and $O(d^{1.585})$ below it.
   \item $O((d/m) \cdot M(m) \cdot \log m)$ per call to division and modulo operations once the divisor reaches \inlinecode{DIV\_CUTOFF}, and $O(d \cdot m)$ below it, where $d$ and $m$ are the number of digits in the dividend and divisor respectively, and $M(m)$ is the cost of one multiplication of two $m$-digit big integers. Both forms consume the dividend in $d/m$ blocks of the divisor's size; only the per-block cost differs.
   \item $O(M(d) \log n)$ per call to \inlinecode{pow()}, where $n$ is the exponent and $d$ is the maximum digit length reached during exponentiation.
@@ -4456,7 +4513,6 @@ Addition, subtraction, and comparisons are performed using the standard linear a
 #include <algorithm>
 #include <cassert>
 #include <chrono>
-#include <climits>
 #include <cmath>
 #include <complex>
 #include <cstdint>
@@ -4468,6 +4524,7 @@ Addition, subtraction, and comparisons are performed using the standard linear a
 #include <random>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -5104,7 +5161,7 @@ class BigInt {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
-using namespace std;
+#include <climits>
 
 int main() {
   BigInt a("-9899819294989142124"), b("12398124981294214");
@@ -5142,18 +5199,18 @@ int main() {
       }
     }
   }
-  mt19937 rng(1234567);  // Fixed seed for reproducibility.
-  uniform_int_distribution<int> length_dist(1, 100);
+  std::mt19937 rng(1234567);  // Fixed seed for reproducibility.
+  std::uniform_int_distribution<int> len_dist(1, 100);
   for (int i = 0; i < 20; i++) {
-    int d = length_dist(rng);
-    BigInt value(BigInt::rand(d)), root(value.sqrt()), lower(root * root), upper(root + 1);
+    int d = len_dist(rng);
+    BigInt val(BigInt::rand(d)), root(val.sqrt()), lower(root * root), upper(root + 1);
     upper *= upper;
-    assert(lower <= value && value < upper);
-    uniform_int_distribution<int> divisor_length_dist(1, d);
-    BigInt divisor(BigInt::rand(divisor_length_dist(rng)) + 1), quotient(value / divisor);
+    assert(lower <= val && val < upper);
+    std::uniform_int_distribution<int> divisor_len_dist(1, d);
+    BigInt divisor(BigInt::rand(divisor_len_dist(rng)) + 1), quotient(val / divisor);
     lower = quotient * divisor;
     upper = divisor * (quotient + 1);
-    assert(value >= lower && value < upper);
+    assert(val >= lower && val < upper);
   }
   BigInt x(-6);
   assert(x.to_string() == "-6");
@@ -6003,7 +6060,6 @@ Converts a matrix to reduced row echelon form using Gaussian elimination to solv
 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <type_traits>
 #include <utility>
@@ -6120,6 +6176,7 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
+#include <cassert>
 using namespace std;
 
 int main() {
@@ -6175,6 +6232,7 @@ Overflow warning: In \inlinecode{det\_bareiss()}, stored entries are minors of \
 #include <cstdint>
 #include <optional>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 template<typename SquareMatrix>
@@ -6890,21 +6948,20 @@ int main() {
 \label{sec:6.5.7}
 An eigenvector of a square matrix is a direction the matrix does not rotate, only rescales, and the scale factor is its eigenvalue. For a real symmetric matrix, the spectral theorem guarantees that a full set of real eigenvalues exists and that eigenvectors for distinct eigenvalues are orthogonal, so the matrix is diagonalized by an orthogonal change of basis.
 
-The Jacobi eigenvalue algorithm builds that basis one rotation at a time. It repeatedly picks the largest off-diagonal entry and applies a rotation in the plane of that entry's row and column, choosing the angle that sets the entry to zero. A rotation is a similarity transform, so it preserves the eigenvalues, and it also preserves the sum of squares of all entries; since zeroing an entry removes its square from the off-diagonal total and moves it onto the diagonal, every sweep strictly reduces the off-diagonal weight. Earlier zeros are partially refilled by later rotations, but the total decays geometrically, and the matrix converges to a diagonal one whose entries are the eigenvalues. Accumulating the rotations gives the eigenvectors.
+The Jacobi eigenvalue algorithm builds that basis one rotation at a time. It repeatedly picks the largest off-diagonal entry and applies a rotation in the plane of that entry's row and column, choosing the angle that sets the entry to zero. A rotation is a similarity transform, so it preserves the eigenvalues, and it also preserves the sum of squares of all entries; since zeroing an entry removes its square from the off-diagonal total and moves it onto the diagonal, every rotation strictly reduces the off-diagonal weight. Earlier zeros are partially refilled by later rotations, but the total decays geometrically, and the matrix converges to a diagonal one whose entries are the eigenvalues. Accumulating the rotations gives the eigenvectors.
 
 \begin{compactitem}
-  \item \inlinecode{jacobi\_eigen(a, eps = 1e-12, iterations = 100)} returns the pair (\inlinecode{values}, \inlinecode{vectors}) for a real symmetric $n$ by $n$ matrix \inlinecode{a}. The eigenvalues in \inlinecode{values} are sorted in decreasing order, and \inlinecode{vectors[i]} is a unit eigenvector for \inlinecode{values[i]}, so the eigenvectors are rows rather than columns. Iteration stops once every off-diagonal entry is smaller than \inlinecode{eps}. The matrix must be symmetric, which is not checked; an unsymmetric one silently produces nonsense.
+  \item \inlinecode{jacobi\_eigen(a, eps = 1e-12, iterations = 100)} returns the pair (\inlinecode{values}, \inlinecode{vectors}) for a real symmetric $n$ by $n$ matrix \inlinecode{a}. The eigenvalues in \inlinecode{values} are sorted in decreasing order, and \inlinecode{vectors[i]} is a unit eigenvector for \inlinecode{values[i]}, so the eigenvectors are rows rather than columns. Each iteration rotates away the currently largest off-diagonal entry, stopping early once every such entry is smaller than \inlinecode{eps}; if the \inlinecode{iterations} limit is reached first, the current approximation is returned. The matrix must be symmetric, which is not checked; an unsymmetric one silently produces nonsense.
 \end{compactitem}
 
 A general matrix instead needs the roots of the characteristic polynomial of section \secref{6.5.6}, found including complex ones by the Ehrlich-Aberth iteration of section \secref{5.4.5}, though accuracy degrades with degree since polynomial roots are far more sensitive to coefficients than eigenvalues are to the matrix. When only the dominant eigenvalue is wanted, power iteration finds it with no decomposition at all, by repeatedly multiplying a random vector and renormalizing.
 
-\textbf{Time Complexity}: $O(n^{3})$ per sweep and $O(n^{3} \log\left(1 / {\inlinecodemath{eps}}\right))$ per call in practice, where $n$ is the dimension of the matrix. Each rotation costs $O(n)$ and the search for the largest off-diagonal entry costs $O(n^{2})$.
+\textbf{Time Complexity}: $O(I \cdot n^{2})$ per call for at most $I$ iterations, where $n$ is the matrix dimension. Each iteration searches $O(n^{2})$ entries for the largest off-diagonal one and applies one $O(n)$ rotation.
 
 \textbf{Space Complexity}: $O(n^{2})$ auxiliary, and $O(n^{2})$ for the returned eigenvectors.
 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <numeric>
 #include <utility>
@@ -6920,7 +6977,7 @@ std::pair<std::vector<double>, Matrix> jacobi_eigen(
   for (int i = 0; i < n; i++) {
     vectors[i][i] = 1;
   }
-  for (int sweep = 0; sweep < iterations; sweep++) {
+  while (iterations--) {
     int p = 0, q = 1;
     double largest = 0;
     for (int i = 0; i < n; i++) {
@@ -6969,6 +7026,7 @@ std::pair<std::vector<double>, Matrix> jacobi_eigen(
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
+#include <cassert>
 #include <cmath>
 using namespace std;
 
@@ -7055,7 +7113,6 @@ The class treats \inlinecode{T\{\}} as additive zero and requires \inlinecode{va
 
 \begin{lstlisting}[style=cpp]
 #include <cassert>
-#include <cstdint>
 #include <map>
 #include <unordered_set>
 #include <utility>
@@ -7364,6 +7421,7 @@ int solve_system(const SparseMatrix<T> &a, const std::vector<T> &b, std::vector<
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
 #include <cassert>
+#include <cstdint>
 using namespace std;
 
 int main() {
@@ -8200,7 +8258,6 @@ Poly mod(const Poly &a, const Poly &b) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
 #include <cassert>
-using namespace std;
 
 int main() {
   // 5 + 7x + 11x^2 evaluates to 63 at x = 2 and 9 at x = -1.
@@ -8566,7 +8623,7 @@ Each cumulative function sums its mass function term by term, which keeps the co
   \item \inlinecode{hypergeometric\_pmf(n, k, draws, hits)} and \inlinecode{hypergeometric\_cdf(n, k, draws, hits)} evaluate the number of marked items among \inlinecode{draws} items taken without replacement from a population of \inlinecode{n} items of which \inlinecode{k} are marked.
   \item \inlinecode{normal\_pdf(x, mu = 0, sigma = 1)} and \inlinecode{normal\_cdf(x, mu = 0, sigma = 1)} evaluate the normal distribution of mean \inlinecode{mu} and positive standard deviation \inlinecode{sigma}, defaulting to the standard normal distribution.
   \item \inlinecode{exponential\_pdf(x, lambda)} and \inlinecode{exponential\_cdf(x, lambda)} evaluate the waiting time until the next event when events arrive at positive mean rate \inlinecode{lambda}.
-  \item \inlinecode{quantile(cdf, p, lo, hi, iterations = 100)} returns the smallest $x$ in [\inlinecode{lo}, \inlinecode{hi}] whose cumulative probability \inlinecode{cdf(x)} reaches \inlinecode{p}, for any nondecreasing \inlinecode{cdf}.
+  \item \inlinecode{quantile(cdf, p, lo, hi, iterations = 100)} returns the smallest $x$ in [\inlinecode{lo}, \inlinecode{hi}] whose cumulative probability \inlinecode{cdf(x)} reaches \inlinecode{p}, for any nondecreasing \inlinecode{cdf}. The bounds must satisfy \inlinecode{lo} $\leq$ \inlinecode{hi}, \inlinecode{cdf(hi)} must reach \inlinecode{p}, and \inlinecode{iterations} must be positive.
 \end{compactitem}
 
 Sampling is left to \inlinecode{\textless{}random\textgreater{}}, whose \inlinecode{std::binomial\_distribution}, \inlinecode{std::poisson\_distribution}, \inlinecode{std::normal\_distribution}, and their siblings draw from exactly these families. What the standard library does not provide, and this section supplies, is the ability to evaluate and invert them.
@@ -8577,7 +8634,7 @@ Overflow warning: \inlinecode{log\_choose()} is exact only while \inlinecode{std
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to every mass and density function, and to \inlinecode{log\_factorial()} and \inlinecode{log\_choose()}.
-  \item $O(k)$ per call to \inlinecode{binomial\_cdf()}, \inlinecode{poisson\_cdf()}, \inlinecode{negative\_binomial\_cdf()}, and \inlinecode{hypergeometric\_cdf()}, where $k$ is the outcome whose tail is summed.
+  \item $O(k)$ per call to \inlinecode{binomial\_cdf()}, \inlinecode{poisson\_cdf()}, and \inlinecode{negative\_binomial\_cdf()}, where $k$ is the outcome whose tail is summed, and $O(h)$ per call to \inlinecode{hypergeometric\_cdf()}, where $h$ is its \inlinecode{hits} argument.
   \item $O(1)$ per call to \inlinecode{geometric\_cdf()}, \inlinecode{normal\_cdf()}, and \inlinecode{exponential\_cdf()}, which have closed forms.
   \item $O(n)$ calls to \inlinecode{cdf()} per call to \inlinecode{quantile()}, where $n$ is the number of iterations.
 \end{compactitem}
@@ -8586,14 +8643,17 @@ Overflow warning: \inlinecode{log\_choose()} is exact only while \inlinecode{std
 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <limits>
 
 double log_factorial(int n) {
+  assert(n >= 0);
   return std::lgamma(n + 1.0);
 }
 
 double log_choose(int n, int k) {
+  assert(n >= 0);
   if (k < 0 || k > n) {
     return -std::numeric_limits<double>::infinity();
   }
@@ -8601,6 +8661,7 @@ double log_choose(int n, int k) {
 }
 
 double binomial_pmf(int n, int k, double p) {
+  assert(n >= 0 && 0 <= p && p <= 1);
   if (k < 0 || k > n) {
     return 0;
   }
@@ -8614,23 +8675,31 @@ double binomial_pmf(int n, int k, double p) {
 }
 
 double binomial_cdf(int n, int k, double p) {
+  assert(n >= 0 && 0 <= p && p <= 1);
   double res = 0;
-  for (int i = 0; i <= std::min(k, n); i++) {
+  int last = std::min(k, n);
+  for (int i = 0; i <= last; i++) {
     res += binomial_pmf(n, i, p);
+    if (i == last) {
+      break;
+    }
   }
   return std::min(res, 1.0);
 }
 
 double geometric_pmf(int k, double p) {
+  assert(0 < p && p <= 1);
   return k < 1 ? 0 : p * std::pow(1 - p, k - 1);
 }
 
 double geometric_cdf(int k, double p) {
+  assert(0 < p && p <= 1);
   return k < 1 ? 0 : -std::expm1(k * std::log1p(-p));
 }
 
 double negative_binomial_pmf(int k, int r, double p) {
-  if (k < r || r < 1) {
+  assert(r >= 1 && 0 < p && p <= 1);
+  if (k < r) {
     return 0;
   }
   if (p >= 1) {
@@ -8640,14 +8709,22 @@ double negative_binomial_pmf(int k, int r, double p) {
 }
 
 double negative_binomial_cdf(int k, int r, double p) {
+  assert(r >= 1 && 0 < p && p <= 1);
+  if (k < r) {
+    return 0;
+  }
   double res = 0;
-  for (int i = r; i <= k; i++) {
+  for (int i = r;; i++) {
     res += negative_binomial_pmf(i, r, p);
+    if (i == k) {
+      break;
+    }
   }
   return std::min(res, 1.0);
 }
 
 double poisson_pmf(int k, double lambda) {
+  assert(lambda >= 0);
   if (k < 0) {
     return 0;
   }
@@ -8658,49 +8735,74 @@ double poisson_pmf(int k, double lambda) {
 }
 
 double poisson_cdf(int k, double lambda) {
+  assert(lambda >= 0);
+  if (k < 0) {
+    return 0;
+  }
   double res = 0;
-  for (int i = 0; i <= k; i++) {
+  for (int i = 0;; i++) {
     res += poisson_pmf(i, lambda);
+    if (i == k) {
+      break;
+    }
   }
   return std::min(res, 1.0);
 }
 
 double hypergeometric_pmf(int n, int k, int draws, int hits) {
-  if (hits < 0 || hits > k || draws - hits < 0 || draws - hits > n - k) {
+  assert(n >= 0 && 0 <= k && k <= n && 0 <= draws && draws <= n);
+  if (hits < 0 || hits > draws || hits > k || draws - hits > n - k) {
     return 0;
   }
   return std::exp(log_choose(k, hits) + log_choose(n - k, draws - hits) - log_choose(n, draws));
 }
 
 double hypergeometric_cdf(int n, int k, int draws, int hits) {
+  assert(n >= 0 && 0 <= k && k <= n && 0 <= draws && draws <= n);
+  if (hits < 0) {
+    return 0;
+  }
   double res = 0;
-  for (int i = 0; i <= hits; i++) {
+  int last = std::min({hits, k, draws});
+  for (int i = 0; i <= last; i++) {
     res += hypergeometric_pmf(n, k, draws, i);
+    if (i == last) {
+      break;
+    }
   }
   return std::min(res, 1.0);
 }
 
 double normal_pdf(double x, double mu = 0, double sigma = 1) {
+  assert(sigma > 0);
   static const double INV_SQRT_2PI = 0.3989422804014327;
   double z = (x - mu) / sigma;
   return INV_SQRT_2PI / sigma * std::exp(-0.5 * z * z);
 }
 
 double normal_cdf(double x, double mu = 0, double sigma = 1) {
+  assert(sigma > 0);
   static const double INV_SQRT_2 = 0.7071067811865476;
   return 0.5 * std::erfc(-(x - mu) * INV_SQRT_2 / sigma);
 }
 
 double exponential_pdf(double x, double lambda) {
+  assert(lambda > 0);
   return x < 0 ? 0 : lambda * std::exp(-lambda * x);
 }
 
 double exponential_cdf(double x, double lambda) {
+  assert(lambda > 0);
   return x < 0 ? 0 : -std::expm1(-lambda * x);
 }
 
 template<typename Cdf>
 double quantile(Cdf cdf, double p, double lo, double hi, int iterations = 100) {
+  assert(0 <= p && p <= 1 && lo <= hi && iterations > 0);
+  if (cdf(lo) >= p) {
+    return lo;
+  }
+  assert(cdf(hi) >= p);
   for (int i = 0; i < iterations; i++) {
     double mid = lo + (hi - lo) / 2;
     if (cdf(mid) >= p) {
@@ -8763,7 +8865,7 @@ When the transition graph is acyclic, the equations can be evaluated instead of 
 A self-loop is the one cycle this method still handles. If the process stays in $u$ with probability $q$, then $E[u] = c_u + q E[u] + \sum_{v \neq u} p_{uv} E[v]$, and isolating $E[u]$ gives $E[u] = (c_u + \sum_{v \neq u} p_{uv} E[v]) / (1 - q)$. Equivalently, the process retries until it leaves, so the expected number of attempts is the geometric mean $1/(1 - q)$. Self-loops appear whenever a move can be rejected and repeated, such as a die roll that would overshoot the goal or a draw that repeats a coupon already held.
 
 \begin{compactitem}
-  \item \inlinecode{expected\_cost(trans, cost)} returns a vector \inlinecode{e} such that \inlinecode{e[u]} is the expected total cost accumulated from state \inlinecode{u} until the process reaches a state with no outgoing transitions. States are the indices of \inlinecode{trans}, each entry \inlinecode{trans[u]} lists the outgoing transitions of \inlinecode{u} as pairs of (\inlinecode{next\_state}, \inlinecode{probability}), and \inlinecode{cost[u]} is the cost charged on leaving \inlinecode{u}. Transition probabilities out of a state must sum to at most $1$, with any missing probability treated as ending the process.
+  \item \inlinecode{expected\_cost(trans, cost)} returns a vector \inlinecode{e} such that \inlinecode{e[u]} is the expected total cost accumulated from state \inlinecode{u} until the process reaches a state with no outgoing transitions. States are the indices of \inlinecode{trans}, each entry \inlinecode{trans[u]} lists the outgoing transitions of \inlinecode{u} as pairs of (\inlinecode{next\_state}, \inlinecode{probability}), and \inlinecode{cost[u]} is the cost charged on leaving \inlinecode{u}. Transition destinations must be valid state indices, and their nonnegative probabilities must sum to at most $1$, with any missing probability treated as ending the process.
 \end{compactitem}
 
 Aside from self-loops the transition graph must be acyclic, since a genuine cycle leaves the equations mutually dependent and they must then be solved as a linear system; two states that reach each other call for the absorbing Markov chains of section \secref{6.7.3} instead.
@@ -8789,11 +8891,16 @@ std::vector<double> expected_cost(
   assert(static_cast<int>(cost.size()) == n);
   std::vector<int> indeg(n);
   for (int u = 0; u < n; u++) {
+    double prob = 0;
     for (auto [v, p] : trans[u]) {
+      assert(v >= 0 && v < n && p >= 0);
+      prob += p;
       if (v != u) {  // Self-loops are resolved algebraically, so they do not order the states.
         indeg[v]++;
       }
     }
+    assert(prob <= 1 + 1e-12);
+    (void)prob;
   }
   std::vector<int> order, ready;
   order.reserve(n);
@@ -8909,6 +9016,7 @@ Every transient state must reach an absorbing one, which is exactly what makes $
 \begin{lstlisting}[style=cpp]
 #include <cassert>
 #include <cmath>
+#include <utility>
 #include <vector>
 
 const double EPS = 1e-9;
@@ -9026,7 +9134,7 @@ A Markov chain with no absorbing states never settles on a single state, but the
 The defining equations are one short of determining $\pi$. Each column of $\pi P = \pi$ says that the probability flowing into a state equals the probability flowing out, and those $n$ equations sum to the trivial identity $1 = 1$, leaving the system rank $n - 1$ and any scalar multiple of a solution also a solution. Substituting the normalization $\sum_i \pi_i = 1$ for one of them pins down the scale and makes the system uniquely solvable by ordinary elimination.
 
 \begin{compactitem}
-  \item \inlinecode{stationary\_distribution(p, eps = 1e-10)} returns the stationary distribution of the $n$ by $n$ row-stochastic transition matrix \inlinecode{p}, where \inlinecode{p[i][j]} is the probability of stepping from state \inlinecode{i} to state \inlinecode{j}. It returns \inlinecode{std::nullopt} when the system is singular to within \inlinecode{eps}, which happens exactly when the chain is reducible and therefore has no unique stationary distribution.
+  \item \inlinecode{stationary\_distribution(p, eps = 1e-10)} returns the stationary distribution of the $n$ by $n$ row-stochastic transition matrix \inlinecode{p}, where \inlinecode{p[i][j]} is the probability of stepping from state \inlinecode{i} to state \inlinecode{j}. It returns \inlinecode{std::nullopt} when the system is singular to within \inlinecode{eps}, which happens when the chain has more than one closed recurrent class and therefore no unique stationary distribution. A reducible chain may still have a unique distribution when all states eventually enter the same closed class.
 \end{compactitem}
 
 Two quantities follow at once: the expected number of steps to return to state $i$ is $1/\pi_i$, and on an undirected graph walked by a uniformly random incident edge, $\pi_v$ is proportional to the degree of $v$, which is why such a walk is uniform in the limit on a regular graph. Where the absorbing chains of section \secref{6.7.3} ask what happens before the process stops, this asks what happens when it never does.
@@ -9036,9 +9144,9 @@ Two quantities follow at once: the expected number of steps to return to state $
 \textbf{Space Complexity}: $O(n^{2})$ auxiliary and $O(n)$ for the returned distribution.
 
 \begin{lstlisting}[style=cpp]
-#include <cassert>
 #include <cmath>
 #include <optional>
+#include <utility>
 #include <vector>
 
 std::optional<std::vector<double>> stationary_distribution(
@@ -9067,7 +9175,7 @@ std::optional<std::vector<double>> stationary_distribution(
       }
     }
     if (fabs(a[pivot][col]) < eps) {
-      return std::nullopt;  // Reducible, so the stationary distribution is not unique.
+      return std::nullopt;  // Multiple closed classes make the stationary distribution nonunique.
     }
     std::swap(a[col], a[pivot]);
     double scale = a[col][col];  // Saved, since the loop below overwrites it on its first step.
@@ -9093,6 +9201,7 @@ std::optional<std::vector<double>> stationary_distribution(
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
+#include <cassert>
 #include <cmath>
 using namespace std;
 
@@ -9123,6 +9232,10 @@ int main() {
 
   // Two states that never reach each other admit no unique distribution.
   assert(!stationary_distribution({{1, 0}, {0, 1}}).has_value());
+
+  // Reducibility alone is not an obstruction: state 0 is transient and state 1 is the sole class.
+  auto reducible = stationary_distribution({{0, 1}, {0, 1}});
+  assert(reducible.has_value() && EQ((*reducible)[0], 0) && EQ((*reducible)[1], 1));
   return 0;
 }
 \end{lstlisting}
@@ -9134,6 +9247,7 @@ Features measured on different scales distort every distance here, so call \inli
 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <limits>
@@ -9145,6 +9259,7 @@ Features measured on different scales distort every distance here, so call \inli
 using Points = std::vector<std::vector<double>>;
 
 double sqdist(const std::vector<double> &a, const std::vector<double> &b) {
+  assert(a.size() == b.size());
   double res = 0;
   for (size_t i = 0; i < a.size(); i++) {
     res += (a[i] - b[i]) * (a[i] - b[i]);
@@ -9165,6 +9280,7 @@ Standardizing subtracts each column's mean and divides by its standard deviation
 
 \begin{lstlisting}[style=cpp]
 std::vector<double> column_mean(const Points &points) {
+  assert(!points.empty());
   int n = static_cast<int>(points.size()), d = static_cast<int>(points[0].size());
   std::vector<double> res(d);
   for (int i = 0; i < n; i++) {
@@ -9179,6 +9295,7 @@ std::vector<double> column_mean(const Points &points) {
 }
 
 std::vector<double> column_stddev(const Points &points, const std::vector<double> &mean) {
+  assert(!points.empty() && mean.size() == points[0].size());
   int n = static_cast<int>(points.size()), d = static_cast<int>(points[0].size());
   std::vector<double> res(d);
   for (int i = 0; i < n; i++) {
@@ -9198,6 +9315,8 @@ std::vector<double> column_stddev(const Points &points, const std::vector<double
 void standardize(
     std::vector<double> &x, const std::vector<double> &mean, const std::vector<double> &stddev
 ) {
+  assert(x.size() == mean.size() && x.size() == stddev.size());
+  assert(std::all_of(stddev.begin(), stddev.end(), [](double value) { return value > 0; }));
   for (size_t j = 0; j < x.size(); j++) {
     x[j] = (x[j] - mean[j]) / stddev[j];
   }
@@ -9216,7 +9335,7 @@ $k$-means partitions the rows into $k$ clusters so that each row lies nearer to 
 Choosing those starting centroids is called seeding, and $k$-means++ is the standard rule: take the first uniformly at random, then draw each remaining one with probability proportional to its squared distance from the nearest already chosen. That spreads them out instead of letting several land in one dense region, bounding the expected cost at $O(\log k)$ times optimal, which uniform choice cannot promise. The loop stops once an assignment pass changes nothing, and a cluster that loses all its rows keeps its previous centroid.
 
 \begin{compactitem}
-  \item \inlinecode{kmeans(points, k, rng, iterations = 100)} returns (\inlinecode{centroids}, \inlinecode{assignment}), partitioning the rows into \inlinecode{k} clusters, where \inlinecode{assignment[i]} is the cluster of row \inlinecode{i} and \inlinecode{centroids[c]} is the mean of cluster \inlinecode{c}. The number of rows must be at least \inlinecode{k}, which must be positive.
+  \item \inlinecode{kmeans(points, k, rng, iterations = 100)} returns (\inlinecode{centroids}, \inlinecode{assignment}), partitioning the rows into \inlinecode{k} clusters, where \inlinecode{assignment[i]} is the cluster of row \inlinecode{i} and \inlinecode{centroids[c]} is the mean of cluster \inlinecode{c}. The number of rows must be at least \inlinecode{k}; both \inlinecode{k} and \inlinecode{iterations} must be positive.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(i \cdot n \cdot k \cdot d)$ per call for \inlinecode{iterations} $i$, $n$ rows, and $d$ columns.
@@ -9228,6 +9347,7 @@ std::pair<Points, std::vector<int>> kmeans(
     const Points &points, int k, std::mt19937 &rng, int iterations = 100
 ) {
   int n = static_cast<int>(points.size());
+  assert(k > 0 && k <= n && iterations > 0);
   Points centroids;
   centroids.push_back(points[std::uniform_int_distribution<int>(0, n - 1)(rng)]);
   std::vector<double> best(n);
@@ -9298,6 +9418,9 @@ int knn_classify(
     const Points &points, const std::vector<int> &labels, const std::vector<double> &query, int k
 ) {
   int n = static_cast<int>(points.size());
+  assert(n > 0 && static_cast<int>(labels.size()) == n && query.size() == points[0].size());
+  assert(k >= 1 && k <= n);
+  assert(std::all_of(labels.begin(), labels.end(), [](int label) { return label >= 0; }));
   std::vector<int> order(n);
   std::iota(order.begin(), order.end(), 0);
   std::vector<double> dist(n);
@@ -9326,7 +9449,7 @@ The Gaussian variant below models each feature within each class by a normal dis
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \cdot d)$ per construction.
-  \item $O(c \cdot d)$ per call to \inlinecode{predict()} and \inlinecode{log\_likelihood()} for $n$ rows of $d$ columns and $c$ classes.
+  \item $O(c \cdot d)$ per call to \inlinecode{predict()} and $O(d)$ per call to \inlinecode{log\_likelihood()}, for $n$ rows of $d$ columns and $c$ classes.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(c \cdot d)$ for storage.
@@ -9338,6 +9461,10 @@ class NaiveBayes {
 
  public:
   NaiveBayes(const Points &points, const std::vector<int> &labels, int classes) {
+    assert(!points.empty() && labels.size() == points.size() && classes > 0);
+    assert(std::all_of(labels.begin(), labels.end(), [&](int label) {
+      return 0 <= label && label < classes;
+    }));
     int n = static_cast<int>(points.size()), d = static_cast<int>(points[0].size());
     std::vector<int> counts(classes);
     mean.assign(classes, std::vector<double>(d));
@@ -9376,6 +9503,7 @@ class NaiveBayes {
   }
 
   double log_likelihood(const std::vector<double> &x, int c) const {
+    assert(c >= 0 && c < static_cast<int>(log_prior.size()) && x.size() == mean[c].size());
     static const double LOG_2PI = 1.8378770664093453;
     double res = log_prior[c];
     for (size_t j = 0; j < x.size(); j++) {
@@ -9418,6 +9546,7 @@ double sigmoid(double z) {
 }
 
 double logistic_predict(const std::vector<double> &w, const std::vector<double> &x) {
+  assert(w.size() == x.size() + 1);
   double z = w[0];
   for (size_t j = 0; j < x.size(); j++) {
     z += w[j + 1] * x[j];
@@ -9429,6 +9558,11 @@ std::vector<double> logistic_regression(
     const Points &points, const std::vector<int> &labels, double rate = 0.1, int iterations = 1000,
     double l2 = 0
 ) {
+  assert(!points.empty() && labels.size() == points.size());
+  assert(rate > 0 && iterations > 0 && l2 >= 0);
+  assert(std::all_of(labels.begin(), labels.end(), [](int label) {
+    return label == 0 || label == 1;
+  }));
   int n = static_cast<int>(points.size()), d = static_cast<int>(points[0].size());
   std::vector<double> w(d + 1), grad(d + 1);
   for (int it = 0; it < iterations; it++) {
@@ -9640,7 +9774,6 @@ uint64_t nim_inverse(uint64_t b) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
 #include <cassert>
-using namespace std;
 
 int main() {
   // Smallest nontrivial products: {0,1,2,3} form the field GF(4) under XOR and nim product.

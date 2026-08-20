@@ -27,7 +27,6 @@ Space Complexity:
 
 */
 
-#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <tuple>
@@ -87,6 +86,7 @@ using Point3LD = TPoint3<long double>;
 
 /*** Example Usage ***/
 
+#include <cassert>
 using namespace std;
 
 int main() {

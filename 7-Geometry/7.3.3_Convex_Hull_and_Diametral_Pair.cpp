@@ -27,7 +27,6 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
-#include <random>
 #include <utility>
 #include <vector>
 
@@ -113,6 +112,7 @@ std::pair<Pt, Pt> diametral_pair(const std::vector<Pt> &p) {
 /*** Example Usage ***/
 
 #include <cassert>
+#include <random>
 #include <vector>
 using namespace std;
 
