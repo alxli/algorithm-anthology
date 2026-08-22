@@ -1587,14 +1587,16 @@ int main() {
 \section{\texorpdfstring{Bump Allocation}{8.8 Bump Allocation}}
 \setcounter{section}{8}
 \label{sec:8.8}
-A typed bump pool replaces many small heap allocations with consecutive slots in one fixed vector. This simple form is useful for pointer-based trees, tries, and linked structures whose nodes all live until the algorithm finishes. Allocation advances one index, and individual nodes are never freed.
+A typed bump pool replaces many small heap allocations with consecutive slots in one fixed array. This simple form is useful for pointer-based trees, tries, and linked structures whose nodes all live until the algorithm finishes. Allocation advances one index, and individual nodes are never freed.
 
 \begin{compactitem}
-  \item \inlinecode{make\_node(value, next = nullptr)} returns a pointer to a new node initialized with \inlinecode{value} and \inlinecode{next}.
+  \item \inlinecode{make\_node(args...)} returns a pointer to a new node initialized as \inlinecode{Node\{args...\}}.
   \item \inlinecode{BumpArena\textless{}N\textgreater{}} owns an inline $N$-byte monotonic buffer. Pass \inlinecode{arena.resource()} to a \inlinecode{std::pmr} container such as \inlinecode{std::pmr::vector\textless{}T\textgreater{}} or \inlinecode{std::pmr::map\textless{}K, V\textgreater{}}.
 \end{compactitem}
 
-The vector is created at its final size and never resized, so returned pointers remain valid. Adjust \inlinecode{MAX\_NODES} and the fields of \inlinecode{Node} for the problem at hand.
+The array has a fixed size, so returned pointers remain valid. Adjust \inlinecode{MAX\_NODES} and the fields of \inlinecode{Node} for the problem at hand. For a growable pool, use \inlinecode{std::deque\textless{}Node\textgreater{}} to preserve pointers or store indices instead; growing \inlinecode{std::vector} can reallocate and invalidate its pointers.
+
+This pattern suits append-only structures because individual slots are never reclaimed. If nodes may be erased and replaced, use a free-list pool or \inlinecode{new}/\inlinecode{delete} so storage stays proportional to the number of live nodes rather than the total number allocated. A raw array also constructs every node up front, so this form is best for simple, default-constructible node types.
 
 For standard containers, the C++17 polymorphic allocator interface avoids both a global \inlinecode{operator new} override and the full allocator protocol. An arena must outlive every container using it; declare a large arena statically if it would exceed the stack limit. The wrapper uses \inlinecode{std::pmr::null\_memory\_resource()} as its upstream resource, so exhausting the buffer throws \inlinecode{std::bad\_alloc} instead of silently allocating from the heap.
 
@@ -1616,20 +1618,22 @@ For standard containers, the C++17 polymorphic allocator interface avoids both a
 #include <cassert>
 #include <cstddef>
 #include <memory_resource>
-#include <vector>
+#include <utility>
 
 struct Node {
+  // Define the fields needed by the data structure here.
   int value;
   Node *next;
 };
 
 static constexpr int MAX_NODES = 100000;
-static std::vector<Node> node_pool(MAX_NODES);
+static Node node_pool[MAX_NODES];
 static int node_count = 0;
 
-Node *make_node(int value, Node *next = nullptr) {
+template<typename... Args>
+Node *make_node(Args &&...args) {
   assert(node_count < MAX_NODES);
-  node_pool[node_count] = {value, next};
+  node_pool[node_count] = Node{std::forward<Args>(args)...};
   return &node_pool[node_count++];
 }
 
@@ -1646,6 +1650,7 @@ class BumpArena {
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
 #include <map>
+#include <vector>
 using namespace std;
 
 int main() {

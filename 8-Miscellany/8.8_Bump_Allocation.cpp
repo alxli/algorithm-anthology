@@ -1,17 +1,22 @@
 /*
 
-A typed bump pool replaces many small heap allocations with consecutive slots in one fixed vector.
+A typed bump pool replaces many small heap allocations with consecutive slots in one fixed array.
 This simple form is useful for pointer-based trees, tries, and linked structures whose nodes all
 live until the algorithm finishes. Allocation advances one index, and individual nodes are never
 freed.
 
-- `make_node(value, next = nullptr)` returns a pointer to a new node initialized with `value` and
-  `next`.
+- `make_node(args...)` returns a pointer to a new node initialized as `Node{args...}`.
 - `BumpArena<N>` owns an inline $N$-byte monotonic buffer. Pass `arena.resource()` to a `std::pmr`
   container such as `std::pmr::vector<T>` or `std::pmr::map<K, V>`.
 
-The vector is created at its final size and never resized, so returned pointers remain valid. Adjust
-`MAX_NODES` and the fields of `Node` for the problem at hand.
+The array has a fixed size, so returned pointers remain valid. Adjust `MAX_NODES` and the fields of
+`Node` for the problem at hand. For a growable pool, use `std::deque<Node>` to preserve pointers or
+store indices instead; growing `std::vector` can reallocate and invalidate its pointers.
+
+This pattern suits append-only structures because individual slots are never reclaimed. If nodes may
+be erased and replaced, use a free-list pool or `new`/`delete` so storage stays proportional to the
+number of live nodes rather than the total number allocated. A raw array also constructs every node
+up front, so this form is best for simple, default-constructible node types.
 
 For standard containers, the C++17 polymorphic allocator interface avoids both a global
 `operator new` override and the full allocator protocol. An arena must outlive every container using
@@ -32,20 +37,22 @@ Space Complexity:
 #include <cassert>
 #include <cstddef>
 #include <memory_resource>
-#include <vector>
+#include <utility>
 
 struct Node {
+  // Define the fields needed by the data structure here.
   int value;
   Node *next;
 };
 
 static constexpr int MAX_NODES = 100000;
-static std::vector<Node> node_pool(MAX_NODES);
+static Node node_pool[MAX_NODES];
 static int node_count = 0;
 
-Node *make_node(int value, Node *next = nullptr) {
+template<typename... Args>
+Node *make_node(Args &&...args) {
   assert(node_count < MAX_NODES);
-  node_pool[node_count] = {value, next};
+  node_pool[node_count] = Node{std::forward<Args>(args)...};
   return &node_pool[node_count++];
 }
 
@@ -61,6 +68,7 @@ class BumpArena {
 /*** Example Usage ***/
 
 #include <map>
+#include <vector>
 using namespace std;
 
 int main() {

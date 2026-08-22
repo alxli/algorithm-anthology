@@ -3,7 +3,8 @@
 Maintain a two-dimensional array over a huge grid while supporting dynamic queries of rectangular
 subarrays and dynamic updates of individual indices. This is a sparse (a.k.a. dynamic or implicit)
 2D segment tree: row and column nodes are allocated lazily as cells are touched, so large coordinate
-bounds are supported without allocating the full grid.
+bounds are supported without allocating the full grid. Allocated nodes are kept in stable-address
+pools and released together when the tree is destroyed.
 
 The query operation is defined by a commutative associative aggregate function `combine(a, b)`.
 Because untouched regions are implicit, `combine_n(v, area)` must return the aggregate summary of
@@ -46,6 +47,7 @@ Space Complexity:
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <deque>
 #include <optional>
 
 template<typename T, int R = 1000000001, int C = 1000000001>
@@ -72,12 +74,25 @@ class SparseSegTree2D {
 
     OuterNode(int lo, int hi, const T &v)
         : inner(0, C - 1, v), lo(lo), hi(hi), left(nullptr), right(nullptr) {}
-  } *root;
+  };
 
+  std::deque<InnerNode> inner_nodes;
+  std::deque<OuterNode> outer_nodes;
+  OuterNode *root;
   T init;
 
   static int64_t length(int lo, int hi) { return hi - lo + 1LL; }
   static void append_result(std::optional<T> &res, const T &v) { res = res ? combine(*res, v) : v; }
+
+  InnerNode *make_inner(int lo, int hi, const T &v) {
+    inner_nodes.emplace_back(lo, hi, v);
+    return &inner_nodes.back();
+  }
+
+  OuterNode *make_outer(int lo, int hi, const T &v) {
+    outer_nodes.emplace_back(lo, hi, v);
+    return &outer_nodes.back();
+  }
 
   template<typename Node, typename Get>
   T query_nodes(const Node *n, int qlo, int qhi, int64_t span, const Get &get) const {
@@ -127,7 +142,7 @@ class SparseSegTree2D {
     }
     InnerNode *&target = (c <= mid) ? n->left : n->right;
     if (target == nullptr) {
-      target = new InnerNode(c, c, combine_n(init, rows));
+      target = make_inner(c, c, combine_n(init, rows));
     }
     if (target->lo <= c && c <= target->hi) {
       update_inner(target, c, rows, apply);
@@ -142,7 +157,7 @@ class SparseSegTree2D {
         split_mid = split_lo + (split_hi - split_lo) / 2;
       } while ((c <= split_mid) == (target->lo <= split_mid));
       InnerNode *tmp =
-          new InnerNode(split_lo, split_hi, combine_n(init, rows * length(split_lo, split_hi)));
+          make_inner(split_lo, split_hi, combine_n(init, rows * length(split_lo, split_hi)));
       if (target->lo <= split_mid) {
         tmp->left = target;
       } else {
@@ -165,12 +180,12 @@ class SparseSegTree2D {
     }
     if (r <= mid) {
       if (n->left == nullptr) {
-        n->left = new OuterNode(lo, mid, combine_n(init, length(lo, mid) * C));
+        n->left = make_outer(lo, mid, combine_n(init, length(lo, mid) * C));
       }
       update(n->left, r, c, d);
     } else {
       if (n->right == nullptr) {
-        n->right = new OuterNode(mid + 1, hi, combine_n(init, length(mid + 1, hi) * C));
+        n->right = make_outer(mid + 1, hi, combine_n(init, length(mid + 1, hi) * C));
       }
       update(n->right, r, c, d);
     }
@@ -185,32 +200,13 @@ class SparseSegTree2D {
     update_inner(&n->inner, c, rows, [&](const T &) { return value; });
   }
 
-  static void clean_up(InnerNode *n) {
-    if (n != nullptr) {
-      clean_up(n->left);
-      clean_up(n->right);
-      delete n;
-    }
-  }
-
-  static void clean_up(OuterNode *n) {
-    if (n != nullptr) {
-      clean_up(n->inner.left);
-      clean_up(n->inner.right);
-      clean_up(n->left);
-      clean_up(n->right);
-      delete n;
-    }
-  }
-
  public:
-  explicit SparseSegTree2D(const T &v = T{})
-      : root(new OuterNode(0, R - 1, combine_n(v, static_cast<int64_t>(R) * C))), init(v) {}
+  explicit SparseSegTree2D(const T &v = T{}) : root(nullptr), init(v) {
+    root = make_outer(0, R - 1, combine_n(v, static_cast<int64_t>(R) * C));
+  }
 
-  ~SparseSegTree2D() { clean_up(root); }
   SparseSegTree2D(const SparseSegTree2D &) = delete;
   SparseSegTree2D &operator=(const SparseSegTree2D &) = delete;
-
   T at(int r, int c) const { return query(r, c, r, c); }
 
   T query(int r1, int c1, int r2, int c2) const {

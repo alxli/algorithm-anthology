@@ -4,7 +4,8 @@ A sparse segment tree (also commonly called a dynamic or implicit segment tree) 
 over a large index range while supporting both dynamic queries and updates of contiguous subarrays
 via the lazy propagation technique. This implementation uses lazy initialization of nodes to
 conserve memory: only the nodes covering touched indices are ever allocated, so a huge index range
-is supported without preallocating the whole tree.
+is supported without preallocating the whole tree. Allocated nodes are kept in a stable-address pool
+and released together when the tree is destroyed.
 
 The query operation is defined by an associative aggregate function `combine(a, b)`. Since untouched
 nodes are implicit, `combine_n(v, len)` must return the aggregate summary of `len` copies of the
@@ -56,6 +57,7 @@ Space Complexity:
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <deque>
 #include <optional>
 
 template<typename T, int N = 1000000001>
@@ -73,13 +75,20 @@ class SparseSegTree {
     Node *left, *right;
 
     explicit Node(const T &v) : value(v), pending(false), left(nullptr), right(nullptr) {}
-  } *root;
+  };
 
+  std::deque<Node> nodes;
+  Node *root;
   T init;
+
+  Node *make_node(const T &v) {
+    nodes.emplace_back(v);
+    return &nodes.back();
+  }
 
   void update_delta(Node *&n, const T &d, int64_t len) {
     if (n == nullptr) {
-      n = new Node(combine_n(init, len));
+      n = make_node(combine_n(init, len));
     }
     n->delta = n->pending ? compose_deltas(n->delta, d) : d;
     n->pending = true;
@@ -126,7 +135,7 @@ class SparseSegTree {
       if (hi < tgt_lo || lo > tgt_hi) {
         return;
       }
-      n = new Node(combine_n(init, hi - lo + 1));
+      n = make_node(combine_n(init, hi - lo + 1));
     } else {
       push_delta(n, lo, hi);
     }
@@ -196,21 +205,11 @@ class SparseSegTree {
     return res != -1 ? res : min_left(n == nullptr ? nullptr : n->left, lo, mid, tgt_hi, pred, acc);
   }
 
-  void clean_up(Node *n) {
-    if (n != nullptr) {
-      clean_up(n->left);
-      clean_up(n->right);
-      delete n;
-    }
-  }
-
  public:
   explicit SparseSegTree(const T &v = T{}) : root(nullptr), init(v) {}
 
-  ~SparseSegTree() { clean_up(root); }
   SparseSegTree(const SparseSegTree &) = delete;
   SparseSegTree &operator=(const SparseSegTree &) = delete;
-
   T at(int i) { return query(i, i); }
 
   T query(int lo, int hi) {
