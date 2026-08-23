@@ -158,6 +158,7 @@ double intersection_area(const std::vector<Pt> &a, const std::vector<Pt> &b) {
     orientation[id] = (area < 0 ? 1 : (area > 0 ? -1 : 0));
   }
   std::vector<double> x_coords;
+  x_coords.reserve(a.size() + b.size());
   for (const Pt &p : a) {
     x_coords.push_back(p.x);
   }

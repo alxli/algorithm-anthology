@@ -15,8 +15,10 @@ cycle remains.
 
 - `directed_mst(n, edges, root)` returns the total weight of the minimum spanning arborescence
   rooted at `root` over `n` nodes numbered $[0, `n`)$, or `std::nullopt` if no arborescence exists.
-  Edges are given as (`from`, `to`, `weight`) triples; parallel edges and self-loops are allowed,
-  with self-loops simply ignored.
+  Edges are given as (`from`, `to`, `weight`) triples with valid node indices; parallel edges and
+  self-loops are allowed, with self-loops simply ignored.
+
+Overflow warning: selected edge weights, adjusted weights, and their total must fit in `int64_t`.
 
 Time Complexity:
 - O(n * m) per call, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -26,6 +28,8 @@ Space Complexity:
 
 */
 
+#include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <optional>
 #include <tuple>
@@ -34,19 +38,23 @@ Space Complexity:
 using Edge = std::tuple<int, int, int64_t>;  // (u, v, weight)
 
 std::optional<int64_t> directed_mst(int n, std::vector<Edge> edges, int root) {
-  const int64_t INF = INT64_MAX / 4;
+  assert(n >= 1 && 0 <= root && root < n);
+  assert(std::all_of(edges.begin(), edges.end(), [n](const Edge &edge) {
+    auto [u, v, w] = edge;
+    return 0 <= u && u < n && 0 <= v && v < n;
+  }));
   int64_t total_dist = 0;
   while (true) {
-    std::vector<int64_t> min_in(n, INF);
+    std::vector<int64_t> min_in(n);
     std::vector<int> pre(n, -1);
     for (const auto &[u, v, w] : edges) {
-      if (u != v && w < min_in[v]) {
+      if (u != v && (pre[v] == -1 || w < min_in[v])) {
         min_in[v] = w;
         pre[v] = u;
       }
     }
     for (int v = 0; v < n; v++) {
-      if (v != root && min_in[v] == INF) {
+      if (v != root && pre[v] == -1) {
         return std::nullopt;
       }
     }
@@ -117,5 +125,6 @@ int main() {
 
   vector<Edge> negative{{0, 1, -1}};
   assert(directed_mst(2, negative, 0) == -1);  // A weight of -1 is a valid result.
+  assert(directed_mst(2, {{0, 1, INT64_MAX / 3}}, 0) == INT64_MAX / 3);
   return 0;
 }

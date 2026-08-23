@@ -4373,14 +4373,18 @@ Given a weighted, directed graph and a root node, a spanning arborescence is a s
 Edmonds' (a.k.a. the Chu-Liu/Edmonds) algorithm computes the arborescence by first selecting, for each non-root node, its cheapest incoming edge. If these choices form no cycle, they already constitute the answer. Otherwise each cycle is contracted into a single supernode, and every edge entering the cycle has its weight reduced by the cost of the edge it would replace inside the cycle. Solving the problem on the contracted graph and expanding the cycles back yields the optimum. The implementation below repeats this contraction in rounds, accumulating the selected weights, until no cycle remains.
 
 \begin{compactitem}
-  \item \inlinecode{directed\_mst(n, edges, root)} returns the total weight of the minimum spanning arborescence rooted at \inlinecode{root} over \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$, or \inlinecode{std::nullopt} if no arborescence exists. Edges are given as (\inlinecode{from}, \inlinecode{to}, \inlinecode{weight}) triples; parallel edges and self-loops are allowed, with self-loops simply ignored.
+  \item \inlinecode{directed\_mst(n, edges, root)} returns the total weight of the minimum spanning arborescence rooted at \inlinecode{root} over \inlinecode{n} nodes numbered $[0, {\inlinecodemath{n}})$, or \inlinecode{std::nullopt} if no arborescence exists. Edges are given as (\inlinecode{from}, \inlinecode{to}, \inlinecode{weight}) triples with valid node indices; parallel edges and self-loops are allowed, with self-loops simply ignored.
 \end{compactitem}
+
+Overflow warning: selected edge weights, adjusted weights, and their total must fit in \inlinecode{int64\_t}.
 
 \textbf{Time Complexity}: $O(n \cdot m)$ per call, where $n$ is the number of nodes and $m$ is the number of edges.
 
 \textbf{Space Complexity}: $O(n + m)$ auxiliary.
 
 \begin{lstlisting}[style=cpp]
+#include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <optional>
 #include <tuple>
@@ -4389,19 +4393,23 @@ Edmonds' (a.k.a. the Chu-Liu/Edmonds) algorithm computes the arborescence by fir
 using Edge = std::tuple<int, int, int64_t>;  // (u, v, weight)
 
 std::optional<int64_t> directed_mst(int n, std::vector<Edge> edges, int root) {
-  const int64_t INF = INT64_MAX / 4;
+  assert(n >= 1 && 0 <= root && root < n);
+  assert(std::all_of(edges.begin(), edges.end(), [n](const Edge &edge) {
+    auto [u, v, w] = edge;
+    return 0 <= u && u < n && 0 <= v && v < n;
+  }));
   int64_t total_dist = 0;
   while (true) {
-    std::vector<int64_t> min_in(n, INF);
+    std::vector<int64_t> min_in(n);
     std::vector<int> pre(n, -1);
     for (const auto &[u, v, w] : edges) {
-      if (u != v && w < min_in[v]) {
+      if (u != v && (pre[v] == -1 || w < min_in[v])) {
         min_in[v] = w;
         pre[v] = u;
       }
     }
     for (int v = 0; v < n; v++) {
-      if (v != root && min_in[v] == INF) {
+      if (v != root && pre[v] == -1) {
         return std::nullopt;
       }
     }
@@ -4473,6 +4481,7 @@ int main() {
 
   vector<Edge> negative{{0, 1, -1}};
   assert(directed_mst(2, negative, 0) == -1);  // A weight of -1 is a valid result.
+  assert(directed_mst(2, {{0, 1, INT64_MAX / 3}}, 0) == INT64_MAX / 3);
   return 0;
 }
 \end{lstlisting}

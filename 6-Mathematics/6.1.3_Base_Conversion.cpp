@@ -89,7 +89,7 @@ std::vector<int> convert_base(const std::vector<int> &d, int a, int b) {
   if (cur.empty() || (cur.size() == 1 && cur[0] == 0)) {
     return {0};
   }
-  while (!(cur.size() == 1 && cur[0] == 0)) {
+  while (cur.size() != 1 || cur[0] != 0) {
     std::vector<int> q(cur.size());
     uint64_t rem = 0;
     for (int i = static_cast<int>(cur.size()) - 1; i >= 0; i--) {

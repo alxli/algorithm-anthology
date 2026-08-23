@@ -52,7 +52,7 @@ int eval(const std::string &s) {
       return sign * res;
     }
     int num = rec(rec, prec - 1);
-    while (!((prec == 2 && *it != '+' && *it != '-') || (prec == 1 && *it != '*' && *it != '/'))) {
+    while ((prec == 2 && (*it == '+' || *it == '-')) || (prec == 1 && (*it == '*' || *it == '/'))) {
       switch (*(it++)) {
         case '+':
           num += rec(rec, prec - 1);

@@ -68,6 +68,7 @@ template<typename Pt>
 std::vector<std::tuple<Pt, Pt, Pt>> delaunay_triangulation(const std::vector<Pt> &p) {
   int n = static_cast<int>(p.size());
   std::vector<decltype(Pt::x)> z;
+  z.reserve(n);
   for (const auto &[px, py] : p) {
     z.emplace_back(px * px + py * py);  // Overflow warning.
   }

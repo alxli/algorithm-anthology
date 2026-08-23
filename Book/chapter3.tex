@@ -4281,7 +4281,7 @@ int eval(const std::string &s) {
       return sign * res;
     }
     int num = rec(rec, prec - 1);
-    while (!((prec == 2 && *it != '+' && *it != '-') || (prec == 1 && *it != '*' && *it != '/'))) {
+    while ((prec == 2 && (*it == '+' || *it == '-')) || (prec == 1 && (*it == '*' || *it == '/'))) {
       switch (*(it++)) {
         case '+':
           num += rec(rec, prec - 1);
@@ -4385,6 +4385,7 @@ void require(bool condition, const string &message) {
 
 std::vector<string> tokenize(const string &s) {
   std::vector<string> op_tokens;
+  op_tokens.reserve(unary_ops.size() + binary_ops.size());
   for (const auto &[op, rule] : unary_ops) {
     op_tokens.push_back(op);
   }
@@ -4596,6 +4597,7 @@ void require(bool condition, const string &message) {
 
 Operand eval_pratt(const string &s) {
   std::vector<string> op_tokens;
+  op_tokens.reserve(unary_ops.size() + binary_ops.size());
   for (const auto &[op, rule] : unary_ops) {
     op_tokens.push_back(op);
   }

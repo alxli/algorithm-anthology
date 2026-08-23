@@ -38,21 +38,21 @@ Space Complexity:
 
 #include <cassert>
 #include <cstdint>
+#include <functional>
 #include <set>
 
 class FullyDynamicCHT {
   struct Line {
     int64_t m, b;
     mutable int64_t xhi;
-    bool is_query;
 
-    Line(int64_t m, int64_t b, int64_t xhi = 0, bool is_query = false)
-        : m(m), b(b), xhi(xhi), is_query(is_query) {}
+    Line(int64_t m, int64_t b) : m(m), b(b), xhi(0) {}
 
-    bool operator<(const Line &l) const { return l.is_query ? xhi < l.xhi : m < l.m; }
+    bool operator<(const Line &l) const { return m < l.m; }
+    bool operator<(int64_t x) const { return xhi < x; }
   };
 
-  std::multiset<Line> hull;
+  std::multiset<Line, std::less<>> hull;
   bool query_max;
 
   template<class It>
@@ -78,7 +78,7 @@ class FullyDynamicCHT {
       m = -m;
       b = -b;
     }
-    auto z = hull.insert(Line(m, b));
+    auto z = hull.emplace(m, b);
     auto y = z++;
     auto x = y;
     while (update_border(y, z)) {
@@ -94,8 +94,7 @@ class FullyDynamicCHT {
 
   int64_t query(int64_t x) const {
     assert(!hull.empty());
-    Line q(0, 0, x, true);
-    auto it = hull.lower_bound(q);
+    auto it = hull.lower_bound(x);
     int64_t res = it->m * x + it->b;  // Overflow warning.
     return query_max ? res : -res;
   }

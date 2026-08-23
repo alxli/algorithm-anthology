@@ -64,6 +64,7 @@ void require(bool condition, const string &message) {
 
 Operand eval_pratt(const string &s) {
   std::vector<string> op_tokens;
+  op_tokens.reserve(unary_ops.size() + binary_ops.size());
   for (const auto &[op, rule] : unary_ops) {
     op_tokens.push_back(op);
   }

@@ -4169,6 +4169,7 @@ double intersection_area(const std::vector<Pt> &a, const std::vector<Pt> &b) {
     orientation[id] = (area < 0 ? 1 : (area > 0 ? -1 : 0));
   }
   std::vector<double> x_coords;
+  x_coords.reserve(a.size() + b.size());
   for (const Pt &p : a) {
     x_coords.push_back(p.x);
   }
@@ -4349,6 +4350,7 @@ template<typename Pt>
 std::vector<std::tuple<Pt, Pt, Pt>> delaunay_triangulation(const std::vector<Pt> &p) {
   int n = static_cast<int>(p.size());
   std::vector<decltype(Pt::x)> z;
+  z.reserve(n);
   for (const auto &[px, py] : p) {
     z.emplace_back(px * px + py * py);  // Overflow warning.
   }

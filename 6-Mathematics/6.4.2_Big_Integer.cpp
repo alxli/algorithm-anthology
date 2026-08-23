@@ -542,7 +542,7 @@ class BigInt {
       at = fft(at.begin(), at.end(), true);
       c.resize(n);
       for (int i = 0; i < n; i++) {
-        c[i] = at[i].real() + 0.5;
+        c[i] = std::llround(at[i].real());
       }
     }
     BigInt res;

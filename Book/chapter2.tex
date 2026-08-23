@@ -9279,8 +9279,9 @@ class SparseDSU {
       tmp[find(val)].push_back(key);
     }
     std::vector<std::vector<T>> res;
+    res.reserve(tmp.size());
     for (auto &[key, val] : tmp) {
-      res.push_back(val);
+      res.push_back(std::move(val));
     }
     return res;
   }
