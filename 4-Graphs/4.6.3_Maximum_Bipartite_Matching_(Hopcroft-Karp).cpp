@@ -11,7 +11,9 @@ overall.
 
 - `match_bipartite_hk(n2)` populates `match_left` and `match_right`, then returns maximum matching
   size for a global, pre-populated adjacency list `adj`, whose indices represent left-side nodes and
-  whose entries contain right-side neighbors numbered $[0, `n2`)$. Time Complexity:
+  whose entries contain right-side neighbors numbered $[0, `n2`)$.
+
+Time Complexity:
 - O(m*sqrt(n_1 + n_2)) per call, where $m$ is the number of edges.
 
 Space Complexity:

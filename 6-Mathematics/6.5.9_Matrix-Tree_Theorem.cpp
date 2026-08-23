@@ -25,6 +25,8 @@ Space Complexity:
 
 */
 
+#include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -43,6 +45,11 @@ int64_t powmod(int64_t x, int64_t n, int64_t m) {
 }
 
 int64_t count_spanning_trees(int n, const std::vector<std::pair<int, int>> &edges) {
+  assert(n >= 0);
+  assert(std::all_of(edges.begin(), edges.end(), [n](auto edge) {
+    auto [u, v] = edge;
+    return 0 <= u && u < n && 0 <= v && v < n;
+  }));
   if (n <= 1) {
     return n == 1 ? 1 : 0;
   }

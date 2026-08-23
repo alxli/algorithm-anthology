@@ -88,9 +88,9 @@ std::pair<int, std::vector<int>> set_cover(const std::vector<int> &sets, int uni
   assert(0 <= universe_size && universe_size < 31);
   int states = 1 << universe_size;
   int full = states - 1;
-  for (int subset : sets) {
-    assert((subset & ~full) == 0);
-  }
+  assert(std::all_of(sets.begin(), sets.end(), [full](int subset) {
+    return (subset & ~full) == 0;
+  }));
   int n = static_cast<int>(sets.size());
   int inf = n + 1;
   std::vector<int> dp(states, inf), parent(states, -1), prev(states, -1);

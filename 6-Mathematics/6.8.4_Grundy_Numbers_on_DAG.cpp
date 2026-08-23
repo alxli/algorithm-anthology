@@ -8,7 +8,7 @@ The implementation uses memoized DFS. It assumes the graph is acyclic; if cycles
 usual finite impartial-game Grundy recurrence is not directly valid without additional analysis.
 
 - `grundy_on_dag(g)` returns the Grundy number of every node in graph `g`, where `g[u]` contains all
-  positions reachable from position `u` in one move.
+  positions reachable from position `u` in one move and every endpoint is a valid node index.
 
 Time Complexity:
 - O(n + m) per call, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -18,9 +18,16 @@ Space Complexity:
 
 */
 
+#include <algorithm>
+#include <cassert>
 #include <vector>
 
 std::vector<int> grundy_on_dag(const std::vector<std::vector<int>> &g) {
+  assert(std::all_of(g.begin(), g.end(), [&](const auto &edges) {
+    return std::all_of(edges.begin(), edges.end(), [&](int v) {
+      return 0 <= v && v < static_cast<int>(g.size());
+    });
+  }));
   std::vector<int> memo(g.size(), -1);
   auto dfs = [&](auto &&dfs, int u) {
     if (memo[u] != -1) {

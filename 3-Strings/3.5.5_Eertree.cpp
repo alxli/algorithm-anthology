@@ -45,7 +45,7 @@ class Eertree {
     int len, link, occ;
     std::unordered_map<char, int> next;
 
-    Node(int len = 0) : len(len), link(0), occ(0) {}
+    explicit Node(int len = 0) : len(len), link(0), occ(0) {}
   };
 
   std::vector<Node> tree;

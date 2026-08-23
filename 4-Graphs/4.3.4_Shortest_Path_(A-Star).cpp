@@ -24,7 +24,7 @@ minimum edge weight in a geometric graph, or the number of misplaced tiles in a 
   unreachable, for a global, pre-populated adjacency list `adj` whose indices represent the nodes.
   Each edge is stored as (`neighbor`, `weight`), where `weight` is nonnegative. The heuristic `h(v)`
   must return an admissible numeric estimate of the remaining distance from node `v` to `dest`;
-  integral and floating-point estimates are both supported.
+  `h(dest)` must equal $0$. Integral and floating-point estimates are both supported.
 - `get_path(dest)` returns the path from `start` to `dest`, or an empty vector if `dest` is
   unreachable, using the state left by the most recent call to `astar()`.
 
@@ -47,11 +47,11 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <functional>
 #include <queue>
 #include <tuple>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -63,6 +63,8 @@ std::vector<int> pred;
 template<typename Fn>
 int64_t astar(int start, int dest, Fn h) {
   int n = static_cast<int>(adj.size());
+  assert(0 <= start && start < n && 0 <= dest && dest < n);
+  assert(h(dest) == 0);
   dist.assign(n, INF);
   pred.assign(n, -1);
   dist[start] = 0;

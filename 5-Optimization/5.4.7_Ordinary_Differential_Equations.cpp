@@ -51,6 +51,7 @@ State euler(Fn f, double t0, const State &y0, double t1, int steps) {
   State y = y0;
   for (int i = 0; i < steps; i++) {
     State k = f(t0 + i * h, y);
+    assert(k.size() == y.size());
     for (size_t j = 0; j < y.size(); j++) {
       y[j] += h * k[j];
     }
@@ -66,10 +67,12 @@ State midpoint(Fn f, double t0, const State &y0, double t1, int steps) {
   for (int i = 0; i < steps; i++) {
     double t = t0 + i * h;
     State k1 = f(t, y), half = y;
+    assert(k1.size() == y.size());
     for (size_t j = 0; j < y.size(); j++) {
       half[j] += h / 2 * k1[j];
     }
     State k2 = f(t + h / 2, half);
+    assert(k2.size() == y.size());
     for (size_t j = 0; j < y.size(); j++) {
       y[j] += h * k2[j];
     }
@@ -85,18 +88,22 @@ State runge_kutta(Fn f, double t0, const State &y0, double t1, int steps) {
   for (int i = 0; i < steps; i++) {
     double t = t0 + i * h;
     State k1 = f(t, y);
+    assert(k1.size() == y.size());
     for (size_t j = 0; j < y.size(); j++) {
       probe[j] = y[j] + h / 2 * k1[j];
     }
     State k2 = f(t + h / 2, probe);
+    assert(k2.size() == y.size());
     for (size_t j = 0; j < y.size(); j++) {
       probe[j] = y[j] + h / 2 * k2[j];
     }
     State k3 = f(t + h / 2, probe);
+    assert(k3.size() == y.size());
     for (size_t j = 0; j < y.size(); j++) {
       probe[j] = y[j] + h * k3[j];
     }
     State k4 = f(t + h, probe);
+    assert(k4.size() == y.size());
     for (size_t j = 0; j < y.size(); j++) {
       y[j] += h / 6 * (k1[j] + 2 * k2[j] + 2 * k3[j] + k4[j]);
     }

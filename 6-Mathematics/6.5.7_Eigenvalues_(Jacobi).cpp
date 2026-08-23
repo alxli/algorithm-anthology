@@ -19,8 +19,8 @@ eigenvalues. Accumulating the rotations gives the eigenvectors.
   `vectors[i]` is a unit eigenvector for `values[i]`, so the eigenvectors are rows rather than
   columns. Each iteration rotates away the currently largest off-diagonal entry, stopping early once
   every such entry is smaller than `eps`; if the `iterations` limit is reached first, the current
-  approximation is returned. The matrix must be symmetric, which is not checked; an unsymmetric one
-  silently produces nonsense.
+  approximation is returned. `iterations` must be nonnegative. The matrix must be symmetric, which
+  is not checked; an unsymmetric one silently produces nonsense.
 
 A general matrix instead needs the roots of the characteristic polynomial of section 6.5.6, found
 including complex ones by the Ehrlich-Aberth iteration of section 5.4.5, though accuracy degrades
@@ -38,6 +38,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <numeric>
 #include <utility>
@@ -49,6 +50,7 @@ std::pair<std::vector<double>, Matrix> jacobi_eigen(
     Matrix a, double eps = 1e-12, int iterations = 100
 ) {
   int n = static_cast<int>(a.size());
+  assert((n == 0 || static_cast<int>(a[0].size()) == n) && iterations >= 0);
   Matrix vectors(n, std::vector<double>(n));
   for (int i = 0; i < n; i++) {
     vectors[i][i] = 1;
@@ -65,7 +67,7 @@ std::pair<std::vector<double>, Matrix> jacobi_eigen(
         }
       }
     }
-    if (n < 2 || largest < eps) {
+    if (n < 2 || largest <= eps) {
       break;
     }
     // Choose the rotation angle that zeroes a[p][q], using the numerically safe form of

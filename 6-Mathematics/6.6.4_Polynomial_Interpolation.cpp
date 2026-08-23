@@ -51,8 +51,17 @@ int64_t submod(int64_t a, int64_t b) { return modnorm(modnorm(a) - modnorm(b)); 
 int64_t inv(int64_t a) { return powmod(modnorm(a), MOD - 2, MOD); }
 // clang-format on
 
+void validate_points(const std::vector<int64_t> &x) {
+  for (int i = 0; i < static_cast<int>(x.size()); i++) {
+    for (int j = 0; j < i; j++) {
+      assert(modnorm(x[i]) != modnorm(x[j]));
+    }
+  }
+}
+
 std::vector<int64_t> interpolate(std::vector<int64_t> x, std::vector<int64_t> y) {
   assert(x.size() == y.size());
+  validate_points(x);
   int n = static_cast<int>(x.size());
   for (int i = 0; i < n; i++) {
     x[i] = modnorm(x[i]);
@@ -82,6 +91,7 @@ std::vector<int64_t> interpolate(std::vector<int64_t> x, std::vector<int64_t> y)
 
 int64_t interpolate_at(const std::vector<int64_t> &x, const std::vector<int64_t> &y, int64_t t) {
   assert(x.size() == y.size());
+  validate_points(x);
   int n = static_cast<int>(x.size());
   t = modnorm(t);
   int64_t res = 0;

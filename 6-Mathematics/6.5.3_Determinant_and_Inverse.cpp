@@ -44,6 +44,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <optional>
@@ -53,8 +54,9 @@ Space Complexity:
 
 template<typename SquareMatrix>
 auto det_naive(const SquareMatrix &a) {
-  using T = std::decay_t<decltype(a[0][0])>;
   int n = static_cast<int>(a.size());
+  assert(n == 0 || static_cast<int>(a[0].size()) == n);
+  using T = std::decay_t<decltype(a[0][0])>;
   if (n == 0) {
     return T{1};
   }
@@ -96,7 +98,7 @@ int elimination_pivot(const SquareMatrix &a, int row, int col, double eps) {
         pivot = r;
       }
     }
-    return std::fabs(a[pivot][col]) < eps ? -1 : pivot;
+    return std::fabs(a[pivot][col]) <= eps ? -1 : pivot;
   }
   for (int r = row; r < n; r++) {
     if (a[r][col] != T{0}) {
@@ -108,8 +110,9 @@ int elimination_pivot(const SquareMatrix &a, int row, int col, double eps) {
 
 template<typename SquareMatrix>
 auto det(const SquareMatrix &a, double eps = 1e-10) {
-  using T = std::decay_t<decltype(a[0][0])>;
   int n = static_cast<int>(a.size());
+  assert(n == 0 || static_cast<int>(a[0].size()) == n);
+  using T = std::decay_t<decltype(a[0][0])>;
   SquareMatrix b(a);
   T res = 1;
   for (int i = 0; i < n; i++) {
@@ -134,6 +137,7 @@ auto det(const SquareMatrix &a, double eps = 1e-10) {
 
 int64_t det_bareiss(std::vector<std::vector<int64_t>> a) {
   int n = static_cast<int>(a.size());
+  assert(n == 0 || static_cast<int>(a[0].size()) == n);
   int64_t prev = 1, sign = 1;
   for (int k = 0; k < n; k++) {
     if (a[k][k] == 0) {  // Swap in a nonzero pivot; each swap flips the sign.
@@ -169,8 +173,9 @@ int64_t det_bareiss(std::vector<std::vector<int64_t>> a) {
 
 template<typename SquareMatrix>
 std::optional<SquareMatrix> inverse(SquareMatrix a, double eps = 1e-10) {
-  using T = std::decay_t<decltype(a[0][0])>;
   int n = static_cast<int>(a.size());
+  assert(n == 0 || static_cast<int>(a[0].size()) == n);
+  using T = std::decay_t<decltype(a[0][0])>;
   for (int i = 0; i < n; i++) {
     a[i].resize(2 * n);
     for (int j = n; j < n * 2; j++) {

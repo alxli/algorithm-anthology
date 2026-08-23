@@ -47,9 +47,7 @@ class SlotDSU {
 };
 
 std::pair<int64_t, std::vector<int>> select_deadline_jobs(const std::vector<Job> &jobs) {
-  for (const auto &job : jobs) {
-    assert(job.deadline > 0);
-  }
+  assert(std::all_of(jobs.begin(), jobs.end(), [](const Job &job) { return job.deadline > 0; }));
   int n = static_cast<int>(jobs.size());
   std::vector<int> order(n);
   std::iota(order.begin(), order.end(), 0);

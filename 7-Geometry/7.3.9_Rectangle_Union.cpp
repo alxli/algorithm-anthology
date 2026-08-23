@@ -65,6 +65,11 @@ struct UnionMeasure {
 // least once and at least twice, the number of maximal covered runs, and the greatest weight at any
 // point. Each is its own recurrence, so each is pulled up separately.
 class CoverTree {
+  static int checked_len(const std::vector<int64_t> &ys) {
+    assert(ys.size() >= 2);
+    return static_cast<int>(ys.size()) - 1;
+  }
+
   std::vector<int64_t> ys;  // Compressed coordinates; leaf i spans [ys[i], ys[i + 1]).
   int len;
   std::vector<int> count, runs;
@@ -112,7 +117,7 @@ class CoverTree {
  public:
   explicit CoverTree(std::vector<int64_t> coords)
       : ys(std::move(coords)),
-        len(static_cast<int>(ys.size()) - 1),
+        len(checked_len(ys)),
         count(4 * len),
         runs(4 * len),
         covered(4 * len),
@@ -120,9 +125,7 @@ class CoverTree {
         weight(4 * len),
         heaviest(4 * len),
         covers_lo(4 * len),
-        covers_hi(4 * len) {
-    assert(len > 0);
-  }
+        covers_hi(4 * len) {}
 
   // Adds delta covers of weight w to every elementary interval in [lo, hi]; a removal negates both.
   void update(int lo, int hi, int delta, int64_t w) {
@@ -155,9 +158,11 @@ UnionMeasure rect_union(const std::vector<Rect> &rects) {
   if (rects.empty()) {
     return {};
   }
+  assert(std::all_of(rects.begin(), rects.end(), [](const Rect &r) {
+    return r.x1 < r.x2 && r.y1 < r.y2;
+  }));
   std::vector<int64_t> ys;
   for (const Rect &r : rects) {
-    assert(r.x1 < r.x2 && r.y1 < r.y2);
     ys.push_back(r.y1);
     ys.push_back(r.y2);
   }

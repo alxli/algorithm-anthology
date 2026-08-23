@@ -21,6 +21,8 @@ buffer for the whole sort instead of one per level of recursion.
 - `inversions(a)` uses coordinate compression and a Fenwick tree to return the number of inversions
   in an integer vector without modifying it.
 
+Overflow warning: The range length and doubled merge widths must fit in `int`.
+
 Time Complexity:
 - O(n log n) per call to `inversions(lo, hi)`, where $n$ is the distance between `lo` and `hi`.
 - O(n log n) per call to `inversions(a)`.

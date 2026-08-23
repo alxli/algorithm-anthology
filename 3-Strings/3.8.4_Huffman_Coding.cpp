@@ -28,6 +28,8 @@ Space Complexity:
 
 */
 
+#include <algorithm>
+#include <cassert>
 #include <functional>
 #include <queue>
 #include <string>
@@ -41,7 +43,7 @@ class HuffmanTree {
     unsigned char ch;
     int left, right;
 
-    Node(int freq = 0, unsigned char ch = 0, int left = -1, int right = -1)
+    explicit Node(int freq = 0, unsigned char ch = 0, int left = -1, int right = -1)
         : freq(freq), ch(ch), left(left), right(right) {}
   };
 
@@ -91,19 +93,23 @@ class HuffmanTree {
   string encode(const string &text) const {
     string bits;
     for (unsigned char c : text) {
+      assert(!code[c].empty());
       bits += code[c];
     }
     return bits;
   }
 
   string decode(const string &bits) const {
+    assert(std::all_of(bits.begin(), bits.end(), [](char b) { return b == '0' || b == '1'; }));
     string text;
     if (root == -1) {
+      assert(bits.empty());
       return text;
     }
     // Degenerate tree: the input had a single distinct character, so the root is itself a leaf and
     // each symbol was encoded as one bit. Walking children would dereference node -1.
     if (nodes[root].left == -1 && nodes[root].right == -1) {
+      assert(bits.find('1') == string::npos);
       return string(bits.size(), static_cast<char>(nodes[root].ch));
     }
     int u = root;
@@ -114,6 +120,7 @@ class HuffmanTree {
         u = root;
       }
     }
+    assert(u == root);
     return text;
   }
 };

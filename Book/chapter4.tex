@@ -3210,7 +3210,7 @@ A* is Dijkstra's algorithm with the priority queue keyed by $f(v) = g(v) + h(v)$
 A heuristic is consistent when $h(u) \leq w(u, v) + h(v)$ for every edge $(u, v)$ and $h({\inlinecodemath{dest}}) = 0$. Consistency implies admissibility and makes every distance final on first removal, exactly as in Dijkstra's algorithm; an admissible but inconsistent heuristic may improve a node after it has been expanded, which the stale-entry check below handles by re-expanding it. Setting $h(v) = 0$ satisfies both and reduces this to Dijkstra's algorithm, so the heuristic is what buys the speedup: use the Manhattan distance on a unit-weight grid, the Euclidean distance scaled by the minimum edge weight in a geometric graph, or the number of misplaced tiles in a sliding puzzle.
 
 \begin{compactitem}
-  \item \inlinecode{astar(start, dest, h)} returns the minimum distance from \inlinecode{start} to \inlinecode{dest}, or \inlinecode{INF} if \inlinecode{dest} is unreachable, for a global, pre-populated adjacency list \inlinecode{adj} whose indices represent the nodes. Each edge is stored as (\inlinecode{neighbor}, \inlinecode{weight}), where \inlinecode{weight} is nonnegative. The heuristic \inlinecode{h(v)} must return an admissible numeric estimate of the remaining distance from node \inlinecode{v} to \inlinecode{dest}; integral and floating-point estimates are both supported.
+  \item \inlinecode{astar(start, dest, h)} returns the minimum distance from \inlinecode{start} to \inlinecode{dest}, or \inlinecode{INF} if \inlinecode{dest} is unreachable, for a global, pre-populated adjacency list \inlinecode{adj} whose indices represent the nodes. Each edge is stored as (\inlinecode{neighbor}, \inlinecode{weight}), where \inlinecode{weight} is nonnegative. The heuristic \inlinecode{h(v)} must return an admissible numeric estimate of the remaining distance from node \inlinecode{v} to \inlinecode{dest}; \inlinecode{h(dest)} must equal $0$. Integral and floating-point estimates are both supported.
   \item \inlinecode{get\_path(dest)} returns the path from \inlinecode{start} to \inlinecode{dest}, or an empty vector if \inlinecode{dest} is unreachable, using the state left by the most recent call to \inlinecode{astar()}.
 \end{compactitem}
 
@@ -3233,11 +3233,11 @@ Since the search stops as soon as \inlinecode{dest} is expanded, only \inlinecod
 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <functional>
 #include <queue>
 #include <tuple>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -3249,6 +3249,8 @@ std::vector<int> pred;
 template<typename Fn>
 int64_t astar(int start, int dest, Fn h) {
   int n = static_cast<int>(adj.size());
+  assert(0 <= start && start < n && 0 <= dest && dest < n);
+  assert(h(dest) == 0);
   dist.assign(n, INF);
   pred.assign(n, -1);
   dist[start] = 0;
@@ -6188,9 +6190,10 @@ Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots,
 Kuhn's algorithm builds the matching one left node at a time. For each, a depth-first search looks for an augmenting path: an alternating sequence of unmatched and matched edges that reaches a free right node. Flipping the edges along such a path enlarges the matching by one.
 
 \begin{compactitem}
-  \item \inlinecode{match\_bipartite(n2)} populates \inlinecode{match\_left} and \inlinecode{match\_right}, then returns maximum matching size for a global, pre-populated adjacency list \inlinecode{adj}, whose indices represent left-side nodes and whose entries contain right-side neighbors numbered $[0, {\inlinecodemath{n2}})$. The two sides are given as separate node numberings. Use the bipartite check of section \secref{4.6.1} to produce them for a graph that does not already arrive presented as two sets. Time Complexity:
-  \item $O(n_1 \cdot m)$ per call, where $m$ is the number of edges.
+  \item \inlinecode{match\_bipartite(n2)} populates \inlinecode{match\_left} and \inlinecode{match\_right}, then returns maximum matching size for a global, pre-populated adjacency list \inlinecode{adj}, whose indices represent left-side nodes and whose entries contain right-side neighbors numbered $[0, {\inlinecodemath{n2}})$. The two sides are given as separate node numberings. Use the bipartite check of section \secref{4.6.1} to produce them for a graph that does not already arrive presented as two sets.
 \end{compactitem}
+
+\textbf{Time Complexity}: $O(n_1 \cdot m)$ per call, where $m$ is the number of edges.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -6273,9 +6276,10 @@ Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots,
 Hopcroft-Karp augments along many shortest augmenting paths per phase. Each phase first runs a breadth-first search to layer the graph by distance, then a depth-first search to find a maximal set of node-disjoint shortest augmenting paths to flip at once, for $O(m \cdot \sqrt{n_1 + n_2})$ running time overall.
 
 \begin{compactitem}
-  \item \inlinecode{match\_bipartite\_hk(n2)} populates \inlinecode{match\_left} and \inlinecode{match\_right}, then returns maximum matching size for a global, pre-populated adjacency list \inlinecode{adj}, whose indices represent left-side nodes and whose entries contain right-side neighbors numbered $[0, {\inlinecodemath{n2}})$. Time Complexity:
-  \item $O(m \cdot \sqrt{n_1 + n_2})$ per call, where $m$ is the number of edges.
+  \item \inlinecode{match\_bipartite\_hk(n2)} populates \inlinecode{match\_left} and \inlinecode{match\_right}, then returns maximum matching size for a global, pre-populated adjacency list \inlinecode{adj}, whose indices represent left-side nodes and whose entries contain right-side neighbors numbered $[0, {\inlinecodemath{n2}})$.
 \end{compactitem}
+
+\textbf{Time Complexity}: $O(m \cdot \sqrt{n_1 + n_2})$ per call, where $m$ is the number of edges.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -7185,6 +7189,7 @@ std::pair<T, std::vector<int>> max_assignment(std::vector<std::vector<T>> value)
   if (value.empty()) {
     return {0, {}};
   }
+  assert(value.size() <= value[0].size());
   T max_value = value[0][0];
   for (const auto &row : value) {
     max_value = std::max(max_value, *std::max_element(row.begin(), row.end()));

@@ -31,7 +31,7 @@ positive leap second, which is what keeps every day $86400$ seconds long.
 - `timestamp_from_civil(y, m, d, hh = 0, mm = 0, ss = 0)` returns the Unix timestamp of that
   instant.
 - `civil_from_timestamp(t)` returns the `DateTime` of a Unix timestamp, which may be negative for
-  instants before the epoch.
+  instants before the epoch. Its day count must fit in `int`.
 
 ISO 8601 numbers weeks from the one containing the first Thursday of the year, and assigns a date to
 the year of its own week's Thursday. Early January therefore often belongs to the previous ISO year
@@ -62,6 +62,7 @@ Space Complexity:
 */
 
 #include <cassert>
+#include <climits>
 #include <cstdint>
 #include <tuple>
 #include <utility>
@@ -81,6 +82,7 @@ int days_in_month(int y, int m) {
 }
 
 int days_from_civil(int y, int m, int d) {
+  assert(1 <= m && m <= 12 && 1 <= d && d <= days_in_month(y, m));
   y -= m <= 2;  // Start the year in March, so that February 29 is the final day of a year.
   int era = (y >= 0 ? y : y - 399) / 400;
   int yoe = y - era * 400;  // Year of era, in [0, 399].
@@ -123,7 +125,7 @@ std::tuple<int, int, int> hms_from_seconds(int seconds) {
 }
 
 int64_t timestamp_from_civil(int y, int m, int d, int hh = 0, int mm = 0, int ss = 0) {
-  return int64_t{86400} * days_from_civil(y, m, d) + seconds_from_hms(hh, mm, ss);
+  return 86400LL * days_from_civil(y, m, d) + seconds_from_hms(hh, mm, ss);
 }
 
 DateTime civil_from_timestamp(int64_t t) {
@@ -132,6 +134,7 @@ DateTime civil_from_timestamp(int64_t t) {
     rest += 86400;
     days--;
   }
+  assert(INT_MIN <= days && days <= INT_MAX);
   auto [y, m, d] = civil_from_days(static_cast<int>(days));
   auto [hh, mm, ss] = hms_from_seconds(static_cast<int>(rest));
   return {y, m, d, hh, mm, ss};

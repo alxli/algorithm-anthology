@@ -13,6 +13,7 @@ File-redirection failures throw `std::runtime_error`.
 
 */
 
+#include <cassert>
 #include <cctype>
 #include <cstddef>
 #include <cstdio>
@@ -66,18 +67,24 @@ inline int read_char() {
 
 template<typename Int>
 void read_int(Int &x) {
-  int c, s = 1;
-  while ((c = read_char()) != '-' && (c < '0' || c > '9'));
-  if (c == '-') s = -1, c = read_char();
-  for (x = 0; '0' <= c && c <= '9'; c = read_char()) x = x * 10 + c - '0';
-  x *= s;
+  int c;
+  while ((c = read_char()) != '-' && (c < '0' || c > '9')) {
+  }
+  bool neg = c == '-';
+  if (neg) {
+    c = read_char();
+  }
+  for (x = 0; '0' <= c && c <= '9'; c = read_char()) {
+    x = x * 10 - (c - '0');  // Accumulate negatively to prevent INT_MIN overflow.
+  }
+  x = neg ? x : -x;
 }
 
 /*
 
 `FastInput` reads large byte blocks with `fread()` and parses tokens from an internal buffer.
 
-- `FastInput in(file = stdin)` constructs a faster reader from a `FILE*`.
+- `FastInput in(file = stdin)` constructs a faster reader from a non-null `FILE*`.
 - `in >> x` reads a non-whitespace token into `char`, `std::string`, integral types, or
   floating-point types.
 
@@ -121,7 +128,7 @@ class FastInput {
   }
 
  public:
-  explicit FastInput(FILE *file_ = stdin) : file(file_) {}
+  explicit FastInput(FILE *file_ = stdin) : file(file_) { assert(file != nullptr); }
 
   FastInput(const FastInput &) = delete;
   FastInput &operator=(const FastInput &) = delete;
@@ -163,17 +170,12 @@ class FastInput {
       neg = true;
       c = get_char();
     }
-    using U = typename std::make_unsigned<T>::type;
-    U val = 0;
+    T val = 0;
     while (c && !std::isspace(static_cast<unsigned char>(c))) {
-      val = U{10} * val + U(c - '0');
+      val = T{10} * val - T(c - '0');  // Accumulate negatively to prevent INT_MIN overflow.
       c = get_char();
     }
-    if constexpr (std::is_signed<T>::value) {
-      x = neg ? T(U{0} - val) : T(val);
-    } else {
-      x = T(val);
-    }
+    x = neg ? val : -val;
     return *this;
   }
 
@@ -190,7 +192,7 @@ class FastInput {
 
 `FastOutput` formats values into an internal buffer and writes them in large blocks with `fwrite()`.
 
-- `FastOutput out(file = stdout)` constructs a faster writer to a `FILE*`.
+- `FastOutput out(file = stdout)` constructs a faster writer to a non-null `FILE*`.
 - `out << x` writes `char`, C strings, `std::string`, integral types, or floating-point types.
 - `out.flush()` writes any buffered output immediately.
 
@@ -220,7 +222,7 @@ class FastOutput {
   }
 
  public:
-  explicit FastOutput(FILE *file_ = stdout) : file(file_) {}
+  explicit FastOutput(FILE *file_ = stdout) : file(file_) { assert(file != nullptr); }
 
   ~FastOutput() { flush_buf(); }
   FastOutput(const FastOutput &) = delete;
@@ -305,7 +307,6 @@ FastOutput              0.009 s
 
 ***/
 
-#include <cassert>
 #include <ctime>
 #include <filesystem>
 #include <fstream>

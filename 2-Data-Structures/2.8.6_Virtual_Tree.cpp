@@ -113,9 +113,9 @@ class VirtualTree {
   }
 
   Tree build(std::vector<int> nodes) const {
-    for (int u : nodes) {
-      assert(0 <= u && u < static_cast<int>(tin.size()));
-    }
+    assert(std::all_of(nodes.begin(), nodes.end(), [&](int u) {
+      return 0 <= u && u < static_cast<int>(tin.size());
+    }));
     Tree res;
     if (nodes.empty()) {
       return res;
@@ -183,9 +183,9 @@ int main() {
   assert(t.root == 0);
   assert((t.nodes == vector<int>{0, 6, 7}));
   assert(t.edges.size() == 2);
-  for (auto &e : t.edges) {
-    assert(e.first == 0 && (e.second == 6 || e.second == 7));
-  }
+  assert(all_of(t.edges.begin(), t.edges.end(), [](auto e) {
+    return e.first == 0 && (e.second == 6 || e.second == 7);
+  }));
 
   // Virtual tree of {6, 4, 7}: node 1 becomes a branch point (LCA of 6 and 4).
   //        0

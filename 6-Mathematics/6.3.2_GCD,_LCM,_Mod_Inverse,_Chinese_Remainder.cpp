@@ -54,6 +54,7 @@ Space Complexity:
 
 */
 
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <type_traits>
@@ -150,10 +151,12 @@ Int mod(Int a, Int m) {
 
 template<typename Int>
 Int mod_inverse(Int a, Int m) {
+  assert(m > 0 && gcd(a, m) == 1);
   return mod(extended_gcd(a, m).first, m);
 }
 
 std::vector<int> mod_inverse_table(int p) {
+  assert(p >= 2);
   std::vector<int> res(p);
   res[1] = 1;
   for (int i = 2; i < p; i++) {
@@ -183,10 +186,10 @@ bool crt(int64_t r1, int64_t m1, int64_t r2, int64_t m2, int64_t *r, int64_t *m)
 
 std::vector<int64_t> garner_digits(const std::vector<int> &a, const std::vector<int> &p) {
   assert(a.size() == p.size());
+  assert(std::all_of(p.begin(), p.end(), [](int m) { return m > 0; }));
   int n = static_cast<int>(a.size());
   std::vector<int64_t> x(n);
   for (int i = 0; i < n; i++) {
-    assert(p[i] > 0);
     x[i] = mod(static_cast<int64_t>(a[i]), static_cast<int64_t>(p[i]));
   }
   for (int i = 0; i < n; i++) {

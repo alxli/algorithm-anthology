@@ -42,9 +42,9 @@ Space Complexity:
 std::pair<int64_t, std::vector<int>> min_weighted_completion_time(
     const std::vector<std::pair<int, int>> &jobs
 ) {
-  for (auto [time, weight] : jobs) {
-    assert(time >= 0 && weight > 0);
-  }
+  assert(std::all_of(jobs.begin(), jobs.end(), [](auto job) {
+    return job.first >= 0 && job.second > 0;
+  }));
   int n = static_cast<int>(jobs.size());
   std::vector<int> order(n);
   std::iota(order.begin(), order.end(), 0);

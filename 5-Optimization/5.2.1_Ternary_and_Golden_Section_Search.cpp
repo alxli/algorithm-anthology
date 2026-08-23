@@ -43,6 +43,9 @@ coordinate. As with ternary search on reals, the function must be strictly unimo
   in range $[`lo`, `hi`]$ optimizing the unimodal function `f`, breaking ties toward the smaller
   index.
 
+Overflow warning: For the discrete searches, `hi - lo` must be representable by `Int`, and values
+returned by `f()` must be safe to negate when using `discrete_ternary_max()`.
+
 Time Complexity:
 - O(log(n / `eps`)) calls to `f()` per call to `brent_min()` and `brent_max()` in the worst case,
   and far fewer once the parabolic steps take over.
@@ -189,8 +192,8 @@ Int discrete_ternary_min(Int lo, Int hi, Fn f) {
   }
   Int best = lo;
   auto best_value = f(best);
-  for (Int k = lo + 1; k <= hi; k++) {
-    auto value = f(k);
+  for (Int k = lo; k < hi;) {
+    auto value = f(++k);
     if (value < best_value) {
       best = k;
       best_value = value;

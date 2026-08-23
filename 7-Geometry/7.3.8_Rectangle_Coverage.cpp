@@ -40,9 +40,11 @@ struct Rect {
 
 template<typename Fn>
 void for_each_rect_cell(const std::vector<Rect> &rects, Fn visit) {
+  assert(std::all_of(rects.begin(), rects.end(), [](const Rect &r) {
+    return r.x1 < r.x2 && r.y1 < r.y2;
+  }));
   std::vector<int64_t> xs, ys;
   for (const Rect &r : rects) {
-    assert(r.x1 < r.x2 && r.y1 < r.y2);
     xs.push_back(r.x1);
     xs.push_back(r.x2);
     ys.push_back(r.y1);

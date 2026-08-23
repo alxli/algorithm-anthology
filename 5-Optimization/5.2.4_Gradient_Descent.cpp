@@ -25,6 +25,8 @@ variables and to noisy gradients, at the cost of a learning rate to choose.
   `eps = 1e-9`, `beta1 = 0.9`, and `beta2 = 0.999`, where `rate` is the learning rate and the two
   decay factors, both required to lie in $[0, 1)$, control the two running averages.
 
+The gradient callable must return a vector with the same length as its input point.
+
 Both routines find a local minimum, and only a convex $f$ makes that the global one, as with the
 logistic regression of section 6.7.5. Prefer the golden-section search of section 5.2.1 in one
 dimension, or the hill climbing of section 5.2.2 and annealing of section 5.2.3 when no gradient is
@@ -73,6 +75,7 @@ std::pair<double, std::vector<double>> gradient_descent_min(
   std::vector<double> next(x.size());
   for (int it = 0; it < iterations; it++) {
     std::vector<double> g = grad(x);
+    assert(g.size() == x.size());
     double norm2 = 0;
     for (double v : g) {
       norm2 += v * v;
@@ -110,6 +113,7 @@ std::pair<double, std::vector<double>> adam_min(
   std::vector<double> m(x.size()), v(x.size());
   for (int t = 1; t <= iterations; t++) {
     std::vector<double> g = grad(x);
+    assert(g.size() == x.size());
     double norm2 = 0;
     for (double d : g) {
       norm2 += d * d;

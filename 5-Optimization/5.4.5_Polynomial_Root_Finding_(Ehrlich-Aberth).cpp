@@ -210,9 +210,9 @@ int main() {
     vector<dbl> p{-1, 2, -6, 2};
     vector<cdbl> roots = find_all_roots(p);
     assert(roots.size() == 3);
-    for (const auto &root : roots) {
-      assert(abs(eval(cpoly(p.begin(), p.end()), root)) < CHECK_EPS);
-    }
+    assert(all_of(roots.begin(), roots.end(), [&](const auto &root) {
+      return abs(eval(cpoly(p.begin(), p.end()), root)) < CHECK_EPS;
+    }));
   }
   {  // Scaling all coefficients does not change the roots.
     vector<dbl> p{-6e-40L, 1e-40L};
@@ -228,9 +228,9 @@ int main() {
     p.emplace_back(-6, 4);
     vector<cdbl> roots = find_all_roots(p);
     assert(roots.size() == 4);
-    for (const auto &root : roots) {
-      assert(abs(eval(p, root)) < CHECK_EPS);
-    }
+    assert(all_of(roots.begin(), roots.end(), [&](const auto &root) {
+      return abs(eval(p, root)) < CHECK_EPS;
+    }));
     assert_roots(roots, {{-3, -2}, {-12.0L / 13, 18.0L / 13}, {0, -1}, {0, 1}});
   }
   return 0;

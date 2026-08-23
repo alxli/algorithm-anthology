@@ -34,6 +34,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cmath>
 #include <optional>
 #include <utility>
@@ -43,6 +44,7 @@ std::optional<std::vector<double>> stationary_distribution(
     const std::vector<std::vector<double>> &p, double eps = 1e-10
 ) {
   int n = static_cast<int>(p.size());
+  assert(n == 0 || static_cast<int>(p[0].size()) == n);
   if (n == 0) {
     return std::vector<double>{};
   }
@@ -64,7 +66,7 @@ std::optional<std::vector<double>> stationary_distribution(
         pivot = i;
       }
     }
-    if (fabs(a[pivot][col]) < eps) {
+    if (fabs(a[pivot][col]) <= eps) {
       return std::nullopt;  // Multiple closed classes make the stationary distribution nonunique.
     }
     std::swap(a[col], a[pivot]);
@@ -90,6 +92,7 @@ std::optional<std::vector<double>> stationary_distribution(
 
 /*** Example Usage ***/
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 using namespace std;
@@ -115,9 +118,7 @@ int main() {
   // A doubly stochastic chain is uniform in the limit no matter the transition probabilities.
   auto cycle = stationary_distribution({{0, 0.3, 0.7}, {0.7, 0, 0.3}, {0.3, 0.7, 0}});
   assert(cycle.has_value());
-  for (int i = 0; i < 3; i++) {
-    assert(EQ((*cycle)[i], 1.0 / 3));
-  }
+  assert(all_of(cycle->begin(), cycle->end(), [](double p) { return EQ(p, 1.0 / 3); }));
 
   // Two states that never reach each other admit no unique distribution.
   assert(!stationary_distribution({{1, 0}, {0, 1}}).has_value());

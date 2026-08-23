@@ -99,6 +99,7 @@ std::pair<T, std::vector<int>> max_assignment(std::vector<std::vector<T>> value)
   if (value.empty()) {
     return {0, {}};
   }
+  assert(value.size() <= value[0].size());
   T max_value = value[0][0];
   for (const auto &row : value) {
     max_value = std::max(max_value, *std::max_element(row.begin(), row.end()));

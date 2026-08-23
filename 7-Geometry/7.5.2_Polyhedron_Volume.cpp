@@ -6,7 +6,7 @@ $((a \times b) \cdot c) / 6$. If faces are oriented outward, the result is posit
 orientation used by `convex_hull_3d()` in 7.5.3; take `abs()` if only the magnitude is needed.
 
 - `signed_polyhedron_volume(p, faces)` returns the signed volume. Each face triplet (`a`, `b`, `c`)
-  represents the triangle with vertices `p[a]`, `p[b]`, and `p[c]`.
+  represents the triangle with vertices `p[a]`, `p[b]`, and `p[c]`, and its indices must be valid.
 
 Overflow warning: for integral point types, each scalar triple product must fit in the point's
 coordinate arithmetic type before it is converted to `double`.
@@ -19,6 +19,8 @@ Space Complexity:
 
 */
 
+#include <algorithm>
+#include <cassert>
 #include <vector>
 
 struct Point3D {
@@ -34,6 +36,11 @@ struct Point3D {
 
 template<typename Pt, typename F>
 double signed_polyhedron_volume(const std::vector<Pt> &p, const std::vector<F> &faces) {
+  assert(std::all_of(faces.begin(), faces.end(), [&](const F &face) {
+    auto [a, b, c] = face;
+    return 0 <= a && a < static_cast<int>(p.size()) && 0 <= b && b < static_cast<int>(p.size()) &&
+           0 <= c && c < static_cast<int>(p.size());
+  }));
   double volume = 0;
   for (const auto &[a, b, c] : faces) {
     volume += p[a].cross(p[b]).dot(p[c]);  // Overflow warning.

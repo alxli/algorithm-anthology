@@ -98,9 +98,7 @@ std::pair<int64_t, std::vector<int>> max_subset_sum_at_most(
 
 int max_subset_sum_bounded(const std::vector<int> &weights, int target) {
   assert(target >= 0);
-  for (int w : weights) {
-    assert(w >= 0);
-  }
+  assert(std::all_of(weights.begin(), weights.end(), [](int w) { return w >= 0; }));
   int n = static_cast<int>(weights.size());
   // Greedily take a prefix while it still fits; the optimum then lies within one weight of target.
   int sum = 0, b = 0;

@@ -77,6 +77,7 @@ Space Complexity:
 const int64_t MOD = 1000000007;
 
 int64_t factorial(int n, int64_t m = MOD) {
+  assert(n >= 0 && m > 0);
   int64_t res = 1;
   for (int i = 2; i <= n; i++) {
     res = (res * i) % m;
@@ -85,13 +86,14 @@ int64_t factorial(int n, int64_t m = MOD) {
 }
 
 int64_t factorial_without_p(int64_t n, int64_t p = MOD) {
+  assert(n >= 0 && p >= 2);
   int64_t res = 1;
   while (n > 1) {
     if (n / p % 2 == 1) {
       res = res * (p - 1) % p;
     }
-    int max = n % p;
-    for (int i = 2; i <= max; i++) {
+    int64_t max = n % p;
+    for (int64_t i = 2; i <= max; i++) {
       res = (res * i) % p;
     }
     n /= p;
@@ -100,7 +102,7 @@ int64_t factorial_without_p(int64_t n, int64_t p = MOD) {
 }
 
 int64_t legendre(int64_t n, int64_t p) {
-  assert(p >= 2);
+  assert(n >= 0 && p >= 2);
   int64_t res = 0;
   for (int64_t q = n / p; q > 0; q /= p) {  // Dividing repeatedly avoids overflowing p^i.
     res += q;
@@ -109,6 +111,7 @@ int64_t legendre(int64_t n, int64_t p) {
 }
 
 std::vector<std::vector<int64_t>> binomial_table(int n, int64_t m = MOD) {
+  assert(n >= 0 && m > 0);
   std::vector<std::vector<int64_t>> t(n + 1);
   for (int i = 0; i <= n; i++) {
     for (int j = 0; j <= i; j++) {
@@ -123,6 +126,7 @@ std::vector<std::vector<int64_t>> binomial_table(int n, int64_t m = MOD) {
 }
 
 int64_t permute(int n, int k, int64_t m = MOD) {
+  assert(n >= 0 && k >= 0 && m > 0);
   if (n < k) {
     return 0;
   }
@@ -144,7 +148,8 @@ int64_t powmod(int64_t x, int64_t n, int64_t m) {
   return res;
 }
 
-int64_t choose(int n, int k, int64_t p = MOD) {
+int64_t choose(int64_t n, int64_t k, int64_t p = MOD) {
+  assert(n >= 0 && k >= 0 && p >= 2 && n < p);
   if (n < k) {
     return 0;
   }
@@ -152,16 +157,17 @@ int64_t choose(int n, int k, int64_t p = MOD) {
     k = n - k;
   }
   int64_t num = 1, den = 1;
-  for (int i = 0; i < k; i++) {
+  for (int64_t i = 0; i < k; i++) {
     num = num * (n - i) % p;
   }
-  for (int i = 1; i <= k; i++) {
+  for (int64_t i = 1; i <= k; i++) {
     den = den * i % p;
   }
   return num * powmod(den, p - 2, p) % p;
 }
 
 int64_t choose_lucas(int64_t n, int64_t k, int64_t p = MOD) {
+  assert(n >= 0 && p >= 2);
   if (k < 0 || k > n) {
     return 0;
   }
@@ -171,7 +177,7 @@ int64_t choose_lucas(int64_t n, int64_t k, int64_t p = MOD) {
     if (ki > ni) {
       return 0;
     }
-    res = res * choose(static_cast<int>(ni), static_cast<int>(ki), p) % p;
+    res = res * choose(ni, ki, p) % p;
     n /= p;
     k /= p;
   }
@@ -179,17 +185,20 @@ int64_t choose_lucas(int64_t n, int64_t k, int64_t p = MOD) {
 }
 
 int64_t multichoose(int n, int k, int64_t p = MOD) {
+  assert(n >= 0 && k >= 0 && p >= 2);
   if (n == 0) {
     return k == 0;
   }
-  return choose(n + k - 1, k, p);
+  return choose(static_cast<int64_t>(n) + k - 1, k, p);
 }
 
 int64_t catalan(int n, int64_t p = MOD) {
-  return choose(2 * n, n, p) * powmod(n + 1, p - 2, p) % p;
+  assert(n >= 0 && p >= 2);
+  return choose(2LL * n, n, p) * powmod(n + 1, p - 2, p) % p;
 }
 
 int64_t partitions(int n, int64_t m = MOD) {
+  assert(n >= 0 && m > 0);
   std::vector<int64_t> t(n + 1);
   t[0] = 1;
   for (int i = 1; i <= n; i++) {
@@ -201,6 +210,7 @@ int64_t partitions(int n, int64_t m = MOD) {
 }
 
 int64_t partitions(int n, int k, int64_t m = MOD) {
+  assert(n >= 0 && k >= 0 && m > 0);
   std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
@@ -212,6 +222,7 @@ int64_t partitions(int n, int k, int64_t m = MOD) {
 }
 
 int64_t stirling1(int n, int k, int64_t m = MOD) {
+  assert(n >= 0 && k >= 0 && m > 0);
   std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
@@ -224,6 +235,7 @@ int64_t stirling1(int n, int k, int64_t m = MOD) {
 }
 
 int64_t stirling2(int n, int k, int64_t m = MOD) {
+  assert(n >= 0 && k >= 0 && m > 0);
   std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
@@ -236,6 +248,7 @@ int64_t stirling2(int n, int k, int64_t m = MOD) {
 }
 
 int64_t eulerian1(int n, int k, int64_t m = MOD) {
+  assert(n > k && k >= 0 && m > 0);
   if (k > n - 1 - k) {
     k = n - 1 - k;
   }
@@ -253,6 +266,7 @@ int64_t eulerian1(int n, int k, int64_t m = MOD) {
 }
 
 int64_t eulerian2(int n, int k, int64_t m = MOD) {
+  assert(n > k && k >= 0 && m > 0);
   std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 1));
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= k; j++) {

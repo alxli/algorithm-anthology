@@ -24,6 +24,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <vector>
 
 int mex(const std::vector<int> &values) {
@@ -42,6 +43,7 @@ int mex(const std::vector<int> &values) {
 }
 
 std::vector<int> subtraction_game_grundy(int max_stones, const std::vector<int> &moves) {
+  assert(max_stones >= 0);
   std::vector<int> grundy(max_stones + 1);
   for (int stones = 1; stones <= max_stones; stones++) {
     std::vector<int> reachable;

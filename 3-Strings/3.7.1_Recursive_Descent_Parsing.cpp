@@ -26,6 +26,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <string>
 
 int eval(const std::string &s) {
@@ -62,9 +63,12 @@ int eval(const std::string &s) {
         case '*':
           num *= rec(rec, prec - 1);
           break;
-        case '/':
-          num /= rec(rec, prec - 1);
+        case '/': {
+          int divisor = rec(rec, prec - 1);
+          assert(divisor != 0);
+          num /= divisor;
           break;
+        }
       }
     }
     return num;

@@ -22,6 +22,8 @@ Both `gap_cost` and `sub_cost` must be nonnegative.
 - `hirschberg_align(s1, s2, gap_cost, sub_cost)` returns the sequence alignment of strings `s1` and
   `s2` using the more memory efficient Hirschberg's algorithm.
 
+Overflow warning: All DP costs must fit in `int`.
+
 Time Complexity:
 - O(n*m) per call to `edit_distance(s1, s2)`, `align_sequences(s1, s2)`, and
   `hirschberg_align(s1, s2)`, where $n$ and $m$ are the lengths of `s1` and `s2`, respectively.
@@ -35,6 +37,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <iterator>
 #include <string>
 #include <utility>
@@ -64,6 +67,7 @@ int edit_distance(const string &s1, const string &s2) {
 std::pair<string, string> align_sequences(
     const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1
 ) {
+  assert(gap_cost >= 0 && sub_cost >= 0);
   int n = static_cast<int>(s1.size()), m = static_cast<int>(s2.size());
   std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1));
   for (int i = 0; i <= n; i++) {
@@ -171,6 +175,7 @@ void hirschberg_rec(
 std::pair<string, string> hirschberg_align(
     const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1
 ) {
+  assert(gap_cost >= 0 && sub_cost >= 0);
   if (s1.size() < s2.size()) {
     auto res = hirschberg_align(s2, s1, gap_cost, sub_cost);
     return {res.second, res.first};

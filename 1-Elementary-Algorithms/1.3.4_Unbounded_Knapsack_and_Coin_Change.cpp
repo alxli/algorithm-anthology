@@ -37,6 +37,7 @@ Space Complexity:
 
 */
 
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <utility>
@@ -47,9 +48,7 @@ std::pair<int64_t, std::vector<int>> unbounded_knapsack(
 ) {
   int n = static_cast<int>(weight.size());
   assert(static_cast<int>(value.size()) == n && capacity >= 0);
-  for (int w : weight) {
-    assert(w > 0);
-  }
+  assert(std::all_of(weight.begin(), weight.end(), [](int w) { return w > 0; }));
   std::vector<int64_t> dp(capacity + 1);
   std::vector<int> choice(capacity + 1, -1);
   for (int w = 1; w <= capacity; w++) {
@@ -73,10 +72,10 @@ std::pair<int64_t, std::vector<int>> unbounded_knapsack(
 
 int64_t count_coin_change(const std::vector<int> &coins, int target) {
   assert(target >= 0);
+  assert(std::all_of(coins.begin(), coins.end(), [](int coin) { return coin > 0; }));
   std::vector<int64_t> dp(target + 1);
   dp[0] = 1;
   for (int coin : coins) {
-    assert(coin > 0);
     for (int sum = coin; sum <= target; sum++) {
       dp[sum] += dp[sum - coin];  // Overflow warning.
     }
@@ -86,9 +85,7 @@ int64_t count_coin_change(const std::vector<int> &coins, int target) {
 
 std::pair<int, std::vector<int>> min_coin_change(const std::vector<int> &coins, int target) {
   assert(target >= 0);
-  for (int coin : coins) {
-    assert(coin > 0);
-  }
+  assert(std::all_of(coins.begin(), coins.end(), [](int coin) { return coin > 0; }));
   int inf = target + 1;
   std::vector<int> dp(target + 1, inf), choice(target + 1, -1);
   dp[0] = 0;

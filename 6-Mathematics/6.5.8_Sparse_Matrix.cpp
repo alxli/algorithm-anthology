@@ -66,7 +66,11 @@ class SparseMatrix {
   bool is_zero(const T &value) const { return value == T{}; }
 
  public:
-  SparseMatrix(int rows, int cols) : rows(rows), cols(cols), rvals(rows), cvals(cols) {}
+  SparseMatrix(int rows, int cols) : rows(rows), cols(cols) {
+    assert(rows >= 0 && cols >= 0);
+    rvals.resize(rows);
+    cvals.resize(cols);
+  }
 
   int num_rows() const { return rows; }
   int num_cols() const { return cols; }

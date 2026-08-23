@@ -39,9 +39,9 @@ struct Interval {
 };
 
 std::vector<Interval> merge_intervals(std::vector<Interval> intervals) {
-  for (const auto &iv : intervals) {
-    assert(iv.start < iv.finish);
-  }
+  assert(std::all_of(intervals.begin(), intervals.end(), [](const Interval &iv) {
+    return iv.start < iv.finish;
+  }));
   std::sort(intervals.begin(), intervals.end(), [](const Interval &a, const Interval &b) {
     return a.start != b.start ? a.start < b.start : a.finish < b.finish;
   });
@@ -60,9 +60,9 @@ std::optional<std::vector<int>> cover_interval(
     const std::vector<Interval> &intervals, int lo, int hi
 ) {
   assert(lo <= hi);
-  for (const auto &iv : intervals) {
-    assert(iv.start < iv.finish);
-  }
+  assert(std::all_of(intervals.begin(), intervals.end(), [](const Interval &iv) {
+    return iv.start < iv.finish;
+  }));
   int n = static_cast<int>(intervals.size());
   std::vector<int> order(n);
   std::iota(order.begin(), order.end(), 0);

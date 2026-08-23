@@ -29,6 +29,7 @@ Space Complexity:
 
 */
 
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <string>
@@ -37,9 +38,7 @@ Space Complexity:
 
 std::pair<int64_t, std::string> matrix_chain_order(const std::vector<int> &dim) {
   assert(dim.size() >= 2);
-  for (int d : dim) {
-    assert(d > 0);
-  }
+  assert(std::all_of(dim.begin(), dim.end(), [](int d) { return d > 0; }));
   int n = static_cast<int>(dim.size()) - 1;
   std::vector<std::vector<int64_t>> dp(n, std::vector<int64_t>(n));
   std::vector<std::vector<int>> split(n, std::vector<int>(n));

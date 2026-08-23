@@ -2951,9 +2951,11 @@ struct Rect {
 
 template<typename Fn>
 void for_each_rect_cell(const std::vector<Rect> &rects, Fn visit) {
+  assert(std::all_of(rects.begin(), rects.end(), [](const Rect &r) {
+    return r.x1 < r.x2 && r.y1 < r.y2;
+  }));
   std::vector<int64_t> xs, ys;
   for (const Rect &r : rects) {
-    assert(r.x1 < r.x2 && r.y1 < r.y2);
     xs.push_back(r.x1);
     xs.push_back(r.x2);
     ys.push_back(r.y1);
@@ -3090,6 +3092,11 @@ struct UnionMeasure {
 // least once and at least twice, the number of maximal covered runs, and the greatest weight at any
 // point. Each is its own recurrence, so each is pulled up separately.
 class CoverTree {
+  static int checked_len(const std::vector<int64_t> &ys) {
+    assert(ys.size() >= 2);
+    return static_cast<int>(ys.size()) - 1;
+  }
+
   std::vector<int64_t> ys;  // Compressed coordinates; leaf i spans [ys[i], ys[i + 1]).
   int len;
   std::vector<int> count, runs;
@@ -3137,7 +3144,7 @@ class CoverTree {
  public:
   explicit CoverTree(std::vector<int64_t> coords)
       : ys(std::move(coords)),
-        len(static_cast<int>(ys.size()) - 1),
+        len(checked_len(ys)),
         count(4 * len),
         runs(4 * len),
         covered(4 * len),
@@ -3145,9 +3152,7 @@ class CoverTree {
         weight(4 * len),
         heaviest(4 * len),
         covers_lo(4 * len),
-        covers_hi(4 * len) {
-    assert(len > 0);
-  }
+        covers_hi(4 * len) {}
 
   // Adds delta covers of weight w to every elementary interval in [lo, hi]; a removal negates both.
   void update(int lo, int hi, int delta, int64_t w) {
@@ -3180,9 +3185,11 @@ UnionMeasure rect_union(const std::vector<Rect> &rects) {
   if (rects.empty()) {
     return {};
   }
+  assert(std::all_of(rects.begin(), rects.end(), [](const Rect &r) {
+    return r.x1 < r.x2 && r.y1 < r.y2;
+  }));
   std::vector<int64_t> ys;
   for (const Rect &r : rects) {
-    assert(r.x1 < r.x2 && r.y1 < r.y2);
     ys.push_back(r.y1);
     ys.push_back(r.y2);
   }
@@ -4832,7 +4839,7 @@ int main() {
 Given an oriented triangular mesh of a closed polyhedron, compute its signed volume. Each triangle contributes the signed volume of the tetrahedron formed by the triangle $abc$ and the origin $((a \times b) \cdot c) / 6$. If faces are oriented outward, the result is positive for the orientation used by \inlinecode{convex\_hull\_3d()} in \secref{7.5.3}; take \inlinecode{abs()} if only the magnitude is needed.
 
 \begin{compactitem}
-  \item \inlinecode{signed\_polyhedron\_volume(p, faces)} returns the signed volume. Each face triplet (\inlinecode{a}, \inlinecode{b}, \inlinecode{c}) represents the triangle with vertices \inlinecode{p[a]}, \inlinecode{p[b]}, and \inlinecode{p[c]}.
+  \item \inlinecode{signed\_polyhedron\_volume(p, faces)} returns the signed volume. Each face triplet (\inlinecode{a}, \inlinecode{b}, \inlinecode{c}) represents the triangle with vertices \inlinecode{p[a]}, \inlinecode{p[b]}, and \inlinecode{p[c]}, and its indices must be valid.
 \end{compactitem}
 
 Overflow warning: for integral point types, each scalar triple product must fit in the point's coordinate arithmetic type before it is converted to \inlinecode{double}.
@@ -4842,6 +4849,8 @@ Overflow warning: for integral point types, each scalar triple product must fit 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[style=cpp]
+#include <algorithm>
+#include <cassert>
 #include <vector>
 
 struct Point3D {
@@ -4857,6 +4866,11 @@ struct Point3D {
 
 template<typename Pt, typename F>
 double signed_polyhedron_volume(const std::vector<Pt> &p, const std::vector<F> &faces) {
+  assert(std::all_of(faces.begin(), faces.end(), [&](const F &face) {
+    auto [a, b, c] = face;
+    return 0 <= a && a < static_cast<int>(p.size()) && 0 <= b && b < static_cast<int>(p.size()) &&
+           0 <= c && c < static_cast<int>(p.size());
+  }));
   double volume = 0;
   for (const auto &[a, b, c] : faces) {
     volume += p[a].cross(p[b]).dot(p[c]);  // Overflow warning.

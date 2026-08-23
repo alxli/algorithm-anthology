@@ -66,6 +66,7 @@ using Matrix = std::vector<std::vector<T>>;
 
 template<typename T = int>
 Matrix<T> make_matrix(int m, int n, const T &v = T{}) {
+  assert(m >= 0 && n >= 0);
   return Matrix<T>(m, std::vector<T>(n, v));
 }
 

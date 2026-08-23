@@ -51,8 +51,9 @@ Prefer code that a strong contestant can adapt quickly after skimming:
   accident.
 - Use assertions for preconditions that represent caller misuse; return sentinels or empty results
   for ordinary algorithmic failure when that is the section's established API.
-- Never put a required side effect inside `assert()`, since defining `NDEBUG` removes the entire
-  expression.
+- In reusable code, never put a required side effect inside `assert()`, since defining `NDEBUG`
+  removes the entire expression. Example code may perform the operation being tested inside
+  `assert()`; examples run with assertions enabled, so do not flag or scan for those side effects.
 - Mark single-argument constructors `explicit` unless implicit conversion is an intentional part of
   a mathematical value type or another established API.
 - When saving a dereferenced generic iterator across mutations, materialize its `value_type`;

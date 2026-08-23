@@ -66,7 +66,7 @@ class RangeTree {
   void query(
       int n, int lo, int hi, const T &x1, const T &y1, const T &x2, const T &y2,
       std::vector<std::tuple<int, T, T>> &res
-  ) {
+  ) const {
     if (points[hi].x < x1 || x2 < points[lo].x) {
       return;
     }
@@ -105,7 +105,9 @@ class RangeTree {
     build(0, 0, n - 1);
   }
 
-  std::vector<std::tuple<int, T, T>> query(const T &x1, const T &y1, const T &x2, const T &y2) {
+  std::vector<std::tuple<int, T, T>> query(
+      const T &x1, const T &y1, const T &x2, const T &y2
+  ) const {
     assert(!(x2 < x1) && !(y2 < y1));
     std::vector<std::tuple<int, T, T>> res;
     query(0, 0, static_cast<int>(points.size()) - 1, x1, y1, x2, y2, res);

@@ -6879,6 +6879,7 @@ class WaveletTree {
   WaveletTree(std::vector<int>::iterator lo, std::vector<int>::iterator hi, int mn, int mx)
       : min_val(mn), max_val(mx) {
     assert(min_val <= max_val);
+    assert(std::all_of(lo, hi, [&](int x) { return min_val <= x && x <= max_val; }));
     b.reserve((hi - lo) + 1);
     b.push_back(0);
     if (lo >= hi) {
@@ -6887,7 +6888,6 @@ class WaveletTree {
     int mid = min_val + static_cast<int>((static_cast<int64_t>(max_val) - min_val) / 2);
     auto go_left = [mid](int v) { return v <= mid; };
     for (auto it = lo; it != hi; ++it) {
-      assert(min_val <= *it && *it <= max_val);
       b.push_back(b.back() + (go_left(*it) ? 1 : 0));
     }
     if (min_val == max_val) {
@@ -7713,17 +7713,12 @@ class SparseSegTree2D {
       } while ((c <= split_mid) == (target->lo <= split_mid));
       InnerNode *tmp =
           make_inner(split_lo, split_hi, combine_n(init, rows * length(split_lo, split_hi)));
-      if (target->lo <= split_mid) {
-        tmp->left = target;
-      } else {
-        tmp->right = target;
-      }
+      (target->lo <= split_mid ? tmp->left : tmp->right) = target;
       target = tmp;
       update_inner(tmp, c, rows, apply);
     }
-    T lval = (n->left != nullptr) ? n->left->value : combine_n(init, rows * length(lo, mid));
-    T rval = (n->right != nullptr) ? n->right->value : combine_n(init, rows * length(mid + 1, hi));
-    n->value = combine(lval, rval);
+    n->value =
+        combine(query_inner(n->left, lo, mid, rows), query_inner(n->right, mid + 1, hi, rows));
   }
 
   void update(OuterNode *n, int r, int c, const T &d) {
@@ -7804,10 +7799,10 @@ int main() {
   t.update(500000000, 500000000, -100);
   assert(t.query(0, 0, 1000000000, 1000000000) == -100);
 
-  SparseSegTree2D<int, 1, 2> rectangular(0);
+  SparseSegTree2D<int, 1, 4> rectangular(0);
   rectangular.update(0, 0, 5);
-  rectangular.update(0, 1, 6);
-  assert(rectangular.query(0, 0, 0, 1) == 5);
+  rectangular.update(0, 3, 6);
+  assert(rectangular.query(0, 0, 0, 3) == 0);  // Untouched gaps remain part of the aggregate.
   return 0;
 }
 \end{lstlisting}
@@ -7881,7 +7876,7 @@ class RangeTree {
   void query(
       int n, int lo, int hi, const T &x1, const T &y1, const T &x2, const T &y2,
       std::vector<std::tuple<int, T, T>> &res
-  ) {
+  ) const {
     if (points[hi].x < x1 || x2 < points[lo].x) {
       return;
     }
@@ -7920,7 +7915,9 @@ class RangeTree {
     build(0, 0, n - 1);
   }
 
-  std::vector<std::tuple<int, T, T>> query(const T &x1, const T &y1, const T &x2, const T &y2) {
+  std::vector<std::tuple<int, T, T>> query(
+      const T &x1, const T &y1, const T &x2, const T &y2
+  ) const {
     assert(!(x2 < x1) && !(y2 < y1));
     std::vector<std::tuple<int, T, T>> res;
     query(0, 0, static_cast<int>(points.size()) - 1, x1, y1, x2, y2, res);
@@ -8015,7 +8012,7 @@ class RangeKDTree {
   void query(
       int lo, int hi, const T &x1, const T &y1, const T &x2, const T &y2,
       std::vector<std::pair<T, T>> &res
-  ) {
+  ) const {
     if (lo >= hi) {
       return;
     }
@@ -8049,7 +8046,7 @@ class RangeKDTree {
     build(0, static_cast<int>(tree.size()), true);
   }
 
-  std::vector<std::pair<T, T>> query(const T &x1, const T &y1, const T &x2, const T &y2) {
+  std::vector<std::pair<T, T>> query(const T &x1, const T &y1, const T &x2, const T &y2) const {
     assert(!(x2 < x1) && !(y2 < y1));
     std::vector<std::pair<T, T>> res;
     query(0, static_cast<int>(tree.size()), x1, y1, x2, y2, res);
@@ -9129,6 +9126,7 @@ This version is simplified to work only on the fixed set of integer elements $[0
 \end{compactitem}
 
 \begin{lstlisting}[style=cpp]
+#include <cassert>
 #include <numeric>
 #include <utility>
 #include <vector>
@@ -9140,7 +9138,11 @@ class DSU {
  public:
   explicit DSU(int n) : root(n), size(n, 1), num_sets(n) { std::iota(root.begin(), root.end(), 0); }
 
-  int find(int u) { return root[u] == u ? u : root[u] = find(root[u]); }
+  int find(int u) {
+    assert(0 <= u && u < static_cast<int>(root.size()));
+    return root[u] == u ? u : root[u] = find(root[u]);
+  }
+
   int sets() const { return num_sets; }
   int set_size(int u) { return size[find(u)]; }
   bool is_united(int u, int v) { return find(u) == find(v); }
@@ -9808,9 +9810,9 @@ class VirtualTree {
   }
 
   Tree build(std::vector<int> nodes) const {
-    for (int u : nodes) {
-      assert(0 <= u && u < static_cast<int>(tin.size()));
-    }
+    assert(std::all_of(nodes.begin(), nodes.end(), [&](int u) {
+      return 0 <= u && u < static_cast<int>(tin.size());
+    }));
     Tree res;
     if (nodes.empty()) {
       return res;
@@ -9879,9 +9881,9 @@ int main() {
   assert(t.root == 0);
   assert((t.nodes == vector<int>{0, 6, 7}));
   assert(t.edges.size() == 2);
-  for (auto &e : t.edges) {
-    assert(e.first == 0 && (e.second == 6 || e.second == 7));
-  }
+  assert(all_of(t.edges.begin(), t.edges.end(), [](auto e) {
+    return e.first == 0 && (e.second == 6 || e.second == 7);
+  }));
 
   // Virtual tree of {6, 4, 7}: node 1 becomes a branch point (LCA of 6 and 4).
   //        0

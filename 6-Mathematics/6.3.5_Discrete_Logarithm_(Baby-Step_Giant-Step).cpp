@@ -48,6 +48,7 @@ int64_t mulmod(int64_t a, int64_t b, int64_t m) {
 }
 
 int64_t discrete_log(int64_t a, int64_t b, int64_t m) {
+  assert(m >= 1);
   a %= m;
   b %= m;
   if (a < 0) {

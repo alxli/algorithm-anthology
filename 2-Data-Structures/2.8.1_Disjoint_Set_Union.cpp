@@ -33,6 +33,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <numeric>
 #include <utility>
 #include <vector>
@@ -44,7 +45,11 @@ class DSU {
  public:
   explicit DSU(int n) : root(n), size(n, 1), num_sets(n) { std::iota(root.begin(), root.end(), 0); }
 
-  int find(int u) { return root[u] == u ? u : root[u] = find(root[u]); }
+  int find(int u) {
+    assert(0 <= u && u < static_cast<int>(root.size()));
+    return root[u] == u ? u : root[u] = find(root[u]);
+  }
+
   int sets() const { return num_sets; }
   int set_size(int u) { return size[find(u)]; }
   bool is_united(int u, int v) { return find(u) == find(v); }

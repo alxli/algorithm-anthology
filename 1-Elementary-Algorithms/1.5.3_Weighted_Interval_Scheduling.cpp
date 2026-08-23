@@ -40,9 +40,9 @@ struct WeightedInterval {
 std::pair<int64_t, std::vector<int>> select_weighted_intervals(
     const std::vector<WeightedInterval> &intervals
 ) {
-  for (const auto &iv : intervals) {
-    assert(iv.start < iv.finish);
-  }
+  assert(std::all_of(intervals.begin(), intervals.end(), [](const WeightedInterval &iv) {
+    return iv.start < iv.finish;
+  }));
   int n = static_cast<int>(intervals.size());
   std::vector<int> order(n), finish(n), prev(n);
   std::iota(order.begin(), order.end(), 0);
@@ -56,9 +56,10 @@ std::pair<int64_t, std::vector<int>> select_weighted_intervals(
   std::vector<int64_t> dp(n + 1);
   std::vector<char> take(n + 1);
   for (int i = 1; i <= n; i++) {
-    int j =
+    int j = static_cast<int>(
         std::upper_bound(finish.begin(), finish.begin() + i - 1, intervals[order[i - 1]].start) -
-        finish.begin();
+        finish.begin()
+    );
     prev[i - 1] = j;
     int64_t candidate = dp[j] + intervals[order[i - 1]].weight;  // Overflow warning.
     if (dp[i - 1] < candidate) {

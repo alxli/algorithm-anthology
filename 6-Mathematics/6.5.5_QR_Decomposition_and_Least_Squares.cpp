@@ -133,7 +133,7 @@ std::optional<std::vector<double>> least_squares(
   }
   std::vector<double> x(n);
   for (int i = n - 1; i >= 0; i--) {  // Back substitution over the triangular top block.
-    if (std::fabs(r[i][i]) < eps) {
+    if (std::fabs(r[i][i]) <= eps) {
       return std::nullopt;
     }
     double sum = rhs[i];

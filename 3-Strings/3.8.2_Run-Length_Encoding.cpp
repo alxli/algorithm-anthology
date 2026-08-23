@@ -8,7 +8,7 @@ The representation below stores runs in a vector of pairs rather than formatting
 This avoids ambiguity when the original text contains digits or separator characters.
 
 - `run_length_encode(s)` returns the sequence of runs in string `s`.
-- `run_length_decode(runs)` reconstructs the original string from a sequence of runs.
+- `run_length_decode(runs)` reconstructs the original string from a sequence of nonnegative runs.
 
 Time Complexity:
 - O(n) per call, where $n$ is the input or output length.
@@ -19,6 +19,8 @@ Space Complexity:
 
 */
 
+#include <algorithm>
+#include <cassert>
 #include <string>
 #include <utility>
 #include <vector>
@@ -37,6 +39,7 @@ std::vector<std::pair<char, int>> run_length_encode(const string &s) {
 }
 
 string run_length_decode(const std::vector<std::pair<char, int>> &runs) {
+  assert(std::all_of(runs.begin(), runs.end(), [](auto r) { return r.second >= 0; }));
   string res;
   for (auto [c, count] : runs) {
     res.append(count, c);

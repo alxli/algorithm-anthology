@@ -51,6 +51,7 @@ const double EPS = 1e-9;
 
 std::vector<std::vector<double>> fundamental_matrix(const std::vector<std::vector<double>> &q) {
   int n = static_cast<int>(q.size());
+  assert(n == 0 || static_cast<int>(q[0].size()) == n);
   // Reduce the augmented matrix [I - Q | I] to [I | N] by Gauss-Jordan elimination.
   std::vector<std::vector<double>> a(n, std::vector<double>(2 * n));
   for (int i = 0; i < n; i++) {
@@ -121,6 +122,7 @@ std::vector<std::vector<double>> absorption_probabilities(
 
 /*** Example Usage ***/
 
+#include <algorithm>
 #include <cmath>
 using namespace std;
 
@@ -148,8 +150,8 @@ int main() {
   // A fair game is won with probability i/4.
   auto odds = absorption_probabilities(q, r);
   assert(EQ(odds[0][1], 0.25) && EQ(odds[1][1], 0.5) && EQ(odds[2][1], 0.75));
-  for (int i = 0; i < 3; i++) {
-    assert(EQ(odds[i][0] + odds[i][1], 1.0));  // Absorption is certain.
-  }
+  assert(all_of(odds.begin(), odds.end(), [](const auto &row) {
+    return EQ(row[0] + row[1], 1.0);  // Absorption is certain.
+  }));
   return 0;
 }

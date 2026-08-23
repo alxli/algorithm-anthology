@@ -41,7 +41,7 @@ int simplex_solve(
     const std::vector<double> &c, std::vector<double> *x, bool maximize = true, double eps = 1e-10
 ) {
   int m = static_cast<int>(a.size()), n = static_cast<int>(c.size());
-  assert(x != nullptr && n > 0 && b.size() == a.size());
+  assert(x != nullptr && n > 0 && b.size() == a.size() && (a.empty() || a[0].size() == c.size()));
   std::vector<int> basis(m), nonbasis(n + 1);
   std::vector<std::vector<double>> tab(m + 2, std::vector<double>(n + 2));
   for (int i = 0; i < m; i++) {

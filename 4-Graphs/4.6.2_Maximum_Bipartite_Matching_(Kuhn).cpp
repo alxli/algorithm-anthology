@@ -12,7 +12,9 @@ right node. Flipping the edges along such a path enlarges the matching by one.
   for a global, pre-populated adjacency list `adj`, whose indices represent left-side nodes and
   whose entries contain right-side neighbors numbered $[0, `n2`)$. The two sides are given as
   separate node numberings. Use the bipartite check of section 4.6.1 to produce them for a graph
-  that does not already arrive presented as two sets. Time Complexity:
+  that does not already arrive presented as two sets.
+
+Time Complexity:
 - O(n_1*m) per call, where $m$ is the number of edges.
 
 Space Complexity:

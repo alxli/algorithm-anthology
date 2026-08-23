@@ -426,6 +426,8 @@ The discrete version operates on an integer domain, narrowing by thirds until at
   \item \inlinecode{discrete\_ternary\_min(lo, hi, f)} and \inlinecode{discrete\_ternary\_max(lo, hi, f)} return the integer index in range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ optimizing the unimodal function \inlinecode{f}, breaking ties toward the smaller index.
 \end{compactitem}
 
+Overflow warning: For the discrete searches, \inlinecode{hi - lo} must be representable by \inlinecode{Int}, and values returned by \inlinecode{f()} must be safe to negate when using \inlinecode{discrete\_ternary\_max()}.
+
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
@@ -571,8 +573,8 @@ Int discrete_ternary_min(Int lo, Int hi, Fn f) {
   }
   Int best = lo;
   auto best_value = f(best);
-  for (Int k = lo + 1; k <= hi; k++) {
-    auto value = f(k);
+  for (Int k = lo; k < hi;) {
+    auto value = f(++k);
     if (value < best_value) {
       best = k;
       best_value = value;
@@ -813,6 +815,8 @@ Backtracking answers this by trying a full step and halving it until the Armijo 
   \item \inlinecode{adam\_min(f, grad, x0, ...)} returns (\inlinecode{value}, \inlinecode{point}) for an approximate minimum of \inlinecode{f} reached from \inlinecode{x0} using Adam. Optional parameters default to \inlinecode{rate = 0.01}, \inlinecode{iterations = 10000}, \inlinecode{eps = 1e-9}, \inlinecode{beta1 = 0.9}, and \inlinecode{beta2 = 0.999}, where \inlinecode{rate} is the learning rate and the two decay factors, both required to lie in $[0, 1)$, control the two running averages.
 \end{compactitem}
 
+The gradient callable must return a vector with the same length as its input point.
+
 Both routines find a local minimum, and only a convex $f$ makes that the global one, as with the logistic regression of section \secref{6.7.5}. Prefer the golden-section search of section \secref{5.2.1} in one dimension, or the hill climbing of section \secref{5.2.2} and annealing of section \secref{5.2.3} when no gradient is available, since a numeric gradient costs $2n$ evaluations per step and half the usable precision.
 
 \Needspace*{3\baselineskip}
@@ -857,6 +861,7 @@ std::pair<double, std::vector<double>> gradient_descent_min(
   std::vector<double> next(x.size());
   for (int it = 0; it < iterations; it++) {
     std::vector<double> g = grad(x);
+    assert(g.size() == x.size());
     double norm2 = 0;
     for (double v : g) {
       norm2 += v * v;
@@ -894,6 +899,7 @@ std::pair<double, std::vector<double>> adam_min(
   std::vector<double> m(x.size()), v(x.size());
   for (int t = 1; t <= iterations; t++) {
     std::vector<double> g = grad(x);
+    assert(g.size() == x.size());
     double norm2 = 0;
     for (double d : g) {
       norm2 += d * d;
@@ -1557,7 +1563,7 @@ const int64_t INF = INT64_MAX / 4;
 class LiChaoTree {
   struct Line {
     int64_t m, b;
-    Line(int64_t m = 0, int64_t b = INF) : m(m), b(b) {}
+    explicit Line(int64_t m = 0, int64_t b = INF) : m(m), b(b) {}
     int64_t eval(int64_t x) const { return m * x + b; }  // Overflow warning.
   };
 
@@ -2420,9 +2426,9 @@ int main() {
     vector<dbl> p{-1, 2, -6, 2};
     vector<cdbl> roots = find_all_roots(p);
     assert(roots.size() == 3);
-    for (const auto &root : roots) {
-      assert(abs(eval(cpoly(p.begin(), p.end()), root)) < CHECK_EPS);
-    }
+    assert(all_of(roots.begin(), roots.end(), [&](const auto &root) {
+      return abs(eval(cpoly(p.begin(), p.end()), root)) < CHECK_EPS;
+    }));
   }
   {  // Scaling all coefficients does not change the roots.
     vector<dbl> p{-6e-40L, 1e-40L};
@@ -2438,9 +2444,9 @@ int main() {
     p.emplace_back(-6, 4);
     vector<cdbl> roots = find_all_roots(p);
     assert(roots.size() == 4);
-    for (const auto &root : roots) {
-      assert(abs(eval(p, root)) < CHECK_EPS);
-    }
+    assert(all_of(roots.begin(), roots.end(), [&](const auto &root) {
+      return abs(eval(p, root)) < CHECK_EPS;
+    }));
     assert_roots(roots, {{-3, -2}, {-12.0L / 13, 18.0L / 13}, {0, -1}, {0, 1}});
   }
   return 0;
@@ -2524,6 +2530,7 @@ State euler(Fn f, double t0, const State &y0, double t1, int steps) {
   State y = y0;
   for (int i = 0; i < steps; i++) {
     State k = f(t0 + i * h, y);
+    assert(k.size() == y.size());
     for (size_t j = 0; j < y.size(); j++) {
       y[j] += h * k[j];
     }
@@ -2539,10 +2546,12 @@ State midpoint(Fn f, double t0, const State &y0, double t1, int steps) {
   for (int i = 0; i < steps; i++) {
     double t = t0 + i * h;
     State k1 = f(t, y), half = y;
+    assert(k1.size() == y.size());
     for (size_t j = 0; j < y.size(); j++) {
       half[j] += h / 2 * k1[j];
     }
     State k2 = f(t + h / 2, half);
+    assert(k2.size() == y.size());
     for (size_t j = 0; j < y.size(); j++) {
       y[j] += h * k2[j];
     }
@@ -2558,18 +2567,22 @@ State runge_kutta(Fn f, double t0, const State &y0, double t1, int steps) {
   for (int i = 0; i < steps; i++) {
     double t = t0 + i * h;
     State k1 = f(t, y);
+    assert(k1.size() == y.size());
     for (size_t j = 0; j < y.size(); j++) {
       probe[j] = y[j] + h / 2 * k1[j];
     }
     State k2 = f(t + h / 2, probe);
+    assert(k2.size() == y.size());
     for (size_t j = 0; j < y.size(); j++) {
       probe[j] = y[j] + h / 2 * k2[j];
     }
     State k3 = f(t + h / 2, probe);
+    assert(k3.size() == y.size());
     for (size_t j = 0; j < y.size(); j++) {
       probe[j] = y[j] + h * k3[j];
     }
     State k4 = f(t + h, probe);
+    assert(k4.size() == y.size());
     for (size_t j = 0; j < y.size(); j++) {
       y[j] += h / 6 * (k1[j] + 2 * k2[j] + 2 * k3[j] + k4[j]);
     }
@@ -2636,7 +2649,7 @@ int simplex_solve(
     const std::vector<double> &c, std::vector<double> *x, bool maximize = true, double eps = 1e-10
 ) {
   int m = static_cast<int>(a.size()), n = static_cast<int>(c.size());
-  assert(x != nullptr && n > 0 && b.size() == a.size());
+  assert(x != nullptr && n > 0 && b.size() == a.size() && (a.empty() || a[0].size() == c.size()));
   std::vector<int> basis(m), nonbasis(n + 1);
   std::vector<std::vector<double>> tab(m + 2, std::vector<double>(n + 2));
   for (int i = 0; i < m; i++) {

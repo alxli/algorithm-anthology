@@ -27,6 +27,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -81,6 +82,7 @@ void to_hessenberg(std::vector<std::vector<int64_t>> &m) {
 
 std::vector<int64_t> characteristic_polynomial(std::vector<std::vector<int64_t>> a) {
   int n = static_cast<int>(a.size());
+  assert(n == 0 || static_cast<int>(a[0].size()) == n);
   for (auto &row : a) {
     for (int64_t &x : row) {
       x = (x % MOD + MOD) % MOD;

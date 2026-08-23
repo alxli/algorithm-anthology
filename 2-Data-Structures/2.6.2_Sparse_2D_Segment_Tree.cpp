@@ -158,17 +158,12 @@ class SparseSegTree2D {
       } while ((c <= split_mid) == (target->lo <= split_mid));
       InnerNode *tmp =
           make_inner(split_lo, split_hi, combine_n(init, rows * length(split_lo, split_hi)));
-      if (target->lo <= split_mid) {
-        tmp->left = target;
-      } else {
-        tmp->right = target;
-      }
+      (target->lo <= split_mid ? tmp->left : tmp->right) = target;
       target = tmp;
       update_inner(tmp, c, rows, apply);
     }
-    T lval = (n->left != nullptr) ? n->left->value : combine_n(init, rows * length(lo, mid));
-    T rval = (n->right != nullptr) ? n->right->value : combine_n(init, rows * length(mid + 1, hi));
-    n->value = combine(lval, rval);
+    n->value =
+        combine(query_inner(n->left, lo, mid, rows), query_inner(n->right, mid + 1, hi, rows));
   }
 
   void update(OuterNode *n, int r, int c, const T &d) {
@@ -255,9 +250,9 @@ int main() {
   t.update(500000000, 500000000, -100);
   assert(t.query(0, 0, 1000000000, 1000000000) == -100);
 
-  SparseSegTree2D<int, 1, 2> rectangular(0);
+  SparseSegTree2D<int, 1, 4> rectangular(0);
   rectangular.update(0, 0, 5);
-  rectangular.update(0, 1, 6);
-  assert(rectangular.query(0, 0, 0, 1) == 5);
+  rectangular.update(0, 3, 6);
+  assert(rectangular.query(0, 0, 0, 3) == 0);  // Untouched gaps remain part of the aggregate.
   return 0;
 }

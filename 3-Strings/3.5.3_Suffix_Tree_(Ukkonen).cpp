@@ -13,9 +13,9 @@ one character at a time. It maintains an "active point" (a node, an edge, and a 
 edge) describing where the next suffix must be inserted, together with suffix links that let it hop
 between successive insertion points in amortized constant time. Edges to leaves are stored with an
 open-ended length that grows automatically as the string lengthens, so each phase touches only the
-suffixes that genuinely change. A unique terminal sentinel smaller than every real character is
-appended internally so that no suffix is a prefix of another and every suffix ends at its own leaf.
-The input must therefore not contain the character `'\1'`.
+suffixes that genuinely change. A unique terminal sentinel is appended internally so that no suffix
+is a prefix of another and every suffix ends at its own leaf. The input must therefore not contain
+the character `'\1'`.
 
 - `SuffixTree(s)` builds the suffix tree of string `s`.
 - `contains(t)` returns whether string `t` occurs as a substring of `s`.
@@ -35,12 +35,15 @@ Space Complexity:
 
 */
 
+#include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <map>
 #include <string>
 #include <vector>
 
 class SuffixTree {
+  static constexpr char SENTINEL = '\1';
   static const int OPEN = -1;  // Marks a leaf edge whose right end follows the growing string.
 
   struct Node {
@@ -142,8 +145,9 @@ class SuffixTree {
 
  public:
   explicit SuffixTree(const std::string &s) : str(s) {
-    str.push_back('\1');  // Unique terminal sentinel, smaller than every real character.
-    make_node(-1, -1);    // Root, at index 0; its incoming edge is never read.
+    assert(str.find(SENTINEL) == std::string::npos);
+    str.push_back(SENTINEL);
+    make_node(-1, -1);  // Root, at index 0; its incoming edge is never read.
     active_node = 0;
     active_edge = 0;
     active_length = 0;
@@ -156,6 +160,9 @@ class SuffixTree {
   }
 
   bool contains(const std::string &t) const {
+    if (t.find(SENTINEL) != std::string::npos) {
+      return false;
+    }
     int v = 0, i = 0, m = static_cast<int>(t.size());
     while (i < m) {
       auto it = tree[v].next.find(t[i]);
@@ -220,9 +227,7 @@ int main() {
     }
   }
   assert(t.count_distinct_substrings() == static_cast<int>(subs.size()));
-  for (const string &sub : subs) {
-    assert(t.contains(sub));
-  }
+  assert(all_of(subs.begin(), subs.end(), [&](const string &sub) { return t.contains(sub); }));
   assert(!t.contains("issa"));
   assert(t.longest_repeated_substring() == "issi");  // "issi" appears at indices 1 and 4.
   return 0;

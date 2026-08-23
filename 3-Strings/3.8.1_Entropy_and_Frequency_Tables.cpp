@@ -18,14 +18,15 @@ estimate: order-$k$ entropy never exceeds order-$(k - 1)$ entropy, which is why 
 compressors beat the order-0 bound.
 
 - `byte_frequencies(s)` returns a length-256 table of byte counts in string `s`.
-- `entropy(freq)` returns order-0 empirical entropy in bits per symbol for a frequency table.
+- `entropy(freq)` returns order-0 empirical entropy in bits per symbol for a nonnegative frequency
+  table.
 - `entropy(s)` returns order-0 empirical entropy in bits per symbol for string `s`.
 - `conditional_entropy(s, order = 1)` returns the order-`order` empirical entropy of `s` in bits per
   symbol, that is, the average uncertainty of each byte given the `order` bytes preceding it.
   `conditional_entropy(s, 0)` equals `entropy(s)`, and raising `order` never increases the result. A
   string of at most `order` bytes has no complete context, so the result is $0$.
-- `expected_code_length(freq, length)` returns the average encoded bits per symbol for code lengths
-  `length[c]`. The two input vectors must have the same size.
+- `expected_code_length(freq, length)` returns the average encoded bits per symbol for nonnegative
+  frequencies and code lengths `length[c]`. The two input vectors must have the same size.
 
 Time Complexity:
 - O(n + m) per call to `entropy(s)`, where $n$ is the string length and $m = 256$.
@@ -41,6 +42,7 @@ Space Complexity:
 
 */
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstdint>
@@ -59,6 +61,7 @@ std::vector<int> byte_frequencies(const string &s) {
 }
 
 double entropy(const std::vector<int> &freq) {
+  assert(std::all_of(freq.begin(), freq.end(), [](int f) { return f >= 0; }));
   int64_t total = std::accumulate(freq.begin(), freq.end(), 0LL);
   if (total == 0) {
     return 0;
@@ -104,6 +107,9 @@ double conditional_entropy(const string &s, int order = 1) {
 
 double expected_code_length(const std::vector<int> &freq, const std::vector<int> &length) {
   assert(freq.size() == length.size());
+  for (int i = 0; i < static_cast<int>(freq.size()); i++) {
+    assert(freq[i] >= 0 && length[i] >= 0);
+  }
   int64_t total = std::accumulate(freq.begin(), freq.end(), 0LL);
   if (total == 0) {
     return 0;

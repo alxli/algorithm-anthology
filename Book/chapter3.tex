@@ -3139,7 +3139,7 @@ int main() {
 \label{sec:3.5.3}
 A suffix tree is the compressed trie of every suffix of a string: a rooted tree in which each edge is labeled with a substring, no two edges leaving a node start with the same character, and the concatenation of labels from the root to each leaf spells one suffix. Paths from the root therefore spell exactly the distinct substrings of the string, which makes the tree a powerful index for substring queries, repeated-substring problems, and many other tasks. It is the explicit-pointer counterpart of the suffix automaton; the two store the same information and either can be converted into the other.
 
-This implementation is Ukkonen's algorithm, which builds the tree online in linear time by feeding one character at a time. It maintains an ``active point'' (a node, an edge, and a length along that edge) describing where the next suffix must be inserted, together with suffix links that let it hop between successive insertion points in amortized constant time. Edges to leaves are stored with an open-ended length that grows automatically as the string lengthens, so each phase touches only the suffixes that genuinely change. A unique terminal sentinel smaller than every real character is appended internally so that no suffix is a prefix of another and every suffix ends at its own leaf. The input must therefore not contain the character \inlinecode{\textquotesingle{}\textbackslash{}1\textquotesingle{}}.
+This implementation is Ukkonen's algorithm, which builds the tree online in linear time by feeding one character at a time. It maintains an ``active point'' (a node, an edge, and a length along that edge) describing where the next suffix must be inserted, together with suffix links that let it hop between successive insertion points in amortized constant time. Edges to leaves are stored with an open-ended length that grows automatically as the string lengthens, so each phase touches only the suffixes that genuinely change. A unique terminal sentinel is appended internally so that no suffix is a prefix of another and every suffix ends at its own leaf. The input must therefore not contain the character \inlinecode{\textquotesingle{}\textbackslash{}1\textquotesingle{}}.
 
 \begin{compactitem}
   \item \inlinecode{SuffixTree(s)} builds the suffix tree of string \inlinecode{s}.
@@ -3164,12 +3164,15 @@ This implementation is Ukkonen's algorithm, which builds the tree online in line
 \end{compactitem}
 
 \begin{lstlisting}[style=cpp]
+#include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <map>
 #include <string>
 #include <vector>
 
 class SuffixTree {
+  static constexpr char SENTINEL = '\1';
   static const int OPEN = -1;  // Marks a leaf edge whose right end follows the growing string.
 
   struct Node {
@@ -3271,8 +3274,9 @@ class SuffixTree {
 
  public:
   explicit SuffixTree(const std::string &s) : str(s) {
-    str.push_back('\1');  // Unique terminal sentinel, smaller than every real character.
-    make_node(-1, -1);    // Root, at index 0; its incoming edge is never read.
+    assert(str.find(SENTINEL) == std::string::npos);
+    str.push_back(SENTINEL);
+    make_node(-1, -1);  // Root, at index 0; its incoming edge is never read.
     active_node = 0;
     active_edge = 0;
     active_length = 0;
@@ -3285,6 +3289,9 @@ class SuffixTree {
   }
 
   bool contains(const std::string &t) const {
+    if (t.find(SENTINEL) != std::string::npos) {
+      return false;
+    }
     int v = 0, i = 0, m = static_cast<int>(t.size());
     while (i < m) {
       auto it = tree[v].next.find(t[i]);
@@ -3350,9 +3357,7 @@ int main() {
     }
   }
   assert(t.count_distinct_substrings() == static_cast<int>(subs.size()));
-  for (const string &sub : subs) {
-    assert(t.contains(sub));
-  }
+  assert(all_of(subs.begin(), subs.end(), [&](const string &sub) { return t.contains(sub); }));
   assert(!t.contains("issa"));
   assert(t.longest_repeated_substring() == "issi");  // "issi" appears at indices 1 and 4.
   return 0;
@@ -3576,7 +3581,7 @@ class Eertree {
     int len, link, occ;
     std::unordered_map<char, int> next;
 
-    Node(int len = 0) : len(len), link(0), occ(0) {}
+    explicit Node(int len = 0) : len(len), link(0), occ(0) {}
   };
 
   std::vector<Node> tree;
@@ -3867,6 +3872,8 @@ Dynamic programming compares prefixes and chooses the cheapest last operation: a
   \item \inlinecode{hirschberg\_align(s1, s2, gap\_cost, sub\_cost)} returns the sequence alignment of strings \inlinecode{s1} and \inlinecode{s2} using the more memory efficient Hirschberg's algorithm.
 \end{compactitem}
 
+Overflow warning: All DP costs must fit in \inlinecode{int}.
+
 \textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{edit\_distance(s1, s2)}, \inlinecode{align\_sequences(s1, s2)}, and \inlinecode{hirschberg\_align(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
 
 \Needspace*{3\baselineskip}
@@ -3879,6 +3886,7 @@ Dynamic programming compares prefixes and chooses the cheapest last operation: a
 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
+#include <cassert>
 #include <iterator>
 #include <string>
 #include <utility>
@@ -3908,6 +3916,7 @@ int edit_distance(const string &s1, const string &s2) {
 std::pair<string, string> align_sequences(
     const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1
 ) {
+  assert(gap_cost >= 0 && sub_cost >= 0);
   int n = static_cast<int>(s1.size()), m = static_cast<int>(s2.size());
   std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1));
   for (int i = 0; i <= n; i++) {
@@ -4015,6 +4024,7 @@ void hirschberg_rec(
 std::pair<string, string> hirschberg_align(
     const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1
 ) {
+  assert(gap_cost >= 0 && sub_cost >= 0);
   if (s1.size() < s2.size()) {
     auto res = hirschberg_align(s2, s1, gap_cost, sub_cost);
     return {res.second, res.first};
@@ -4245,6 +4255,7 @@ Overflow warning: All intermediate results must fit in \inlinecode{int}.
 \textbf{Space Complexity}: $O(n)$ auxiliary stack space, where $n$ is the length of \inlinecode{s}.
 
 \begin{lstlisting}[style=cpp]
+#include <cassert>
 #include <string>
 
 int eval(const std::string &s) {
@@ -4281,9 +4292,12 @@ int eval(const std::string &s) {
         case '*':
           num *= rec(rec, prec - 1);
           break;
-        case '/':
-          num /= rec(rec, prec - 1);
+        case '/': {
+          int divisor = rec(rec, prec - 1);
+          assert(divisor != 0);
+          num /= divisor;
           break;
+        }
       }
     }
     return num;
@@ -4697,10 +4711,10 @@ For symbol probabilities $p_i$, the order-0 empirical entropy is $H = -\sum_i p_
 
 \begin{compactitem}
   \item \inlinecode{byte\_frequencies(s)} returns a length-256 table of byte counts in string \inlinecode{s}.
-  \item \inlinecode{entropy(freq)} returns order-0 empirical entropy in bits per symbol for a frequency table.
+  \item \inlinecode{entropy(freq)} returns order-0 empirical entropy in bits per symbol for a nonnegative frequency table.
   \item \inlinecode{entropy(s)} returns order-0 empirical entropy in bits per symbol for string \inlinecode{s}.
   \item \inlinecode{conditional\_entropy(s, order = 1)} returns the order-\inlinecode{order} empirical entropy of \inlinecode{s} in bits per symbol, that is, the average uncertainty of each byte given the \inlinecode{order} bytes preceding it. \inlinecode{conditional\_entropy(s, 0)} equals \inlinecode{entropy(s)}, and raising \inlinecode{order} never increases the result. A string of at most \inlinecode{order} bytes has no complete context, so the result is $0$.
-  \item \inlinecode{expected\_code\_length(freq, length)} returns the average encoded bits per symbol for code lengths \inlinecode{length[c]}. The two input vectors must have the same size.
+  \item \inlinecode{expected\_code\_length(freq, length)} returns the average encoded bits per symbol for nonnegative frequencies and code lengths \inlinecode{length[c]}. The two input vectors must have the same size.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -4720,6 +4734,7 @@ For symbol probabilities $p_i$, the order-0 empirical entropy is $H = -\sum_i p_
 \end{compactitem}
 
 \begin{lstlisting}[style=cpp]
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstdint>
@@ -4738,6 +4753,7 @@ std::vector<int> byte_frequencies(const string &s) {
 }
 
 double entropy(const std::vector<int> &freq) {
+  assert(std::all_of(freq.begin(), freq.end(), [](int f) { return f >= 0; }));
   int64_t total = std::accumulate(freq.begin(), freq.end(), 0LL);
   if (total == 0) {
     return 0;
@@ -4783,6 +4799,9 @@ double conditional_entropy(const string &s, int order = 1) {
 
 double expected_code_length(const std::vector<int> &freq, const std::vector<int> &length) {
   assert(freq.size() == length.size());
+  for (int i = 0; i < static_cast<int>(freq.size()); i++) {
+    assert(freq[i] >= 0 && length[i] >= 0);
+  }
   int64_t total = std::accumulate(freq.begin(), freq.end(), 0LL);
   if (total == 0) {
     return 0;
@@ -4841,7 +4860,7 @@ The representation below stores runs in a vector of pairs rather than formatting
 
 \begin{compactitem}
   \item \inlinecode{run\_length\_encode(s)} returns the sequence of runs in string \inlinecode{s}.
-  \item \inlinecode{run\_length\_decode(runs)} reconstructs the original string from a sequence of runs.
+  \item \inlinecode{run\_length\_decode(runs)} reconstructs the original string from a sequence of nonnegative runs.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ per call, where $n$ is the input or output length.
@@ -4854,6 +4873,8 @@ The representation below stores runs in a vector of pairs rather than formatting
 \end{compactitem}
 
 \begin{lstlisting}[style=cpp]
+#include <algorithm>
+#include <cassert>
 #include <string>
 #include <utility>
 #include <vector>
@@ -4872,6 +4893,7 @@ std::vector<std::pair<char, int>> run_length_encode(const string &s) {
 }
 
 string run_length_decode(const std::vector<std::pair<char, int>> &runs) {
+  assert(std::all_of(runs.begin(), runs.end(), [](auto r) { return r.second >= 0; }));
   string res;
   for (auto [c, count] : runs) {
     res.append(count, c);
@@ -5010,6 +5032,8 @@ The implementation below stores encoded bits as a string of \inlinecode{\textquo
 \end{compactitem}
 
 \begin{lstlisting}[style=cpp]
+#include <algorithm>
+#include <cassert>
 #include <functional>
 #include <queue>
 #include <string>
@@ -5023,7 +5047,7 @@ class HuffmanTree {
     unsigned char ch;
     int left, right;
 
-    Node(int freq = 0, unsigned char ch = 0, int left = -1, int right = -1)
+    explicit Node(int freq = 0, unsigned char ch = 0, int left = -1, int right = -1)
         : freq(freq), ch(ch), left(left), right(right) {}
   };
 
@@ -5073,19 +5097,23 @@ class HuffmanTree {
   string encode(const string &text) const {
     string bits;
     for (unsigned char c : text) {
+      assert(!code[c].empty());
       bits += code[c];
     }
     return bits;
   }
 
   string decode(const string &bits) const {
+    assert(std::all_of(bits.begin(), bits.end(), [](char b) { return b == '0' || b == '1'; }));
     string text;
     if (root == -1) {
+      assert(bits.empty());
       return text;
     }
     // Degenerate tree: the input had a single distinct character, so the root is itself a leaf and
     // each symbol was encoded as one bit. Walking children would dereference node -1.
     if (nodes[root].left == -1 && nodes[root].right == -1) {
+      assert(bits.find('1') == string::npos);
       return string(bits.size(), static_cast<char>(nodes[root].ch));
     }
     int u = root;
@@ -5096,6 +5124,7 @@ class HuffmanTree {
         u = root;
       }
     }
+    assert(u == root);
     return text;
   }
 };
@@ -5146,13 +5175,17 @@ The input must not contain the sentinel character \inlinecode{\textquotesingle{}
 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
+#include <cassert>
 #include <numeric>
 #include <string>
 #include <tuple>
 #include <vector>
 
+constexpr char SENTINEL = '\0';
+
 std::string bwt(std::string s) {
-  s.push_back('\0');  // Unique sentinel, smaller than every real character.
+  assert(s.find(SENTINEL) == std::string::npos);
+  s.push_back(SENTINEL);
   int n = static_cast<int>(s.size());
   // Sort the indices of the cyclic rotations by prefix doubling; with the sentinel this matches
   // sorting the suffixes.
@@ -5183,6 +5216,7 @@ std::string bwt(std::string s) {
 }
 
 std::string inverse_bwt(const std::string &code) {
+  assert(std::count(code.begin(), code.end(), SENTINEL) == 1);
   int n = static_cast<int>(code.size());
   // first[k] is the row supplying the first column's k-th character; following it from row 0 (the
   // sentinel row, sorted first) reconstructs the sentinel followed by the original string.

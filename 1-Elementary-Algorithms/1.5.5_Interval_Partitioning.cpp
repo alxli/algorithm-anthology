@@ -39,9 +39,9 @@ struct Interval {
 };
 
 std::pair<int, std::vector<int>> partition_intervals(const std::vector<Interval> &intervals) {
-  for (const auto &iv : intervals) {
-    assert(iv.start < iv.finish);
-  }
+  assert(std::all_of(intervals.begin(), intervals.end(), [](const Interval &iv) {
+    return iv.start < iv.finish;
+  }));
   int n = static_cast<int>(intervals.size());
   std::vector<int> order(n);
   std::iota(order.begin(), order.end(), 0);

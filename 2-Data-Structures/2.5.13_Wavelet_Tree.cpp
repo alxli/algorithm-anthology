@@ -50,6 +50,7 @@ class WaveletTree {
   WaveletTree(std::vector<int>::iterator lo, std::vector<int>::iterator hi, int mn, int mx)
       : min_val(mn), max_val(mx) {
     assert(min_val <= max_val);
+    assert(std::all_of(lo, hi, [&](int x) { return min_val <= x && x <= max_val; }));
     b.reserve((hi - lo) + 1);
     b.push_back(0);
     if (lo >= hi) {
@@ -58,7 +59,6 @@ class WaveletTree {
     int mid = min_val + static_cast<int>((static_cast<int64_t>(max_val) - min_val) / 2);
     auto go_left = [mid](int v) { return v <= mid; };
     for (auto it = lo; it != hi; ++it) {
-      assert(min_val <= *it && *it <= max_val);
       b.push_back(b.back() + (go_left(*it) ? 1 : 0));
     }
     if (min_val == max_val) {

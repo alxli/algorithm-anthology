@@ -419,7 +419,7 @@ Unix time counts seconds from the same epoch, and is exactly $86400$ times the d
 \begin{compactitem}
   \item \inlinecode{seconds\_from\_hms(h, m, s)} returns the seconds elapsed since midnight, and \inlinecode{hms\_from\_seconds(seconds)} returns the tuple (\inlinecode{hour}, \inlinecode{minute}, \inlinecode{second}) inverting it.
   \item \inlinecode{timestamp\_from\_civil(y, m, d, hh = 0, mm = 0, ss = 0)} returns the Unix timestamp of that instant.
-  \item \inlinecode{civil\_from\_timestamp(t)} returns the \inlinecode{DateTime} of a Unix timestamp, which may be negative for instants before the epoch.
+  \item \inlinecode{civil\_from\_timestamp(t)} returns the \inlinecode{DateTime} of a Unix timestamp, which may be negative for instants before the epoch. Its day count must fit in \inlinecode{int}.
 \end{compactitem}
 
 ISO 8601 numbers weeks from the one containing the first Thursday of the year, and assigns a date to the year of its own week's Thursday. Early January therefore often belongs to the previous ISO year and late December to the next, which is the mistake this replaces: 2021-01-01 is ISO week $53$ of $2020$.
@@ -442,6 +442,7 @@ Dates are ordinary \inlinecode{int} values with no range checking, and the era a
 
 \begin{lstlisting}[style=cpp]
 #include <cassert>
+#include <climits>
 #include <cstdint>
 #include <tuple>
 #include <utility>
@@ -461,6 +462,7 @@ int days_in_month(int y, int m) {
 }
 
 int days_from_civil(int y, int m, int d) {
+  assert(1 <= m && m <= 12 && 1 <= d && d <= days_in_month(y, m));
   y -= m <= 2;  // Start the year in March, so that February 29 is the final day of a year.
   int era = (y >= 0 ? y : y - 399) / 400;
   int yoe = y - era * 400;  // Year of era, in [0, 399].
@@ -503,7 +505,7 @@ std::tuple<int, int, int> hms_from_seconds(int seconds) {
 }
 
 int64_t timestamp_from_civil(int y, int m, int d, int hh = 0, int mm = 0, int ss = 0) {
-  return int64_t{86400} * days_from_civil(y, m, d) + seconds_from_hms(hh, mm, ss);
+  return 86400LL * days_from_civil(y, m, d) + seconds_from_hms(hh, mm, ss);
 }
 
 DateTime civil_from_timestamp(int64_t t) {
@@ -512,6 +514,7 @@ DateTime civil_from_timestamp(int64_t t) {
     rest += 86400;
     days--;
   }
+  assert(INT_MIN <= days && days <= INT_MAX);
   auto [y, m, d] = civil_from_days(static_cast<int>(days));
   auto [hh, mm, ss] = hms_from_seconds(static_cast<int>(rest));
   return {y, m, d, hh, mm, ss};
@@ -665,6 +668,7 @@ Overflow warning: Modular products use ordinary \inlinecode{int64\_t} multiplica
 const int64_t MOD = 1000000007;
 
 int64_t factorial(int n, int64_t m = MOD) {
+  assert(n >= 0 && m > 0);
   int64_t res = 1;
   for (int i = 2; i <= n; i++) {
     res = (res * i) % m;
@@ -673,13 +677,14 @@ int64_t factorial(int n, int64_t m = MOD) {
 }
 
 int64_t factorial_without_p(int64_t n, int64_t p = MOD) {
+  assert(n >= 0 && p >= 2);
   int64_t res = 1;
   while (n > 1) {
     if (n / p % 2 == 1) {
       res = res * (p - 1) % p;
     }
-    int max = n % p;
-    for (int i = 2; i <= max; i++) {
+    int64_t max = n % p;
+    for (int64_t i = 2; i <= max; i++) {
       res = (res * i) % p;
     }
     n /= p;
@@ -688,7 +693,7 @@ int64_t factorial_without_p(int64_t n, int64_t p = MOD) {
 }
 
 int64_t legendre(int64_t n, int64_t p) {
-  assert(p >= 2);
+  assert(n >= 0 && p >= 2);
   int64_t res = 0;
   for (int64_t q = n / p; q > 0; q /= p) {  // Dividing repeatedly avoids overflowing p^i.
     res += q;
@@ -697,6 +702,7 @@ int64_t legendre(int64_t n, int64_t p) {
 }
 
 std::vector<std::vector<int64_t>> binomial_table(int n, int64_t m = MOD) {
+  assert(n >= 0 && m > 0);
   std::vector<std::vector<int64_t>> t(n + 1);
   for (int i = 0; i <= n; i++) {
     for (int j = 0; j <= i; j++) {
@@ -711,6 +717,7 @@ std::vector<std::vector<int64_t>> binomial_table(int n, int64_t m = MOD) {
 }
 
 int64_t permute(int n, int k, int64_t m = MOD) {
+  assert(n >= 0 && k >= 0 && m > 0);
   if (n < k) {
     return 0;
   }
@@ -732,7 +739,8 @@ int64_t powmod(int64_t x, int64_t n, int64_t m) {
   return res;
 }
 
-int64_t choose(int n, int k, int64_t p = MOD) {
+int64_t choose(int64_t n, int64_t k, int64_t p = MOD) {
+  assert(n >= 0 && k >= 0 && p >= 2 && n < p);
   if (n < k) {
     return 0;
   }
@@ -740,16 +748,17 @@ int64_t choose(int n, int k, int64_t p = MOD) {
     k = n - k;
   }
   int64_t num = 1, den = 1;
-  for (int i = 0; i < k; i++) {
+  for (int64_t i = 0; i < k; i++) {
     num = num * (n - i) % p;
   }
-  for (int i = 1; i <= k; i++) {
+  for (int64_t i = 1; i <= k; i++) {
     den = den * i % p;
   }
   return num * powmod(den, p - 2, p) % p;
 }
 
 int64_t choose_lucas(int64_t n, int64_t k, int64_t p = MOD) {
+  assert(n >= 0 && p >= 2);
   if (k < 0 || k > n) {
     return 0;
   }
@@ -759,7 +768,7 @@ int64_t choose_lucas(int64_t n, int64_t k, int64_t p = MOD) {
     if (ki > ni) {
       return 0;
     }
-    res = res * choose(static_cast<int>(ni), static_cast<int>(ki), p) % p;
+    res = res * choose(ni, ki, p) % p;
     n /= p;
     k /= p;
   }
@@ -767,17 +776,20 @@ int64_t choose_lucas(int64_t n, int64_t k, int64_t p = MOD) {
 }
 
 int64_t multichoose(int n, int k, int64_t p = MOD) {
+  assert(n >= 0 && k >= 0 && p >= 2);
   if (n == 0) {
     return k == 0;
   }
-  return choose(n + k - 1, k, p);
+  return choose(static_cast<int64_t>(n) + k - 1, k, p);
 }
 
 int64_t catalan(int n, int64_t p = MOD) {
-  return choose(2 * n, n, p) * powmod(n + 1, p - 2, p) % p;
+  assert(n >= 0 && p >= 2);
+  return choose(2LL * n, n, p) * powmod(n + 1, p - 2, p) % p;
 }
 
 int64_t partitions(int n, int64_t m = MOD) {
+  assert(n >= 0 && m > 0);
   std::vector<int64_t> t(n + 1);
   t[0] = 1;
   for (int i = 1; i <= n; i++) {
@@ -789,6 +801,7 @@ int64_t partitions(int n, int64_t m = MOD) {
 }
 
 int64_t partitions(int n, int k, int64_t m = MOD) {
+  assert(n >= 0 && k >= 0 && m > 0);
   std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
@@ -800,6 +813,7 @@ int64_t partitions(int n, int k, int64_t m = MOD) {
 }
 
 int64_t stirling1(int n, int k, int64_t m = MOD) {
+  assert(n >= 0 && k >= 0 && m > 0);
   std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
@@ -812,6 +826,7 @@ int64_t stirling1(int n, int k, int64_t m = MOD) {
 }
 
 int64_t stirling2(int n, int k, int64_t m = MOD) {
+  assert(n >= 0 && k >= 0 && m > 0);
   std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
@@ -824,6 +839,7 @@ int64_t stirling2(int n, int k, int64_t m = MOD) {
 }
 
 int64_t eulerian1(int n, int k, int64_t m = MOD) {
+  assert(n > k && k >= 0 && m > 0);
   if (k > n - 1 - k) {
     k = n - 1 - k;
   }
@@ -841,6 +857,7 @@ int64_t eulerian1(int n, int k, int64_t m = MOD) {
 }
 
 int64_t eulerian2(int n, int k, int64_t m = MOD) {
+  assert(n > k && k >= 0 && m > 0);
   std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 1));
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= k; j++) {
@@ -2209,6 +2226,7 @@ Overflow warning: Every intermediate and result of the templated signed-integer 
 \end{compactitem}
 
 \begin{lstlisting}[style=cpp]
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <type_traits>
@@ -2305,10 +2323,12 @@ Int mod(Int a, Int m) {
 
 template<typename Int>
 Int mod_inverse(Int a, Int m) {
+  assert(m > 0 && gcd(a, m) == 1);
   return mod(extended_gcd(a, m).first, m);
 }
 
 std::vector<int> mod_inverse_table(int p) {
+  assert(p >= 2);
   std::vector<int> res(p);
   res[1] = 1;
   for (int i = 2; i < p; i++) {
@@ -2338,10 +2358,10 @@ bool crt(int64_t r1, int64_t m1, int64_t r2, int64_t m2, int64_t *r, int64_t *m)
 
 std::vector<int64_t> garner_digits(const std::vector<int> &a, const std::vector<int> &p) {
   assert(a.size() == p.size());
+  assert(std::all_of(p.begin(), p.end(), [](int m) { return m > 0; }));
   int n = static_cast<int>(a.size());
   std::vector<int64_t> x(n);
   for (int i = 0; i < n; i++) {
-    assert(p[i] > 0);
     x[i] = mod(static_cast<int64_t>(a[i]), static_cast<int64_t>(p[i]));
   }
   for (int i = 0; i < n; i++) {
@@ -2927,6 +2947,7 @@ int64_t mulmod(int64_t a, int64_t b, int64_t m) {
 }
 
 int64_t discrete_log(int64_t a, int64_t b, int64_t m) {
+  assert(m >= 1);
   a %= m;
   b %= m;
   if (a < 0) {
@@ -5242,14 +5263,16 @@ Division and square root generally have nonterminating decimal expansions, so bo
   \item \inlinecode{unscaled\_value()} returns the underlying \inlinecode{BigInt} coefficient.
   \item \inlinecode{abs()} and \inlinecode{normalized()} return the absolute value and a value with trailing fractional zeros removed.
   \item \inlinecode{move\_point(places)} moves the decimal point right by \inlinecode{places} positions, or left if \inlinecode{places} is negative.
-  \item \inlinecode{rescale(new\_scale, mode = Rounding::HalfAway)} returns the value with exactly \inlinecode{new\_scale} decimal places, rounding if the scale is reduced.
+  \item \inlinecode{rescale(new\_scale, mode = Round::HalfAway)} returns the value with exactly \inlinecode{new\_scale} decimal places, rounding if the scale is reduced.
   \item \inlinecode{trunc()}, \inlinecode{floor()}, and \inlinecode{ceil()} return the corresponding integer as a \inlinecode{BigInt}.
-  \item \inlinecode{divide(v, result\_scale, mode = Rounding::HalfAway)} divides by nonzero \inlinecode{v} and rounds to exactly \inlinecode{result\_scale} decimal places.
-  \item \inlinecode{sqrt(result\_scale, mode = Rounding::HalfAway)} returns the nonnegative square root rounded to exactly \inlinecode{result\_scale} decimal places.
+  \item \inlinecode{divide(v, result\_scale, mode = Round::HalfAway)} divides by nonzero \inlinecode{v} and rounds to exactly \inlinecode{result\_scale} decimal places.
+  \item \inlinecode{sqrt(result\_scale, mode = Round::HalfAway)} returns the nonnegative square root rounded to exactly \inlinecode{result\_scale} decimal places.
   \item \inlinecode{pow(n)} returns the value raised to nonnegative integer power \inlinecode{n}.
   \item \inlinecode{to\_string()} returns ordinary decimal notation with the stored number of decimal places.
   \item Stream operators and comparisons are defined, as are \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{\%}, and their compound assignments.
 \end{compactitem}
+
+Overflow warning: The stored scale and every decimal-shift magnitude must fit in \inlinecode{int}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -5268,6 +5291,8 @@ Division and square root generally have nonterminating decimal expansions, so bo
 #include "6.4.2_Big_Integer.cpp"
 #undef main
 
+#include <climits>
+
 class BigDecimal {
  public:
   enum class Round { TowardZero, AwayFromZero, Floor, Ceil, HalfAway, HalfEven };
@@ -5276,7 +5301,13 @@ class BigDecimal {
   BigInt coeff;
   int scale;
 
+  static int checked_scale(int64_t scale) {
+    assert(0 <= scale && scale <= INT_MAX);
+    return static_cast<int>(scale);
+  }
+
   BigDecimal(BigInt coeff, int scale) : coeff(std::move(coeff)), scale(scale) {}
+
   BigInt scaled(int new_scale) const { return coeff.mul_pow10(new_scale - scale); }
   static BigInt pow10(int n) { return BigInt(10).pow(n); }
 
@@ -5298,6 +5329,7 @@ class BigDecimal {
   BigDecimal(int64_t n = 0) : coeff(n), scale(0) {}
 
   explicit BigDecimal(const std::string &s) : coeff(0), scale(0) {
+    assert(s.size() <= INT_MAX);
     size_t e = s.find_first_of("eE");
     std::string mantissa = s.substr(0, e);
     int exponent = e == std::string::npos ? 0 : std::stoi(s.substr(e + 1));
@@ -5319,10 +5351,12 @@ class BigDecimal {
     }
     assert(!digits.empty());
     coeff = negative ? -BigInt(digits) : BigInt(digits);
-    scale -= exponent;
-    if (scale < 0) {
-      coeff = coeff.mul_pow10(-scale);
+    int64_t adjusted_scale = static_cast<int64_t>(scale) - exponent;
+    if (adjusted_scale < 0) {
+      coeff = coeff.mul_pow10(checked_scale(-adjusted_scale));
       scale = 0;
+    } else {
+      scale = checked_scale(adjusted_scale);
     }
   }
 
@@ -5343,9 +5377,9 @@ class BigDecimal {
   }
 
   BigDecimal move_point(int places) const {
-    int new_scale = scale - places;
-    return new_scale >= 0 ? BigDecimal(coeff, new_scale)
-                          : BigDecimal(coeff.mul_pow10(-new_scale), 0);
+    int64_t new_scale = static_cast<int64_t>(scale) - places;
+    return new_scale >= 0 ? BigDecimal(coeff, checked_scale(new_scale))
+                          : BigDecimal(coeff.mul_pow10(checked_scale(-new_scale)), 0);
   }
 
   BigDecimal rescale(int new_scale, Round mode = Round::HalfAway) const {
@@ -5362,8 +5396,9 @@ class BigDecimal {
   BigDecimal divide(const BigDecimal &v, int result_scale, Round mode = Round::HalfAway) const {
     assert(v.coeff != 0 && result_scale >= 0);
     BigInt num = coeff.abs(), den = v.coeff.abs();
-    int shift = v.scale + result_scale - scale;
-    (shift >= 0 ? num : den) = (shift >= 0 ? num : den).mul_pow10(std::abs(shift));
+    int64_t shift = static_cast<int64_t>(v.scale) + result_scale - scale;
+    (shift >= 0 ? num : den) =
+        (shift >= 0 ? num : den).mul_pow10(checked_scale(shift < 0 ? -shift : shift));
     if ((coeff < 0) != (v.coeff < 0)) {
       num = -num;
     }
@@ -5373,8 +5408,9 @@ class BigDecimal {
   BigDecimal sqrt(int result_scale, Round mode = Round::HalfAway) const {
     assert(coeff >= 0 && result_scale >= 0);
     BigInt num = coeff, den = 1;
-    int shift = 2 * result_scale - scale;
-    (shift >= 0 ? num : den) = (shift >= 0 ? num : den).mul_pow10(std::abs(shift));
+    int64_t shift = 2LL * result_scale - scale;
+    (shift >= 0 ? num : den) =
+        (shift >= 0 ? num : den).mul_pow10(checked_scale(shift < 0 ? -shift : shift));
     BigInt q = (num / den).sqrt();
     bool exact = q * q * den == num;
     int half_cmp = (4 * num).comp(den * (4 * q * q + 4 * q + 1));
@@ -5427,7 +5463,7 @@ class BigDecimal {
   friend BigDecimal operator-(const BigDecimal &a, const BigDecimal &b) { return a + -b; }
 
   friend BigDecimal operator*(const BigDecimal &a, const BigDecimal &b) {
-    return BigDecimal(a.coeff * b.coeff, a.scale + b.scale);
+    return BigDecimal(a.coeff * b.coeff, checked_scale(static_cast<int64_t>(a.scale) + b.scale));
   }
 
   friend BigDecimal operator%(const BigDecimal &a, const BigDecimal &b) {
@@ -5440,7 +5476,7 @@ class BigDecimal {
 
   BigDecimal pow(int n) const {
     assert(n >= 0);
-    return BigDecimal(coeff.pow(n), scale * n);
+    return BigDecimal(coeff.pow(n), checked_scale(static_cast<int64_t>(scale) * n));
   }
 
   BigDecimal &operator+=(const BigDecimal &v) { return *this = *this + v; }
@@ -5479,10 +5515,14 @@ int main() {
   assert((BigDecimal("5.50") % 2).to_string() == "1.50");
 
   BigDecimal x = a;
-  assert((x += b).to_string() == "4.60");
-  assert((x -= b).to_string() == "1.20");
-  assert((x *= b).to_string() == "4.080");
-  assert((x %= 1.0).to_string() == "0.080");
+  x += b;
+  assert(x.to_string() == "4.60");
+  x -= b;
+  assert(x.to_string() == "1.20");
+  x *= b;
+  assert(x.to_string() == "4.080");
+  x %= 1.0;
+  assert(x.to_string() == "0.080");
 
   assert(a.move_point(2).to_string() == "120");
   assert(a.move_point(-1).to_string() == "0.120");
@@ -5796,6 +5836,7 @@ using Matrix = std::vector<std::vector<T>>;
 
 template<typename T = int>
 Matrix<T> make_matrix(int m, int n, const T &v = T{}) {
+  assert(m >= 0 && n >= 0);
   return Matrix<T>(m, std::vector<T>(n, v));
 }
 
@@ -6228,6 +6269,7 @@ Overflow warning: In \inlinecode{det\_bareiss()}, stored entries are minors of \
 \end{compactitem}
 
 \begin{lstlisting}[style=cpp]
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <optional>
@@ -6237,8 +6279,9 @@ Overflow warning: In \inlinecode{det\_bareiss()}, stored entries are minors of \
 
 template<typename SquareMatrix>
 auto det_naive(const SquareMatrix &a) {
-  using T = std::decay_t<decltype(a[0][0])>;
   int n = static_cast<int>(a.size());
+  assert(n == 0 || static_cast<int>(a[0].size()) == n);
+  using T = std::decay_t<decltype(a[0][0])>;
   if (n == 0) {
     return T{1};
   }
@@ -6280,7 +6323,7 @@ int elimination_pivot(const SquareMatrix &a, int row, int col, double eps) {
         pivot = r;
       }
     }
-    return std::fabs(a[pivot][col]) < eps ? -1 : pivot;
+    return std::fabs(a[pivot][col]) <= eps ? -1 : pivot;
   }
   for (int r = row; r < n; r++) {
     if (a[r][col] != T{0}) {
@@ -6292,8 +6335,9 @@ int elimination_pivot(const SquareMatrix &a, int row, int col, double eps) {
 
 template<typename SquareMatrix>
 auto det(const SquareMatrix &a, double eps = 1e-10) {
-  using T = std::decay_t<decltype(a[0][0])>;
   int n = static_cast<int>(a.size());
+  assert(n == 0 || static_cast<int>(a[0].size()) == n);
+  using T = std::decay_t<decltype(a[0][0])>;
   SquareMatrix b(a);
   T res = 1;
   for (int i = 0; i < n; i++) {
@@ -6318,6 +6362,7 @@ auto det(const SquareMatrix &a, double eps = 1e-10) {
 
 int64_t det_bareiss(std::vector<std::vector<int64_t>> a) {
   int n = static_cast<int>(a.size());
+  assert(n == 0 || static_cast<int>(a[0].size()) == n);
   int64_t prev = 1, sign = 1;
   for (int k = 0; k < n; k++) {
     if (a[k][k] == 0) {  // Swap in a nonzero pivot; each swap flips the sign.
@@ -6353,8 +6398,9 @@ int64_t det_bareiss(std::vector<std::vector<int64_t>> a) {
 
 template<typename SquareMatrix>
 std::optional<SquareMatrix> inverse(SquareMatrix a, double eps = 1e-10) {
-  using T = std::decay_t<decltype(a[0][0])>;
   int n = static_cast<int>(a.size());
+  assert(n == 0 || static_cast<int>(a[0].size()) == n);
+  using T = std::decay_t<decltype(a[0][0])>;
   for (int i = 0; i < n; i++) {
     a[i].resize(2 * n);
     for (int j = n; j < n * 2; j++) {
@@ -6452,6 +6498,7 @@ The LU decomposition of a matrix $A$ with row-partial pivoting is a factorizatio
 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <numeric>
 #include <optional>
@@ -6474,7 +6521,7 @@ int lu_decompose(Matrix &a, std::vector<int> *perm = nullptr, double eps = 1e-10
         pi = k;
       }
     }
-    if (std::fabs(a[pi][i]) < eps) {
+    if (std::fabs(a[pi][i]) <= eps) {
       return -1;
     }
     if (pi != i) {
@@ -6549,8 +6596,9 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x, do
 
 template<typename Matrix>
 auto det(const Matrix &a) {
-  using T = std::decay_t<decltype(a[0][0])>;
   int n = static_cast<int>(a.size());
+  assert(n == 0 || static_cast<int>(a[0].size()) == n);
+  using T = std::decay_t<decltype(a[0][0])>;
   Matrix lu(a);
   int status = lu_decompose(lu);
   if (status < 0) {
@@ -6566,6 +6614,7 @@ auto det(const Matrix &a) {
 template<typename SquareMatrix>
 std::optional<SquareMatrix> inverse(SquareMatrix a) {
   int n = static_cast<int>(a.size());
+  assert(n == 0 || static_cast<int>(a[0].size()) == n);
   std::vector<int> perm;
   int status = lu_decompose(a, &perm);
   if (status < 0) {
@@ -6777,7 +6826,7 @@ std::optional<std::vector<double>> least_squares(
   }
   std::vector<double> x(n);
   for (int i = n - 1; i >= 0; i--) {  // Back substitution over the triangular top block.
-    if (std::fabs(r[i][i]) < eps) {
+    if (std::fabs(r[i][i]) <= eps) {
       return std::nullopt;
     }
     double sum = rhs[i];
@@ -6847,6 +6896,7 @@ A direct expansion would cost a determinant per coefficient. Instead the matrix 
 \textbf{Space Complexity}: $O(n^{2})$ auxiliary.
 
 \begin{lstlisting}[style=cpp]
+#include <cassert>
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -6901,6 +6951,7 @@ void to_hessenberg(std::vector<std::vector<int64_t>> &m) {
 
 std::vector<int64_t> characteristic_polynomial(std::vector<std::vector<int64_t>> a) {
   int n = static_cast<int>(a.size());
+  assert(n == 0 || static_cast<int>(a[0].size()) == n);
   for (auto &row : a) {
     for (int64_t &x : row) {
       x = (x % MOD + MOD) % MOD;
@@ -6951,7 +7002,7 @@ An eigenvector of a square matrix is a direction the matrix does not rotate, onl
 The Jacobi eigenvalue algorithm builds that basis one rotation at a time. It repeatedly picks the largest off-diagonal entry and applies a rotation in the plane of that entry's row and column, choosing the angle that sets the entry to zero. A rotation is a similarity transform, so it preserves the eigenvalues, and it also preserves the sum of squares of all entries; since zeroing an entry removes its square from the off-diagonal total and moves it onto the diagonal, every rotation strictly reduces the off-diagonal weight. Earlier zeros are partially refilled by later rotations, but the total decays geometrically, and the matrix converges to a diagonal one whose entries are the eigenvalues. Accumulating the rotations gives the eigenvectors.
 
 \begin{compactitem}
-  \item \inlinecode{jacobi\_eigen(a, eps = 1e-12, iterations = 100)} returns the pair (\inlinecode{values}, \inlinecode{vectors}) for a real symmetric $n$ by $n$ matrix \inlinecode{a}. The eigenvalues in \inlinecode{values} are sorted in decreasing order, and \inlinecode{vectors[i]} is a unit eigenvector for \inlinecode{values[i]}, so the eigenvectors are rows rather than columns. Each iteration rotates away the currently largest off-diagonal entry, stopping early once every such entry is smaller than \inlinecode{eps}; if the \inlinecode{iterations} limit is reached first, the current approximation is returned. The matrix must be symmetric, which is not checked; an unsymmetric one silently produces nonsense.
+  \item \inlinecode{jacobi\_eigen(a, eps = 1e-12, iterations = 100)} returns the pair (\inlinecode{values}, \inlinecode{vectors}) for a real symmetric $n$ by $n$ matrix \inlinecode{a}. The eigenvalues in \inlinecode{values} are sorted in decreasing order, and \inlinecode{vectors[i]} is a unit eigenvector for \inlinecode{values[i]}, so the eigenvectors are rows rather than columns. Each iteration rotates away the currently largest off-diagonal entry, stopping early once every such entry is smaller than \inlinecode{eps}; if the \inlinecode{iterations} limit is reached first, the current approximation is returned. \inlinecode{iterations} must be nonnegative. The matrix must be symmetric, which is not checked; an unsymmetric one silently produces nonsense.
 \end{compactitem}
 
 A general matrix instead needs the roots of the characteristic polynomial of section \secref{6.5.6}, found including complex ones by the Ehrlich-Aberth iteration of section \secref{5.4.5}, though accuracy degrades with degree since polynomial roots are far more sensitive to coefficients than eigenvalues are to the matrix. When only the dominant eigenvalue is wanted, power iteration finds it with no decomposition at all, by repeatedly multiplying a random vector and renormalizing.
@@ -6962,6 +7013,7 @@ A general matrix instead needs the roots of the characteristic polynomial of sec
 
 \begin{lstlisting}[style=cpp]
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <numeric>
 #include <utility>
@@ -6973,6 +7025,7 @@ std::pair<std::vector<double>, Matrix> jacobi_eigen(
     Matrix a, double eps = 1e-12, int iterations = 100
 ) {
   int n = static_cast<int>(a.size());
+  assert((n == 0 || static_cast<int>(a[0].size()) == n) && iterations >= 0);
   Matrix vectors(n, std::vector<double>(n));
   for (int i = 0; i < n; i++) {
     vectors[i][i] = 1;
@@ -6989,7 +7042,7 @@ std::pair<std::vector<double>, Matrix> jacobi_eigen(
         }
       }
     }
-    if (n < 2 || largest < eps) {
+    if (n < 2 || largest <= eps) {
       break;
     }
     // Choose the rotation angle that zeroes a[p][q], using the numerically safe form of
@@ -7126,7 +7179,11 @@ class SparseMatrix {
   bool is_zero(const T &value) const { return value == T{}; }
 
  public:
-  SparseMatrix(int rows, int cols) : rows(rows), cols(cols), rvals(rows), cvals(cols) {}
+  SparseMatrix(int rows, int cols) : rows(rows), cols(cols) {
+    assert(rows >= 0 && cols >= 0);
+    rvals.resize(rows);
+    cvals.resize(cols);
+  }
 
   int num_rows() const { return rows; }
   int num_cols() const { return cols; }
@@ -7537,6 +7594,8 @@ The determinant is evaluated modulo a prime by Gaussian elimination, so the coun
 \textbf{Space Complexity}: $O(n^{2})$ auxiliary.
 
 \begin{lstlisting}[style=cpp]
+#include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -7555,6 +7614,11 @@ int64_t powmod(int64_t x, int64_t n, int64_t m) {
 }
 
 int64_t count_spanning_trees(int n, const std::vector<std::pair<int, int>> &edges) {
+  assert(n >= 0);
+  assert(std::all_of(edges.begin(), edges.end(), [n](auto edge) {
+    auto [u, v] = edge;
+    return 0 <= u && u < n && 0 <= v && v < n;
+  }));
   if (n <= 1) {
     return n == 1 ? 1 : 0;
   }
@@ -8356,8 +8420,17 @@ int64_t addmod(int64_t a, int64_t b) { return modnorm(modnorm(a) + modnorm(b)); 
 int64_t submod(int64_t a, int64_t b) { return modnorm(modnorm(a) - modnorm(b)); }
 int64_t inv(int64_t a) { return powmod(modnorm(a), MOD - 2, MOD); }
 
+void validate_points(const std::vector<int64_t> &x) {
+  for (int i = 0; i < static_cast<int>(x.size()); i++) {
+    for (int j = 0; j < i; j++) {
+      assert(modnorm(x[i]) != modnorm(x[j]));
+    }
+  }
+}
+
 std::vector<int64_t> interpolate(std::vector<int64_t> x, std::vector<int64_t> y) {
   assert(x.size() == y.size());
+  validate_points(x);
   int n = static_cast<int>(x.size());
   for (int i = 0; i < n; i++) {
     x[i] = modnorm(x[i]);
@@ -8387,6 +8460,7 @@ std::vector<int64_t> interpolate(std::vector<int64_t> x, std::vector<int64_t> y)
 
 int64_t interpolate_at(const std::vector<int64_t> &x, const std::vector<int64_t> &y, int64_t t) {
   assert(x.size() == y.size());
+  validate_points(x);
   int n = static_cast<int>(x.size());
   t = modnorm(t);
   int64_t res = 0;
@@ -9023,6 +9097,7 @@ const double EPS = 1e-9;
 
 std::vector<std::vector<double>> fundamental_matrix(const std::vector<std::vector<double>> &q) {
   int n = static_cast<int>(q.size());
+  assert(n == 0 || static_cast<int>(q[0].size()) == n);
   // Reduce the augmented matrix [I - Q | I] to [I | N] by Gauss-Jordan elimination.
   std::vector<std::vector<double>> a(n, std::vector<double>(2 * n));
   for (int i = 0; i < n; i++) {
@@ -9094,6 +9169,7 @@ std::vector<std::vector<double>> absorption_probabilities(
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
+#include <algorithm>
 #include <cmath>
 using namespace std;
 
@@ -9121,9 +9197,9 @@ int main() {
   // A fair game is won with probability i/4.
   auto odds = absorption_probabilities(q, r);
   assert(EQ(odds[0][1], 0.25) && EQ(odds[1][1], 0.5) && EQ(odds[2][1], 0.75));
-  for (int i = 0; i < 3; i++) {
-    assert(EQ(odds[i][0] + odds[i][1], 1.0));  // Absorption is certain.
-  }
+  assert(all_of(odds.begin(), odds.end(), [](const auto &row) {
+    return EQ(row[0] + row[1], 1.0);  // Absorption is certain.
+  }));
   return 0;
 }
 \end{lstlisting}
@@ -9144,6 +9220,7 @@ Two quantities follow at once: the expected number of steps to return to state $
 \textbf{Space Complexity}: $O(n^{2})$ auxiliary and $O(n)$ for the returned distribution.
 
 \begin{lstlisting}[style=cpp]
+#include <cassert>
 #include <cmath>
 #include <optional>
 #include <utility>
@@ -9153,6 +9230,7 @@ std::optional<std::vector<double>> stationary_distribution(
     const std::vector<std::vector<double>> &p, double eps = 1e-10
 ) {
   int n = static_cast<int>(p.size());
+  assert(n == 0 || static_cast<int>(p[0].size()) == n);
   if (n == 0) {
     return std::vector<double>{};
   }
@@ -9174,7 +9252,7 @@ std::optional<std::vector<double>> stationary_distribution(
         pivot = i;
       }
     }
-    if (fabs(a[pivot][col]) < eps) {
+    if (fabs(a[pivot][col]) <= eps) {
       return std::nullopt;  // Multiple closed classes make the stationary distribution nonunique.
     }
     std::swap(a[col], a[pivot]);
@@ -9201,6 +9279,7 @@ std::optional<std::vector<double>> stationary_distribution(
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[style=cpp]
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 using namespace std;
@@ -9226,9 +9305,7 @@ int main() {
   // A doubly stochastic chain is uniform in the limit no matter the transition probabilities.
   auto cycle = stationary_distribution({{0, 0.3, 0.7}, {0.7, 0, 0.3}, {0.3, 0.7, 0}});
   assert(cycle.has_value());
-  for (int i = 0; i < 3; i++) {
-    assert(EQ((*cycle)[i], 1.0 / 3));
-  }
+  assert(all_of(cycle->begin(), cycle->end(), [](double p) { return EQ(p, 1.0 / 3); }));
 
   // Two states that never reach each other admit no unique distribution.
   assert(!stationary_distribution({{1, 0}, {0, 1}}).has_value());
@@ -9825,6 +9902,7 @@ For a sum of independent impartial games, the combined Grundy number is the XOR 
 \end{compactitem}
 
 \begin{lstlisting}[style=cpp]
+#include <cassert>
 #include <vector>
 
 int mex(const std::vector<int> &values) {
@@ -9843,6 +9921,7 @@ int mex(const std::vector<int> &values) {
 }
 
 std::vector<int> subtraction_game_grundy(int max_stones, const std::vector<int> &moves) {
+  assert(max_stones >= 0);
   std::vector<int> grundy(max_stones + 1);
   for (int stones = 1; stones <= max_stones; stones++) {
     std::vector<int> reachable;
@@ -9889,7 +9968,7 @@ Computes Grundy numbers for impartial games whose positions form a directed acyc
 The implementation uses memoized DFS. It assumes the graph is acyclic; if cycles are present, the usual finite impartial-game Grundy recurrence is not directly valid without additional analysis.
 
 \begin{compactitem}
-  \item \inlinecode{grundy\_on\_dag(g)} returns the Grundy number of every node in graph \inlinecode{g}, where \inlinecode{g[u]} contains all positions reachable from position \inlinecode{u} in one move.
+  \item \inlinecode{grundy\_on\_dag(g)} returns the Grundy number of every node in graph \inlinecode{g}, where \inlinecode{g[u]} contains all positions reachable from position \inlinecode{u} in one move and every endpoint is a valid node index.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n + m)$ per call, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -9897,9 +9976,16 @@ The implementation uses memoized DFS. It assumes the graph is acyclic; if cycles
 \textbf{Space Complexity}: $O(d)$ auxiliary stack space and $O(n + m)$ auxiliary heap space, where $d$ is DFS depth.
 
 \begin{lstlisting}[style=cpp]
+#include <algorithm>
+#include <cassert>
 #include <vector>
 
 std::vector<int> grundy_on_dag(const std::vector<std::vector<int>> &g) {
+  assert(std::all_of(g.begin(), g.end(), [&](const auto &edges) {
+    return std::all_of(edges.begin(), edges.end(), [&](int v) {
+      return 0 <= v && v < static_cast<int>(g.size());
+    });
+  }));
   std::vector<int> memo(g.size(), -1);
   auto dfs = [&](auto &&dfs, int u) {
     if (memo[u] != -1) {

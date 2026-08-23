@@ -41,6 +41,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <numeric>
 #include <optional>
@@ -63,7 +64,7 @@ int lu_decompose(Matrix &a, std::vector<int> *perm = nullptr, double eps = 1e-10
         pi = k;
       }
     }
-    if (std::fabs(a[pi][i]) < eps) {
+    if (std::fabs(a[pi][i]) <= eps) {
       return -1;
     }
     if (pi != i) {
@@ -138,8 +139,9 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x, do
 
 template<typename Matrix>
 auto det(const Matrix &a) {
-  using T = std::decay_t<decltype(a[0][0])>;
   int n = static_cast<int>(a.size());
+  assert(n == 0 || static_cast<int>(a[0].size()) == n);
+  using T = std::decay_t<decltype(a[0][0])>;
   Matrix lu(a);
   int status = lu_decompose(lu);
   if (status < 0) {
@@ -155,6 +157,7 @@ auto det(const Matrix &a) {
 template<typename SquareMatrix>
 std::optional<SquareMatrix> inverse(SquareMatrix a) {
   int n = static_cast<int>(a.size());
+  assert(n == 0 || static_cast<int>(a[0].size()) == n);
   std::vector<int> perm;
   int status = lu_decompose(a, &perm);
   if (status < 0) {

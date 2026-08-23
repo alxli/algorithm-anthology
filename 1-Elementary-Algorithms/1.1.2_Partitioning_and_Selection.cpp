@@ -133,15 +133,9 @@ int main() {
 
   vector<int> b{4, 2, 5, 3, 3, 1};
   auto [mid1, mid2] = partition_three_way(b.begin(), b.end(), 3);
-  for (auto it = b.begin(); it != mid1; ++it) {
-    assert(*it < 3);
-  }
-  for (auto it = mid1; it != mid2; ++it) {
-    assert(*it == 3);
-  }
-  for (auto it = mid2; it != b.end(); ++it) {
-    assert(*it > 3);
-  }
+  assert(all_of(b.begin(), mid1, [](int x) { return x < 3; }));
+  assert(all_of(mid1, mid2, [](int x) { return x == 3; }));
+  assert(all_of(mid2, b.end(), [](int x) { return x > 3; }));
 
   vector<int> a{5, 6, 4, 3, 2, 6, 7, 9, 3};
   int n = static_cast<int>(a.size());
@@ -149,12 +143,8 @@ int main() {
   assert(a[n / 2] == 5);
   // Values left of the median are <=, and values right are >= (the exact order within each side is
   // randomized, since the pivot is chosen at random).
-  for (int i = 0; i < n / 2; i++) {
-    assert(a[i] <= a[n / 2]);
-  }
-  for (int i = n / 2 + 1; i < n; i++) {
-    assert(a[i] >= a[n / 2]);
-  }
+  assert(all_of(a.begin(), a.begin() + n / 2, [&](int x) { return x <= a[n / 2]; }));
+  assert(all_of(a.begin() + n / 2 + 1, a.end(), [&](int x) { return x >= a[n / 2]; }));
 
   // The median-of-medians variant gives the same answer with a worst case that is still linear.
   vector<int> c{5, 6, 4, 3, 2, 6, 7, 9, 3};

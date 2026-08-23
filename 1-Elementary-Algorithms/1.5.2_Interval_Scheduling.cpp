@@ -37,9 +37,9 @@ struct Interval {
 };
 
 std::vector<int> select_intervals(const std::vector<Interval> &intervals) {
-  for (const auto &iv : intervals) {
-    assert(iv.start < iv.finish);
-  }
+  assert(std::all_of(intervals.begin(), intervals.end(), [](const Interval &iv) {
+    return iv.start < iv.finish;
+  }));
   std::vector<int> order(intervals.size());
   std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [&](int i, int j) {

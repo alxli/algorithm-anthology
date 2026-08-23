@@ -32,13 +32,17 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <numeric>
 #include <string>
 #include <tuple>
 #include <vector>
 
+constexpr char SENTINEL = '\0';
+
 std::string bwt(std::string s) {
-  s.push_back('\0');  // Unique sentinel, smaller than every real character.
+  assert(s.find(SENTINEL) == std::string::npos);
+  s.push_back(SENTINEL);
   int n = static_cast<int>(s.size());
   // Sort the indices of the cyclic rotations by prefix doubling; with the sentinel this matches
   // sorting the suffixes.
@@ -69,6 +73,7 @@ std::string bwt(std::string s) {
 }
 
 std::string inverse_bwt(const std::string &code) {
+  assert(std::count(code.begin(), code.end(), SENTINEL) == 1);
   int n = static_cast<int>(code.size());
   // first[k] is the row supplying the first column's k-th character; following it from row 0 (the
   // sentinel row, sorted first) reconstructs the sentinel followed by the original string.

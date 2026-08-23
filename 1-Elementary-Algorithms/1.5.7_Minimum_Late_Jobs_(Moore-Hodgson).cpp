@@ -37,9 +37,9 @@ struct TimedJob {
 };
 
 std::vector<int> max_on_time_jobs(const std::vector<TimedJob> &jobs) {
-  for (const auto &job : jobs) {
-    assert(job.duration >= 0 && job.deadline >= 0);
-  }
+  assert(std::all_of(jobs.begin(), jobs.end(), [](const TimedJob &job) {
+    return job.duration >= 0 && job.deadline >= 0;
+  }));
   int n = static_cast<int>(jobs.size());
   std::vector<int> order(n);
   std::iota(order.begin(), order.end(), 0);

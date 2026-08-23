@@ -66,7 +66,7 @@ class RangeKDTree {
   void query(
       int lo, int hi, const T &x1, const T &y1, const T &x2, const T &y2,
       std::vector<std::pair<T, T>> &res
-  ) {
+  ) const {
     if (lo >= hi) {
       return;
     }
@@ -100,7 +100,7 @@ class RangeKDTree {
     build(0, static_cast<int>(tree.size()), true);
   }
 
-  std::vector<std::pair<T, T>> query(const T &x1, const T &y1, const T &x2, const T &y2) {
+  std::vector<std::pair<T, T>> query(const T &x1, const T &y1, const T &x2, const T &y2) const {
     assert(!(x2 < x1) && !(y2 < y1));
     std::vector<std::pair<T, T>> res;
     query(0, static_cast<int>(tree.size()), x1, y1, x2, y2, res);

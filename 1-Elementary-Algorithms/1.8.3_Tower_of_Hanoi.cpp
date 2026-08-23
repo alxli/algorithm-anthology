@@ -56,7 +56,7 @@ std::vector<std::pair<int, int>> hanoi_moves(int n, int from = 0, int to = 2) {
 
 int64_t hanoi_move_count(int n) {
   assert(n >= 0 && n <= 63);
-  return static_cast<int64_t>((uint64_t{1} << n) - 1);  // Unsigned, so n = 63 does not overflow.
+  return static_cast<int64_t>((1ULL << n) - 1);  // Unsigned, so n = 63 does not overflow.
 }
 
 /*** Example Usage ***/
