@@ -204,7 +204,7 @@ votes turns the same routine into regression.
 
 Selecting the $k$ nearest with `std::nth_element` costs linear time rather than the O(n log n) of a
 full sort, since the neighbors' relative order is irrelevant to the vote. Scanning every row makes
-each query linear in the data, which the k-d tree of section 2.6.5 improves to logarithmic on
+each query linear in the data, which the k-d tree of section 2.6.4 improves to logarithmic on
 low-dimensional data; above roughly ten features the two converge and the scan below is preferable.
 
 - `knn_classify(points, labels, query, k)` returns the majority label among the `k` rows nearest to

@@ -6296,21 +6296,23 @@ int main() {
 \label{sec:2.5.10}
 A sparse segment tree (also commonly called a dynamic or implicit segment tree) maintains an array over a large index range while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique. This implementation uses lazy initialization of nodes to conserve memory: only the nodes covering touched indices are ever allocated, so a huge index range is supported without preallocating the whole tree. Allocated nodes are kept in a stable-address pool and released together when the tree is destroyed.
 
-The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. Since untouched nodes are implicit, \inlinecode{combine\_n(v, len)} must return the aggregate summary of \inlinecode{len} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For range-sum queries, \inlinecode{combine(a, b)} should return \inlinecode{a + b} and \inlinecode{combine\_n(v, len)} should return \inlinecode{v * len}.
+The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. Since untouched nodes are implicit, \inlinecode{combine\_n(v, len)} must return the aggregate summary of \inlinecode{len} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the sum of the target range. For range-min queries, \inlinecode{combine(a, b)} should return \inlinecode{std::min(a, b)} and \inlinecode{combine\_n(v, len)} should return \inlinecode{v}.
 
-Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
+Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range increments. For range assignment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{d} for range-min/range-max queries and \inlinecode{d * len} for range-sum queries.
 
 \begin{compactitem}
   \item \inlinecode{SparseSegTree\textless{}T, N\textgreater{}(v = T\{\})} constructs an array over indices $[0, {\inlinecodemath{N}})$, with every value implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} must be in $[0, {\inlinecodemath{N}})$.
   \item \inlinecode{query(lo, hi)} returns the aggregate of the values at indices in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$. If \inlinecode{lo == hi}, then the single specified value is returned.
-  \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{apply\_delta(v, d)}.
-  \item \inlinecode{update(lo, hi, d)} modifies the value at each array index in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$ by applying the delta \inlinecode{d} to each value.
+  \item \inlinecode{update(i, d)} adds \inlinecode{d} to the value at index \inlinecode{i}.
+  \item \inlinecode{update(lo, hi, d)} adds \inlinecode{d} to every value at an index in $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}}]$.
   \item \inlinecode{max\_right(lo, pred)} returns the largest boundary \inlinecode{hi} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred()}. As \inlinecode{hi} increases, \inlinecode{pred()} applied to this aggregate may change only from true to false. The empty range is valid, and \inlinecode{N} is returned if the predicate remains true to the end.
   \item \inlinecode{min\_left(hi, pred)} returns the smallest boundary \inlinecode{lo} such that the aggregate over the half-open range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$ satisfies \inlinecode{pred()}. As \inlinecode{lo} decreases, \inlinecode{pred()} applied to this aggregate may change only from true to false. The empty range is valid, and $0$ is returned if the predicate remains true to the beginning.
 \end{compactitem}
 
-For the boundary-search functions, \inlinecode{pred()} takes aggregate \inlinecode{T} values. For \inlinecode{combine = min}, \inlinecode{pred(mn) = (mn \textgreater{} x)} makes \inlinecode{max\_right()} stop at the first value \inlinecode{\textless{}= x} when extending right, while \inlinecode{min\_left()} stops just after the first such value when extending left. With nonnegative values and \inlinecode{combine = sum}, \inlinecode{pred(sum) = (sum \textless{}= x)} finds the longest extension with sum at most \inlinecode{x}.
+For the boundary-search functions, \inlinecode{pred()} takes aggregate \inlinecode{T} values. With the default sum aggregate and nonnegative values, \inlinecode{pred(sum) = (sum \textless{}= x)} finds the longest extension with sum at most \inlinecode{x}.
+
+Overflow warning: Products of values or deltas with segment lengths, and all resulting sums, must fit in \inlinecode{T}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -6337,10 +6339,10 @@ template<typename T, int N = 1000000001>
 class SparseSegTree {
   static_assert(N > 0);
 
-  static T combine(const T &a, const T &b) { return std::min(a, b); }
-  static T combine_n(const T &v, int64_t len) { return v; }
-  static T apply_delta(const T &v, const T &d, int64_t len) { return d; }
-  static T compose_deltas(const T &d1, const T &d2) { return d2; }
+  static T combine(const T &a, const T &b) { return a + b; }
+  static T combine_n(const T &v, int64_t len) { return v * len; }
+  static T apply_delta(const T &v, const T &d, int64_t len) { return v + d * len; }
+  static T compose_deltas(const T &d1, const T &d2) { return d1 + d2; }
 
   struct Node {
     T value, delta;
@@ -6523,27 +6525,31 @@ using namespace std;
 int main() {
   SparseSegTree<int> t(0);
   t.update(0, 6);
-  t.update(1, -2);
+  t.update(1, 2);
   t.update(2, 4);
   t.update(3, 8);
   t.update(4, 10);
-  vector<int> expected{6, -2, 4, 8, 10};
+  vector<int> expected{6, 2, 4, 8, 10};
   for (int i = 0; i < 5; i++) {
     assert(t.at(i) == expected[i]);
   }
-  assert(t.query(0, 3) == -2);
+  assert(t.query(0, 3) == 20);
   t.update(0, 4, 5);
   t.update(3, 2);
   t.update(3, 1);
-  expected = {5, 5, 5, 1, 5};
+  expected = {11, 7, 9, 16, 15};
   for (int i = 0; i < 5; i++) {
     assert(t.at(i) == expected[i]);
   }
-  assert(t.query(0, 3) == 1);
+  assert(t.query(0, 3) == 43);
 
-  // Boundary search over the sparse domain; values at indices 0..4 are now {5, 5, 5, 1, 5}.
-  assert(t.max_right(0, [](int mn) { return mn > 1; }) == 3);
-  assert(t.min_left(5, [](int mn) { return mn > 1; }) == 4);
+  assert(t.max_right(0, [](int sum) { return sum <= 27; }) == 3);
+  assert(t.min_left(5, [](int sum) { return sum <= 31; }) == 3);
+
+  SparseSegTree<int, 8> initialized(3);
+  assert(initialized.query(2, 5) == 12);
+  initialized.update(3, 4, 2);
+  assert(initialized.query(2, 5) == 16);
   return 0;
 }
 \end{lstlisting}
@@ -7567,11 +7573,11 @@ int main() {
 \end{lstlisting}
 \subsection{Sparse 2D Segment Tree}
 \label{sec:2.6.2}
-Maintain a two-dimensional array over a huge grid while supporting dynamic queries of rectangular subarrays and dynamic updates of individual indices. This is a sparse (a.k.a. dynamic or implicit) 2D segment tree: row and column nodes are allocated lazily as cells are touched, so large coordinate bounds are supported without allocating the full grid. Allocated nodes are kept in stable-address pools and released together when the tree is destroyed.
+Maintain a two-dimensional array over a huge grid while supporting dynamic queries of rectangular subarrays and dynamic updates of individual indices. This is a sparse (a.k.a. dynamic or implicit) 2D segment tree: row and column nodes are allocated lazily as cells are touched, so large coordinate bounds are supported without allocating the full grid. Inner trees path-compress chains of unallocated column nodes, so each point update creates only $O(1)$ column nodes at every visited row node. Allocated nodes are kept in stable-address pools and released together when the tree is destroyed.
 
-The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{combine\_n(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return \inlinecode{a + b} and \inlinecode{combine\_n(v, area)} should return \inlinecode{v * area}.
+The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{combine\_n(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the sum of the target range. For rectangle-min queries, \inlinecode{combine(a, b)} should return \inlinecode{std::min(a, b)} and \inlinecode{combine\_n(v, area)} should return \inlinecode{v}.
 
-The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at one updated cell. The default code below defines updates that ``set'' the chosen cell to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return \inlinecode{v + d}.
+The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at one updated cell. The default code below defines increments. For point assignment, \inlinecode{apply\_delta(v, d)} should return \inlinecode{d}.
 
 Rows and columns are split independently, so every rectangle query decomposes into $O(\log\left(R\right) \cdot \log\left(C\right))$ canonical rectangles regardless of whether it is thin, off-center, or otherwise adversarially placed.
 
@@ -7581,8 +7587,10 @@ Use the dense 2D segment tree in the previous section when the grid is modest en
   \item \inlinecode{SparseSegTree2D\textless{}T, R, C\textgreater{}(v = T\{\})} constructs a two-dimensional array over rows $[0, {\inlinecodemath{R}})$ and columns $[0, {\inlinecodemath{C}})$. All array values are implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
   \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
   \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{combine()} applied to every value in the rectangular region consisting of rows in $[{\inlinecodemath{r1}}, {\inlinecodemath{r2}}]$ and columns in $[{\inlinecodemath{c1}}, {\inlinecodemath{c2}}]$.
-  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{apply\_delta(v, d)}.
+  \item \inlinecode{update(r, c, d)} adds \inlinecode{d} to the value at (\inlinecode{r}, \inlinecode{c}).
 \end{compactitem}
+
+Overflow warning: Products of initial values with rectangle areas, and all resulting sums, must fit in \inlinecode{T}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -7594,7 +7602,7 @@ Use the dense 2D segment tree in the previous section when the grid is modest en
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n \cdot \log\left(R\right) \cdot \log\left(C\right))$ for storage after $n$ point updates.
+  \item $O(n \log R)$ for storage after $n$ point updates.
   \item $O(\log\left(R\right) + \log\left(C\right))$ auxiliary stack space for \inlinecode{at()}, \inlinecode{query()}, and \inlinecode{update()}.
 \end{compactitem}
 
@@ -7609,9 +7617,9 @@ template<typename T, int R = 1000000001, int C = 1000000001>
 class SparseSegTree2D {
   static_assert(R > 0 && C > 0);
 
-  static T combine(const T &a, const T &b) { return std::min(a, b); }
-  static T combine_n(const T &v, int64_t area) { return v; }
-  static T apply_delta(const T &v, const T &d) { return d; }
+  static T combine(const T &a, const T &b) { return a + b; }
+  static T combine_n(const T &v, int64_t area) { return v * area; }
+  static T apply_delta(const T &v, const T &d) { return v + d; }
 
   struct InnerNode {
     T value;
@@ -7792,17 +7800,22 @@ int main() {
     }
     cout << endl;
   }
-  assert(t.query(0, 0, 0, 1) == 6);
-  assert(t.query(0, 0, 1, 0) == 5);
-  assert(t.query(1, 1, 2, 2) == 0);
-  assert(t.query(0, 0, 1000000000, 1000000000) == 0);
+  assert(t.query(0, 0, 0, 1) == 13);
+  assert(t.query(0, 0, 1, 0) == 12);
+  assert(t.query(1, 1, 2, 2) == 14);
+  assert(t.query(0, 0, 1000000000, 1000000000) == 32);
   t.update(500000000, 500000000, -100);
-  assert(t.query(0, 0, 1000000000, 1000000000) == -100);
+  assert(t.query(0, 0, 1000000000, 1000000000) == -68);
 
   SparseSegTree2D<int, 1, 4> rectangular(0);
   rectangular.update(0, 0, 5);
   rectangular.update(0, 3, 6);
-  assert(rectangular.query(0, 0, 0, 3) == 0);  // Untouched gaps remain part of the aggregate.
+  assert(rectangular.query(0, 0, 0, 3) == 11);
+
+  SparseSegTree2D<int, 2, 3> initialized(2);
+  assert(initialized.query(0, 0, 1, 2) == 12);
+  initialized.update(0, 1, 3);
+  assert(initialized.query(0, 0, 1, 2) == 15);
   return 0;
 }
 \end{lstlisting}
@@ -7814,12 +7827,14 @@ Values:
 \end{exampleoutput}
 \subsection{2D Range Tree}
 \label{sec:2.6.3}
-Maintain a set of two-dimensional points while supporting queries for all points that fall inside given rectangular regions. This implementation uses \inlinecode{std::pair} to represent points, requiring operators \inlinecode{\textless{}}, \inlinecode{\textless{}=}, and \inlinecode{==} to be defined on the numeric template type. A balanced tree over the points sorted by $x$ stores at each node its subrange of points sorted by $y$, merged from its children's lists as in a merge sort tree. A query decomposes the $x$-range into $O(\log n)$ nodes and binary searches each node's list for the matching $y$-range.
+Maintain a static collection of two-dimensional points while supporting rectangle reporting queries. A 2D range tree sorts the points by $x$ and stores at each tree node its subrange of points sorted by $y$, merged from its children's lists as in a merge sort tree. A query decomposes its $x$-range into $O(\log n)$ canonical nodes and binary searches their $y$-sorted lists.
 
-Use this for static point-reporting queries when guaranteed worst-case bounds are more important than memory. Compared with a range k-d tree, it uses more space but gives $O(\log^{2} n + m)$ query time regardless of point distribution; the k-d tree is lighter and often faster on typical inputs, but its pruning is more distribution-dependent.
+This implementation uses \inlinecode{std::pair} to represent points, requiring \inlinecode{operator\textless{}} to be defined on the numeric template type.
+
+Use this for static point-reporting queries when guaranteed worst-case bounds are more important than memory. Compared with the k-d tree in the next section, it uses $O(n \log n)$ rather than $O(n)$ space but improves the worst-case query time from $O(\sqrt{n} + m)$ to $O(\log^{2} n + m)$.
 
 \begin{compactitem}
-  \item \inlinecode{RangeTree\textless{}T\textgreater{}(lo, hi)} constructs a set of \inlinecode{std::pair} points from the half-open forward-iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
+  \item \inlinecode{RangeTree\textless{}T\textgreater{}(lo, hi)} constructs a collection of \inlinecode{std::pair} points from the half-open forward-iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
   \item \inlinecode{query(x1, y1, x2, y2)} returns (\inlinecode{i}, \inlinecode{x}, \inlinecode{y}) tuples for all points in the closed rectangle $[{\inlinecodemath{x1}}, {\inlinecodemath{x2}}] \times [{\inlinecodemath{y1}}, {\inlinecodemath{y2}}]$, where \inlinecode{i} is the point's 0-based index in the original range.
 \end{compactitem}
 
@@ -7857,7 +7872,7 @@ class RangeTree {
   std::vector<std::vector<std::pair<int, T>>> cols;
 
   void build(int n, int lo, int hi) {
-    if (points[lo].x == points[hi].x) {
+    if (!(points[lo].x < points[hi].x)) {
       for (int i = lo; i <= hi; i++) {
         cols[n].emplace_back(i, points[i].y);
       }
@@ -7886,7 +7901,7 @@ class RangeTree {
             std::lower_bound(cols[n].begin(), cols[n].end(), y1, [](const auto &a, const T &value) {
               return a.second < value;
             });
-        for (; it != cols[n].end() && it->second <= y2; ++it) {
+        for (; it != cols[n].end() && !(y2 < it->second); ++it) {
           const IndexedPoint &p = points[it->first];
           res.emplace_back(p.original_index, p.x, p.y);
         }
@@ -7910,7 +7925,7 @@ class RangeTree {
     }
     cols.resize(4 * n + 1);
     std::sort(points.begin(), points.end(), [](const IndexedPoint &a, const IndexedPoint &b) {
-      return a.x != b.x ? a.x < b.x : a.y < b.y;
+      return a.x < b.x || (!(b.x < a.x) && a.y < b.y);
     });
     build(0, 0, n - 1);
   }
@@ -7945,146 +7960,18 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{K-d Tree (2D Range Reporting)}
+\subsection{K-d Tree}
 \label{sec:2.6.4}
-Maintain a static set of two-dimensional points while supporting rectangle reporting queries. A k-d tree recursively splits points by alternating coordinates and stores a bounding box for each subtree, allowing whole subtrees to be accepted or pruned during a query.
-
-This implementation uses \inlinecode{std::pair} to represent points, requiring \inlinecode{operator\textless{}} to be defined on the numeric template type.
-
-Use this for static point-reporting queries when $O(n)$ space and good average performance are more important than a strict worst-case guarantee. Use the 2D range tree instead when adversarial point sets or query rectangles are expected and the extra $O(n \log n)$ space is acceptable.
-
-\begin{compactitem}
-  \item \inlinecode{RangeKDTree\textless{}T\textgreater{}(lo, hi)} constructs a set of \inlinecode{std::pair} points from the half-open forward-iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
-  \item \inlinecode{query(x1, y1, x2, y2)} returns all points in the closed rectangle $[{\inlinecodemath{x1}}, {\inlinecodemath{x2}}] \times [{\inlinecodemath{y1}}, {\inlinecodemath{y2}}]$ as \inlinecode{std::pair} values.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(n \log n)$ per call to the constructor, where $n$ is the number of points.
-  \item $O(\sqrt{n} + m)$ per call to \inlinecode{query()}, where $m$ is the number of points that are reported by the query.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n)$ for storage of the points.
-  \item $O(\log n)$ auxiliary stack space for \inlinecode{query()}.
-  \item $O(m)$ for the vector returned by \inlinecode{query()}, where $m$ is the number of reported points.
-\end{compactitem}
-
-\begin{lstlisting}[style=cpp]
-#include <algorithm>
-#include <cassert>
-#include <utility>
-#include <vector>
-
-template<typename T>
-class RangeKDTree {
-  std::vector<std::pair<T, T>> tree, minp, maxp;
-  std::vector<int> l_index, h_index;
-
-  void build(int lo, int hi, bool div_x) {
-    if (lo >= hi) {
-      return;
-    }
-    int mid = lo + (hi - lo) / 2;
-    std::nth_element(
-        tree.begin() + lo, tree.begin() + mid, tree.begin() + hi,
-        [div_x](const auto &a, const auto &b) {
-          return div_x ? a.first < b.first : a.second < b.second;
-        }
-    );
-    l_index[mid] = lo;
-    h_index[mid] = hi;
-    minp[mid].first = maxp[mid].first = tree[lo].first;
-    minp[mid].second = maxp[mid].second = tree[lo].second;
-    for (int i = lo + 1; i < hi; i++) {
-      minp[mid].first = std::min(minp[mid].first, tree[i].first);
-      minp[mid].second = std::min(minp[mid].second, tree[i].second);
-      maxp[mid].first = std::max(maxp[mid].first, tree[i].first);
-      maxp[mid].second = std::max(maxp[mid].second, tree[i].second);
-    }
-    build(lo, mid, !div_x);
-    build(mid + 1, hi, !div_x);
-  }
-
-  void query(
-      int lo, int hi, const T &x1, const T &y1, const T &x2, const T &y2,
-      std::vector<std::pair<T, T>> &res
-  ) const {
-    if (lo >= hi) {
-      return;
-    }
-    int mid = lo + (hi - lo) / 2;
-    T ax = minp[mid].first, ay = minp[mid].second;
-    T bx = maxp[mid].first, by = maxp[mid].second;
-    if (x2 < ax || bx < x1 || y2 < ay || by < y1) {
-      return;
-    }
-    if (!(ax < x1 || x2 < bx || ay < y1 || y2 < by)) {
-      res.insert(res.end(), tree.begin() + l_index[mid], tree.begin() + h_index[mid]);
-      return;
-    }
-    query(lo, mid, x1, y1, x2, y2, res);
-    query(mid + 1, hi, x1, y1, x2, y2, res);
-    if (tree[mid].first < x1 || x2 < tree[mid].first || tree[mid].second < y1 ||
-        y2 < tree[mid].second) {
-      return;
-    }
-    res.push_back(tree[mid]);
-  }
-
- public:
-  template<typename It>
-  RangeKDTree(It lo, It hi)
-      : tree(lo, hi),
-        minp(tree.size()),
-        maxp(tree.size()),
-        l_index(tree.size()),
-        h_index(tree.size()) {
-    build(0, static_cast<int>(tree.size()), true);
-  }
-
-  std::vector<std::pair<T, T>> query(const T &x1, const T &y1, const T &x2, const T &y2) const {
-    assert(!(x2 < x1) && !(y2 < y1));
-    std::vector<std::pair<T, T>> res;
-    query(0, static_cast<int>(tree.size()), x1, y1, x2, y2, res);
-    return res;
-  }
-};
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[style=cpp]
-#include <algorithm>
-#include <cassert>
-using namespace std;
-
-int main() {
-  vector<pair<int, int>> v{{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
-                           {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
-  RangeKDTree<int> t(v.begin(), v.end());
-  auto got = t.query(-1, -1, 2, 5);
-  sort(got.begin(), got.end());
-  assert((got == vector<pair<int, int>>{{-1, -1}, {1, 4}, {2, -1}, {2, 2}}));
-  got = t.query(1, 1, 4, 8);
-  sort(got.begin(), got.end());
-  assert((got == vector<pair<int, int>>{{1, 4}, {2, 2}, {3, 1}}));
-  return 0;
-}
-\end{lstlisting}
-\subsection{K-d Tree (Nearest Neighbor)}
-\label{sec:2.6.5}
-Maintain a static set of two-dimensional points while supporting nearest-neighbor queries. A k-d tree recursively splits points by the coordinate with larger spread, searches the more promising side first, and only explores the other side when its splitting plane can still improve the answer.
+Maintain a static collection of two-dimensional points while supporting rectangle reporting and nearest-neighbor queries. A k-d tree recursively splits points by alternating coordinates and stores a bounding box for each subtree. Rectangle queries accept or prune entire bounding boxes, while nearest-neighbor queries visit the boxes with the smallest possible distance first and prune those that cannot improve the answer.
 
 This implementation uses \inlinecode{std::pair} to represent points. The numeric template type must support \inlinecode{operator\textless{}} and conversion to \inlinecode{int64\_t} for integral types or \inlinecode{long double} otherwise.
 
-Use this for static nearest-neighbor queries on point sets in low dimensions. It is a geometric search tree rather than an aggregate structure: for rectangle reporting use the range k-d tree or 2D range tree, and for grid cell updates or rectangle sums/minima use a Fenwick tree or segment tree.
+Use this when $O(n)$ storage and nearest-neighbor queries are more important than the 2D range tree's faster $O(\log^{2} n + m)$ rectangle reporting. This tree reports a rectangle in $O(\sqrt{n} + m)$ time but supports both query types with the same index.
 
 \begin{compactitem}
-  \item \inlinecode{NearestKDTree\textless{}T\textgreater{}(lo, hi)} constructs a set of \inlinecode{std::pair} points from the half-open forward-iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
-  \item \inlinecode{nearest(x, y, can\_equal = true)} returns a point in the set that is closest to (\inlinecode{x}, \inlinecode{y}) by Euclidean distance. This may be equal to (\inlinecode{x}, \inlinecode{y}) only if \inlinecode{can\_equal} is \inlinecode{true}; at least one eligible point must exist.
+  \item \inlinecode{KDTree\textless{}T\textgreater{}(lo, hi)} constructs a collection of \inlinecode{std::pair} points from the half-open forward-iterator range $[{\inlinecodemath{lo}}, {\inlinecodemath{hi}})$.
+  \item \inlinecode{query(x1, y1, x2, y2)} returns all points in the closed rectangle $[{\inlinecodemath{x1}}, {\inlinecodemath{x2}}] \times [{\inlinecodemath{y1}}, {\inlinecodemath{y2}}]$ as \inlinecode{std::pair} values.
+  \item \inlinecode{nearest(x, y, can\_equal = true)} returns a point in the collection that is closest to (\inlinecode{x}, \inlinecode{y}) by Euclidean distance. This may be equal to (\inlinecode{x}, \inlinecode{y}) only if \inlinecode{can\_equal} is \inlinecode{true}; at least one eligible point must exist.
 \end{compactitem}
 
 Overflow warning: For integral coordinate types, every coordinate difference, squared difference, and sum of squared differences must fit in \inlinecode{int64\_t}.
@@ -8093,14 +7980,16 @@ Overflow warning: For integral coordinate types, every coordinate difference, sq
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ per call to the constructor, where $n$ is the number of points.
-  \item $O(\log n)$ on average per call to \inlinecode{nearest()}.
+  \item $O(\sqrt{n} + m)$ per call to \inlinecode{query()}, where $m$ is the number of points that are reported.
+  \item $O(\log n)$ on average and $O(n)$ in the worst case per call to \inlinecode{nearest()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ for storage of the points.
-  \item $O(\log n)$ auxiliary stack space for \inlinecode{nearest()}.
+  \item $O(n)$ for storage of the points and bounding boxes.
+  \item $O(\log n)$ auxiliary stack space for \inlinecode{query()} and \inlinecode{nearest()}.
+  \item $O(m)$ for the vector returned by \inlinecode{query()}, where $m$ is the number of reported points.
 \end{compactitem}
 
 \begin{lstlisting}[style=cpp]
@@ -8113,79 +8002,120 @@ Overflow warning: For integral coordinate types, every coordinate difference, sq
 #include <vector>
 
 template<typename T>
-class NearestKDTree {
+class KDTree {
   using Dist = std::conditional_t<std::is_integral_v<T>, int64_t, long double>;
+  using Point = std::pair<T, T>;
 
-  std::vector<std::pair<T, T>> tree;
-  std::vector<char> div_x;
+  std::vector<Point> tree, minp, maxp;
 
-  void build(int lo, int hi) {
+  static int root_index(int lo, int hi) { return lo + (hi - lo) / 2; }
+
+  void build(int lo, int hi, bool div_x) {
     if (lo >= hi) {
       return;
     }
-    int mid = lo + (hi - lo) / 2;
-    T minx, maxx, miny, maxy;
-    minx = maxx = tree[lo].first;
-    miny = maxy = tree[lo].second;
-    for (int i = lo + 1; i < hi; i++) {
-      minx = std::min(minx, tree[i].first);
-      miny = std::min(miny, tree[i].second);
-      maxx = std::max(maxx, tree[i].first);
-      maxy = std::max(maxy, tree[i].second);
-    }
-    Dist x_span = static_cast<Dist>(maxx) - static_cast<Dist>(minx);
-    Dist y_span = static_cast<Dist>(maxy) - static_cast<Dist>(miny);
-    div_x[mid] = !(x_span < y_span);
+    int mid = root_index(lo, hi);
     std::nth_element(
         tree.begin() + lo, tree.begin() + mid, tree.begin() + hi,
-        [&](const auto &a, const auto &b) {
-          return div_x[mid] ? a.first < b.first : a.second < b.second;
+        [div_x](const Point &a, const Point &b) {
+          return div_x ? a.first < b.first : a.second < b.second;
         }
     );
-    if (lo + 1 == hi) {
+    minp[mid] = maxp[mid] = tree[mid];
+    build(lo, mid, !div_x);
+    build(mid + 1, hi, !div_x);
+    for (int i = lo; i < hi; i++) {
+      minp[mid].first = std::min(minp[mid].first, tree[i].first);
+      minp[mid].second = std::min(minp[mid].second, tree[i].second);
+      maxp[mid].first = std::max(maxp[mid].first, tree[i].first);
+      maxp[mid].second = std::max(maxp[mid].second, tree[i].second);
+    }
+  }
+
+  void query(
+      int lo, int hi, const T &x1, const T &y1, const T &x2, const T &y2, std::vector<Point> &res
+  ) const {
+    if (lo >= hi) {
       return;
     }
-    build(lo, mid);
-    build(mid + 1, hi);
+    int mid = root_index(lo, hi);
+    T ax = minp[mid].first, ay = minp[mid].second;
+    T bx = maxp[mid].first, by = maxp[mid].second;
+    if (x2 < ax || bx < x1 || y2 < ay || by < y1) {
+      return;
+    }
+    if (!(ax < x1 || x2 < bx || ay < y1 || y2 < by)) {
+      res.insert(res.end(), tree.begin() + lo, tree.begin() + hi);
+      return;
+    }
+    query(lo, mid, x1, y1, x2, y2, res);
+    query(mid + 1, hi, x1, y1, x2, y2, res);
+    if (!(tree[mid].first < x1 || x2 < tree[mid].first || tree[mid].second < y1 ||
+          y2 < tree[mid].second)) {
+      res.push_back(tree[mid]);
+    }
+  }
+
+  Dist box_dist(int root, const T &x, const T &y) const {
+    Dist dx = 0, dy = 0;
+    if (x < minp[root].first) {
+      dx = Dist(minp[root].first) - Dist(x);
+    } else if (maxp[root].first < x) {
+      dx = Dist(x) - Dist(maxp[root].first);
+    }
+    if (y < minp[root].second) {
+      dy = Dist(minp[root].second) - Dist(y);
+    } else if (maxp[root].second < y) {
+      dy = Dist(y) - Dist(maxp[root].second);
+    }
+    return dx * dx + dy * dy;  // Overflow warning.
+  }
+
+  void nearest(
+      int lo, int hi, const T &x, const T &y, bool can_equal, Dist &best_dist, int &best
+  ) const {
+    if (lo >= hi) {
+      return;
+    }
+    int mid = root_index(lo, hi);
+    if (best != -1 && best_dist <= box_dist(mid, x, y)) {
+      return;
+    }
+    Dist dx = Dist(x) - Dist(tree[mid].first);
+    Dist dy = Dist(y) - Dist(tree[mid].second);
+    Dist dist = dx * dx + dy * dy;  // Overflow warning.
+    if ((best == -1 || dist < best_dist) && (can_equal || dist != 0)) {
+      best_dist = dist;
+      best = mid;
+    }
+
+    int llo = lo, lhi = mid, rlo = mid + 1, rhi = hi;
+    if (llo < lhi && rlo < rhi &&
+        box_dist(root_index(rlo, rhi), x, y) < box_dist(root_index(llo, lhi), x, y)) {
+      std::swap(llo, rlo);
+      std::swap(lhi, rhi);
+    }
+    nearest(llo, lhi, x, y, can_equal, best_dist, best);
+    nearest(rlo, rhi, x, y, can_equal, best_dist, best);
   }
 
  public:
   template<typename It>
-  NearestKDTree(It lo, It hi) : tree(lo, hi), div_x(tree.size()) {
-    assert(!tree.empty());
-    build(0, static_cast<int>(tree.size()));
+  KDTree(It lo, It hi) : tree(lo, hi), minp(tree.size()), maxp(tree.size()) {
+    build(0, static_cast<int>(tree.size()), true);
   }
 
-  std::pair<T, T> nearest(const T &x, const T &y, bool can_equal = true) const {
+  std::vector<Point> query(const T &x1, const T &y1, const T &x2, const T &y2) const {
+    assert(!(x2 < x1) && !(y2 < y1));
+    std::vector<Point> res;
+    query(0, static_cast<int>(tree.size()), x1, y1, x2, y2, res);
+    return res;
+  }
+
+  Point nearest(const T &x, const T &y, bool can_equal = true) const {
     Dist best_dist = std::numeric_limits<Dist>::max();
     int best = -1;
-    auto rec = [&](auto &&rec, int lo, int hi) {
-      if (lo >= hi) {
-        return;
-      }
-      int mid = lo + (hi - lo) / 2;
-      Dist dx = static_cast<Dist>(x) - static_cast<Dist>(tree[mid].first);
-      Dist dy = static_cast<Dist>(y) - static_cast<Dist>(tree[mid].second);
-      Dist dist = dx * dx + dy * dy;  // Overflow warning.
-      if (dist < best_dist && (can_equal || dist != 0)) {
-        best_dist = dist;
-        best = mid;
-      }
-      if (lo + 1 == hi) {
-        return;
-      }
-      Dist axis_delta = div_x[mid] ? dx : dy;
-      int l1 = lo, r1 = mid, l2 = mid + 1, r2 = hi;
-      if (axis_delta > 0) {
-        std::swap(l1, l2);
-        std::swap(r1, r2);
-      }
-      rec(rec, l1, r1);
-      if (axis_delta * axis_delta < best_dist) {
-        rec(rec, l2, r2);
-      }
-    };
-    rec(rec, 0, static_cast<int>(tree.size()));
+    nearest(0, static_cast<int>(tree.size()), x, y, can_equal, best_dist, best);
     assert(best != -1);
     return tree[best];
   }
@@ -8197,16 +8127,407 @@ class NearestKDTree {
 using namespace std;
 
 int main() {
-  vector<pair<int, int>> p{{0, 2}, {0, 3}, {-1, 0}};
-  NearestKDTree<int> t(p.begin(), p.end());
-  assert(t.nearest(0, 2, true) == (pair<int, int>{0, 2}));
-  assert(t.nearest(0, 2, false) == (pair<int, int>{0, 3}));
-  assert(t.nearest(0, 0) == (pair<int, int>{-1, 0}));
-  assert(t.nearest(-10000, 0) == (pair<int, int>{-1, 0}));
+  vector<pair<int, int>> points{{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
+                                {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
+  KDTree<int> t(points.begin(), points.end());
+  auto got = t.query(-1, -1, 2, 5);
+  sort(got.begin(), got.end());
+  assert((got == vector<pair<int, int>>{{-1, -1}, {1, 4}, {2, -1}, {2, 2}}));
+  got = t.query(1, 1, 4, 8);
+  sort(got.begin(), got.end());
+  assert((got == vector<pair<int, int>>{{1, 4}, {2, 2}, {3, 1}}));
+
+  assert(t.nearest(0, 2) == (pair<int, int>{2, 2}));
+  assert(t.nearest(2, 2, false) == (pair<int, int>{3, 1}));
 
   vector<pair<int, int>> large{{-1000000000, 1}, {1000000000, 0}};
-  NearestKDTree<int> large_tree(large.begin(), large.end());
+  KDTree<int> large_tree(large.begin(), large.end());
   assert(large_tree.nearest(0, 0) == (pair<int, int>{1000000000, 0}));
+
+  KDTree<int> empty(points.end(), points.end());
+  assert(empty.query(0, 0, 1, 1).empty());
+  return 0;
+}
+\end{lstlisting}
+\subsection{Quadtree}
+\label{sec:2.6.5}
+Maintain a dynamic collection of points in a bounded two-dimensional region while supporting rectangle reporting, radius reporting, and nearest-neighbor queries. A quadtree recursively divides space into at most four disjoint regions. Each leaf stores a small bucket of points, and queries prune regions using their spatial bounds rather than decomposing each coordinate independently.
+
+The same implementation supports integral and floating-point coordinates. A leaf stops splitting at depth \inlinecode{MAX\_DEPTH} or when rounding leaves neither coordinate interval with an interior midpoint; its bucket may then grow beyond \inlinecode{BUCKET\_SIZE}. These guards make duplicate and arbitrarily close floating-point coordinates safe without giving integral and floating-point trees different logic.
+
+Unlike the static 2D range tree and k-d tree, this structure supports online insertions and erasures. Its spatial pruning also handles disks and nearest neighbors naturally, but its query cost depends on the point distribution and requested region. Use a 2D segment or Fenwick tree instead for guaranteed polylogarithmic rectangle aggregates over grid cells.
+
+\begin{compactitem}
+  \item \inlinecode{Quadtree\textless{}T, BUCKET\_SIZE, MAX\_DEPTH\textgreater{}(x1, y1, x2, y2)} constructs an empty tree covering the half-open region $[{\inlinecodemath{x1}}, {\inlinecodemath{x2}}) \times [{\inlinecodemath{y1}}, {\inlinecodemath{y2}})$. Both coordinate intervals must be nonempty.
+  \item \inlinecode{size()} returns the number of stored points, counting duplicates.
+  \item \inlinecode{insert(x, y)} inserts one occurrence of (\inlinecode{x}, \inlinecode{y}), which must lie inside the covered region.
+  \item \inlinecode{erase(x, y)} erases one occurrence of (\inlinecode{x}, \inlinecode{y}) and returns whether one existed. Floating-point coordinates are compared exactly.
+  \item \inlinecode{query(x1, y1, x2, y2)} returns every stored point in the closed rectangle $[{\inlinecodemath{x1}}, {\inlinecodemath{x2}}] \times [{\inlinecodemath{y1}}, {\inlinecodemath{y2}}]$, including duplicate occurrences.
+  \item \inlinecode{query\_radius(x, y, radius)} returns every stored point at Euclidean distance at most \inlinecode{radius} from (\inlinecode{x}, \inlinecode{y}). \inlinecode{radius} must be nonnegative.
+  \item \inlinecode{nearest(x, y, can\_equal = true)} returns a stored point closest to (\inlinecode{x}, \inlinecode{y}) by Euclidean distance. This may equal (\inlinecode{x}, \inlinecode{y}) only if \inlinecode{can\_equal} is \inlinecode{true}; at least one eligible point must exist.
+  \item \inlinecode{k\_nearest(x, y, k, can\_equal = true)} returns the \inlinecode{k} closest stored points in nondecreasing order of Euclidean distance, counting duplicates. Points equal to (\inlinecode{x}, \inlinecode{y}) are eligible only if \inlinecode{can\_equal} is \inlinecode{true}; $k$ must be positive and at most the number of eligible points.
+\end{compactitem}
+
+Overflow warning: Coordinate differences used to split the covered region must fit in \inlinecode{int64\_t} for integral types or \inlinecode{long double} otherwise. The same applies to squared differences and their sums in radius and nearest-neighbor queries.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the constructor and \inlinecode{size()}.
+  \item $O(B \cdot D)$ amortized per call to \inlinecode{insert()}, where $B$ is \inlinecode{BUCKET\_SIZE} and $D$ is \inlinecode{MAX\_DEPTH}.
+  \item $O(D + b)$ per call to \inlinecode{erase()}, where $b$ is the size of the terminal bucket and can be $O(n)$.
+  \item $O(v + m)$ per call to \inlinecode{query()} and \inlinecode{query\_radius()}, where $v$ is the number of visited nodes and $m$ is the number of reported points; this is $O(n \cdot D)$ in the worst case.
+  \item $O(v + b)$ per call to \inlinecode{nearest()}, where $v$ is the number of visited nodes and $b$ is the total number of inspected bucket entries; this is $O(n \cdot D)$ in the worst case.
+  \item $O(v + b \log k)$ per call to \inlinecode{k\_nearest()}, with the same definitions of $v$ and $b$; this is $O(n \cdot (D + \log k))$ in the worst case.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n \cdot D)$ for storage after inserting $n$ points.
+  \item $O(D)$ auxiliary stack space for \inlinecode{insert()}, \inlinecode{erase()}, and all queries.
+  \item $O(k)$ auxiliary for \inlinecode{k\_nearest()}.
+  \item $O(m)$ for the vector returned by a reporting query, where $m$ is the number of reported points.
+\end{compactitem}
+
+\begin{lstlisting}[style=cpp]
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <cstdint>
+#include <memory>
+#include <queue>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+template<typename T, int BUCKET_SIZE = 8, int MAX_DEPTH = 64>
+class Quadtree {
+  static_assert(std::is_arithmetic_v<T> && !std::is_same_v<T, bool>);
+  static_assert(BUCKET_SIZE > 0 && MAX_DEPTH >= 0);
+
+  using Dist = std::conditional_t<std::is_integral_v<T>, int64_t, long double>;
+  using Point = std::pair<T, T>;
+  using Candidate = std::pair<Dist, Point>;
+
+  struct Node {
+    T x1, y1, x2, y2;
+    int size;
+    std::vector<Point> points;
+    std::array<std::unique_ptr<Node>, 4> children;
+
+    Node(const T &x1, const T &y1, const T &x2, const T &y2)
+        : x1(x1), y1(y1), x2(x2), y2(y2), size(0) {}
+  };
+
+  std::unique_ptr<Node> root;
+
+  static T midpoint(const T &lo, const T &hi) {
+    return T(Dist(lo) + (Dist(hi) - Dist(lo)) / Dist(2));
+  }
+
+  static bool is_leaf(const Node *n) {
+    return std::all_of(n->children.begin(), n->children.end(), [](const auto &child) {
+      return child == nullptr;
+    });
+  }
+
+  static int child_index(const Node *n, const Point &p) {
+    T mid_x = midpoint(n->x1, n->x2), mid_y = midpoint(n->y1, n->y2);
+    bool split_x = n->x1 < mid_x && mid_x < n->x2;
+    bool split_y = n->y1 < mid_y && mid_y < n->y2;
+    int index = split_x && !(p.first < mid_x) ? 1 : 0;
+    return index + (split_y && !(p.second < mid_y) ? 2 : 0);
+  }
+
+  static std::unique_ptr<Node> make_child(const Node *n, int index) {
+    T mid_x = midpoint(n->x1, n->x2), mid_y = midpoint(n->y1, n->y2);
+    bool split_x = n->x1 < mid_x && mid_x < n->x2;
+    bool split_y = n->y1 < mid_y && mid_y < n->y2;
+    T x1 = split_x && (index & 1) != 0 ? mid_x : n->x1;
+    T x2 = split_x && (index & 1) == 0 ? mid_x : n->x2;
+    T y1 = split_y && (index & 2) != 0 ? mid_y : n->y1;
+    T y2 = split_y && (index & 2) == 0 ? mid_y : n->y2;
+    return std::make_unique<Node>(x1, y1, x2, y2);
+  }
+
+  static bool can_split(const Node *n, int depth) {
+    if (depth >= MAX_DEPTH) {
+      return false;
+    }
+    T mid_x = midpoint(n->x1, n->x2), mid_y = midpoint(n->y1, n->y2);
+    return (n->x1 < mid_x && mid_x < n->x2) || (n->y1 < mid_y && mid_y < n->y2);
+  }
+
+  static void collect(const Node *n, std::vector<Point> &res) {
+    if (is_leaf(n)) {
+      res.insert(res.end(), n->points.begin(), n->points.end());
+      return;
+    }
+    for (const auto &child : n->children) {
+      if (child != nullptr) {
+        collect(child.get(), res);
+      }
+    }
+  }
+
+  void insert_child(Node *n, const Point &p, int depth) {
+    int index = child_index(n, p);
+    if (n->children[index] == nullptr) {
+      n->children[index] = make_child(n, index);
+    }
+    insert(n->children[index].get(), p, depth);
+  }
+
+  void insert(Node *n, const Point &p, int depth) {
+    n->size++;
+    if (!is_leaf(n)) {
+      insert_child(n, p, depth + 1);
+      return;
+    }
+    n->points.push_back(p);
+    if (static_cast<int>(n->points.size()) <= BUCKET_SIZE || !can_split(n, depth)) {
+      return;
+    }
+    std::vector<Point> points = std::move(n->points);
+    for (const Point &point : points) {
+      insert_child(n, point, depth + 1);
+    }
+  }
+
+  bool erase(Node *n, const Point &p) {
+    if (is_leaf(n)) {
+      auto it = std::find(n->points.begin(), n->points.end(), p);
+      if (it == n->points.end()) {
+        return false;
+      }
+      n->points.erase(it);
+      n->size--;
+      return true;
+    }
+    int index = child_index(n, p);
+    if (n->children[index] == nullptr || !erase(n->children[index].get(), p)) {
+      return false;
+    }
+    n->size--;
+    if (n->children[index]->size == 0) {
+      n->children[index].reset();
+    }
+    if (n->size <= BUCKET_SIZE) {
+      n->points.reserve(n->size);
+      collect(n, n->points);
+      for (auto &child : n->children) {
+        child.reset();
+      }
+    }
+    return true;
+  }
+
+  static bool disjoint(const Node *n, const T &x1, const T &y1, const T &x2, const T &y2) {
+    return x2 < n->x1 || !(x1 < n->x2) || y2 < n->y1 || !(y1 < n->y2);
+  }
+
+  static bool covered(const Node *n, const T &x1, const T &y1, const T &x2, const T &y2) {
+    return !(n->x1 < x1) && !(x2 < n->x2) && !(n->y1 < y1) && !(y2 < n->y2);
+  }
+
+  void query(
+      const Node *n, const T &x1, const T &y1, const T &x2, const T &y2, std::vector<Point> &res
+  ) const {
+    if (disjoint(n, x1, y1, x2, y2)) {
+      return;
+    }
+    if (covered(n, x1, y1, x2, y2)) {
+      collect(n, res);
+      return;
+    }
+    if (is_leaf(n)) {
+      for (const Point &p : n->points) {
+        if (!(p.first < x1) && !(x2 < p.first) && !(p.second < y1) && !(y2 < p.second)) {
+          res.push_back(p);
+        }
+      }
+      return;
+    }
+    for (const auto &child : n->children) {
+      if (child != nullptr) {
+        query(child.get(), x1, y1, x2, y2, res);
+      }
+    }
+  }
+
+  static Dist box_dist(const Node *n, const T &x, const T &y) {
+    Dist dx = 0, dy = 0;
+    if (x < n->x1) {
+      dx = Dist(n->x1) - Dist(x);
+    } else if (!(x < n->x2)) {
+      dx = Dist(x) - Dist(n->x2);
+    }
+    if (y < n->y1) {
+      dy = Dist(n->y1) - Dist(y);
+    } else if (!(y < n->y2)) {
+      dy = Dist(y) - Dist(n->y2);
+    }
+    return dx * dx + dy * dy;  // Overflow warning.
+  }
+
+  static Dist point_dist(const Point &p, const T &x, const T &y) {
+    Dist dx = Dist(x) - Dist(p.first), dy = Dist(y) - Dist(p.second);
+    return dx * dx + dy * dy;  // Overflow warning.
+  }
+
+  void query_radius(
+      const Node *n, const T &x, const T &y, Dist radius_sq, std::vector<Point> &res
+  ) const {
+    if (radius_sq < box_dist(n, x, y)) {
+      return;
+    }
+    if (is_leaf(n)) {
+      for (const Point &p : n->points) {
+        if (point_dist(p, x, y) <= radius_sq) {
+          res.push_back(p);
+        }
+      }
+      return;
+    }
+    for (const auto &child : n->children) {
+      if (child != nullptr) {
+        query_radius(child.get(), x, y, radius_sq, res);
+      }
+    }
+  }
+
+  void k_nearest(
+      const Node *n, const T &x, const T &y, int k, bool can_equal,
+      std::priority_queue<Candidate> &best
+  ) const {
+    if (static_cast<int>(best.size()) == k && best.top().first <= box_dist(n, x, y)) {
+      return;
+    }
+    if (is_leaf(n)) {
+      for (const Point &p : n->points) {
+        Dist dist = point_dist(p, x, y);
+        if (!can_equal && dist == 0) {
+          continue;
+        }
+        if (static_cast<int>(best.size()) < k) {
+          best.emplace(dist, p);
+        } else if (dist < best.top().first) {
+          best.pop();
+          best.emplace(dist, p);
+        }
+      }
+      return;
+    }
+    std::array<std::pair<Dist, const Node *>, 4> order;
+    int count = 0;
+    for (const auto &child : n->children) {
+      if (child != nullptr) {
+        order[count++] = {box_dist(child.get(), x, y), child.get()};
+      }
+    }
+    for (int i = 1; i < count; i++) {
+      auto entry = order[i];
+      int j = i;
+      for (; j > 0 && entry.first < order[j - 1].first; j--) {
+        order[j] = order[j - 1];
+      }
+      order[j] = entry;
+    }
+    for (int i = 0; i < count; i++) {
+      auto [dist, child] = order[i];
+      if (static_cast<int>(best.size()) == k && best.top().first <= dist) {
+        break;
+      }
+      k_nearest(child, x, y, k, can_equal, best);
+    }
+  }
+
+ public:
+  Quadtree(const T &x1, const T &y1, const T &x2, const T &y2) {
+    assert(x1 < x2 && y1 < y2);
+    root = std::make_unique<Node>(x1, y1, x2, y2);
+  }
+
+  Quadtree(const Quadtree &) = delete;
+  Quadtree &operator=(const Quadtree &) = delete;
+
+  int size() const { return root->size; }
+
+  void insert(const T &x, const T &y) {
+    assert(!(x < root->x1) && x < root->x2 && !(y < root->y1) && y < root->y2);
+    insert(root.get(), {x, y}, 0);
+  }
+
+  bool erase(const T &x, const T &y) { return erase(root.get(), {x, y}); }
+
+  std::vector<Point> query(const T &x1, const T &y1, const T &x2, const T &y2) const {
+    assert(!(x2 < x1) && !(y2 < y1));
+    std::vector<Point> res;
+    query(root.get(), x1, y1, x2, y2, res);
+    return res;
+  }
+
+  std::vector<Point> query_radius(const T &x, const T &y, const T &radius) const {
+    assert(!(radius < T{}));
+    Dist radius_sq = Dist(radius) * Dist(radius);  // Overflow warning.
+    std::vector<Point> res;
+    query_radius(root.get(), x, y, radius_sq, res);
+    return res;
+  }
+
+  Point nearest(const T &x, const T &y, bool can_equal = true) const {
+    return k_nearest(x, y, 1, can_equal)[0];
+  }
+
+  std::vector<Point> k_nearest(const T &x, const T &y, int k, bool can_equal = true) const {
+    assert(k > 0);
+    std::priority_queue<Candidate> best;
+    k_nearest(root.get(), x, y, k, can_equal, best);
+    assert(static_cast<int>(best.size()) == k);
+    std::vector<Point> res(best.size());
+    for (int i = k - 1; i >= 0; i--) {
+      res[i] = best.top().second;
+      best.pop();
+    }
+    return res;
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[style=cpp]
+using namespace std;
+
+int main() {
+  Quadtree<int, 2> t(0, 0, 16, 16);
+  t.insert(1, 1);
+  t.insert(4, 5);
+  t.insert(7, 5);
+  t.insert(12, 12);
+  assert(t.size() == 4);
+
+  auto got = t.query(0, 0, 7, 5);
+  sort(got.begin(), got.end());
+  assert((got == vector<pair<int, int>>{{1, 1}, {4, 5}, {7, 5}}));
+  got = t.query_radius(5, 5, 2);
+  sort(got.begin(), got.end());
+  assert((got == vector<pair<int, int>>{{4, 5}, {7, 5}}));
+  assert(t.nearest(6, 4) == (pair<int, int>{7, 5}));
+  assert(t.nearest(7, 5, false) == (pair<int, int>{4, 5}));
+  assert((t.k_nearest(6, 4, 3) == vector<pair<int, int>>{{7, 5}, {4, 5}, {1, 1}}));
+  assert((t.k_nearest(7, 5, 2, false) == vector<pair<int, int>>{{4, 5}, {1, 1}}));
+  assert(t.erase(4, 5));
+  assert(!t.erase(4, 5));
+
+  Quadtree<double, 1, 8> close(0.0, 0.0, 1.0, 1.0);
+  close.insert(0.5, 0.5);
+  close.insert(0.5, 0.5);
+  close.insert(0.5000000000000001, 0.5);
+  assert(close.size() == 3);
+  assert(close.query(0.5, 0.5, 0.5, 0.5).size() == 2);
+  assert(close.erase(0.5, 0.5));
+  assert(close.size() == 2);
   return 0;
 }
 \end{lstlisting}

@@ -3,19 +3,20 @@
 Maintain a two-dimensional array over a huge grid while supporting dynamic queries of rectangular
 subarrays and dynamic updates of individual indices. This is a sparse (a.k.a. dynamic or implicit)
 2D segment tree: row and column nodes are allocated lazily as cells are touched, so large coordinate
-bounds are supported without allocating the full grid. Allocated nodes are kept in stable-address
-pools and released together when the tree is destroyed.
+bounds are supported without allocating the full grid. Inner trees path-compress chains of
+unallocated column nodes, so each point update creates only O(1) column nodes at every visited row
+node. Allocated nodes are kept in stable-address pools and released together when the tree is
+destroyed.
 
 The query operation is defined by a commutative associative aggregate function `combine(a, b)`.
 Because untouched regions are implicit, `combine_n(v, area)` must return the aggregate summary of
 `area` copies of the initial value `v`. The default code below assumes a numerical array type,
-defining queries for the "min" of the target range. For rectangle-sum queries, `combine(a, b)`
-should return `a + b` and `combine_n(v, area)` should return `v * area`.
+defining queries for the sum of the target range. For rectangle-min queries, `combine(a, b)` should
+return `std::min(a, b)` and `combine_n(v, area)` should return `v`.
 
 The point update operation is defined by `apply_delta(v, d)`, which returns the new value at one
-updated cell. The default code below defines updates that "set" the chosen cell to a new value.
-Another possible update operation is "increment", in which case `apply_delta(v, d)` should return
-`v + d`.
+updated cell. The default code below defines increments. For point assignment, `apply_delta(v, d)`
+should return `d`.
 
 Rows and columns are split independently, so every rectangle query decomposes into O(log(R)*log(C))
 canonical rectangles regardless of whether it is thin, off-center, or otherwise adversarially
@@ -32,14 +33,17 @@ tree in 2.7.5.
 - `at(r, c)` returns the value at row `r`, column `c`.
 - `query(r1, c1, r2, c2)` returns the result of `combine()` applied to every value in the
   rectangular region consisting of rows in $[`r1`, `r2`]$ and columns in $[`c1`, `c2`]$.
-- `update(r, c, d)` assigns the value `v` at (`r`, `c`) to `apply_delta(v, d)`.
+- `update(r, c, d)` adds `d` to the value at (`r`, `c`).
+
+Overflow warning: Products of initial values with rectangle areas, and all resulting sums, must fit
+in `T`.
 
 Time Complexity:
 - O(1) per call to the constructor.
 - O(log(R)*log(C)) per call to `at()`, `query()`, and `update()`.
 
 Space Complexity:
-- O(n*log(R)*log(C)) for storage after $n$ point updates.
+- O(n log R) for storage after $n$ point updates.
 - O(log(R) + log(C)) auxiliary stack space for `at()`, `query()`, and `update()`.
 
 */
@@ -54,9 +58,9 @@ template<typename T, int R = 1000000001, int C = 1000000001>
 class SparseSegTree2D {
   static_assert(R > 0 && C > 0);
 
-  static T combine(const T &a, const T &b) { return std::min(a, b); }
-  static T combine_n(const T &v, int64_t area) { return v; }
-  static T apply_delta(const T &v, const T &d) { return d; }
+  static T combine(const T &a, const T &b) { return a + b; }
+  static T combine_n(const T &v, int64_t area) { return v * area; }
+  static T apply_delta(const T &v, const T &d) { return v + d; }
 
   struct InnerNode {
     T value;
@@ -243,16 +247,21 @@ int main() {
     }
     cout << endl;
   }
-  assert(t.query(0, 0, 0, 1) == 6);
-  assert(t.query(0, 0, 1, 0) == 5);
-  assert(t.query(1, 1, 2, 2) == 0);
-  assert(t.query(0, 0, 1000000000, 1000000000) == 0);
+  assert(t.query(0, 0, 0, 1) == 13);
+  assert(t.query(0, 0, 1, 0) == 12);
+  assert(t.query(1, 1, 2, 2) == 14);
+  assert(t.query(0, 0, 1000000000, 1000000000) == 32);
   t.update(500000000, 500000000, -100);
-  assert(t.query(0, 0, 1000000000, 1000000000) == -100);
+  assert(t.query(0, 0, 1000000000, 1000000000) == -68);
 
   SparseSegTree2D<int, 1, 4> rectangular(0);
   rectangular.update(0, 0, 5);
   rectangular.update(0, 3, 6);
-  assert(rectangular.query(0, 0, 0, 3) == 0);  // Untouched gaps remain part of the aggregate.
+  assert(rectangular.query(0, 0, 0, 3) == 11);
+
+  SparseSegTree2D<int, 2, 3> initialized(2);
+  assert(initialized.query(0, 0, 1, 2) == 12);
+  initialized.update(0, 1, 3);
+  assert(initialized.query(0, 0, 1, 2) == 15);
   return 0;
 }

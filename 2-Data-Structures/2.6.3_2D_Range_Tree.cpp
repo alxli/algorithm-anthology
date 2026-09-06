@@ -1,19 +1,19 @@
 /*
 
-Maintain a set of two-dimensional points while supporting queries for all points that fall inside
-given rectangular regions. This implementation uses `std::pair` to represent points, requiring
-operators `<`, `<=`, and `==` to be defined on the numeric template type. A balanced tree over the
-points sorted by $x$ stores at each node its subrange of points sorted by $y$, merged from its
-children's lists as in a merge sort tree. A query decomposes the $x$-range into O(log n) nodes and
-binary searches each node's list for the matching $y$-range.
+Maintain a static collection of two-dimensional points while supporting rectangle reporting queries.
+A 2D range tree sorts the points by $x$ and stores at each tree node its subrange of points sorted
+by $y$, merged from its children's lists as in a merge sort tree. A query decomposes its $x$-range
+into O(log n) canonical nodes and binary searches their $y$-sorted lists.
+
+This implementation uses `std::pair` to represent points, requiring `operator<` to be defined on the
+numeric template type.
 
 Use this for static point-reporting queries when guaranteed worst-case bounds are more important
-than memory. Compared with a range k-d tree, it uses more space but gives O(log^2 n + m) query time
-regardless of point distribution; the k-d tree is lighter and often faster on typical inputs, but
-its pruning is more distribution-dependent.
+than memory. Compared with the k-d tree in the next section, it uses O(n log n) rather than O(n)
+space but improves the worst-case query time from O(sqrt(n) + m) to O(log^2 n + m).
 
-- `RangeTree<T>(lo, hi)` constructs a set of `std::pair` points from the half-open forward-iterator
-  range $[`lo`, `hi`)$.
+- `RangeTree<T>(lo, hi)` constructs a collection of `std::pair` points from the half-open
+  forward-iterator range $[`lo`, `hi`)$.
 - `query(x1, y1, x2, y2)` returns (`i`, `x`, `y`) tuples for all points in the closed rectangle
   $[`x1`, `x2`] \times [`y1`, `y2`]$, where `i` is the point's 0-based index in the original range.
 
@@ -47,7 +47,7 @@ class RangeTree {
   std::vector<std::vector<std::pair<int, T>>> cols;
 
   void build(int n, int lo, int hi) {
-    if (points[lo].x == points[hi].x) {
+    if (!(points[lo].x < points[hi].x)) {
       for (int i = lo; i <= hi; i++) {
         cols[n].emplace_back(i, points[i].y);
       }
@@ -76,7 +76,7 @@ class RangeTree {
             std::lower_bound(cols[n].begin(), cols[n].end(), y1, [](const auto &a, const T &value) {
               return a.second < value;
             });
-        for (; it != cols[n].end() && it->second <= y2; ++it) {
+        for (; it != cols[n].end() && !(y2 < it->second); ++it) {
           const IndexedPoint &p = points[it->first];
           res.emplace_back(p.original_index, p.x, p.y);
         }
@@ -100,7 +100,7 @@ class RangeTree {
     }
     cols.resize(4 * n + 1);
     std::sort(points.begin(), points.end(), [](const IndexedPoint &a, const IndexedPoint &b) {
-      return a.x != b.x ? a.x < b.x : a.y < b.y;
+      return a.x < b.x || (!(b.x < a.x) && a.y < b.y);
     });
     build(0, 0, n - 1);
   }
